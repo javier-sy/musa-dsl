@@ -146,8 +146,14 @@ module Musa
 
 			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Only :wait or :at available" unless mode == :wait || mode == :at
 
-			parameter ||= :at if mode == :at
-			parameter ||= :duration if mode == :wait
+			if parameter.is_a? Proc
+				parameter_block = parameter
+			else
+				parameter ||= :at if mode == :at
+				parameter ||= :duration if mode == :wait
+				
+				parameter_block = Proc.new { |element| 	element[parameter] }
+			end
 
 			context ||= @context
 
@@ -156,8 +162,8 @@ module Musa
 			if element
 				context.instance_exec_nice element, &block 
 				
-				context.send mode, element[parameter], context: context, **mode_args, 
-					&(Proc.new { play serie, mode: mode, parameter: parameter, context: context, **mode_args, &block })
+				context.send mode, parameter_block.call(element), context: context, **mode_args, 
+					&(Proc.new { play serie, mode: mode, parameter: parameter_block, context: context, **mode_args, &block })
 			end
 		end	
 
