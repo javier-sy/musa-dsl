@@ -152,8 +152,8 @@ module Musa
 			end
 
 			def restart
-				@series.each { |serie| serie.restart }
 				@index = 0
+				@series[@index].restart
 			end
 
 			def next_value
@@ -161,7 +161,10 @@ module Musa
 
 				if value.nil?
 					@index += 1
-					value = next_value if @index < @series.size
+					if @index < @series.size
+						@series[@index].restart
+						value = next_value
+					end
 				end
 
 				value

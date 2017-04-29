@@ -106,23 +106,25 @@ module Musa
 
 			context ||= @context
 
-			instance_parameters = {}
+			theme_constructor_parameters = {}
 
 			run_method = theme.instance_method(:run)
 			at_position_method = theme.instance_method(:at_position)
 			
 			run_parameters = run_method.parameters.collect {|p| [ p[1], nil ] }.compact.to_h
 			run_parameters.delete :next_position
-			
+
 			parameters.each do |k, v|
 				if run_parameters.include? k
 					run_parameters[k] = v
 				else
-					instance_parameters[k] = v
+					theme_constructor_parameters[k] = v
 				end
 			end
 
-			theme_instance = theme.new context, **instance_parameters
+			run_parameters[:at] = at.duplicate if run_parameters.include? :at
+
+			theme_instance = theme.new context, **theme_constructor_parameters
 
 			with_serie_at = H(run_parameters)
 			with_serie_run = with_serie_at.duplicate
@@ -136,7 +138,6 @@ module Musa
 				with: with_serie_run, 
 				debug: debug do
 					|**parameters|
-
 					effective_parameters = Tool::make_hash_key_parameters run_method, parameters
 					theme_instance.run **effective_parameters
 			end
