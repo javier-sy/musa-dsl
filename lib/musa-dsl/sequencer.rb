@@ -131,8 +131,13 @@ module Musa
 
 			self.at E(at, with: with_serie_at) { 
 						|p, **parameters| 
-						effective_parameters = Tool::make_hash_key_parameters at_position_method, parameters
-						theme_instance.at_position p, **effective_parameters
+						if !parameters.empty?
+							effective_parameters = Tool::make_hash_key_parameters at_position_method, parameters
+							theme_instance.at_position p, **effective_parameters
+						else
+							log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
+							nil
+						end
 					}, 
 				context: context,
 				with: with_serie_run, 
