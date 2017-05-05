@@ -90,6 +90,7 @@ module Musa
 			at position + bdelay.rationalize, context: context, with: with, &block
 		end
 
+		# TODO añadir control de seguridad: si un bar_position no es válido hacer log
 		def at(bar_position, context: nil, with: nil, debug: false, &block)
 
 			if bar_position.is_a? Numeric
@@ -199,6 +200,11 @@ module Musa
 
 		def _numeric_at(bar_position, context: nil, next_bar_position: nil, with: nil, debug:, &block)
 			position = bar_position.rationalize * @ticks_per_bar
+
+			if position != position.round
+				log "Sequencer._numeric_at: warning: rounding position #{position}"
+				position = position.round
+			end
 
 			context ||= @context
 
