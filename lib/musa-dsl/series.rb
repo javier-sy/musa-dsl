@@ -450,7 +450,7 @@ module Musa
 			include BasicSerie
 
 			def initialize(serie)
-				raise ArgumentError, "cannot reverse an infinite serie #{serie}"
+				raise ArgumentError, "cannot reverse an infinite serie #{serie}" if serie.infinite?
 				@serie = serie
 				restart
 			end
