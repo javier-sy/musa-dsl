@@ -202,8 +202,9 @@ module Musa
 			position = bar_position.rationalize * @ticks_per_bar
 
 			if position != position.round
-				log "Sequencer._numeric_at: warning: rounding position #{position}"
-				position = position.round
+				original_position = position
+				position = position.round.rationalize
+				log "Sequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position/@ticks_per_bar} (#{position})"
 			end
 
 			context ||= @context
@@ -226,7 +227,7 @@ module Musa
 				@score[position] << { block: @on_debug_at } if debug && @on_debug_at
 				@score[position] << { block: block, value_parameters: value_parameters, key_parameters: key_parameters, context: context }
 			else
-				log "ignoring at command for #{Rational(position, @ticks_per_bar)}"
+				log "Warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
 			end
 
 			nil
