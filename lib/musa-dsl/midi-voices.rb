@@ -88,11 +88,13 @@ module Musa
 		class NoteControl
 			
 			def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: true)
+
+				raise ArgumentError, "MIDIVoice: note duration should be nil or Numeric: #{duration} (#{duration.class})" unless duration.nil? || duration.is_a?(Numeric)
+
 				@voice = voice
 
 				@pitch = Tool::explode_ranges_on_array(Tool::grant_array(pitch))
 				@velocity = Tool::explode_ranges_on_array(Tool::grant_array(velocity))
-				@duration = Tool::explode_ranges_on_array(Tool::grant_array(duration))
 				@velocity_off = Tool::explode_ranges_on_array(Tool::grant_array(velocity_off))
 
 				@do_on_stop = []
@@ -102,7 +104,6 @@ module Musa
 					@pitch.each_index do |i|
 						pitch = @pitch[i]
 						velocity = @velocity[i % @velocity.size]
-						duration = @duration[i % @duration.size]
 						velocity_off = @velocity_off[i % @velocity_off.size]
 
 						if !silence?(pitch)
@@ -115,12 +116,12 @@ module Musa
 						else
 							@voice.log "silence duration: #{duration}"
 						end
+					end
 
-						if duration
-							this = self
-							@voice.sequencer.wait duration - @voice.tick_duration do
-								this.note_off velocity: velocity_off
-							end
+					if duration
+						this = self
+						@voice.sequencer.wait duration - @voice.tick_duration do
+							this.note_off velocity: velocity_off
 						end
 					end
 				end
@@ -134,7 +135,6 @@ module Musa
 
 				@pitch.each_index do |i|
 					pitch = @pitch[i]
-					duration = @duration[i % @duration.size]
 					velocity_off = velocity[i % velocity.size]
 
 					if !silence?(pitch)
