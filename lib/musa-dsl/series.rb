@@ -91,6 +91,10 @@ module Musa
 			Serie.new BasicSerieFromHash.new(series_hash)
 		end
 
+		def HH(serie, keys:)
+			Serie.new BasicHashSerieFromArraySerie.new(serie, keys)
+		end
+
 		def A(*series)
 			Serie.new BasicSerieFromArrayOfArrays.new(series)
 		end
@@ -148,7 +152,7 @@ module Musa
 		
 			def initialize(series)
 				@series = series
-				restart
+				@index = 0
 			end
 
 			def restart
@@ -188,8 +192,6 @@ module Musa
 				elsif hash_series && !hash_series.empty?
 					@series = hash_series
 				end
-
-				restart
 			end
 
 			def restart
@@ -228,8 +230,6 @@ module Musa
 				elsif hash_series && !hash_series.empty?
 					@series = hash_series
 				end
-
-				restart
 			end
 
 			def restart
@@ -265,7 +265,6 @@ module Musa
 
 			def initialize(serie)
 				@serie = serie
-				restart
 			end
 
 			def restart
@@ -301,7 +300,7 @@ module Musa
 
 				raise ArgumentError, "times or condition block are mandatory" unless @condition_block
 
-				restart
+				@count = 0
 			end
 
 			def restart
@@ -636,6 +635,35 @@ module Musa
 		end
 
 		private_constant :BasicSerieFromHash
+
+		class BasicHashSerieFromArraySerie
+			include BasicSerie
+
+			def initialize(serie, keys)
+				@serie = serie
+				@keys = keys
+			end
+
+			def restart
+				@serie.restart
+			end
+
+			def next_value
+				array = @serie.next_value
+
+				return nil unless array
+
+				value = array.length.times.collect { |i| [ @keys[i], array[i] ] }.to_h
+
+				if value.find { |key, value| value.nil? }
+					nil
+				else
+					value
+				end
+			end
+		end
+
+		private_constant :BasicHashSerieFromArraySerie
 
 		class BasicSerieFromArrayOfSeries
 			include BasicSerie
