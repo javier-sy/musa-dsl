@@ -1,4 +1,11 @@
 module Musa
+
+	module Series
+		def SPLIT(hash_serie)
+			HashSerieSplitter.new hash_serie
+		end
+	end
+
 	class HashSerieSplitter
 		def initialize(hash_serie)
 			@proxy = HashSerieKeyProxy.new hash_serie
@@ -33,8 +40,12 @@ module Musa
 				value = @values[key]
 
 				if value.nil?
+					before_values = @values.collect { |k, v| [k, v] if v }.compact.to_h
+
 					@values = @serie.next_value
-					value = @values[key] if @values				
+					value = @values[key] if @values
+
+					puts "Warning: splitted serie #{@serie} values #{before_values} are being lost" if value && !before_values.empty?
 				end
 				
 				@values[key] = nil if @values

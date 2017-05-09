@@ -67,6 +67,9 @@ module Musa
 		end
 	end
 
+	# TODO implementar métodos genéricos para operaciones sobre series (.duplicate; .to_hash(?), .repeat, .freeze, .reverse, .eval, .sequence/.after, ...
+	# TODO de este modo quedarían constructores que crean una serie de la nada(S, FOR, RND, ...), operadores de múltiples series (SEQ(?))
+
 	module Series
 
 		def S(*values)
@@ -105,6 +108,10 @@ module Musa
 			else
 				Serie.new BasicSerieInfiniteRepeater.new(serie)
 			end
+		end
+
+		def SHIFT(serie, shift:)
+			Serie.new BasicSerieShifter.new(serie, shift: shift)
 		end
 
 		def F(serie)
@@ -477,6 +484,34 @@ module Musa
 		end
 
 		private_constant :BasicSerieReverser
+
+		class BasicSerieShifter
+			include BasicSerie
+
+			def initialize(serie, shift:)
+				raise ArgumentError, "cannot shift to right an infinite serie #{serie}" if shift > 0 && serie.infinite?
+				raise ArgumentError, "cannot shift to right: function not yet implemented" if shift > 0
+
+				@serie = serie
+				@shift = shift
+				restart
+			end
+
+			def restart
+				@serie.restart
+
+				@shifted = []
+				@shift.abs.times { || @shifted << @serie.next_value } if @shift < 0
+			end
+
+			def next_value
+				value = @serie.next_value
+				return value unless value.nil?
+				@shifted.shift
+			end
+		end
+
+		private_constant :BasicSerieShifter
 
 		class BasicSerieFromArray
 			include BasicSerie
