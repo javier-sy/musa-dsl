@@ -103,11 +103,6 @@ module Musa
 		delegate symbol_of: :@def
 
 		def based_on(grade, octave: 0)
-			puts "@base_pitch = #{@base_pitch}"
-			puts "@def.pitch_offset(grade) = #{@def.pitch_offset(grade)}"
-			puts "number_of_grades = #{number_of_grades}"
-			puts "@def.pitch_range_in_octave = #{@def.pitch_range_in_octave}"
-			
 			@def.based_on_pitch @base_pitch + @def.pitch_offset(grade) + octave * @def.pitch_range_in_octave
 		end
 
