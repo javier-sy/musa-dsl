@@ -1,14 +1,16 @@
 module Musa
 
 	module Series
-		def SPLIT(hash_serie)
-			HashSerieSplitter.new hash_serie
+		def SPLIT(hash_serie, buffered: false, master: nil)
+			return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(hash_serie) if master.nil? && !buffered
+			return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(hash_serie, master: master) if !master.nil? && !buffered
+			return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(hash_serie) if buffered
 		end
 	end
 
 	class HashSerieSplitter
-		def initialize(hash_serie)
-			@proxy = HashSerieKeyProxy.new hash_serie
+		def initialize(proxy)
+			@proxy = proxy
 			@series = {}
 		end
 
@@ -19,8 +21,6 @@ module Musa
 				serie = @series[key] = Serie.new HashSplittedSerie.new(@proxy, key: key)
 			end
 		end
-
-		private
 
 		class HashSerieKeyProxy
 			def initialize(hash_serie)
@@ -40,12 +40,12 @@ module Musa
 				value = @values[key]
 
 				if value.nil?
-					before_values = @values.collect { |k, v| [k, v] if v }.compact.to_h
+					before_values = @values.collect { |k, v| [k, v] if !v.nil? }.compact.to_h
 
 					@values = @serie.next_value
 					value = @values[key] if @values
 
-					puts "Warning: splitted serie #{@serie} values #{before_values} are being lost" if value && !before_values.empty?
+					puts "Warning: splitted serie #{@serie} values #{before_values} are being lost" if !value.nil? && !before_values.empty?
 				end
 				
 				@values[key] = nil if @values
@@ -59,6 +59,90 @@ module Musa
 				if value.nil?
 					peek_values = @serie.peek_next_value
 					value = peek_values[key] if peek_values				
+				end
+
+				value
+			end
+		end
+
+		class HashSerieBufferedKeyProxy
+			def initialize(hash_serie)
+				@serie = hash_serie
+				@values = {}
+			end
+
+			def restart
+				@serie.restart
+				@values = {}
+			end
+
+			def next_value(key)
+				value = nil
+
+				if @values[key].nil? || @values[key].empty?
+					hash_value = @serie.next_value
+
+					if hash_value
+						hash_value.each do |k, v| 
+							@values[k] = [] if @values[k].nil? 
+							@values[k] << v
+						end
+					end
+				end
+								
+				value = @values[key].shift if @values[key]
+
+				value
+			end
+
+			def peek_next_value(key)
+				value = nil
+
+				if @values[key] && !@values[key].empty?
+					value = @values[key].first
+				else
+					peek_values = @serie.peek_next_value
+					value = peek_values[key] if peek_values
+				end
+
+				value
+			end
+		end
+
+		class HashSerieMasterSlaveKeyProxy
+			def initialize(hash_serie, master:)
+				@serie = hash_serie
+				@master = master
+				@values = {}
+			end
+
+			def restart
+				@serie.restart
+				@values = {}
+			end
+
+			def next_value(key)
+
+				return nil unless @values
+
+				value = @values[key]
+
+				if value.nil?
+					@values = @serie.next_value
+					value = @values[key] if @values
+				end
+				
+				@values[key] = nil if key == @master && @values
+
+				value
+			end
+
+			def peek_next_value(key)
+				value = @values[key]
+
+				if value.nil?
+					peek_values = @serie.peek_next_value
+					value = peek_values[key] if peek_values
 				end
 
 				value
@@ -86,6 +170,8 @@ module Musa
 			end
 		end
 	end
+
+	private_constant :HashSerieSplitter
 end
 
 
