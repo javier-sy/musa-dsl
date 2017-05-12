@@ -6,6 +6,7 @@ require 'musa-dsl/midi-voices'
 
 require 'musa-dsl/scales'
 require 'musa-dsl/chords'
+require 'musa-dsl/chords2'
 
 require 'musa-dsl/hash-serie-splitter'
 

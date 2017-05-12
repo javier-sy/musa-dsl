@@ -1,5 +1,3 @@
-require 'duplicate'
-
 module Musa
 	module ProtoSerie
 
@@ -71,9 +69,9 @@ module Musa
 			array
 		end
 
-		def duplicate
-			Duplicate.duplicate(self)
-		end
+		#def duplicate
+		#	Duplicate.duplicate(self)
+		#end
 
 		def slave
 			slave_serie = SlaveSerie.new self	

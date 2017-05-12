@@ -1,6 +1,6 @@
 module Musa
 	def self.Chord2(*parameters)
-		Chord.new *parameters
+		Chord2.new *parameters
 	end
 
 	class Chord2
@@ -21,7 +21,7 @@ module Musa
 					grade = @scale.symbol_of(scale_note)
 
 					@grades << grade
-					@voices << ChordNote.new chord: self, grade: grade, grade_index: index
+					@voices << ChordNote.new(chord: self, grade: grade, grade_index: index)
 				end
 
 			elsif grades.is_a? Array
@@ -41,7 +41,7 @@ module Musa
 					end
 
 					@grades << grade
-					@voices << ChordNote.new chord: self, grade: grade, grade_index: index
+					@voices << ChordNote.new(chord: self, grade: grade, grade_index: index)
 
 					index += 1
 				end
@@ -114,11 +114,11 @@ module Musa
 			end
 
 			def pitch
-				@scale.pitch_of @grade, octave: @octave
+				@chord.scale.pitch_of @grade, octave: @octave
 			end
 
 			def voice
-				@chord.voice.index self
+				@chord.voices.index self
 			end
 		end
 

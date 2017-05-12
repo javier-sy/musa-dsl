@@ -2,7 +2,6 @@
 *.gem
 .bundle
 .rspec
-Gemfile.lock
 bin
 
 
