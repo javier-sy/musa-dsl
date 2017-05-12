@@ -136,12 +136,6 @@ module Musa
 		end
 	end
 
-	class OperationNotAllowedError < RuntimeError
-		def initialize(msg)
-			super msg
-		end
-	end
-
 	class SlaveSerie < Serie
 		def initialize(master)
 			@master = master
@@ -154,9 +148,10 @@ module Musa
 
 		def next_value
 			value = @next_value.shift
-			propagate_value value
 
-			puts "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
+			raise "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
+
+			propagate_value value
 
 			return value
 		end
@@ -164,7 +159,7 @@ module Musa
 		def peek_next_value
 			value = @next_value.first
 
-			puts "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
+			raise "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
 			
 			return value
 		end
