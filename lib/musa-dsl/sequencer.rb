@@ -97,7 +97,7 @@ module Musa
 				_numeric_at bar_position, context: context, with: with, debug: debug, &block
 			else
 				bar_position = S(*bar_position) if bar_position.is_a? Array
-				with = R(S(*with)) if with.is_a? Array
+				with = S(*with).repeat if with.is_a? Array
 
 				_serie_at bar_position, context: context, with: with, debug: debug, &block
 			end
@@ -128,9 +128,9 @@ module Musa
 			theme_instance = theme.new context, **theme_constructor_parameters
 
 			with_serie_at = H(run_parameters)
-			with_serie_run = with_serie_at.duplicate
+			with_serie_run = with_serie_at.slave
 
-			self.at E(at, with: with_serie_at) { 
+			self.at at.eval(with: with_serie_at) { 
 						|p, **parameters| 
 						if !parameters.empty?
 							effective_parameters = Tool::make_hash_key_parameters at_position_method, parameters
@@ -378,13 +378,6 @@ module Musa
 					elsif to
 						size.times do |i|
 							adjusted_value[i] = from[i] + step[i] * ((value[i] - from[i]) / step[i])
-
-							if rstep[i].nil?
-								puts "value = #{value}"
-								puts "rstep = #{rstep}"
-							end
-
-
 							value[i] += rstep[i]
 						end
 					end

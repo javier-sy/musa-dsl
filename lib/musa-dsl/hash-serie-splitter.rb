@@ -1,10 +1,10 @@
 module Musa
 
-	module Series
-		def SPLIT(hash_serie, buffered: false, master: nil)
-			return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(hash_serie) if master.nil? && !buffered
-			return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(hash_serie, master: master) if !master.nil? && !buffered
-			return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(hash_serie) if buffered
+	module SerieOperations
+		def split(buffered: false, master: nil)
+			return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(self) if master.nil? && !buffered
+			return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
+			return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(self) if buffered
 		end
 	end
 
@@ -110,15 +110,17 @@ module Musa
 		end
 
 		class HashSerieMasterSlaveKeyProxy
-			def initialize(hash_serie, master:)
+			def initialize(hash_serie, master)
 				@serie = hash_serie
 				@master = master
 				@values = {}
+				@values_counter = {}
 			end
 
 			def restart
 				@serie.restart
 				@values = {}
+				@values_counter = {}
 			end
 
 			def next_value(key)
@@ -129,9 +131,16 @@ module Musa
 
 				if value.nil?
 					@values = @serie.next_value
+
 					value = @values[key] if @values
+
+					puts "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
+					@values_counter = {}
 				end
 				
+				@values_counter[key] ||= 0
+				@values_counter[key] += 1	
+
 				@values[key] = nil if key == @master && @values
 
 				value
@@ -150,7 +159,7 @@ module Musa
 		end
 
 		class HashSplittedSerie
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(proxy, key:)
 				@proxy = proxy

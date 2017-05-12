@@ -1,55 +1,60 @@
 require 'duplicate'
 
 module Musa
-	module BasicSerie
+	module ProtoSerie
+
 		def restart
 		end
 
 		def next_value
+			nil
 		end
 
 		def infinite?
 			false
 		end
-
-		def duplicate
-			Duplicate.duplicate(self)
-		end
 	end
 
-	class Serie
-		include BasicSerie
+	module SerieOperations
 
-		def initialize(basic_serie)
-			@serie = basic_serie
-		end
-
-		def restart
-			@have_peeked_next_value = false
-			@peeked_next_value = nil
-			@serie.restart
-		end
-
-		def next_value
-			if @have_peeked_next_value
-				@have_peeked_next_value = false
-				@peeked_next_value
+		def repeat(times = nil, &condition_block)
+			if times || condition_block
+				Serie.new BasicSerieRepeater.new(self, times, &condition_block)
 			else
-				@serie.next_value
+				Serie.new BasicSerieInfiniteRepeater.new(self)
 			end
 		end
 
-		def peek_next_value
-			if @have_peeked_next_value
-				@peeked_next_value
-			else
-				@have_peeked_next_value = true
-				@peeked_next_value = @serie.next_value
-			end
+		def hashify(*keys)
+			Serie.new BasicHashSerieFromArraySerie.new(self, keys)
 		end
 
-		def infinite?
-			@serie.infinite?
+		def shift(shift)
+			Serie.new BasicSerieShifter.new(self, shift)
+		end
+
+		def lock
+			Serie.new BasicSerieLocker.new(self)
+		end
+
+		def reverse
+			Serie.new BasicSerieReverser.new(self)
+		end
+
+		def eval(with: nil, &block)
+			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, &block)
+		end
+
+		def select(*indexed_series, **hash_series)
+			Serie.new SelectorBasicSerie.new(self, indexed_series, hash_series)
+		end
+
+		def select_serie(*indexed_series, **hash_series)
+			Serie.new SelectorFullSerieBasicSerie.new(self, indexed_series, hash_series)
+		end
+
+		def after(*series)
+			Serie.new SequenceBasicSerie.new([self, *series])
 		end
 
 		def as_array
@@ -65,15 +70,130 @@ module Musa
 
 			array
 		end
+
+		def duplicate
+			Duplicate.duplicate(self)
+		end
+
+		def slave
+			slave_serie = SlaveSerie.new self	
+					
+			@slaves ||= []
+			@slaves << slave_serie
+
+			return slave_serie
+		end
+
+		def image
+			# TODO
+		end
 	end
 
-	# TODO implementar métodos genéricos para operaciones sobre series (.duplicate; .to_hash(?), .repeat, .freeze, .reverse, .eval, .sequence/.after, ...
-	# TODO de este modo quedarían constructores que crean una serie de la nada(S, FOR, RND, ...), operadores de múltiples series (SEQ(?))
+	class Serie
+		include ProtoSerie
+		include SerieOperations
+
+		def initialize(basic_serie)
+			@serie = basic_serie
+		end
+
+		def restart
+			@have_peeked_next_value = false
+			@peeked_next_value = nil
+			@serie.restart
+		end
+
+		def next_value
+			if @have_peeked_next_value
+				@have_peeked_next_value = false
+				value = @peeked_next_value
+			else
+				value = @serie.next_value
+			end
+
+			propagate_value value
+
+			return value
+		end
+
+		def peek_next_value
+			if @have_peeked_next_value
+				@peeked_next_value
+			else
+				@have_peeked_next_value = true
+				@peeked_next_value = @serie.next_value
+			end
+		end
+
+		def infinite?
+			@serie.infinite?
+		end
+
+		protected
+
+		def propagate_value(value)
+			@slaves.each {|s| s.push_next_value value } if @slaves
+		end
+	end
+
+	class OperationNotAllowedError < RuntimeError
+		def initialize(msg)
+			super msg
+		end
+	end
+
+	class SlaveSerie < Serie
+		def initialize(master)
+			@master = master
+			@next_value = []
+		end
+
+		def restart
+			throw OperationNotAllowedError, "SlaveSerie #{self}: slave series cannot be restart"
+		end
+
+		def next_value
+			value = @next_value.shift
+			propagate_value value
+
+			puts "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
+
+			return value
+		end
+
+		def peek_next_value
+			value = @next_value.first
+
+			puts "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
+			
+			return value
+		end
+
+		def infinite?
+			@master.infinite?
+		end
+
+		def push_next_value(value)
+			@next_value << value
+		end
+	end
 
 	module Series
 
+		def NIL
+			Serie.new NilBasicSerie.new
+		end
+
 		def S(*values)
 			Serie.new BasicSerieFromArray.new(Tool::explode_ranges_on_array(values))
+		end
+
+		def E(start: nil, with: nil, &block)
+			if start
+				Serie.new BasicSerieFromAutoEvalBlockOnSeed.new(start: start, &block)
+			else
+				Serie.new BasicSerieFromEvalBlock.new(&block)
+			end
 		end
 
 		def FOR(from: 0, to:, step: 1)
@@ -94,56 +214,8 @@ module Musa
 			Serie.new BasicSerieFromHash.new(series_hash)
 		end
 
-		def HH(serie, keys:)
-			Serie.new BasicHashSerieFromArraySerie.new(serie, keys)
-		end
-
 		def A(*series)
 			Serie.new BasicSerieFromArrayOfArrays.new(series)
-		end
-
-		def R(serie, times: nil, &condition_block)
-			if times || condition_block
-				Serie.new BasicSerieRepeater.new(serie, times: times, &condition_block)
-			else
-				Serie.new BasicSerieInfiniteRepeater.new(serie)
-			end
-		end
-
-		def SHIFT(serie, shift:)
-			Serie.new BasicSerieShifter.new(serie, shift: shift)
-		end
-
-		def F(serie)
-			Serie.new BasicSerieFreezer.new(serie)
-		end
-
-		def REV(serie)
-			Serie.new BasicSerieReverser.new(serie)
-		end
-
-		def SEL(selector, *indexed_series, **hash_series)
-			Serie.new SelectorBasicSerie.new(selector, indexed_series, hash_series)
-		end
-
-		def SEL_F(selector, *indexed_series, **hash_series)
-			Serie.new SelectorFullSerieBasicSerie.new(selector, indexed_series, hash_series)
-		end
-
-		def SEQ(*series)
-			Serie.new SequenceBasicSerie.new(series)
-		end
-
-		def E(serie = nil, start: nil, with: nil, &block)
-			raise ArgumentError, "only serie or start can be defined" if serie && start
-
-			if start
-				Serie.new BasicSerieFromAutoEvalBlockOnSeed.new(start: start, &block)
-			elsif serie
-				Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, &block)
-			else
-				Serie.new BasicSerieFromEvalBlock.new(&block)
-			end
 		end
 
 		def SIN(start_value: 0.0, steps:, frequency: nil, period: nil, amplitude: 1, center: 0)
@@ -154,8 +226,14 @@ module Musa
 		###
 		###
 
+		class NilBasicSerie
+			include ProtoSerie
+		end
+
+		private_constant :NilBasicSerie
+
 		class SequenceBasicSerie
-			include BasicSerie
+			include ProtoSerie
 		
 			def initialize(series)
 				@series = series
@@ -189,7 +267,7 @@ module Musa
 		private_constant :SequenceBasicSerie
 
 		class SelectorBasicSerie
-			include BasicSerie
+			include ProtoSerie
 		
 			def initialize(selector, indexed_series, hash_series)
 				@selector = selector
@@ -227,7 +305,7 @@ module Musa
 		private_constant :SelectorBasicSerie
 
 		class SelectorFullSerieBasicSerie
-			include BasicSerie
+			include ProtoSerie
 		
 			def initialize(selector, indexed_series, hash_series)
 				@selector = selector
@@ -268,7 +346,7 @@ module Musa
 		private_constant :SelectorFullSerieBasicSerie
 
 		class BasicSerieInfiniteRepeater
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(serie)
 				@serie = serie
@@ -297,9 +375,9 @@ module Musa
 		private_constant :BasicSerieInfiniteRepeater
 
 		class BasicSerieRepeater
-			include BasicSerie
+			include ProtoSerie
 
-			def initialize(serie, times: nil, &condition_block)
+			def initialize(serie, times = nil, &condition_block)
 				@serie = serie
 				
 				@condition_block = condition_block
@@ -416,7 +494,7 @@ module Musa
 
 		private_constant :RandomFromArrayBasicSerie
 
-		class BasicSerieFreezer
+		class BasicSerieLocker
 			def initialize(serie)
 				@serie = serie
 				@values = []
@@ -450,10 +528,10 @@ module Musa
 			end
 		end
 
-		private_constant :BasicSerieFreezer
+		private_constant :BasicSerieLocker
 
 		class BasicSerieReverser
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(serie)
 				raise ArgumentError, "cannot reverse an infinite serie #{serie}" if serie.infinite?
@@ -486,9 +564,9 @@ module Musa
 		private_constant :BasicSerieReverser
 
 		class BasicSerieShifter
-			include BasicSerie
+			include ProtoSerie
 
-			def initialize(serie, shift:)
+			def initialize(serie, shift)
 				raise ArgumentError, "cannot shift to right an infinite serie #{serie}" if shift > 0 && serie.infinite?
 				raise ArgumentError, "cannot shift to right: function not yet implemented" if shift > 0
 
@@ -514,7 +592,7 @@ module Musa
 		private_constant :BasicSerieShifter
 
 		class BasicSerieFromArray
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(array)
 				@array = array.clone
@@ -540,9 +618,9 @@ module Musa
 		private_constant :BasicSerieFromArray
 
 		class BasicSerieFromAutoEvalBlockOnSeed
-			include BasicSerie
+			include ProtoSerie
 
-			def initialize(start:, &block)
+			def initialize(start, &block)
 				@value = start
 				@block = block
 
@@ -569,7 +647,7 @@ module Musa
 		private_constant :BasicSerieFromAutoEvalBlockOnSeed
 
 		class BasicSerieFromEvalBlockOnSerie
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(serie, with: nil, &block)
 				
@@ -619,7 +697,7 @@ module Musa
 		private_constant :BasicSerieFromEvalBlockOnSerie
 
 		class BasicSerieFromEvalBlock
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(&block)
 				@block = block
@@ -646,7 +724,7 @@ module Musa
 		private_constant :BasicSerieFromEvalBlock
 
 		class BasicSerieFromHash
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(series)
 				@series = series
@@ -672,7 +750,7 @@ module Musa
 		private_constant :BasicSerieFromHash
 
 		class BasicHashSerieFromArraySerie
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(serie, keys)
 				@serie = serie
@@ -701,7 +779,7 @@ module Musa
 		private_constant :BasicHashSerieFromArraySerie
 
 		class BasicSerieFromArrayOfSeries
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(series)
 				@series = series
@@ -727,7 +805,7 @@ module Musa
 		private_constant :BasicSerieFromArrayOfSeries
 
 		class BasicSerieSinFunction
-			include BasicSerie
+			include ProtoSerie
 
 			def initialize(start_value:, steps:, period:, amplitude:, center:)
 
