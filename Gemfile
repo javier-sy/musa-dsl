@@ -6,3 +6,5 @@ gem "midi-topaz", "~> 0.2", ">= 0.2.5"
 
 gem "duplicate", "~> 1.1", ">= 1.1.1"
 
+gem "rspec", "~> 3.0"
+
