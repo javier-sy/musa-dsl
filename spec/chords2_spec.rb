@@ -20,10 +20,18 @@ RSpec.describe Musa::Chord2 do
 			expect(chord.pitches).to eq [48, 60, 64, 67]
 		end
 
-		it "Create a C3 major chord with E note in higher voice" do
+		it "Create a C3 major chord with E note in higher voice (use grade position to duplicate)" do
 			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
 
 			chord.duplicate 1, octave: 1
+
+			expect(chord.pitches).to eq [60, 64, 67, 76]
+		end
+
+		it "Create a C3 major chord with E note in higher voice (use grade symbol to duplicate)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+
+			chord.duplicate :III, octave: 1
 
 			expect(chord.pitches).to eq [60, 64, 67, 76]
 		end
@@ -97,4 +105,69 @@ RSpec.describe Musa::Chord2 do
 		end
 	end
 
+	context "Inversion and position querying" do
+
+		scale = Musa::Scales.get(:major)
+
+		it "C chord with C on bass - without inversion" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :I, octave: -1, to_voice: 0
+
+			expect(chord.inversion).to eq 0
+			expect(chord.distance).to eq 67 - 48
+		end
+
+		it "C chord with E on bass - inversion 1 (with voice sorting)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :III, octave: -1
+
+			chord.sort_voices!
+
+			expect(chord.inversion).to eq 1
+			expect(chord.distance).to eq 67 - 52
+		end
+
+		it "C chord with E on bass - inversion 1 (bass voice in mid voice)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :III, octave: -1
+
+			expect(chord.inversion).to eq 1
+			expect(chord.distance).to eq 67 - 52
+		end
+
+		it "C chord with G on high - position 2 (based on 0)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :I, octave: -1, to_voice: 0
+
+			expect(chord.position).to eq 2
+			expect(chord.distance).to eq 67 - 48
+		end
+
+		it "C chord with E on high - position 1 (based on 0) (with voice sorting)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :III, octave: 1
+
+			chord.sort_voices!
+
+			expect(chord.position).to eq 1
+			expect(chord.distance).to eq 76 - 60
+		end
+
+		it "C chord with E on high - position 1 (based on 0) (without voice sorting)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :III, octave: 1
+
+			expect(chord.position).to eq 1
+			expect(chord.distance).to eq 76 - 60
+		end
+
+		it "C chord with C on high - position 0 (based on 0) (without voice sorting)" do
+			chord = Musa::Chord2 :I, scale: scale.based_on_pitch(60)
+			chord.duplicate :I, octave: 1
+
+			expect(chord.position).to eq 0
+			expect(chord.distance).to eq 72 - 60
+		end
+
+	end
 end

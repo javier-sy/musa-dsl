@@ -83,6 +83,20 @@ module Musa
 			self
 		end
 
+		def inversion
+			@voices.sort_by { |note| note.pitch }.first.grade_index
+ 		end
+
+		def position
+			@voices.sort_by { |note| note.pitch }.last.grade_index
+ 		end
+
+ 		def distance
+ 			sorted = @voices.sort_by { |note| note.pitch }
+
+ 			sorted.last.pitch - sorted.first.pitch
+ 		end
+
 		private
 
 		def grade_of(grade_or_grade_index)
