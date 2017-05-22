@@ -97,6 +97,8 @@ module Musa
  			sorted.last.pitch - sorted.first.pitch
  		end
 
+ 		# TODO to_s inspect
+
 		private
 
 		def grade_of(grade_or_grade_index)

@@ -1,5 +1,5 @@
 class Array
-	def apply(method_name, source)
+	def apply method_name, source
 	
 		source = [source] unless source.is_a? Array
 		
@@ -8,10 +8,24 @@ class Array
 		end
 	end
 
-	def get(method_name)
+	def get method_name
 		self.collect { |o| o.send method_name }
 	end
+
+	def deep_clone
+		self.collect { |element| element.deep_clone if !element.nil? }
+	end
 end
+
+class Hash
+	def deep_clone
+		result = {}
+		
+		self.each { |key, value| result[key.deep_clone] = value.deep_clone }
+		
+		result
+	end
+end	
 
 class Rational
 	def inspect
@@ -27,7 +41,7 @@ class Rational
 end
 
 class Object
-	def instance_exec_nice(value_or_key_args = nil, key_args = nil, &block)
+	def instance_exec_nice value_or_key_args = nil, key_args = nil, &block
 
 		if !value_or_key_args.nil? && value_or_key_args.is_a?(Hash)
 			key_args ||= {}
@@ -66,7 +80,7 @@ class Object
 		end
 	end
 
-	def send_nice(method_name, *args, **key_args, &block)
+	def send_nice method_name, *args, **key_args, &block
 		if args && args.size > 0
 			if key_args && key_args.size > 0
 				send method_name, *args, **key_args, &block
@@ -80,5 +94,9 @@ class Object
 				send method_name, &block
 			end
 		end
+	end
+
+	def deep_clone
+		self.clone
 	end
 end

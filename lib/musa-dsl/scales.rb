@@ -72,6 +72,8 @@ module Musa
 		def to_s
 			"ScaleDef: #{@name}"
 		end
+
+		alias inspect to_s
 	end
 
 	Scales.register :major, 
@@ -147,6 +149,8 @@ module Musa
 		def octave_of_pitch(pitch)
 			(pitch - @base_pitch) / @def.pitch_range_in_octave
 		end
+
+		# TODO to_s inspect
 
 		private :grade_of_pitch, :octave_of_pitch
 	end
