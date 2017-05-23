@@ -1,8 +1,10 @@
+require 'pp'
+
 module Musa
 	class Variatio
 		def initialize instance_name, parameters:, &block
 			
-			raise ArgumentError, "instance_name should be a symbol" unless instance_name.is_a? Symbol
+			raise ArgumentError, "instance_name should be a symbol" unless instance_name.is_a?(Symbol)
 			raise ArgumentError, "parameters should be an array of symbols" unless parameters.is_a?(Array) && !parameters.find {|p| !(p.is_a? Symbol) }
 			raise ArgumentError, "block is needed" unless block
 
@@ -12,30 +14,31 @@ module Musa
 			main_context = MainContext.new &block
 
 			@constructor = main_context._constructor
-			@components = main_context._components
-			@with_attributes = main_context._with_attributes
+			@fieldset = main_context._fieldset
 			@finalize = main_context._finalize
 		end
 
 		def on **values
-			recurse_collect_parameters(@components).collect do |instance_attributes|
+			parameters = @fieldset.calculate_combinations(**values)
 
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **instance_attributes, **values)
+			pp parameters
 
-				@with_attributes.each do |with_attributes|
+			parameters.collect do |combination|
+
+				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **combination[:parameters])
+
+				combination[:with_attributes].each do |with_attributes|
 					with_attributes.call **Tool::make_hash_key_parameters(
 						with_attributes, 
-						**instance_attributes, 
-						**values, 
-						**{ @instance_name => instance } )
+						**{ @instance_name => instance },
+						**combination[:parameters])
 				end
 
 				if @finalize
 					@finalize.call **Tool::make_hash_key_parameters(
 						@finalize, 
-						**instance_attributes, 
-						**values, 
-						**{ @instance_name => instance } )
+						**{ @instance_name => instance },
+						**combination[:parameters])
 				end
 
 				instance
@@ -43,61 +46,6 @@ module Musa
 		end
 
 		private
-
-		def recurse_collect_parameters components, parameters = nil
-			components = components.clone
-
-			first = components.shift
-
-			result = []
-
-			first.collect_parameters(parameters).each do |inner_parameters|
-
-				if components.empty?
-					result << inner_parameters
-				else
-					result.push *recurse_collect_parameters(components, inner_parameters)
-				end
-			end
-
-			result
-		end
-
-		class MainContext
-			attr_reader :_constructor, :_components, :_with_attributes, :_finalize
-
-			def initialize &block
-				@_constructor = nil
-				@_components = []
-				@_with_attributes = []
-				@_finalize = nil
-
-				self.instance_exec_nice &block
-			end
-
-			def constructor &block
-				@_constructor = block
-			end
-
-			def field name, options
-				@_components << Field.new(name, options)
-			end
-
-			def fieldset name, options, &block
-				fieldset_context = FieldsetContext.new name, options, &block
-				@_components << fieldset_context._fieldset
-			end
-
-			def with_attributes &block
-				@_with_attributes << block
-			end
-
-			def finalize &block
-				@_finalize = block
-			end
-		end
-
-		private_constant :MainContext
 
 		class FieldsetContext
 			attr_reader :_fieldset
@@ -122,27 +70,36 @@ module Musa
 			end
 		end
 
-		private :FieldsetContext
+		private_constant :FieldsetContext
+
+		class MainContext < FieldsetContext
+			attr_reader :_constructor, :_finalize
+
+			def initialize &block
+				@_constructor = nil
+				@_finalize = nil
+
+				super nil, nil, &block
+			end
+
+			def constructor &block
+				@_constructor = block
+			end
+
+			def finalize &block
+				@_finalize = block
+			end
+		end
+
+		private_constant :MainContext
 
 		class Field
 			attr_reader :name, :options
 
-			def collect_parameters in_parameters, parent_parameters = nil
-				in_parameters ||= {}
-				parent_parameters ||= {}
-
-				result = []
-
-				@options.each do |option|
-					parameters = in_parameters.deep_clone
-
-					parent_parameters.each { |k, v| parameters[k] = v } 
-					parameters[name] = option
-
-					result << parameters
+			def calculate_combinations
+				options.collect do |option| 
+					{ name => option }
 				end
-
-				result
 			end
 
 			def inspect
@@ -164,35 +121,56 @@ module Musa
 		class Fieldset
 			attr_reader :name, :options, :components, :with_attributes
 
-			def collect_parameters in_parameters, parent_parameters = nil
-				in_parameters ||= {}
-				parent_parameters ||= {}
-
-				result = []
-
-				@options.each do |option|
-					parameters = in_parameters.deep_clone
-
-					parent_parameters.each { |k, v| parameters[k] = v } 
-					parameters[name] = option
-
-					result << parameters
+			def calculate_combinations **parent_parameters
+				if @name
+					calculate_combinations_of(@components).collect do |inner_parameters|
+						{ @name => 
+							@options.collect do |option|
+								{ 	parameters: { **{ @name => option }, **parent_parameters, **inner_parameters },
+									blocks: @with_attributes }
+							end
+						}
+					end
+				else
+					calculate_combinations_of(@components).collect do |inner_parameters|
+						@options.collect do |option|
+							{ 	parameters: { **parent_parameters, **inner_parameters },
+								blocks: @with_attributes }
+						end
+					end
 				end
-
-				result
 			end
 
 			def inspect
-				"Fieldset #{@name} options: #{@options}"
+				"Fieldset #{@name} options: #{@options} components: #{@components}"
 			end
 
 			alias to_s inspect
 
 			private
 
+			def calculate_combinations_of components, **parent_parameters
+
+				components = components.clone
+
+				first = components.shift
+
+				result = []
+
+				first.calculate_combinations.each do |inner_parameters|
+					if components.empty?
+						result << { **parent_parameters, **inner_parameters }
+					else
+						result.push *calculate_combinations_of(components, **parent_parameters, **inner_parameters)
+					end
+				end
+
+				result
+			end
+
 			def initialize name, options
 				@name = name
-				@options = options
+				@options = options || [0]
 				@components = []
 				@with_attributes = []
 			end
