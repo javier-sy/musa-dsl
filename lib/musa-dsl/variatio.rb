@@ -21,18 +21,18 @@ module Musa
 		def on **values
 			parameters = @fieldset.calculate_combinations(**values)
 
-			pp parameters
-
 			parameters.collect do |combination|
 
 				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **combination[:parameters])
 
-				combination[:with_attributes].each do |with_attributes|
-					with_attributes.call **Tool::make_hash_key_parameters(
-						with_attributes, 
+				combination[:blocks].each do |block|
+					block.call **Tool::make_hash_key_parameters(
+						block, 
 						**{ @instance_name => instance },
 						**combination[:parameters])
 				end
+
+				process_fieldsets combination
 
 				if @finalize
 					@finalize.call **Tool::make_hash_key_parameters(
@@ -46,6 +46,12 @@ module Musa
 		end
 
 		private
+
+		def process_fieldsets combination
+
+
+
+		end
 
 		class FieldsetContext
 			attr_reader :_fieldset
@@ -126,18 +132,21 @@ module Musa
 					calculate_combinations_of(@components).collect do |inner_parameters|
 						{ @name => 
 							@options.collect do |option|
-								{ 	parameters: { **{ @name => option }, **parent_parameters, **inner_parameters },
-									blocks: @with_attributes }
+								{ parameters: { **{ @name => option }, **parent_parameters, **inner_parameters }, blocks: @with_attributes }
 							end
 						}
+						
 					end
 				else
-					calculate_combinations_of(@components).collect do |inner_parameters|
-						@options.collect do |option|
-							{ 	parameters: { **parent_parameters, **inner_parameters },
-								blocks: @with_attributes }
+					result = []
+
+					calculate_combinations_of(@components).each do |inner_parameters|
+						@options.each do |option|
+							result << { parameters: { **parent_parameters, **inner_parameters }, blocks: @with_attributes }
 						end
 					end
+
+					result
 				end
 			end
 

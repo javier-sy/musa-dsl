@@ -26,12 +26,14 @@ RSpec.describe Musa::Variatio do
 					field :e, [4, 5]
 					field :f, [6, 7]
 
-					fieldset :g, [2, 3] do
-						field :h, [8, 9]
-						field :i, [10, 11]
+=begin
+					fieldset :g, [8, 9] do
+						field :h, [10, 11]
+						field :i, [12, 13]
 					end
-
+=end
 					with_attributes do |object:, d:, e:, f:|
+						puts "with with_attributes #{d} #{e} #{f}"
 						object[:d][d] = {}
 						object[:d][d][:e] = e
 						object[:d][d][:f] = f
@@ -43,15 +45,16 @@ RSpec.describe Musa::Variatio do
 
 			#pp variations
 			
-			expect(variations[0]).to.eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 } ] })
-			expect(variations[1]).to.eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 7 } ] })
-			expect(variations[2]).to.eq({ a: 1000, b: 0, c: 2, d: [ { e: 5, f: 6 } ] })
-			expect(variations[3]).to.eq({ a: 1000, b: 0, c: 2, d: [ { e: 5, f: 7 } ] })
+			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 } ] })
+			expect(variations[1]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 7 } ] })
+			expect(variations[2]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 5, f: 6 } ] })
+			expect(variations[3]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 5, f: 7 } ] })
 
 			# combinaciones del fieldset = producto_each(field.options.size) ^ fieldset.options.size
 
 		end
-
+=begin
+	
 		it "con fieldset de longitud 2" do
 
 			v = Musa::Variatio.new :object, parameters: [:a] do
@@ -106,7 +109,7 @@ RSpec.describe Musa::Variatio do
 
 		end
 
-
+=end
 =begin
 		v = Musa::Variatio.new :chord, parameters: [:scale] do 
 
