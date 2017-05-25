@@ -19,56 +19,30 @@ module Musa
 		end
 
 		def on **values
-			parameters = @fieldset.calculate_combinations(**values)
+			pp @fieldset
 
-			parameters.collect do |combination|
-
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **combination[:parameters])
-
-				combination[:blocks].each do |block|
-					block.call **Tool::make_hash_key_parameters(
-						block, 
-						**{ @instance_name => instance },
-						**combination[:parameters])
-				end
-
-				process_fieldsets combination
-
-				if @finalize
-					@finalize.call **Tool::make_hash_key_parameters(
-						@finalize, 
-						**{ @instance_name => instance },
-						**combination[:parameters])
-				end
-
-				instance
-			end
+			[]
 		end
 
 		private
-
-		def process_fieldsets combination
-
-
-
-		end
 
 		class FieldsetContext
 			attr_reader :_fieldset
 
 			def initialize name, options, &block
 				@_fieldset = Fieldset.new name, options
+				@_lastfield = @_fieldset
 
 				self.instance_exec_nice &block
 			end
 
 			def field name, options
-				@_fieldset.components << Field.new(name, options)
+				@_lastfield = @_lastfield.component = Field.new(name, options)
 			end
 
 			def fieldset name, options, &block
 				fieldset_context = FieldsetContext.new name, options, &block
-				@_fieldset.components << fieldset_context._fieldset
+				@_lastfield = @_lastfield.component = fieldset_context._fieldset
 			end
 
 			def with_attributes &block
@@ -101,15 +75,10 @@ module Musa
 
 		class Field
 			attr_reader :name, :options
-
-			def calculate_combinations
-				options.collect do |option| 
-					{ name => option }
-				end
-			end
+			attr_accessor :component
 
 			def inspect
-				"Field #{@name} options: #{@options}"
+				"Field #{@name} options: #{@options} component: (#{@component})"
 			end
 
 			alias to_s inspect
@@ -119,68 +88,28 @@ module Musa
 			def initialize name, options
 				@name = name
 				@options = options
+				@component = nil
 			end
 		end
 
 		private_constant :Field
 
 		class Fieldset
-			attr_reader :name, :options, :components, :with_attributes
-
-			def calculate_combinations **parent_parameters
-				if @name
-					calculate_combinations_of(@components).collect do |inner_parameters|
-						{ @name => 
-							@options.collect do |option|
-								{ parameters: { **{ @name => option }, **parent_parameters, **inner_parameters }, blocks: @with_attributes }
-							end
-						}
-						
-					end
-				else
-					result = []
-
-					calculate_combinations_of(@components).each do |inner_parameters|
-						@options.each do |option|
-							result << { parameters: { **parent_parameters, **inner_parameters }, blocks: @with_attributes }
-						end
-					end
-
-					result
-				end
-			end
+			attr_reader :name, :options, :with_attributes
+			attr_accessor :component
 
 			def inspect
-				"Fieldset #{@name} options: #{@options} components: #{@components}"
+				"Fieldset #{@name} options: #{@options} components: (#{@component})"
 			end
 
 			alias to_s inspect
 
 			private
 
-			def calculate_combinations_of components, **parent_parameters
-
-				components = components.clone
-
-				first = components.shift
-
-				result = []
-
-				first.calculate_combinations.each do |inner_parameters|
-					if components.empty?
-						result << { **parent_parameters, **inner_parameters }
-					else
-						result.push *calculate_combinations_of(components, **parent_parameters, **inner_parameters)
-					end
-				end
-
-				result
-			end
-
 			def initialize name, options
 				@name = name
 				@options = options || [0]
-				@components = []
+				@component = nil
 				@with_attributes = []
 			end
 		end

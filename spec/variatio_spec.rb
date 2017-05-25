@@ -26,14 +26,7 @@ RSpec.describe Musa::Variatio do
 					field :e, [4, 5]
 					field :f, [6, 7]
 
-=begin
-					fieldset :g, [8, 9] do
-						field :h, [10, 11]
-						field :i, [12, 13]
-					end
-=end
 					with_attributes do |object:, d:, e:, f:|
-						puts "with with_attributes #{d} #{e} #{f}"
 						object[:d][d] = {}
 						object[:d][d][:e] = e
 						object[:d][d][:f] = f
@@ -52,6 +45,50 @@ RSpec.describe Musa::Variatio do
 
 			# combinaciones del fieldset = producto_each(field.options.size) ^ fieldset.options.size
 
+		end
+
+		it "versión en código" do
+
+
+			variations = []
+
+			a = 1000
+
+			[0, 1].each do |b|
+				[2, 3].each do |c|
+
+
+					[4, 5].each do |e|
+						[6, 7].each do |f|
+
+							[4, 5].each do |ee|
+								[6, 7].each do |ff|
+									variations << (object = { a: a, b: b, d: [] })
+
+									object[:c] = c
+
+									object[:d][0] = {}
+									object[:d][0][:e] = e
+									object[:d][0][:f] = f
+
+
+									object[:d][1] = {}
+									object[:d][1][:e] = ee
+									object[:d][1][:f] = ff
+
+								end
+							end
+						end
+					end
+				end
+			end
+
+			pp variations
+
+			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 }, { e: 4, f: 6 } ] })
+			expect(variations[1]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 }, { e: 4, f: 7 } ] })
+			expect(variations[2]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 }, { e: 5, f: 6 } ] })
+			expect(variations[3]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 }, { e: 5, f: 7 } ] })
 		end
 =begin
 	
