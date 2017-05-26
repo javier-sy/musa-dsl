@@ -21,7 +21,7 @@ RSpec.describe Musa::Variatio do
 					object[:c] = c
 				end
 
-				fieldset :d, [0, 1] do
+				fieldset :d, [100, 101] do
 
 					field :e, [4, 5]
 					field :f, [6, 7]
@@ -31,6 +31,21 @@ RSpec.describe Musa::Variatio do
 						object[:d][d][:e] = e
 						object[:d][d][:f] = f
 					end
+
+					fieldset :g, [200, 201] do
+						
+						field :h, [8, 9]
+						field :i, [10, 11]
+
+						with_attributes do |object:, d:, g:, h:, i:|
+							object[:d][d][:g] = []
+							object[:d][d][:g][g] = {}
+
+							object[:d][d][:g][g][:h] = h
+							object[:d][d][:g][g][:i] = i
+						end
+					end
+
 				end
 			end
 
@@ -49,33 +64,89 @@ RSpec.describe Musa::Variatio do
 
 		it "versión en código" do
 
-
+			param = {}
 			variations = []
 
-			a = 1000
+			param[:a] ||= {}
+			param[:a][nil] = 1000
 
-			[0, 1].each do |b|
-				[2, 3].each do |c|
+			[0, 1].each do |v|
 
+				param[:b] ||= {}
+				param[:b][nil] = v
 
-					[4, 5].each do |e|
-						[6, 7].each do |f|
+				[2, 3].each do |v|
 
-							[4, 5].each do |ee|
-								[6, 7].each do |ff|
-									variations << (object = { a: a, b: b, d: [] })
-
-									object[:c] = c
-
-									object[:d][0] = {}
-									object[:d][0][:e] = e
-									object[:d][0][:f] = f
+					param[:c] ||= {}
+					param[:c][nil] = v
 
 
-									object[:d][1] = {}
-									object[:d][1][:e] = ee
-									object[:d][1][:f] = ff
+					[4, 5].each do |v|
+						
+						param[:e] ||= {}
+						param[:e][0] = v
+						
+						[6, 7].each do |v|
 
+							param[:f] ||= {}
+							param[:f][0] = v
+
+							[4, 5].each do |v|
+
+								param[:e] ||= {}
+								param[:e][1] = v
+
+								[6, 7].each do |v|
+
+									param[:f] ||= {}
+									param[:f][1] = v
+
+									[8, 9].each do |v|
+
+										param[:h] ||= {}
+										param[:h][0] = v
+
+										[10, 11].each do |v|
+
+											param[:i] ||= {}
+											param[:i][0] = v
+
+											[8, 9].each do |v|
+
+												param[:h] ||= {}
+												param[:h][1] = v
+
+												[10, 11].each do |v|
+
+													param[:i] ||= {}
+													param[:i][1] = v
+
+													variations << (object = { a: param[:a], b: param[:b], d: [] })
+
+													[nil].each do |v|
+
+														object[:c] = param[:c][v]
+
+														[0, 1].each do |i|
+															object[:d][i] ||= {}
+															object[:d][i][:e] = param[:e][i]
+															object[:d][i][:f] = param[:f][i]
+
+
+															[0, 1].each do |j|
+																object[:d][i][:g] ||= []
+																object[:d][i][:g][j] ||= {}
+
+																object[:d][i][:g][j][:h] = param[:h][j]
+																object[:d][i][:g][j][:i] = param[:i][j]
+
+															end
+														end
+													end
+												end
+											end
+										end
+									end
 								end
 							end
 						end
@@ -83,7 +154,7 @@ RSpec.describe Musa::Variatio do
 				end
 			end
 
-			pp variations
+			# pp variations
 
 			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 }, { e: 4, f: 6 } ] })
 			expect(variations[1]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 }, { e: 4, f: 7 } ] })
