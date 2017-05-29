@@ -20,19 +20,16 @@ module Musa
 
 		def on **values
 			tree_A = generate_eval_tree_A @fieldset
-
-			puts tree_A
-
-			return []
-
 			tree_B = generate_eval_tree_B @fieldset
 
 			combinations = []
 
-			tree_A.run(values) do |parameters|
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters)
+			values = values.collect { |k, v| [k, { nil => v}] }.compact.to_h
 
-				tree_B.run parameters, @instance_name, instance
+			tree_A.run(values) do |parameters|
+				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters).transform_values { |v| v[nil] }
+
+				tree_B.run parameters, values, @instance_name, instance
 
 				if @finalize
 					@finalize.call **Tool::make_hash_key_parameters(@finalize, **{ @instance_name => instance }, **parameters)
@@ -70,18 +67,6 @@ module Musa
 			root
 		end
 
-		def generate_eval_tree_B fieldset
-			b = B.new fieldset.name, fieldset.options, fieldset.with_attributes
-
-			fieldset.components.each do |component|
-				if component.is_a? Fieldset
-					b.inner << generate_eval_tree_B(component)
-				end
-			end
-
-			b
-		end
-
 		class A
 			attr_reader :parameter_name, :parameter_depth, :options
 			attr_accessor :inner
@@ -103,10 +88,8 @@ module Musa
 				last
 			end
 
-			def run in_parameters = nil, &block
-				in_parameters ||= {}
-
-				parameters = in_parameters.deep_clone
+			def run parameters = nil, &block
+				parameters ||= {}
 
 				@options.each do |value|
 					parameters[@parameter_name] ||= {}
@@ -118,7 +101,6 @@ module Musa
 						block.call parameters
 					end
 				end
-
 			end
 
 			def inspect
@@ -128,30 +110,59 @@ module Musa
 			alias to_s inspect 
 		end
 
+		def generate_eval_tree_B fieldset
+			affected_field_names = []
+			inner = []
+
+			fieldset.components.each do |component|
+				if component.is_a? Fieldset
+					inner << generate_eval_tree_B(component)
+				elsif component.is_a? Field
+					affected_field_names << component.name
+				end
+			end
+
+			B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
+		end
+
 		class B
 			attr_reader :parameter_name, :options, :blocks, :inner
 
-			def initialize parameter_name, options, blocks
+			def initialize parameter_name, options, affected_field_names, inner, blocks
 				@parameter_name = parameter_name
 				@options = options
+				@affected_field_names = affected_field_names
+				@inner = inner
 				@blocks = blocks
-				@inner = []
 			end
 
-			def run in_parameters = nil, instance_name, instance
-				in_parameters ||= {}
+			def run parameters = nil, parameter_depths, instance_name, instance
+				puts
+				puts "parameter_depths: #{parameter_depths}"
 
-				parameters = in_parameters.deep_clone
+				parameters ||= {}
+				parameter_depths = parameter_depths.clone
 
 				@options.each do |value|
 					parameters[@parameter_name] = value
 
+					@affected_field_names.each do |name|
+						parameter_depths[name] = value
+					end
+
 					@blocks.each do |block|
-						block.call **Tool::make_hash_key_parameters(block, **{ instance_name => instance }, **parameters)
+						puts
+						puts "instance = #{instance}"
+						puts "parameter_name = #{parameter_name} value = #{value}"
+						puts "affected_field_names: #{@affected_field_names}"
+						puts "parameters: #{parameters}"
+						puts "real parameters = #{make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)}"
+
+						block.call **make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)
 					end
 
 					@inner.each do |inner|
-						inner.run parameters, instance_name, instance
+						inner.run parameters, parameter_depths, instance_name, instance
 					end
 				end
 			end
@@ -161,6 +172,42 @@ module Musa
 			end
 
 			alias to_s inspect 
+
+			private
+
+			def make_parameters(proc, parameter_depths, **hash)
+
+				parameters = proc.parameters.collect do |parameter| 
+					parameter_type = parameter[0]
+					parameter_name = parameter[1]
+
+					if parameter_type == :key || parameter_type == :keyreq
+						if parameter_depths.has_key? parameter_name
+							result = [ parameter_name, hash[parameter_name][parameter_depths[parameter_name]] ]
+						else
+							result = [ parameter_name, hash[parameter_name] ]
+						end
+					end
+
+					result
+				end
+
+				parameters =  parameters.compact.to_h
+
+				if proc.parameters.find { |parameter| parameter[0] == :keyrest }
+
+					hash.each do |k, v|
+
+						if !parameters[k]
+							parameters[k] = v[parameter_depths[k]]
+						end
+					end
+				end
+
+				parameters
+			end
+
+
 		end
 
 		class FieldsetContext

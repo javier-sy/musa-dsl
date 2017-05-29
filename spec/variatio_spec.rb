@@ -14,7 +14,7 @@ RSpec.describe Musa::Variatio do
 				field :c, [2, 3]
 
 				constructor do |a:, b:|
-					{ a: a, b: b, d: [] }
+					{ a: a, b: b, d: {} }
 				end
 
 				with_attributes do |object:, c:|
@@ -28,11 +28,12 @@ RSpec.describe Musa::Variatio do
 
 					with_attributes do |object:, d:, e:, f:|
 
-						puts "with_attributes d: #{d} e: #{e} f: #{f}"
+						#puts "with_attributes d: #{d} e: #{e} f: #{f}"
 						object[:d][d] = {}
 						object[:d][d][:e] = e
 						object[:d][d][:f] = f
 					end
+=begin
 
 					fieldset :g, [200, 201] do
 						
@@ -40,7 +41,7 @@ RSpec.describe Musa::Variatio do
 						field :i, [10, 11]
 
 						with_attributes do |object:, d:, g:, h:, i:|
-							puts "with_attributes d: #{d} g: #{g} h: #{h} i: #{i}"
+							#puts "with_attributes d: #{d} g: #{g} h: #{h} i: #{i}"
 							object[:d][d][:g] = []
 							object[:d][d][:g][g] = {}
 
@@ -54,26 +55,26 @@ RSpec.describe Musa::Variatio do
 						field :k, [12, 13]
 
 						with_attributes do |object:, d:, j:, k:|
-							puts "with_attributes d: #{d} j: #{j} k: #{k}"
+							#puts "with_attributes d: #{d} j: #{j} k: #{k}"
 							object[:d][d][:j] = []
 							object[:d][d][:j][j] = {}
 
 							object[:d][d][:j][j][:k] = k
 						end
 					end
-
+=end
 
 				end
 			end
 
 			variations = v.on a: 1000
 
-			pp variations
+			#pp variations
 			
-			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 6 } ] })
-			expect(variations[1]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 4, f: 7 } ] })
-			expect(variations[2]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 5, f: 6 } ] })
-			expect(variations[3]).to eq({ a: 1000, b: 0, c: 2, d: [ { e: 5, f: 7 } ] })
+			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 }, 101 => { e: 4, f: 6 } } })
+			expect(variations[1]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 }, 101 => { e: 4, f: 7 } } })
+			expect(variations[2]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 }, 101 => { e: 5, f: 6 } } })
+			expect(variations[3]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 }, 101 => { e: 5, f: 7 } } })
 
 			# combinaciones del fieldset = producto_each(field.options.size) ^ fieldset.options.size
 
