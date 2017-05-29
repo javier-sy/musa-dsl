@@ -1,4 +1,5 @@
-require 'pp'
+# TODO optimiziación: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
+# TODO optimización: multithreading
 
 module Musa
 	class Variatio
@@ -24,12 +25,13 @@ module Musa
 
 			combinations = []
 
-			values = values.collect { |k, v| [k, { nil => v}] }.compact.to_h
+			external_parameters_depths = values.collect { |k, v| [k, { nil => v }] }.compact.to_h
 
-			tree_A.run(values) do |parameters|
+			tree_A.run(external_parameters_depths) do |parameters|
+
 				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters).transform_values { |v| v[nil] }
 
-				tree_B.run parameters, values, @instance_name, instance
+				tree_B.run parameters, external_parameters_depths, @instance_name, instance
 
 				if @finalize
 					@finalize.call **Tool::make_hash_key_parameters(@finalize, **{ @instance_name => instance }, **parameters)
@@ -90,6 +92,7 @@ module Musa
 
 			def run parameters = nil, &block
 				parameters ||= {}
+				parameters = parameters.clone
 
 				@options.each do |value|
 					parameters[@parameter_name] ||= {}
@@ -137,11 +140,8 @@ module Musa
 			end
 
 			def run parameters = nil, parameter_depths, instance_name, instance
-				puts
-				puts "parameter_depths: #{parameter_depths}"
-
 				parameters ||= {}
-				parameter_depths = parameter_depths.clone
+				parameters = parameters.deep_clone
 
 				@options.each do |value|
 					parameters[@parameter_name] = value
@@ -151,14 +151,8 @@ module Musa
 					end
 
 					@blocks.each do |block|
-						puts
-						puts "instance = #{instance}"
-						puts "parameter_name = #{parameter_name} value = #{value}"
-						puts "affected_field_names: #{@affected_field_names}"
-						puts "parameters: #{parameters}"
-						puts "real parameters = #{make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)}"
-
-						block.call **make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)
+						real_parameters = make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)
+						block.call **real_parameters
 					end
 
 					@inner.each do |inner|
@@ -206,8 +200,6 @@ module Musa
 
 				parameters
 			end
-
-
 		end
 
 		class FieldsetContext
