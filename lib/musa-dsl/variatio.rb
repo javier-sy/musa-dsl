@@ -38,6 +38,8 @@ module Musa
 				end
 
 				combinations << instance
+
+				return combinations if combinations.size > 3
 			end
 
 			combinations
@@ -146,12 +148,23 @@ module Musa
 				@options.each do |value|
 					parameters[@parameter_name] = value
 
+					# TODO el problema está aquí: debería haber un doble bucle de options * affected fields
+
 					@affected_field_names.each do |name|
 						parameter_depths[name] = value
 					end
 
+
 					@blocks.each do |block|
+
 						real_parameters = make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)
+
+						if parameter_name == :g
+							#puts "parameter_depths: #{parameter_depths}"
+							real_parameters2 = real_parameters.select { |k, v| k != :object }
+							puts "real_parameters2: #{real_parameters2} parameter_depths: #{parameter_depths}"
+						end
+
 						block.call **real_parameters
 					end
 
