@@ -20,8 +20,8 @@ module Musa
 		end
 
 		def on **values
-			tree_A = generate_eval_tree_A @fieldset
-			tree_B = generate_eval_tree_B @fieldset
+			tree_A = Variatio::generate_eval_tree_A @fieldset
+			tree_B = Variatio::generate_eval_tree_B @fieldset
 
 			combinations = []
 
@@ -29,17 +29,19 @@ module Musa
 
 			tree_A.run(external_parameters_depths) do |parameters|
 
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters).transform_values { |v| v[nil] }
+				puts "parameters: #{parameters}"
 
+				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters).transform_values { |v| v[nil] }
+=begin
 				tree_B.run parameters, external_parameters_depths, @instance_name, instance
 
 				if @finalize
 					@finalize.call **Tool::make_hash_key_parameters(@finalize, **{ @instance_name => instance }, **parameters)
 				end
-
+=end
 				combinations << instance
 
-				return combinations if combinations.size > 3
+				return combinations if combinations.size > 15
 			end
 
 			combinations
@@ -47,27 +49,39 @@ module Musa
 
 		private
 
-		def generate_eval_tree_A fieldset
+		def self.generate_eval_tree_A fieldset
 			root = nil
 			current = nil
 
 			fieldset.options.each do |option|
+				a = generate_eval_tree_A_from_fields option, fieldset.components
 
-				fieldset.components.each do |component|
-
-					if component.is_a? Field
-						a = A.new component.name, option, component.options
-					elsif component.is_a? Fieldset
-						a = generate_eval_tree_A component
-					end
-
-					current.inner = a if current
-					root = a unless root
-					
-					current = a.last_inner
-				end
+				current.inner = a if current
+				root = a unless root
+				
+				current = a.last_inner
 			end
 					
+			root
+		end
+
+		def self.generate_eval_tree_A_from_fields option, fields
+			root = nil
+			current = nil
+
+			fields.each do |component|
+				if component.is_a? Field
+					a = A.new component.name, option, component.options
+				elsif component.is_a? Fieldset
+					a = generate_eval_tree_A component
+				end
+
+				current.inner = a if current
+				root = a unless root
+				
+				current = a.last_inner
+			end
+
 			root
 		end
 
@@ -115,28 +129,28 @@ module Musa
 			alias to_s inspect 
 		end
 
-		def generate_eval_tree_B fieldset
-			affected_field_names = []
+		def self.generate_eval_tree_B fieldset, affected_fields = nil
+			affected_fields ||= []
 			inner = []
 
 			fieldset.components.each do |component|
 				if component.is_a? Fieldset
-					inner << generate_eval_tree_B(component)
+					inner << generate_eval_tree_B(component, affected_fields)
 				elsif component.is_a? Field
-					affected_field_names << component.name
+					affected_fields << component
 				end
 			end
 
-			B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
+			B.new fieldset.name, fieldset.options, affected_fields, inner, fieldset.with_attributes
 		end
 
 		class B
 			attr_reader :parameter_name, :options, :blocks, :inner
 
-			def initialize parameter_name, options, affected_field_names, inner, blocks
+			def initialize parameter_name, options, affected_fields, inner, blocks
 				@parameter_name = parameter_name
 				@options = options
-				@affected_field_names = affected_field_names
+				@affected_fields = affected_fields
 				@inner = inner
 				@blocks = blocks
 			end
@@ -146,30 +160,27 @@ module Musa
 				parameters = parameters.deep_clone
 
 				@options.each do |value|
-					parameters[@parameter_name] = value
+					parameters[@parameter_name] = { nil => value }
 
-					# TODO el problema está aquí: debería haber un doble bucle de options * affected fields
+					tree_a = Variatio::generate_eval_tree_A_from_fields value, @affected_fields
 
-					@affected_field_names.each do |name|
-						parameter_depths[name] = value
-					end
+					tree_a.run parameters do |parameters_a|
+						@blocks.each do |block|
 
+							real_parameters = make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters_a)
 
-					@blocks.each do |block|
+							if parameter_name == :g
+								#puts "parameter_depths: #{parameter_depths}"
+								real_parameters2 = real_parameters.select { |k, v| k != :object }
+								puts "parameters: #{parameters} real_parameters2: #{real_parameters2}"
+							end
 
-						real_parameters = make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters)
-
-						if parameter_name == :g
-							#puts "parameter_depths: #{parameter_depths}"
-							real_parameters2 = real_parameters.select { |k, v| k != :object }
-							puts "real_parameters2: #{real_parameters2} parameter_depths: #{parameter_depths}"
+							block.call **real_parameters
 						end
 
-						block.call **real_parameters
-					end
-
-					@inner.each do |inner|
-						inner.run parameters, parameter_depths, instance_name, instance
+						@inner.each do |inner|
+							inner.run parameters_a, parameter_depths, instance_name, instance
+						end
 					end
 				end
 			end
