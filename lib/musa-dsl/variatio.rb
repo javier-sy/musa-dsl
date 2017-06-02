@@ -1,5 +1,6 @@
 # TODO optimiziación: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
 # TODO optimización: multithreading
+# TODO optimizar: eliminar ** si mejora rendimiento
 
 module Musa
 	class Variatio
@@ -25,23 +26,24 @@ module Musa
 
 			combinations = []
 
-			external_parameters_depths = values.collect { |k, v| [k, { nil => v }] }.compact.to_h
+			external_parameters_with_depth = values.collect { |k, v| [k, { nil => v }] }.compact.to_h
 
-			tree_A.run(external_parameters_depths) do |parameters|
+			tree_A.run(external_parameters_with_depth) do |parameters_with_depth|
 
-				puts "parameters: #{parameters}"
+				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth).transform_values { |v| v[nil] }
 
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters).transform_values { |v| v[nil] }
-=begin
-				tree_B.run parameters, external_parameters_depths, @instance_name, instance
+				tree_B.run parameters_with_depth, @instance_name, instance
 
 				if @finalize
-					@finalize.call **Tool::make_hash_key_parameters(@finalize, **{ @instance_name => instance }, **parameters)
+					parameters = parameters_with_depth.transform_values { |v| v[nil] }
+					parameters[@instance_name] = instance
+
+					@finalize.call **Tool::make_hash_key_parameters(@finalize, **parameters)
 				end
-=end
+
 				combinations << instance
 
-				return combinations if combinations.size > 15
+				return combinations if combinations.size > 0
 			end
 
 			combinations
@@ -130,7 +132,7 @@ module Musa
 		end
 
 		def self.generate_eval_tree_B fieldset, affected_fields = nil
-			affected_fields ||= []
+			affected_fields = []
 			inner = []
 
 			fieldset.components.each do |component|
@@ -145,7 +147,7 @@ module Musa
 		end
 
 		class B
-			attr_reader :parameter_name, :options, :blocks, :inner
+			attr_reader :parameter_name, :options, :affected_fields, :blocks, :inner
 
 			def initialize parameter_name, options, affected_fields, inner, blocks
 				@parameter_name = parameter_name
@@ -155,34 +157,51 @@ module Musa
 				@blocks = blocks
 			end
 
-			def run parameters = nil, parameter_depths, instance_name, instance
-				parameters ||= {}
-				parameters = parameters.deep_clone
+			def run parameters_with_depth, instance_name, instance, parent_parameters = {}
+				parameters_with_depth = parameters_with_depth.deep_clone
+				parent_parameters = parent_parameters.clone
 
 				@options.each do |value|
-					parameters[@parameter_name] = { nil => value }
 
-					tree_a = Variatio::generate_eval_tree_A_from_fields value, @affected_fields
+					#puts
+					#puts "parameter_depths: #{parameter_depths}"
+					#puts "parameters_with_depth: #{parameters_with_depth.select { |k, v| k != :object } }"
 
-					tree_a.run parameters do |parameters_a|
-						@blocks.each do |block|
+#=begin
 
-							real_parameters = make_parameters(block, parameter_depths, **{ instance_name => instance }, **parameters_a)
 
-							if parameter_name == :g
-								#puts "parameter_depths: #{parameter_depths}"
-								real_parameters2 = real_parameters.select { |k, v| k != :object }
-								puts "parameters: #{parameters} real_parameters2: #{real_parameters2}"
-							end
+					parameter_indexes = {}
 
-							block.call **real_parameters
-						end
-
-						@inner.each do |inner|
-							inner.run parameters_a, parameter_depths, instance_name, instance
-						end
+					@affected_fields.each do |field|
+						parameter_indexes[field.name] = value
 					end
+
+					@blocks.each do |block|
+
+						# TODO 1o indexar los parameter_with_depth, después seleccionar los que van al block según sus parámetros
+
+						real_parameters = make_parameters(block, parameters_with_depth, parameter_indexes)
+						
+						real_parameters[instance_name] = instance
+
+						parent_parameters.each do |k, v|
+							real_parameters[k] = v
+						end
+
+						parent_parameters[@parameter_name] = real_parameters[@parameter_name] = value unless @parameter_name == :_maincontext
+
+						puts "real_parameters: #{real_parameters.select { |k, v| k != :object } }"
+
+						block.call **real_parameters
+					end
+
+
+					@inner.each do |inner|
+						inner.run parameters_with_depth, instance_name, instance, parent_parameters
+					end
+#=end
 				end
+
 			end
 
 			def inspect
@@ -193,17 +212,17 @@ module Musa
 
 			private
 
-			def make_parameters(proc, parameter_depths, **hash)
+			def make_parameters(proc, parameters_with_depth, parameter_indexes)
 
 				parameters = proc.parameters.collect do |parameter| 
 					parameter_type = parameter[0]
 					parameter_name = parameter[1]
 
 					if parameter_type == :key || parameter_type == :keyreq
-						if parameter_depths.has_key? parameter_name
-							result = [ parameter_name, hash[parameter_name][parameter_depths[parameter_name]] ]
+						if parameter_indexes.has_key? parameter_name
+							result = [ parameter_name, parameters_with_depth[parameter_name][parameter_indexes[parameter_name]] ]
 						else
-							result = [ parameter_name, hash[parameter_name] ]
+							result = [ parameter_name, parameter_indexes[parameter_name] ]
 						end
 					end
 
@@ -214,10 +233,10 @@ module Musa
 
 				if proc.parameters.find { |parameter| parameter[0] == :keyrest }
 
-					hash.each do |k, v|
+					parameters_with_depth.each do |k, v|
 
-						if !parameters[k]
-							parameters[k] = v[parameter_depths[k]]
+						if parameters[k].nil?
+							parameters[k] = v[parameter_indexes[k]]
 						end
 					end
 				end
