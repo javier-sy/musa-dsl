@@ -24,21 +24,24 @@ module Musa
 			tree_A = Variatio::generate_eval_tree_A @fieldset
 			tree_B = Variatio::generate_eval_tree_B @fieldset
 
+
+			#puts "tree_B = #{tree_B}"
+
+			parameters_set = tree_A.calc_parameters
 			combinations = []
 
-			external_parameters_with_depth = values.collect { |k, v| [k, { nil => v }] }.compact.to_h
+			parameters_set.each do |parameters_with_depth|
 
-			tree_A.run(external_parameters_with_depth) do |parameters_with_depth|
+				parameters_with_depth.merge! values
 
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth).transform_values { |v| v[nil] }
+				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)
 
-				tree_B.run parameters_with_depth, @instance_name, instance
+				parameters_with_depth[@instance_name] = instance
+
+				tree_B.run parameters_with_depth
 
 				if @finalize
-					parameters = parameters_with_depth.transform_values { |v| v[nil] }
-					parameters[@instance_name] = instance
-
-					@finalize.call **Tool::make_hash_key_parameters(@finalize, **parameters)
+					@finalize.call **Tool::make_hash_key_parameters(@finalize, **parameters_with_depth)
 				end
 
 				combinations << instance
@@ -55,27 +58,26 @@ module Musa
 			root = nil
 			current = nil
 
-			fieldset.options.each do |option|
-				a = generate_eval_tree_A_from_fields option, fieldset.components
+			fieldset.components.each do |component|
 
-				current.inner = a if current
-				root = a unless root
-				
-				current = a.last_inner
-			end
-					
-			root
-		end
-
-		def self.generate_eval_tree_A_from_fields option, fields
-			root = nil
-			current = nil
-
-			fields.each do |component|
 				if component.is_a? Field
-					a = A.new component.name, option, component.options
+
+					a = A1.new component.name, component.options
+
 				elsif component.is_a? Fieldset
-					a = generate_eval_tree_A component
+
+					first = last = nil
+
+					component.options.each do |option|
+						a = A2.new component.name, option, generate_eval_tree_A(component)
+
+						last.inner = a if last
+						first = a unless first
+
+						last = a
+					end
+
+					a = first
 				end
 
 				current.inner = a if current
@@ -88,15 +90,6 @@ module Musa
 		end
 
 		class A
-			attr_reader :parameter_name, :parameter_depth, :options
-			attr_accessor :inner
-
-			def initialize parameter_name, parameter_depth, options
-				@parameter_name = parameter_name
-				@parameter_depth = parameter_depth
-				@options = options
-			end
-
 			def last_inner
 				i = self
 
@@ -107,142 +100,131 @@ module Musa
 
 				last
 			end
+		end
 
-			def run parameters = nil, &block
-				parameters ||= {}
-				parameters = parameters.clone
+		private_constant :A
 
-				@options.each do |value|
-					parameters[@parameter_name] ||= {}
-					parameters[@parameter_name][@parameter_depth] = value
+		class A1 < A
+			attr_reader :parameter_name, :options
+			attr_accessor :inner
 
-					if inner
-						inner.run parameters, &block
-					else
-						block.call parameters
+			def initialize parameter_name, options
+				@parameter_name = parameter_name
+				@options = options
+			end
+
+			def calc_parameters
+				if inner
+					inner_parameters_set = @inner.calc_parameters
+					result_parameters_set = []
+
+					@options.collect do |option|
+						inner_parameters_set.each do |inner_parameters|
+							actual_parameters = inner_parameters.clone
+							actual_parameters[@parameter_name] = option
+
+							result_parameters_set << actual_parameters
+						end
 					end
+				else
+					result_parameters_set = @options.collect { |option|	{ @parameter_name => option } }
 				end
+
+				result_parameters_set
 			end
 
 			def inspect
-				"name: #{@parameter_name} depth: #{@parameter_depth} options: #{@options} inner: (#{@inner})"
+				"A1 (name: #{@parameter_name} options: [#{@options}] inner: [#{@inner}])"
 			end
 
 			alias to_s inspect 
 		end
 
+		private_constant :A1
+
+		class A2 < A
+			attr_reader :parameter_name, :options
+			attr_accessor :inner
+
+			def initialize parameter_name, option, subcomponents
+				@parameter_name = parameter_name
+				@option = option
+				@subcomponents = subcomponents
+			end
+
+			def calc_parameters
+				if inner
+					result_parameters_set = []
+					inner_parameters_set = @inner.calc_parameters
+
+					@subcomponents.calc_parameters.collect { |parameters| { @option => parameters } }.each do |parameters|
+
+						inner_parameters_set.each do |inner_parameters|
+
+							result_parameters_set << { @parameter_name => parameters.merge(inner_parameters) }
+						end
+					end
+				else
+					result_parameters_set = @subcomponents.calc_parameters.collect { |parameters| { @option => parameters } }
+				end
+
+				result_parameters_set
+			end
+
+			def inspect
+				"A2 (name: #{@parameter_name} option: #{@option} subcomponents: [#{@subcomponents}] inner: [#{@inner}])"
+			end
+
+			alias to_s inspect 
+		end
+
+		private_constant :A2
+
 		def self.generate_eval_tree_B fieldset, affected_fields = nil
-			affected_fields = []
+			affected_field_names = []
 			inner = []
 
 			fieldset.components.each do |component|
 				if component.is_a? Fieldset
 					inner << generate_eval_tree_B(component, affected_fields)
 				elsif component.is_a? Field
-					affected_fields << component
+					affected_field_names << component.name
 				end
 			end
 
-			B.new fieldset.name, fieldset.options, affected_fields, inner, fieldset.with_attributes
+			B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
 		end
 
 		class B
-			attr_reader :parameter_name, :options, :affected_fields, :blocks, :inner
+			attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner
 
-			def initialize parameter_name, options, affected_fields, inner, blocks
+			def initialize parameter_name, options, affected_field_names, inner, blocks
 				@parameter_name = parameter_name
 				@options = options
-				@affected_fields = affected_fields
+				@affected_field_names = affected_field_names
 				@inner = inner
 				@blocks = blocks
 			end
 
-			def run parameters_with_depth, instance_name, instance, parent_parameters = {}
-				parameters_with_depth = parameters_with_depth.deep_clone
-				parent_parameters = parent_parameters.clone
-
-				@options.each do |value|
-
-					#puts
-					#puts "parameter_depths: #{parameter_depths}"
-					#puts "parameters_with_depth: #{parameters_with_depth.select { |k, v| k != :object } }"
-
-#=begin
+			def run parameters_with_depth
+				puts "B.run: parameters_with_depth = #{parameters_with_depth}"
+				puts "B = #{self}"
 
 
-					parameter_indexes = {}
-
-					@affected_fields.each do |field|
-						parameter_indexes[field.name] = value
-					end
-
-					@blocks.each do |block|
-
-						# TODO 1o indexar los parameter_with_depth, después seleccionar los que van al block según sus parámetros
-
-						real_parameters = make_parameters(block, parameters_with_depth, parameter_indexes)
-						
-						real_parameters[instance_name] = instance
-
-						parent_parameters.each do |k, v|
-							real_parameters[k] = v
-						end
-
-						parent_parameters[@parameter_name] = real_parameters[@parameter_name] = value unless @parameter_name == :_maincontext
-
-						puts "real_parameters: #{real_parameters.select { |k, v| k != :object } }"
-
-						block.call **real_parameters
-					end
+				parameters_with_depth.select_keys..................................
 
 
-					@inner.each do |inner|
-						inner.run parameters_with_depth, instance_name, instance, parent_parameters
-					end
-#=end
-				end
 
 			end
 
 			def inspect
-				"name: #{@parameter_name} options: #{@options} blocks.size: #{@blocks.size} inner: (#{@inner})"
+				"B (name: #{@parameter_name} options: #{@options} affected_field_names: #{@affected_field_names} blocks.size: #{@blocks.size} inner: #{@inner})"
 			end
 
 			alias to_s inspect 
 
 			private
 
-			def make_parameters(proc, parameters_with_depth, parameter_indexes)
-
-				parameters = proc.parameters.collect do |parameter| 
-					parameter_type = parameter[0]
-					parameter_name = parameter[1]
-
-					if parameter_type == :key || parameter_type == :keyreq
-						if parameter_indexes.has_key? parameter_name
-							result = [ parameter_name, parameters_with_depth[parameter_name][parameter_indexes[parameter_name]] ]
-						else
-							result = [ parameter_name, parameter_indexes[parameter_name] ]
-						end
-					end
-
-					result
-				end
-
-				parameters =  parameters.compact.to_h
-
-				if proc.parameters.find { |parameter| parameter[0] == :keyrest }
-
-					parameters_with_depth.each do |k, v|
-
-						if parameters[k].nil?
-							parameters[k] = v[parameter_indexes[k]]
-						end
-					end
-				end
-
-				parameters
-			end
 		end
 
 		class FieldsetContext

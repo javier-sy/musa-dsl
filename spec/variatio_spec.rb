@@ -6,6 +6,46 @@ RSpec.describe Musa::Variatio do
 
 	context "Create several kind of variations" do
 
+
+#=begin
+		it "With 2 fields + fieldset (2 inner fields), test with only 1 option each, constructor and finalize" do
+
+			v = Musa::Variatio.new :object, parameters: [:a] do
+
+				field :b, [0, 1]
+				field :c, [2, 3]
+
+				constructor do |a:, b:|
+					{ a: a, b: b, d: {} }
+				end
+
+				finalize do |object:|
+					object[:finalized] = true
+				end
+
+				with_attributes do |object:, c:|
+					object[:c] = c
+				end
+
+				fieldset :d, [100, 101] do
+
+					field :e, [4, 5]
+					field :f, [6, 7]
+
+					with_attributes do |object:, d:, e:, f:|
+						object[:d][d] = {}
+						object[:d][d][:e] = e
+						object[:d][d][:f] = f
+					end
+				end
+			end
+
+			variations = v.on a: 1000
+
+			expect(1).to eq 1
+		end
+#=end
+
 =begin
 		it "With 2 fields + fieldset (2 inner fields), constructor and finalize" do
 
@@ -54,7 +94,10 @@ RSpec.describe Musa::Variatio do
 
 			expect(variations.size).to eq 2 * 2 * (2 * 2) ** 2
 		end
+
 =end
+
+=begin
 		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize" do
 
 			v = Musa::Variatio.new :object, parameters: [:a] do
@@ -104,14 +147,14 @@ RSpec.describe Musa::Variatio do
 
 			variations = v.on a: 1000
 
-			puts
-			puts
-			pp variations[0]
-			pp variations[1]
-			pp variations[2]
-			pp variations[3]
+			#puts
+			#puts
+			#pp variations[0]
+			#pp variations[1]
+			#pp variations[2]
+			#pp variations[3]
 
-=begin			
+#=begin			
 			puts "expected variations = #{2 * 2 * ((2 * 2) ** 2) * ((2 * 2) ** 4)} real = #{variations.size}"
 
 
@@ -135,10 +178,10 @@ RSpec.describe Musa::Variatio do
 				finalized: true })
 
 			expect(variations.size).to eq 2 * 2 * ((2 * 2) ** 2) * ((2 * 2) ** 4)
-=end
+#=end
 			expect(1).to eq 1
 		end
-
+=end
 =begin
 		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields) + fieldset with 1 inner field, constructor and finalize" do
 
