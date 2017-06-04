@@ -24,29 +24,33 @@ module Musa
 			tree_A = Variatio::generate_eval_tree_A @fieldset
 			tree_B = Variatio::generate_eval_tree_B @fieldset
 
+			puts "Variatio.on: tree_A = #{tree_A}"
+			puts
+			puts "Variatio.on: tree_B = #{tree_B}"
+			puts
 
-			#puts "tree_B = #{tree_B}"
+			combinations = []
 
 			parameters_set = tree_A.calc_parameters
-			combinations = []
 
 			parameters_set.each do |parameters_with_depth|
 
 				parameters_with_depth.merge! values
 
+				puts "Variatio.on: parameters_with_depth = #{parameters_with_depth}"
+				puts "Variatio.on: Tool::make_hash_key_parameters(@constructor, **parameters_with_depth) = #{Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)}"
+
 				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)
 
-				parameters_with_depth[@instance_name] = instance
-
-				tree_B.run parameters_with_depth
+				tree_B.run parameters_with_depth, { @instance_name => instance }
 
 				if @finalize
-					@finalize.call **Tool::make_hash_key_parameters(@finalize, **parameters_with_depth)
+					@finalize.call **Tool::make_hash_key_parameters(@finalize, **parameters_with_depth, @instance_name => instance)
 				end
 
 				combinations << instance
 
-				return combinations if combinations.size > 0
+				#return combinations if combinations.size > 0
 			end
 
 			combinations
@@ -160,12 +164,11 @@ module Musa
 					@subcomponents.calc_parameters.collect { |parameters| { @option => parameters } }.each do |parameters|
 
 						inner_parameters_set.each do |inner_parameters|
-
-							result_parameters_set << { @parameter_name => parameters.merge(inner_parameters) }
+							result_parameters_set << { @parameter_name => parameters.merge(inner_parameters[@parameter_name]) }
 						end
 					end
 				else
-					result_parameters_set = @subcomponents.calc_parameters.collect { |parameters| { @option => parameters } }
+					result_parameters_set = @subcomponents.calc_parameters.collect { |parameters| { @parameter_name => { @option => parameters } } } 
 				end
 
 				result_parameters_set
@@ -180,13 +183,13 @@ module Musa
 
 		private_constant :A2
 
-		def self.generate_eval_tree_B fieldset, affected_fields = nil
+		def self.generate_eval_tree_B fieldset
 			affected_field_names = []
 			inner = []
 
 			fieldset.components.each do |component|
 				if component.is_a? Fieldset
-					inner << generate_eval_tree_B(component, affected_fields)
+					inner << generate_eval_tree_B(component)
 				elsif component.is_a? Field
 					affected_field_names << component.name
 				end
@@ -206,15 +209,44 @@ module Musa
 				@blocks = blocks
 			end
 
-			def run parameters_with_depth
-				puts "B.run: parameters_with_depth = #{parameters_with_depth}"
+			def run parameters_with_depth, parent_parameters = nil
+
+				parent_parameters ||= {}
+
+				puts
 				puts "B = #{self}"
+				puts "B.run: parameters_with_depth = #{parameters_with_depth}"
 
+				@options.each do |option|
 
-				parameters_with_depth.select_keys..................................
+					base = (@parameter_name == :_maincontext) ? parameters_with_depth : parameters_with_depth[@parameter_name][option]
+					
+					puts "B.run: base = #{base}"
 
+					parameters = base.select { |k, v| @affected_field_names.include? k }.merge(parent_parameters)
+					parameters[@parameter_name] = option
 
+					puts "B.run: parameters = #{parameters}"
 
+					@blocks.each do |block|
+
+						effective_parameters = Tool::make_hash_key_parameters(block, **parameters)
+
+						puts "B.run: effective_parameters = #{effective_parameters}"
+
+						block.call **effective_parameters
+					end
+
+					if @parameter_name == :_maincontext
+						@inner.each do |inner|
+							inner.run parameters_with_depth, parameters
+						end
+					else
+						@inner.each do |inner|
+							inner.run parameters_with_depth[@parameter_name][option], parameters
+						end
+					end
+				end
 			end
 
 			def inspect
