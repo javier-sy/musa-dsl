@@ -138,7 +138,7 @@ module Musa
 			end
 
 			def inspect
-				"A1 (name: #{@parameter_name} options: [#{@options}] inner: [#{@inner}])"
+				"A1 (name: #{@parameter_name} options: #{@options} inner: <#{@inner}>)"
 			end
 
 			alias to_s inspect 
@@ -157,6 +157,9 @@ module Musa
 			end
 
 			def calc_parameters
+				puts
+				puts "A2.calc_parameters: self = #{self}"
+
 				if inner
 					result_parameters_set = []
 					inner_parameters_set = @inner.calc_parameters
@@ -164,10 +167,16 @@ module Musa
 					@subcomponents.calc_parameters.collect { |parameters| { @option => parameters } }.each do |parameters|
 
 						inner_parameters_set.each do |inner_parameters|
+
+							puts "A2.calc_parameters (with inner): inner_parameters = #{inner_parameters}"
+							puts "A2.calc_parameters (with inner): @parameter_name = #{@parameter_name}"
+							puts "A2.calc_parameters (with inner): inner_parameters[@parameter_name] = #{inner_parameters[@parameter_name]}"
+
 							result_parameters_set << { @parameter_name => parameters.merge(inner_parameters[@parameter_name]) }
 						end
 					end
 				else
+					puts "A2.calc_parameters (without inner): "
 					result_parameters_set = @subcomponents.calc_parameters.collect { |parameters| { @parameter_name => { @option => parameters } } } 
 				end
 
@@ -175,7 +184,7 @@ module Musa
 			end
 
 			def inspect
-				"A2 (name: #{@parameter_name} option: #{@option} subcomponents: [#{@subcomponents}] inner: [#{@inner}])"
+				"A2 (name: #{@parameter_name} option: #{@option} subcomponents: <#{@subcomponents}> inner: <#{@inner}>)"
 			end
 
 			alias to_s inspect 
