@@ -96,8 +96,13 @@ module Musa
 		end
 
 		class A
-			attr_reader :parameter_name, :options
+			attr_reader :parameter_name
 			attr_accessor :inner
+
+			def initialize parameter_name
+				@parameter_name = parameter_name
+				@inner = nil
+			end
 
 			def last_inner
 				i = self
@@ -114,8 +119,10 @@ module Musa
 		private_constant :A
 
 		class A1 < A
+			attr_reader :options
+
 			def initialize parameter_name, options
-				@parameter_name = parameter_name
+				super parameter_name
 				@options = options
 			end
 
@@ -150,7 +157,8 @@ module Musa
 
 		class A2 < A
 			def initialize parameter_name, option, subcomponents
-				@parameter_name = parameter_name
+				super parameter_name
+
 				@option = option
 				@subcomponents = subcomponents
 			end
