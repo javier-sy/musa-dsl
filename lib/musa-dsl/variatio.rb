@@ -24,9 +24,11 @@ module Musa
 			tree_A = Variatio::generate_eval_tree_A @fieldset
 			tree_B = Variatio::generate_eval_tree_B @fieldset
 
-			puts "Variatio.on: tree_A = #{tree_A}"
+			puts "Variatio.on: tree_A ="
+			pp eval(tree_A.inspect)
 			puts
-			puts "Variatio.on: tree_B = #{tree_B}"
+			puts "Variatio.on: tree_B ="
+			pp eval(tree_B.inspect)
 			puts
 
 			combinations = []
@@ -94,6 +96,9 @@ module Musa
 		end
 
 		class A
+			attr_reader :parameter_name, :options
+			attr_accessor :inner
+
 			def last_inner
 				i = self
 
@@ -109,9 +114,6 @@ module Musa
 		private_constant :A
 
 		class A1 < A
-			attr_reader :parameter_name, :options
-			attr_accessor :inner
-
 			def initialize parameter_name, options
 				@parameter_name = parameter_name
 				@options = options
@@ -138,7 +140,7 @@ module Musa
 			end
 
 			def inspect
-				"A1 (name: #{@parameter_name} options: #{@options} inner: <#{@inner}>)"
+				"{ type: :A1, name: :#{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'} }"
 			end
 
 			alias to_s inspect 
@@ -147,9 +149,6 @@ module Musa
 		private_constant :A1
 
 		class A2 < A
-			attr_reader :parameter_name, :options
-			attr_accessor :inner
-
 			def initialize parameter_name, option, subcomponents
 				@parameter_name = parameter_name
 				@option = option
@@ -184,7 +183,7 @@ module Musa
 			end
 
 			def inspect
-				"A2 (name: #{@parameter_name} option: #{@option} subcomponents: <#{@subcomponents}> inner: <#{@inner}>)"
+				"{ type: :A2, name: :#{@parameter_name}, option: #{@option}, subcomponents: #{@subcomponents}, inner: #{@inner ? @inner : 'nil'} }"
 			end
 
 			alias to_s inspect 
@@ -259,7 +258,7 @@ module Musa
 			end
 
 			def inspect
-				"B (name: #{@parameter_name} options: #{@options} affected_field_names: #{@affected_field_names} blocks.size: #{@blocks.size} inner: #{@inner})"
+				"{ type: :B, name: :#{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner} }"
 			end
 
 			alias to_s inspect 
