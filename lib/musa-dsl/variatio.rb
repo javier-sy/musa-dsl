@@ -1,6 +1,7 @@
 # TODO optimiziación: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
 # TODO optimización: multithreading
 # TODO optimizar: eliminar ** si mejora rendimiento
+# TODO permitir definir un variatio a través de atributos, además de a través del block del constructor
 
 module Musa
 	class Variatio
