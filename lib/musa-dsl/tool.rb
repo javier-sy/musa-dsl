@@ -57,5 +57,17 @@ module Musa
 		def self.find_hash_parameter(proc, parameter_name)
 			proc.parameters.find { |parameter| parameter[0] == :keyrest || parameter[1] == parameter_name && (parameter[0] == :key || parameter[0] == :keyreq) }
 		end
+
+		def self.list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
+			result = []
+
+			list_of_hashes_1.each do |hash1|
+				list_of_hashes_2.each do |hash2|
+					result << hash1.merge(hash2)
+				end
+			end
+
+			result
+		end
 	end
 end

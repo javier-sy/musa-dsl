@@ -24,13 +24,6 @@ module Musa
 			tree_A = Variatio::generate_eval_tree_A @fieldset
 			tree_B = Variatio::generate_eval_tree_B @fieldset
 
-			puts "Variatio.on: tree_A ="
-			pp eval(tree_A.inspect)
-			puts
-			puts "Variatio.on: tree_B ="
-			pp eval(tree_B.inspect)
-			puts
-
 			combinations = []
 
 			parameters_set = tree_A.calc_parameters
@@ -38,9 +31,6 @@ module Musa
 			parameters_set.each do |parameters_with_depth|
 
 				parameters_with_depth.merge! values
-
-				puts "Variatio.on: parameters_with_depth = #{parameters_with_depth}"
-				puts "Variatio.on: Tool::make_hash_key_parameters(@constructor, **parameters_with_depth) = #{Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)}"
 
 				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)
 
@@ -51,8 +41,6 @@ module Musa
 				end
 
 				combinations << instance
-
-				#return combinations if combinations.size > 0
 			end
 
 			combinations
@@ -67,87 +55,54 @@ module Musa
 			fieldset.components.each do |component|
 
 				if component.is_a? Field
-
 					a = A1.new component.name, component.options
-
 				elsif component.is_a? Fieldset
-
-					first = last = nil
-
-					component.options.each do |option|
-						a = A2.new component.name, option, generate_eval_tree_A(component)
-
-						last.inner = a if last
-						first = a unless first
-
-						last = a
-					end
-
-					a = first
+					a = A2.new component.name, component.options, generate_eval_tree_A(component)
 				end
 
 				current.inner = a if current
 				root = a unless root
 				
-				current = a.last_inner
+				current = a
 			end
 
 			root
 		end
 
 		class A
-			attr_reader :parameter_name
+			attr_reader :parameter_name, :options
 			attr_accessor :inner
 
-			def initialize parameter_name
+			def initialize parameter_name, options
 				@parameter_name = parameter_name
+				@options = options
 				@inner = nil
 			end
 
-			def last_inner
-				i = self
-
-				while i
-					last = i
-					i = i.inner
+			def calc_parameters
+				if inner
+					Tool::list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
+				else
+					calc_own_parameters
 				end
-
-				last
 			end
+
 		end
 
 		private_constant :A
 
 		class A1 < A
-			attr_reader :options
-
 			def initialize parameter_name, options
-				super parameter_name
-				@options = options
+				super parameter_name, options
 			end
 
-			def calc_parameters
-				if inner
-					inner_parameters_set = @inner.calc_parameters
-					result_parameters_set = []
-
-					@options.collect do |option|
-						inner_parameters_set.each do |inner_parameters|
-							actual_parameters = inner_parameters.clone
-							actual_parameters[@parameter_name] = option
-
-							result_parameters_set << actual_parameters
-						end
-					end
-				else
-					result_parameters_set = @options.collect { |option|	{ @parameter_name => option } }
-				end
-
-				result_parameters_set
+			def calc_own_parameters
+				@options.collect { |option| { @parameter_name => option } }
 			end
 
 			def inspect
-				"{ type: :A1, name: :#{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'} }"
+				# "{ type: :A1, name: :#{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'} }"
+				"A1 name: #{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'}"
 			end
 
 			alias to_s inspect 
@@ -156,42 +111,32 @@ module Musa
 		private_constant :A1
 
 		class A2 < A
-			def initialize parameter_name, option, subcomponents
-				super parameter_name
+			def initialize parameter_name, options, subcomponent
+				super parameter_name, options
 
-				@option = option
-				@subcomponents = subcomponents
+				@subcomponent = subcomponent
 			end
 
-			def calc_parameters
-				puts
-				puts "A2.calc_parameters: self = #{self}"
+			def calc_own_parameters
+				sub_parameters_set = @subcomponent.calc_parameters
+				result = nil
 
-				if inner
-					result_parameters_set = []
-					inner_parameters_set = @inner.calc_parameters
-
-					@subcomponents.calc_parameters.collect { |parameters| { @option => parameters } }.each do |parameters|
-
-						inner_parameters_set.each do |inner_parameters|
-
-							puts "A2.calc_parameters (with inner): inner_parameters = #{inner_parameters}"
-							puts "A2.calc_parameters (with inner): @parameter_name = #{@parameter_name}"
-							puts "A2.calc_parameters (with inner): inner_parameters[@parameter_name] = #{inner_parameters[@parameter_name]}"
-
-							result_parameters_set << { @parameter_name => parameters.merge(inner_parameters[@parameter_name]) }
-						end
+				@options.each do |option|
+					if result.nil?
+						result = sub_parameters_set.collect { |v| { option => v } }
+					else
+						result = Tool::list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
 					end
-				else
-					puts "A2.calc_parameters (without inner): "
-					result_parameters_set = @subcomponents.calc_parameters.collect { |parameters| { @parameter_name => { @option => parameters } } } 
 				end
 
-				result_parameters_set
+				result = result.collect { |v| { @parameter_name => v } }
+
+				result
 			end
 
 			def inspect
-				"{ type: :A2, name: :#{@parameter_name}, option: #{@option}, subcomponents: #{@subcomponents}, inner: #{@inner ? @inner : 'nil'} }"
+				# "{ type: :A2, name: :#{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner ? @inner : 'nil'} }"
+				"A2 name: #{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner ? @inner : 'nil'}"
 			end
 
 			alias to_s inspect 
@@ -229,27 +174,15 @@ module Musa
 
 				parent_parameters ||= {}
 
-				puts
-				puts "B = #{self}"
-				puts "B.run: parameters_with_depth = #{parameters_with_depth}"
-
 				@options.each do |option|
 
 					base = (@parameter_name == :_maincontext) ? parameters_with_depth : parameters_with_depth[@parameter_name][option]
 					
-					puts "B.run: base = #{base}"
-
 					parameters = base.select { |k, v| @affected_field_names.include? k }.merge(parent_parameters)
 					parameters[@parameter_name] = option
 
-					puts "B.run: parameters = #{parameters}"
-
 					@blocks.each do |block|
-
 						effective_parameters = Tool::make_hash_key_parameters(block, **parameters)
-
-						puts "B.run: effective_parameters = #{effective_parameters}"
-
 						block.call **effective_parameters
 					end
 
@@ -266,7 +199,8 @@ module Musa
 			end
 
 			def inspect
-				"{ type: :B, name: :#{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner} }"
+				# "{ type: :B, name: :#{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner} }"
+				 "B name: #{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner}"
 			end
 
 			alias to_s inspect 
@@ -344,7 +278,7 @@ module Musa
 			attr_reader :name, :options, :with_attributes, :components
 
 			def inspect
-				"Fieldset #{@name} options: #{@options} components: (#{@components})"
+				"Fieldset #{@name} options: #{@options} components: #{@components}"
 			end
 
 			alias to_s inspect
