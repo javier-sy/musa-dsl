@@ -11,6 +11,7 @@ require 'musa-dsl/chords2'
 require 'musa-dsl/hash-serie-splitter'
 
 require 'musa-dsl/variatio'
+require 'musa-dsl/darwin'
 
 module Musa
 	VERSION = '0.0.1'
