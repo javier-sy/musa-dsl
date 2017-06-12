@@ -19,7 +19,7 @@ RSpec.describe Musa::Darwin do
 					dimension :ratio, object.width / object.height
 				end
 
-				selection do |good_chord:, great_bla:, height: ratio:|
+				selection do 
 					feature :great_bla, better_than: :good_chord, as: :blainnes
 
 					dimension :height, better_than: :width, by: .5, as: :heightness
