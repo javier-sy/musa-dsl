@@ -8,16 +8,19 @@ module Musa
 			main_context = MainContext.new &block
 
 			@measures = main_context._measures
-			@selection = main_context._selection
+			@weights = main_context._weights
 		end
 
 		def select population
 			
-			measured_objects = population.collect do |object|
+			measured_objects = []
+
+			population.each do |object|
 				context = MeasuresEvalContext.new 
 				context.instance_exec_nice object, &measures
+				measure = context._measure
 
-				{ object: object, measure: context._measure }
+				measured_objects << { object: object, measure: context._measure } unless measure.died?
 			end
 
 			limits = {}
@@ -26,15 +29,13 @@ module Musa
 
 				measure = measured_object[:measure]
 				
-				if !measure.died?
-					measure.dimensions.each do |measure_name, value|
-						limits[measure_name] ||= { min: nil, max: nil }
+				measure.dimensions.each do |measure_name, value|
+					limit = limits[measure_name] ||= { min: nil, max: nil }
 
-						limits[measure_name][:min] = value.to_f if limits[measure_name][:min].nil? || limits[measure_name][:min] > value
-						limits[measure_name][:max] = value.to_f if limits[measure_name][:max].nil? || limits[measure_name][:max] < value
+					limit[:min] = value.to_f if limit[:min].nil? || limit[:min] > value
+					limit[:max] = value.to_f if limit[:max].nil? || limit[:max] < value
 
-						limits[measure_name][:range] = limits[measure_name][:max] - limits[measure_name][:min]
-					end
+					limit[:range] = limit[:max] - limit[:min]
 				end
 			end
 
@@ -42,22 +43,26 @@ module Musa
 
 				measure = measured_object[:measure]
 				
-				if !measure.died?
-					measure.dimensions.each do |dimension_name, value|
-						measure.normalized_dimension[dimension_name] = ( value - limits[measure_name][:min] ) / limits[measure_name][:range]
-					end
+				measure.dimensions.each do |dimension_name, value|
+					limit = limits[measure_name]
+					measure.normalized_dimensions[dimension_name] = ( value - limit[:min] ) / limit[:range]
 				end
 			end
 
+			measured_objects.sort! { |a, b|	evaluate_weights a.measure, b.measure }
 
-			### seguir aquí
+			return measured_objects
+		end
 
+		def evaluate_weights measure_a, measure_b
+			measure_a.evaluate_weights(@weights) <=> measure_b.evaluate_weights(@weights)
 		end
 
 		class MainContext
-			attr_reader :_measures, :_selection
+			attr_reader :_measures, :_weights
 
 			def initialize &block
+				@_weights = {}
 				self.instance_exec_nice &block
 			end
 
@@ -65,71 +70,16 @@ module Musa
 				@_measures = block
 			end
 
-			def selection &block
-				@_selection = SelectionContext.new &block
-			end
-
-			class SelectionContext
-				def initialize &block
-					@_selection = Selection.new
-					self.instance_exec_nice &block
-				end
-
-				def feature feature_name, better_than:, as:
-					@_selection.features[as] = Feature.new as, feature_name, better_than
-				end
-
-				def dimension dimension_name, better_than:, by: 1.0, as:
-					@_selection.dimensions[as] = Dimension.new as, dimension_name, better_than, by
-				end
-
-				def weight **feature_or_dimension_weights
-					feature_or_dimension_weights.each do |name, value|
-						@_selection.weight[name] = value
-					end
-				end
-
-				def resurrect ratio = 0
-					@selection.resurrections << ratio
-				end
-			end
-		end
-
-		class Selection
-			attr_accessor :features, :dimensions, :weight, :resurrections
-
-			def initialize
-				@features = {}
-				@dimensions = {}
-				@weight = {}
-				@resurrections = []
-			end
-
-			class Dimension
-				attr_reader :name, :dimension_name, :better_than, :by
-
-				def initialize name, dimension_name, better_than, by
-					@name = name
-					@dimension_name = dimension_name
-					@better_than = better_than
-					@by = by
-				end
-			end
-
-			class Feature
-				attr_reader :name, :feature_name, :better_than
-
-				def initialize name, feature_name, better_than
-					@name = name
-					@dimension_name = feature_name
-					@better_than = better_than
+			def weight **feature_or_dimension_weights
+				feature_or_dimension_weights.each do |name, value|
+					@_weights[name] = value
 				end
 			end
 		end
 
 		class MeasuresEvalContext
 			def initialize
-				@_features = []
+				@_features = {}
 				@_dimensions = {}
 				@_died = false
 			end
@@ -138,7 +88,7 @@ module Musa
 				Measure.new _features, _dimensions, _died
 
 			def feature feature_name
-				@_features << feature_name
+				@_features[feature_name] = true
 			end
 
 			def dimension dimension_name, value
@@ -163,6 +113,19 @@ module Musa
 
 			def died?
 				@died
+			end
+
+			def evaluate_weight weights
+				total = 0.0
+
+				unless @died
+					weights.each do |name, weight|
+						total += @normalized_dimensions[name] * weight if @normalized_dimensions.has_key? name
+						total += weight if @features[name]
+					end
+				end
+
+				return total
 			end
 		end
 	end

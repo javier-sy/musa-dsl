@@ -17,18 +17,11 @@ RSpec.describe Musa::Darwin do
 					dimension :height, object.height
 
 					dimension :ratio, object.width / object.height
+					dimension :light, object.light
 				end
 
-				selection do 
-					feature :great_bla, better_than: :good_chord, as: :blainnes
 
-					dimension :height, better_than: :width, by: .5, as: :heightness
-					dimension :ratio, better_than: :height, by: .1, as: :rationess
-
-					weight blainness: 1, heightness: 1, rationess: 1
-
-					resurrect .5
-				end
+				weight good_chord: 1, height: 1, ratio: 1, light: 0.5, blueness: 0.1
 
 
 			end
