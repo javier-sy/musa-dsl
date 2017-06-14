@@ -2,6 +2,7 @@ require 'musa-dsl'
 require 'pp'
 
 RSpec.describe Musa::Darwin do
+
 	context "Select over a range of variations" do
 
 		it "" do
@@ -20,10 +21,7 @@ RSpec.describe Musa::Darwin do
 					dimension :light, object.light
 				end
 
-
 				weight good_chord: 1, height: 1, ratio: 1, light: 0.5, blueness: 0.1
-
-
 			end
 
 			survivors = d.select [ {}, {}, {}, {} ]
