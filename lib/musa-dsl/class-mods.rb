@@ -11,21 +11,7 @@ class Array
 	def get method_name
 		self.collect { |o| o.send method_name }
 	end
-
-	def deep_clone
-		self.collect { |element| element.deep_clone if !element.nil? }
-	end
 end
-
-class Hash
-	def deep_clone
-		result = {}
-		
-		self.each { |key, value| result[key.deep_clone] = value.deep_clone }
-		
-		result
-	end
-end	
 
 class Rational
 	def inspect
@@ -94,9 +80,5 @@ class Object
 				send method_name, &block
 			end
 		end
-	end
-
-	def deep_clone
-		self.clone
 	end
 end

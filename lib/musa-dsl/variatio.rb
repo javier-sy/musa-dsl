@@ -5,10 +5,12 @@
 
 module Musa
 	class Variatio
-		def initialize instance_name, parameters:, &block
+		def initialize instance_name, parameters: nil, &block
+
+			parameters ||= []
 			
 			raise ArgumentError, "instance_name should be a symbol" unless instance_name.is_a?(Symbol)
-			raise ArgumentError, "parameters should be an array of symbols" unless parameters.is_a?(Array) && !parameters.find {|p| !(p.is_a? Symbol) }
+			raise ArgumentError, "parameters should be an array of symbols" unless parameters.empty? || ( parameters.is_a?(Array) && !parameters.find {|p| !(p.is_a? Symbol) } )
 			raise ArgumentError, "block is needed" unless block
 
 			@instance_name = instance_name
@@ -20,6 +22,7 @@ module Musa
 			@fieldset = main_context._fieldset
 			@finalize = main_context._finalize
 		end
+
 
 		def on **values
 			tree_A = Variatio::generate_eval_tree_A @fieldset
@@ -46,6 +49,8 @@ module Musa
 
 			combinations
 		end
+
+		alias run on
 
 		private
 
@@ -214,17 +219,17 @@ module Musa
 			attr_reader :_fieldset
 
 			def initialize name, options, &block
-				@_fieldset = Fieldset.new name, options
+				@_fieldset = Fieldset.new name, options.to_a
 
 				self.instance_exec_nice &block
 			end
 
 			def field name, options
-				@_fieldset.components << Field.new(name, options)
+				@_fieldset.components << Field.new(name, options.to_a)
 			end
 
 			def fieldset name, options, &block
-				fieldset_context = FieldsetContext.new name, options, &block
+				fieldset_context = FieldsetContext.new name, options.to_a, &block
 				@_fieldset.components << fieldset_context._fieldset
 			end
 

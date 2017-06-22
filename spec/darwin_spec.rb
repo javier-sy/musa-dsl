@@ -1,34 +1,43 @@
 require 'musa-dsl'
-require 'pp'
+
+include Musa::Series
 
 RSpec.describe Musa::Darwin do
 
 	context "Select over a range of variations" do
 
-		it "" do
+		it "Simple selection" do
+
+			v = Musa::Variatio.new :object do
+				field :a, 1..10
+				field :b, [:alfa, :beta, :gamma, :delta]
+
+				constructor do |a:, b:|
+					{ a: a, b: b }
+				end
+			end
 
 			d = Musa::Darwin.new do
 
 				measures do |object|
-					die if object.distance > 10
+					die if object[:b] == :gamma
 
-					feature :good_chord if object.x > 10
-					feature :great_bla if object.y > 100
+					feature :alfa_feature if object[:b] == :alfa
+					feature :beta_feature if object[:b] == :beta
 
-					dimension :height, object.height
-
-					dimension :ratio, object.width / object.height
-					dimension :light, object.light
+					dimension :a_dimension, 1.0 / object[:a].to_f
 				end
 
-				weight good_chord: 1, height: 1, ratio: 1, light: 0.5, blueness: 0.1
+				weight a_dimension: 2, alfa_feature: 1, beta_feature: -0.5
 			end
 
-			survivors = d.select [ {}, {}, {}, {} ]
+			population = S(*v.run).randomize.to_a
 
-			expect(variations.size).to eq 1
+			survivors = d.select population
 
-			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 } }, finalized: true })
+			expect(survivors.size).to eq(population.size - 10)
+
+			expect(survivors[0]).to eq({ a: 1, b: :alfa })
 		end
 	end
 end

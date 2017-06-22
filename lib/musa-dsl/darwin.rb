@@ -17,7 +17,7 @@ module Musa
 
 			population.each do |object|
 				context = MeasuresEvalContext.new 
-				context.instance_exec_nice object, &measures
+				context.instance_exec_nice object, &@measures
 				measure = context._measure
 
 				measured_objects << { object: object, measure: context._measure } unless measure.died?
@@ -44,18 +44,18 @@ module Musa
 				measure = measured_object[:measure]
 				
 				measure.dimensions.each do |dimension_name, value|
-					limit = limits[measure_name]
+					limit = limits[dimension_name]
 					measure.normalized_dimensions[dimension_name] = ( value - limit[:min] ) / limit[:range]
 				end
 			end
 
-			measured_objects.sort! { |a, b|	evaluate_weights a.measure, b.measure }
+			measured_objects.sort! { |a, b|	evaluate_weights a[:measure], b[:measure] }
 
-			return measured_objects
+			return measured_objects.collect { |measured_object| measured_object[:object] }
 		end
 
 		def evaluate_weights measure_a, measure_b
-			measure_a.evaluate_weights(@weights) <=> measure_b.evaluate_weights(@weights)
+			measure_b.evaluate_weight(@weights) <=> measure_a.evaluate_weight(@weights)
 		end
 
 		class MainContext
@@ -85,7 +85,8 @@ module Musa
 			end
 
 			def _measure
-				Measure.new _features, _dimensions, _died
+				Measure.new @_features, @_dimensions, @_died
+			end
 
 			def feature feature_name
 				@_features[feature_name] = true
@@ -118,7 +119,7 @@ module Musa
 			def evaluate_weight weights
 				total = 0.0
 
-				unless @died
+				unless @died then
 					weights.each do |name, weight|
 						total += @normalized_dimensions[name] * weight if @normalized_dimensions.has_key? name
 						total += weight if @features[name]
