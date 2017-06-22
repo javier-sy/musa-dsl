@@ -1,3 +1,5 @@
+require 'Duplicate'
+
 module Musa
 	module ProtoSerie
 
@@ -69,9 +71,10 @@ module Musa
 			array
 		end
 
-		#def duplicate
-		#	Duplicate.duplicate(self)
-		#end
+		# TODO reimplementar duplicate sin require 'duplicate' (este añade un duplicate en object que es un coñazo)
+		def duplicate
+			Duplicate.duplicate(self)
+		end
 
 		def slave
 			slave_serie = SlaveSerie.new self	
@@ -82,7 +85,7 @@ module Musa
 			return slave_serie
 		end
 
-		def image
+		def image # serie que va clonando en imagen lo de la principal... ¿? revisar notas
 			# TODO
 		end
 	end
