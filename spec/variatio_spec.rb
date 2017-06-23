@@ -21,8 +21,12 @@ RSpec.describe Musa::Variatio do
 
 			expect(variations[0]).to eq( {a: 1, b: :alfa} )
 			expect(variations[1]).to eq( {a: 1, b: :beta} )
+			expect(variations[2]).to eq( {a: 1, b: :gamma} )
+			expect(variations[3]).to eq( {a: 1, b: :delta} )
 
-			expect(variations[40]).to eq( {a: 4, b: :delta} )
+			expect(variations[4]).to eq( {a: 2, b: :alfa} )
+
+			expect(variations[39]).to eq( {a: 10, b: :delta} )
 		end
 
 		it "With 2 fields + fieldset (2 inner fields), test with only 1 option each, constructor and finalize" do

@@ -39,6 +39,8 @@ module Musa
 				end
 			end
 
+			#puts "Darwin.select: weights #{@weights}"
+
 			measured_objects.each do |measured_object|
 
 				measure = measured_object[:measure]
@@ -47,6 +49,8 @@ module Musa
 					limit = limits[dimension_name]
 					measure.normalized_dimensions[dimension_name] = ( value - limit[:min] ) / limit[:range]
 				end
+
+				#puts "Darwin.select: #{measured_object[:object]} #{measured_object[:measure]} weight=#{measured_object[:measure].evaluate_weight(@weights).round(2)}"
 			end
 
 			measured_objects.sort! { |a, b|	evaluate_weights a[:measure], b[:measure] }
@@ -128,6 +132,13 @@ module Musa
 
 				return total
 			end
+
+			def inspect
+				"Measure features=#{@features.collect {|k,v| k}} dimensions=#{@normalized_dimensions.collect { |k, v| [k, [@dimensions[k].round(5), v.round(2)]] }.to_h }"
+			end
+
+			alias to_s inspect
+
 		end
 	end
 end

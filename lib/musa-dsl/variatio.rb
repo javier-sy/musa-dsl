@@ -107,7 +107,6 @@ module Musa
 			end
 
 			def inspect
-				# "{ type: :A1, name: :#{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'} }"
 				"A1 name: #{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'}"
 			end
 
@@ -141,7 +140,6 @@ module Musa
 			end
 
 			def inspect
-				# "{ type: :A2, name: :#{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner ? @inner : 'nil'} }"
 				"A2 name: #{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner ? @inner : 'nil'}"
 			end
 
@@ -205,7 +203,6 @@ module Musa
 			end
 
 			def inspect
-				# "{ type: :B, name: :#{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner} }"
 				 "B name: #{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner}"
 			end
 
