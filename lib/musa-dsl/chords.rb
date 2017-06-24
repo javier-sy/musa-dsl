@@ -7,7 +7,7 @@ module Musa
 
 		attr_reader :root_grade, :scale
 
-		def initialize(root_grade, grades: 3, scale:)
+		def initialize(root_grade, grades: 3, scale:, duplicate: [])
 			@scale = scale
 			@root_grade = root_grade
 
@@ -49,6 +49,9 @@ module Musa
 			else
 				raise ArgumentError, 'grades is not a Numeric nor an Array'
 			end
+
+			duplicate = [duplicate] unless duplicate.is_a? Array
+			duplicate.each { |d| duplicate d[:position], octave: d[:octave], to_voice: d[:to_voice] if d.is_a? Hash}
 		end
 
 		def voices
@@ -67,7 +70,9 @@ module Musa
 			@voices.collect { |v| v.pitch }
 		end
 
-		def duplicate(grade_or_grade_index, octave: 0, to_voice: nil) # -> ChordNote
+		def duplicate(grade_or_grade_index, octave: nil, to_voice: nil) # -> ChordNote
+			octave ||= 0
+			
 			chord = ChordNote.new chord: self, grade: grade_of(grade_or_grade_index), grade_index: grade_index_of(grade_or_grade_index), octave: octave
 
 			if to_voice

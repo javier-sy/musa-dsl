@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Javier Sánchez"]
   s.email       = 'javier.sy@gmail.com'
   s.files       = ["lib/musa-dsl.rb", 
-                    "lib/musa-dsl/class-mods.rb", 
+                    "lib/musa-dsl/class-mods.rb", "lib/musa-dsl/deep-clone.rb",
                     "lib/musa-dsl/topaz-midi-clock-input-mods.rb", 
                     "lib/musa-dsl/tool.rb", 
                     "lib/musa-dsl/transport.rb", "lib/musa-dsl/sequencer.rb", "lib/musa-dsl/themes.rb", 
