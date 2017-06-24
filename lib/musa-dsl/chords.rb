@@ -4,171 +4,142 @@ module Musa
 	end
 
 	class Chord
-		def initialize(base_grade, grades: 3, scale:, octave: 0, inversion: nil, duplicate: nil, move: nil, sort: false)
-			@base = base_grade
-			@scale = scale
-			@octave = octave
 
-			@grades = {}
+		attr_reader :root_grade, :scale
+
+		def initialize(root_grade, grades: 3, scale:)
+			@scale = scale
+			@root_grade = root_grade
+
+			@grades = []
 			@voices = []
 
-			if grades.is_a? Array
-				grades.each do |grade|
-					note = @scale.note_of(grade)
-					symbol = @scale.symbol_of(note)
-					
-					@grades[ symbol ] = [ note ]
-					@voices << { symbol: symbol, value: note }
-				end
-			elsif grades.is_a? Integer
-				grades.times do |position|
-					note = @scale.note_of(@base) + 2 * position
+			if grades.is_a? Numeric
 
-					symbol = @scale.symbol_of(note)
-					
-					@grades[ symbol ] = [ note ]
-					@voices << { symbol: symbol, value: note }
+				grades.times do |index|
+					scale_note = @scale.note_of(@root_grade) + 2 * index
+					grade = @scale.symbol_of(scale_note)
+
+					@grades << grade
+					@voices << ChordNote.new(chord: self, grade: grade, grade_index: index)
 				end
+
+			elsif grades.is_a? Array
+
+				grades = [root_grade, *grades]
+				index = 0
+
+				grades.each do |grade_or_note|
+					if grade_or_note.is_a? Symbol # grade
+						grade = grade_or_note
+
+					elsif grade_or_note.is_a? Numeric # note
+						grade = @scale.symbol_of(grade_or_note)
+
+					else
+						raise ArgumentError, 'grades array contains elements that are not Numeric nor grade Symbols'
+					end
+
+					@grades << grade
+					@voices << ChordNote.new(chord: self, grade: grade, grade_index: index)
+
+					index += 1
+				end
+
 			else
-				raise ArgumentError, 'grades is not Numeric nor Array'
+				raise ArgumentError, 'grades is not a Numeric nor an Array'
 			end
-
-			@history = []
-
-			invert! inversion if inversion
-
-			duplicate = [duplicate] unless duplicate.is_a? Array
-			duplicate.each { |d| duplicate! d if d}
-
-			move = [move] unless move.is_a? Array
-			move.each { |m| move! m if m}
-
-			sort_voices! if sort
-		end
-
-		attr_reader :scale, :base, :inversion
-		attr_accessor :octave
-
-		def grades
-			@grades.keys
-		end
-
-		def notes
-			@grades.values.flatten
 		end
 
 		def voices
-			@voices.collect { |h| h[:value] + @octave * @scale.number_of_grades }
+			@voices.clone
+		end
+
+		def grade(grade_or_grade_index) # -> Array de ChordNote
+			if grade_or_grade_index.is_a? Symbol
+				return @voices.select { |note| note.grade == grade_or_grade_index }
+			else
+				return @voices.select { |note| note.grade_index == grade_or_grade_index }
+			end
 		end
 
 		def pitches
-			@scale.pitch_of voices, octave: @octave if @scale.respond_to? :pitch_of
+			@voices.collect { |v| v.pitch }
 		end
 
-		def copy
-			c = Chord.new @base, grades: @grades.length, scale: @scale, octave: @octave
-			
-			@history.each do |command|
-				if command[1]
-					c.send command[0], command[1] 
-				else
-					c.send command[0]
-				end
+		def duplicate(grade_or_grade_index, octave: 0, to_voice: nil) # -> ChordNote
+			chord = ChordNote.new chord: self, grade: grade_of(grade_or_grade_index), grade_index: grade_index_of(grade_or_grade_index), octave: octave
+
+			if to_voice
+				@voices.insert to_voice, chord
+			else
+				@voices << chord
 			end
-
-			c
-		end
-
-		def invert!(inversion, to_voice: nil)
-
-			raise "Chord already inverted. Cannot invert." if @inversion
-			raise "Chord already with duplications. Cannot invert." if @duplications
-			raise "Chord with movements. Cannot invert." if @movements
-
-			to_voice ||= @voices.length - 1
-
-			@history << [ :invert!, inversion, { to_voice: to_voice } ]
-
-			@inversion = inversion
-
-			for i in 0...inversion
-				grade = @grades.keys[i]
-				notes = @grades[grade]
-
-				if notes.length == 1
-					old_note = notes[0]
-					new_note = old_note + @scale.number_of_grades
-					old_voice = @voices.find_index {|v| v[:symbol] == grade && v[:value] == old_note }
-
-					notes[0] = new_note
-
-					@voices.delete_at old_voice
-					@voices.insert to_voice, { symbol: grade, value: new_note }
-				end
-			end
-
-			self
-		end
-
-		def duplicate!(grade: nil, position: nil, voice: nil, octaves: 1, to_voice: -1)
-
-			@history << [ :duplicate!, { grade: grade, position: position, voice: voice, octaves: octaves, to_voice: to_voice }]
-
-			@duplications = true
-
-			grade = @grades.keys[position] if grade.nil? && position
-			grade = @voices[voice][:symbol] if grade.nil? && voice
-
-			notes = @grades[grade]
-
-			octaves = [octaves] unless octaves.is_a? Array
-
-			octaves.each do |octaves|
-				note = notes[0] + octaves * @scale.number_of_grades
-				
-				notes << note
-				@voices.insert to_voice, { symbol: grade, value: note }
-			end
-
-			self
-		end
-
-		def move!(grade: nil, position: nil, voice: nil, octaves:, to_voice: nil)
-
-			@history << [ :move!, { grade: grade, position: position, voice: voice, octaves: octaves, to_voice: to_voice }]
-
-			@movements = true
-
-			grade = @grades.keys[position] if grade.nil? && position
-			grade = @voices[voice][:symbol] if grade.nil? && voice
-
-			notes = @grades[grade]
-
-			new_note = notes[0] + octaves * @scale.number_of_grades
-			notes[0] = new_note
-
-			if !to_voice.nil?
-				voice = @voices.index { |h| h[:symbol] == grade } if voice.nil?
-
-				@voices.delete_at voice if voice
-				@voices.insert to_voice, { symbol: grade, value: new_note }
-			end
-
-			self
 		end
 
 		def sort_voices!
-			@history << [ :sort_voices! ]
-
-			@voices.sort! { |a, b| a[:value] <=> b[:value] }
+			@voices.sort! { |a, b| a.pitch <=> b.pitch }
 
 			self
 		end
 
-		def to_s
-			# "Chord: scale=#{@scale} base=#{@base} #{"inversion=#{@inversion}" if @inversion} grades=#{@grades} voices=#{@voices}"
-			"grades: #{self.grades} notes: #{self.notes} voices: #{self.voices} pitches: #{self.pitches}"
+		def inversion
+			@voices.sort_by { |note| note.pitch }.first.grade_index
+ 		end
+
+		def position
+			@voices.sort_by { |note| note.pitch }.last.grade_index
+ 		end
+
+ 		def distance
+ 			sorted = @voices.sort_by { |note| note.pitch }
+
+ 			sorted.last.pitch - sorted.first.pitch
+ 		end
+
+ 		# TODO to_s inspect
+
+		private
+
+		def grade_of(grade_or_grade_index)
+			if grade_or_grade_index.is_a? Symbol
+				return grade_or_grade_index
+			else
+				return @grades[grade_or_grade_index]
+			end
 		end
+
+		def grade_index_of(grade_or_grade_index)
+			if grade_or_grade_index.is_a? Symbol
+				return @grades.index(grade_or_grade_index)
+			else
+				return grade_or_grade_index
+			end
+		end
+
+		class ChordNote
+			attr_reader :grade, :grade_index
+			attr_accessor :octave
+
+			def initialize(chord:, grade:, grade_index:, octave: 0)
+				@chord = chord
+
+				@grade = grade
+				@grade_index = grade_index
+				@octave = octave
+			end
+
+			def pitch
+				@chord.scale.pitch_of @grade, octave: @octave
+			end
+
+			def voice
+				@chord.voices.index self
+			end
+		end
+
+		private_constant :ChordNote
 	end
 end
+
 
