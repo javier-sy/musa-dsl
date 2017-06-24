@@ -13,33 +13,25 @@ RSpec.describe Musa::Chord do
 		end
 
 		it "Create a C3 major chord with C note in bass" do
-			chord = Musa::Chord :I, scale: scale.based_on_pitch(60)
-
-			chord.duplicate 0, octave: -1, to_voice: 0
+			chord = Musa::Chord :I, scale: scale.based_on_pitch(60), duplicate: { position: 0, octave: -1, to_voice: 0 }
 
 			expect(chord.pitches).to eq [48, 60, 64, 67]
 		end
 
 		it "Create a C3 major chord with E note in higher voice (use grade position to duplicate)" do
-			chord = Musa::Chord :I, scale: scale.based_on_pitch(60)
-
-			chord.duplicate 1, octave: 1
+			chord = Musa::Chord :I, scale: scale.based_on_pitch(60), duplicate: { position: 1, octave: 1 }
 
 			expect(chord.pitches).to eq [60, 64, 67, 76]
 		end
 
 		it "Create a C3 major chord with E note in higher voice (use grade symbol to duplicate)" do
-			chord = Musa::Chord :I, scale: scale.based_on_pitch(60)
-
-			chord.duplicate :III, octave: 1
+			chord = Musa::Chord :I, scale: scale.based_on_pitch(60), duplicate: { position: :III, octave: 1 }
 
 			expect(chord.pitches).to eq [60, 64, 67, 76]
 		end
 
 		it "Create a C3 major chord with C note in bass, adding it as last voice and reordering it to get it in lower voice" do
-			chord = Musa::Chord :I, scale: scale.based_on_pitch(60)
-
-			chord.duplicate 0, octave: -1
+			chord = Musa::Chord :I, scale: scale.based_on_pitch(60), duplicate: { position: 0, octave: -1 }
 
 			expect(chord.pitches).to eq [60, 64, 67, 48]
 
