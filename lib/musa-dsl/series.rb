@@ -1,5 +1,3 @@
-require 'Duplicate'
-
 module Musa
 	module ProtoSerie
 
@@ -41,6 +39,10 @@ module Musa
 			Serie.new BasicSerieReverser.new(self)
 		end
 
+		def randomize
+			Serie.new BasicSerieRandomizer.new(self)
+		end
+
 		def eval(with: nil, &block)
 			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, &block)
 		end
@@ -57,7 +59,7 @@ module Musa
 			Serie.new SequenceBasicSerie.new([self, *series])
 		end
 
-		def as_array
+		def to_a
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 
 			@serie.restart
@@ -71,9 +73,8 @@ module Musa
 			array
 		end
 
-		# TODO reimplementar duplicate sin require 'duplicate' (este añade un duplicate en object que es un coñazo)
 		def duplicate
-			Duplicate.duplicate(self)
+			self.deep_clone
 		end
 
 		def slave
@@ -558,6 +559,37 @@ module Musa
 		end
 
 		private_constant :BasicSerieReverser
+
+		class BasicSerieRandomizer
+			include ProtoSerie
+
+			def initialize(serie)
+				raise ArgumentError, "cannot randomize an infinite serie #{serie}" if serie.infinite?
+				@serie = serie
+				@random = Random.new
+				restart
+			end
+
+			def restart
+				@serie.restart
+				@values = @serie.to_a
+			end
+
+			def next_value
+				if @values.size > 0
+					position = @random.rand(0...@values.size)
+					value = @values[position]
+					
+					@values.delete_at position
+				else
+					value = nil
+				end
+
+				return value
+			end
+		end
+
+		private_constant :BasicSerieRandomizer
 
 		class BasicSerieShifter
 			include ProtoSerie

@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
                     "lib/musa-dsl/series.rb", "lib/musa-dsl/hash-serie-splitter.rb",
                     "lib/musa-dsl/midi-voices.rb", 
                     "lib/musa-dsl/scales.rb", "lib/musa-dsl/chords.rb", "lib/musa-dsl/chords2.rb",
-                    "lib/musa-dsl/variatio.rb" ]
+                    "lib/musa-dsl/variatio.rb", "lib/musa-dsl/darwin.rb" ]
   s.homepage    = 'http://rubygems.org/gems/musa-dsl'
   s.license       = 'CC-BY-NC-ND-4.0'
 end
