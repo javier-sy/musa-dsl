@@ -74,7 +74,7 @@ module Musa
 		end
 
 		def duplicate
-			self.deep_clone
+			self.deep_dup
 		end
 
 		def slave
@@ -436,35 +436,31 @@ module Musa
 		private_constant :ForLoopBasicSerie
 
 		class RandomNumberBasicSerie
-			def initialize(from: 0, to: nil, step: 1)
+			def initialize(from: nil, to: nil, step: nil)
+				from ||= 0
+				step ||= 1
+
 				@from = from
 				@to = to
 				@step = step
 
-				if @step
-					@range = ((@to - @from) / @step).ceil
-				else
-					@range = @to - @from
-					@step = 1
-				end
+				@range = ((@to - @from) / @step).ceil
+
+				@random = Random.new
 
 				restart
 			end
 
 			def restart
-				@random = Random.new
+				while !@value || @value > @to
+					@value = @from + @random.rand(0..@range) * @step
+				end
 			end
 
 			def next_value
-				value = @from + @random.rand(0..@range) * @step
-				if value > @to
-					value = next_value
-				end
-				value
-			end
-
-			def infinite?
-				true
+				v = @value
+				@value = nil
+				return v
 			end
 		end
 
@@ -473,19 +469,19 @@ module Musa
 		class RandomFromArrayBasicSerie
 			def initialize(values)
 				@values = values
+				@random = Random.new
+
 				restart
 			end
 
 			def restart
-				@random = Random.new
+				@value = @values[@random.rand(0...@values.size)]
 			end
 
 			def next_value
-				@values[@random.rand(0...@values.size)]
-			end
-
-			def infinite?
-				true
+				v = @value
+				@value = nil
+				return v
 			end
 		end
 

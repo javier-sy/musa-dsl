@@ -134,7 +134,7 @@ module Musa
 
 					value = @values[key] if @values
 
-					puts "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
+					#puts "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
 					@values_counter = {}
 				end
 				

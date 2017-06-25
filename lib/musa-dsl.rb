@@ -1,4 +1,3 @@
-require 'musa-dsl/deep-clone.rb'
 require 'musa-dsl/class-mods.rb'
 
 require 'musa-dsl/transport'
