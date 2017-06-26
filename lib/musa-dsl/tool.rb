@@ -33,6 +33,22 @@ module Musa
 			r
 		end
 
+		def self.make_array_of(object_range_or_array)
+			object_range_or_array = [object_range_or_array] unless object_range_or_array.is_a?(Array)
+
+			r = []
+
+			object_range_or_array.each do |element|
+				if element.is_a? Range
+					element.to_a.each { |element| r << element }
+				else
+					r << element
+				end
+			end
+
+			r
+		end
+
 		def self.make_hash_key_parameters(proc, **hash)
 
 			parameters = proc.parameters.collect { |parameter| [ parameter[1], hash[parameter[1]] ] if parameter[0] == :key || parameter[0] == :keyreq }.compact.to_h

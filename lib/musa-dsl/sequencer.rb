@@ -1,9 +1,5 @@
-require 'musa-dsl/tool'
-
-require 'musa-dsl/themes' 
-require 'musa-dsl/series'
-
 module Musa
+
 	class Sequencer
 		
 		include Series

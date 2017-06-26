@@ -7,7 +7,10 @@ module Musa
 
 		attr_reader :root_grade, :scale
 
-		def initialize(root_grade, grades: 3, scale:, duplicate: [])
+		def initialize(root_grade, grades: nil, scale:, duplicate: nil)
+			grades ||= 3
+			duplicate ||= []
+
 			@scale = scale
 			@root_grade = root_grade
 
@@ -72,14 +75,24 @@ module Musa
 
 		def duplicate(grade_or_grade_index, octave: nil, to_voice: nil) # -> ChordNote
 			octave ||= 0
-			
-			chord = ChordNote.new chord: self, grade: grade_of(grade_or_grade_index), grade_index: grade_index_of(grade_or_grade_index), octave: octave
+
+			note = ChordNote.new chord: self, grade: grade_of(grade_or_grade_index), grade_index: grade_index_of(grade_or_grade_index), octave: octave
 
 			if to_voice
-				@voices.insert to_voice, chord
+				@voices.insert to_voice, note
 			else
-				@voices << chord
+				@voices << note
 			end
+
+			self
+		end
+
+		def move(voice, octave: nil)
+			octave ||= 0
+
+			@voices[voice].octave += octave
+
+			self
 		end
 
 		def sort_voices!
@@ -102,7 +115,11 @@ module Musa
  			sorted.last.pitch - sorted.first.pitch
  		end
 
- 		# TODO to_s inspect
+ 		def inspect
+ 			"Chord root: #{@root_grade} voices: #{@voices}"
+ 		end
+
+ 		alias to_s inspect
 
 		private
 
@@ -126,7 +143,9 @@ module Musa
 			attr_reader :grade, :grade_index
 			attr_accessor :octave
 
-			def initialize(chord:, grade:, grade_index:, octave: 0)
+			def initialize(chord:, grade:, grade_index:, octave: nil)
+				octave ||= 0
+
 				@chord = chord
 
 				@grade = grade
@@ -141,10 +160,15 @@ module Musa
 			def voice
 				@chord.voices.index self
 			end
+
+			def inspect
+				"ChordNote \##{voice} #{@grade} octave: #{@octave}"
+			end
+
+			alias to_s inspect
+
 		end
 
 		private_constant :ChordNote
 	end
 end
-
-

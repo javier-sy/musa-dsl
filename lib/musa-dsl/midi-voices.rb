@@ -1,12 +1,17 @@
 module Musa
+
 	class MIDIVoices
 
 		attr_accessor :log
 
-		def initialize(sequencer:, output:, channels:, log: false)
+		def initialize(sequencer:, output:, channels:, log: nil)
+			log ||= false
+
+			channels = [channels] unless channels.is_a? Array
+
 			@sequencer = sequencer
 			@output = output
-			@channels = channels
+			@channels = Tool::explode_ranges_on_array channels
 			@do_log = log
 
 			reset
@@ -32,7 +37,9 @@ module Musa
 		attr_accessor :name, :do_log
 		attr_reader :sequencer, :output, :channel, :used_pitches, :tick_duration
 
-		def initialize(sequencer:, output:, channel:, name: nil, log: false)
+		def initialize(sequencer:, output:, channel:, name: nil, log: nil)
+			log ||= false
+			
 			@sequencer = sequencer
 			@output = output
 			@channel = channel

@@ -29,10 +29,36 @@ RSpec.describe Musa::Variatio do
 			expect(variations[39]).to eq( {a: 10, b: :delta} )
 		end
 
+		it "With 2 fields and constructor, with external parameter" do
+
+			v = Musa::Variatio.new :object do
+				field :a, 1..10
+				field :b, [:alfa, :beta, :gamma, :delta]
+
+				constructor do |a:, b:|
+					{ a: a, b: b }
+				end
+			end
+
+			variations = v.on a: 1..3
+
+			expect(variations.size).to eq 3*4
+
+			expect(variations[0]).to eq( {a: 1, b: :alfa} )
+			expect(variations[1]).to eq( {a: 1, b: :beta} )
+			expect(variations[2]).to eq( {a: 1, b: :gamma} )
+			expect(variations[3]).to eq( {a: 1, b: :delta} )
+
+			expect(variations[4]).to eq( {a: 2, b: :alfa} )
+
+			expect(variations[11]).to eq( {a: 3, b: :delta} )
+		end
+
 		it "With 2 fields + fieldset (2 inner fields), test with only 1 option each, constructor and finalize" do
 
-			v = Musa::Variatio.new :object, parameters: [:a] do
+			v = Musa::Variatio.new :object do
 
+				field :a
 				field :b, [0]
 				field :c, [2]
 
@@ -68,10 +94,51 @@ RSpec.describe Musa::Variatio do
 			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 } }, finalized: true })
 		end
 
+		it "With 2 fields + fieldset (2 inner fields), test with only 1 option each and external parameters for field and fieldset options constructor and finalize" do
+
+			v = Musa::Variatio.new :object do
+
+				field :a
+				field :b, [0]
+				field :c, [2]
+
+				constructor do |a:, b:|
+					{ a: a, b: b, d: {} }
+				end
+
+				finalize do |object:|
+					object[:finalized] = true
+				end
+
+				with_attributes do |object:, c:|
+					object[:c] = c
+				end
+
+				fieldset :d do
+
+					field :e, [4]
+					field :f, [6]
+
+					with_attributes do |object:, d:, e:, f:|
+						object[:d][d] = {}
+						object[:d][d][:e] = e
+						object[:d][d][:f] = f
+					end
+				end
+			end
+
+			variations = v.on a: 1000, d: 100..103
+
+			expect(variations.size).to eq 1
+
+			expect(variations[0]).to eq({ a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 }, 101 => { e: 4, f: 6 }, 102 => { e: 4, f: 6 }, 103 => { e: 4, f: 6 } }, finalized: true })
+		end
+
 		it "With 1 field + 2 fieldset (1 inner fields + 2 fieldset with 1 inner fields), test with only 1 option each, constructor and finalize" do
 
-			v = Musa::Variatio.new :object, parameters: [:a] do
+			v = Musa::Variatio.new :object do
 
+				field :a
 				field :b, [0]
 
 				constructor do |a:, b:|
@@ -133,8 +200,9 @@ RSpec.describe Musa::Variatio do
 
 		it "With 2 fields + fieldset (2 inner fields), constructor and finalize" do
 
-			v = Musa::Variatio.new :object, parameters: [:a] do
+			v = Musa::Variatio.new :object do
 
+				field :a
 				field :b, [0, 1]
 				field :c, [2, 3]
 
@@ -181,8 +249,9 @@ RSpec.describe Musa::Variatio do
 
 		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize" do
 
-			v = Musa::Variatio.new :object, parameters: [:a] do
+			v = Musa::Variatio.new :object do
 
+				field :a
 				field :b, [0, 1]
 				field :c, [2, 3]
 
@@ -252,8 +321,9 @@ RSpec.describe Musa::Variatio do
 
 		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields) + fieldset with 1 inner field, constructor and finalize" do
 
-			v = Musa::Variatio.new :object, parameters: [:a] do
+			v = Musa::Variatio.new :object do
 
+				field :a
 				field :b, [0, 1]
 				field :c, [2, 3]
 
@@ -322,5 +392,6 @@ RSpec.describe Musa::Variatio do
 
 			expect(variations.size).to eq 2 * 2 * ((2 * 2) ** 2) * ((2 * 2) ** 4) * (2 ** 4)
 		end
+
 	end
 end

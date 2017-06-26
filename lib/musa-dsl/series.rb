@@ -1,4 +1,7 @@
+# TODO reorganizar estructura de ficheros, modules y clases de Series y hash-serie-splitter.rb
+
 module Musa
+
 	module ProtoSerie
 
 		def restart

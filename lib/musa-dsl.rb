@@ -1,4 +1,10 @@
+# TODO reorganizar dependencias explícitas e implícitas: en este fichero poner sólo los require de los módulos principales, y que estos hagan require de sus dependencias
+
 require 'musa-dsl/class-mods.rb'
+require 'musa-dsl/tool.rb'
+
+require 'musa-dsl/series'
+require 'musa-dsl/hash-serie-splitter'
 
 require 'musa-dsl/transport'
 require 'musa-dsl/sequencer'
@@ -6,9 +12,6 @@ require 'musa-dsl/midi-voices'
 
 require 'musa-dsl/scales'
 require 'musa-dsl/chords'
-
-require 'musa-dsl/hash-serie-splitter'
-require 'musa-dsl/series'
 
 require 'musa-dsl/variatio'
 require 'musa-dsl/darwin'

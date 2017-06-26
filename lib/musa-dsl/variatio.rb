@@ -1,20 +1,20 @@
-# TODO optimiziación: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
-# TODO optimización: multithreading
-# TODO optimizar: eliminar ** si mejora rendimiento
-# TODO permitir definir un variatio a través de atributos, además de a través del block del constructor
+require 'active_support/core_ext/object/deep_dup'
+
+# TODO optimizar: eliminar ** (mejora el rendimiento 20 veces)
+# TODO optimizar: eliminar el paso de bloques con ampersand de un método a otro (usarlo como variable normal sin ampersand en la definición) (mejora 5 veces)
+# TODO optimizar: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
+# TODO optimizar: multithreading
+
+# TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
 	class Variatio
-		def initialize instance_name, parameters: nil, &block
+		def initialize instance_name, &block
 
-			parameters ||= []
-			
 			raise ArgumentError, "instance_name should be a symbol" unless instance_name.is_a?(Symbol)
-			raise ArgumentError, "parameters should be an array of symbols" unless parameters.empty? || ( parameters.is_a?(Array) && !parameters.find {|p| !(p.is_a? Symbol) } )
 			raise ArgumentError, "block is needed" unless block
 
 			@instance_name = instance_name
-			@parameters = parameters
 
 			main_context = MainContext.new &block
 
@@ -23,18 +23,24 @@ module Musa
 			@finalize = main_context._finalize
 		end
 
-
 		def on **values
-			tree_A = Variatio::generate_eval_tree_A @fieldset
-			tree_B = Variatio::generate_eval_tree_B @fieldset
+
+			run_fieldset = @fieldset.deep_dup
+
+			run_fieldset.components.each do |component|
+				if values.has_key? component.name
+					component.options = Tool::make_array_of values[component.name]
+				end
+			end
+
+			tree_A = Variatio::generate_eval_tree_A run_fieldset
+			tree_B = Variatio::generate_eval_tree_B run_fieldset
 
 			combinations = []
 
 			parameters_set = tree_A.calc_parameters
 
 			parameters_set.each do |parameters_with_depth|
-
-				parameters_with_depth.merge! values
 
 				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)
 
@@ -50,7 +56,9 @@ module Musa
 			combinations
 		end
 
-		alias run on
+		def run 
+			on
+		end
 
 		private
 
@@ -215,18 +223,18 @@ module Musa
 		class FieldsetContext
 			attr_reader :_fieldset
 
-			def initialize name, options, &block
-				@_fieldset = Fieldset.new name, options.to_a
+			def initialize name, options = nil, &block
+				@_fieldset = Fieldset.new name, Tool::make_array_of(options)
 
 				self.instance_exec_nice &block
 			end
 
-			def field name, options
-				@_fieldset.components << Field.new(name, options.to_a)
+			def field name, options = nil
+				@_fieldset.components << Field.new(name, Tool::make_array_of(options))
 			end
 
-			def fieldset name, options, &block
-				fieldset_context = FieldsetContext.new name, options.to_a, &block
+			def fieldset name, options = nil, &block
+				fieldset_context = FieldsetContext.new name, options, &block
 				@_fieldset.components << fieldset_context._fieldset
 			end
 
@@ -259,7 +267,8 @@ module Musa
 		private_constant :MainContext
 
 		class Field
-			attr_reader :name, :options
+			attr_reader :name
+			attr_accessor :options
 
 			def inspect
 				"Field #{@name} options: #{@options}"
@@ -278,7 +287,8 @@ module Musa
 		private_constant :Field
 
 		class Fieldset
-			attr_reader :name, :options, :with_attributes, :components
+			attr_reader :name, :with_attributes, :components
+			attr_accessor :options
 
 			def inspect
 				"Fieldset #{@name} options: #{@options} components: #{@components}"

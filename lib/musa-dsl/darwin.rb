@@ -1,4 +1,5 @@
 module Musa
+
 	class Darwin
 
 		def initialize &block
