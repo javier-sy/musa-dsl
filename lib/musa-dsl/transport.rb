@@ -2,6 +2,8 @@ require 'topaz'
 require 'unimidi'
 require 'midi-message'
 
+require 'musa-dsl/topaz-midi-clock-input-mods'
+
 module Musa
 	class Transport
 
