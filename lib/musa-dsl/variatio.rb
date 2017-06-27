@@ -1,20 +1,23 @@
 require 'active_support/core_ext/object/deep_dup'
 
 
-# TODO optimizar: eliminar el paso de bloques con ampersand de un método a otro (usarlo como variable normal sin ampersand en la definición) (mejora 5 veces)
-
-
-# TODO optimizar: eliminar ** (mejora el rendimiento 20 veces)
-
-
-
-# TODO optimizar: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
-# TODO optimizar: multithreading
+# TODO optimizar: multithreading, ruby no tiene multicore!!!!
 
 # TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
 	class Variatio
+
+		@@threads = 4
+
+		def self.threads
+			@@threads
+		end
+
+		def self.threads= threads
+			@@threads = threads
+		end
+
 		def initialize instance_name, &block
 
 			raise ArgumentError, "instance_name should be a symbol" unless instance_name.is_a?(Symbol)
@@ -31,6 +34,9 @@ module Musa
 
 		def on **values
 
+			constructor_binder = Tool::KeyParametersProcedureBinder.new @constructor
+			finalize_binder = Tool::KeyParametersProcedureBinder.new @finalize if @finalize
+
 			run_fieldset = @fieldset.deep_dup
 
 			run_fieldset.components.each do |component|
@@ -42,24 +48,55 @@ module Musa
 			tree_A = Variatio::generate_eval_tree_A run_fieldset
 			tree_B = Variatio::generate_eval_tree_B run_fieldset
 
-			combinations = []
-
 			parameters_set = tree_A.calc_parameters
 
-			parameters_set.each do |parameters_with_depth|
+			parameters_set_slices = []
+			slice_size = parameters_set.size / @@threads
+			slice_position = 0
 
-				instance = @constructor.call **Tool::make_hash_key_parameters(@constructor, **parameters_with_depth)
-
-				tree_B.run parameters_with_depth, { @instance_name => instance }
-
-				if @finalize
-					@finalize.call **Tool::make_hash_key_parameters(@finalize, **parameters_with_depth, @instance_name => instance)
-				end
-
-				combinations << instance
+			@@threads.times do |i|
+				parameters_set_slices[i] = parameters_set.slice slice_position, slice_size
+				slice_position += slice_size
 			end
 
-			combinations
+			threads = []
+
+			parameters_set_slices.each do |parameters_set|
+
+				threads << Thread.new do 
+
+					puts "En Thread"
+
+					combinations = []
+
+					parameters_set.each do |parameters_with_depth|
+
+						instance = @constructor.call constructor_binder.apply(parameters_with_depth)
+
+						tree_B.run parameters_with_depth, { @instance_name => instance }
+
+						if @finalize
+							finalize_parameters = finalize_binder.apply parameters_with_depth
+							finalize_parameters[@instance_name] = instance
+
+							@finalize.call finalize_parameters
+						end
+
+						combinations << instance
+					end
+
+					combinations
+				end
+			end
+
+
+			merged_combinations = []
+
+			threads.each do |thread|
+				merged_combinations += thread.value
+			end
+
+			merged_combinations
 		end
 
 		def run 
@@ -100,13 +137,16 @@ module Musa
 			end
 
 			def calc_parameters
-				if inner
-					Tool::list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
-				else
-					calc_own_parameters
+				if !@calc_parameters
+					if inner
+						@calc_parameters = Tool::list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
+					else
+						@calc_parameters = calc_own_parameters
+					end
 				end
-			end
 
+				@calc_parameters
+			end
 		end
 
 		private_constant :A
@@ -114,10 +154,12 @@ module Musa
 		class A1 < A
 			def initialize parameter_name, options
 				super parameter_name, options
+
+				@own_parameters = @options.collect { |option| { @parameter_name => option } }
 			end
 
 			def calc_own_parameters
-				@options.collect { |option| { @parameter_name => option } }
+				@own_parameters # TODO .clone??????
 			end
 
 			def inspect
@@ -134,9 +176,11 @@ module Musa
 				super parameter_name, options
 
 				@subcomponent = subcomponent
-			end
 
-			def calc_own_parameters
+
+
+				# extraído de calc_own_parameters
+
 				sub_parameters_set = @subcomponent.calc_parameters
 				result = nil
 
@@ -150,7 +194,13 @@ module Musa
 
 				result = result.collect { |v| { @parameter_name => v } }
 
-				result
+				@own_parameters = result
+
+
+			end
+
+			def calc_own_parameters
+				@own_parameters # .clone????
 			end
 
 			def inspect
@@ -185,7 +235,8 @@ module Musa
 				@options = options
 				@affected_field_names = affected_field_names
 				@inner = inner
-				@blocks = blocks
+
+				@procedures = blocks.collect { |proc| Tool::KeyParametersProcedureBinder.new proc }
 			end
 
 			def run parameters_with_depth, parent_parameters = nil
@@ -199,9 +250,8 @@ module Musa
 					parameters = base.select { |k, v| @affected_field_names.include? k }.merge(parent_parameters)
 					parameters[@parameter_name] = option
 
-					@blocks.each do |block|
-						effective_parameters = Tool::make_hash_key_parameters(block, **parameters)
-						block.call **effective_parameters
+					@procedures.each do |procedure_binder|
+						procedure_binder.call parameters
 					end
 
 					if @parameter_name == :_maincontext

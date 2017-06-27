@@ -1,5 +1,44 @@
 module Musa
+
 	module Tool
+
+		class KeyParametersProcedureBinder
+			
+			attr_reader :procedure
+
+			def initialize procedure
+				@procedure = procedure
+
+				@parameters = {}
+				@has_rest = false
+
+				procedure.parameters.each do |parameter| 
+					@parameters[parameter[1]] = nil if parameter[0] == :key || parameter[0] == :keyreq
+					@has_rest = true if parameter[0] == :keyrest
+				end
+			end
+
+			def call hash
+				@procedure.call apply(hash)
+			end
+
+			def apply hash
+				result = @parameters.clone
+
+				@parameters.each_key do |parameter_name|
+					result[parameter_name] = hash[parameter_name]
+				end
+
+				if @has_rest
+					hash.each do |key, value|
+						result[key] = value unless result.key? key
+					end
+				end
+
+				result
+			end
+		end
+
 		def self.grant_array(object_or_array)
 			if object_or_array.is_a? Array
 				object_or_array.dup
@@ -33,12 +72,12 @@ module Musa
 			r
 		end
 
-		def self.make_array_of(object_range_or_array)
-			object_range_or_array = [object_range_or_array] unless object_range_or_array.is_a?(Array)
+		def self.make_array_of(object_or_range_or_array)
+			object_or_range_or_array = [object_or_range_or_array] unless object_or_range_or_array.is_a?(Array)
 
 			r = []
 
-			object_range_or_array.each do |element|
+			object_or_range_or_array.each do |element|
 				if element.is_a? Range
 					element.to_a.each { |element| r << element }
 				else
@@ -50,6 +89,8 @@ module Musa
 		end
 
 		def self.make_hash_key_parameters(proc, **hash)
+
+			# TODO deprecate
 
 			parameters = proc.parameters.collect { |parameter| [ parameter[1], hash[parameter[1]] ] if parameter[0] == :key || parameter[0] == :keyreq }.compact.to_h
 
