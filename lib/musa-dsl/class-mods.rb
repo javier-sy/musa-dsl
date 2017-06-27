@@ -30,7 +30,17 @@ end
 
 class Object
 
+	def as_context_run proc, parameter: nil
+		if parameter
+			self.instance_exec parameter, &proc
+		else
+			self.instance_exec &proc
+		end
+	end
+
 	def instance_exec_nice value_or_key_args = nil, key_args = nil, &block
+
+		raise "DEPRECATED Object.instance_exec_nice"
 
 		if !value_or_key_args.nil? && value_or_key_args.is_a?(Hash)
 			key_args ||= {}

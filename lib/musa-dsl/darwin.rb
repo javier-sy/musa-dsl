@@ -6,7 +6,7 @@ module Musa
 			
 			raise ArgumentError, "block is needed" unless block
 
-			main_context = MainContext.new &block
+			main_context = MainContext.new block
 
 			@measures = main_context._measures
 			@weights = main_context._weights
@@ -18,8 +18,8 @@ module Musa
 
 			population.each do |object|
 				context = MeasuresEvalContext.new 
-				# TODO eliminar [] de [object] cuando se modifique instance_exec_nice
-				context.instance_exec_nice [object], &@measures
+
+				context.as_context_run @measures, parameter: object
 				measure = context._measure
 
 				measured_objects << { object: object, measure: context._measure } unless measure.died?
@@ -67,9 +67,9 @@ module Musa
 		class MainContext
 			attr_reader :_measures, :_weights
 
-			def initialize &block
+			def initialize block
 				@_weights = {}
-				self.instance_exec_nice &block
+				self.as_context_run block
 			end
 
 			def measures &block

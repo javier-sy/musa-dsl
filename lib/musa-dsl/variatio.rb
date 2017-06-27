@@ -1,7 +1,13 @@
 require 'active_support/core_ext/object/deep_dup'
 
-# TODO optimizar: eliminar ** (mejora el rendimiento 20 veces)
+
 # TODO optimizar: eliminar el paso de bloques con ampersand de un método a otro (usarlo como variable normal sin ampersand en la definición) (mejora 5 veces)
+
+
+# TODO optimizar: eliminar ** (mejora el rendimiento 20 veces)
+
+
+
 # TODO optimizar: cachear listas de parámetros de los blocks, para no tener que obtenerlas y esquematizarlas cada vez
 # TODO optimizar: multithreading
 
@@ -16,7 +22,7 @@ module Musa
 
 			@instance_name = instance_name
 
-			main_context = MainContext.new &block
+			main_context = MainContext.new block
 
 			@constructor = main_context._constructor
 			@fieldset = main_context._fieldset
@@ -223,10 +229,10 @@ module Musa
 		class FieldsetContext
 			attr_reader :_fieldset
 
-			def initialize name, options = nil, &block
+			def initialize name, options = nil, block
 				@_fieldset = Fieldset.new name, Tool::make_array_of(options)
 
-				self.instance_exec_nice &block
+				self.as_context_run block
 			end
 
 			def field name, options = nil
@@ -234,7 +240,7 @@ module Musa
 			end
 
 			def fieldset name, options = nil, &block
-				fieldset_context = FieldsetContext.new name, options, &block
+				fieldset_context = FieldsetContext.new name, options, block
 				@_fieldset.components << fieldset_context._fieldset
 			end
 
@@ -248,11 +254,11 @@ module Musa
 		class MainContext < FieldsetContext
 			attr_reader :_constructor, :_finalize
 
-			def initialize &block
+			def initialize block
 				@_constructor = nil
 				@_finalize = nil
 
-				super :_maincontext, [nil], &block
+				super :_maincontext, [nil], block
 			end
 
 			def constructor &block
