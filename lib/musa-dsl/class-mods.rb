@@ -1,3 +1,5 @@
+# TODO hacer que *_nice permitar recibir atributos para indicar cómo se quieren procesar los parámetros (haciendo *, **, o sin hacer nada)
+
 class Array
 	def apply method_name, source
 	
@@ -27,6 +29,7 @@ class Rational
 end
 
 class Object
+
 	def instance_exec_nice value_or_key_args = nil, key_args = nil, &block
 
 		if !value_or_key_args.nil? && value_or_key_args.is_a?(Hash)

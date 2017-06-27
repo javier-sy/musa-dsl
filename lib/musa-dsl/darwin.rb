@@ -18,7 +18,8 @@ module Musa
 
 			population.each do |object|
 				context = MeasuresEvalContext.new 
-				context.instance_exec_nice object, &@measures
+				# TODO eliminar [] de [object] cuando se modifique instance_exec_nice
+				context.instance_exec_nice [object], &@measures
 				measure = context._measure
 
 				measured_objects << { object: object, measure: context._measure } unless measure.died?
