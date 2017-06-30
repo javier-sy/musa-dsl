@@ -1,5 +1,5 @@
-require 'musa-dsl'
 require 'profile'
+require 'musa-dsl'
 
 v3 = Musa::Variatio.new :object do
 

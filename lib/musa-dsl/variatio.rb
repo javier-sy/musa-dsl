@@ -1,22 +1,12 @@
 require 'active_support/core_ext/object/deep_dup'
 
 
-# TODO optimizar: multithreading, ruby no tiene multicore!!!!
+# TODO optimizar: multithreading (jruby/¿?)
 
 # TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
 	class Variatio
-
-		@@threads = 4
-
-		def self.threads
-			@@threads
-		end
-
-		def self.threads= threads
-			@@threads = threads
-		end
 
 		def initialize instance_name, &block
 
@@ -50,53 +40,25 @@ module Musa
 
 			parameters_set = tree_A.calc_parameters
 
-			parameters_set_slices = []
-			slice_size = parameters_set.size / @@threads
-			slice_position = 0
+			combinations = []
 
-			@@threads.times do |i|
-				parameters_set_slices[i] = parameters_set.slice slice_position, slice_size
-				slice_position += slice_size
-			end
+			parameters_set.each do |parameters_with_depth|
 
-			threads = []
+				instance = @constructor.call constructor_binder.apply(parameters_with_depth)
 
-			parameters_set_slices.each do |parameters_set|
+				tree_B.run parameters_with_depth, { @instance_name => instance }
 
-				threads << Thread.new do 
+				if @finalize
+					finalize_parameters = finalize_binder.apply parameters_with_depth
+					finalize_parameters[@instance_name] = instance
 
-					puts "En Thread"
-
-					combinations = []
-
-					parameters_set.each do |parameters_with_depth|
-
-						instance = @constructor.call constructor_binder.apply(parameters_with_depth)
-
-						tree_B.run parameters_with_depth, { @instance_name => instance }
-
-						if @finalize
-							finalize_parameters = finalize_binder.apply parameters_with_depth
-							finalize_parameters[@instance_name] = instance
-
-							@finalize.call finalize_parameters
-						end
-
-						combinations << instance
-					end
-
-					combinations
+					@finalize.call finalize_parameters
 				end
+
+				combinations << instance
 			end
 
-
-			merged_combinations = []
-
-			threads.each do |thread|
-				merged_combinations += thread.value
-			end
-
-			merged_combinations
+			combinations
 		end
 
 		def run 
@@ -159,7 +121,7 @@ module Musa
 			end
 
 			def calc_own_parameters
-				@own_parameters # TODO .clone??????
+				@own_parameters
 			end
 
 			def inspect
@@ -177,10 +139,6 @@ module Musa
 
 				@subcomponent = subcomponent
 
-
-
-				# extraído de calc_own_parameters
-
 				sub_parameters_set = @subcomponent.calc_parameters
 				result = nil
 
@@ -195,12 +153,10 @@ module Musa
 				result = result.collect { |v| { @parameter_name => v } }
 
 				@own_parameters = result
-
-
 			end
 
 			def calc_own_parameters
-				@own_parameters # .clone????
+				@own_parameters
 			end
 
 			def inspect
