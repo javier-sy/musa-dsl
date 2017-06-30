@@ -15,6 +15,14 @@ class Array
 	end
 end
 
+class Hash
+	def inspect
+		all = collect { |key, value| [ ", ", key.is_a?(Symbol) ? key.to_s + ": " : key + " => ", value.inspect ] }.flatten
+		all.shift
+		"{ " + all.join + " }"
+	end
+end
+
 class Rational
 	def inspect
 		d = self - self.to_i

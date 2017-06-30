@@ -1,6 +1,5 @@
 require 'active_support/core_ext/object/deep_dup'
 
-
 # TODO optimizar: multithreading (jruby/¿?)
 
 # TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
