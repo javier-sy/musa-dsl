@@ -1,4 +1,4 @@
-# TODO no resulta reconstruible vía inspect si se utiliza grade(x).octave = y o si se llama a move tras un sort_voices! revisar reconstruccionabilidad del chord
+# TODO no resulta reconstruible vía inspect si se utiliza grade(x).octave = y o si se llama a move tras un sort_voices!: revisar reconstruccionabilidad del chord
 
 module Musa
 	def self.Chord(*parameters)

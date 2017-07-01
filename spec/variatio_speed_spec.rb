@@ -290,7 +290,7 @@ RSpec.describe Musa::Variatio do
 		Benchmark.bmbm do |x|
 #			x.report("With 2 fields and constructor, without external parameters") { 1.upto(5000) { variations = v1.run } }
 #			x.report("With 2 fields + fieldset (2 inner fields), constructor and finalize") { 1.upto(500) { variations = v2.on a: 1000 } }
-			x.report("With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize") { 1.upto(1) { variations = v3.on a: 1000 } }
+#			x.report("With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize") { 1.upto(1) { variations = v3.on a: 1000 } }
 #			x.report("With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields) + fieldset with 1 inner field, constructor and finalize") { 1.upto(1) { variations = v4.on a: 1000 } }
 		end
 	end

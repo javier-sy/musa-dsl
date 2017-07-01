@@ -105,6 +105,10 @@ module Musa
 			def die
 				@_died = true
 			end
+
+			def died?
+				@_died
+			end
 		end
 
 		class Measure
