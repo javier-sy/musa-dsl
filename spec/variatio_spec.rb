@@ -1,4 +1,5 @@
 require 'musa-dsl'
+require 'benchmark'
 
 RSpec.describe Musa::Variatio do
 	context "Create several kind of variations" do
@@ -392,6 +393,5 @@ RSpec.describe Musa::Variatio do
 
 			expect(variations.size).to eq 2 * 2 * ((2 * 2) ** 2) * ((2 * 2) ** 4) * (2 ** 4)
 		end
-
 	end
 end
