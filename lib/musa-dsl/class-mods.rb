@@ -48,7 +48,7 @@ class Object
 
 	def instance_exec_nice value_or_key_args = nil, key_args = nil, &block
 
-		raise "DEPRECATED Object.instance_exec_nice"
+		# TODO raise "DEPRECATED Object.instance_exec_nice, use Object.as_context_run"
 
 		if !value_or_key_args.nil? && value_or_key_args.is_a?(Hash)
 			key_args ||= {}

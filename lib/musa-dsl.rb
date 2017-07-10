@@ -13,6 +13,7 @@ require 'musa-dsl/midi-voices'
 
 require 'musa-dsl/scales'
 require 'musa-dsl/chords'
+require 'musa-dsl/themes'
 
 require 'musa-dsl/variatio'
 require 'musa-dsl/darwin'

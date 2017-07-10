@@ -89,7 +89,7 @@ module Musa
 			return slave_serie
 		end
 
-		def image # serie que va clonando en imagen lo de la principal... ¿? revisar notas
+		def image # TODO serie que va clonando en imagen lo de la principal... ¿? revisar notas
 			# TODO
 		end
 	end

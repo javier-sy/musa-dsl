@@ -1,5 +1,3 @@
-# TODO no resulta reconstruible vía inspect si se utiliza grade(x).octave = y o si se llama a move tras un sort_voices!: revisar reconstruccionabilidad del chord
-
 module Musa
 	def self.Chord(*parameters)
 		Chord.new *parameters
@@ -9,17 +7,15 @@ module Musa
 
 		attr_reader :root_grade, :scale, :duplicated, :moved
 
-		def initialize(root_grade, grades: nil, scale:, duplicate: nil, move: nil)
-			@constructor_grades = grades
-			@duplicates = []
-			@moves = []
-
+		def initialize(root_grade, grades: nil, octave: nil, scale:, duplicate: nil, move: nil)
 			grades ||= 3
+			octave ||= 0
 			duplicate ||= []
 			move ||= []
 
 			@scale = scale
 			@root_grade = root_grade
+			@octave = octave
 
 			@grades = []
 			@voices = []
@@ -31,7 +27,7 @@ module Musa
 					grade = @scale.symbol_of(scale_note)
 
 					@grades << grade
-					@voices << ChordNote.new(chord: self, grade: grade, grade_index: index)
+					@voices << ChordNote.new(self, grade, index, @octave)
 				end
 
 			elsif grades.is_a? Array
@@ -51,7 +47,7 @@ module Musa
 					end
 
 					@grades << grade
-					@voices << ChordNote.new(chord: self, grade: grade, grade_index: index)
+					@voices << ChordNote.new(self, grade, index)
 
 					index += 1
 				end
@@ -65,6 +61,8 @@ module Musa
 
 			move = [move] unless move.is_a? Array
 			move.each { |m| self.move m[:voice], octave: m[:octave] if m.is_a? Hash }
+
+			sort_voices!
 		end
 
 		def voices
@@ -84,16 +82,9 @@ module Musa
 		end
 
 		def duplicate(grade_or_grade_index, octave: nil, to_voice: nil) # -> ChordNote
+ 			octave ||= 0
 
-			cmd = { position: grade_or_grade_index }
-			cmd[:octave] = octave if octave
-			cmd[:to_voice] = to_voice if to_voice
-
-			@duplicates << cmd
-
-			octave ||= 0
-
-			note = ChordNote.new chord: self, grade: grade_of(grade_or_grade_index), grade_index: grade_index_of(grade_or_grade_index), octave: octave
+			note = ChordNote.new self, grade_of(grade_or_grade_index), grade_index_of(grade_or_grade_index), @octave + octave
 
 			if to_voice
 				@voices.insert to_voice, note
@@ -105,14 +96,9 @@ module Musa
 		end
 
 		def move(voice, octave: nil)
-			cmd = { voice: voice }
-			cmd[:octave] = octave if octave
-
-			@moves << cmd
-
 			octave ||= 0
 
-			@voices[voice].octave += octave
+			@voices[voice].octave = octave + @octave
 
 			self
 		end
@@ -137,17 +123,11 @@ module Musa
  			sorted.last.pitch - sorted.first.pitch
  		end
 
- 		def inspect
- 			grades = "grades: #{@constructor_grades}" if @constructor_grades
- 			duplicates =  "duplicate: #{ @duplicates.size == 1 ? @duplicates.first.inspect : @duplicates.inspect }" unless @duplicates.empty?
- 			moves = "move: #{ @moves.size == 1 ? @moves.first.inspect : @moves.inspect }" unless @moves.empty?
-
- 			%{ Musa::Chord #{@root_grade.inspect}#{", #{grades}" if grades}#{", #{duplicates}" if duplicates}#{", #{moves}" if moves} }.strip
- 		end
-
  		def to_s
  			"Chord root: #{@root_grade} voices: #{@voices}"
  		end
+
+ 		alias inspect to_s
 
 		private
 
@@ -171,7 +151,7 @@ module Musa
 			attr_reader :grade, :grade_index
 			attr_accessor :octave
 
-			def initialize(chord:, grade:, grade_index:, octave: nil)
+			def initialize(chord, grade, grade_index, octave)
 				octave ||= 0
 
 				@chord = chord
