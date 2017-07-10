@@ -1,5 +1,3 @@
-require 'active_support/core_ext/object/deep_dup'
-
 # TODO optimizar: multithreading (jruby/¿?)
 
 # TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
@@ -26,7 +24,7 @@ module Musa
 			constructor_binder = Tool::KeyParametersProcedureBinder.new @constructor
 			finalize_binder = Tool::KeyParametersProcedureBinder.new @finalize if @finalize
 
-			run_fieldset = @fieldset.deep_dup
+			run_fieldset = @fieldset.clone # TODO verificar que esto no da problemas
 
 			run_fieldset.components.each do |component|
 				if values.has_key? component.name

@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 require 'musa-dsl'
 require 'benchmark'
 

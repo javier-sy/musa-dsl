@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
                     "lib/musa-dsl/class-mods.rb",
                     "lib/musa-dsl/topaz-midi-clock-input-mods.rb", 
                     "lib/musa-dsl/tool.rb", 
+                    "lib/musa-dsl/duplicate.rb",
                     "lib/musa-dsl/transport.rb", "lib/musa-dsl/sequencer.rb", "lib/musa-dsl/themes.rb", 
                     "lib/musa-dsl/series.rb", "lib/musa-dsl/hash-serie-splitter.rb",
                     "lib/musa-dsl/midi-voices.rb", 

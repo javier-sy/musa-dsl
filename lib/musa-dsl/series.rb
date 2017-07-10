@@ -1,5 +1,8 @@
 # TODO reorganizar estructura de ficheros, modules y clases de Series y hash-serie-splitter.rb
 
+
+require_relative 'duplicate'
+
 module Musa
 
 	module ProtoSerie
@@ -76,10 +79,6 @@ module Musa
 			array
 		end
 
-		def duplicate
-			self.deep_dup
-		end
-
 		def slave
 			slave_serie = SlaveSerie.new self	
 					
@@ -89,8 +88,8 @@ module Musa
 			return slave_serie
 		end
 
-		def image # TODO serie que va clonando en imagen lo de la principal... ¿? revisar notas
-			# TODO
+		def duplicate
+			Duplicate.duplicate(self)
 		end
 	end
 

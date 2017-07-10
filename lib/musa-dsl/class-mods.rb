@@ -37,7 +37,6 @@ class Rational
 end
 
 class Object
-
 	def as_context_run proc, parameter: nil
 		if parameter
 			self.instance_exec parameter, &proc

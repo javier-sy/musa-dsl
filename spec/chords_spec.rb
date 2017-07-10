@@ -1,5 +1,7 @@
 require 'musa-dsl'
 
+require 'spec_helper'
+
 RSpec.describe Musa::Chord do
 
 	context "Basic chord creation" do
