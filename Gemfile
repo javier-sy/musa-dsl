@@ -1,8 +1,12 @@
 source "https://rubygems.org"
 
-gem "unimidi", "~> 0.4", ">= 0.4.7"
-gem "midi-message", "~> 0.4", ">= 0.4.9"
-gem "midi-topaz", "~> 0.2", ">= 0.2.5"
+group :transport do
+	gem "unimidi", "~> 0.4", ">= 0.4.7"
+	gem "midi-message", "~> 0.4", ">= 0.4.9"
+	gem "midi-topaz", "~> 0.2", ">= 0.2.5"
+end
 
-gem "rspec", "~> 3.0"
+group :test do
+	gem "rspec", "~> 3.0"
+end
 

@@ -1,3 +1,5 @@
+require 'topaz'
+
 class Topaz::MIDIClockInput
 
   def after_stop(&block)
