@@ -1,5 +1,6 @@
 # TODO reorganizar estructura de ficheros, modules y clases de Series y hash-serie-splitter.rb
 
+# TODO añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
 require_relative 'duplicate'
 

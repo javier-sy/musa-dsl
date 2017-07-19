@@ -145,8 +145,10 @@ module Musa
 			end
 		end
 
-		def play(serie, mode: :wait, parameter: nil, context: nil, **mode_args, &block)
+		def play(serie, mode: nil, parameter: nil, context: nil, **mode_args, &block)
 
+			mode ||= :wait
+			
 			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Only :wait or :at available" unless mode == :wait || mode == :at
 
 			if parameter.is_a? Proc
