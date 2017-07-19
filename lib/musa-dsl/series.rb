@@ -411,6 +411,8 @@ module Musa
 		private_constant :BasicSerieRepeater
 
 		class ForLoopBasicSerie
+			include ProtoSerie
+
 			def initialize(from:, to:, step:)
 				@from = from
 				@to = to
@@ -438,6 +440,8 @@ module Musa
 		private_constant :ForLoopBasicSerie
 
 		class RandomNumberBasicSerie
+			include ProtoSerie
+
 			def initialize(from: nil, to: nil, step: nil)
 				from ||= 0
 				step ||= 1
@@ -469,6 +473,8 @@ module Musa
 		private_constant :RandomNumberBasicSerie
 
 		class RandomFromArrayBasicSerie
+			include ProtoSerie
+
 			def initialize(values)
 				@values = values
 				@random = Random.new
@@ -490,6 +496,8 @@ module Musa
 		private_constant :RandomFromArrayBasicSerie
 
 		class BasicSerieLocker
+			include ProtoSerie
+
 			def initialize(serie)
 				@serie = serie
 				@values = []
