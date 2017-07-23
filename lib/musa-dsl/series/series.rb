@@ -2,7 +2,7 @@
 
 # TODO añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
-require_relative 'duplicate'
+require_relative '../tools/duplicate'
 
 module Musa
 

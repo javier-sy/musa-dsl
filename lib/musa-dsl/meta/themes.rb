@@ -1,3 +1,6 @@
+require_relative '../mods/nice-send'
+require_relative '../sequencer/sequencer'
+
 module Musa
 	class Theme
 		def initialize(context)

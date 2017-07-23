@@ -1,3 +1,5 @@
+require_relative '../mods/nice-context-run'
+
 module Musa
 
 	class Darwin

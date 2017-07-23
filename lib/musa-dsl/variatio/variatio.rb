@@ -64,7 +64,22 @@ module Musa
 
 		private
 
-		def self.generate_eval_tree_A fieldset
+		extend self
+
+		def list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
+			result = []
+
+			list_of_hashes_1.each do |hash1|
+				list_of_hashes_2.each do |hash2|
+					result << hash1.merge(hash2)
+				end
+			end
+
+			result
+		end
+
+
+		def generate_eval_tree_A fieldset
 			root = nil
 			current = nil
 
@@ -85,6 +100,21 @@ module Musa
 			root
 		end
 
+		def generate_eval_tree_B fieldset
+			affected_field_names = []
+			inner = []
+
+			fieldset.components.each do |component|
+				if component.is_a? Fieldset
+					inner << generate_eval_tree_B(component)
+				elsif component.is_a? Field
+					affected_field_names << component.name
+				end
+			end
+
+			B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
+		end
+
 		class A
 			attr_reader :parameter_name, :options
 			attr_accessor :inner
@@ -98,7 +128,7 @@ module Musa
 			def calc_parameters
 				if !@calc_parameters
 					if inner
-						@calc_parameters = Tool::list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
+						@calc_parameters = list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
 					else
 						@calc_parameters = calc_own_parameters
 					end
@@ -143,7 +173,7 @@ module Musa
 					if result.nil?
 						result = sub_parameters_set.collect { |v| { option => v } }
 					else
-						result = Tool::list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
+						result = list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
 					end
 				end
 
@@ -164,21 +194,6 @@ module Musa
 		end
 
 		private_constant :A2
-
-		def self.generate_eval_tree_B fieldset
-			affected_field_names = []
-			inner = []
-
-			fieldset.components.each do |component|
-				if component.is_a? Fieldset
-					inner << generate_eval_tree_B(component)
-				elsif component.is_a? Field
-					affected_field_names << component.name
-				end
-			end
-
-			B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
-		end
 
 		class B
 			attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner

@@ -1,3 +1,5 @@
+require 'musa-dsl/series'
+
 module Musa
 
 	class Sequencer
