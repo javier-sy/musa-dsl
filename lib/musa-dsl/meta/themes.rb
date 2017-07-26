@@ -1,5 +1,5 @@
-require_relative '../mods/nice-send'
-require_relative '../sequencer/sequencer'
+require 'musa-dsl/mods/nice-send'
+require 'musa-dsl/sequencer/sequencer'
 
 module Musa
 	class Theme

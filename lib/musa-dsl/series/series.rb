@@ -2,8 +2,8 @@
 
 # TODO añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
-require_relative '../mods/duplicate'
-require_relative '../mods/arryfy'
+require 'musa-dsl/mods/duplicate'
+require 'musa-dsl/mods/arrayfy'
 
 module Musa
 

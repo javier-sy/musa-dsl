@@ -1,7 +1,7 @@
 require 'midi-message'
 
-require_relative '../mods/array-apply-get'
-require_relative '../mods/arrayfy'
+require 'musa-dsl/mods/array-apply-get'
+require 'musa-dsl/mods/arrayfy'
 
 module Musa
 

@@ -1,7 +1,7 @@
-require_relative '../mods/arrayfy'
-require_relative '../mods/nice-proc-parameters'
+require 'musa-dsl/mods/arrayfy'
+require 'musa-dsl/mods/nice-proc-parameters'
 
-require_relative '../series/series'
+require 'musa-dsl/series/series'
 
 module Musa
 

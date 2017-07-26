@@ -1,5 +1,5 @@
-require_relative '../mods/key-parameters-procedure'
-require_relative '../mods/arrayfy'
+require 'musa-dsl/mods/key-parameters-procedure-binder'
+require 'musa-dsl/mods/arrayfy'
 
 # TODO optimizar: multithreading (jruby/¿?)
 
@@ -35,8 +35,8 @@ module Musa
 				end
 			end
 
-			tree_A = Variatio::generate_eval_tree_A run_fieldset
-			tree_B = Variatio::generate_eval_tree_B run_fieldset
+			tree_A = generate_eval_tree_A run_fieldset
+			tree_B = generate_eval_tree_B run_fieldset
 
 			parameters_set = tree_A.calc_parameters
 
@@ -65,24 +65,25 @@ module Musa
 			on
 		end
 
-		private
+		module Helper
+			extend self
 
-		extend self
+			def list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
+				result = []
 
-		private
-
-		def list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
-			result = []
-
-			list_of_hashes_1.each do |hash1|
-				list_of_hashes_2.each do |hash2|
-					result << hash1.merge(hash2)
+				list_of_hashes_1.each do |hash1|
+					list_of_hashes_2.each do |hash2|
+						result << hash1.merge(hash2)
+					end
 				end
-			end
 
-			result
+				result
+			end
 		end
 
+		private_constant :Helper
+
+		private
 
 		def generate_eval_tree_A fieldset
 			root = nil
@@ -133,7 +134,7 @@ module Musa
 			def calc_parameters
 				if !@calc_parameters
 					if inner
-						@calc_parameters = list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
+						@calc_parameters = Helper.list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
 					else
 						@calc_parameters = calc_own_parameters
 					end
@@ -178,7 +179,7 @@ module Musa
 					if result.nil?
 						result = sub_parameters_set.collect { |v| { option => v } }
 					else
-						result = list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
+						result = Helper.list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
 					end
 				end
 
