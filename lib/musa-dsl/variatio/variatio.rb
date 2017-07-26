@@ -1,3 +1,6 @@
+require_relative '../mods/key-parameters-procedure'
+require_relative '../mods/arrayfy'
+
 # TODO optimizar: multithreading (jruby/¿?)
 
 # TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
@@ -21,14 +24,14 @@ module Musa
 
 		def on **values
 
-			constructor_binder = Tool::KeyParametersProcedureBinder.new @constructor
-			finalize_binder = Tool::KeyParametersProcedureBinder.new @finalize if @finalize
+			constructor_binder = KeyParametersProcedureBinder.new @constructor
+			finalize_binder = KeyParametersProcedureBinder.new @finalize if @finalize
 
 			run_fieldset = @fieldset.clone # TODO verificar que esto no da problemas
 
 			run_fieldset.components.each do |component|
 				if values.has_key? component.name
-					component.options = Tool::make_array_of values[component.name]
+					component.options = values[component.name].arrayfy
 				end
 			end
 
@@ -65,6 +68,8 @@ module Musa
 		private
 
 		extend self
+
+		private
 
 		def list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
 			result = []
@@ -204,7 +209,7 @@ module Musa
 				@affected_field_names = affected_field_names
 				@inner = inner
 
-				@procedures = blocks.collect { |proc| Tool::KeyParametersProcedureBinder.new proc }
+				@procedures = blocks.collect { |proc| KeyParametersProcedureBinder.new proc }
 			end
 
 			def run parameters_with_depth, parent_parameters = nil
@@ -248,13 +253,13 @@ module Musa
 			attr_reader :_fieldset
 
 			def initialize name, options = nil, block
-				@_fieldset = Fieldset.new name, Tool::make_array_of(options)
+				@_fieldset = Fieldset.new name, options.arrayfy
 
 				self.as_context_run block
 			end
 
 			def field name, options = nil
-				@_fieldset.components << Field.new(name, Tool::make_array_of(options))
+				@_fieldset.components << Field.new(name, options.arrayfy)
 			end
 
 			def fieldset name, options = nil, &block

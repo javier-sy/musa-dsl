@@ -1,4 +1,7 @@
-require 'musa-dsl/series'
+require_relative '../mods/arrayfy'
+require_relative '../mods/nice-proc-parameters'
+
+require_relative '../series/series'
 
 module Musa
 
@@ -131,7 +134,7 @@ module Musa
 			self.at at.eval(with: with_serie_at) { 
 						|p, **parameters| 
 						if !parameters.empty?
-							effective_parameters = Tool::make_hash_key_parameters at_position_method, parameters
+							effective_parameters = at_position_method.select_key_parameters, parameters
 							theme_instance.at_position p, **effective_parameters
 						else
 							log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
@@ -142,7 +145,7 @@ module Musa
 				with: with_serie_run, 
 				debug: debug do
 					|**parameters|
-					effective_parameters = Tool::make_hash_key_parameters run_method, parameters
+					effective_parameters = run_method.select_key_parameters, parameters
 					theme_instance.run **effective_parameters
 			end
 		end
@@ -213,9 +216,9 @@ module Musa
 			value_parameters << with if !with.nil? && !with.is_a?(Hash)
 
 			key_parameters = {}
-			key_parameters.merge! Tool::make_hash_key_parameters block, with if with.is_a? Hash
+			key_parameters.merge! block.select_key_parameters, with if with.is_a? Hash
 
-			key_parameters[:next_position] = next_bar_position if next_bar_position && Tool::find_hash_parameter(block, :next_position)
+			key_parameters[:next_position] = next_bar_position if next_bar_position && block.find_hash_parameter(:next_position)
 
 			if position == @position
 				context.instance_eval @debug_at if debug && @debug_at
@@ -291,12 +294,12 @@ module Musa
 
 			array_mode = from.is_a?(Array) || to.is_a?(Array)
 
-			from = Tool::grant_array from
-			diff = Tool::grant_array diff if diff
-			to = Tool::grant_array to if to
+			from = from.arrayfy
+			diff = diff.arrayfy if diff
+			to = to.arrayfy if to
 
 			step ||= Float::MIN
-			step = Tool::grant_array step
+			step = step.arrayfy
 
 			size = [from.size, step.size].max
 			size = [size, to.size].max if to
@@ -309,10 +312,10 @@ module Musa
 			till = till.rationalize if till
 			duration = duration.rationalize if duration
 
-			from = Tool::fill_with_repeat_array from, size
-			diff = Tool::fill_with_repeat_array diff, size if diff
-			to = Tool::fill_with_repeat_array to, size if to
-			step = Tool::fill_with_repeat_array step, size
+			from = from.repeat_to_size size
+			diff = diff.repeat_to_size size if diff
+			to = to.repeat_to_size size if to
+			step = step.repeat_to_size size
 
 			start_position = sequencer.position
 
@@ -355,7 +358,7 @@ module Musa
 				size.times { adjusted_value << nil; previous_adjusted_value << nil }
 
 				if using_init && using_init.is_a?(Proc)
-					parameters = Tool::make_hash_parameters using_init, every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
+					parameters = using_init.select_key_parameters every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
 
 					if parameters.empty?
 						from_candidate = instance_exec &using_init
@@ -363,7 +366,7 @@ module Musa
 						from_candidate = instance_exec **parameters, &using_init
 					end
 
-					from = Tool::grant_array from_candidate if from_candidate
+					from = from_candidate.arrayfy if from_candidate
 				end
 
 				sequencer.every every, control: control, context: context do
@@ -371,9 +374,9 @@ module Musa
 					new_value = []
 
 					if using && using.is_a?(Proc)
-						key_parameters = Tool::make_hash_key_parameters using, every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
+						key_parameters = using.select_key_parameters every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
 
-						adjusted_value = Tool::grant_array instance_exec_nice([], key_parameters, &using)
+						adjusted_value = instance_exec_nice([], key_parameters, &using).arrayfy
 
 					elsif to
 						size.times do |i|

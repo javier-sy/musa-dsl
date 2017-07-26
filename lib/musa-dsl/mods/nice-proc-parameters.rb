@@ -23,7 +23,7 @@ class Proc
 	end
 
 	def find_hash_parameter(proc, parameter_name)
-		raise "Proc.find_hash_parameter DEPRECATED"
+		# TODO raise "Proc.find_hash_parameter DEPRECATED"
 
 		proc.parameters.find { |parameter| parameter[0] == :keyrest || parameter[1] == parameter_name && (parameter[0] == :key || parameter[0] == :keyreq) }
 	end

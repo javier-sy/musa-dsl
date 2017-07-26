@@ -2,7 +2,8 @@
 
 # TODO añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
-require_relative '../tools/duplicate'
+require_relative '../mods/duplicate'
+require_relative '../mods/arryfy'
 
 module Musa
 
@@ -185,7 +186,7 @@ module Musa
 		end
 
 		def S(*values)
-			Serie.new BasicSerieFromArray.new(Tool::explode_ranges_on_array(values))
+			Serie.new BasicSerieFromArray.new(values.explode_ranges)
 		end
 
 		def E(start: nil, with: nil, &block)
@@ -202,7 +203,7 @@ module Musa
 
 		def RND(*values, from: nil, to: nil, step: nil)
 			if !values.empty? && from.nil? && to.nil? && step.nil?
-				Serie.new RandomFromArrayBasicSerie.new(Tool::explode_ranges_on_array(values))
+				Serie.new RandomFromArrayBasicSerie.new(values.explode_ranges)
 			elsif values.empty?
 				Serie.new RandomNumberBasicSerie.new(from: from, to: to, step: step)
 			else
