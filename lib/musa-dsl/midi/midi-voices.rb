@@ -12,11 +12,9 @@ module Musa
 		def initialize(sequencer:, output:, channels:, log: nil)
 			log ||= false
 
-			channels = channels.as_array
-
 			@sequencer = sequencer
 			@output = output
-			@channels = channels.explode_ranges
+			@channels = channels.arrayfy.explode_ranges
 			@do_log = log
 
 			reset
