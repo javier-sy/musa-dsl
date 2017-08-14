@@ -13,15 +13,11 @@ class Array
 		pos = -1
 		new_size -= 1
 
-		new_array = []
+		new_array = clone
 		new_array << self[(pos += 1) % size] while (pos + size) < new_size
-
-
-puts "repeat_to_size: self = #{self} new_array = #{new_array}"
 
 		new_array
 	end
-
 
 	def explode_ranges
 		array = []

@@ -289,8 +289,6 @@ module Musa
 
 		def move(context: nil, every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 			
-puts "before: from = #{from} to = #{to}"
-
 			sequencer = self
 
 			context ||= @context
@@ -304,9 +302,6 @@ puts "before: from = #{from} to = #{to}"
 			diff = diff.arrayfy if diff
 			to = to.arrayfy if to
 
-puts "after arrayfy: from = #{from} to = #{to}"
-
-
 			step ||= Float::MIN
 			step = step.arrayfy
 
@@ -318,8 +313,6 @@ puts "after arrayfy: from = #{from} to = #{to}"
 			to.collect! {|v| v.rationalize } if to
 			step.collect! {|v| v.rationalize }
 
-puts "after collect!: from = #{from} to = #{to}"
-
 			till = till.rationalize if till
 			duration = duration.rationalize if duration
 
@@ -327,8 +320,6 @@ puts "after collect!: from = #{from} to = #{to}"
 			diff = diff.repeat_to_size size if diff
 			to = to.repeat_to_size size if to
 			step = step.repeat_to_size size
-
-puts "after repeat_to_size: from = #{from} to = #{to}"
 
 			start_position = sequencer.position
 
@@ -339,9 +330,6 @@ puts "after repeat_to_size: from = #{from} to = #{to}"
 					size.times { |i| to[i] = from[i] + diff[i] }
 				end
 			end
-
-
-puts "after: size = #{size} from = #{from} to = #{to}"
 
 			size.times { |i| step[i] = -step[i] if from[i] > to[i] } if to
 
