@@ -1,0 +1,8 @@
+require 'musa-dsl/mods/array-apply-get'
+require 'musa-dsl/mods/arrayfy'
+require 'musa-dsl/mods/duplicate'
+require 'musa-dsl/mods/key-parameters-procedure-binder'
+require 'musa-dsl/mods/nice-context-run'
+require 'musa-dsl/mods/nice-inspect'
+require 'musa-dsl/mods/nice-proc-parameters'
+require 'musa-dsl/mods/nice-send'

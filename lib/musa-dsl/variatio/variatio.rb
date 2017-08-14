@@ -29,7 +29,7 @@ module Musa
 
 			run_fieldset.components.each do |component|
 				if values.has_key? component.name
-					component.options = values[component.name].arrayfy
+					component.options = values[component.name].arrayfy.explode_ranges
 				end
 			end
 
@@ -252,13 +252,13 @@ module Musa
 			attr_reader :_fieldset
 
 			def initialize name, options = nil, block
-				@_fieldset = Fieldset.new name, options.arrayfy
+				@_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
 
 				self.as_context_run block
 			end
 
 			def field name, options = nil
-				@_fieldset.components << Field.new(name, options.arrayfy)
+				@_fieldset.components << Field.new(name, options.arrayfy.explode_ranges)
 			end
 
 			def fieldset name, options = nil, &block
