@@ -9,16 +9,17 @@ class Array
 		self
 	end
 
-	def repeat_to_size(size)
+	def repeat_to_size(new_size)
 		pos = -1
-		size -= 1
+		new_size -= 1
 
-		osize = self.size
-		
-		array = []
-		array << self[(pos += 1) % osize] while (pos + osize) < size
+		new_array = []
+		new_array << self[(pos += 1) % size] while (pos + size) < new_size
 
-		array
+
+puts "repeat_to_size: self = #{self} new_array = #{new_array}"
+
+		new_array
 	end
 
 

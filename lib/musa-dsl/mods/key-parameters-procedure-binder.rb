@@ -18,6 +18,10 @@ class KeyParametersProcedureBinder
 		@procedure.call apply(hash)
 	end
 
+	def has_key? key
+		@has_rest || @parameters.include?(key)
+	end
+
 	def apply hash
 		result = @parameters.clone
 

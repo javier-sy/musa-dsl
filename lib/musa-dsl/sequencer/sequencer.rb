@@ -1,5 +1,5 @@
 require 'musa-dsl/mods/arrayfy'
-require 'musa-dsl/mods/nice-proc-parameters'
+require 'musa-dsl/mods/key-parameters-procedure-binder'
 
 require 'musa-dsl/series/series'
 
@@ -112,6 +112,7 @@ module Musa
 
 			run_method = theme.instance_method(:run)
 			at_position_method = theme.instance_method(:at_position)
+			at_position_method_parameter_binder = KeyParametersProcedureBinder.new at_position_method
 			
 			run_parameters = run_method.parameters.collect {|p| [ p[1], nil ] }.compact.to_h
 			run_parameters.delete :next_position
@@ -134,7 +135,7 @@ module Musa
 			self.at at.eval(with: with_serie_at) { 
 						|p, **parameters| 
 						if !parameters.empty?
-							effective_parameters = at_position_method.select_key_parameters, parameters
+							effective_parameters = at_position_method_parameter_binder.apply parameters
 							theme_instance.at_position p, **effective_parameters
 						else
 							log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
@@ -145,7 +146,7 @@ module Musa
 				with: with_serie_run, 
 				debug: debug do
 					|**parameters|
-					effective_parameters = run_method.select_key_parameters, parameters
+					effective_parameters = KeyParametersProcedureBinder.new(run_method).apply parameters
 					theme_instance.run **effective_parameters
 			end
 		end
@@ -215,10 +216,13 @@ module Musa
 			value_parameters = []
 			value_parameters << with if !with.nil? && !with.is_a?(Hash)
 
-			key_parameters = {}
-			key_parameters.merge! block.select_key_parameters, with if with.is_a? Hash
+			
+			block_key_parameters_binder = KeyParametersProcedureBinder.new block
 
-			key_parameters[:next_position] = next_bar_position if next_bar_position && block.find_hash_parameter(:next_position)
+			key_parameters = {}
+			key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
+
+			key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.has_key?(:next_position)
 
 			if position == @position
 				context.instance_eval @debug_at if debug && @debug_at
@@ -285,6 +289,8 @@ module Musa
 
 		def move(context: nil, every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 			
+puts "before: from = #{from} to = #{to}"
+
 			sequencer = self
 
 			context ||= @context
@@ -298,6 +304,9 @@ module Musa
 			diff = diff.arrayfy if diff
 			to = to.arrayfy if to
 
+puts "after arrayfy: from = #{from} to = #{to}"
+
+
 			step ||= Float::MIN
 			step = step.arrayfy
 
@@ -309,6 +318,8 @@ module Musa
 			to.collect! {|v| v.rationalize } if to
 			step.collect! {|v| v.rationalize }
 
+puts "after collect!: from = #{from} to = #{to}"
+
 			till = till.rationalize if till
 			duration = duration.rationalize if duration
 
@@ -316,6 +327,8 @@ module Musa
 			diff = diff.repeat_to_size size if diff
 			to = to.repeat_to_size size if to
 			step = step.repeat_to_size size
+
+puts "after repeat_to_size: from = #{from} to = #{to}"
 
 			start_position = sequencer.position
 
@@ -326,6 +339,9 @@ module Musa
 					size.times { |i| to[i] = from[i] + diff[i] }
 				end
 			end
+
+
+puts "after: size = #{size} from = #{from} to = #{to}"
 
 			size.times { |i| step[i] = -step[i] if from[i] > to[i] } if to
 
@@ -358,7 +374,7 @@ module Musa
 				size.times { adjusted_value << nil; previous_adjusted_value << nil }
 
 				if using_init && using_init.is_a?(Proc)
-					parameters = using_init.select_key_parameters every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
+					parameters = KeyParametersProcedureBinder.new(using_init).apply every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
 
 					if parameters.empty?
 						from_candidate = instance_exec &using_init
@@ -374,7 +390,7 @@ module Musa
 					new_value = []
 
 					if using && using.is_a?(Proc)
-						key_parameters = using.select_key_parameters every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
+						key_parameters = KeyParametersProcedureBinder.new(using).apply every: every, from: from, step: step, steps: steps, start_position: start_position, position: sequencer.position - start_position, abs_position: sequencer.position
 
 						adjusted_value = instance_exec_nice([], key_parameters, &using).arrayfy
 
