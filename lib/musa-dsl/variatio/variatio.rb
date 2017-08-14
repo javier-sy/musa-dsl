@@ -1,8 +1,6 @@
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 require 'musa-dsl/mods/arrayfy'
 
-# TODO optimizar: multithreading (jruby/¿?)
-
 # TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
