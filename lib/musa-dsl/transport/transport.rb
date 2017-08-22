@@ -1,43 +1,33 @@
-require 'topaz'
 require 'unimidi'
-require 'midi-message'
 
-require_relative 'topaz-midi-clock-input-mods'
+require 'musa-dsl/transport/input-midi-clock'
+require 'musa-dsl/sequencer'
 
 module Musa
 	class Transport
 
-		attr_reader :clock, :sequencer
+		attr_reader :sequencer
 		attr_accessor :before_begin, :after_stop
 
-	 	def initialize(input, quarter_notes_by_bar, quarter_note_divisions, before_begin: nil, after_stop: nil, &block)
+	 	def initialize(input, before_begin: nil, after_stop: nil, &block)
 			@input = input
-
-			@quarter_notes_by_bar = quarter_notes_by_bar
-			@quarter_note_divisions = quarter_note_divisions
 
 			@before_begin = before_begin
 			@after_stop = after_stop
 
 			@block = block
 
-			@sequencer = Sequencer.new @quarter_notes_by_bar, @quarter_note_divisions
+			@sequencer = Sequencer.new 4, 24
 			
-			@clock = Topaz::Clock.new(@input, midi_transport: true, interval: @quarter_note_divisions * 4) do
-				@sequencer.tick
-			end
+			@clock = InputMidiClock.new @input
 
-			@clock.source.after_stop &after_stop
+			@clock.on_stop &after_stop
 
-			@clock.source.after_song_position_pointer do |message|
+			@clock.on_song_position_pointer do |position|
 
-				data = message[:message].data
+				tick_before_position = position - Rational(1, 96) 
 
-				position = Rational(data[0] & 0x7F | ((data[1] & 0x7F) << 7), 16) + 1
-
-				tick_before_position = position - Rational(1, @quarter_note_divisions * @quarter_notes_by_bar) 
-
-				puts "Transport: received message position change to #{position} (data: #{data})"
+				puts "Transport: received message position change to #{position}"
 
 				if @sequencer.position > tick_before_position
 					puts "Transport: reseting sequencer"
@@ -52,7 +42,10 @@ module Musa
 
 		def start
 			@before_begin.call if @before_begin
-			@clock.start
+			
+			@clock.run do 
+				@sequencer.tick
+			end
 		end
 	end
 end
