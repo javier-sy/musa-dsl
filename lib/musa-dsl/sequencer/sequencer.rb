@@ -1,7 +1,7 @@
 require 'musa-dsl/mods/arrayfy'
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 
-require 'musa-dsl/series/series'
+require 'musa-dsl/series'
 
 module Musa
 

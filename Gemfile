@@ -3,7 +3,7 @@ source "https://rubygems.org"
 group :transport do
 	gem "unimidi", "~> 0.4", ">= 0.4.7"
 	gem "midi-message", "~> 0.4", ">= 0.4.9"
-	gem "midi-topaz", "~> 0.2", ">= 0.2.5"
+	gem "midi-nibbler", "~> 0.2", ">= 0.2.4"
 end
 
 group :test do
