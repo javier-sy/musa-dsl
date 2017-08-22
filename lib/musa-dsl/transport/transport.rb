@@ -22,7 +22,10 @@ module Musa
 			@block = block
 
 			@sequencer = Sequencer.new @quarter_notes_by_bar, @quarter_note_divisions
-			@clock = Topaz::Clock.new(@input, midi_transport: true, interval: @quarter_note_divisions * 4) { @sequencer.tick }
+			
+			@clock = Topaz::Clock.new(@input, midi_transport: true, interval: @quarter_note_divisions * 4) do
+				@sequencer.tick
+			end
 
 			@clock.source.after_stop &after_stop
 
