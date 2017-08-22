@@ -1,3 +1,8 @@
+require 'midi-message'
+
+require 'musa-dsl/mods/array-apply-get'
+require 'musa-dsl/mods/arrayfy'
+
 module Musa
 
 	class MIDIVoices
@@ -7,11 +12,9 @@ module Musa
 		def initialize(sequencer:, output:, channels:, log: nil)
 			log ||= false
 
-			channels = [channels] unless channels.is_a? Array
-
 			@sequencer = sequencer
 			@output = output
-			@channels = Tool::explode_ranges_on_array channels
+			@channels = channels.arrayfy.explode_ranges
 			@do_log = log
 
 			reset
@@ -100,9 +103,9 @@ module Musa
 
 				@voice = voice
 
-				@pitch = Tool::explode_ranges_on_array(Tool::grant_array(pitch))
-				@velocity = Tool::explode_ranges_on_array(Tool::grant_array(velocity))
-				@velocity_off = Tool::explode_ranges_on_array(Tool::grant_array(velocity_off))
+				@pitch = pitch.arrayfy.explode_ranges
+				@velocity = velocity.arrayfy.explode_ranges
+				@velocity_off = velocity_off.arrayfy.explode_ranges
 
 				@do_on_stop = []
 				@do_after = []
@@ -138,7 +141,7 @@ module Musa
 
 			def note_off(velocity: nil)
 				velocity ||= @velocity_off
-				velocity = Tool::explode_ranges_on_array(Tool::grant_array(velocity))
+				velocity = velocity.arrayfy.explode_ranges
 
 				@pitch.each_index do |i|
 					pitch = @pitch[i]

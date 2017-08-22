@@ -1,8 +1,9 @@
-<<<<<<< HEAD
 # TODO reorganizar estructura de ficheros, modules y clases de Series y hash-serie-splitter.rb
 
+# TODO añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
-require_relative 'duplicate'
+require 'musa-dsl/mods/duplicate'
+require 'musa-dsl/mods/arrayfy'
 
 module Musa
 
@@ -185,7 +186,7 @@ module Musa
 		end
 
 		def S(*values)
-			Serie.new BasicSerieFromArray.new(Tool::explode_ranges_on_array(values))
+			Serie.new BasicSerieFromArray.new(values.explode_ranges)
 		end
 
 		def E(start: nil, with: nil, &block)
@@ -202,7 +203,7 @@ module Musa
 
 		def RND(*values, from: nil, to: nil, step: nil)
 			if !values.empty? && from.nil? && to.nil? && step.nil?
-				Serie.new RandomFromArrayBasicSerie.new(Tool::explode_ranges_on_array(values))
+				Serie.new RandomFromArrayBasicSerie.new(values.explode_ranges)
 			elsif values.empty?
 				Serie.new RandomNumberBasicSerie.new(from: from, to: to, step: step)
 			else
@@ -412,8 +413,6 @@ module Musa
 		private_constant :BasicSerieRepeater
 
 		class ForLoopBasicSerie
-			include ProtoSerie
-
 			def initialize(from:, to:, step:)
 				@from = from
 				@to = to
@@ -441,8 +440,6 @@ module Musa
 		private_constant :ForLoopBasicSerie
 
 		class RandomNumberBasicSerie
-			include ProtoSerie
-
 			def initialize(from: nil, to: nil, step: nil)
 				from ||= 0
 				step ||= 1
@@ -474,8 +471,6 @@ module Musa
 		private_constant :RandomNumberBasicSerie
 
 		class RandomFromArrayBasicSerie
-			include ProtoSerie
-
 			def initialize(values)
 				@values = values
 				@random = Random.new
@@ -497,8 +492,6 @@ module Musa
 		private_constant :RandomFromArrayBasicSerie
 
 		class BasicSerieLocker
-			include ProtoSerie
-
 			def initialize(serie)
 				@serie = serie
 				@values = []
@@ -885,7 +878,3 @@ module Musa
 		private_constant :BasicSerieSinFunction
 	end
 end
-=======
-require 'musa-dsl/series/series'
-require 'musa-dsl/series/hash-serie-splitter'
->>>>>>> 7ebe02807d9aa51820c6028562b1cd550ef4bd7b
