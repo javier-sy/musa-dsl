@@ -1,3 +1,5 @@
+# TODO allow several kinds of clocks: midi-input-clock, topaz-auto-generated-clock, etc
+
 require 'unimidi'
 
 require 'musa-dsl/transport/input-midi-clock'

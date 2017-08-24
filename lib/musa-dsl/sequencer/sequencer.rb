@@ -175,6 +175,8 @@ module Musa
 				
 				context.send mode, parameter_block.call(element), context: context, **mode_args, 
 					&(Proc.new { play serie, mode: mode, parameter: parameter_block, context: context, **mode_args, &block })
+			else
+				puts "play ended..."		
 			end
 		end	
 
@@ -467,6 +469,10 @@ module Musa
 			end
 		end
 
+
+		# Dentro del every control debería haber 2 apartados: el código a ejecutar en cada paso y las condiciones de inicio, fin, etc; deberían quedar representadas en el DSL
+		# Lo mismo aplica a un nuevo PlayControl, para permitir poner los after que haga falta sin que entorpezcan la ejecución principal
+		
 		class EveryControl < SequencerControl
 			
 			attr_reader :duration_value, :till_value, :condition_block, :do_on_stop, :do_after

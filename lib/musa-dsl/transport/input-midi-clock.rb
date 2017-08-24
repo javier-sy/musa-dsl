@@ -30,18 +30,17 @@ module Musa
 
 					case m.name 
 					when 'Start'
-						# puts "InputMidiClock: start on #{@input.name}"
+						@on_start.call if @on_start
 					
 					when 'Stop'
-						# puts "InputMidiClock: stop on #{@input.name}"
+						@on_stop.call if @on_stop
 
 					when 'Clock'
 						yield if block_given?
 
 					when 'Song Position Pointer'
-						# puts "Song Position Pointer: #{message}"
-
 						position = Rational(message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7), 16) + 1
+
 						@on_song_position_pointer.call position if @on_song_position_pointer
 					end
 				end
@@ -49,8 +48,6 @@ module Musa
 				sleep 0.0001
 				Thread.pass
 			end
-
-			@on_stop.call if @on_stop
 		end
 
 		def terminate
