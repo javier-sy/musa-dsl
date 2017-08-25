@@ -21,7 +21,7 @@ module Musa
 			population.each do |object|
 				context = MeasuresEvalContext.new 
 
-				context.as_context_run @measures, parameter: object
+				context.as_context_run parameter: object, &@measures
 				measure = context._measure
 
 				measured_objects << { object: object, measure: context._measure } unless measure.died?

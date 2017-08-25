@@ -254,7 +254,7 @@ module Musa
 			def initialize name, options = nil, block
 				@_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
 
-				self.as_context_run block
+				self.as_context_run &block
 			end
 
 			def field name, options = nil
