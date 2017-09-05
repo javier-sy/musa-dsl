@@ -9,13 +9,12 @@ module Musa
 	class Transport
 
 		attr_reader :sequencer
-		attr_accessor :before_begin, :after_stop
 
 	 	def initialize(input, before_begin: nil, after_stop: nil, &block)
 			@input = input
 
-			@before_begin = before_begin
-			@after_stop = after_stop
+			@before_begin = []
+			@before_begin << before_begin if before_begin
 
 			@block = block
 
@@ -23,7 +22,7 @@ module Musa
 			
 			@clock = InputMidiClock.new @input
 
-			@clock.on_stop &after_stop
+			@clock.on_stop &after_stop if after_stop
 
 			@clock.on_song_position_pointer do |position|
 
@@ -34,7 +33,7 @@ module Musa
 				if @sequencer.position > tick_before_position
 					puts "Transport: reseting sequencer"
 					@sequencer.reset
-					@before_begin.call if @before_begin
+					@before_begin.each { |block| block.call }
 				end
 
 				puts "Transport: setting sequencer position to #{tick_before_position}"
@@ -42,8 +41,16 @@ module Musa
 			end 
 		end
 
+		def before_begin &block
+			@before_begin << block
+		end
+
+		def after_stop &block
+			@clock.on_stop block
+		end
+
 		def start
-			@before_begin.call if @before_begin
+			@before_begin.each { |block| block.call }
 			
 			@clock.run do 
 				@sequencer.tick

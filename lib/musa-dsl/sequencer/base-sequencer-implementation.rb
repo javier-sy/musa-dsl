@@ -14,7 +14,7 @@ class Musa::BaseSequencer
 		if position != position.round
 			original_position = position
 			position = position.round.rationalize
-			log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position/@ticks_per_bar} (#{position})"
+			_log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position/@ticks_per_bar} (#{position})"
 		end
 
 		value_parameters = []
@@ -37,7 +37,7 @@ class Musa::BaseSequencer
 			@score[position] << { block: @on_debug_at } if debug && @on_debug_at
 			@score[position] << { block: block, value_parameters: value_parameters, key_parameters: key_parameters }
 		else
-			log "Warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+			_log "Sequencer.numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
 		end
 
 		nil
@@ -99,7 +99,7 @@ class Musa::BaseSequencer
 						effective_parameters = at_position_method_parameter_binder.apply parameters
 						theme_instance.at_position p, **effective_parameters
 					else
-						log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
+						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
 						nil
 					end
 				}, 
@@ -291,6 +291,13 @@ class Musa::BaseSequencer
 		end
 
 		control
+	end
+
+	def _log msg = nil
+		m = "..." unless msg
+		m = ": #{msg}" if msg
+
+		puts "#{self.position}#{m}"
 	end
 
 	class PlayControl

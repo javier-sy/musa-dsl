@@ -4,19 +4,24 @@ module Musa
 	class InputMidiClock
 		def initialize input
 			@input = input
+
+			@on_start = []
+			@on_stop = []
+			@on_song_position_pointer = []
+
 			@nibbler = Nibbler.new
 		end
 
 		def on_start &block
-			@on_start = block
+			@on_start << block
 		end
 
 		def on_stop &block
-			@on_stop = block
+			@on_stop << block
 		end
 
 		def on_song_position_pointer &block
-			@on_song_position_pointer = block
+			@on_song_position_pointer << block
 		end
 
 		def run
@@ -30,10 +35,10 @@ module Musa
 
 					case m.name 
 					when 'Start'
-						@on_start.call if @on_start
+						@on_start.each { |block| block.call }
 					
 					when 'Stop'
-						@on_stop.call if @on_stop
+						@on_stop.each { |block| block.call }
 
 					when 'Clock'
 						yield if block_given?
@@ -41,7 +46,7 @@ module Musa
 					when 'Song Position Pointer'
 						position = Rational(message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7), 16) + 1
 
-						@on_song_position_pointer.call position if @on_song_position_pointer
+						@on_song_position_pointer.each { |block| block.call }
 					end
 				end
 

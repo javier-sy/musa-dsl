@@ -1,9 +1,10 @@
 require 'forwardable'
 
 class Musa::Sequencer
+
 	extend Forwardable
 
-	def_delegators :@sequencer, :reset, :tick, :on_debug_at, :on_fast_forward, :position, :position=, :log, :to_s, :inspect
+	def_delegators :@sequencer, :reset, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position, :position=, :log, :to_s, :inspect
 
 	def initialize quarter_notes_by_bar = nil, quarter_note_divisions = nil, sequencer: nil, &block
 		@sequencer ||= sequencer

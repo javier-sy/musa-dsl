@@ -24,8 +24,12 @@ module Musa
 			@voices = @channels.collect { |channel| MIDIVoice.new sequencer: @sequencer, output: @output, channel: channel, log: @do_log }
 		end
 
-		def voice(index)
+		def voice index
 			@voices[index]
+		end
+
+		def size
+			@voices.size
 		end
 
 		def fast_forward=(enabled)
