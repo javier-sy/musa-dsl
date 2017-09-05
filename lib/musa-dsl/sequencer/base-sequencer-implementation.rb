@@ -6,6 +6,9 @@ class Musa::BaseSequencer
 	private
 
 	def _numeric_at(bar_position, next_bar_position: nil, with: nil, debug: nil, &block)
+
+		raise ArgumentError, 'Block is mandatory' if !block
+
 		position = bar_position.rationalize * @ticks_per_bar
 
 		if position != position.round
@@ -103,6 +106,7 @@ class Musa::BaseSequencer
 			with: with_serie_run, 
 			debug: debug do
 				|**parameters|
+				# TODO optimizar inicialización KeyParamtersProcedureBinder
 				effective_parameters = KeyParametersProcedureBinder.new(run_method).apply parameters
 				theme_instance.run **effective_parameters
 		end
@@ -110,7 +114,7 @@ class Musa::BaseSequencer
 		nil
 	end
 
-	def _play(serie, mode:, parameter: nil, **mode_args, &block)
+	def _play(serie, control, mode:, parameter: nil, **mode_args, &block)
 		if parameter.is_a? Proc
 			parameter_block = parameter
 		else
@@ -123,13 +127,18 @@ class Musa::BaseSequencer
 		element = serie.next_value
 
 		if element
-			block.call element
+			# TODO optimizar inicialización KeyParamtersProcedureBinder
+			block.call element, **(KeyParametersProcedureBinder.new(block).apply( {control: control} ))
 			
 			self.send mode, parameter_block.call(element), **mode_args, 
-				&(Proc.new { play serie, mode: mode, parameter: parameter_block, **mode_args, &block })
+				&(proc { _play serie, control, mode: mode, parameter: parameter_block, **mode_args, &block })
 		else
-			puts "play ended..."		
+			control.do_after.each do |do_after|
+				_numeric_at position, &do_after
+			end
 		end
+
+		control
 	end	
 
 	# TODO every queda substituido por un at con una Serie periódica?
@@ -139,7 +148,8 @@ class Musa::BaseSequencer
 
 			control._start ||= position
 
-			block.call
+			# TODO optimizar inicialización KeyParamtersProcedureBinder
+			KeyParametersProcedureBinder.new(block).call( {control: control} )
 
 			duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
 			till_exceeded = control.till_value - binterval <= position if control.till_value
@@ -231,6 +241,7 @@ class Musa::BaseSequencer
 			size.times { adjusted_value << nil; previous_adjusted_value << nil }
 
 			if using_init && using_init.is_a?(Proc)
+				# TODO optimizar inicialización de KeyParametersProcedureBinder
 				parameters = KeyParametersProcedureBinder.new(using_init).apply every: every, from: from, step: step, steps: steps, start_position: start_position, position: position - start_position, abs_position: position
 
 				if parameters.empty?
@@ -247,6 +258,7 @@ class Musa::BaseSequencer
 				new_value = []
 
 				if using && using.is_a?(Proc)
+					# TODO optimizar inicialización de KeyParametersProcedureBinder
 					key_parameters = KeyParametersProcedureBinder.new(using).apply every: every, from: from, step: step, steps: steps, start_position: start_position, position: position - start_position, abs_position: position
 
 					adjusted_value = using.call(**key_parameters).arrayfy
@@ -267,10 +279,13 @@ class Musa::BaseSequencer
 				end
 
 				# TODO se podría hacer que los parámetros que llegasen aquí tb se parsearan como key_parameters si es posible
+
+				parameters = KeyParametersProcedureBinder.new(block).apply( { control: MoveControl.new(control) } )
+
 				if array_mode
-					block.call new_value
+					block.call new_value, **parameters
 				else
-					new_value.compact.each { |v| block.call v }
+					new_value.compact.each { |v| block.call v, **parameters }
 				end
 			end
 		end
@@ -278,13 +293,32 @@ class Musa::BaseSequencer
 		control
 	end
 
+	class PlayControl
+
+		attr_reader :do_after
+
+		def initialize after: nil
+			@do_after = []
+
+			if after
+				self.after after
+			end
+		end
+
+		def after bars = nil, &block
+			@do_after << block
+		end
+	end
+
+	private_constant :PlayControl
+
 	class EveryControl
 		
 		attr_reader :duration_value, :till_value, :condition_block, :do_on_stop, :do_after
 
 		attr_accessor :_start
 
-		def initialize(duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil)
+		def initialize duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil
 
 			@duration_value = duration
 			@till_value = till
@@ -310,26 +344,40 @@ class Musa::BaseSequencer
 			@stop
 		end
 
-		def duration(value)
+		def duration value
 			@duration_value = value.rationalize
 		end
 
-		def till(value)
+		def till value
 			@till_value = value.rationalize
 		end
 
-		def condition(&block)
+		def condition &block
 			@condition_block = block
 		end
 
-		def on_stop(&block)
+		def on_stop &block
 			@do_on_stop << block
 		end
 
-		def after(bars = 0, &block)
+		def after bars = nil, &block
+			bars ||= 0
 			@do_after << { bars: bars.rationalize, block: block }
 		end
 	end
 
 	private_constant :EveryControl
+
+		class MoveControl
+	
+		extend Forwardable
+
+		def initialize every_control
+			@every_control = every_control
+		end
+
+		def_delegators :@every_control, :on_stop, :after
+	end
+
+	private_constant :MoveControl
 end

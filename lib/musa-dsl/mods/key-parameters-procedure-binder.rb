@@ -14,27 +14,33 @@ class KeyParametersProcedureBinder
 		end
 	end
 
-	def call hash
-		@procedure.call apply(hash)
+	def call *value_parameters, **key_parameters
+		@procedure.call *value_parameters, **apply(key_parameters)
 	end
 
 	def has_key? key
 		@has_rest || @parameters.include?(key)
 	end
 
-	def apply hash
+	def apply hsh
 		result = @parameters.clone
 
 		@parameters.each_key do |parameter_name|
-			result[parameter_name] = hash[parameter_name]
+			result[parameter_name] = hsh[parameter_name]
 		end
 
 		if @has_rest
-			hash.each do |key, value|
-				result[key] = value unless result.key? key
+			hsh.each do |key, value|
+				result[key] = value unless result.key?(key)
 			end
 		end
 
 		result
 	end
+
+	def inspect
+		"KeyParametersProcedureBinder: parameters = #{@parameters} has_rest = #{@has_rest}"
+	end
+
+	alias to_s inspect
 end

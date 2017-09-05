@@ -100,13 +100,15 @@ class Musa::BaseSequencer
 		_theme theme, at: at, debug: debug, **parameters
 	end
 
-	def play serie, mode: nil, parameter: nil, **mode_args, &block
+	def play serie, mode: nil, parameter: nil, after: nil, **mode_args, &block
 
 		mode ||= :wait
 
 		raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Only :wait or :at available" unless mode == :wait || mode == :at
 
-		_play serie, mode: mode, parameter: parameter, **mode_args, &block
+		control = PlayControl.new after: after
+
+		_play serie, control, mode: mode, parameter: parameter, **mode_args, &block
 	end
 
 	def every binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block
