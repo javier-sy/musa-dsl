@@ -43,10 +43,10 @@ class Musa::BaseSequencer
 		nil
 	end
 
-	def _serie_at(serie_bar_position, with: nil, debug: nil, &block)
+	def _serie_at(bar_position_serie, with: nil, debug: nil, &block)
 
-		bar_position = serie_bar_position.next_value
-		next_bar_position = serie_bar_position.peek_next_value
+		bar_position = bar_position_serie.next_value
+		next_bar_position = bar_position_serie.peek_next_value
 		
 		if with.respond_to? :next_value
 			with_value = with.next_value 
@@ -58,7 +58,7 @@ class Musa::BaseSequencer
 			_numeric_at bar_position, next_bar_position: next_bar_position, with: with_value, debug: debug, &block
 
 			_numeric_at bar_position, debug: false do
-				_serie_at serie_bar_position, with: with, debug: debug, &block
+				_serie_at bar_position_serie, with: with, debug: debug, &block
 			end
 		else
 			# serie finalizada
