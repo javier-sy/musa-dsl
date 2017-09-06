@@ -11,8 +11,6 @@ module Musa
 		attr_reader :sequencer
 
 	 	def initialize(input, before_begin: nil, after_stop: nil, &block)
-			@input = input
-
 			@before_begin = []
 			@before_begin << before_begin if before_begin
 
@@ -20,7 +18,7 @@ module Musa
 
 			@sequencer = Sequencer.new 4, 24
 			
-			@clock = InputMidiClock.new @input
+			@clock = InputMidiClock.new input
 
 			@clock.on_stop &after_stop if after_stop
 

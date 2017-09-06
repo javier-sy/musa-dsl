@@ -46,7 +46,7 @@ module Musa
 					when 'Song Position Pointer'
 						position = Rational(message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7), 16) + 1
 
-						@on_song_position_pointer.each { |block| block.call }
+						@on_song_position_pointer.each { |block| block.call position }
 					end
 				end
 
