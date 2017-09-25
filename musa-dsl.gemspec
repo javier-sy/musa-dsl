@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
-  s.version     = '0.2.0'
+  s.version     = '0.2.1'
   s.date        = '2017-04-23'
   s.summary     = "A Ruby DSL for making simple and complex music"
   s.description = "..."
