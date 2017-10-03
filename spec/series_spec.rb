@@ -35,5 +35,9 @@ RSpec.describe Musa::Serie do
 			expect(s1.next_value).to eq nil
 			expect(s1.next_value).to eq nil
 		end
+
+		it "Hash serie repeated and split and H() should be equal to the original serie" do
+			# TODO
+		end
 	end
 end

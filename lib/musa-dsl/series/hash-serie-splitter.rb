@@ -1,7 +1,10 @@
 module Musa
 
 	module SerieOperations
-		def split(buffered: false, master: nil)
+		def split(buffered: nil, master: nil)
+
+			buffered ||= false
+			
 			return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(self) if master.nil? && !buffered
 			return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
 			return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(self) if buffered

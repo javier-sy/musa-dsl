@@ -5,16 +5,18 @@ class Musa::BaseSequencer
 
 	private
 
-	def _numeric_at(bar_position, next_bar_position: nil, with: nil, debug: nil, &block)
+	def _numeric_at(bar_position, control: nil, next_bar_position: nil, with: nil, debug: nil, &block)
 
 		raise ArgumentError, 'Block is mandatory' if !block
+
+		control ||= AtControl.new control
 
 		position = bar_position.rationalize * @ticks_per_bar
 
 		if position != position.round
 			original_position = position
 			position = position.round.rationalize
-			_log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position/@ticks_per_bar} (#{position})"
+			_log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position // @ticks_per_bar} (#{position})"
 		end
 
 		value_parameters = []
@@ -25,6 +27,7 @@ class Musa::BaseSequencer
 		key_parameters = {}
 		key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
 
+		key_parameters[:control] = control if block_key_parameters_binder.has_key?(:control)
 		key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.has_key?(:next_position)
 
 		if position == @position
@@ -40,7 +43,7 @@ class Musa::BaseSequencer
 			_log "Sequencer.numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
 		end
 
-		nil
+		control
 	end
 
 	def _serie_at(bar_position_serie, with: nil, debug: nil, &block)
@@ -113,6 +116,8 @@ class Musa::BaseSequencer
 
 		nil
 	end
+
+	# TODO si la serie es de tipo hash (los elementos son un hash), se podría hacer que el block se llamara bindeándole los parámetros por nombre simbólico
 
 	def _play(serie, control, mode:, parameter: nil, **mode_args, &block)
 		if parameter.is_a? Proc
@@ -298,6 +303,26 @@ class Musa::BaseSequencer
 		m = ": #{msg}" if msg
 
 		puts "#{self.position}#{m}"
+	end
+
+	class AtControl
+		def initialize parent 
+			@parent = parent
+			@handlers = {}
+		end
+
+		def on event, &block
+			@handlers[event] ||= {}
+			@handlers[event] << KeyParametersProcedureBinder.new block
+		end
+
+		def launch event, *value_parameters, **key_parameters
+			@handlers[event].each do |handler|
+				handler.call *value_parameters, **key_parameters
+			end
+
+			@parent.launch event, *value_parameters, **key_parameters if @parent
+		end
 	end
 
 	class PlayControl
