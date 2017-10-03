@@ -9,14 +9,15 @@ class Musa::BaseSequencer
 
 		raise ArgumentError, 'Block is mandatory' if !block
 
-		control ||= AtControl.new control
+		control = AtControl.new control
 
 		position = bar_position.rationalize * @ticks_per_bar
 
 		if position != position.round
 			original_position = position
 			position = position.round.rationalize
-			_log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position // @ticks_per_bar} (#{position})"
+			# FIXME sublime text syntax highlight bug
+			#_log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})"
 		end
 
 		value_parameters = []
@@ -312,13 +313,15 @@ class Musa::BaseSequencer
 		end
 
 		def on event, &block
-			@handlers[event] ||= {}
-			@handlers[event] << KeyParametersProcedureBinder.new block
+			@handlers[event] ||= []
+			@handlers[event] << KeyParametersProcedureBinder.new(block)
 		end
 
 		def launch event, *value_parameters, **key_parameters
-			@handlers[event].each do |handler|
-				handler.call *value_parameters, **key_parameters
+			if @handlers.has_key? event
+				@handlers[event].each do |handler|
+					handler.call *value_parameters, **key_parameters
+				end
 			end
 
 			@parent.launch event, *value_parameters, **key_parameters if @parent

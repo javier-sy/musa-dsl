@@ -254,7 +254,7 @@ RSpec.describe Musa::Sequencer do
 			c = 0
 			d = 0
 
-			control = s.at 1 do |control|
+			control = s.at 1 do |control:|
 				c += 1
 				control.launch :event, 100
 			end
@@ -282,15 +282,15 @@ RSpec.describe Musa::Sequencer do
 			d = 0
 			e = 0
 
-			control = s.at 1 do |control|
+			control0 = s.at 1 do |control:|
 
 				c += 1
 				
-				control1 = s.at 2, control: control do |control| 
+				control1 = s.at 2, control: control do |control:| 
 					control.launch :event, 100
 				end
 
-				control2 = s.at 2, control: control do |control|
+				control2 = s.at 2, control: control do |control:|
 					control.launch :event, 100
 				end
 
@@ -300,7 +300,7 @@ RSpec.describe Musa::Sequencer do
 
 			end
 
-			control.on :event do |param|
+			control0.on :event do |param|
 				d += param
 			end
 
