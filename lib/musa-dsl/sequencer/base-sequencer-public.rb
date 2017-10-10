@@ -71,6 +71,7 @@ class Musa::BaseSequencer
 
 	def at bar_position, control: nil, with: nil, debug: nil, &block
 
+		control ||= EventHandler.new
 		debug ||= false
 
 		if bar_position.is_a? Numeric

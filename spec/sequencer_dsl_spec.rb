@@ -157,4 +157,166 @@ RSpec.describe Musa::Sequencer do
 			expect(d).to eq(4)
 		end
 	end
+
+	context "Advanced sequencing" do
+
+		it "Event passing on at - DEPRECATED" do
+			s = Musa::Sequencer.new 4, 4
+
+			c = 0
+			d = 0
+
+			control = s.at 1 do |control:|
+				c += 1
+				control.launch :event, 100
+			end
+
+			control.on :event do |param|
+				d += param
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(100)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(100)
+		end
+
+		it "Event passing on at" do
+			s = Musa::Sequencer.new 4, 4
+
+			c = 0
+			d = 0
+
+			control = s.at 1 do
+				c += 1
+				launch :event, 100
+			end
+
+			control.on :event do |param|
+				d += param
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(100)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(100)
+		end
+
+		it "Event passing on at with inner at - DEPRECATED" do
+			s = Musa::Sequencer.new 4, 4
+
+			c = 0
+			d = 0
+			e = 0
+
+			control0 = s.at 1 do |control:|
+
+				c += 1
+				
+				control1 = at 2, control: control do |control:| 
+					control.launch :event, 100
+				end
+
+				control2 = at 2, control: control do |control:|
+					control.launch :event, 100
+				end
+
+				control2.on :event do |param|
+					e += param
+				end
+
+			end
+
+			control0.on :event do |param|
+				d += param
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+			expect(e).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(0)
+			expect(d).to eq(0)
+
+			95.times { || s.tick }
+
+			expect(c).to eq(1)
+			expect(d).to eq(200)
+			expect(e).to eq(100)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(200)
+			expect(e).to eq(100)
+		end
+
+		it "Event passing on at with inner at" do
+
+			s = Musa::Sequencer.new 4, 4
+
+			c = 0
+			d = 0
+			e = 0
+
+			control2in = []
+
+			control0 = s.at 1 do
+
+				c += 1
+				
+				control1 = at 2 do
+					launch :event, 100
+				end
+
+				control2 = at 2 do
+					launch :event, 100
+				end
+
+				control2.on :event do |param|
+					e += param
+				end
+
+			end
+
+			control0.on :event do |param|
+				d += param
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+			expect(e).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(0)
+			expect(d).to eq(0)
+
+			95.times { || s.tick }
+
+			expect(c).to eq(1)
+			expect(d).to eq(200)
+			expect(e).to eq(100)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(200)
+			expect(e).to eq(100)
+		end
+
+	end	
+
 end

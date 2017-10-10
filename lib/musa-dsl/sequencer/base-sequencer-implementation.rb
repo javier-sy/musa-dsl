@@ -9,8 +9,6 @@ class Musa::BaseSequencer
 
 		raise ArgumentError, 'Block is mandatory' if !block
 
-		control = AtControl.new control
-
 		position = bar_position.rationalize * @ticks_per_bar
 
 		if position != position.round
@@ -306,10 +304,14 @@ class Musa::BaseSequencer
 		puts "#{self.position}#{m}"
 	end
 
-	class AtControl
-		def initialize parent 
+	class EventHandler
+		def initialize parent = nil
 			@parent = parent
 			@handlers = {}
+		end
+
+		def make_subhandler
+			EventHandler.new self
 		end
 
 		def on event, &block
@@ -326,6 +328,12 @@ class Musa::BaseSequencer
 
 			@parent.launch event, *value_parameters, **key_parameters if @parent
 		end
+
+		def inspect
+			"EventHandler #{self.__id__} parent: #{@parent}"
+		end
+
+		alias to_s inspect
 	end
 
 	class PlayControl

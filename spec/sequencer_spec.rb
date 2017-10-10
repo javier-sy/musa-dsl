@@ -290,7 +290,7 @@ RSpec.describe Musa::Sequencer do
 					control.launch :event, 100
 				end
 
-				control2 = s.at 2, control: control do |control:|
+				control2 = s.at 2, control: control.make_subhandler do |control:|
 					control.launch :event, 100
 				end
 
