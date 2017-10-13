@@ -33,58 +33,58 @@ class Musa::Sequencer
 			as_context_run block
 		end
 
-		def at bar_position, with: nil, debug: nil, &block
+		def at *value_parameters, **key_parameters, &block
 			context = DSLContext.new @sequencer, @event_handler
 
-			context.sequencer.at bar_position, with: with, debug: debug do |*value_args, **key_args|
+			context.sequencer.at *value_parameters, **key_parameters do |*value_args, **key_args|
 				context.as_context_run block, value_args, key_args
 			end
 
 			context.event_handler
 		end
 
-		def wait bdelay, event_handler: nil, with: nil, &block
+		def wait *value_parameters, **key_parameters, &block
 			context = DSLContext.new @sequencer, @event_handler
 
-			context.sequencer.wait bdelay, with: with do
+			context.sequencer.wait *value_parameters, **key_parameters do
 				context.as_context_run block
 			end
 
 			context.event_handler
 		end
 
-		def theme theme, at:, debug: nil, **parameters
+		def theme *value_parameters, **key_parameters
 			context = DSLContext.new @sequencer, @event_handler
 
-			context.sequencer.theme theme, context: context, at: at, debug: debug, **parameters
+			context.sequencer.theme *value_parameters, context: context, **key_parameters
 
 			context.event_handler
 		end
 
-		def play serie, mode: nil, parameter: nil, **mode_args, &block
+		def play *value_parameters, **key_parameters, &block
 			context = DSLContext.new @sequencer, @event_handler
 
-			context.sequencer.play serie, mode: mode, parameter: parameter, **mode_args do |*value_args, **key_args|
+			context.sequencer.play *value_parameters, **key_parameters do |*value_args, **key_args|
 				context.as_context_run block, value_args, key_args
 			end
 
 			context.event_handler
 		end
 
-		def every binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block
+		def every *value_parameters, **key_parameters, &block
 			context = DSLContext.new @sequencer, @event_handler
 
-			context.sequencer.every binterval, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after do |*value_args, **key_args|
+			context.sequencer.every *value_parameters, **key_parameters do |*value_args, **key_args|
 				context.as_context_run block, value_args, KeyParametersProcedureBinder.new(block).apply(key_args)
 			end
 
 			context.event_handler
 		end
 
-		def move every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block
+		def move *value_parameters, **key_parameters, &block
 			context = DSLContext.new @sequencer, @event_handler
 
-			context.sequencer.move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after do |*value_args, **key_args|
+			context.sequencer.move *value_parameters, **key_parameters do |*value_args, **key_args|
 				context.as_context_run block, value_args, key_args
 			end
 
