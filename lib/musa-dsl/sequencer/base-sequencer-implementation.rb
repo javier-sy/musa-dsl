@@ -5,7 +5,7 @@ class Musa::BaseSequencer
 
 	private
 
-	def _numeric_at(bar_position, control: nil, next_bar_position: nil, with: nil, debug: nil, &block)
+	def _numeric_at(bar_position, next_bar_position: nil, with: nil, debug: nil, &block)
 
 		raise ArgumentError, 'Block is mandatory' if !block
 
@@ -26,7 +26,6 @@ class Musa::BaseSequencer
 		key_parameters = {}
 		key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
 
-		key_parameters[:control] = control if block_key_parameters_binder.has_key?(:control)
 		key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.has_key?(:next_position)
 
 		if position == @position
@@ -42,7 +41,7 @@ class Musa::BaseSequencer
 			_log "Sequencer.numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
 		end
 
-		control
+		nil
 	end
 
 	def _serie_at(bar_position_serie, with: nil, debug: nil, &block)
@@ -95,7 +94,7 @@ class Musa::BaseSequencer
 		with_serie_at = H(run_parameters)
 		with_serie_run = with_serie_at.slave
 
-		_at at.eval(with: with_serie_at) { 
+		_serie_at at.eval(with: with_serie_at) { 
 					|p, **parameters| 
 					if !parameters.empty?
 						effective_parameters = at_position_method_parameter_binder.apply parameters
@@ -302,38 +301,6 @@ class Musa::BaseSequencer
 		m = ": #{msg}" if msg
 
 		puts "#{self.position}#{m}"
-	end
-
-	class EventHandler
-		def initialize parent = nil
-			@parent = parent
-			@handlers = {}
-		end
-
-		def make_subhandler
-			EventHandler.new self
-		end
-
-		def on event, &block
-			@handlers[event] ||= []
-			@handlers[event] << KeyParametersProcedureBinder.new(block)
-		end
-
-		def launch event, *value_parameters, **key_parameters
-			if @handlers.has_key? event
-				@handlers[event].each do |handler|
-					handler.call *value_parameters, **key_parameters
-				end
-			end
-
-			@parent.launch event, *value_parameters, **key_parameters if @parent
-		end
-
-		def inspect
-			"EventHandler #{self.__id__} parent: #{@parent}"
-		end
-
-		alias to_s inspect
 	end
 
 	class PlayControl

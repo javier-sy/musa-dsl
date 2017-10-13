@@ -241,89 +241,48 @@ RSpec.describe Musa::Sequencer do
 			expect(d).to eq(1)
 		end
 
-		#it "Basic theme sequencing" do
-			# TODO
-		#end
+		it "Basic theme sequencing" do
+
+			@@c = 0
+
+			class Theme1
+				include Musa::BaseTheme
+				
+				def initialize(parameter1:, parameter2:)
+					@parameter1 = parameter1
+					@parameter2 = parameter2
+				end
+
+				def run(parameter3:)
+					@@c = @parameter1 + @parameter2 + parameter3
+				end
+			end
+
+			s = Musa::BaseSequencer.new 4, 4
+
+			s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
+
+			expect(@@c).to eq(0)
+
+			s.tick
+
+			expect(@@c).to eq(1210)
+
+			16.times { || s.tick }
+
+			expect(@@c).to eq(1220)
+
+			15.times { || s.tick }
+
+			expect(@@c).to eq(1220)
+
+			s.tick
+
+			expect(@@c).to eq(1230)
+		end
 	end
 
 	context "Advanced sequencing" do
-
-		it "Event passing on at" do
-			s = Musa::BaseSequencer.new 4, 4
-
-			c = 0
-			d = 0
-
-			control = s.at 1 do |control:|
-				c += 1
-				control.launch :event, 100
-			end
-
-			control.on :event do |param|
-				d += param
-			end
-
-			expect(c).to eq(0)
-			expect(d).to eq(0)
-
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
-
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
-		end
-
-		it "Event passing on at with inner at" do
-			s = Musa::BaseSequencer.new 4, 4
-
-			c = 0
-			d = 0
-			e = 0
-
-			control0 = s.at 1 do |control:|
-
-				c += 1
-				
-				control1 = s.at 2, control: control do |control:| 
-					control.launch :event, 100
-				end
-
-				control2 = s.at 2, control: control.make_subhandler do |control:|
-					control.launch :event, 100
-				end
-
-				control2.on :event do |param|
-					e += param
-				end
-
-			end
-
-			control0.on :event do |param|
-				d += param
-			end
-
-			expect(c).to eq(0)
-			expect(d).to eq(0)
-			expect(e).to eq(0)
-
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(0)
-			expect(d).to eq(0)
-
-			95.times { || s.tick }
-
-			expect(c).to eq(1)
-			expect(d).to eq(200)
-			expect(e).to eq(100)
-
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(200)
-			expect(e).to eq(100)
-		end
 
 	end	
 end

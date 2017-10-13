@@ -69,18 +69,17 @@ class Musa::BaseSequencer
 		_numeric_at position + bdelay.rationalize, with: with, &block
 	end
 
-	def at bar_position, control: nil, with: nil, debug: nil, &block
+	def at bar_position, with: nil, debug: nil, &block
 
-		control ||= EventHandler.new
 		debug ||= false
 
 		if bar_position.is_a? Numeric
-			_numeric_at bar_position, control: control, with: with, debug: debug, &block
+			_numeric_at bar_position, with: with, debug: debug, &block
 		else
 			bar_position = Series::S(*bar_position) if bar_position.is_a? Array
 			with = Series::S(*with).repeat if with.is_a? Array
 
-			_serie_at bar_position, control: control, with: with, debug: debug, &block
+			_serie_at bar_position, with: with, debug: debug, &block
 		end
 	end
 
@@ -130,4 +129,13 @@ class Musa::BaseSequencer
 	end
 
 	alias inspect to_s
+end
+
+module Musa::BaseTheme
+	def at_position p, **parameters
+		p
+	end
+
+	def run
+	end
 end
