@@ -1,4 +1,4 @@
-require 'musa-dsl/mods/nice-context-run'
+require 'musa-dsl/mods/as-context-run'
 
 module Musa
 
