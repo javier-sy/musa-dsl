@@ -289,8 +289,49 @@ RSpec.describe Musa::Sequencer do
 
 		it "Event passing on theme" do
 
-			# TODO
-			
+			@@c = 0
+
+			class Theme1
+				include Musa::Theme
+				
+				def initialize(context:, parameter1:, parameter2:)
+					super context
+					
+					@parameter1 = parameter1
+					@parameter2 = parameter2
+				end
+
+				def run(parameter3:)
+					launch :event, @parameter1 + @parameter2 + parameter3
+				end
+			end
+
+			s = Musa::Sequencer.new 4, 4
+
+			control = s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
+
+			control.on :event do |param|
+				@@c = param
+			end
+
+			expect(@@c).to eq(0)
+
+			s.tick
+
+			expect(@@c).to eq(1210)
+
+			16.times { || s.tick }
+
+			expect(@@c).to eq(1220)
+
+			15.times { || s.tick }
+
+			expect(@@c).to eq(1220)
+
+			s.tick
+
+			expect(@@c).to eq(1230)
+
 		end
 
 	end	
