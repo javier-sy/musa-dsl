@@ -8,6 +8,7 @@ class Musa::Sequencer
 
 	def_delegators :@context, :position, :position=, :log, :to_s, :inspect
 	def_delegators :@context, :with, :at, :wait, :theme, :play, :every, :move
+	def_delegators :@context, :launch, :on
 
 	def initialize quarter_notes_by_bar = nil, quarter_note_divisions = nil, sequencer: nil, &block
 		@sequencer ||= Musa::BaseSequencer.new quarter_notes_by_bar, quarter_note_divisions if quarter_notes_by_bar && quarter_note_divisions
@@ -29,8 +30,18 @@ class Musa::Sequencer
 			@event_handler = EventHandler.new(parent)
 		end
 
-		def with &block
-			as_context_run block
+		def with *value_parameters, **key_parameters, &block
+			as_context_run block, value_parameters, key_parameters
+		end
+
+		def now *value_parameters, **key_parameters, &block
+			context = DSLContext.new @sequencer, @event_handler
+
+			context.sequencer.now *value_parameters, **key_parameters do |*value_args, **key_args|
+				context.as_context_run block, value_args, key_args
+			end
+
+			context.event_handler
 		end
 
 		def at *value_parameters, **key_parameters, &block

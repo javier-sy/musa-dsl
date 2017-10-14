@@ -234,6 +234,37 @@ RSpec.describe Musa::Sequencer do
 			expect(d).to eq(100)
 		end
 
+		it "Event passing on at with event listener on sequencer" do
+			c = 0
+			d = 0
+
+			s = Musa::Sequencer.new 4, 4
+
+			s.with do
+				at 1 do
+					c += 1
+					now do
+						launch :event, 100
+					end
+				end
+
+				on :event do |param|
+					d += param
+				end
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(100)
+
+			s.tick
+			expect(c).to eq(1)
+			expect(d).to eq(100)
+		end
+
 		it "Event passing on at with inner at" do
 
 			s = Musa::Sequencer.new 4, 4
@@ -289,49 +320,80 @@ RSpec.describe Musa::Sequencer do
 
 		it "Event passing on theme" do
 
-			@@c = 0
-
 			class Theme1
 				include Musa::Theme
 				
 				def initialize(context:, parameter1:, parameter2:)
 					super context
-					
+
 					@parameter1 = parameter1
 					@parameter2 = parameter2
 				end
 
 				def run(parameter3:)
 					launch :event, @parameter1 + @parameter2 + parameter3
+
+					at position + Rational(1,16) do
+						launch :event2, position
+					end
 				end
 			end
 
 			s = Musa::Sequencer.new 4, 4
 
-			control = s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
+			s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
 
-			control.on :event do |param|
-				@@c = param
+			c = 0
+			d = 0
+
+			s.with do
+				on :event do |param|
+					c = param
+				end
+
+				on :event2 do |pos|
+					d += 1
+				end
 			end
 
-			expect(@@c).to eq(0)
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
 
 			s.tick
 
-			expect(@@c).to eq(1210)
+			expect(c).to eq(1210)
+			expect(d).to eq(0)
 
-			16.times { || s.tick }
+			s.tick
 
-			expect(@@c).to eq(1220)
+			expect(c).to eq(1210)
+			expect(d).to eq(1)
 
 			15.times { || s.tick }
 
-			expect(@@c).to eq(1220)
+			expect(c).to eq(1220)
+			expect(d).to eq(1)
 
 			s.tick
 
-			expect(@@c).to eq(1230)
+			expect(c).to eq(1220)
+			expect(d).to eq(2)
 
+			14.times { || s.tick }
+
+			expect(c).to eq(1220)
+			expect(d).to eq(2)
+
+			s.tick
+
+			expect(c).to eq(1230)
+			expect(d).to eq(2)
+
+			s.tick
+
+			expect(c).to eq(1230)
+			expect(d).to eq(3)
 		end
 
 	end	

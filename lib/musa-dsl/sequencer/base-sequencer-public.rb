@@ -69,6 +69,10 @@ class Musa::BaseSequencer
 		_numeric_at position + bdelay.rationalize, with: with, &block
 	end
 
+	def now with: nil, &block
+		_numeric_at position, with: with, &block
+	end
+
 	def at bar_position, with: nil, debug: nil, &block
 
 		debug ||= false
