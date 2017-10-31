@@ -3,6 +3,7 @@
 require 'unimidi'
 
 require 'musa-dsl/transport/input-midi-clock'
+require 'musa-dsl/transport/dummy-clock'
 require 'musa-dsl/sequencer'
 
 module Musa
@@ -20,6 +21,8 @@ module Musa
 			
 			@clock = InputMidiClock.new input_or_ticks if input_or_ticks.is_a? UniMIDI::Input
 			@clock = DummyClock.new input_or_ticks if input_or_ticks.is_a? Numeric
+			
+			raise ArgumentError, "No valid clock input provided: #{input_or_ticks}" unless input_or_ticks
 
 			@clock.on_stop &after_stop if after_stop
 

@@ -4,7 +4,7 @@ require 'nibbler'
 module Musa
 	class InputMidiClock < Clock
 		def initialize input
-			super
+			super()
 
 			@input = input
 			@nibbler = Nibbler.new

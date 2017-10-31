@@ -4,7 +4,7 @@ require 'nibbler'
 module Musa
 	class DummyClock < Clock
 		def initialize ticks
-			super
+			super()
 
 			@ticks = ticks
 		end
@@ -13,9 +13,9 @@ module Musa
 			@run = true
 
 			while @run && @ticks > 0
-					yield if block_given?
-					@ticks -= 1
-				end
+				yield if block_given?
+				@ticks -= 1
+
 				Thread.pass
 			end
 		end

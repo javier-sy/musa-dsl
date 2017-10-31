@@ -126,7 +126,7 @@ module Musa
 
 							msg = MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity)
 							@voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{duration}"
-							@voice.output.puts MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity) if !@voice.fast_forward?
+							@voice.output.puts MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity) if @voice.output && !@voice.fast_forward?
 						else
 							@voice.log "silence duration: #{duration}"
 						end
@@ -158,7 +158,7 @@ module Musa
 						if @voice.used_pitches[pitch][:counter] == 0
 							msg = MIDIMessage::NoteOff.new(@voice.channel, pitch, velocity)
 							@voice.log "#{msg.verbose_name}"
-							@voice.output.puts msg if !@voice.fast_forward?
+							@voice.output.puts msg if @voice.output && !@voice.fast_forward?
 						end
 					end
 				end
