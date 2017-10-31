@@ -175,7 +175,7 @@ RSpec.describe Musa::Sequencer do
 					@@c = @parameter1 + @parameter2 + parameter3
 
 					wait 1 do
-						puts "tras 1..."
+						# puts "tras 1..."
 					end
 				end
 			end
