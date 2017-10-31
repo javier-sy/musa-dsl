@@ -1,27 +1,13 @@
+require 'musa-dsl/transport/clock'
 require 'nibbler'
 
 module Musa
-	class InputMidiClock
+	class InputMidiClock < Clock
 		def initialize input
+			super
+
 			@input = input
-
-			@on_start = []
-			@on_stop = []
-			@on_song_position_pointer = []
-
 			@nibbler = Nibbler.new
-		end
-
-		def on_start &block
-			@on_start << block
-		end
-
-		def on_stop &block
-			@on_stop << block
-		end
-
-		def on_song_position_pointer &block
-			@on_song_position_pointer << block
 		end
 
 		def run

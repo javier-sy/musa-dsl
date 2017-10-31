@@ -10,7 +10,7 @@ module Musa
 
 		attr_reader :sequencer
 
-	 	def initialize(input, before_begin: nil, after_stop: nil, &block)
+	 	def initialize(input_or_ticks, before_begin: nil, after_stop: nil, &block)
 			@before_begin = []
 			@before_begin << before_begin if before_begin
 
@@ -18,7 +18,8 @@ module Musa
 
 			@sequencer = Sequencer.new 4, 24
 			
-			@clock = InputMidiClock.new input
+			@clock = InputMidiClock.new input_or_ticks if input_or_ticks.is_a? UniMIDI::Input
+			@clock = DummyClock.new input_or_ticks if input_or_ticks.is_a? Numeric
 
 			@clock.on_stop &after_stop if after_stop
 
