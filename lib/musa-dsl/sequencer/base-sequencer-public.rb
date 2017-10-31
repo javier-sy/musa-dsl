@@ -36,6 +36,10 @@ class Musa::BaseSequencer
 			@score.delete position_to_run
 		end
 	end
+	
+	def size
+		@score.size
+	end
 
 	def on_debug_at &block
 		@on_debug_at << block
