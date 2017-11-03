@@ -1,7 +1,4 @@
 # TODO allow several kinds of clocks: midi-input-clock, topaz-auto-generated-clock, etc
-# TODO refactor intialize to allow clock parameter instead of input_or_ticks; this will allow to remove require 'unimidi'
-
-require 'unimidi'
 
 require 'musa-dsl/transport/input-midi-clock'
 require 'musa-dsl/transport/dummy-clock'
