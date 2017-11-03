@@ -1,4 +1,5 @@
 # TODO allow several kinds of clocks: midi-input-clock, topaz-auto-generated-clock, etc
+# TODO refactor intialize to allow clock parameter instead of input_or_ticks; this will allow to remove require 'unimidi'
 
 require 'unimidi'
 
@@ -18,7 +19,7 @@ module Musa
 			@block = block
 
 			@sequencer = Sequencer.new 4, 24
-			
+
 			if input_or_ticks.is_a? UniMIDI::Input
 				@clock = InputMidiClock.new input_or_ticks
 			elsif input_or_ticks.is_a? Numeric
