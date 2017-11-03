@@ -12,23 +12,14 @@ module Musa
 
 		attr_reader :sequencer
 
-	 	def initialize(input_or_ticks = nil, before_begin: nil, after_stop: nil, &block)
+	 	def initialize(clock, before_begin: nil, after_stop: nil, &block)
+	 		@clock = clock
 			@before_begin = []
 			@before_begin << before_begin if before_begin
 
 			@block = block
 
 			@sequencer = Sequencer.new 4, 24
-
-			if input_or_ticks.is_a? UniMIDI::Input
-				@clock = InputMidiClock.new input_or_ticks
-			elsif input_or_ticks.is_a? Numeric
-				@clock = DummyClock.new input_or_ticks
-			elsif input_or_ticks.nil?
-				@clock = DummyClock.new { @sequencer.size > 0 }
-			else
-				raise ArgumentError, "No valid clock input provided: #{input_or_ticks}"
-			end
 
 			@clock.on_stop &after_stop if after_stop
 

@@ -60,6 +60,8 @@ module Musa
 			(0..127).each do |pitch|
 				@used_pitches[pitch] = { counter: 0, velocity: 0 }
 			end
+			
+			log "Warning: voice without output" unless @output
 
 			self
 		end
