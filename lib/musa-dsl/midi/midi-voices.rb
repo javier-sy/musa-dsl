@@ -92,7 +92,7 @@ module Musa
 		end
 
 		def log(msg)
-			@sequencer.log "voice #{name}: #{msg}" if @do_log
+			@sequencer.log "voice #{name || @channel}: #{msg}" if @do_log
 		end
 
 	 	def to_s
