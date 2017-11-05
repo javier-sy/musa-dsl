@@ -247,13 +247,17 @@ module Musa
 			end
 
 			def next_value
-				value = @series[@index].next_value
+				value = nil
+				
+				if @index < @series.size
+					value = @series[@index].next_value
 
-				if value.nil?
-					@index += 1
-					if @index < @series.size
-						@series[@index].restart
-						value = next_value
+					if value.nil?
+						@index += 1
+						if @index < @series.size
+							@series[@index].restart
+							value = next_value
+						end
 					end
 				end
 

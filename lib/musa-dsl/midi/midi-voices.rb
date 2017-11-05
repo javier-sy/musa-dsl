@@ -69,7 +69,7 @@ module Musa
 		def fast_forward=(enabled)
 			if @fast_forward && !enabled
 				(0..127).each do |pitch|
-					@output.puts MIDIMessage::NoteOn @channel, pitch, @used_pitches[pitch][:velocity] if @used_pitches[pitch][:counter] > 0
+					@output.puts MIDIMessage::NoteOn.new(@channel, pitch, @used_pitches[pitch][:velocity]) if @used_pitches[pitch][:counter] > 0
 				end
 			end
 
