@@ -4,7 +4,7 @@ class Musa::Sequencer
 
 	extend Forwardable
 
-	def_delegators :@sequencer, :reset, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position=, :size
+	def_delegators :@sequencer, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position=, :size
 
 	def_delegators :@context, :position, :log, :to_s, :inspect
 	def_delegators :@context, :with, :at, :wait, :theme, :play, :every, :move
@@ -15,6 +15,11 @@ class Musa::Sequencer
 		@context = DSLContext.new @sequencer
 
 		with &block if block
+	end
+
+	def reset
+		@context.event_handler.reset
+		@sequencer.reset
 	end
 
 	class DSLContext
@@ -128,6 +133,10 @@ class Musa::Sequencer
 			end
 
 			@parent.launch event, *value_parameters, **key_parameters if @parent
+		end
+
+		def reset
+			@handlers.clear
 		end
 
 		def inspect

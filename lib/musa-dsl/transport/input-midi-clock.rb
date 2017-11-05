@@ -19,20 +19,22 @@ module Musa
 				@messages.each do |message|
 					m = @nibbler.parse message[:data]
 
-					case m.name 
-					when 'Start'
-						@on_start.each { |block| block.call }
-					
-					when 'Stop'
-						@on_stop.each { |block| block.call }
+					if m
+						case m.name 
+						when 'Start'
+							@on_start.each { |block| block.call }
+						
+						when 'Stop'
+							@on_stop.each { |block| block.call }
 
-					when 'Clock'
-						yield if block_given?
+						when 'Clock'
+							yield if block_given?
 
-					when 'Song Position Pointer'
-						position = Rational(message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7), 16) + 1
+						when 'Song Position Pointer'
+							position = Rational(message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7), 16) + 1
 
-						@on_song_position_pointer.each { |block| block.call position }
+							@on_song_position_pointer.each { |block| block.call position }
+						end
 					end
 				end
 
