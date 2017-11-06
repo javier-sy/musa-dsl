@@ -59,13 +59,15 @@ class Musa::BaseSequencer
 
 		raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
 
-		@on_fast_forward.each { |block| block.call(true) }
+		if position > @position
+			@on_fast_forward.each { |block| block.call(true) }
 
-		while @position < position
-			tick
+			while @position < position
+				tick
+			end
+
+			@on_fast_forward.each { |block| block.call(false) }
 		end
-
-		@on_fast_forward.each { |block| block.call(false) }
 	end
 
 	# TODO implementar series como parámetros (bdelay sería el wait respecto al evento programado anterior?)
