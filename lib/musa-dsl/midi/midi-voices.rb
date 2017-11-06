@@ -67,6 +67,9 @@ module Musa
 		end
 
 		def fast_forward=(enabled)
+
+			puts "MIDIVoice.fast_forward = #{enabled}"
+			
 			if @fast_forward && !enabled
 				(0..127).each do |pitch|
 					@output.puts MIDIMessage::NoteOn.new(@channel, pitch, @used_pitches[pitch][:velocity]) if @used_pitches[pitch][:counter] > 0
