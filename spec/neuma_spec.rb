@@ -125,18 +125,18 @@ RSpec.describe Musa::Neuma do
 
 			# puts "Neuma.parse('1+2') = #{Neuma.parse('1+2').value}"
 
-			match = Neuma.parse('2.3.4 5.6.7 # comment')
+			match = Neuma.parse('2.3.4 5.6.7 # comentario 1')
 			
-			puts
-			match.dump
+			#puts
+			#match.dump
 			
 			puts "#{match.to_str} = #{match.value}"
 
 
-			match = Neuma.parse('(2 3 4) (7 8 9) # comment')
+			match = Neuma.parse('(2 3 4) (7 8 9) # comentario 2')
 			
-			puts
-			match.dump
+			#puts
+			#match.dump
 			
 			puts "#{match.to_str} = #{match.value}"
 

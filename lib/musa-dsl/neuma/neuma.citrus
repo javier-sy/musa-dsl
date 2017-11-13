@@ -1,57 +1,89 @@
 grammar Neuma
 	rule line
-		((a:neuma space)* comment?) { [ captures(:a).collect { |x| x.value } ] }
+		((neuma space*)* comment?) { captures(:neuma).collect { |c| c.value } }
 	end
 
 	rule neuma
-		(x:(dotted_attributes | parenthesis_attributes)) { capture(:x).value }
+		dotted_attributes | parenthesis_attributes
 	end
 
 	rule dotted_attributes
-		(a:attribute ('.' b:attribute)*) { "dotted_attributes"+ capture(:a).class+ captures(:b).value }
+		(a:attribute (dot b:attribute)*) { [ capture(:a).value ] + captures(:b).collect { |c| c.value } }
 	end
 
 	rule parenthesis_attributes
-		('(' a:attribute (space b:attribute)* ')') { "parenthesis_attributes"+ capture(:a).class+ captures(:b).value  }
+		(lpar a:attribute (space* b:attribute)* rpar) { [ capture(:a).value ] + captures(:b).collect { |c| c.value } }
 	end
 
 	rule command
-		(element:(event | braced_command)) { capture(:element).value }
+		event | braced_command
 	end
 
 	rule event
-		(':' name) { capture(:name).value }
+		(colon name) { capture(:name).value }
 	end
 
 	rule braced_command
-		('{' space complex_command space '}') { capture(:complex_command).value }
+		lbrace space* complex_command space* rbrace
 	end
 
 	rule complex_command
-		(element:(everything_except_braces | '{' everything_except_braces '}')) { capture(:element).value }
+		everything_except_braces | (lbrace everything_except_braces rbrace)
 	end
 
 	rule everything_except_braces
-		( [^({|})]+ ) { to_str }
+		/[^({|})]+/
 	end
 
 	rule attribute
-		(everything_except_braces_dots_spaces_comment) { capture(:everything_except_braces_dots_spaces_comment).value } 
+		everything_except_braces_dots_spaces_comment
 	end
 
 	rule everything_except_braces_dots_spaces_comment
-		([^({|}|.| |\t|\n|#)]+) { to_str.to_i }
+		/[^({|}|.| |\t|\n|#)]+/
 	end
 
 	rule name
-		( /[[:alpha:]]\w*/ ) { to_str }
-	end
-
-	rule space
-		[ \t\n]*
+		/[[:alpha:]]\w*/
 	end
 
 	rule comment
-		'#' .*
+		(hsh everything) { capture(:everything).value }
+	end
+
+	rule dot
+		'.'
+	end
+
+	rule colon
+		':'
+	end
+
+	rule lpar
+		'('
+	end
+
+	rule rpar
+		')'
+	end
+
+	rule lbrace
+		'{'
+	end
+
+	rule rbrace
+		'}'
+	end
+
+	rule space
+		[ \t\n]
+	end
+
+	rule hsh
+		'#'
+	end
+
+	rule everything
+		/.*/
 	end
 end
