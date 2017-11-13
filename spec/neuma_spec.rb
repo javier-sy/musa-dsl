@@ -125,7 +125,7 @@ RSpec.describe Musa::Neuma do
 
 			# puts "Neuma.parse('1+2') = #{Neuma.parse('1+2').value}"
 
-			match = Neuma.parse('2.3.4 5.6.7 # comentario 1')
+			match = Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')
 			
 			#puts
 			#match.dump
@@ -133,7 +133,7 @@ RSpec.describe Musa::Neuma do
 			puts "#{match.to_str} = #{match.value}"
 
 
-			match = Neuma.parse('(2 3 4) (7 8 9) # comentario 2')
+			match = Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')
 			
 			#puts
 			#match.dump

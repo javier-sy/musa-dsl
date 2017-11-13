@@ -1,18 +1,22 @@
 grammar Neuma
 	rule line
-		((neuma space*)* comment?) { captures(:neuma).collect { |c| c.value } }
+		((neuma space*)* comment?) { captures(:neuma).collect { |c| c.value } + [ { comment: capture(:comment).value } ] }
 	end
 
 	rule neuma
-		dotted_attributes | parenthesis_attributes
+		command | dotted_attributes | parenthesis_attributes
 	end
 
 	rule dotted_attributes
-		(a:attribute (dot b:attribute)*) { [ capture(:a).value ] + captures(:b).collect { |c| c.value } }
+		(a:attribute (dot b:attribute)*) { { attributes: [ capture(:a).value ] + captures(:b).collect { |c| c.value } } }
 	end
 
 	rule parenthesis_attributes
-		(lpar a:attribute (space* b:attribute)* rpar) { [ capture(:a).value ] + captures(:b).collect { |c| c.value } }
+		(lpar a:attribute (space* b:attribute)* rpar) { { attributes: [ capture(:a).value ] + captures(:b).collect { |c| c.value } } }
+	end
+
+	rule attribute
+		everything_except_braces_dots_spaces_comment
 	end
 
 	rule command
@@ -20,23 +24,23 @@ grammar Neuma
 	end
 
 	rule event
-		(colon name) { capture(:name).value }
+		(colon name) { { event: capture(:name).value } } 
 	end
 
 	rule braced_command
-		lbrace space* complex_command space* rbrace
+		(lbrace space* complex_command space* rbrace) { { command: capture(:complex_command).value } }
 	end
 
 	rule complex_command
-		everything_except_braces | (lbrace everything_except_braces rbrace)
+		everything_except_braces? (space* lbrace space* complex_command space* rbrace)* space* everything_except_braces?
+	end
+
+	rule comment
+		(hsh everything) { capture(:everything).value }
 	end
 
 	rule everything_except_braces
 		/[^({|})]+/
-	end
-
-	rule attribute
-		everything_except_braces_dots_spaces_comment
 	end
 
 	rule everything_except_braces_dots_spaces_comment
@@ -45,10 +49,6 @@ grammar Neuma
 
 	rule name
 		/[[:alpha:]]\w*/
-	end
-
-	rule comment
-		(hsh everything) { capture(:everything).value }
 	end
 
 	rule dot
@@ -84,6 +84,6 @@ grammar Neuma
 	end
 
 	rule everything
-		/.*/
+		/.*$/
 	end
 end
