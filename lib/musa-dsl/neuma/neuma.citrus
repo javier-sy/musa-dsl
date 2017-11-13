@@ -1,54 +1,50 @@
 grammar Neuma
 	rule line
-		neuma* comment? { capture(:neuma).value }
+		((a:neuma space)* comment?) { [ captures(:a).collect { |x| x.value } ] }
 	end
 
 	rule neuma
-		(a: dotted_attributes | b: parenthesis_attributes | c: command) space { [ capture[:a].value, capture[:b].value, capture[:c].value ]}
+		(x:(dotted_attributes | parenthesis_attributes)) { capture(:x).value }
 	end
 
 	rule dotted_attributes
-		a: attribute '.' aa: dotted_attributes | attribute { [ capture(:a).value, capture[:aa].value ] }
+		(a:attribute ('.' b:attribute)*) { "dotted_attributes"+ capture(:a).class+ captures(:b).value }
 	end
 
 	rule parenthesis_attributes
-		'(' spaced_attributes ')' { capture(:spaced_attributes).value }
+		('(' a:attribute (space b:attribute)* ')') { "parenthesis_attributes"+ capture(:a).class+ captures(:b).value  }
 	end
 
 	rule command
-		e: event | c: braced_command { [ capture(:e).value, capture[:c].value ] }
+		(element:(event | braced_command)) { capture(:element).value }
 	end
 
 	rule event
-		':' name { capture(:name).value }
+		(':' name) { capture(:name).value }
 	end
 
 	rule braced_command
-		'{' space complex_command space '}' { capture(:complex_command).value }
+		('{' space complex_command space '}') { capture(:complex_command).value }
 	end
 
 	rule complex_command
-		a: everything_except_braces | '{' b: everything_except_braces '}' { capture(:a).value + '{' + capture(:b).value + '}' }
+		(element:(everything_except_braces | '{' everything_except_braces '}')) { capture(:element).value }
 	end
 
 	rule everything_except_braces
-		/[^({|})]+/ { to_str }
-	end
-
-	rule spaced_attributes
-		a: attribute space aa: spaced_attributes | b: attribute { [ capture(:a).value, capture(:aa).value, capture(:c).value ] }
+		( [^({|})]+ ) { to_str }
 	end
 
 	rule attribute
-		everything_except_braces_dots_spaces { capture(:everything_except_braces_dots_spaces).value }
+		(everything_except_braces_dots_spaces_comment) { capture(:everything_except_braces_dots_spaces_comment).value } 
 	end
 
-	rule everything_except_braces_dots_spaces
-		/[^({|}|.| |\t|\n)]+/ { to_str }
+	rule everything_except_braces_dots_spaces_comment
+		([^({|}|.| |\t|\n|#)]+) { to_str.to_i }
 	end
 
 	rule name
-		/[[:alpha:]]\w*/ { to_str }
+		( /[[:alpha:]]\w*/ ) { to_str }
 	end
 
 	rule space

@@ -104,28 +104,43 @@ end
 RSpec.describe Musa::Neuma do
 
 	context "Easy series unmarshalling" do
+=begin			
 		it "Basic parsing" do
 
 			source = File.read File.join(File.dirname(__FILE__), "neuma_spec.neu")
 
-
 			elements = (source.split /\n/).collect { |line| line.split('#')[0] }.compact.collect { |line_nc| line_nc.split }.flatten
-
 
 			p = X.new nil, [1, 1, 1]
 
-
 			elements = elements.collect { |x| p.process x }
-
-
 
 			expect(elements).to eq ["hola"]
 		end
+=end
 
 
 		it "Parsing with citrus" do
 			Citrus.load File.join(File.dirname(__FILE__), "../lib/musa-dsl/neuma/neuma")
 
+			# puts "Neuma.parse('1+2') = #{Neuma.parse('1+2').value}"
+
+			match = Neuma.parse('2.3.4 5.6.7 # comment')
+			
+			puts
+			match.dump
+			
+			puts "#{match.to_str} = #{match.value}"
+
+
+			match = Neuma.parse('(2 3 4) (7 8 9) # comment')
+			
+			puts
+			match.dump
+			
+			puts "#{match.to_str} = #{match.value}"
+
+=begin
 			puts "Neuma.parse('1.2.3 4.5.6 # comment') = #{Neuma.parse('1.2.3 4.5.6 # comment').value}"
 
 			expect(Neuma.parse('1.2.3 4.5.6 # comment')).to eq '1.2.3 4.5.6 # comment'
@@ -133,7 +148,7 @@ RSpec.describe Musa::Neuma do
 			expect(Neuma.parse('1.2.3 (4 5 6) (6 7 8) # comment')).to eq '1.2.3 (4 5 6) (6 7 8) # comment'
 
 			expect(Neuma.parse('1.2.3 (4 5 6) :hola { que tal } # comment')).to eq '1.2.3 (4 5 6) :hola { que tal } # comment'
-
+=end
 		end
 
 	end

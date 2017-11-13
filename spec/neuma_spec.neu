@@ -21,8 +21,8 @@ I.p 	# piano
 1		# como el anterior pero altura substituida por 1
 +1		# elemento +1 en la escala respecto al anterior
 .1/2	# como el anterior pero con duración substituida 1/2
-.*1/2	# como el anterior, con duración la del anterior * 1/2
-.p 		# como el anterior, con velocidad substituida por p
+.*1/2	# como el anterior, con duración la del anterior * 1/2
+.p 		# como el anterior, con velocidad substituida por p
 .-p 	# como el anterior, con velocidad menos piano, es decir, un punto +forte
 
 
