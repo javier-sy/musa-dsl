@@ -36,7 +36,7 @@ I.p 	# piano
 
 
 
-evento: 0.1.n +1 +1 
+:evento 0.1.n +1 +1 
 
 
 

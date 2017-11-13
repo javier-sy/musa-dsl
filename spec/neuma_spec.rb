@@ -1,10 +1,6 @@
 require 'spec_helper'
 
 require 'musa-dsl'
-require 'citrus'
-
-module Musa::Neuma
-end
 
 class Processor
 	def initialize start
@@ -103,7 +99,7 @@ end
 
 RSpec.describe Musa::Neuma do
 
-	context "Easy series unmarshalling" do
+	context "Neuma parsing" do
 =begin			
 		it "Basic parsing" do
 
@@ -120,36 +116,9 @@ RSpec.describe Musa::Neuma do
 =end
 
 
-		it "Parsing with citrus" do
-			Citrus.load File.join(File.dirname(__FILE__), "../lib/musa-dsl/neuma/neuma")
-
-			# puts "Neuma.parse('1+2') = #{Neuma.parse('1+2').value}"
-
-			match = Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')
-			
-			#puts
-			#match.dump
-			
-			puts "#{match.to_str} = #{match.value}"
-
-
-			match = Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')
-			
-			#puts
-			#match.dump
-			
-			puts "#{match.to_str} = #{match.value}"
-
-=begin
-			puts "Neuma.parse('1.2.3 4.5.6 # comment') = #{Neuma.parse('1.2.3 4.5.6 # comment').value}"
-
-			expect(Neuma.parse('1.2.3 4.5.6 # comment')).to eq '1.2.3 4.5.6 # comment'
-
-			expect(Neuma.parse('1.2.3 (4 5 6) (6 7 8) # comment')).to eq '1.2.3 (4 5 6) (6 7 8) # comment'
-
-			expect(Neuma.parse('1.2.3 (4 5 6) :hola { que tal } # comment')).to eq '1.2.3 (4 5 6) :hola { que tal } # comment'
-=end
+		it "Basic neuma inline parsing" do
+			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq([{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: "evento" }, { comment: " comentario 1" }])
+			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')).to eq([{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro } " }, { comment: " comentario 2" }])
 		end
-
 	end
 end
