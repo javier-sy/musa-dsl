@@ -1,0 +1,61 @@
+grammar Neuma
+	rule line
+		neuma* comment? { capture(:neuma).value }
+	end
+
+	rule neuma
+		(a: dotted_attributes | b: parenthesis_attributes | c: command) space { [ capture[:a].value, capture[:b].value, capture[:c].value ]}
+	end
+
+	rule dotted_attributes
+		a: attribute '.' aa: dotted_attributes | attribute { [ capture(:a).value, capture[:aa].value ] }
+	end
+
+	rule parenthesis_attributes
+		'(' spaced_attributes ')' { capture(:spaced_attributes).value }
+	end
+
+	rule command
+		e: event | c: braced_command { [ capture(:e).value, capture[:c].value ] }
+	end
+
+	rule event
+		':' name { capture(:name).value }
+	end
+
+	rule braced_command
+		'{' space complex_command space '}' { capture(:complex_command).value }
+	end
+
+	rule complex_command
+		a: everything_except_braces | '{' b: everything_except_braces '}' { capture(:a).value + '{' + capture(:b).value + '}' }
+	end
+
+	rule everything_except_braces
+		/[^({|})]+/ { to_str }
+	end
+
+	rule spaced_attributes
+		a: attribute space aa: spaced_attributes | b: attribute { [ capture(:a).value, capture(:aa).value, capture(:c).value ] }
+	end
+
+	rule attribute
+		everything_except_braces_dots_spaces { capture(:everything_except_braces_dots_spaces).value }
+	end
+
+	rule everything_except_braces_dots_spaces
+		/[^({|}|.| |\t|\n)]+/ { to_str }
+	end
+
+	rule name
+		/[[:alpha:]]\w*/ { to_str }
+	end
+
+	rule space
+		[ \t\n]*
+	end
+
+	rule comment
+		'#' .*
+	end
+end
