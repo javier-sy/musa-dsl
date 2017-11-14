@@ -1,7 +1,11 @@
 grammar Neuma
-	
-	rule content
-		(spaces (neuma spaces)*) { captures(:neuma).collect { |c| c.value } }
+
+	rule lines
+		((spaces ((line_content comment?) | comment | crlf ))*) { captures(:line_content).collect { |c| c.value }.flatten(1) }
+	end
+
+	rule line_content
+		((neuma spaces)+) { captures(:neuma).collect { |c| c.value } }
 	end
 
 	rule neuma
@@ -33,27 +37,27 @@ grammar Neuma
 	end
 
 	rule complex_command
-		everything_except_braces_eol? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces_eol?
+		everything_except_braces? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces?
 	end
 
 	rule spaces
-		space* comment? space*
+		space*
 	end
 
 	rule comment
-		hsh ~eol # everything_except_eol eol?
+		hsh ~/$/x
 	end
 
-	rule everything_except_eol
-		/[^(\n|\r)]+/
+	rule space
+		[ \t]
 	end
 
-	rule everything_except_braces_eol
-		/[^({|}|\n|\r)]+/
+	rule everything_except_braces
+		/[^({|})]+/
 	end
 
 	rule everything_except_braces_dots_spaces_comment
-		/[^({|}|.| |\t|\n|\r|#)]+/
+		/[^({|}|.| |\t|\n|\r\#)]+/
 	end
 
 	rule name
@@ -84,15 +88,11 @@ grammar Neuma
 		'}'
 	end
 
-	rule space
-		[ \t\n\r]
-	end
-
 	rule hsh
 		'#'
 	end
 
-	rule eol
+	rule crlf
 		[\n\r]
 	end
 end

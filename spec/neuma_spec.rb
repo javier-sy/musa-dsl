@@ -97,7 +97,7 @@ RSpec.describe Musa::Neuma do
 		end
 
 		it "Basic neuma inline parsing with comment" do
-			expect(Musa::Neuma.parse("# comentario (con parentesis) \n 2.3.4", debug: true)).to eq([{ attributes: ["2", "3", "4"] }])
+			expect(Musa::Neuma.parse("# comentario (con parentesis) \n 2.3.4")).to eq([{ attributes: ["2", "3", "4"] }])
 		end	
 
 		it "Basic neuma inline parsing with decoder" do
@@ -114,10 +114,10 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma file parsing with decoder" do
 
-			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: p, debug: true
+			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: p
 
-			expect(result[0]).to eq({ abs_pitch: 0 })
-			expect(result[1]).to eq({ })
+			expect(result[0]).to eq({ })
+			expect(result[1]).to eq({ abs_pitch: 'II' })
 			expect(result[2]).to eq({ delta_pitch: 1 })
 			expect(result[3]).to eq({ abs_pitch: 2, abs_velocity: -1 })
 			expect(result[4]).to eq({ abs_pitch: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
