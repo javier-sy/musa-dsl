@@ -1,15 +1,7 @@
 grammar Neuma
 	
-	rule line
-		(content:(content_line | empty_line) eol?)* { captures(:content).collect { |c| c.value } }
-	end
-
-	rule content_line
-		((neuma space*)* comment?) { captures(:neuma).collect { |c| c.value } + [ { comment: capture(:comment).value } ] }
-	end
-
-	rule empty_line
-		(space*) { [] }
+	rule content
+		(spaces (neuma spaces)*) { captures(:neuma).collect { |c| c.value } }
 	end
 
 	rule neuma
@@ -21,7 +13,7 @@ grammar Neuma
 	end
 
 	rule parenthesis_attributes
-		(lpar space* (a:attribute space*)* rpar) { { attributes: captures(:a).collect { |c| c.value } } }
+		(lpar spaces (a:attribute spaces)* rpar) { { attributes: captures(:a).collect { |c| c.value } } }
 	end
 
 	rule attribute
@@ -37,23 +29,31 @@ grammar Neuma
 	end
 
 	rule braced_command
-		(lbrace space* complex_command space* rbrace) { { command: capture(:complex_command).value } }
+		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value } }
 	end
 
 	rule complex_command
-		everything_except_braces_eol? (space* lbrace space* complex_command space* rbrace)* space* everything_except_braces_eol?
+		everything_except_braces_eol? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces_eol?
+	end
+
+	rule spaces
+		space* comment? space*
 	end
 
 	rule comment
-		(hsh everything_except_eol) { capture(:everything_except_eol).value }
+		hsh ~eol # everything_except_eol eol?
+	end
+
+	rule everything_except_eol
+		/[^(\n|\r)]+/
 	end
 
 	rule everything_except_braces_eol
-		/[^({|}|\n)]+/
+		/[^({|}|\n|\r)]+/
 	end
 
 	rule everything_except_braces_dots_spaces_comment
-		/[^({|}|.| |\t|\n|#)]+/
+		/[^({|}|.| |\t|\n|\r|#)]+/
 	end
 
 	rule name
@@ -85,18 +85,14 @@ grammar Neuma
 	end
 
 	rule space
-		[ \t]
+		[ \t\n\r]
 	end
 
 	rule hsh
 		'#'
 	end
 
-	rule everything_except_eol
-		/[^\n]*/
-	end
-
 	rule eol
-		'\n'
+		[\n\r]
 	end
 end

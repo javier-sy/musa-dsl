@@ -90,11 +90,15 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: "evento" }, { comment: " comentario 1" }])
+				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: "evento" }])
 
 			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro } " }, { comment: " comentario 2" }])
+				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro } " }])
 		end
+
+		it "Basic neuma inline parsing with comment" do
+			expect(Musa::Neuma.parse("# comentario (con parentesis) \n 2.3.4", debug: true)).to eq([{ attributes: ["2", "3", "4"] }])
+		end	
 
 		it "Basic neuma inline parsing with decoder" do
 
@@ -110,7 +114,7 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma file parsing with decoder" do
 
-			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: p
+			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: p, debug: true
 
 			expect(result[0]).to eq({ abs_pitch: 0 })
 			expect(result[1]).to eq({ })

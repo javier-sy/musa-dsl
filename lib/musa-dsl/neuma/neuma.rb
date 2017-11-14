@@ -5,7 +5,7 @@ module Musa::Neuma
 		Citrus.load grammar_path
 	end
 
-	def self.parse string_or_file, language: nil, decode_with: nil
+	def self.parse string_or_file, language: nil, decode_with: nil, debug: nil
 
 		language ||= Neuma
 
@@ -21,6 +21,8 @@ module Musa::Neuma
 			raise ArgumentError, 'Only String or File allowed to be parsed'
 		end
 
+		match.dump if debug
+
 		if decode_with
 			match.value.collect { |v| decode_with.decode v }
 		else
@@ -28,9 +30,9 @@ module Musa::Neuma
 		end
 	end
 
-	def self.parse_file filename, decode_with: nil
+	def self.parse_file filename, decode_with: nil, debug: nil
 		File.open filename do |file|
-			parse file, decode_with: decode_with
+			parse file, decode_with: decode_with, debug: debug
 		end
 	end
 
