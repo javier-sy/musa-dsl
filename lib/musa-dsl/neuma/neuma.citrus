@@ -1,6 +1,15 @@
 grammar Neuma
+	
 	rule line
+		(content:(content_line | empty_line) eol?)* { captures(:content).collect { |c| c.value } }
+	end
+
+	rule content_line
 		((neuma space*)* comment?) { captures(:neuma).collect { |c| c.value } + [ { comment: capture(:comment).value } ] }
+	end
+
+	rule empty_line
+		(space*) { [] }
 	end
 
 	rule neuma
@@ -8,11 +17,11 @@ grammar Neuma
 	end
 
 	rule dotted_attributes
-		(a:attribute (dot b:attribute)*) { { attributes: [ capture(:a).value ] + captures(:b).collect { |c| c.value } } }
+		(dot | (a:attribute (dot b:attribute?)*)) { { attributes: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 	end
 
 	rule parenthesis_attributes
-		(lpar a:attribute (space* b:attribute)* rpar) { { attributes: [ capture(:a).value ] + captures(:b).collect { |c| c.value } } }
+		(lpar space* (a:attribute space*)* rpar) { { attributes: captures(:a).collect { |c| c.value } } }
 	end
 
 	rule attribute
@@ -32,15 +41,15 @@ grammar Neuma
 	end
 
 	rule complex_command
-		everything_except_braces? (space* lbrace space* complex_command space* rbrace)* space* everything_except_braces?
+		everything_except_braces_eol? (space* lbrace space* complex_command space* rbrace)* space* everything_except_braces_eol?
 	end
 
 	rule comment
-		(hsh everything) { capture(:everything).value }
+		(hsh everything_except_eol) { capture(:everything_except_eol).value }
 	end
 
-	rule everything_except_braces
-		/[^({|})]+/
+	rule everything_except_braces_eol
+		/[^({|}|\n)]+/
 	end
 
 	rule everything_except_braces_dots_spaces_comment
@@ -76,14 +85,18 @@ grammar Neuma
 	end
 
 	rule space
-		[ \t\n]
+		[ \t]
 	end
 
 	rule hsh
 		'#'
 	end
 
-	rule everything
-		/.*$/
+	rule everything_except_eol
+		/[^\n]*/
+	end
+
+	rule eol
+		'\n'
 	end
 end
