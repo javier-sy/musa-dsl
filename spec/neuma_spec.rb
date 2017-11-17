@@ -93,7 +93,7 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: "evento" }])
+				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: :evento }])
 
 			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')).to eq(
 				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro } " }])
@@ -105,7 +105,6 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing with decoder" do
 
-			puts "#{Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1'}"
 			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1', decode_with: p
 
 			expect(result[0]).to eq({ abs_pitch: 0 })
@@ -113,7 +112,14 @@ RSpec.describe Musa::Neuma do
 			expect(result[2]).to eq({ delta_pitch: 1 })
 			expect(result[3]).to eq({ abs_pitch: 2, abs_velocity: -1 })
 			expect(result[4]).to eq({ abs_pitch: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
-			expect(result[5]).to eq(nil)
+		end
+
+		it "Basic neuma inline parsing only duration" do
+
+			result = Musa::Neuma.parse '0 .1/2'
+
+			expect(result[0]).to eq({ attributes: ["0"] })
+			expect(result[1]).to eq({ attributes: [nil, "1/2"] })
 		end
 
 		it "Basic neuma file parsing with decoder" do
