@@ -2,11 +2,8 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-module Impl
+module Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
 	def parse _attributes
-
-		#puts _attributes
-		
 		case
 		when _attributes.key?(:attributes)
 
@@ -71,11 +68,11 @@ module Impl
 end	
 
 class X < Musa::Neuma::NeumaDecoder
-	include Impl
+	include Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
 end
 
 class Y < Musa::Neuma::DifferentialNeumaDecoder
-	include Impl
+	include Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
 
 	def initialize 
 		super nil
