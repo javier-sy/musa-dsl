@@ -74,12 +74,41 @@ end
 class Y < Musa::Neuma::DifferentialNeumaDecoder
 	include Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
 
-	def initialize 
-		super nil
+	def initialize event_handler, scale, base = nil
+
+		base ||= { pitch: 0, duration: Rational(1,4), velocity: 1 }
+
+		@event_handler = event_handler
+		@scale = scale
+
+		super base
 	end
 
 	def apply action, on:
-		action
+		if action[:abs_pitch]
+			on[:pitch] = action[:abs_pitch]
+		end
+
+		if action[:delta_pitch]
+			on[:pitch] += action[:delta_pitch]
+		end
+
+		if action[:abs_duration]
+			on[:duration] = action[:duration]
+		end
+
+		if action[:delta_duration]
+			on[:duration] += action[:delta_duration]
+		end
+
+		if action[:factor_duration]
+			on[:duration] *= action[:factor_duration]
+		end
+
+		# esto da bien la temporización? se lanza el evento en el momento adecuado???? o mejor lanzarlo en el consumidor????
+		if action[:event]
+			@event_handler.launch action[:event]
+		end	
 	end
 end
 

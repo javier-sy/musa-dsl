@@ -50,19 +50,12 @@ module Musa::Neuma
 
 	class DifferentialNeumaDecoder < NeumaDecoder
 		def initialize start
-			@last = start
+			@last = start.clone
 		end
 
 		def decode attributes
-			element = @last.clone
-
-			action = parse attributes
-
-			element = apply action, on: element
-
-			@last = element
-
-			element.clone
+			apply parse(attributes), on: @last
+			@last.clone
 		end
 
 		def apply action, on:
