@@ -17,8 +17,18 @@ grammar Neuma
 	rule dotted_attributes
 		 # buena... (dot | (a:attribute (dot b:attribute?)*)) { { attributes: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 
-		( (dot) | (attribute dot) | (attribute (dot attribute)+) | (dot attribute)  )
-		
+
+		( (a:attribute (dot as:attribute)+) | (b:attribute dot) | (dot cs:attribute)+ | (d:attribute) | dot ) { 
+			{ attributes: 
+				( capture(:d) ? [ capture(:d).value ] : 
+					( capture(:c) ? [ capture(:c).value ] : 
+						( capture(:b) ? [ capture(:b).value ] : 
+							( (captures[:cs] ? captures(:cs).collect { |c| c.value } :
+								( (capture(:a) ? [ capture(:a).value ] : []) + 
+									(captures(:as) ? captures(:as).collect { |c| c.value } : []) ) ) ) ) ) ) } 
+		}
+
+#		( (a:attribute (dot as:attribute)+) | (b:attribute dot) | (dot cs:attribute)+ | (d:attribute) | dot )
 	end
 
 	rule parenthesis_attributes
