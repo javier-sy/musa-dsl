@@ -5,7 +5,7 @@ require 'musa-dsl'
 module Impl
 	def parse _attributes
 
-		puts _attributes
+		#puts _attributes
 		
 		case
 		when _attributes.key?(:attributes)
@@ -95,8 +95,8 @@ RSpec.describe Musa::Neuma do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq(
 				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: "evento" }])
 
-			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro } " }])
+			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')).to eq(
+				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro } " }])
 		end
 
 		it "Basic neuma inline parsing with comment" do
@@ -105,6 +105,7 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing with decoder" do
 
+			puts "#{Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1'}"
 			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1', decode_with: p
 
 			expect(result[0]).to eq({ abs_pitch: 0 })

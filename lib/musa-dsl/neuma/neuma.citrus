@@ -18,14 +18,27 @@ grammar Neuma
 		 # buena... (dot | (a:attribute (dot b:attribute?)*)) { { attributes: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 
 
-		( (a:attribute (dot as:attribute)+) | (b:attribute dot) | (dot cs:attribute)+ | (d:attribute) | dot ) { 
-			{ attributes: 
-				( capture(:d) ? [ capture(:d).value ] : 
-					( capture(:b) ? [ capture(:b).value ] : 
-						( (captures[:cs] ? captures(:cs).collect { |c| c.value } :
-							( (capture(:a) ? [ capture(:a).value ] : []) + 
-								(captures(:as) ? captures(:as).collect { |c| c.value } : []) ) ) ) ) ) } 
+		(a1:attribute dot d:dotted_attributes | a2:attribute | dot ) {
+			v = []
+			
+			v << capture(:a1).value if capture(:a1)
+			v.concat capture(:d).value[:attributes] if capture(:d)
+			#v << capture(:a2).value if capture(:a2)
+
+			{ attributes: v }			
 		}
+
+		#( (a:attribute (dot as:attribute)+) | (dot bs:attribute)+ | (c:attribute dot?)+ | dot ) { 
+		#	if capture(:a)
+		#		{ attributes: [ capture(:a).value ] + captures(:as).collect { |c| c.value } }
+		#	elsif captures(:bs)
+		#		{ attributes: captures(:bs).collect { |c| c.value } }
+		#	elsif capture(:c)
+		#		{ attributes: [ capture(:c).value ] }
+		#	else
+		#		{ }
+		#	end	
+		#}
 
 #		( (a:attribute (dot as:attribute)+) | (b:attribute dot) | (dot cs:attribute)+ | (d:attribute) | dot )
 	end
