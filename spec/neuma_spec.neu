@@ -1,6 +1,6 @@
 # Esto sería algo así...
 
-.		# suena la tónica de la escala, con el tiempo inicial (negra, p.ej), y la velocidad inicial (normal, p.ej.)
+.		# suena la anterior, porque no se da información nueva, si no hay anterior, se coge la "por defecto" o la "base de la serie"
 II		# suena el segundo grado de la escala, con el tiempo y velocidad anteriores
 I.2		# suena el primer grado, con la duración de blanca, y la velocidad de la anterior
 I.1/2	# corchea
@@ -11,15 +11,13 @@ I.p 	# piano
 0.1/2
 0.p
 
-0 1 2.p 2.1/2.p
+0 1 2.p 2.1/2.ff
 
 # modo diferencial
 # otra línea
 
-0		# suena la tónica de la escala, con el tiempo base (negra. p.ej.) y velocidad predeterminada
 0.		# suena la tónica de la escala con los demás parámetros como el anterior
 .		# como el anterior
-1		# como el anterior pero altura substituida por 1
 +1		# elemento +1 en la escala respecto al anterior
 .1/2	# como el anterior pero con duración substituida 1/2
 .*1/2	# como el anterior, con duración la del anterior * 1/2
@@ -27,17 +25,8 @@ I.p 	# piano
 .-p 	# como el anterior, con velocidad menos piano, es decir, un punto +forte
 
 
+:evento -1 
 
-
-
-0 +1 -1 
-
-+1 :evento -1
-
-
-
-
-:evento 0.1.n +1 +1 
 
 
 

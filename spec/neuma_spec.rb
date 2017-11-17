@@ -4,6 +4,9 @@ require 'musa-dsl'
 
 module Impl
 	def parse _attributes
+
+		puts _attributes
+		
 		case
 		when _attributes.key?(:attributes)
 
@@ -17,21 +20,24 @@ module Impl
 				if pitch[0] == '+' || pitch[0] == '-'
 					command[:delta_pitch] = pitch.to_i
 				else
-					command[:abs_pitch] = pitch.to_i
+					if pitch.match /^[+-]?[0-9]+$/
+						command[:abs_pitch] = pitch.to_i
+					else 
+						command[:abs_pitch] = pitch.to_sym
+					end
 				end
 			end
 
 			velocity = attributes.find { |a| /\A (mp | mf | (\+|\-)?(p+|f+)) \Z/x.match a }
-
 
 			if velocity
 				if velocity[0] == '+' || velocity[0] == '-'
 					command[:delta_velocity] = (velocity[1] == 'f' ? 1 : -1) * (velocity.length - 1) * (velocity[0] + '1').to_i
 				elsif 
 					if velocity[0] == 'm'
-						command[:abs_velocity] = (velocity[1] == 'f') ? 1 : -1
+						command[:abs_velocity] = (velocity[1] == 'f') ? 1 : 0
 					else
-						command[:abs_velocity] = velocity.length * (velocity[1] == 'f' ? 1 : -1)
+						command[:abs_velocity] = velocity.length * (velocity[0] == 'f' ? 1 : -1) + (velocity[0] == 'f' ? 1 : 0)
 					end
 				end
 					
@@ -40,7 +46,7 @@ module Impl
 
 			duration = attributes.shift
 
-			if duration
+			if duration && !duration.empty?
 				if duration[0] == '+' || duration[0] == '-'
 					command[:delta_duration] = duration.to_r
 				
@@ -56,11 +62,8 @@ module Impl
 
 		when _attributes.key?(:event)
 
-			nil
+			{ event: _attributes[:event] }
 
-		when _attributes.key?(:comment)
-
-			nil
 		else
 			raise RuntimeError, "Not processable data #{_attributes}. Keys allowed are :attributes, :event and :comment"
 		end
@@ -116,12 +119,35 @@ RSpec.describe Musa::Neuma do
 
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: p
 
-			expect(result[0]).to eq({ })
-			expect(result[1]).to eq({ abs_pitch: 'II' })
-			expect(result[2]).to eq({ delta_pitch: 1 })
-			expect(result[3]).to eq({ abs_pitch: 2, abs_velocity: -1 })
-			expect(result[4]).to eq({ abs_pitch: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
-			expect(result[5]).to eq(nil)
+			c = -1
+
+			expect(result[c+=1]).to eq({ })
+			expect(result[c+=1]).to eq({ abs_pitch: :II })
+			expect(result[c+=1]).to eq({ abs_pitch: :I, abs_duration: Rational(2) })
+			expect(result[c+=1]).to eq({ abs_pitch: :I, abs_duration: Rational(1,2) })
+			expect(result[c+=1]).to eq({ abs_pitch: :I, abs_velocity: -1 })
+			
+			expect(result[c+=1]).to eq({ abs_pitch: 0 })
+			expect(result[c+=1]).to eq({ abs_pitch: 0, abs_duration: Rational(1) })
+			expect(result[c+=1]).to eq({ abs_pitch: 0, abs_duration: Rational(1,2) })
+			expect(result[c+=1]).to eq({ abs_pitch: 0, abs_velocity: -1 })
+
+			expect(result[c+=1]).to eq({ abs_pitch: 0 })
+			expect(result[c+=1]).to eq({ abs_pitch: 1 })
+			expect(result[c+=1]).to eq({ abs_pitch: 2, abs_velocity: -1 })
+			expect(result[c+=1]).to eq({ abs_pitch: 2, abs_duration: Rational(1,2), abs_velocity: 3 })
+
+			expect(result[c+=1]).to eq({ abs_pitch: 0 })
+			expect(result[c+=1]).to eq({ })
+			expect(result[c+=1]).to eq({ delta_pitch: 1 })
+			expect(result[c+=1]).to eq({ delta_duration: Rational(1,2) })
+			expect(result[c+=1]).to eq({ factor_duration: Rational(1,2) })
+			expect(result[c+=1]).to eq({ abs_velocity: -1 })
+			expect(result[c+=1]).to eq({ delta_velocity: 1 })
+
+			expect(result[c+=1]).to eq({ event: :evento })
+
+			expect(result[c+=1]).to eq({ delta_pitch: -1 })
 		end
 	end
 end

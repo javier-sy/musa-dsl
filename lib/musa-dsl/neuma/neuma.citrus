@@ -1,3 +1,5 @@
+# TODO add event parameters
+	
 grammar Neuma
 
 	rule lines
@@ -13,7 +15,10 @@ grammar Neuma
 	end
 
 	rule dotted_attributes
-		(dot | (a:attribute (dot b:attribute?)*)) { { attributes: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
+		 # buena... (dot | (a:attribute (dot b:attribute?)*)) { { attributes: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
+
+		( (dot) | (attribute dot) | (attribute (dot attribute)+) | (dot attribute)  )
+		
 	end
 
 	rule parenthesis_attributes
