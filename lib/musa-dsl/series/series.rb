@@ -67,6 +67,19 @@ module Musa
 			Serie.new SequenceBasicSerie.new([self, *series])
 		end
 
+		def slave
+			slave_serie = SlaveSerie.new self	
+					
+			@slaves ||= []
+			@slaves << slave_serie
+
+			return slave_serie
+		end
+
+		def duplicate
+			Duplicate.duplicate(self)
+		end
+
 		def to_a
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 
@@ -79,19 +92,6 @@ module Musa
 			end
 
 			array
-		end
-
-		def slave
-			slave_serie = SlaveSerie.new self	
-					
-			@slaves ||= []
-			@slaves << slave_serie
-
-			return slave_serie
-		end
-
-		def duplicate
-			Duplicate.duplicate(self)
 		end
 	end
 

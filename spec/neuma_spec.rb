@@ -2,7 +2,7 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-module Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
+module Musa::Neuma::GradeDurationVelocityDecoderImpl
 	def parse _attributes
 		case
 		when _attributes.key?(:attributes)
@@ -11,16 +11,16 @@ module Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
 
 			command = {}
 
-			pitch = attributes.shift
+			grade = attributes.shift
 
-			if pitch && !pitch.empty?
-				if pitch[0] == '+' || pitch[0] == '-'
-					command[:delta_pitch] = pitch.to_i
+			if grade && !grade.empty?
+				if grade[0] == '+' || grade[0] == '-'
+					command[:delta_grade] = grade.to_i
 				else
-					if pitch.match /^[+-]?[0-9]+$/
-						command[:abs_pitch] = pitch.to_i
+					if grade.match /^[+-]?[0-9]+$/
+						command[:abs_grade] = grade.to_i
 					else 
-						command[:abs_pitch] = pitch.to_sym
+						command[:abs_grade] = grade.to_sym
 					end
 				end
 			end
@@ -67,34 +67,36 @@ module Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
 	end
 end	
 
-class X < Musa::Neuma::NeumaDecoder
-	include Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
+class GDVDecoder < Musa::Neuma::Decoder
+	include Musa::Neuma::GradeDurationVelocityDecoderImpl
 end
 
-class Y < Musa::Neuma::DifferentialNeumaDecoder
-	include Musa::Neuma::PitchDurationVelocityNeumaDecoderImpl
+class GDVDifferentialDecoder < Musa::Neuma::DifferentialDecoder
+	include Musa::Neuma::GradeDurationVelocityDecoderImpl
 
-	def initialize event_handler, scale, base = nil
+	def initialize scale, base = nil, &event_handler
+		base ||= { grade: 0, duration: Rational(1,4), velocity: 1 }
 
-		base ||= { pitch: 0, duration: Rational(1,4), velocity: 1 }
-
-		@event_handler = event_handler
 		@scale = scale
+		@event_handler = event_handler
 
 		super base
 	end
 
 	def apply action, on:
-		if action[:abs_pitch]
-			on[:pitch] = action[:abs_pitch]
+
+		r = on
+
+		if action[:abs_grade]
+			on[:grade] = @scale.note_of action[:abs_grade]
 		end
 
-		if action[:delta_pitch]
-			on[:pitch] += action[:delta_pitch]
+		if action[:delta_grade]
+			on[:grade] = @scale.note_of on[:grade] + action[:delta_grade]
 		end
 
 		if action[:abs_duration]
-			on[:duration] = action[:duration]
+			on[:duration] = action[:abs_duration]
 		end
 
 		if action[:delta_duration]
@@ -105,17 +107,25 @@ class Y < Musa::Neuma::DifferentialNeumaDecoder
 			on[:duration] *= action[:factor_duration]
 		end
 
-		# esto da bien la temporización? se lanza el evento en el momento adecuado???? o mejor lanzarlo en el consumidor????
+		if action[:abs_velocity]
+			on[:velocity] = action[:abs_velocity]
+		end
+
+		if action[:delta_velocity]
+			on[:velocity] += action[:delta_velocity]
+		end
+
 		if action[:event]
-			@event_handler.launch action[:event]
-		end	
+			r = @event_handler.call action[:event] if @event_handler
+		end
+
+		r
 	end
 end
 
 RSpec.describe Musa::Neuma do
 
 	context "Neuma parsing" do
-		p = X.new 
 
 		it "Basic neuma inline parsing" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq(
@@ -129,17 +139,6 @@ RSpec.describe Musa::Neuma do
 			expect(Musa::Neuma.parse("# comentario (con parentesis) \n 2.3.4")).to eq([{ attributes: ["2", "3", "4"] }])
 		end	
 
-		it "Basic neuma inline parsing with decoder" do
-
-			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1', decode_with: p
-
-			expect(result[0]).to eq({ abs_pitch: 0 })
-			expect(result[1]).to eq({ })
-			expect(result[2]).to eq({ delta_pitch: 1 })
-			expect(result[3]).to eq({ abs_pitch: 2, abs_velocity: -1 })
-			expect(result[4]).to eq({ abs_pitch: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
-		end
-
 		it "Basic neuma inline parsing only duration" do
 
 			result = Musa::Neuma.parse '0 .1/2'
@@ -148,31 +147,44 @@ RSpec.describe Musa::Neuma do
 			expect(result[1]).to eq({ attributes: [nil, "1/2"] })
 		end
 
+		decoder = GDVDecoder.new 
+
+		it "Basic neuma inline parsing with decoder" do
+
+			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1', decode_with: decoder
+
+			expect(result[0]).to eq({ abs_grade: 0 })
+			expect(result[1]).to eq({ })
+			expect(result[2]).to eq({ delta_grade: 1 })
+			expect(result[3]).to eq({ abs_grade: 2, abs_velocity: -1 })
+			expect(result[4]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
+		end
+
 		it "Basic neuma file parsing with decoder" do
 
-			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: p
+			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: decoder
 
 			c = -1
 
 			expect(result[c+=1]).to eq({ })
-			expect(result[c+=1]).to eq({ abs_pitch: :II })
-			expect(result[c+=1]).to eq({ abs_pitch: :I, abs_duration: Rational(2) })
-			expect(result[c+=1]).to eq({ abs_pitch: :I, abs_duration: Rational(1,2) })
-			expect(result[c+=1]).to eq({ abs_pitch: :I, abs_velocity: -1 })
+			expect(result[c+=1]).to eq({ abs_grade: :II })
+			expect(result[c+=1]).to eq({ abs_grade: :I, abs_duration: Rational(2) })
+			expect(result[c+=1]).to eq({ abs_grade: :I, abs_duration: Rational(1,2) })
+			expect(result[c+=1]).to eq({ abs_grade: :I, abs_velocity: -1 })
 			
-			expect(result[c+=1]).to eq({ abs_pitch: 0 })
-			expect(result[c+=1]).to eq({ abs_pitch: 0, abs_duration: Rational(1) })
-			expect(result[c+=1]).to eq({ abs_pitch: 0, abs_duration: Rational(1,2) })
-			expect(result[c+=1]).to eq({ abs_pitch: 0, abs_velocity: -1 })
+			expect(result[c+=1]).to eq({ abs_grade: 0 })
+			expect(result[c+=1]).to eq({ abs_grade: 0, abs_duration: Rational(1) })
+			expect(result[c+=1]).to eq({ abs_grade: 0, abs_duration: Rational(1,2) })
+			expect(result[c+=1]).to eq({ abs_grade: 0, abs_velocity: 4 })
 
-			expect(result[c+=1]).to eq({ abs_pitch: 0 })
-			expect(result[c+=1]).to eq({ abs_pitch: 1 })
-			expect(result[c+=1]).to eq({ abs_pitch: 2, abs_velocity: -1 })
-			expect(result[c+=1]).to eq({ abs_pitch: 2, abs_duration: Rational(1,2), abs_velocity: 3 })
+			expect(result[c+=1]).to eq({ abs_grade: 0 })
+			expect(result[c+=1]).to eq({ abs_grade: 1 })
+			expect(result[c+=1]).to eq({ abs_grade: 2, abs_velocity: -1 })
+			expect(result[c+=1]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: 3 })
 
-			expect(result[c+=1]).to eq({ abs_pitch: 0 })
+			expect(result[c+=1]).to eq({ abs_grade: 0 })
 			expect(result[c+=1]).to eq({ })
-			expect(result[c+=1]).to eq({ delta_pitch: 1 })
+			expect(result[c+=1]).to eq({ delta_grade: 1 })
 			expect(result[c+=1]).to eq({ delta_duration: Rational(1,2) })
 			expect(result[c+=1]).to eq({ factor_duration: Rational(1,2) })
 			expect(result[c+=1]).to eq({ abs_velocity: -1 })
@@ -180,7 +192,46 @@ RSpec.describe Musa::Neuma do
 
 			expect(result[c+=1]).to eq({ event: :evento })
 
-			expect(result[c+=1]).to eq({ delta_pitch: -1 })
+			expect(result[c+=1]).to eq({ delta_grade: -1 })
+		end
+
+		it "Basic neuma file parsing with differential decoder" do
+
+			scale = Musa::Scales.get :major
+
+			differential_decoder = GDVDifferentialDecoder.new(scale, { grade: 0, duration: 1, velocity: 1 }) { |event| { evento: event } }
+
+			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: differential_decoder
+
+			c = -1
+
+			expect(result[c+=1]).to eq({ grade: 0, duration: 1, velocity: 1 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: 1, velocity: 1 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: 2, velocity: 1 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 1 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: -1 })
+
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: -1 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1), velocity: -1 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: -1 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 4 })
+
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 4 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 4 })
+			expect(result[c+=1]).to eq({ grade: 2, duration: Rational(1,2), velocity: -1 })
+			expect(result[c+=1]).to eq({ grade: 2, duration: Rational(1,2), velocity: 3 })
+
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 3 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1), velocity: 3 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 3 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: -1 })
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 0 })
+			
+			expect(result[c+=1]).to eq({ evento: :evento })
+
+			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 0 })
 		end
 	end
 end

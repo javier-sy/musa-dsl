@@ -9,7 +9,7 @@ I.p 	# piano
 0		# suena la tónica
 0.1
 0.1/2
-0.p
+0.fff
 
 0 1 2.p 2.1/2.ff
 
@@ -35,3 +35,6 @@ I.p 	# piano
 # Sintaxis: Serie separada con . 
 # El primero tiene el significado especial de altura
 # El resto tienen que ser "capturables" por el procesador
+
+
+
