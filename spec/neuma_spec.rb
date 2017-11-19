@@ -78,7 +78,7 @@ RSpec.describe Musa::Neuma do
 
 			scale = Musa::Scales.get :major
 
-			differential_decoder = GDVDifferentialDecoder.new(scale, { grade: 0, duration: 1, velocity: 1 }) { |event| { evento: event } }
+			differential_decoder = GDVDifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
 
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: differential_decoder
 
@@ -108,7 +108,7 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: -1 })
 			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 0 })
 			
-			expect(result[c+=1]).to eq({ evento: :evento })
+			expect(result[c+=1]).to eq({ duration: 0, event: :evento })
 
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 0 })
 		end
