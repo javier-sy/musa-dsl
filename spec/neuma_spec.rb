@@ -74,7 +74,7 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ delta_grade: -1 })
 		end
 
-		it "Basic neuma file parsing with differential GDV decoder" do
+		it "Basic neuma file parsing with GDV differential decoder" do
 
 			scale = Musa::Scales.get :major
 
@@ -111,6 +111,17 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ duration: 0, event: :evento })
 
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 0 })
+		end
+
+		it "GDV differential decoder midi conversion" do
+			
+			scale = Musa::Scales.get(:major).based_on_pitch 60
+
+			differential_decoder = Musa::Neuma::GDV::DifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
+
+			expect(differential_decoder.to_midi_note_on_or_event({ grade: 3, duration: 1, velocity: 4 })).to eq({ pitch: 60+5, duration: 1, velocity: 127})
+			expect(differential_decoder.to_midi_note_on_or_event({ grade: 8, duration: 1, velocity: -3 })).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
+			expect(differential_decoder.to_midi_note_on_or_event({ duration: 0, event: :evento })).to eq({ duration: 0, event: :evento})
 		end
 	end
 end

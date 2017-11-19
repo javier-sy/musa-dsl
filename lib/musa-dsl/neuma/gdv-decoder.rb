@@ -2,7 +2,7 @@ require 'musa-dsl/neuma/neuma'
 
 module Musa::Neuma
 	module GDV
-		module Impl
+		module Implementation
 			def parse _attributes
 				case
 				when _attributes.key?(:attributes)
@@ -67,12 +67,14 @@ module Musa::Neuma
 			end
 		end
 
+		private_constant :Implementation
+
 		class Decoder < Musa::Neuma::Decoder
-			include GDV::Impl
+			include Implementation
 		end
 
 		class DifferentialDecoder < Musa::Neuma::DifferentialDecoder
-			include GDV::Impl
+			include Implementation
 
 			def initialize scale, base = nil
 				base ||= { grade: 0, duration: Rational(1,4), velocity: 1 }
@@ -120,7 +122,31 @@ module Musa::Neuma
 
 				r
 			end
+
+			def to_midi_note_on_or_event **gdv
+				r = {}
+
+				if gdv[:grade]
+					r[:pitch] = @scale.pitch_of gdv[:grade]
+				end
+
+				if gdv[:duration]
+					r[:duration] = gdv[:duration]
+				end
+
+				if gdv[:velocity]
+					# ppp = 16 ... fff = 127
+					r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][gdv[:velocity] + 3]
+				end
+
+				if gdv[:event]
+					r[:event] = gdv[:event]
+				end
+
+				r
+			end
 		end
+
 	end
 end	
 
