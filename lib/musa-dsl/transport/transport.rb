@@ -15,10 +15,10 @@ module Musa
 	 		@clock = clock
 
 			@before_begin = []
-			@before_begin << before_begin if before_begin
+			@before_begin << KeyParametersProcedureBinder.new(before_begin) if before_begin
 
 			@before_each_tick = []
-			@before_each_tick << before_each_tick if before_each_tick
+			@before_each_tick << KeyParametersProcedureBinder.new(before_each_tick) if before_each_tick
 
 			@sequencer = Sequencer.new 4, 24
 
@@ -42,7 +42,7 @@ module Musa
 		end
 
 		def before_begin &block
-			@before_begin << block
+			@before_begin << KeyParametersProcedureBinder.new(block)
 		end
 
 		def before_each_tick &block
@@ -54,10 +54,10 @@ module Musa
 		end
 
 		def start
-			@before_begin.each { |block| block.call }
+			@before_begin.each { |block| block.call @sequencer }
 			
 			@clock.run do 
-				@before_each_tick.each { |block| block.call(sequencer: @sequencer) }
+				@before_each_tick.each { |block| block.call @sequencer }
 				@sequencer.tick
 			end
 		end

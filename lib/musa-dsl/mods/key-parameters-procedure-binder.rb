@@ -7,25 +7,25 @@ class KeyParametersProcedureBinder
 
 		@parameters = {}
 		@has_rest = false
+		@value_parameters_count = 0
 
 		procedure.parameters.each do |parameter| 
 			@parameters[parameter[1]] = nil if parameter[0] == :key || parameter[0] == :keyreq
 			@has_rest = true if parameter[0] == :keyrest
+
+			@value_parameters_count += 1 if parameter[0] == :req || parameter[0] == :opt
 		end
 	end
 
 	def call *value_parameters, **key_parameters
+
 		effective_key_parameters = apply(key_parameters)
 
-		puts "effective_key_parameters = #{effective_key_parameters}"
-
-
-
 		if effective_key_parameters.empty?
-			if value_parameters.empty?
+			if value_parameters.empty? || @value_parameters_count == 0
 				@procedure.call
 			else
-				@procedure.call *value_parameters
+				@procedure.call *value_parameters.first(@value_parameters_count)
 			end
 		else
 			if value_parameters.empty?

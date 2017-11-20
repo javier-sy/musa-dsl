@@ -17,9 +17,12 @@ module Musa
 				@messages = @input.gets
 
 				@messages.each do |message|
-					m = @nibbler.parse message[:data]
 
-					if m
+					mm = @nibbler.parse message[:data]
+
+					mm = [mm] unless mm.is_a? Array
+
+					mm.each do |m|
 						case m.name 
 						when 'Start'
 							@on_start.each { |block| block.call }
@@ -45,6 +48,11 @@ module Musa
 
 		def terminate
 			@run = false
+		end
+
+		private
+
+		def process message, m
 		end
 	end
 end
