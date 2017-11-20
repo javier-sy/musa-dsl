@@ -15,7 +15,25 @@ class KeyParametersProcedureBinder
 	end
 
 	def call *value_parameters, **key_parameters
-		@procedure.call *value_parameters, **apply(key_parameters)
+		effective_key_parameters = apply(key_parameters)
+
+		puts "effective_key_parameters = #{effective_key_parameters}"
+
+
+
+		if effective_key_parameters.empty?
+			if value_parameters.empty?
+				@procedure.call
+			else
+				@procedure.call *value_parameters
+			end
+		else
+			if value_parameters.empty?
+				@procedure.call **effective_key_parameters
+			else
+				@procedure.call *value_parameters, **effective_key_parameters
+			end
+		end
 	end
 
 	def has_key? key

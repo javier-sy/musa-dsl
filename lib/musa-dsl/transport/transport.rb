@@ -4,17 +4,21 @@ require 'musa-dsl/transport/input-midi-clock'
 require 'musa-dsl/transport/dummy-clock'
 require 'musa-dsl/sequencer'
 
+require 'musa-dsl/mods/key-parameters-procedure-binder'
+
 module Musa
 	class Transport
 
 		attr_reader :sequencer
 
-	 	def initialize(clock, before_begin: nil, after_stop: nil, &block)
+	 	def initialize clock, before_begin: nil, after_stop: nil, before_each_tick: nil
 	 		@clock = clock
+
 			@before_begin = []
 			@before_begin << before_begin if before_begin
 
-			@block = block
+			@before_each_tick = []
+			@before_each_tick << before_each_tick if before_each_tick
 
 			@sequencer = Sequencer.new 4, 24
 
@@ -41,6 +45,10 @@ module Musa
 			@before_begin << block
 		end
 
+		def before_each_tick &block
+			@before_each_tick << KeyParametersProcedureBinder.new(block)
+		end
+
 		def after_stop &block
 			@clock.on_stop block
 		end
@@ -49,6 +57,7 @@ module Musa
 			@before_begin.each { |block| block.call }
 			
 			@clock.run do 
+				@before_each_tick.each { |block| block.call(sequencer: @sequencer) }
 				@sequencer.tick
 			end
 		end
