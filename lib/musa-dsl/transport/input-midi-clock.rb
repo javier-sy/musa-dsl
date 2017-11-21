@@ -49,10 +49,5 @@ module Musa
 		def terminate
 			@run = false
 		end
-
-		private
-
-		def process message, m
-		end
 	end
 end
