@@ -26,7 +26,7 @@ RSpec.describe Musa::Neuma do
 			expect(result[1]).to eq({ attributes: [nil, "1/2"] })
 		end
 
-		decoder = Musa::Neuma::GDV::Decoder.new 
+		decoder = Musa::Dataset::GDV::NeumaDecoder.new 
 
 		it "Basic neuma inline parsing with decoder" do
 
@@ -78,7 +78,7 @@ RSpec.describe Musa::Neuma do
 
 			scale = Musa::Scales.get :major
 
-			differential_decoder = Musa::Neuma::GDV::DifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
+			differential_decoder = Musa::Dataset::GDV::NeumaDifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
 
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: differential_decoder
 
@@ -113,15 +113,30 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 0 })
 		end
 
-		it "GDV differential decoder midi conversion" do
+		it "GDV differential decoder to PDVE dataset" do
 			
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 
-			differential_decoder = Musa::Neuma::GDV::DifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
+			differential_decoder = Musa::Dataset::GDV::NeumaDifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
 
-			expect(differential_decoder.to_midi_note_on_or_event({ grade: 3, duration: 1, velocity: 4 })).to eq({ pitch: 60+5, duration: 1, velocity: 127})
-			expect(differential_decoder.to_midi_note_on_or_event({ grade: 8, duration: 1, velocity: -3 })).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
-			expect(differential_decoder.to_midi_note_on_or_event({ duration: 0, event: :evento })).to eq({ duration: 0, event: :evento})
+			expect(Musa::Dataset::GDV.to_PDVE(scale: scale, grade: 3, duration: 1, velocity: 4)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
+			expect(Musa::Dataset::GDV.to_PDVE(scale: scale, grade: 8, duration: 1, velocity: -3 )).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
+			expect(Musa::Dataset::GDV.to_PDVE(scale: scale, duration: 0, event: :evento )).to eq({ duration: 0, event: :evento})
+		end
+
+		it "GDV differential decoder to PDVE dataset (with module alias)" do
+			
+			GDV = Musa::Dataset::GDV
+
+			scale = Musa::Scales.get(:major).based_on_pitch 60
+
+			differential_decoder = GDV::NeumaDifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
+
+			expect(GDV.to_PDVE(scale: scale, grade: 3, duration: 1, velocity: 4)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
+			expect(GDV.to_PDVE(scale: scale, grade: 8, duration: 1, velocity: -3 )).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
+			
+			h = { scale: scale, duration: 0, event: :evento  }
+			expect(GDV.to_PDVE(h)).to eq({ duration: 0, event: :evento })
 		end
 	end
 end
