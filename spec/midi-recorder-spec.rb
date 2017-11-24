@@ -6,7 +6,7 @@ RSpec.describe Musa::MIDIRecorder do
 
 	context "Midi Recorder" do
 
-		it "Basic midi recorder processing" do
+		it "Basic midi recorder processing (raw midi)" do
 
 			s = Musa::BaseSequencer.new 4, 4
 			recorder = Musa::MIDIRecorder.new s
@@ -83,6 +83,50 @@ RSpec.describe Musa::MIDIRecorder do
 			expect(result[c].position).to eq(1 + Rational(12,16))
 			expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(128, 63, 64).data)
 
+			recorder.clear
+
+			expect(recorder.raw.size).to eq(0)
+			expect(recorder.transcription.size).to eq(0)
+		end
+
+		it "Basic midi recorder processing (transcription to PDV)" do
+
+			s = Musa::BaseSequencer.new 4, 4
+			recorder = Musa::MIDIRecorder.new s
+
+			s.tick
+			s.tick
+
+			recorder.record [176, 88, 114, 144, 58, 15]
+
+			s.tick
+			s.tick
+
+			recorder.record [128, 58, 64]
+
+			s.tick
+			s.tick
+
+			recorder.record [176, 88, 34, 144, 61, 29]
+
+			s.tick
+
+			recorder.record [128, 61, 64]
+
+			s.tick
+			s.tick
+
+			recorder.record [176, 88, 94, 144, 63, 36]
+
+			s.tick
+			s.tick
+			s.tick
+			s.tick
+
+			recorder.record [128, 63, 64]
+
+			s.tick
+
 			result = recorder.transcription
 
 			expect(result.size).to eq(5)
@@ -109,5 +153,6 @@ RSpec.describe Musa::MIDIRecorder do
 			expect(recorder.raw.size).to eq(0)
 			expect(recorder.transcription.size).to eq(0)
 		end
+
 	end
 end
