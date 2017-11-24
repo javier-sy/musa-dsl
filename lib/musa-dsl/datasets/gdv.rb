@@ -1,28 +1,81 @@
 require 'musa-dsl/neuma/neuma'
 
 module Musa::Dataset
+	module GDVd
+		def to_neuma
+			attributes = []
+
+			if self[:abs_grade]
+				attributes[0] = self[:abs_grade].to_s
+
+			elsif self[:delta_grade]
+				attributes[0] = self[:abs_grade].to_s
+			end
+
+			
+
+		end
+	end
+
 	module GDV
-		def self.to_PDVE scale:, grade: nil, duration: nil, velocity: nil, event: nil
+		include GDVd
+
+		def to_pdve scale
 			r = {}
 
-			if grade
-				r[:pitch] = scale.pitch_of grade
+			if self[:grade]
+				r[:pitch] = scale.pitch_of self[:grade]
 			end
 
-			if duration
-				r[:duration] = duration
+			if self[:duration]
+				r[:duration] = self[:duration]
 			end
 
-			if velocity
+			if self[:velocity]
 				# ppp = 16 ... fff = 127
-				r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][velocity + 3]
+				r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
 			end
 
-			if event
-				r[:event] = event
+			if self[:event]
+				r[:event] = self[:event]
 			end
 
-			r
+			r.extend Musa::Dataset::PDV
+		end
+
+		def diff_to previous = nil, scale:
+
+			r = {}
+
+			if previous
+				if self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])
+					r[:delta_grade] = scale.note_of(self[:grade]) - scale.note_of(previous[:grade])
+				end
+			else
+				r[:abs_grade] = self[:grade] if self[:grade]
+			end
+
+			if previous
+				if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
+					r[:delta_duration] = self[:duration] - previous[:duration]
+				end
+			else
+				r[:abs_duration] = self[:duration] if self[:duration]
+			end
+
+			if previous
+				if self[:velocity] && previous[:velocity] && (self[:velocity] != previous[:velocity])
+					r[:delta_velocity] = self[:velocity] - previous[:velocity]
+				end
+			else
+				r[:abs_velocity] = self[:velocity] if self[:velocity]
+			end
+
+			if self[:event]
+				r[:event] = self[:event]
+			end
+
+			r.extend Musa::Dataset::GDVd
 		end
 
 		module Parser

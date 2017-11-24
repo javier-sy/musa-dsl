@@ -77,16 +77,6 @@ module Musa
 		alias inspect to_s
 	end
 
-	Scales.register :major, 
-		ScaleDef.new("Major", 12,
-			symbols: { I: 0, II: 1, III: 2, IV: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10 },
-			offsets: [ 0, 2, 4, 5, 7, 9, 11 ])
-
-	Scales.register :minor, 
-		ScaleDef.new("Minor", 12,
-			symbols: { I: 0, II: 1, III: 2, IV: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10 },
-			offsets: [ 0, 2, 3, 5, 7, 8, 10 ])
-
 	class Scale
 		extend Forwardable
 
@@ -155,5 +145,15 @@ module Musa
 
 		private :grade_of_pitch, :octave_of_pitch
 	end
+
+	Scales.register :major, 
+		ScaleDef.new("Major", 12,
+			symbols: { I: 0, II: 1, III: 2, IV: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10 },
+			offsets: [ 0, 2, 4, 5, 7, 9, 11 ])
+
+	Scales.register :minor, 
+		ScaleDef.new("Minor", 12,
+			symbols: { I: 0, II: 1, III: 2, IV: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10 },
+			offsets: [ 0, 2, 3, 5, 7, 8, 10 ])
 end
 
