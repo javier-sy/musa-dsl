@@ -2,18 +2,54 @@ require 'musa-dsl/neuma/neuma'
 
 module Musa::Dataset
 	module GDVd
-		def to_neuma
+		def to_neuma mode = nil
+
+			mode ||= :dotted # :parenthesis
+
 			attributes = []
 
 			if self[:abs_grade]
 				attributes[0] = self[:abs_grade].to_s
-
 			elsif self[:delta_grade]
-				attributes[0] = self[:abs_grade].to_s
+				attributes[0] = sign_of(self[:abs_grade]) + self[:abs_grade].to_s
 			end
 
-			
+			c = 1
 
+			if self[:abs_duration]
+				attributes[c] = self[:abs_duration].to_s
+				c += 1
+			elsif self[:delta_duration]
+				attributes[c] = sign_of(self[:delta_duration]) + self[:delta_duration].to_s
+				c += 1
+			elsif self[:factor_duration]
+				attributes[c] = '*' + self[:factor_duration].to_s
+				c += 1
+			end
+
+			if self[:abs_velocity]
+				attributes[c] = velocity_of(self[:abs_velocity])
+			elsif self[:delta_velocity]
+				attributes[c] = sign_of(self[:delta_velocity]) + 'f' * self[:delta_duration].abs
+			end
+
+			if mode == :dotted
+				attributes.join '.'
+
+			elsif mode == :parenthesis
+				'(' + attributes.join(', ') + ')'
+			else
+			end
+		end
+
+		private 
+
+		def sign_of x
+			"++-"[x <=> 0]
+		end
+
+		def velocity_of x
+			['ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][x + 3]
 		end
 	end
 
@@ -85,7 +121,7 @@ module Musa::Dataset
 
 					attributes = _attributes[:attributes].clone 
 
-					command = {}
+					command = {}.extend GDVd
 
 					grade = attributes.shift
 
@@ -135,7 +171,7 @@ module Musa::Dataset
 
 				when _attributes.key?(:event)
 
-					{ event: _attributes[:event] }
+					{ event: _attributes[:event] }.extend GDVd
 
 				else
 					raise RuntimeError, "Not processable data #{_attributes}. Keys allowed are :attributes, :event and :comment"
@@ -195,7 +231,7 @@ module Musa::Dataset
 					r = { duration: 0, event: action[:event] }
 				end
 
-				r
+				r.clone.extend GDV
 			end
 		end
 	end

@@ -7,7 +7,7 @@ class Hash
 end
 
 class Rational
-	def to_s
+	def inspect
 		d = self - self.to_i
 		if d != 0
 			"#{self.to_i}(#{d.numerator}/#{d.denominator})"
