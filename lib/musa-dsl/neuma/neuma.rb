@@ -54,7 +54,11 @@ module Musa::Neuma
 		end
 
 		def decode attributes
-			@last = apply parse(attributes), on: @last
+			result = apply parse(attributes), on: @last
+
+			@last = result.clone unless result[:event]
+
+			result
 		end
 
 		def apply action, on:

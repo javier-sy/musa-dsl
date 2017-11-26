@@ -29,8 +29,7 @@ module Musa::Dataset
 			end
 
 			if self[:event]
-				r[:duration] = 0
-				r[:event] = self[:event]
+				r = { duration: 0, event: self[:event] }
 			end
 
 			r
