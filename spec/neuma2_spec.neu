@@ -1,0 +1,17 @@
+@a = [ I.1.ff . .*1/2 . 2 ]
+
+| @a
+| silence.2 a
+
+
+|| @b: [ 1.2.p 2 1 2 ]
+|  silence.4 @b.reverse @b.inverse
+
+
+
+
+# @var = x			asignación, sin usar
+# @var: 			asignación, usando
+# @var.operation	operación sobre la variable
+# | 				sincroniza con el bloque anterior
+# ||				salta de bloque
