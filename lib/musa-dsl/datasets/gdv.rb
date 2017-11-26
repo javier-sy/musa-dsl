@@ -98,7 +98,7 @@ module Musa::Dataset
 			r = {}
 
 			if self[:grade]
-				r[:pitch] = scale.pitch_of self[:grade]
+				r[:pitch] = scale.pitch_of self[:grade], octave: self[:octave]
 			end
 
 			if self[:duration]

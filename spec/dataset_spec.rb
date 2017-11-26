@@ -41,7 +41,11 @@ RSpec.describe Musa::Neuma do
 
 			result_pdv = result_gdv.collect { |g| g.to_pdv(scale) }
 
+			puts "result_pdv = #{result_pdv}"
+
 			result_gdv2 = result_pdv.collect { |p| p.to_gdv(scale) }
+
+			puts "result_gdv2 = #{result_gdv2}"
 
 			result_neuma = result_gdv2.collect { |g| g.to_neuma }
 

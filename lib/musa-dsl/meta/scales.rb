@@ -95,11 +95,16 @@ module Musa
 		delegate note_of: :@def
 		delegate symbol_of: :@def
 
-		def based_on(grade, octave: 0)
+		def based_on(grade, octave: nil)
+			octave ||= 0
+
 			@def.based_on_pitch @base_pitch + @def.pitch_offset(grade) + octave * @def.pitch_range_in_octave
 		end
 
-		def pitch_of(grade_or_grades, reduce: false, octave: 0) # => (number, Rational?) note
+		def pitch_of(grade_or_grades, reduce: nil, octave: nil) # => (number, Rational?) note
+			reduce ||= false
+			octave ||= 0
+
 			if grade_or_grades.is_a? Array
 				grade_or_grades.collect { |v| pitch_of_grade v, reduce: reduce, octave: octave }
 			else
@@ -107,12 +112,17 @@ module Musa
 			end
 		end
 
-		def pitch_of_grade(grade, reduce: false, octave: 0)
+		def pitch_of_grade(grade, reduce: nil, octave: nil)
+			reduce ||= false
+			octave ||= 0
+			
 			grade = @def.reduced_grade(grade) if reduce
 			@base_pitch + @def.pitch_offset(grade) + octave * @def.pitch_range_in_octave
 		end
 
-		def grade_of(pitch_or_pitches, reduced: false) # => number - entero o decimal, si hay alteraciones (grade)
+		def grade_of(pitch_or_pitches, reduced: nil) # => number - entero o decimal, si hay alteraciones (grade)
+			reduced ||= false
+
 			if pitch_or_pitches.is_a? Array
 				pitch_or_pitches.collect { |v| grade_of_pitch v, reduced: reduced }
 			else
@@ -128,13 +138,17 @@ module Musa
 			end
 		end
 
-		def grade_of_pitch(pitch, reduced: false)
+		def grade_of_pitch(pitch, reduced: nil)
+			reduced ||= false
+
 			octaves = (pitch - @base_pitch) / @def.pitch_range_in_octave
 			pitch %= @def.pitch_range_in_octave
 
 			grade = @def.grade_of_pitch_offset pitch
 
 			grade += octaves * @def.number_of_grades if !reduced
+
+			grade
 		end
 
 		def octave_of_pitch(pitch)

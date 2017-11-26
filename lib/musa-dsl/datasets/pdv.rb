@@ -9,7 +9,8 @@ module Musa::Dataset
 				if self[:pitch] == :silence
 					r[:grade] = :silence
 				else
-					r[:grade] = scale.grade_of self[:pitch]
+					r[:grade] = scale.grade_of self[:pitch], reduced: true
+					r[:octave] = scale.octave_of self[:pitch]
 				end
 			end
 
