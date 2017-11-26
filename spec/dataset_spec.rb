@@ -61,7 +61,7 @@ RSpec.describe Musa::Neuma do
 
 			result_gdv = Musa::Neuma.parse gdv_abs_neumas, decode_with: decoder
 
-			result_gdvd = result_gdv.each_index.collect { |i| result_gdv[i].to_gdvd previous: (i>0?result_gdv[i-1]:nil), scale: scale }
+			result_gdvd = result_gdv.each_index.collect { |i| result_gdv[i].to_gdvd scale, previous: (i>0?result_gdv[i-1]:nil) }
 
 			result_neuma = result_gdvd.collect { |gd| gd.to_neuma }
 

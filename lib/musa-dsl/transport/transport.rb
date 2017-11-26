@@ -33,7 +33,7 @@ module Musa
 				if @sequencer.position > tick_before_position
 					puts "Transport: reseting sequencer"
 					@sequencer.reset
-					@before_begin.each { |block| block.call }
+					@before_begin.each { |block| block.call @sequencer }
 				end
 
 				puts "Transport: setting sequencer position to #{tick_before_position}"
@@ -50,7 +50,7 @@ module Musa
 		end
 
 		def after_stop &block
-			@clock.on_stop block
+			@clock.on_stop &block
 		end
 
 		def start

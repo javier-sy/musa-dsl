@@ -4,7 +4,7 @@ module Musa::Dataset
 
 	module GDVd # abs_grade delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
 
-		def to_gdv previous:, scale:
+		def to_gdv scale, previous:
 
 			r = previous.clone.extend GDV
 
@@ -144,7 +144,7 @@ module Musa::Dataset
 
 		private :velocity_of
 
-		def to_gdvd previous: nil, scale:
+		def to_gdvd scale, previous: nil
 
 			r = {}
 
@@ -262,7 +262,7 @@ module Musa::Dataset
 			end
 
 			def apply action, on:
-				action.to_gdv previous: on, scale: @scale
+				action.to_gdv @scale, previous: on
 			end
 		end
 	end

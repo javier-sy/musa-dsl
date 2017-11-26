@@ -6,7 +6,11 @@ module Musa::Dataset
 			r = {}
 
 			if self[:pitch]
-				r[:grade] = scale.grade_of self[:pitch]
+				if self[:pitch] == :silence
+					r[:grade] = :silence
+				else
+					r[:grade] = scale.grade_of self[:pitch]
+				end
 			end
 
 			if self[:duration]
