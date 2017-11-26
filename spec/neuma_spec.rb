@@ -26,9 +26,9 @@ RSpec.describe Musa::Neuma do
 			expect(result[1]).to eq({ attributes: [nil, "1/2"] })
 		end
 
-		decoder = Musa::Dataset::GDV::NeumaDecoder.new 
+		decoder = Musa::Dataset::GDV::NeumaDifferentialDecoder.new 
 
-		it "Basic neuma inline parsing with decoder" do
+		it "Basic neuma inline parsing with differential decoder" do
 
 			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1', decode_with: decoder
 
@@ -39,7 +39,7 @@ RSpec.describe Musa::Neuma do
 			expect(result[4]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
 		end
 
-		it "Basic neuma file parsing with GDV decoder" do
+		it "Basic neuma file parsing with GDV differential decoder" do
 
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: decoder
 
@@ -74,11 +74,11 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ delta_grade: -1 })
 		end
 
-		it "Basic neuma file parsing with GDV differential decoder" do
+		it "Basic neuma file parsing with GDV decoder" do
 
 			scale = Musa::Scales.get :major
 
-			differential_decoder = Musa::Dataset::GDV::NeumaDifferentialDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
+			differential_decoder = Musa::Dataset::GDV::NeumaDecoder.new scale, { grade: 0, duration: 1, velocity: 1 }
 
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: differential_decoder
 

@@ -1,48 +1,89 @@
 require 'musa-dsl/neuma/neuma'
 
 module Musa::Dataset
-	module GDVd
+
+	module GDVd # abs_grade delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
+
+		def to_gdv previous:, scale:
+
+			r = previous.clone.extend GDV
+
+			if self[:abs_grade]
+				r[:grade] = scale.note_of self[:abs_grade]
+			elsif self[:delta_grade]
+				r[:grade] = scale.note_of r[:grade] + self[:delta_grade]
+			end
+
+			if self[:abs_duration]
+				r[:duration] = self[:abs_duration]
+			elsif self[:delta_duration]
+				r[:duration] += self[:delta_duration]
+			elsif self[:factor_duration]
+				r[:duration] *= self[:factor_duration]
+			end
+
+			if self[:abs_velocity]
+				r[:velocity] = self[:abs_velocity]
+			elsif self[:delta_velocity]
+				r[:velocity] += self[:delta_velocity]
+			end
+
+			if self[:event]
+				r[:duration] = 0
+				r[:event] = self[:event]
+			end
+
+			r
+		end
+
 		def to_neuma mode = nil
 
 			mode ||= :dotted # :parenthesis
 
 			attributes = []
 
+			c = 0
+
 			if self[:abs_grade]
-				attributes[0] = self[:abs_grade].to_s
+				attributes[c] = self[:abs_grade].to_s
 			elsif self[:delta_grade]
-				attributes[0] = sign_of(self[:abs_grade]) + self[:abs_grade].to_s
+				attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s
 			end
 
-			c = 1
 
 			if self[:abs_duration]
-				attributes[c] = self[:abs_duration].to_s
-				c += 1
+				attributes[c+=1] = self[:abs_duration].to_s
 			elsif self[:delta_duration]
-				attributes[c] = sign_of(self[:delta_duration]) + self[:delta_duration].to_s
-				c += 1
+				attributes[c+=1] = positive_sign_of(self[:delta_duration]) + self[:delta_duration].to_s
 			elsif self[:factor_duration]
-				attributes[c] = '*' + self[:factor_duration].to_s
-				c += 1
+				attributes[c+=1] = '*' + self[:factor_duration].to_s
 			end
 
 			if self[:abs_velocity]
-				attributes[c] = velocity_of(self[:abs_velocity])
+				attributes[c+=1] = velocity_of(self[:abs_velocity])
 			elsif self[:delta_velocity]
-				attributes[c] = sign_of(self[:delta_velocity]) + 'f' * self[:delta_duration].abs
+				attributes[c+=1] = sign_of(self[:delta_velocity]) + 'f' * self[:delta_velocity].abs
 			end
 
 			if mode == :dotted
-				attributes.join '.'
+				if attributes.size > 0
+					attributes.join '.'
+				else
+					'.'
+				end
 
 			elsif mode == :parenthesis
 				'(' + attributes.join(', ') + ')'
 			else
+				attributes
 			end
 		end
 
 		private 
+
+		def positive_sign_of x
+			x > 0 ? '+' : ''
+		end
 
 		def sign_of x
 			"++-"[x <=> 0]
@@ -53,10 +94,8 @@ module Musa::Dataset
 		end
 	end
 
-	module GDV
-		include GDVd
-
-		def to_pdve scale
+	module GDV # grade duration velocity event
+		def to_pdv scale
 			r = {}
 
 			if self[:grade]
@@ -79,7 +118,34 @@ module Musa::Dataset
 			r.extend Musa::Dataset::PDV
 		end
 
-		def diff_to previous = nil, scale:
+		def to_neuma mode = nil
+			mode ||= :dotted # :parenthesis
+
+			attributes = []
+
+			c = 0
+
+			attributes[c] = self[:grade].to_s if self[:grade]
+			attributes[c+=1] = self[:duration].to_s if self[:duration]
+			attributes[c+=1] = velocity_of(self[:velocity]) if self[:velocity]
+				
+			if mode == :dotted
+				attributes.join '.'
+
+			elsif mode == :parenthesis
+				'(' + attributes.join(', ') + ')'
+			else
+				attributes
+			end
+		end
+
+		def velocity_of x
+			['ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][x + 3]
+		end
+
+		private :velocity_of
+
+		def to_gdvd previous: nil, scale:
 
 			r = {}
 
@@ -181,11 +247,11 @@ module Musa::Dataset
 
 		private_constant :Parser
 
-		class NeumaDecoder < Musa::Neuma::Decoder
+		class NeumaDifferentialDecoder < Musa::Neuma::DifferentialDecoder
 			include Parser
 		end
 
-		class NeumaDifferentialDecoder < Musa::Neuma::DifferentialDecoder
+		class NeumaDecoder < Musa::Neuma::Decoder
 			include Parser
 
 			def initialize scale, base = nil
@@ -197,41 +263,7 @@ module Musa::Dataset
 			end
 
 			def apply action, on:
-				r = on
-
-				if action[:abs_grade]
-					on[:grade] = @scale.note_of action[:abs_grade]
-				end
-
-				if action[:delta_grade]
-					on[:grade] = @scale.note_of on[:grade] + action[:delta_grade]
-				end
-
-				if action[:abs_duration]
-					on[:duration] = action[:abs_duration]
-				end
-
-				if action[:delta_duration]
-					on[:duration] += action[:delta_duration]
-				end
-
-				if action[:factor_duration]
-					on[:duration] *= action[:factor_duration]
-				end
-
-				if action[:abs_velocity]
-					on[:velocity] = action[:abs_velocity]
-				end
-
-				if action[:delta_velocity]
-					on[:velocity] += action[:delta_velocity]
-				end
-
-				if action[:event]
-					r = { duration: 0, event: action[:event] }
-				end
-
-				r.clone.extend GDV
+				action.to_gdv previous: on, scale: @scale
 			end
 		end
 	end

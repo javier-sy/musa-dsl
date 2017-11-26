@@ -38,7 +38,7 @@ module Musa::Neuma
 
 	register File.join(File.dirname(__FILE__), "neuma")
 
-	class Decoder
+	class DifferentialDecoder
 		def decode attributes
 			parse attributes
 		end
@@ -48,13 +48,13 @@ module Musa::Neuma
 		end
 	end
 
-	class DifferentialDecoder < Decoder
+	class Decoder < DifferentialDecoder
 		def initialize start
 			@last = start.clone
 		end
 
 		def decode attributes
-			apply(parse(attributes), on: @last).clone
+			@last = apply parse(attributes), on: @last
 		end
 
 		def apply action, on:

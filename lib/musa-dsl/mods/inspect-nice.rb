@@ -15,4 +15,14 @@ class Rational
 			"#{self.to_i}"
 		end
 	end
+
+	alias _to_s_original to_s
+
+	def to_s
+		if to_i == self
+			to_i.to_s
+		else
+			_to_s_original
+		end
+	end
 end
