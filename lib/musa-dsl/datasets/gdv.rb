@@ -30,51 +30,60 @@ module Musa::Dataset
 
 			if self[:event]
 				r = { duration: 0, event: self[:event] }
+			elsif self[:command]
+				r = { duration: 0, command: self[:command] }
 			end
 
 			r
 		end
 
 		def to_neuma mode = nil
-
 			mode ||= :dotted # :parenthesis
 
-			attributes = []
+			if self[:event]
+				':' + self[:event].to_s
 
-			c = 0
+			elsif self[:command]
+				'{ ' + self[:command] + ' }'
 
-			if self[:abs_grade]
-				attributes[c] = self[:abs_grade].to_s
-			elsif self[:delta_grade]
-				attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s
-			end
+			else
+				attributes = []
 
+				c = 0
 
-			if self[:abs_duration]
-				attributes[c+=1] = self[:abs_duration].to_s
-			elsif self[:delta_duration]
-				attributes[c+=1] = positive_sign_of(self[:delta_duration]) + self[:delta_duration].to_s
-			elsif self[:factor_duration]
-				attributes[c+=1] = '*' + self[:factor_duration].to_s
-			end
-
-			if self[:abs_velocity]
-				attributes[c+=1] = velocity_of(self[:abs_velocity])
-			elsif self[:delta_velocity]
-				attributes[c+=1] = sign_of(self[:delta_velocity]) + 'f' * self[:delta_velocity].abs
-			end
-
-			if mode == :dotted
-				if attributes.size > 0
-					attributes.join '.'
-				else
-					'.'
+				if self[:abs_grade]
+					attributes[c] = self[:abs_grade].to_s
+				elsif self[:delta_grade]
+					attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s
 				end
 
-			elsif mode == :parenthesis
-				'(' + attributes.join(', ') + ')'
-			else
-				attributes
+
+				if self[:abs_duration]
+					attributes[c+=1] = self[:abs_duration].to_s
+				elsif self[:delta_duration]
+					attributes[c+=1] = positive_sign_of(self[:delta_duration]) + self[:delta_duration].to_s
+				elsif self[:factor_duration]
+					attributes[c+=1] = '*' + self[:factor_duration].to_s
+				end
+
+				if self[:abs_velocity]
+					attributes[c+=1] = velocity_of(self[:abs_velocity])
+				elsif self[:delta_velocity]
+					attributes[c+=1] = sign_of(self[:delta_velocity]) + 'f' * self[:delta_velocity].abs
+				end
+
+				if mode == :dotted
+					if attributes.size > 0
+						attributes.join '.'
+					else
+						'.'
+					end
+
+				elsif mode == :parenthesis
+					'(' + attributes.join(', ') + ')'
+				else
+					attributes
+				end
 			end
 		end
 
@@ -112,6 +121,10 @@ module Musa::Dataset
 
 			if self[:event]
 				r[:event] = self[:event]
+			end
+
+			if self[:command]
+				r[:command] = self[:command]
 			end
 
 			r.extend Musa::Dataset::PDV
@@ -174,6 +187,9 @@ module Musa::Dataset
 
 			if self[:event]
 				r[:event] = self[:event]
+
+			elsif self[:command]
+				r[:command] = self[:command]
 			end
 
 			r.extend Musa::Dataset::GDVd
@@ -235,8 +251,10 @@ module Musa::Dataset
 					command
 
 				when _attributes.key?(:event)
-
 					{ event: _attributes[:event] }.extend GDVd
+
+				when _attributes.key?(:command)
+					{ command: _attributes[:command] }.extend GDVd
 
 				else
 					raise RuntimeError, "Not processable data #{_attributes}. Keys allowed are :attributes, :event and :comment"

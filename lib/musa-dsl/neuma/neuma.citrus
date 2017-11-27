@@ -39,7 +39,7 @@ grammar Neuma
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value } }
+		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value.strip } }
 	end
 
 	rule complex_command
