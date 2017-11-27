@@ -14,6 +14,12 @@ module Musa::Dataset
 				r[:grade] = scale.note_of r[:grade] + self[:delta_grade]
 			end
 
+			if self[:abs_octave]
+				r[:octave] = self[:abs_octave]
+			elsif self[:delta_octave]
+				r[:octave] += self[:delta_octave]
+			end
+
 			if self[:abs_duration]
 				r[:duration] = self[:abs_duration]
 			elsif self[:delta_duration]
@@ -57,6 +63,11 @@ module Musa::Dataset
 					attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s
 				end
 
+				if self[:abs_octave]
+					attributes[c+=1] = 'o' + self[:abs_octave].to_s
+				elsif self[:delta_octave]
+					attributes[c+=1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s
+				end
 
 				if self[:abs_duration]
 					attributes[c+=1] = self[:abs_duration].to_s
@@ -138,6 +149,7 @@ module Musa::Dataset
 			c = 0
 
 			attributes[c] = self[:grade].to_s if self[:grade]
+			attributes[c+=1] = 'o' + self[:octave].to_s if self[:octave]
 			attributes[c+=1] = self[:duration].to_s if self[:duration]
 			attributes[c+=1] = velocity_of(self[:velocity]) if self[:velocity]
 				
@@ -168,6 +180,8 @@ module Musa::Dataset
 			else
 				r[:abs_grade] = self[:grade] if self[:grade]
 			end
+
+			# TODO procesar octavas
 
 			if previous
 				if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
@@ -218,17 +232,27 @@ module Musa::Dataset
 						end
 					end
 
+					octave = attributes.find { |a| /\A [+-]?o[-]?[0-9]+ \Z/x.match a }
+
+					if octave
+						if (octave[0] == '+' || octave[0] == '-') && octave[1] == 'o'
+							command[:delta_octave] = (octave[0] + octave[2..-1]).to_i
+						elsif octave[0] == 'o'
+							command[:abs_octave] = octave[1..-1].to_i
+						end
+
+						attributes.delete octave
+					end
+
 					velocity = attributes.find { |a| /\A (mp | mf | (\+|\-)?(p+|f+)) \Z/x.match a }
 
 					if velocity
 						if velocity[0] == '+' || velocity[0] == '-'
 							command[:delta_velocity] = (velocity[1] == 'f' ? 1 : -1) * (velocity.length - 1) * (velocity[0] + '1').to_i
-						elsif 
-							if velocity[0] == 'm'
-								command[:abs_velocity] = (velocity[1] == 'f') ? 1 : 0
-							else
-								command[:abs_velocity] = velocity.length * (velocity[0] == 'f' ? 1 : -1) + (velocity[0] == 'f' ? 1 : 0)
-							end
+						elsif velocity[0] == 'm'
+							command[:abs_velocity] = (velocity[1] == 'f') ? 1 : 0
+						else
+							command[:abs_velocity] = velocity.length * (velocity[0] == 'f' ? 1 : -1) + (velocity[0] == 'f' ? 1 : 0)
 						end
 							
 						attributes.delete velocity
@@ -272,7 +296,7 @@ module Musa::Dataset
 			include Parser
 
 			def initialize scale, base = nil
-				base ||= { grade: 0, duration: Rational(1,4), velocity: 1 }
+				base ||= { grade: 0, octave: 0, duration: Rational(1,4), velocity: 1 }
 
 				@scale = scale
 
