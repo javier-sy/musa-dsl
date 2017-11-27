@@ -11,7 +11,7 @@ grammar Neuma
 	end
 
 	rule neuma
-		command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes
+		command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes | bracketed_neumas
 	end
 
 	rule dotted_attributes_beginning_with_dot
@@ -26,8 +26,12 @@ grammar Neuma
 		(lpar spaces (a:attribute spaces)* rpar) { { attributes: captures(:a).collect { |c| c.value } } }
 	end
 
+	rule bracketed_neumas
+		(lbracket spaces (a:neuma spaces)* rbracket) { { neumas: captures(:a).collect { |c| c.value } } }
+	end
+
 	rule attribute
-		everything_except_braces_dots_spaces_comment
+		everything_except_braces_brackets_dots_spaces_comment
 	end
 
 	rule command
@@ -62,8 +66,8 @@ grammar Neuma
 		/[^({|})]+/
 	end
 
-	rule everything_except_braces_dots_spaces_comment
-		/[^({|}|.| |\t|\n|\r\#)]+/
+	rule everything_except_braces_brackets_dots_spaces_comment
+		/[^({|}|\[|\]|.| |\t|\n|\r\#)]+/
 	end
 
 	rule name
@@ -92,6 +96,14 @@ grammar Neuma
 
 	rule rbrace
 		'}'
+	end
+
+	rule lbracket
+		'['
+	end
+
+	rule rbracket
+		']'
 	end
 
 	rule hsh

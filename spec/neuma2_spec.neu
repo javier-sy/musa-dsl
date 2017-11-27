@@ -10,8 +10,12 @@
 
 
 
-# @var = x			asignación, sin usar
-# @var: 			asignación, usando
-# @var.operation	operación sobre la variable
+# @var = x			asignación, sin usar, var es una serie
+# @var: 			asignación, usando, var es una serie
+# @var.operation	operación sobre la serie
 # | 				sincroniza con el bloque anterior
 # ||				salta de bloque
+# [ ... ]			bloque (anidable)
+
+
+bloque = [ cosas ]

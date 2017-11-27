@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 RSpec.describe Musa::Neuma do
 
-	context "Neuma parsing" do
+	context "Neuma simple parsing" do
 
 		it "Basic neuma inline parsing" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq(
