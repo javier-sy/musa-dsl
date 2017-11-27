@@ -179,10 +179,13 @@ module Musa::Dataset
 				
 				note_diff = current_note - previous_note
 				
-				puts "scale.reduced_grade(self[:grade]) = #{scale.reduced_grade(self[:grade])} scale.octave_of_grade(self[:grade]) = #{scale.octave_of_grade(self[:grade])} self[:octave] = #{self[:octave]} current_note = #{current_note} previous_note = #{previous_note}"
-				
-				r[:delta_octave] = 0
-				r[:delta_grade] = note_diff
+				if note_diff < 0
+					r[:delta_grade] = -(note_diff.abs % scale.number_of_grades)
+					r[:delta_octave] = -(note_diff.abs / scale.number_of_grades)
+				else
+					r[:delta_grade] = note_diff % scale.number_of_grades
+					r[:delta_octave] = note_diff / scale.number_of_grades
+				end
 			else
 				r[:abs_grade] = self[:grade] if self[:grade]
 				r[:abs_octave] = self[:octave] if self[:octave] && self[:octave] != 0
