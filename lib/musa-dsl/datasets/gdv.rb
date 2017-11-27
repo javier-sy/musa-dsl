@@ -182,7 +182,8 @@ module Musa::Dataset
 			end
 
 			# TODO procesar octavas
-
+			...
+			
 			if previous
 				if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
 					r[:delta_duration] = self[:duration] - previous[:duration]
