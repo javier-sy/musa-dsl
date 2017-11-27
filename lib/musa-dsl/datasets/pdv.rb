@@ -1,7 +1,7 @@
 require 'musa-dsl/neuma/neuma'
 
 module Musa::Dataset
-	module PDV # pitch duration velocity event
+	module PDV # pitch duration velocity event command
 		def to_gdv scale
 			r = {}
 
@@ -25,6 +25,8 @@ module Musa::Dataset
 
 			if self[:event]
 				r[:event] = self[:event]
+			elsif self[:command]
+				r[:command] = self[:command]
 			end
 
 			r.extend Musa::Dataset::GDV

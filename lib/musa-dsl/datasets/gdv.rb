@@ -2,7 +2,7 @@ require 'musa-dsl/neuma/neuma'
 
 module Musa::Dataset
 
-	module GDVd # abs_grade delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
+	module GDVd # abs_grade abs_octave delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity event command
 
 		def to_gdv scale, previous:
 
@@ -59,13 +59,13 @@ module Musa::Dataset
 
 				if self[:abs_grade]
 					attributes[c] = self[:abs_grade].to_s
-				elsif self[:delta_grade]
+				elsif self[:delta_grade] && self[:delta_grade] != 0
 					attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s
 				end
 
 				if self[:abs_octave]
 					attributes[c+=1] = 'o' + self[:abs_octave].to_s
-				elsif self[:delta_octave]
+				elsif self[:delta_octave] && self[:delta_octave] != 0
 					attributes[c+=1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s
 				end
 
@@ -113,7 +113,7 @@ module Musa::Dataset
 		end
 	end
 
-	module GDV # grade duration velocity event
+	module GDV # grade duration velocity event command
 		def to_pdv scale
 			r = {}
 
@@ -174,6 +174,21 @@ module Musa::Dataset
 			r = {}
 
 			if previous
+				current_note = scale.reduced_grade(self[:grade]) + scale.number_of_grades * (scale.octave_of_grade(self[:grade]) + self[:octave])
+				previous_note = scale.reduced_grade(previous[:grade]) + scale.number_of_grades * (scale.octave_of_grade(previous[:grade]) + previous[:octave])
+				
+				note_diff = current_note - previous_note
+				
+				puts "scale.reduced_grade(self[:grade]) = #{scale.reduced_grade(self[:grade])} scale.octave_of_grade(self[:grade]) = #{scale.octave_of_grade(self[:grade])} self[:octave] = #{self[:octave]} current_note = #{current_note} previous_note = #{previous_note}"
+				
+				r[:delta_octave] = 0
+				r[:delta_grade] = note_diff
+			else
+				r[:abs_grade] = self[:grade] if self[:grade]
+				r[:abs_octave] = self[:octave] if self[:octave] && self[:octave] != 0
+			end
+
+			if previous
 				if self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])
 					r[:delta_grade] = scale.note_of(self[:grade]) - scale.note_of(previous[:grade])
 				end
@@ -181,9 +196,6 @@ module Musa::Dataset
 				r[:abs_grade] = self[:grade] if self[:grade]
 			end
 
-			# TODO procesar octavas
-			...
-			
 			if previous
 				if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
 					r[:delta_duration] = self[:duration] - previous[:duration]
@@ -282,7 +294,7 @@ module Musa::Dataset
 					{ command: _attributes[:command] }.extend GDVd
 
 				else
-					raise RuntimeError, "Not processable data #{_attributes}. Keys allowed are :attributes, :event and :comment"
+					raise RuntimeError, "Not processable data #{_attributes}. Keys allowed are :attributes, :event and :command"
 				end
 			end
 		end
