@@ -13,6 +13,8 @@ I.p 	# piano
 
 0 1 2.p 2.1/2.ff
 
+{ esto es una llamada especial a un comando }
+
 # modo diferencial
 # otra línea
 

@@ -94,6 +94,8 @@ module Musa
 		delegate number_of_grades: :@def
 		delegate note_of: :@def
 		delegate symbol_of: :@def
+		delegate reduced_grade: :@def
+		delegate octave_of_grade: :@def
 
 		def based_on(grade, octave: nil)
 			octave ||= 0

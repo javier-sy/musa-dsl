@@ -31,7 +31,7 @@ RSpec.describe Musa::Neuma do
 
 		it "GDV neuma to PDVE and back to neuma via GDV::NeumaDecoder" do
 			
-			gdv_abs_neumas = '0.1.p 0.2.p 0.3.p 2.3.fff 1.2.fff 5.1/2.ppp'
+			gdv_abs_neumas = '0.o0.1.p 0.o1.2.p 0.o-1.3.p 2.o0.3.fff 1.o0.2.fff 5.o1.1/2.ppp'
 			
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 
@@ -41,11 +41,7 @@ RSpec.describe Musa::Neuma do
 
 			result_pdv = result_gdv.collect { |g| g.to_pdv(scale) }
 
-			puts "result_pdv = #{result_pdv}"
-
 			result_gdv2 = result_pdv.collect { |p| p.to_gdv(scale) }
-
-			puts "result_gdv2 = #{result_gdv2}"
 
 			result_neuma = result_gdv2.collect { |g| g.to_neuma }
 
@@ -64,7 +60,7 @@ RSpec.describe Musa::Neuma do
 			decoder = GDV::NeumaDecoder.new scale 
 
 			result_gdv = Musa::Neuma.parse gdv_abs_neumas, decode_with: decoder
-
+			
 			result_gdvd = result_gdv.each_index.collect { |i| result_gdv[i].to_gdvd scale, previous: (i>0?result_gdv[i-1]:nil) }
 
 			result_neuma = result_gdvd.collect { |gd| gd.to_neuma }
@@ -92,8 +88,8 @@ RSpec.describe Musa::Neuma do
 
 		it "GDV diff neuma to GDVd and back to GDV abs neuma via GDV::DifferentialDecoder" do
 			
-			gdv_diff_neumas = '0.1.mf . +1 2.p 2.1/2.p'
-			gdv_abs_neumas = '0.1.mf 0.1.mf 1.1.mf 2.1.p 2.1/2.p'
+			gdv_diff_neumas = '0.o1.1.mf . +1.+o1 2.p 2.-o3.1/2.p'
+			gdv_abs_neumas = '0.o1.1.mf 0.o1.1.mf 1.o2.1.mf 2.o2.1.p 2.o-1.1/2.p'
 
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 
