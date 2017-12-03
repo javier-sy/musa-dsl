@@ -27,7 +27,7 @@ grammar Neuma
 	end
 
 	rule attribute
-		everything_except_braces_brackets_dots_spaces
+		everything_except_braces_brackets_dots_spaces_hash
 	end
 
 	rule command
@@ -55,11 +55,15 @@ grammar Neuma
 	end
 
 	rule comment
-		(lcomment complex_comment rcomment)
+		(lcomment complex_comment rcomment) | (hsh everything_until_eol)
 	end
 
 	rule complex_comment
 		everything_except_comment? (lcomment complex_comment rcomment)* everything_except_comment?
+	end
+
+	rule everything_until_eol
+		~/$/
 	end
 
 	rule everything_except_comment
@@ -70,8 +74,8 @@ grammar Neuma
 		~/({|})/m
 	end
 
-	rule everything_except_braces_brackets_dots_spaces
-		/[^({|}|\[|\]|.| |\t|\n|\r)]+/m
+	rule everything_except_braces_brackets_dots_spaces_hash
+		/[^({|}|\[|\]|.| |\t|\n|\r|#)]+/m
 	end
 
 	rule name
@@ -116,5 +120,9 @@ grammar Neuma
 
 	rule rcomment
 		'*/'
+	end
+
+	rule hsh
+		'#'
 	end
 end
