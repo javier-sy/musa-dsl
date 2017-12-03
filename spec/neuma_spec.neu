@@ -1,12 +1,12 @@
-# Esto sería algo así...
+/* Esto sería algo así... */
 
-.		# suena la anterior, porque no se da información nueva, si no hay anterior, se coge la "por defecto" o la "base de la serie"
-II		# suena el segundo grado de la escala, con el tiempo y velocidad anteriores
-I.2		# suena el primer grado, con la duración de blanca, y la velocidad de la anterior
-I.1/2	# corchea
-I.p 	# piano
+.		/* suena la anterior, porque no se da información nueva, si no hay anterior, se coge la "por defecto" o la "base de la serie" */
+II		/* suena el segundo grado de la escala, con el tiempo y velocidad anteriores */
+I.2		/* suena el primer grado, con la duración de blanca, y la velocidad de la anterior */
+I.1/2	/* corchea */
+I.p 	/* piano */
 
-0		# suena la tónica
+0		/* suena la tónica */
 0.1
 0.1/2
 0.fff
@@ -15,16 +15,16 @@ I.p 	# piano
 
 { esto es una llamada especial a un comando }
 
-# modo diferencial
-# otra línea
+/* modo diferencial */
+/* otra línea */
 
-0.		# suena la tónica de la escala con los demás parámetros como el anterior
-.		# como el anterior
-+1		# elemento +1 en la escala respecto al anterior
-.+1/2	# como el anterior pero con duración incrementada en 1/2
-.*1/2	# como el anterior, con duración la del anterior * 1/2
-.p 		# como el anterior, con velocidad substituida por p
-.-p 	# como el anterior, con velocidad menos piano, es decir, un punto +forte
+0.		/* suena la tónica de la escala con los demás parámetros como el anterior */
+.		/* como el anterior */
++1		/* elemento +1 en la escala respecto al anterior */
+.+1/2	/* como el anterior pero con duración incrementada en 1/2 */
+.*1/2	/* como el anterior, con duración la del anterior * 1/2 */
+.p 		/* como el anterior, con velocidad substituida por p */
+.-p 	/* como el anterior, con velocidad menos piano, es decir, un punto +forte */
 
 
 :evento -1 
@@ -34,9 +34,9 @@ I.p 	# piano
 
 
 
-# Sintaxis: Serie separada con . 
-# El primero tiene el significado especial de altura
-# El resto tienen que ser "capturables" por el procesador
+/* Sintaxis: Serie separada con .  */
+/* El primero tiene el significado especial de altura */
+/* El resto tienen que ser "capturables" por el procesador */
 
 
 

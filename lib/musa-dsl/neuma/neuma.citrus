@@ -2,12 +2,8 @@
 	
 grammar Neuma
 
-	rule lines
-		((spaces ((line_content comment?) | comment | crlf ))*) { captures(:line_content).collect { |c| c.value }.flatten(1) }
-	end
-
-	rule line_content
-		((neuma spaces)+) { captures(:neuma).collect { |c| c.value } }
+	rule content
+		((spaces neuma)* spaces) { captures(:neuma).collect { |c| c.value } }
 	end
 
 	rule neuma
@@ -31,7 +27,7 @@ grammar Neuma
 	end
 
 	rule attribute
-		everything_except_braces_brackets_dots_spaces_comment
+		everything_except_braces_brackets_dots_spaces
 	end
 
 	rule command
@@ -51,23 +47,31 @@ grammar Neuma
 	end
 
 	rule spaces
-		space*
-	end
-
-	rule comment
-		hsh ~/$/x
+		(space | comment)*
 	end
 
 	rule space
-		[ \t]
+		/[ \t\n\r]/m
+	end
+
+	rule comment
+		(lcomment complex_comment rcomment)
+	end
+
+	rule complex_comment
+		everything_except_comment? (lcomment complex_comment rcomment)* everything_except_comment?
+	end
+
+	rule everything_except_comment
+		~/((\*\/)|(\/\*))/m
 	end
 
 	rule everything_except_braces
-		/[^({|})]+/
+		~/({|})/m
 	end
 
-	rule everything_except_braces_brackets_dots_spaces_comment
-		/[^({|}|\[|\]|.| |\t|\n|\r\#)]+/
+	rule everything_except_braces_brackets_dots_spaces
+		/[^({|}|\[|\]|.| |\t|\n|\r)]+/m
 	end
 
 	rule name
@@ -106,11 +110,11 @@ grammar Neuma
 		']'
 	end
 
-	rule hsh
-		'#'
+	rule lcomment
+		'/*'
 	end
 
-	rule crlf
-		[\n\r]
+	rule rcomment
+		'*/'
 	end
 end

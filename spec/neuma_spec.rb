@@ -6,11 +6,30 @@ RSpec.describe Musa::Neuma do
 
 	context "Neuma simple parsing" do
 
-		it "Basic neuma inline parsing" do
-			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento # comentario 1')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: :evento }])
+		it "Basic neuma inline parsing (only a comment)" do
+			expect(Musa::Neuma.parse('/* comentario 1 */')).to eq([])
+		end
 
-			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } # comentario 2')).to eq(
+		it "Basic neuma inline parsing (two comments)" do
+			expect(Musa::Neuma.parse('/* comentario 1 */ /* bla bla */')).to eq([])
+		end
+
+		it "Basic neuma inline parsing (two comments with subcomments)" do
+			expect(Musa::Neuma.parse('/* comentario  /* otro comentario */ 1 */ /* bla bla */')).to eq([])
+		end
+
+		it "Basic neuma inline parsing (1)" do
+			expect(Musa::Neuma.parse('2.3.4 5.6.7 /* comentario 1 */ :evento')).to eq(
+				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: :evento }])
+		end
+
+		it "Basic neuma inline parsing (2)" do
+			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento /* comentario 1 */')).to eq(
+				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: :evento }])
+		end
+
+		it "Basic neuma inline parsing (3)" do
+			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } /* comentario 2 */')).to eq(
 				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro }" }])
 		end
 
@@ -20,7 +39,7 @@ RSpec.describe Musa::Neuma do
 		end
 
 		it "Basic neuma inline parsing with comment" do
-			expect(Musa::Neuma.parse("# comentario (con parentesis) \n 2.3.4")).to eq([{ attributes: ["2", "3", "4"] }])
+			expect(Musa::Neuma.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ attributes: ["2", "3", "4"] }])
 		end	
 
 		it "Basic neuma inline parsing only duration" do
@@ -35,7 +54,7 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing with differential decoder" do
 
-			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p # comentario 1', decode_with: differential_decoder
+			result = Musa::Neuma.parse '0 . +1 2.p 2.1/2.p /*comentario 1*/', decode_with: differential_decoder
 
 			expect(result[0]).to eq({ abs_grade: 0 })
 			expect(result[1]).to eq({ })
