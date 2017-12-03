@@ -1,5 +1,5 @@
 require 'spec_helper'
-
+require 'pp'
 require 'musa-dsl'
 
 RSpec.describe Musa::Neuma do
@@ -35,7 +35,7 @@ RSpec.describe Musa::Neuma do
 		it "" do
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma2_spec.neu"), debug: true
 
-			puts result
+			pp result
 		end
 	end
 end

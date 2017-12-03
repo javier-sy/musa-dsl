@@ -1,13 +1,32 @@
-# TODO add event parameters
-	
 grammar Neuma
 
 	rule content
-		((spaces neuma)* spaces) { captures(:neuma).collect { |c| c.value } }
+		(row barred_row*) { 
+			a = capture(:row).value
+			b = captures(:barred_row).collect { |r| r.value } 
+
+			if b.empty?
+				a
+			else
+				a + [ { parallel: b } ]
+			end
+		}
+	end
+
+	rule barred_row
+		(bar row) { capture(:row).value }
+	end
+
+	rule row
+		(spaces (a:neuma spaces)*) { captures(:a).collect { |c| c.value } }
+	end
+
+	rule bracketed_neumas
+		(lbracket spaces content rbracket) { { neumas: capture(:content).value } }
 	end
 
 	rule neuma
-		command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes | bracketed_neumas | expression
+		(command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes | expression)
 	end
 
 	rule dotted_attributes_beginning_with_dot
@@ -22,27 +41,21 @@ grammar Neuma
 		(lpar spaces (a:attribute spaces)* rpar) { { attributes: captures(:a).collect { |c| c.value } } }
 	end
 
-	rule bracketed_neumas
-		(lbracket spaces (a:neuma spaces)* rbracket) { { neumas: captures(:a).collect { |c| c.value } } }
-	end
-
 	rule attribute
-		everything_except_braces_brackets_dots_spaces_hash_at
+		everything_that_can_be_an_attribute
 	end
 
 	rule command
 		event | braced_command
 	end
 
-# OJO
 	rule event
 		(colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
 	end
 
 	rule parameters
-		lpar spaces expression spaces rpar
+		(lpar spaces a:expression spaces (comma spaces b:expression spaces)* rpar) { [ capture(:a).value ] + captures(:b).collect { |p| p.value } }
 	end
-# OJO
 
 	rule braced_command
 		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value.strip } }
@@ -93,8 +106,8 @@ grammar Neuma
 		~/({|})/m
 	end
 
-	rule everything_except_braces_brackets_dots_spaces_hash_at
-		/[^({|}|\[|\]|.| |\t|\n|\r|#|@)]+/m
+	rule everything_that_can_be_an_attribute
+		/[^({|}|\[|\]|.| |\t|\n|\r|#|@|,|\|)]+/m
 	end
 
 	rule name
@@ -102,7 +115,9 @@ grammar Neuma
 	end
 
 	rule dot '.' end
+	rule comma ',' end
 	rule colon ':' end
+	rule bar '|' end
 	rule lpar '(' end
 	rule rpar ')' end
 	rule lbrace '{' end
