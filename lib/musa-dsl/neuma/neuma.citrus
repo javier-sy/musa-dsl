@@ -7,7 +7,7 @@ grammar Neuma
 	end
 
 	rule neuma
-		command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes | bracketed_neumas
+		command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes | bracketed_neumas | expression
 	end
 
 	rule dotted_attributes_beginning_with_dot
@@ -27,16 +27,22 @@ grammar Neuma
 	end
 
 	rule attribute
-		everything_except_braces_brackets_dots_spaces_hash
+		everything_except_braces_brackets_dots_spaces_hash_at
 	end
 
 	rule command
 		event | braced_command
 	end
 
+# OJO
 	rule event
-		(colon name) { { event: capture(:name).value.to_sym } } 
+		(colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
 	end
+
+	rule parameters
+		lpar spaces expression spaces rpar
+	end
+# OJO
 
 	rule braced_command
 		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value.strip } }
@@ -45,6 +51,19 @@ grammar Neuma
 	rule complex_command
 		everything_except_braces? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces?
 	end
+
+	rule variable
+		(at name) { { use_variable: capture(:name).value.to_sym } }
+	end
+
+	rule expression
+		(bracketed_neumas | variable_assign | variable)
+	end
+
+	rule variable_assign
+		(variable spaces equal spaces expression) { { assign_to: capture(:variable).value[:use_variable], value: capture(:expression).value } }
+	end
+
 
 	rule spaces
 		(space | comment)*
@@ -74,55 +93,25 @@ grammar Neuma
 		~/({|})/m
 	end
 
-	rule everything_except_braces_brackets_dots_spaces_hash
-		/[^({|}|\[|\]|.| |\t|\n|\r|#)]+/m
+	rule everything_except_braces_brackets_dots_spaces_hash_at
+		/[^({|}|\[|\]|.| |\t|\n|\r|#|@)]+/m
 	end
 
 	rule name
 		/[[:alpha:]]\w*/
 	end
 
-	rule dot
-		'.'
-	end
-
-	rule colon
-		':'
-	end
-
-	rule lpar
-		'('
-	end
-
-	rule rpar
-		')'
-	end
-
-	rule lbrace
-		'{'
-	end
-
-	rule rbrace
-		'}'
-	end
-
-	rule lbracket
-		'['
-	end
-
-	rule rbracket
-		']'
-	end
-
-	rule lcomment
-		'/*'
-	end
-
-	rule rcomment
-		'*/'
-	end
-
-	rule hsh
-		'#'
-	end
+	rule dot '.' end
+	rule colon ':' end
+	rule lpar '(' end
+	rule rpar ')' end
+	rule lbrace '{' end
+	rule rbrace '}' end
+	rule lbracket '[' end
+	rule rbracket ']' end
+	rule at '@' end
+	rule equal '=' end
+	rule lcomment '/*' end
+	rule rcomment '*/' end
+	rule hsh '#' end
 end

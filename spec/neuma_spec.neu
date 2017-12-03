@@ -30,13 +30,7 @@ I.p 	/* piano */
 :evento -1 
 
 
-
-
-
-
 /* Sintaxis: Serie separada con .  */
 /* El primero tiene el significado especial de altura */
 /* El resto tienen que ser "capturables" por el procesador */
-
-
 

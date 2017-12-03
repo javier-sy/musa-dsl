@@ -1,11 +1,12 @@
-@a = [ I.1.ff . .*1/2 . 2 ]
+@b = @a = [ I.1.ff . .*1/2 . 2 ]
+@a
 
-| @a
-| silence.2 a
+# | @a
+# | silence.2 @a
 
 
-|| @b: [ 1.2.p 2 1 2 ]
-|  silence.4 @b.reverse @b.inverse
+# || @b = [ 1.2.p 2 1 2 ] @b
+# |  silence.4 @b.reverse @b.inverse
 
 
 
@@ -17,5 +18,3 @@
 # ||				salta de bloque
 # [ ... ]			bloque (anidable)
 
-
-bloque = [ cosas ]
