@@ -1,9 +1,9 @@
 grammar Neuma
 
 	rule content
-		(row barred_row*) { 
+		(row in_parallel_row*) { 
 			a = capture(:row).value
-			b = captures(:barred_row).collect { |r| r.value } 
+			b = captures(:in_parallel_row).collect { |r| r.value } 
 
 			if b.empty?
 				a
@@ -13,8 +13,8 @@ grammar Neuma
 		}
 	end
 
-	rule barred_row
-		(bar row) { capture(:row).value }
+	rule in_parallel_row
+		(double_bar row) { capture(:row).value }
 	end
 
 	rule row
@@ -118,6 +118,7 @@ grammar Neuma
 	rule comma ',' end
 	rule colon ':' end
 	rule bar '|' end
+	rule double_bar '||' end
 	rule lpar '(' end
 	rule rpar ')' end
 	rule lbrace '{' end

@@ -1,11 +1,20 @@
 @b = @a = [I.1.ff . .*1/2 . 2]
+
+@c = 	[|| :event1([100], @b)
+		 || :event2 (100 200 300) ]
+
+
 @a 
-@c = 	[| :event1([100], @b)
-		 | :event2 (100 200 300) ]
 
-[ @a
- silence.2 @a ]
+[ @a silence.2 @a ]
 
+|| @a
+|| @b
+
+| @a || @a @b @c || @c @d || @d #@c 
+| @c @d
+
+#| [|| @e || @f]
 
 # || @b = [ 1.2.p 2 1 2 ] @b
 # |  silence.4 @b.reverse @b.inverse
@@ -14,9 +23,8 @@
 
 
 # @var = x			asignación, sin usar, var es una serie
-# @var: 			asignación, usando, var es una serie
 # @var.operation	operación sobre la serie
-# | 				sincroniza con el bloque anterior
-# ||				salta de bloque
+# || 				sincroniza con el bloque anterior (temporalmente en paralelo)
+# |					sincroniza con el final (temporalmente en serie)
 # [ ... ]			bloque (anidable)
 
