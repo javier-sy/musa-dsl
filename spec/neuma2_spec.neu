@@ -11,6 +11,8 @@
 || @a
 || @b
 
+# seguir implementando el pasar a SERIE tras un PARALLEL
+
 | @a || @a @b @c || @c @d || @d #@c 
 | @c @d
 
