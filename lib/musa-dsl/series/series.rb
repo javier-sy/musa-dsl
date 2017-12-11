@@ -51,20 +51,24 @@ module Musa
 			Serie.new BasicSerieRandomizer.new(self)
 		end
 
-		def eval(with: nil, &block)
+		def eval with: nil, &block
 			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, &block)
 		end
 
-		def select(*indexed_series, **hash_series)
+		def select *indexed_series, **hash_series
 			Serie.new SelectorBasicSerie.new(self, indexed_series, hash_series)
 		end
 
-		def select_serie(*indexed_series, **hash_series)
+		def select_serie *indexed_series, **hash_series
 			Serie.new SelectorFullSerieBasicSerie.new(self, indexed_series, hash_series)
 		end
 
-		def after(*series)
+		def after *series
 			Serie.new SequenceBasicSerie.new([self, *series])
+		end
+
+		def + serie
+			Serie.new SequenceBasicSerie.new [self, serie]
 		end
 
 		def slave
