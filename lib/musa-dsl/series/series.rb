@@ -23,7 +23,7 @@ module Musa
 
 	module SerieOperations
 
-		def repeat(times = nil, &condition_block)
+		def repeat times = nil, &condition_block
 			if times || condition_block
 				Serie.new BasicSerieRepeater.new(self, times, &condition_block)
 			else
@@ -31,11 +31,11 @@ module Musa
 			end
 		end
 
-		def hashify(*keys)
+		def hashify *keys
 			Serie.new BasicHashSerieFromArraySerie.new(self, keys)
 		end
 
-		def shift(shift)
+		def shift shift
 			Serie.new BasicSerieShifter.new(self, shift)
 		end
 
@@ -71,6 +71,14 @@ module Musa
 			Serie.new SequenceBasicSerie.new [self, serie]
 		end
 
+		def cut length
+			Serie.new CutterSerie.new(self, length)
+		end
+
+		def merge
+			Serie.new MergeSerieOfSeries.new(self)
+		end
+
 		def slave
 			slave_serie = SlaveSerie.new self	
 					
@@ -91,7 +99,7 @@ module Musa
 
 			array = []
 
-			while !(value = @serie.next_value).nil?
+			while value = @serie.next_value
 				array << value
 			end
 
@@ -419,6 +427,100 @@ module Musa
 		end	
 
 		private_constant :BasicSerieRepeater
+
+		class CutterSerie
+			include ProtoSerie
+
+			def initialize(serie, length)
+				@serie = serie
+				@length = length
+
+				restart
+			end
+
+			def restart
+				@serie.restart
+			end
+
+			def next_value
+				@previous.materialize if @previous
+				
+				if @serie.peek_next_value
+					Serie.new @previous = CutSerie.new(@serie, @length)
+				else
+					nil
+				end
+			end
+
+			private
+
+			class CutSerie
+				include ProtoSerie
+
+				def initialize(serie, length)
+					@serie = serie
+					@length = length
+
+					@values = []
+					restart
+				end
+
+				def restart
+					@count = 0
+				end
+
+				def next_value
+					value ||= @values[@count]
+					value ||= @values[@count] = @serie.next_value if @count < @length
+
+					@count += 1
+
+					value
+				end
+
+				def materialize
+					(@values.size..@length - 1).each { |i| @values[i] = @serie.next_value }
+				end
+			end
+		end
+
+		private_constant :CutterSerie
+
+		class MergeSerieOfSeries
+			include ProtoSerie
+
+			def initialize(serie)
+				@serie = serie
+
+				restart
+			end
+
+			def restart
+				@serie.restart
+				@current = nil
+			end
+
+			def next_value
+				value = nil
+
+				@current = @serie.next_value unless @current
+				
+				if @current
+					value = @current.next_value
+
+					if value.nil?
+						@current = nil
+						value = next_value
+					end
+				else
+					value = nil
+				end
+
+				value
+			end
+		end
+
+		private_constant :MergeSerieOfSeries
 
 		class ForLoopBasicSerie
 			def initialize(from:, to:, step:)
