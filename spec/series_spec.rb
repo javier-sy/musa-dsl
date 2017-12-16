@@ -54,6 +54,24 @@ RSpec.describe Musa::Serie do
 
 		end
 
+		it "+" do
+
+			s1 = S(1, 2, 3, 4)
+			s2 = S(5, 6, 7, 8)
+
+			s3 = s1 + s2
+
+			r = []
+
+			while value = s3.next_value
+				r << value
+			end
+
+			expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
+			expect(s3.next_value).to eq nil
+
+		end
+
 		it "Hash serie repeated and split and H() should be equal to the original serie" do
 			# TODO
 		end
