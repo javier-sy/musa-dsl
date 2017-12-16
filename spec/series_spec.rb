@@ -124,5 +124,20 @@ RSpec.describe Musa::Serie do
 
 			expect(sss.to_a).to eq [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 		end
+
+		it "Serie remover" do
+			s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+
+			ss = s.remove 3
+
+			r = []
+
+			while value = ss.next_value
+				r << value
+			end
+
+			expect(r).to eq [4, 5, 6, 7, 8, 9, 10, 11, 12]
+			expect(ss.next_value).to eq nil
+		end
 	end
 end

@@ -51,6 +51,14 @@ module Musa
 			Serie.new BasicSerieShifter.new(serie, shift)
 		end
 
+		def remove positions, duplicate: nil
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieRemover.new(serie, positions)
+		end
+
 		def lock duplicate: nil
 
 			duplicate ||= true
@@ -774,6 +782,28 @@ module Musa
 				value = @serie.next_value
 				return value unless value.nil?
 				@shifted.shift
+			end
+		end
+
+		private_constant :BasicSerieShifter
+
+		class BasicSerieRemover
+			include ProtoSerie
+
+			def initialize(serie, remove)
+				@serie = serie
+				@remove = remove
+				restart
+			end
+
+			def restart
+				@serie.restart
+
+				@remove.times { @serie.next_value }
+			end
+
+			def next_value
+				@serie.next_value
 			end
 		end
 
