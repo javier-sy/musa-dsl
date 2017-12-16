@@ -34,6 +34,7 @@ RSpec.describe Musa::Serie do
 
 			expect(s1.next_value).to eq nil
 			expect(s1.next_value).to eq nil
+			expect(s1.next_value).to eq nil
 		end
 
 		it "Fixed repeat" do
@@ -50,7 +51,49 @@ RSpec.describe Musa::Serie do
 
 			expect(r).to eq [1, 2, 3, 1, 2, 3, 1, 2, 3]
 			expect(s2.next_value).to eq nil
+			expect(s2.next_value).to eq nil
+			expect(s2.next_value).to eq nil
 
+		end
+
+		it "Fixed repeat of added series" do
+
+			s1 = S(1, 2, 3)
+			s2 = S(4, 5, 6)
+
+			s3 = (s1 + s2).repeat 3
+
+			r = []
+
+			while value = s3.next_value
+				r << value
+			end
+
+			expect(r).to eq [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6]
+			expect(s3.next_value).to eq nil
+			expect(s3.next_value).to eq nil
+			expect(s3.next_value).to eq nil
+		end
+
+		it "Fixed repeat of added series plus ending serie" do
+
+			s1 = S(1, 2, 3)
+			s2 = S(4, 5, 6)
+
+			s3 = (s1 + s2).repeat 3
+
+			s4 = s3 + S(10, 11, 12)
+
+			r = []
+
+			while value = s4.next_value
+				r << value
+			end
+
+			expect(r).to eq [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 10, 11, 12]
+			expect(s4.next_value).to eq nil
+			expect(s4.next_value).to eq nil
+			expect(s4.next_value).to eq nil
 		end
 
 		it "After" do
@@ -67,6 +110,8 @@ RSpec.describe Musa::Serie do
 			end
 
 			expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
+			expect(s3.next_value).to eq nil
+			expect(s3.next_value).to eq nil
 			expect(s3.next_value).to eq nil
 
 		end
@@ -85,6 +130,8 @@ RSpec.describe Musa::Serie do
 			end
 
 			expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
+			expect(s3.next_value).to eq nil
+			expect(s3.next_value).to eq nil
 			expect(s3.next_value).to eq nil
 
 		end
@@ -137,6 +184,8 @@ RSpec.describe Musa::Serie do
 			end
 
 			expect(r).to eq [4, 5, 6, 7, 8, 9, 10, 11, 12]
+			expect(ss.next_value).to eq nil
+			expect(ss.next_value).to eq nil
 			expect(ss.next_value).to eq nil
 		end
 	end

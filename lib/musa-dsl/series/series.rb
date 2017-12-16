@@ -455,15 +455,16 @@ module Musa
 			def initialize(serie, times = nil, &condition_block)
 				@serie = serie
 				
+				@count = 0
+
 				@condition_block = condition_block
-				@condition_block ||= ->() { @count < times } if times
+				@condition_block ||= proc { @count < times } if times
 
 				raise ArgumentError, "times or condition block are mandatory" unless @condition_block
-
-				@count = 0
 			end
 
 			def restart
+				puts "BasicSerieRepeater.restart"
 				@serie.restart
 				@count = 0
 			end
@@ -474,7 +475,7 @@ module Musa
 				if value.nil?
 					@count += 1
 
-					if @condition_block.call
+					if self.instance_eval &@condition_block
 						@serie.restart
 						value = @serie.next_value
 					end
