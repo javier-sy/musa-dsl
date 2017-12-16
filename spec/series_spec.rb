@@ -36,6 +36,23 @@ RSpec.describe Musa::Serie do
 			expect(s1.next_value).to eq nil
 		end
 
+		it "Fixed repeat" do
+
+			s1 = S(1, 2, 3)
+
+			s2 = s1.repeat 3
+
+			r = []
+
+			while value = s2.next_value
+				r << value
+			end
+
+			expect(r).to eq [1, 2, 3, 1, 2, 3, 1, 2, 3]
+			expect(s2.next_value).to eq nil
+
+		end
+
 		it "After" do
 
 			s1 = S(1, 2, 3, 4)
