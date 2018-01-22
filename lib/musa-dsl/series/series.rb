@@ -23,52 +23,120 @@ module Musa
 
 	module SerieOperations
 
-		def repeat(times = nil, &condition_block)
+		def repeat times = nil, duplicate: nil, &condition_block
+
+			duplicate ||= true
+			serie = duplicate ? self.duplicate : self
+
 			if times || condition_block
-				Serie.new BasicSerieRepeater.new(self, times, &condition_block)
+				Serie.new BasicSerieRepeater.new(serie, times, &condition_block)
 			else
-				Serie.new BasicSerieInfiniteRepeater.new(self)
+				Serie.new BasicSerieInfiniteRepeater.new(serie)
 			end
 		end
 
-		def hashify(*keys)
-			Serie.new BasicHashSerieFromArraySerie.new(self, keys)
+		def hashify *keys, duplicate: nil
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicHashSerieFromArraySerie.new(serie, keys)
 		end
 
-		def shift(shift)
-			Serie.new BasicSerieShifter.new(self, shift)
+		def shift shift, duplicate: nil
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieShifter.new(serie, shift)
 		end
 
-		def lock
-			Serie.new BasicSerieLocker.new(self)
+		def remove positions, duplicate: nil
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieRemover.new(serie, positions)
 		end
 
-		def reverse
-			Serie.new BasicSerieReverser.new(self)
+		def lock duplicate: nil
+
+			duplicate ||= true
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieLocker.new(serie)
 		end
 
-		def randomize
-			Serie.new BasicSerieRandomizer.new(self)
+		def reverse duplicate: nil
+
+			duplicate ||= true
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieReverser.new(serie)
 		end
 
-		def eval(with: nil, &block)
-			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, &block)
+		def randomize duplicate: nil
+
+			duplicate ||= true
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieRandomizer.new(serie)
 		end
 
-		def select(*indexed_series, **hash_series)
-			Serie.new SelectorBasicSerie.new(self, indexed_series, hash_series)
+		def eval with: nil, duplicate: nil, &block
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, &block)
 		end
 
-		def select_serie(*indexed_series, **hash_series)
-			Serie.new SelectorFullSerieBasicSerie.new(self, indexed_series, hash_series)
+		def select *indexed_series, duplicate: nil, **hash_series
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new SelectorBasicSerie.new(serie, indexed_series, hash_series)
 		end
 
-		def after(*series)
-			Serie.new SequenceBasicSerie.new([self, *series])
+		def select_serie *indexed_series, duplicate: nil, **hash_series
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new SelectorFullSerieBasicSerie.new(serie, indexed_series, hash_series)
+		end
+
+		def after *series, duplicate: nil
+
+			duplicate ||= true
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new SequenceBasicSerie.new([serie, *series])
+		end
+
+		def + serie
+			Serie.new SequenceBasicSerie.new([self.duplicate, serie.duplicate])
+		end
+
+		def cut length, duplicate: nil
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new CutterSerie.new(serie, length)
+		end
+
+		def merge duplicate: nil
+
+			duplicate ||= false
+			serie = duplicate ? self.duplicate : self
+
+			Serie.new MergeSerieOfSeries.new(serie)
 		end
 
 		def slave
-			slave_serie = SlaveSerie.new self	
+			slave_serie = SlaveSerie.new self
 					
 			@slaves ||= []
 			@slaves << slave_serie
@@ -87,9 +155,11 @@ module Musa
 
 			array = []
 
-			while !(value = @serie.next_value).nil?
+			while value = @serie.next_value
 				array << value
 			end
+
+			@serie.restart
 
 			array
 		end
@@ -385,15 +455,16 @@ module Musa
 			def initialize(serie, times = nil, &condition_block)
 				@serie = serie
 				
+				@count = 0
+
 				@condition_block = condition_block
-				@condition_block ||= ->() { @count < times } if times
+				@condition_block ||= proc { @count < times } if times
 
 				raise ArgumentError, "times or condition block are mandatory" unless @condition_block
-
-				@count = 0
 			end
 
 			def restart
+				puts "BasicSerieRepeater.restart"
 				@serie.restart
 				@count = 0
 			end
@@ -404,7 +475,7 @@ module Musa
 				if value.nil?
 					@count += 1
 
-					if @condition_block.call
+					if self.instance_eval &@condition_block
 						@serie.restart
 						value = @serie.next_value
 					end
@@ -415,6 +486,100 @@ module Musa
 		end	
 
 		private_constant :BasicSerieRepeater
+
+		class CutterSerie
+			include ProtoSerie
+
+			def initialize(serie, length)
+				@serie = serie
+				@length = length
+
+				restart
+			end
+
+			def restart
+				@serie.restart
+			end
+
+			def next_value
+				@previous.materialize if @previous
+				
+				if @serie.peek_next_value
+					Serie.new @previous = CutSerie.new(@serie, @length)
+				else
+					nil
+				end
+			end
+
+			private
+
+			class CutSerie
+				include ProtoSerie
+
+				def initialize(serie, length)
+					@serie = serie
+					@length = length
+
+					@values = []
+					restart
+				end
+
+				def restart
+					@count = 0
+				end
+
+				def next_value
+					value ||= @values[@count]
+					value ||= @values[@count] = @serie.next_value if @count < @length
+
+					@count += 1
+
+					value
+				end
+
+				def materialize
+					(@values.size..@length - 1).each { |i| @values[i] = @serie.next_value }
+				end
+			end
+		end
+
+		private_constant :CutterSerie
+
+		class MergeSerieOfSeries
+			include ProtoSerie
+
+			def initialize(serie)
+				@serie = serie
+
+				restart
+			end
+
+			def restart
+				@serie.restart
+				@current = nil
+			end
+
+			def next_value
+				value = nil
+
+				@current = @serie.next_value unless @current
+				
+				if @current
+					value = @current.next_value
+
+					if value.nil?
+						@current = nil
+						value = next_value
+					end
+				else
+					value = nil
+				end
+
+				value
+			end
+		end
+
+		private_constant :MergeSerieOfSeries
 
 		class ForLoopBasicSerie
 			def initialize(from:, to:, step:)
@@ -618,6 +783,28 @@ module Musa
 				value = @serie.next_value
 				return value unless value.nil?
 				@shifted.shift
+			end
+		end
+
+		private_constant :BasicSerieShifter
+
+		class BasicSerieRemover
+			include ProtoSerie
+
+			def initialize(serie, remove)
+				@serie = serie
+				@remove = remove
+				restart
+			end
+
+			def restart
+				@serie.restart
+
+				@remove.times { @serie.next_value }
+			end
+
+			def next_value
+				@serie.next_value
 			end
 		end
 
