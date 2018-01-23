@@ -1,6 +1,6 @@
 @b = @a = [I.1.ff . .*1/2 . 2]
 
-@c = 	[|| :event1([100], @b)
+@c = 	[   :event1([100], @b)
 		 || :event2 (100 200 300) ]
 
 
@@ -8,13 +8,19 @@
 
 [ @a silence.2 @a ]
 
-|| @a
+[ @a || @b || @c ]
+
+@a
 || @b
 
 # seguir implementando el pasar a SERIE tras un PARALLEL
 
-| @a || @a @b @c || @c @d || @d #@c 
-| @c @d
+
+#  [ a || b || c ] para hacer parallel => || es un operador de expresión
+
+
+#| @a || @a @b @c || @c @d || @d #@c 
+#| @c @d
 
 #| [|| @e || @f]
 

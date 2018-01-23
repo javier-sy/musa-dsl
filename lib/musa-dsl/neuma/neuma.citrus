@@ -1,28 +1,15 @@
 grammar Neuma
 
 	rule content
-		(row in_parallel_row*) { 
-			a = capture(:row).value
-			b = captures(:in_parallel_row).collect { |r| r.value } 
-
-			if b.empty?
-				a
-			else
-				a + [ { parallel: b } ]
-			end
-		}
-	end
-
-	rule in_parallel_row
-		(double_bar row) { capture(:row).value }
-	end
-
-	rule row
-		(spaces (a:neuma spaces)*) { captures(:a).collect { |c| c.value } }
+		neumas
 	end
 
 	rule bracketed_neumas
-		(lbracket spaces content rbracket) { { neumas: capture(:content).value } }
+		(lbracket spaces neumas rbracket) { { neumas: capture(:neumas).value } }
+	end
+
+	rule neumas
+		(spaces (a:neuma spaces)*) { captures(:a).collect { |c| c.value } }
 	end
 
 	rule neuma
@@ -76,7 +63,6 @@ grammar Neuma
 	rule variable_assign
 		(variable spaces equal spaces expression) { { assign_to: capture(:variable).value[:use_variable], value: capture(:expression).value } }
 	end
-
 
 	rule spaces
 		(space | comment)*
