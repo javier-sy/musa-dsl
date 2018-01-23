@@ -4,16 +4,12 @@ grammar Neuma
 		neumas
 	end
 
-	rule bracketed_neumas
-		(lbracket spaces neumas rbracket) { { neumas: capture(:neumas).value } }
-	end
-
 	rule neumas
 		(spaces (a:neuma spaces)*) { captures(:a).collect { |c| c.value } }
 	end
 
 	rule neuma
-		(command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes | expression)
+		(expression | command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes)
 	end
 
 	rule dotted_attributes_beginning_with_dot
@@ -52,16 +48,24 @@ grammar Neuma
 		everything_except_braces? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces?
 	end
 
-	rule variable
-		(at name) { { use_variable: capture(:name).value.to_sym } }
+	rule expression
+		(bracketed_2bar_neumas | bracketed_neumas | variable_assign | variable)
 	end
 
-	rule expression
-		(bracketed_neumas | variable_assign | variable)
+	rule bracketed_neumas
+		(lbracket spaces neumas rbracket) { { neumas: capture(:neumas).value } }
+	end
+
+	rule bracketed_2bar_neumas
+		(lbracket spaces aa:neumas (double_bar spaces bb:neumas)+ rbracket) { { parallel: [capture(:aa).value] + captures(:bb).collect { |c| c.value } } }
 	end
 
 	rule variable_assign
 		(variable spaces equal spaces expression) { { assign_to: capture(:variable).value[:use_variable], value: capture(:expression).value } }
+	end
+
+	rule variable
+		(at name) { { use_variable: capture(:name).value.to_sym } }
 	end
 
 	rule spaces

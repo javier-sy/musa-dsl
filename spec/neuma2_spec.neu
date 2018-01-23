@@ -1,31 +1,21 @@
 @b = @a = [I.1.ff . .*1/2 . 2]
 
-@c = 	[   :event1([100], @b)
-		 || :event2 (100 200 300) ]
+@c = 	[ :event1([100], @b)
+		  || :event2 (100 200 300) ]
 
 
 @a 
 
 [ @a silence.2 @a ]
 
-[ @a || @b || @c ]
+[ @a1 @a2 @a3 || @b1 @b2 || @c ]
 
-@a
-|| @b
+[@a||@b]
 
-# seguir implementando el pasar a SERIE tras un PARALLEL
-
-
-#  [ a || b || c ] para hacer parallel => || es un operador de expresión
+[ a || b || c ]
 
 
-#| @a || @a @b @c || @c @d || @d #@c 
-#| @c @d
-
-#| [|| @e || @f]
-
-# || @b = [ 1.2.p 2 1 2 ] @b
-# |  silence.4 @b.reverse @b.inverse
+[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse @b.inverse ]
 
 
 
@@ -33,6 +23,5 @@
 # @var = x			asignación, sin usar, var es una serie
 # @var.operation	operación sobre la serie
 # || 				sincroniza con el bloque anterior (temporalmente en paralelo)
-# |					sincroniza con el final (temporalmente en serie)
 # [ ... ]			bloque (anidable)
 
