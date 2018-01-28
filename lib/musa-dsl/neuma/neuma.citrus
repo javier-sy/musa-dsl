@@ -1,16 +1,70 @@
 grammar Neuma
 
 	rule content
-		neumas
+		sentences
 	end
 
-	rule neumas
-		(spaces (a:neuma spaces)*) { captures(:a).collect { |c| c.value } }
+	rule sentences
+		(spaces (a:sentence spaces)*) { captures(:a).collect { |c| c.value } }
+	end
+
+	rule sentence
+		 command | expression
+	end
+
+
+
+	rule command
+		variable_assign | event | braced_command
+	end
+
+	rule expression
+		(bracketed_2bar_sentences | bracketed_sentences | use_variable | neuma)
+	end
+
+
+
+	rule variable_assign
+		(use_variable spaces equal spaces expression) { { assign_to: capture(:use_variable).value[:use_variable], value: capture(:expression).value } }
+	end
+
+	rule event
+		(colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
+	end
+
+	rule braced_command
+		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value.strip } }
+	end
+
+
+
+	rule bracketed_2bar_sentences
+		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { parallel: [capture(:aa).value] + captures(:bb).collect { |c| c.value } } }
+	end
+
+	rule bracketed_sentences
+		(lbracket spaces sentences rbracket) { { neumas: capture(:sentences).value } }
+	end
+
+	rule use_variable
+		(at name) { { use_variable: capture(:name).value.to_sym } }
 	end
 
 	rule neuma
-		(expression | command | dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes)
+		dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes
 	end
+
+
+
+	rule parameters
+		(lpar spaces a:expression spaces (comma spaces b:expression spaces)* rpar) { [ capture(:a).value ] + captures(:b).collect { |p| p.value } }
+	end
+
+	rule complex_command
+		everything_except_braces? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces?
+	end
+
+
 
 	rule dotted_attributes_beginning_with_dot
 		(dot dotted_attributes) { { attributes: [ nil ] + capture(:dotted_attributes).value[:attributes] } }
@@ -26,46 +80,6 @@ grammar Neuma
 
 	rule attribute
 		everything_that_can_be_an_attribute
-	end
-
-	rule command
-		event | braced_command
-	end
-
-	rule event
-		(colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
-	end
-
-	rule parameters
-		(lpar spaces a:expression spaces (comma spaces b:expression spaces)* rpar) { [ capture(:a).value ] + captures(:b).collect { |p| p.value } }
-	end
-
-	rule braced_command
-		(lbrace spaces complex_command spaces rbrace) { { command: capture(:complex_command).value.strip } }
-	end
-
-	rule complex_command
-		everything_except_braces? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces?
-	end
-
-	rule expression
-		(bracketed_2bar_neumas | bracketed_neumas | variable_assign | variable)
-	end
-
-	rule bracketed_neumas
-		(lbracket spaces neumas rbracket) { { neumas: capture(:neumas).value } }
-	end
-
-	rule bracketed_2bar_neumas
-		(lbracket spaces aa:neumas (double_bar spaces bb:neumas)+ rbracket) { { parallel: [capture(:aa).value] + captures(:bb).collect { |c| c.value } } }
-	end
-
-	rule variable_assign
-		(variable spaces equal spaces expression) { { assign_to: capture(:variable).value[:use_variable], value: capture(:expression).value } }
-	end
-
-	rule variable
-		(at name) { { use_variable: capture(:name).value.to_sym } }
 	end
 
 	rule spaces

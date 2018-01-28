@@ -18,6 +18,7 @@
 [ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse @b.inverse ]
 
 
+#Faltan las llamadas a métodos como .reverse, etc
 
 
 # @var = x			asignación, sin usar, var es una serie
