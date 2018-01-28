@@ -226,15 +226,15 @@ module Musa::Dataset
 		end
 
 		module Parser
-			def parse _attributes
+			def parse expression
 				case
-				when _attributes.key?(:attributes)
+				when expression.key?(:neuma)
 
-					attributes = _attributes[:attributes].clone 
+					neuma = expression[:neuma].clone 
 
 					command = {}.extend GDVd
 
-					grade = attributes.shift
+					grade = neuma.shift
 
 					if grade && !grade.empty?
 						if grade[0] == '+' || grade[0] == '-'
@@ -248,7 +248,7 @@ module Musa::Dataset
 						end
 					end
 
-					octave = attributes.find { |a| /\A [+-]?o[-]?[0-9]+ \Z/x.match a }
+					octave = neuma.find { |a| /\A [+-]?o[-]?[0-9]+ \Z/x.match a }
 
 					if octave
 						if (octave[0] == '+' || octave[0] == '-') && octave[1] == 'o'
@@ -257,10 +257,10 @@ module Musa::Dataset
 							command[:abs_octave] = octave[1..-1].to_i
 						end
 
-						attributes.delete octave
+						neuma.delete octave
 					end
 
-					velocity = attributes.find { |a| /\A (mp | mf | (\+|\-)?(p+|f+)) \Z/x.match a }
+					velocity = neuma.find { |a| /\A (mp | mf | (\+|\-)?(p+|f+)) \Z/x.match a }
 
 					if velocity
 						if velocity[0] == '+' || velocity[0] == '-'
@@ -271,10 +271,10 @@ module Musa::Dataset
 							command[:abs_velocity] = velocity.length * (velocity[0] == 'f' ? 1 : -1) + (velocity[0] == 'f' ? 1 : 0)
 						end
 							
-						attributes.delete velocity
+						neuma.delete velocity
 					end
 
-					duration = attributes.shift
+					duration = neuma.shift
 
 					if duration && !duration.empty?
 						if duration[0] == '+' || duration[0] == '-'
@@ -290,11 +290,11 @@ module Musa::Dataset
 
 					command
 
-				when _attributes.key?(:event)
-					{ event: _attributes[:event] }.extend GDVd
+				when expression.key?(:event)
+					{ event: expression[:event] }.extend GDVd
 
-				when _attributes.key?(:command)
-					{ command: _attributes[:command] }.extend GDVd
+				when expression.key?(:command)
+					{ command: expression[:command] }.extend GDVd
 
 				else
 					raise RuntimeError, "Not processable data #{_attributes}. Keys allowed are :attributes, :event and :command"

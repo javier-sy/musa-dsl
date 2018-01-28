@@ -19,7 +19,7 @@ grammar Neuma
 	end
 
 	rule expression
-		(bracketed_2bar_sentences | bracketed_sentences | use_variable | neuma)
+		(serie_expression | neuma)
 	end
 
 
@@ -38,20 +38,36 @@ grammar Neuma
 
 
 
+	rule serie_expression
+		method_expression | simple_expression
+	end
+
+	rule method_expression
+		(simple_expression (dot name)+) { capture(:simple_expression).value.merge({ method: captures(:name).collect { |c| c.value } }) }
+	end
+
+	rule simple_expression
+		bracketed_2bar_sentences | bracketed_sentences | use_variable
+	end
+
+
+
+	rule neuma
+		dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes
+	end
+
+
+
 	rule bracketed_2bar_sentences
 		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { parallel: [capture(:aa).value] + captures(:bb).collect { |c| c.value } } }
 	end
 
 	rule bracketed_sentences
-		(lbracket spaces sentences rbracket) { { neumas: capture(:sentences).value } }
+		(lbracket spaces sentences rbracket) { { serie: capture(:sentences).value } }
 	end
 
 	rule use_variable
 		(at name) { { use_variable: capture(:name).value.to_sym } }
-	end
-
-	rule neuma
-		dotted_attributes_beginning_with_dot | dotted_attributes | parenthesis_attributes
 	end
 
 
@@ -67,15 +83,15 @@ grammar Neuma
 
 
 	rule dotted_attributes_beginning_with_dot
-		(dot dotted_attributes) { { attributes: [ nil ] + capture(:dotted_attributes).value[:attributes] } }
+		(dot dotted_attributes) { { neuma: [ nil ] + capture(:dotted_attributes).value[:neuma] } }
 	end
 
 	rule dotted_attributes
-		 ((a:attribute (dot b:attribute?)*) | dot) { { attributes: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
+		 ((a:attribute (dot b:attribute?)*) | dot) { { neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 	end
 
 	rule parenthesis_attributes
-		(lpar spaces (a:attribute spaces)* rpar) { { attributes: captures(:a).collect { |c| c.value } } }
+		(lpar spaces (a:attribute spaces)* rpar) { { neuma: captures(:a).collect { |c| c.value } } }
 	end
 
 	rule attribute

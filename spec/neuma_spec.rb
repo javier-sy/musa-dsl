@@ -20,34 +20,34 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing (1)" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 /* comentario 1 */ :evento')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: :evento }])
+				[{ neuma: ["2", "3", "4"] }, { neuma: ["5", "6", "7"] }, { event: :evento }])
 		end
 
 		it "Basic neuma inline parsing (2)" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento /* comentario 1 */')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["5", "6", "7"] }, { event: :evento }])
+				[{ neuma: ["2", "3", "4"] }, { neuma: ["5", "6", "7"] }, { event: :evento }])
 		end
 
 		it "Basic neuma inline parsing (3)" do
 			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } /* comentario 2 */')).to eq(
-				[{ attributes: ["2", "3", "4"] }, { attributes: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro }" }])
+				[{ neuma: ["2", "3", "4"] }, { neuma: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro }" }])
 		end
 
 		it "Basic neuma inline parsing with octaves" do
 			expect(Musa::Neuma.parse('2.o-1.3.4 5.o2.6.7 :evento { comando de prueba }')).to eq(
-				[{ attributes: ["2", "o-1", "3", "4"] }, { attributes: ["5", "o2", "6", "7"] }, { event: :evento }, { command: "comando de prueba" }])
+				[{ neuma: ["2", "o-1", "3", "4"] }, { neuma: ["5", "o2", "6", "7"] }, { event: :evento }, { command: "comando de prueba" }])
 		end
 
 		it "Basic neuma inline parsing with comment" do
-			expect(Musa::Neuma.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ attributes: ["2", "3", "4"] }])
+			expect(Musa::Neuma.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ neuma: ["2", "3", "4"] }])
 		end	
 
 		it "Basic neuma inline parsing only duration" do
 
 			result = Musa::Neuma.parse '0 .1/2'
 
-			expect(result[0]).to eq({ attributes: ["0"] })
-			expect(result[1]).to eq({ attributes: [nil, "1/2"] })
+			expect(result[0]).to eq({ neuma: ["0"] })
+			expect(result[1]).to eq({ neuma: [nil, "1/2"] })
 		end
 
 		differential_decoder = Musa::Dataset::GDV::NeumaDifferentialDecoder.new 

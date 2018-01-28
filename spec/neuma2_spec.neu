@@ -15,7 +15,7 @@
 [ a || b || c ]
 
 
-[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse @b.inverse ]
+[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse.other_operation.another_more @b.inverse ]
 
 
 #Faltan las llamadas a métodos como .reverse, etc

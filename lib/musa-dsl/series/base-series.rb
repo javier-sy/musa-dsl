@@ -1,7 +1,6 @@
 module Musa
 
 	module ProtoSerie
-
 		def restart
 		end
 
