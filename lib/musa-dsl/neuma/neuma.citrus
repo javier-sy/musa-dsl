@@ -84,10 +84,10 @@ grammar Neuma
 
 
 	rule serie_expression
-		method_expression | simple_expression
+		call_method_expression | simple_expression
 	end
 
-	rule method_expression
+	rule call_method_expression
 		(simple_expression (dot name)+) { capture(:simple_expression).value.merge({ call_method: captures(:name).collect { |c| c.value } }) }
 	end
 
