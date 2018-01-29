@@ -19,13 +19,13 @@ grammar Neuma
 	end
 
 	rule expression
-		(serie_expression | neuma)
+		serie_expression | neuma
 	end
 
 
 
 	rule variable_assign
-		(use_variable spaces equal spaces expression) { { assign_to: capture(:use_variable).value[:use_variable], value: capture(:expression).value } }
+		((use_variable spaces equal spaces)+ expression) { { assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, value: capture(:expression).value } }
 	end
 
 	rule event
@@ -38,12 +38,57 @@ grammar Neuma
 
 
 
+
+
+
+
+
+
+
+
+#	rule serie_expression
+#		simple_expression_method | simple_expression
+#	end
+
+
+#	rule simple_expression_method
+#		(simple_expression method_sequence) { capture(:simple_expression).value.merge({ call_method: capture(:method_sequence).value }) }
+#	end
+
+#	rule method_sequence
+#		method_sequence_a | method_sequence_b
+#	end
+
+#	rule method_sequence_a
+#		(dot name method_sequence) { { xx: { call_method: capture(:name).value }, call_method: capture(:method_sequence).value } }
+#	end
+
+#	rule method_sequence_b
+#		(dot name) { { call_method: capture(:name).value } }
+#	end
+
+
+
+
+
+
+#	rule serie_expression
+#		simple_expression  | serie_expression_dot_name
+#	end
+
+#	rule serie_expression_dot_name
+#		serie_expression dot name
+#	end
+
+
+
+
 	rule serie_expression
 		method_expression | simple_expression
 	end
 
 	rule method_expression
-		(simple_expression (dot name)+) { capture(:simple_expression).value.merge({ method: captures(:name).collect { |c| c.value } }) }
+		(simple_expression (dot name)+) { capture(:simple_expression).value.merge({ call_method: captures(:name).collect { |c| c.value } }) }
 	end
 
 	rule simple_expression
