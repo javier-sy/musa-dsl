@@ -84,15 +84,21 @@ grammar Neuma
 
 
 	rule serie_expression
-		call_method_expression | simple_expression
+		call_methods_expression | simple_expression
 	end
 
-	rule call_method_expression
-		(simple_expression (dot name)+) { capture(:simple_expression).value.merge({ call_method: captures(:name).collect { |c| c.value } }) }
+	rule call_methods_expression
+		(simple_expression (dot method_call)+) { capture(:simple_expression).value.merge({ call_method: captures(:method_call).collect { |c| c.value } }) }
 	end
 
 	rule simple_expression
 		bracketed_2bar_sentences | bracketed_sentences | use_variable
+	end
+
+
+
+	rule method_call
+		(name parameters?) { { method: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
 	end
 
 
@@ -118,7 +124,7 @@ grammar Neuma
 
 
 	rule parameters
-		(lpar spaces a:expression spaces (comma spaces b:expression spaces)* rpar) { [ capture(:a).value ] + captures(:b).collect { |p| p.value } }
+		(lpar spaces a:sentence spaces (comma spaces b:sentence spaces)* rpar) { [ capture(:a).value ] + captures(:b).collect { |p| p.value } }
 	end
 
 	rule complex_command
