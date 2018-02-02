@@ -19,23 +19,18 @@ RSpec.describe Musa::Neuma do
 		end
 
 		it "Basic neuma inline parsing (1)" do
-			expect(Musa::Neuma.parse('2.3.4 5.6.7 /* comentario 1 */ :evento')).to eq(
+			expect(Musa::Neuma.parse('2.3.4 5.6.7 /* comentario 1 */ ::evento')).to eq(
 				[{ neuma: ["2", "3", "4"] }, { neuma: ["5", "6", "7"] }, { event: :evento }])
 		end
 
 		it "Basic neuma inline parsing (2)" do
-			expect(Musa::Neuma.parse('2.3.4 5.6.7 :evento /* comentario 1 */')).to eq(
+			expect(Musa::Neuma.parse('2.3.4 5.6.7 ::evento /* comentario 1 */')).to eq(
 				[{ neuma: ["2", "3", "4"] }, { neuma: ["5", "6", "7"] }, { event: :evento }])
 		end
 
-		it "Basic neuma inline parsing (3)" do
-			expect(Musa::Neuma.parse('(2 3 4) (7 8 9) { esto es un comando complejo { con { xxx } subcomando  }  { y otro } } /* comentario 2 */')).to eq(
-				[{ neuma: ["2", "3", "4"] }, { neuma: ["7", "8", "9"] }, { command: "esto es un comando complejo { con { xxx } subcomando  }  { y otro }" }])
-		end
-
 		it "Basic neuma inline parsing with octaves" do
-			expect(Musa::Neuma.parse('2.o-1.3.4 5.o2.6.7 :evento { comando de prueba }')).to eq(
-				[{ neuma: ["2", "o-1", "3", "4"] }, { neuma: ["5", "o2", "6", "7"] }, { event: :evento }, { command: "comando de prueba" }])
+			expect(Musa::Neuma.parse('2.o-1.3.4 5.o2.6.7 ::evento')).to eq(
+				[{ neuma: ["2", "o-1", "3", "4"] }, { neuma: ["5", "o2", "6", "7"] }, { event: :evento }])
 		end
 
 		it "Basic neuma inline parsing with comment" do
@@ -85,7 +80,7 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ abs_grade: 2, abs_velocity: -1 })
 			expect(result[c+=1]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: 3 })
 
-			expect(result[c+=1]).to eq({ command: "esto es una llamada especial a un comando" })
+			expect(result[c+=1][:command].call).to eq(11110)
 
 			expect(result[c+=1]).to eq({ abs_grade: 0 })
 			expect(result[c+=1]).to eq({ })
@@ -126,7 +121,7 @@ RSpec.describe Musa::Neuma do
 			expect(result[c+=1]).to eq({ grade: 2, duration: Rational(1,2), velocity: -1 })
 			expect(result[c+=1]).to eq({ grade: 2, duration: Rational(1,2), velocity: 3 })
 
-			expect(result[c+=1]).to eq({ duration: 0, command: "esto es una llamada especial a un comando" })
+			expect(result[c+=1][:command].call).to eq(11110)
 
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })

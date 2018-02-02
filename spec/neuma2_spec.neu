@@ -1,8 +1,9 @@
 @b = @a = [I.1.ff . .*1/2 . 2]
 
-@c = 	[ :event1([100], @b)
-		  || :event2 (100 200 300) 
-		  || :event3(100, (I 2 ff), 300) ]
+@c = 	[ ::event1([100], @b)
+		  || ::event2 (100 200 300) 
+		  || ::event3(100, (I 2 ff), 300)
+		  || ::event4(:simbolo) ]
 
 
 @a 
@@ -16,10 +17,10 @@
 [ a || b || c ]
 
 
-[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse(199).other_operation(@xxx).another_more({ esto es cdigo }) @b.inverse ]
+[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse(199).other_operation(@xxx).another_more({ 1 + 1 }) @b.inverse ]
 
 
-#Falta que pueda haber constantes numéricas, strings, símbolos, y paso de parámetros por key
+#Falta: constantes string, paso de parámetros por key
 
 
 # @var = x			asignación, sin usar, var es una serie

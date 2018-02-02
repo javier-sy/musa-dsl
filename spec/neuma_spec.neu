@@ -13,7 +13,7 @@ I.p 	/* piano */
 
 0 1 2.p 2.1/2.ff
 
-{ esto es una llamada especial a un comando }
+{ 10 + 100 + { a: 1000, b: 2000}[:a] + {a: 10000}.first[1] }
 
 # modo diferencial
 /* otra línea */
@@ -27,7 +27,7 @@ I.p 	/* piano */
 .-p 	/* como el anterior, con velocidad menos piano, es decir, un punto +forte */
 
 
-:evento -1 
+::evento -1 
 
 
 /* Sintaxis: Serie separada con .  */
