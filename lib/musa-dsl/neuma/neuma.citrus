@@ -35,7 +35,7 @@ grammar Neuma
 	end
 
 	rule event
-		(double_colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
+		(double_colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
 	end
 
 	rule braced_command
@@ -60,7 +60,7 @@ grammar Neuma
 
 
 	rule method_call
-		(name parameters?) { { method: capture(:name).value.to_sym }.merge(capture(:parameters) ? { parameters: capture(:parameters).value } : {}) } 
+		(name parameters?) { { method: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
 	end
 
 
@@ -88,12 +88,41 @@ grammar Neuma
 
 
 	rule parameters
-		(lpar spaces a:sentence_inside_parameter spaces (comma spaces b:sentence_inside_parameter spaces)* rpar) { [ capture(:a).value ] + captures(:b).collect { |c| c.value } }
+		parameters_a | parameters_b | parameters_c
 	end
 
-#	rule complex_command
-#		everything_except_braces? (spaces lbrace spaces complex_command spaces rbrace)* spaces everything_except_braces?
-#	end
+	rule parameters_a
+		(lpar positional_parameters comma key_parameters rpar) { { value_parameters: capture(:positional_parameters).value, key_parameters: capture(:key_parameters).value } }
+	end
+
+	rule parameters_b
+		(lpar key_parameters rpar) { { key_parameters: capture(:key_parameters).value } }
+	end
+
+	rule parameters_c
+		(lpar positional_parameters rpar) { { value_parameters: capture(:positional_parameters).value } }
+	end
+
+	rule positional_parameters
+		(spaces a:sentence_inside_parameter (spaces comma spaces b:sentence_inside_parameter spaces)* spaces) { 
+			[ capture(:a).value ] + captures(:b).collect { |c| c.value } 
+		}
+	end
+
+	rule key_parameters
+		(spaces a:key_value (spaces comma spaces b:key_value spaces)* spaces) { 
+			
+			result = capture(:a).value.clone
+			
+			captures(:b).each { |c| result.merge! c.value }
+			
+			result
+		}
+	end
+
+	rule key_value
+		(key:name colon spaces value:sentence_inside_parameter) { { capture(:key).value.to_sym => capture(:value).value } }
+	end
 
 	rule complex_command
 		(everything_except_braces? lbrace spaces complex_command spaces rbrace)* everything_except_braces?
@@ -139,14 +168,6 @@ grammar Neuma
   	rule digits
     	[0-9]+ ('_' [0-9]+)*
   	end
-
-	rule spaces
-		(space | comment)*
-	end
-
-	rule space
-		/[ \t\n\r]/m
-	end
 
 	rule comment
 		(lcomment complex_comment rcomment) | (hsh everything_until_eol)
@@ -198,4 +219,7 @@ grammar Neuma
 	rule lcomment '/*' end
 	rule rcomment '*/' end
 	rule hsh '#' end
+
+	rule space /[ \t\n\r]/m end
+	rule spaces (space | comment)* end
 end

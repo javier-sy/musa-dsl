@@ -19,9 +19,11 @@
 
 [ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse(199).other_operation(@xxx).another_more({ 1 + 1 }, "esto es un texto string") @b.inverse ]
 
+::event_with_key_parameters(a: 100, b: 200, c: [1.2.f 3.2.p])
 
-#Falta: paso de parámetros por key
+::event_with_value_and_key_parameters(1100, 250, "texto", :simbolo, a: 100, b: 200, c: [1.2.f 3.2.p])
 
+@b.haz_algo(1100, 250, "texto", :simbolo, a: 100, b: 200, c: [1.2.f 3.2.p])
 
 # @var = x			asignación, sin usar, var es una serie
 # @var.operation	operación sobre la serie
