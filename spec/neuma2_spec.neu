@@ -17,10 +17,10 @@
 [ a || b || c ]
 
 
-[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse(199).other_operation(@xxx).another_more({ 1 + 1 }) @b.inverse ]
+[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse(199).other_operation(@xxx).another_more({ 1 + 1 }, "esto es un texto string") @b.inverse ]
 
 
-#Falta: constantes string, paso de parámetros por key
+#Falta: paso de parámetros por key
 
 
 # @var = x			asignación, sin usar, var es una serie

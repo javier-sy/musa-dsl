@@ -70,7 +70,7 @@ grammar Neuma
 	end
 
 	rule constant
-		(number | symbol)
+		number | symbol | string
 	end
 
 	rule bracketed_2bar_sentences
@@ -124,6 +124,10 @@ grammar Neuma
   		(colon name) { { value: capture(:name).value.to_sym } }
   	end
 
+  	rule string
+  		(double_quote everything_except_double_quote double_quote) { { value: capture(:everything_except_double_quote).value } }
+  	end
+
   	rule float
     	(digits dot digits space*) { { value: to_str.to_f } }
   	end
@@ -164,6 +168,10 @@ grammar Neuma
 		~/({|})/m
 	end
 
+	rule everything_except_double_quote
+		~/(\")/m
+	end
+
 	rule everything_that_can_be_an_attribute
 		/[^({|}|\[|\]|.| |\t|\n|\r|#|@|,|\|)]+/m
 	end
@@ -172,6 +180,7 @@ grammar Neuma
 		/[[:alpha:]]\w*/
 	end
 
+	rule double_quote '"' end
 	rule dot '.' end
 	rule comma ',' end
 	rule colon ':' end
