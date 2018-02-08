@@ -126,18 +126,14 @@ class Musa::BaseSequencer
 			
 			parameter_block = Proc.new do |element|
 				
+				value = nil
+
 				if element.respond_to? :[]
 					value = element[parameter]
-					if value
-						value
-					end
 				end
 
-				if parameter == :at
-					position
-				else
-					0
-				end
+				value ||= position if parameter == :at
+				value ||= 0
 			end
 		end
 
@@ -325,7 +321,7 @@ class Musa::BaseSequencer
 			@do_after = []
 
 			if after
-				self.after after
+				self.after &after
 			end
 		end
 
@@ -354,7 +350,7 @@ class Musa::BaseSequencer
 			@do_on_stop << on_stop if on_stop
 
 			if after
-				self.after after_bars, after
+				self.after after_bars, &after
 			end
 
 			@stop = false

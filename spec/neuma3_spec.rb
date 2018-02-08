@@ -56,19 +56,25 @@ module Musa::SerieOperations
 	private_constant :SerieNeumatizer
 end	
 
-def neuma_eval element, decoder:, context:, sequencer:, &block
+def neuma_eval element, context:, sequencer:, &block
 	if element.is_a? Musa::Serie
-		puts "neuma_eval: if Serie: #{element.to_a}"
+		#puts "neuma_eval: if Serie: #{element.to_a}"
 
-		sequencer.play element.neumatize(decoder) do |e|
-			neuma_eval e, decoder: decoder, context: context, sequencer: sequencer, &block
+
+		after = proc { puts "continue" }
+		#after = nil
+		handler = sequencer.play element, after: after do |e|
+
+			puts "playing inside neuma_eval... #{e}"
+
+			neuma_eval e, context: context, sequencer: sequencer, &block
 		end
 	elsif block # se supone que llegados a este punto ne es un neuma final
-		puts "neuma_eval: elseif block: #{element}"
+		#puts "neuma_eval: elseif block: #{element}"
 
 		block.call element
 	else
-		puts "neuma_eval: else: #{element}"
+		#puts "neuma_eval: else: #{element}"
 	end
 
 	nil
@@ -97,7 +103,10 @@ RSpec.describe Musa::Neuma do
 					context = Context.new
 
 					play serie.neumatize(gdv_decoder) do |element|
-						neuma_eval element, decoder: gdv_decoder, context: context, sequencer: sequencer do |gdv|
+
+						puts "playing... #{element}"
+
+						neuma_eval element, context: context, sequencer: sequencer do |gdv|
 							played[position] ||= []
 							played[position] << gdv #.to_pdv(scale)
 						end
