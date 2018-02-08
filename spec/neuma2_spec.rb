@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'pp'
+
 require 'musa-dsl'
 
 RSpec.describe Musa::Neuma do
@@ -93,14 +93,14 @@ RSpec.describe Musa::Neuma do
 				     {:use_variable=>:b}],
 				    [{:neuma=>["silence", "4"]},
 				     {:use_variable=>:b,
-				      :call_method=>
+				      :call_methods=>
 				       [{:method=>:reverse, :value_parameters=>[{:value=>199}]},
 				        {:method=>:other_operation,
 				         :value_parameters=>[{:use_variable=>:xxx}]},
 				        {:method=>:another_more,
 				         :value_parameters=>
 				          [{:value=>"esto es un texto string"}]}]},
-				     {:use_variable=>:b, :call_method=>[{:method=>:inverse}]}]]},
+				     {:use_variable=>:b, :call_methods=>[{:method=>:inverse}]}]]},
 				 {:event=>:event_with_key_parameters,
 				  :key_parameters=>
 				   {:a=>{:value=>100},
@@ -114,7 +114,7 @@ RSpec.describe Musa::Neuma do
 				    :b=>{:value=>200},
 				    :c=>{:serie=>[{:neuma=>["1", "2", "f"]}, {:neuma=>["3", "2", "p"]}]}}},
 				 {:use_variable=>:b,
-				  :call_method=>
+				  :call_methods=>
 				   [{:method=>:haz_algo,
 				     :value_parameters=>
 				      [{:value=>1100}, {:value=>250}, {:value=>"texto"}, {:value=>:simbolo}],

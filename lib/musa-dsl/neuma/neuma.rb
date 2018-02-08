@@ -23,10 +23,19 @@ module Musa::Neuma
 
 		match.dump if debug
 
+		list = match.value
+
 		if decode_with
-			match.value.collect { |v| decode_with.decode v }
+			plan = []
+
+			until list.empty?
+				plan << decode_with.decode(list.shift, list)
+			end
+
+			plan
+
 		else
-			match.value
+			list
 		end
 	end
 
@@ -38,8 +47,14 @@ module Musa::Neuma
 
 	register File.join(File.dirname(__FILE__), "neuma")
 
-	class DifferentialDecoder
-		def decode attributes
+	class ProtoDecoder
+		def decode element, following = nil
+			raise NotImplementedError
+		end
+	end
+
+	class DifferentialDecoder < ProtoDecoder
+		def decode attributes, following = nil
 			parse attributes
 		end
 
@@ -53,7 +68,7 @@ module Musa::Neuma
 			@last = start.clone
 		end
 
-		def decode attributes
+		def decode attributes, following = nil
 			result = apply parse(attributes), on: @last
 
 			@last = result.clone unless result[:event] || result[:command]

@@ -124,7 +124,21 @@ class Musa::BaseSequencer
 			parameter ||= :at if mode == :at
 			parameter ||= :duration if mode == :wait
 			
-			parameter_block = Proc.new { |element| 	element[parameter] }
+			parameter_block = Proc.new do |element|
+				
+				if element.respond_to? :[]
+					value = element[parameter]
+					if value
+						value
+					end
+				end
+
+				if parameter == :at
+					position
+				else
+					0
+				end
+			end
 		end
 
 		element = serie.next_value
