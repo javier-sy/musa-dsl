@@ -37,6 +37,10 @@ module Musa::SerieOperations
 			source = @serie.next_value
 			result = nil
 
+
+			###### TODO gestionar la creación de una única salida con: neumas para interpretar o proc's para ejecutar en el context
+			####### Requiere la inclusión de código sofisticado en la semántica del parser? tipo: métodos sobre las series o sobre los assign_to que evalúen su contenido interno????
+
 			if source
 				if source.key? :neuma
 					result = @decoder.decode source
@@ -57,24 +61,10 @@ module Musa::SerieOperations
 end	
 
 def neuma_eval element, context:, sequencer:, &block
-	if element.is_a? Musa::Serie
-		#puts "neuma_eval: if Serie: #{element.to_a}"
-
-
-		after = proc { puts "continue" }
-		#after = nil
-		handler = sequencer.play element, after: after do |e|
-
-			puts "playing inside neuma_eval... #{e}"
-
-			neuma_eval e, context: context, sequencer: sequencer, &block
-		end
-	elsif block # se supone que llegados a este punto ne es un neuma final
-		#puts "neuma_eval: elseif block: #{element}"
-
-		block.call element
+	if element.is_a? Proc
+		context.instance_eval element
 	else
-		#puts "neuma_eval: else: #{element}"
+		block.call element
 	end
 
 	nil
