@@ -120,30 +120,38 @@ class Musa::BaseSequencer
 	def _play(serie, control, mode:, parameter: nil, **mode_args, &block)
 		if parameter.is_a? Proc
 			parameter_block = parameter
-		else
-			parameter ||= :at if mode == :at
-			parameter ||= :duration if mode == :wait
-			
+		elsif mode == :at
 			parameter_block = Proc.new do |element|
-				
 				value = nil
 
-				if element.respond_to? :[]
-					value = element[parameter]
+				value = { operation_name: :at, parameter: element[:at] } if element.is_a? Hash
+				value ||= { operation_name: :at, parameter: position }
+			end
+
+		elsif mode == :wait
+			parameter_block = Proc.new do |element|
+				value = nil
+			
+				if element.is_a? Hash
+					value = { operation_name: :wait, parameter: element[:duration] } if element.key? :duration
+					value = { operation_name: :on, parameter: element[:until_event] } if element.key? :until_event
 				end
 
-				value ||= position if parameter == :at
-				value ||= 0
+				value ||= { operation_name: :wait, parameter: 0 }
 			end
+		else
+			raise ArgumentError, "mode parameter only can be :at or :wait"
 		end
 
 		element = serie.next_value
 
 		if element
 			# TODO optimizar inicialización KeyParamtersProcedureBinder
-			block.call element, **(KeyParametersProcedureBinder.new(block).apply( {control: control} ))
+			block.call element, **(KeyParametersProcedureBinder.new(block).apply( { control: control } ))
 			
-			self.send mode, parameter_block.call(element), **mode_args, 
+			operation = parameter_block.call(element)
+
+			self.send operation[:operation_name], operation[:parameter], **mode_args, 
 				&(proc { _play serie, control, mode: mode, parameter: parameter_block, **mode_args, &block })
 		else
 			control.do_after.each do |do_after|

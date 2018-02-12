@@ -241,6 +241,39 @@ RSpec.describe Musa::Sequencer do
 			expect(d).to eq(1)
 		end
 
+		it "Basic play sequencing (II)" do
+
+			s = Musa::BaseSequencer.new 4, 4
+
+			t = FOR(from: 0, to: 3)
+
+			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
+
+			c = -1
+			d = 0
+
+			p = s.play serie, after: proc { d = 1} do |element, control:|
+				c = element[:value]
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+
+			s.tick
+			expect(c).to eq(2)
+
+			s.tick
+			expect(c).to eq(3)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(3)
+			expect(d).to eq(1)
+		end
+
 		it "Basic theme sequencing" do
 
 			@@c = 0

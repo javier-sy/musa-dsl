@@ -116,23 +116,22 @@ class Musa::Sequencer
 			@handlers = {}
 		end
 
-		def make_subhandler
-			EventHandler.new self
-		end
-
 		def on event, &block
 			@handlers[event] ||= []
 			@handlers[event] << KeyParametersProcedureBinder.new(block)
 		end
 
 		def launch event, *value_parameters, **key_parameters
+			processed = false
+
 			if @handlers.has_key? event
 				@handlers[event].each do |handler|
 					handler.call *value_parameters, **key_parameters
+					processed = true
 				end
 			end
 
-			@parent.launch event, *value_parameters, **key_parameters if @parent
+			@parent.launch event, *value_parameters, **key_parameters if @parent && !processed
 		end
 
 		def reset

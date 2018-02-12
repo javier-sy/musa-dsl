@@ -27,29 +27,49 @@ module Musa::SerieOperations
 			@serie = serie
 			@duplicate = duplicate
 			@decoder = decoder
+
+			@result = []
 		end
 
 		def restart
 			@serie.restart
+			@result = []
 		end
 
 		def next_value
-			source = @serie.next_value
-			result = nil
+			if @result.empty?
+				source = @serie.next_value
 
+				###### TODO gestionar la creación de una única salida con: neumas para interpretar o proc's para ejecutar en el context
+				####### Requiere la inclusión de código sofisticado en la semántica del parser? tipo: métodos sobre las series o sobre los assign_to que evalúen su contenido interno????
 
-			###### TODO gestionar la creación de una única salida con: neumas para interpretar o proc's para ejecutar en el context
-			####### Requiere la inclusión de código sofisticado en la semántica del parser? tipo: métodos sobre las series o sobre los assign_to que evalúen su contenido interno????
+				if source
+					if source.key?  :neuma
+						@result << @decoder.decode(source)
 
-			if source
-				if source.key? :neuma
-					result = @decoder.decode source
-				elsif source.key? :serie
-					result = S(*source[:serie]).neumatize @decoder, duplicate: @duplicate
+					elsif source.key? :serie
+
+						decoder = @decoder
+						
+						@result << proc do |context, control, block| # play subserie launching finish event after finishing serie
+							handler = nil
+
+							after = proc do
+								puts "launch :end"
+								handler.launch :end, @serie
+							end
+
+							handler = play S(*source[:serie]).neumatize(decoder), after: after do |element|
+								neuma_eval element, context: context, &block
+							end
+						end
+
+						@result << nil
+					end
 				end
 			end
 
-			result
+			@result.shift
 		end
 
 		def infinite?
@@ -60,9 +80,11 @@ module Musa::SerieOperations
 	private_constant :SerieNeumatizer
 end	
 
-def neuma_eval element, context:, sequencer:, &block
+def neuma_eval element, context:, &block
+	#puts "neuma_eval: #{element}"
+
 	if element.is_a? Proc
-		context.instance_eval element
+		instance_exec context, block, &element
 	else
 		block.call element
 	end
@@ -88,15 +110,11 @@ RSpec.describe Musa::Neuma do
 
 			played = {}
 
+			context = Context.new
 			sequencer = Musa::Sequencer.new 4, 4 do
 				at 1 do
-					context = Context.new
-
 					play serie.neumatize(gdv_decoder) do |element|
-
-						puts "playing... #{element}"
-
-						neuma_eval element, context: context, sequencer: sequencer do |gdv|
+						neuma_eval element, context: context do |gdv|
 							played[position] ||= []
 							played[position] << gdv #.to_pdv(scale)
 						end
@@ -104,7 +122,11 @@ RSpec.describe Musa::Neuma do
 				end
 			end
 
-			sequencer.tick while sequencer.size > 0
+			while sequencer.size > 0
+				sequencer.tick
+				puts "tick"
+			end
+
 
 			puts
 			puts "PLAYED"

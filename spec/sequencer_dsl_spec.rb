@@ -121,8 +121,6 @@ RSpec.describe Musa::Sequencer do
 
 		it "Basic play sequencing" do
 
-			t = FOR(from: 0, to: 3)
-
 			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
 
 			c = -1
@@ -155,6 +153,71 @@ RSpec.describe Musa::Sequencer do
 			s.tick
 			expect(c).to eq(3)
 			expect(d).to eq(4)
+		end
+
+		it "Play sequencing with event syncing" do
+
+			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
+
+			serie += S({ until_event: :event_to_wait })
+
+			serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1,16)).repeat
+
+			c = -1
+			d = 0
+
+			s = Musa::Sequencer.new 4, 4 do 
+
+				play serie do |element, control:|
+					c = element[:value]
+
+					control.after do # this will be executed 4 times
+						d += 1
+					end
+				end
+			end
+
+			expect(c).to eq(0)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(1)
+
+			s.tick
+			expect(c).to eq(2)
+
+			s.tick
+			expect(c).to eq(3)
+			expect(d).to eq(0)
+
+			s.tick
+			expect(c).to eq(3)
+			expect(d).to eq(4)
+
+			16.times { s.tick }
+
+			s.now do
+				launch :event_to_wait
+			end
+
+			expect(c).to eq(4)
+			expect(d).to eq(5)
+
+			s.tick
+			expect(c).to eq(5)
+
+			s.tick
+			expect(c).to eq(6)
+
+			s.tick
+			expect(c).to eq(7)
+			expect(d).to eq(6)
+
+			s.tick
+			expect(c).to eq(7)
+			expect(d).to eq(7)
+
+
 		end
 
 		it "Basic theme sequencing" do
@@ -309,12 +372,12 @@ RSpec.describe Musa::Sequencer do
 			95.times { || s.tick }
 
 			expect(c).to eq(1)
-			expect(d).to eq(200)
+			expect(d).to eq(100)
 			expect(e).to eq(100)
 
 			s.tick
 			expect(c).to eq(1)
-			expect(d).to eq(200)
+			expect(d).to eq(100)
 			expect(e).to eq(100)
 		end
 

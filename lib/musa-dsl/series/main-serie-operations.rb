@@ -130,15 +130,13 @@ module Musa
 		def to_a
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 
-			@serie.restart
+			serie = @serie.duplicate
 
 			array = []
 
-			while value = @serie.next_value
+			while value = serie.next_value
 				array << value
 			end
-
-			@serie.restart
 
 			array
 		end

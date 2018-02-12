@@ -254,7 +254,7 @@ RSpec.describe Musa::Variatio do
 			expect(1).to eq 1
 		end
 
-		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize" do
+		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize", slow: true do
 
 			v = Musa::Variatio.new :object do
 
@@ -326,7 +326,7 @@ RSpec.describe Musa::Variatio do
 			expect(variations.size).to eq 2 * 2 * ((2 * 2) ** 2) * ((2 * 2) ** 4)
 		end
 
-		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields) + fieldset with 1 inner field, constructor and finalize" do
+		it "With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields) + fieldset with 1 inner field, constructor and finalize", slow: true do
 
 			v = Musa::Variatio.new :object do
 
