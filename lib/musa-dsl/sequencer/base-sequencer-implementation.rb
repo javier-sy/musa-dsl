@@ -396,7 +396,7 @@ class Musa::BaseSequencer
 
 	private_constant :EveryControl
 
-		class MoveControl
+	class MoveControl
 	
 		extend Forwardable
 
