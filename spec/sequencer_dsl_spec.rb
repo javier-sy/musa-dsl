@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 require 'musa-dsl'
+require 'pp'
 
 
 include Musa::Series
@@ -163,28 +164,32 @@ RSpec.describe Musa::Sequencer do
 
 			serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1,16)).repeat
 
-			c = -1
+			c = 0
 			d = 0
+			inner_control = nil
+			p = nil
 
 			s = Musa::Sequencer.new 4, 4 do 
 
-				play serie do |element, control:|
-					c = element[:value]
-
-					control.after do # this will be executed 4 times
-						d += 1
+				at 1 do
+					p = play serie do |element, control:|
+						inner_control = control
+						c = element[:value] if element[:value]
 					end
 				end
 			end
 
+			s.tick
 			expect(c).to eq(0)
 			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(1)
+			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(2)
+			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(3)
@@ -192,32 +197,43 @@ RSpec.describe Musa::Sequencer do
 
 			s.tick
 			expect(c).to eq(3)
-			expect(d).to eq(4)
+			expect(d).to eq(0)
 
 			16.times { s.tick }
 
+
+			puts "position = #{s.position} size = #{s.size}"
+			puts "s.now..."
 			s.now do
-				launch :event_to_wait
+				puts "inner_control.launch :event_to_wait"
+				inner_control.launch :event_to_wait
 			end
+			puts "position = #{s.position} size = #{s.size}"
+
+			
+			s.tick
+
+			puts "s.tick"
+			puts "position = #{s.position} size = #{s.size}"
 
 			expect(c).to eq(4)
-			expect(d).to eq(5)
+			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(5)
+			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(6)
+			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(7)
-			expect(d).to eq(6)
+			expect(d).to eq(0)
 
 			s.tick
 			expect(c).to eq(7)
-			expect(d).to eq(7)
-
-
+			expect(d).to eq(0)
 		end
 
 		it "Basic theme sequencing" do

@@ -15,12 +15,15 @@ class Musa::BaseSequencer
 		@ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
 		
 		@score = Hash.new
+		@event_handlers = []
 
 		reset
 	end
 
 	def reset
 		@score.clear
+		@event_handlers = [ EventHandler.new ]
+
 		@position = @ticks_per_bar - 1
 	end
 
@@ -30,7 +33,11 @@ class Musa::BaseSequencer
 		if @score[position_to_run]
 			@score[position_to_run].each do |command|
 
+				@event_handlers.push command[:parent_control]
+				
 				command[:block].call *command[:value_parameters], **command[:key_parameters]
+
+				@event_handlers.pop
 			end
 
 			@score.delete position_to_run
@@ -39,6 +46,10 @@ class Musa::BaseSequencer
 	
 	def size
 		@score.size
+	end
+
+	def event_handler
+		@event_handlers.last
 	end
 
 	def on_debug_at &block
@@ -70,27 +81,58 @@ class Musa::BaseSequencer
 		end
 	end
 
+	def on event, &block
+		puts "setting... on #{event} on #{@event_handlers.last.inspect}"
+		@event_handlers.last.on event, &block
+	end
+
+	def launch event, *value_parameters, **key_parameters
+		@event_handlers.last.launch event, *value_parameters, **key_parameters
+	end
+
 	# TODO implementar series como parámetros (bdelay sería el wait respecto al evento programado anterior?)
 	def wait bdelay, with: nil, &block
-		_numeric_at position + bdelay.rationalize, with: with, &block
+
+		control = EventHandler.new @event_handlers.last
+		@event_handlers.push control
+
+		_numeric_at position + bdelay.rationalize, control, with: with, &block
+
+		@event_handlers.pop
+
+		control
 	end
 
 	def now with: nil, &block
-		_numeric_at position, with: with, &block
+		control = EventHandler.new @event_handlers.last
+		@event_handlers.push control
+
+		_numeric_at position, control, with: with, &block
+
+		@event_handlers.pop
+
+		control
 	end
 
 	def at bar_position, with: nil, debug: nil, &block
 
 		debug ||= false
 
+		control = EventHandler.new @event_handlers.last
+		@event_handlers.push control
+
 		if bar_position.is_a? Numeric
-			_numeric_at bar_position, with: with, debug: debug, &block
+			_numeric_at bar_position, control, with: with, debug: debug, &block
 		else
 			bar_position = Series::S(*bar_position) if bar_position.is_a? Array
 			with = Series::S(*with).repeat if with.is_a? Array
 
-			_serie_at bar_position, with: with, debug: debug, &block
+			_serie_at bar_position, control, with: with, debug: debug, &block
 		end
+
+		@event_handlers.pop
+
+		control
 	end
 
 	def theme theme, at:, debug: nil, **parameters
@@ -104,20 +146,28 @@ class Musa::BaseSequencer
 
 		mode ||= :wait
 
-		raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Only :wait or :at available" unless mode == :wait || mode == :at
-
-		control = PlayControl.new after: after
+		control = PlayControl.new @event_handlers.last, after: after
+		@event_handlers.push control
 
 		_play serie, control, mode: mode, parameter: parameter, **mode_args, &block
+
+		@event_handlers.pop
+
+		control
 	end
 
 	def every binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block
 
 		binterval = binterval.rationalize
 
-		control = EveryControl.new duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
+		control = EveryControl.new @event_handlers.last, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
+		@event_handlers.push control
 
 		_every binterval, control, &block
+
+		@event_handlers.pop
+
+		control
 	end
 
 	# TODO estaría bien que from y to pudiera tener un Hash, de modo que el movimiento se realice entre los valores de sus atributos
@@ -139,6 +189,56 @@ class Musa::BaseSequencer
 	end
 
 	alias inspect to_s
+
+	class EventHandler
+		@@counter = 0
+
+		def initialize parent = nil
+			@id = (@@counter += 1)
+			
+			@parent = parent
+			@handlers = {}
+		end
+
+		def on event, &block
+			@handlers[event] ||= []
+			@handlers[event] << KeyParametersProcedureBinder.new(block)
+		end
+
+		def launch event, *value_parameters, **key_parameters
+			processed = false
+
+			puts "launch... searching handler for #{event} on #{id}"
+
+			if @handlers.has_key? event
+				@handlers[event].each do |handler|
+					puts "launch... activating handler for #{event} in #{id}"
+					handler.call *value_parameters, **key_parameters
+					processed = true
+				end
+			end
+
+			puts "launch... going to parent searching handler for #{event}" if @parent
+			puts "launch... going to parent searching handler for #{event}... NIL!!!" unless @parent
+			@parent.launch event, *value_parameters, **key_parameters if @parent && !processed
+		end
+
+		def inspect
+			"EventHandler #{id}"
+		end
+
+		def id
+			if @parent
+				"#{@parent.id}.#{@id}"
+			else
+				"#{@id}"
+			end
+		end
+
+		alias to_s inspect
+	end
+
+	private_constant :EventHandler
 end
 
 module Musa::BaseTheme
