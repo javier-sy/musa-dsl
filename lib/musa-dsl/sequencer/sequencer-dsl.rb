@@ -4,7 +4,7 @@ class Musa::Sequencer
 
 	extend Forwardable
 
-	def_delegators :@sequencer, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position=, :size, :dump
+	def_delegators :@sequencer, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position=, :size, :event_handler
 
 	def_delegators :@context, :position, :log, :to_s, :inspect
 	def_delegators :@context, :with, :now, :at, :wait, :theme, :play, :every, :move

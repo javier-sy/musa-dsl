@@ -167,17 +167,20 @@ RSpec.describe Musa::Sequencer do
 			c = 0
 			d = 0
 			inner_control = nil
-			p = nil
+			cat = cplay = nil
 
 			s = Musa::Sequencer.new 4, 4 do 
 
-				at 1 do
-					p = play serie do |element, control:|
+				cat = at 1 do
+					cplay = play serie do |element, control:|
 						inner_control = control
 						c = element[:value] if element[:value]
 					end
 				end
 			end
+
+			puts "s.event_handler.id = #{s.event_handler.id}"
+			puts "cat.id = #{cat.id}"
 
 			s.tick
 			expect(c).to eq(0)
@@ -201,6 +204,7 @@ RSpec.describe Musa::Sequencer do
 
 			16.times { s.tick }
 
+			puts "cplay.id = #{cplay.id}"
 
 			puts "position = #{s.position} size = #{s.size}"
 			puts "s.now..."
