@@ -55,7 +55,7 @@ class Musa::Sequencer
 		end
 
 		def theme *value_parameters, **key_parameters
-			@sequencer.theme *value_parameters, context: context, **key_parameters
+			@sequencer.theme *value_parameters, context: self, **key_parameters
 		end
 
 		def play *value_parameters, **key_parameters, &block

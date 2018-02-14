@@ -15,7 +15,6 @@ class Musa::BaseSequencer
 		@ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
 		
 		@score = Hash.new
-		@event_handlers = []
 
 		reset
 	end
@@ -82,11 +81,12 @@ class Musa::BaseSequencer
 	end
 
 	def on event, &block
-		puts "setting... on #{event} on #{@event_handlers.last.inspect}"
+		puts "on: @event_handlers = #{@event_handlers}"
 		@event_handlers.last.on event, &block
 	end
 
 	def launch event, *value_parameters, **key_parameters
+		puts "launch: @event_handlers = #{@event_handlers}"
 		@event_handlers.last.launch event, *value_parameters, **key_parameters
 	end
 
@@ -139,7 +139,17 @@ class Musa::BaseSequencer
 
 		debug ||= false
 
+		control = EventHandler.new @event_handlers.last
+		@event_handlers.push control
+
+		puts "theme: @event_handlers = #{@event_handlers}"
+
 		_theme theme, at: at, debug: debug, **parameters
+
+		puts "theme after: @event_handlers = #{@event_handlers}"
+		@event_handlers.pop
+
+		control
 	end
 
 	def play serie, mode: nil, parameter: nil, after: nil, **mode_args, &block
@@ -208,18 +218,13 @@ class Musa::BaseSequencer
 		def launch event, *value_parameters, **key_parameters
 			processed = false
 
-			puts "launch... searching handler for #{event} on #{id}"
-
 			if @handlers.has_key? event
 				@handlers[event].each do |handler|
-					puts "launch... activating handler for #{event} in #{id}"
 					handler.call *value_parameters, **key_parameters
 					processed = true
 				end
 			end
 
-			puts "launch... going to parent searching handler for #{event}" if @parent
-			puts "launch... going to parent searching handler for #{event}... NIL!!!" unless @parent
 			@parent.launch event, *value_parameters, **key_parameters if @parent && !processed
 		end
 

@@ -5,7 +5,7 @@ class Musa::BaseSequencer
 
 	private
 
-	def _numeric_at(bar_position, control = nil, next_bar_position: nil, with: nil, debug: nil, &block)
+	def _numeric_at(bar_position, control, next_bar_position: nil, with: nil, debug: nil, &block)
 
 		raise ArgumentError, 'Block is mandatory' if !block
 
@@ -29,6 +29,11 @@ class Musa::BaseSequencer
 		key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.has_key?(:next_position)
 		key_parameters[:control] = control if block_key_parameters_binder.has_key?(:control)
 
+		puts "_numeric_at: key_parameters = #{key_parameters}"
+		if key_parameters.key?(:control) && key_parameters[:control].nil?
+			raise "BREAKPOINT"
+		end
+
 		if position == @position
 			@debug_at.call if debug && @debug_at
 			block.call *value_parameters, **key_parameters
@@ -45,7 +50,7 @@ class Musa::BaseSequencer
 		nil
 	end
 
-	def _serie_at(bar_position_serie, control = nil, with: nil, debug: nil, &block)
+	def _serie_at(bar_position_serie, control, with: nil, debug: nil, &block)
 
 		bar_position = bar_position_serie.next_value
 		next_bar_position = bar_position_serie.peek_next_value
@@ -95,10 +100,19 @@ class Musa::BaseSequencer
 		with_serie_at = H(run_parameters)
 		with_serie_run = with_serie_at.slave
 
-		_serie_at at.eval(with: with_serie_at) { 
+		control = EventHandler.new @event_handlers.last
+		@event_handlers.push control
+
+
+		puts "_theme: ontrol = #{control}"
+
+		_serie_at at.eval(with: with_serie_at), control { 
 					|p, **parameters| 
+
+					puts "_theme: calling _serie_at with #{parameters}"
 					if !parameters.empty?
 						effective_parameters = at_position_method_parameter_binder.apply parameters
+						puts "_theme: calling _serie_at with effective_parameters #{effective_parameters}"
 						theme_instance.at_position p, **effective_parameters
 					else
 						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
@@ -112,6 +126,8 @@ class Musa::BaseSequencer
 				effective_parameters = KeyParametersProcedureBinder.new(run_method).apply parameters
 				theme_instance.run **effective_parameters
 		end
+
+		@event_handlers.pop
 
 		nil
 	end
@@ -159,7 +175,7 @@ class Musa::BaseSequencer
 				self.send operation[:operation_name], operation[:parameter], **mode_args, 
 					&(proc { _play serie, control, mode: mode, parameter: parameter_block, **mode_args, &block })
 			when :on
-				self.send :on, operation[:parameter], 
+				control.on operation[:parameter], 
 					&(proc { _play serie, control, mode: mode, parameter: parameter_block, **mode_args, &block })
 			end
 		else
@@ -179,7 +195,7 @@ class Musa::BaseSequencer
 	# TODO every queda substituido por un at con una Serie periódica?
 	def _every(binterval, control, &block)
 		
-		_numeric_at position do
+		_numeric_at position, control do
 
 			control._start ||= position
 
@@ -191,7 +207,7 @@ class Musa::BaseSequencer
 			condition_failed = !instance_eval(&control.condition_block) if control.condition_block
 
 			if !control.stopped? && !duration_exceeded && !till_exceeded && !condition_failed
-				_numeric_at position + binterval do
+				_numeric_at position + binterval, control do
 					_every binterval, control, &block
 				end
 			else
@@ -200,7 +216,7 @@ class Musa::BaseSequencer
 				end
 
 				control.do_after.each do |do_after|
-					_numeric_at position + binterval + do_after[:bars], &do_after[:block]
+					_numeric_at position + binterval + do_after[:bars], control, &do_after[:block]
 				end
 			end
 		end
@@ -270,7 +286,7 @@ class Musa::BaseSequencer
 		control = EveryControl.new @event_handlers.last, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
 		@event_handlers.push control
 
-		_numeric_at start_position do
+		_numeric_at start_position, control do
 
 			adjusted_value = []
 			previous_adjusted_value = []
