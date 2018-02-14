@@ -144,7 +144,7 @@ class Musa::BaseSequencer
 			
 				if element.is_a? Hash
 					value = { operation_name: :wait, parameter: element[:duration] } if element.key? :duration
-					value = { operation_name: :on, parameter: element[:until_event] } if element.key? :until_event
+					value = { operation_name: :on, parameter: element[:wait_event] } if element.key? :wait_event
 				end
 
 				value ||= { operation_name: :wait, parameter: 0 }
