@@ -170,7 +170,7 @@ RSpec.describe Musa::Sequencer do
 
 			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
 
-			serie += S({ until_event: :event_to_wait })
+			serie += S({ wait_event: :event_to_wait })
 
 			serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1,16)).repeat
 
@@ -243,7 +243,7 @@ RSpec.describe Musa::Sequencer do
 
 			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
 
-			serie += S({ until_event: :event_to_wait })
+			serie += S({ wait_event: :event_to_wait })
 
 			serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1,16)).repeat
 
