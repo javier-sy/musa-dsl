@@ -81,12 +81,10 @@ class Musa::BaseSequencer
 	end
 
 	def on event, &block
-		puts "on: @event_handlers = #{@event_handlers}"
 		@event_handlers.last.on event, &block
 	end
 
 	def launch event, *value_parameters, **key_parameters
-		puts "launch: @event_handlers = #{@event_handlers}"
 		@event_handlers.last.launch event, *value_parameters, **key_parameters
 	end
 
@@ -142,11 +140,8 @@ class Musa::BaseSequencer
 		control = EventHandler.new @event_handlers.last
 		@event_handlers.push control
 
-		puts "theme: @event_handlers = #{@event_handlers}"
-
 		_theme theme, at: at, debug: debug, **parameters
 
-		puts "theme after: @event_handlers = #{@event_handlers}"
 		@event_handlers.pop
 
 		control

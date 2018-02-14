@@ -29,11 +29,6 @@ class Musa::BaseSequencer
 		key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.has_key?(:next_position)
 		key_parameters[:control] = control if block_key_parameters_binder.has_key?(:control)
 
-		puts "_numeric_at: key_parameters = #{key_parameters}"
-		if key_parameters.key?(:control) && key_parameters[:control].nil?
-			raise "BREAKPOINT"
-		end
-
 		if position == @position
 			@debug_at.call if debug && @debug_at
 			block.call *value_parameters, **key_parameters
@@ -103,22 +98,18 @@ class Musa::BaseSequencer
 		control = EventHandler.new @event_handlers.last
 		@event_handlers.push control
 
-
-		puts "_theme: ontrol = #{control}"
-
-		_serie_at at.eval(with: with_serie_at), control { 
+		_serie_at at.eval(with: with_serie_at) { 
 					|p, **parameters| 
 
-					puts "_theme: calling _serie_at with #{parameters}"
 					if !parameters.empty?
 						effective_parameters = at_position_method_parameter_binder.apply parameters
-						puts "_theme: calling _serie_at with effective_parameters #{effective_parameters}"
 						theme_instance.at_position p, **effective_parameters
 					else
 						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
 						nil
 					end
 				}, 
+			control,
 			with: with_serie_run, 
 			debug: debug do
 				|**parameters|

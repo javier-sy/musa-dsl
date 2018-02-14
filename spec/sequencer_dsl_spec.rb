@@ -3,8 +3,18 @@ require 'spec_helper'
 require 'musa-dsl'
 require 'pp'
 
-
 include Musa::Series
+
+module Test
+	@c = nil
+	def self.c= value
+		@c = value
+	end
+
+	def self.c
+		@c
+	end
+end
 
 RSpec.describe Musa::Sequencer do
 
@@ -303,7 +313,7 @@ RSpec.describe Musa::Sequencer do
 
 		it "Basic theme sequencing" do
 
-			@@c = 0
+			Test.c = 0
 
 			class Theme1 
 				include Musa::Theme
@@ -316,7 +326,7 @@ RSpec.describe Musa::Sequencer do
 				end
 
 				def run(parameter3:)
-					@@c = @parameter1 + @parameter2 + parameter3
+					Test.c = @parameter1 + @parameter2 + parameter3
 
 					wait 1 do
 						# puts "tras 1..."
@@ -328,23 +338,23 @@ RSpec.describe Musa::Sequencer do
 
 			s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
 
-			expect(@@c).to eq(0)
+			expect(Test.c).to eq(0)
 
 			s.tick
 
-			expect(@@c).to eq(1210)
+			expect(Test.c).to eq(1210)
 
 			16.times { || s.tick }
 
-			expect(@@c).to eq(1220)
+			expect(Test.c).to eq(1220)
 
 			15.times { || s.tick }
 
-			expect(@@c).to eq(1220)
+			expect(Test.c).to eq(1220)
 
 			s.tick
 			
-			expect(@@c).to eq(1230)
+			expect(Test.c).to eq(1230)
 		end
 
 	end
