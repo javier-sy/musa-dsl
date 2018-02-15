@@ -125,7 +125,9 @@ class Musa::BaseSequencer
 
 	# TODO si la serie es de tipo hash (los elementos son un hash), se podría hacer que el block se llamara bindeándole los parámetros por nombre simbólico
 
-	def _play(serie, control, mode:, parameter: nil, **mode_args, &block)
+	def _play(serie, control, mode:, parameter: nil, block_procedure_binder: nil, **mode_args, &block)
+
+		block_procedure_binder ||= KeyParametersProcedureBinder.new block
 
 		if parameter.is_a? Proc
 			parameter_block = parameter
@@ -149,6 +151,8 @@ class Musa::BaseSequencer
 
 				value ||= { operation_name: :wait, parameter: 0 }
 			end
+		elsif mode == :neumalang
+			
 		else
 			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Only :wait or :at available"
 		end
@@ -156,18 +160,17 @@ class Musa::BaseSequencer
 		element = serie.next_value
 
 		if element
-			# TODO optimizar inicialización KeyParamtersProcedureBinder
-			block.call element, **(KeyParametersProcedureBinder.new(block).apply( { control: control } ))
+			block_procedure_binder.call element, control: control
 			
-			operation = parameter_block.call(element)
+			operation = parameter_block.call element
 
 			case operation[:operation_name]
 			when :at, :wait
 				self.send operation[:operation_name], operation[:parameter], **mode_args, 
-					&(proc { _play serie, control, mode: mode, parameter: parameter_block, **mode_args, &block })
+					&(proc { _play serie, control, mode: mode, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
 			when :on
 				control.on operation[:parameter], 
-					&(proc { _play serie, control, mode: mode, parameter: parameter_block, **mode_args, &block })
+					&(proc { _play serie, control, mode: mode, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
 			end
 		else
 			control.do_after.each do |do_after|
