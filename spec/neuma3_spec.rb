@@ -23,10 +23,9 @@ module Musa::SerieOperations
 	class SerieNeumatizer
 		include Musa::ProtoSerie
 	
-		def initialize(serie, duplicate, decoder)
+		def initialize(serie, duplicate)
 			@serie = serie
 			@duplicate = duplicate
-			@decoder = decoder
 
 			@result = []
 		end
@@ -49,9 +48,7 @@ module Musa::SerieOperations
 
 					elsif source.key? :serie
 
-						decoder = @decoder
-						
-						@result << proc do |context, control, block| # play subserie launching finish event after finishing serie
+						@result << proc do |context, control, procedure_binder| # play subserie launching finish event after finishing serie
 							handler = nil
 
 							after = proc do
@@ -59,8 +56,8 @@ module Musa::SerieOperations
 								handler.launch :end, @serie
 							end
 
-							handler = play S(*source[:serie]).neumatize(decoder), after: after do |element|
-								neuma_eval element, context: context, &block
+							handler = play S(*source[:serie]).neumatize, after: after do |element|
+								procedure_binder.call element
 							end
 						end
 
@@ -80,11 +77,13 @@ module Musa::SerieOperations
 	private_constant :SerieNeumatizer
 end	
 
-def neuma_eval element, context:, &block
+def neuma_eval element, decoder:, context:, &block
 	#puts "neuma_eval: #{element}"
 
 	if element.is_a? Proc
 		instance_exec context, block, &element
+	elsif element.is_a? Symbol
+
 	else
 		block.call element
 	end
@@ -113,11 +112,9 @@ RSpec.describe Musa::Neuma do
 			context = Context.new
 			sequencer = Musa::Sequencer.new 4, 4 do
 				at 1 do
-					play serie.neumatize(gdv_decoder) do |element|
-						neuma_eval element, context: context do |gdv|
-							played[position] ||= []
-							played[position] << gdv #.to_pdv(scale)
-						end
+					play serie.neumatize do |element|
+						played[position] ||= []
+						played[position] << gdv_decoder.decode(element) #.to_pdv(scale)
 					end
 				end
 			end
