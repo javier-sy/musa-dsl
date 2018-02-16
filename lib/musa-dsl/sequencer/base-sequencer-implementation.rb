@@ -190,13 +190,18 @@ class Musa::BaseSequencer
 
 					value = { 	current_operation: :play, 
 								current_parameter: S(*element[:serie]) }
+
+				elsif element.key? :parallel
+
+					value = { 	current_operation: :parallel_play, 
+								current_parameter: element[:parallel].collect { |e| S(*e) } }
+
+
 				end
 			end
 		else
 			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Allowed modes are :wait, :at or :neumalang"
 		end
-
-		_log "#{control.id} entering _play"
 
 		element = serie.next_value
 
@@ -207,56 +212,62 @@ class Musa::BaseSequencer
 			
 			when :block
 
-				_log "#{control.id} current_operation = #{operation[:current_parameter]}"
-
 				operation[:current_block].call operation[:current_parameter], control: control
 			
 			when :play
 
 				control2 = PlayControl.new control
 				control3 = PlayControl.new control2
-				control3.after { _log "#{control3.id} launching :sync"; control3.launch :sync }
-				#@event_handlers.push control2
-
-				_log "#{control.id} current_operation = :play -> _play #{operation[:current_parameter].to_a}"
+				control3.after { control3.launch :sync }
 
 				_play operation[:current_parameter], control3, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
 
-				control2.on :sync, only_once: true,
-					&(proc { _log "#{control2.id} on :sync doing next level _play"; _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+				control2.on :sync do
+					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				end
 
-				#@event_handlers.pop
+			when :parallel_play
+
+				control2 = PlayControl.new control
+
+				operation[:current_parameter].each do |current_parameter|
+
+					control3 = PlayControl.new control2
+					control3.after { control3.launch :sync }
+
+					_play current_parameter, control3, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				end
+
+				counter = operation[:current_parameter].size
+
+				control2.on :sync do
+					counter -= 1
+					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args if counter == 0
+				end
 			end
 
 			case operation[:continue_operation]
 			when :at
-				_log "#{control.id} continue_operation = :at parameter = #{operation[:continue_parameter]}"
-				at operation[:continue_parameter], 
-					**mode_args, 
-					&(proc { _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+				at operation[:continue_parameter], **mode_args do
+					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				end
 
 			when :wait
-				_log "#{control.id} continue_operation = :wait parameter = #{operation[:continue_parameter]}"
-				wait operation[:continue_parameter], 
-					**mode_args, 
-					&(proc { _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+				wait operation[:continue_parameter], **mode_args do
+					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				end
 
 			when :on
-				_log "#{control.id} continue_operation = :on parameter = #{operation[:continue_parameter]} serie = #{serie.to_a}"
-				control.on operation[:continue_parameter], 
-					only_once: true,
-					&(proc { _log "#{control.id} on :sync doing next level _play"; _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
-
+				control.on operation[:continue_parameter], only_once: true do
+					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				end
 			end
 		else
 			control2 = EventHandler.new control
-			#@event_handlers.push control2
 
 			control.do_after.each do |do_after|
 				_numeric_at position, control2, &do_after
 			end
-
-			#@event_handlers.pop
 		end
 
 		nil

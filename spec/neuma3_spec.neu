@@ -2,10 +2,12 @@ I.1.ff
 II
 
 [III IV]
-[V [VI VII] VIII]
+[V [VI VII] [VII [I] VII] VIII [I II III]]
 
 IX
 X
+
+[ I III V || II IV VI [I I I]]
 
 # @a = [II.2.pp III]
 
