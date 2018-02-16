@@ -93,15 +93,15 @@ RSpec.describe Musa::Neuma do
 				          {:neuma=>["2"]}]}},
 				     {:use_variable=>:b}] },
 				    { serie: [{:neuma=>["silence", "4"]},
-				     {:use_variable=>:b,
-				      :call_methods=>
+				     {:call_methods=>
 				       [{:method=>:reverse, :value_parameters=>[{:value=>199}]},
 				        {:method=>:other_operation,
 				         :value_parameters=>[{:use_variable=>:xxx}]},
 				        {:method=>:another_more,
 				         :value_parameters=>
-				          [{:value=>"esto es un texto string"}]}]},
-				     {:use_variable=>:b, :call_methods=>[{:method=>:inverse}]}] } ]},
+				          [{:value=>"esto es un texto string"}]}],
+				          on: { :use_variable=>:b }},
+				     {:call_methods=>[{:method=>:inverse}], on: { :use_variable=>:b } }] } ]},
 				 {:event=>:event_with_key_parameters,
 				  :key_parameters=>
 				   {:a=>{:value=>100},
@@ -114,8 +114,7 @@ RSpec.describe Musa::Neuma do
 				   {:a=>{:value=>100},
 				    :b=>{:value=>200},
 				    :c=>{:serie=>[{:neuma=>["1", "2", "f"]}, {:neuma=>["3", "2", "p"]}]}}},
-				 {:use_variable=>:b,
-				  :call_methods=>
+				 {:call_methods=>
 				   [{:method=>:haz_algo,
 				     :value_parameters=>
 				      [{:value=>1100}, {:value=>250}, {:value=>"texto"}, {:value=>:simbolo}],
@@ -123,7 +122,7 @@ RSpec.describe Musa::Neuma do
 				      {:a=>{:value=>100},
 				       :b=>{:value=>200},
 				       :c=>
-				        {:serie=>[{:neuma=>["1", "2", "f"]}, {:neuma=>["3", "2", "p"]}]}}}]}])
+				        {:serie=>[{:neuma=>["1", "2", "f"]}, {:neuma=>["3", "2", "p"]}]}}}], on: { :use_variable=>:b } }])
 		end
 	end
 end

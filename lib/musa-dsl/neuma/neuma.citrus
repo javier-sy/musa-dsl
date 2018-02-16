@@ -50,7 +50,7 @@ grammar Neuma
 	end
 
 	rule call_methods_expression
-		(simple_expression (dot method_call)+) { capture(:simple_expression).value.merge({ call_methods: captures(:method_call).collect { |c| c.value } }) }
+		(simple_expression (dot method_call)+) { { call_methods: captures(:method_call).collect { |c| c.value }, on: capture(:simple_expression).value } }
 	end
 
 	rule simple_expression
