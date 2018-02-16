@@ -69,7 +69,7 @@ class Musa::BaseSequencer
 		nil
 	end
 
-	def _theme(theme, at:, debug: nil, **parameters)
+	def _theme(theme, control, at:, debug: nil, **parameters)
 
 		theme_constructor_parameters = {}
 
@@ -95,9 +95,6 @@ class Musa::BaseSequencer
 		with_serie_at = H(run_parameters)
 		with_serie_run = with_serie_at.slave
 
-		control = EventHandler.new @event_handlers.last
-		@event_handlers.push control
-
 		_serie_at at.eval(with: with_serie_at) { 
 					|p, **parameters| 
 
@@ -117,8 +114,6 @@ class Musa::BaseSequencer
 				effective_parameters = KeyParametersProcedureBinder.new(run_method).apply parameters
 				theme_instance.run **effective_parameters
 		end
-
-		@event_handlers.pop
 
 		nil
 	end

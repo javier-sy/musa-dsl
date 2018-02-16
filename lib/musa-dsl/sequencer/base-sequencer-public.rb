@@ -140,7 +140,7 @@ class Musa::BaseSequencer
 		control = EventHandler.new @event_handlers.last
 		@event_handlers.push control
 
-		_theme theme, at: at, debug: debug, **parameters
+		_theme theme, control, at: at, debug: debug, **parameters
 
 		@event_handlers.pop
 
