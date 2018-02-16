@@ -125,7 +125,7 @@ class Musa::BaseSequencer
 
 	# TODO si la serie es de tipo hash (los elementos son un hash), se podría hacer que el block se llamara bindeándole los parámetros por nombre simbólico
 
-	def _play(serie, control, mode:, parameter: nil, block_procedure_binder: nil, **mode_args, &block)
+	def _play(serie, control, mode: nil, decoder: nil, parameter: nil, block_procedure_binder: nil, **mode_args, &block)
 
 		block_procedure_binder ||= KeyParametersProcedureBinder.new block
 
@@ -136,8 +136,15 @@ class Musa::BaseSequencer
 			parameter_block = Proc.new do |element|
 				value = nil
 
-				value = { operation_name: :at, parameter: element[:at] } if element.is_a? Hash
-				value ||= { operation_name: :at, parameter: position }
+				value = { 	current_operation: block_procedure_binder, 
+							current_parameter: element, 
+							continue_operation: :at, 
+							continue_parameter: element[:at] } if element.is_a? Hash
+				
+				value ||= { current_operation: block_procedure_binder, 
+							current_parameter: element, 
+							continue_operation: :at, 
+							continue_parameter: position }
 			end
 
 		elsif mode == :wait
@@ -145,42 +152,111 @@ class Musa::BaseSequencer
 				value = nil
 			
 				if element.is_a? Hash
-					value = { operation_name: :wait, parameter: element[:duration] } if element.key? :duration
-					value = { operation_name: :on, parameter: element[:wait_event] } if element.key? :wait_event
+					value = { 	current_operation: :block,
+								current_block: block_procedure_binder, 
+								current_parameter: element, 
+								continue_operation: :wait, 
+								continue_parameter: element[:duration] } if element.key? :duration
+
+					value = { 	current_operation: :block,
+								current_block: block_procedure_binder, 
+								current_parameter: element, 
+								continue_operation: :on, 
+								continue_parameter: element[:wait_event] } if element.key? :wait_event
 				end
 
-				value ||= { operation_name: :wait, parameter: 0 }
+				value ||= { current_operation: :block,
+							current_block: block_procedure_binder, 
+							current_parameter: element, 
+							continue_operation: :wait, 
+							continue_parameter: 0 }
 			end
+
 		elsif mode == :neumalang
+			parameter_block = Proc.new do |element|
+				value = nil
 			
+				if element.key? :neuma
+
+					decoded_neuma = decoder.decode element
+
+					value = { 	current_operation: :block,
+								current_block: block_procedure_binder, 
+								current_parameter: decoded_neuma,
+								continue_operation: :wait, 
+								continue_parameter: decoded_neuma[:duration] }
+
+				elsif element.key? :serie
+
+					value = { 	current_operation: :play, 
+								current_parameter: S(*element[:serie]) }
+				end
+			end
 		else
-			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Only :wait or :at available"
+			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Allowed modes are :wait, :at or :neumalang"
 		end
+
+		_log "#{control.id} entering _play"
 
 		element = serie.next_value
 
 		if element
-			block_procedure_binder.call element, control: control
-			
 			operation = parameter_block.call element
 
-			case operation[:operation_name]
-			when :at, :wait
-				self.send operation[:operation_name], operation[:parameter], **mode_args, 
-					&(proc { _play serie, control, mode: mode, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+			case operation[:current_operation]
+			
+			when :block
+
+				_log "#{control.id} current_operation = #{operation[:current_parameter]}"
+
+				operation[:current_block].call operation[:current_parameter], control: control
+			
+			when :play
+
+				control2 = PlayControl.new control
+				control3 = PlayControl.new control2
+				control3.after { _log "#{control3.id} launching :sync"; control3.launch :sync }
+				#@event_handlers.push control2
+
+				_log "#{control.id} current_operation = :play -> _play #{operation[:current_parameter].to_a}"
+
+				_play operation[:current_parameter], control3, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+
+				control2.on :sync, only_once: true,
+					&(proc { _log "#{control2.id} on :sync doing next level _play"; _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+
+				#@event_handlers.pop
+			end
+
+			case operation[:continue_operation]
+			when :at
+				_log "#{control.id} continue_operation = :at parameter = #{operation[:continue_parameter]}"
+				at operation[:continue_parameter], 
+					**mode_args, 
+					&(proc { _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+
+			when :wait
+				_log "#{control.id} continue_operation = :wait parameter = #{operation[:continue_parameter]}"
+				wait operation[:continue_parameter], 
+					**mode_args, 
+					&(proc { _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+
 			when :on
-				control.on operation[:parameter], 
-					&(proc { _play serie, control, mode: mode, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+				_log "#{control.id} continue_operation = :on parameter = #{operation[:continue_parameter]} serie = #{serie.to_a}"
+				control.on operation[:continue_parameter], 
+					only_once: true,
+					&(proc { _log "#{control.id} on :sync doing next level _play"; _play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args })
+
 			end
 		else
+			control2 = EventHandler.new control
+			#@event_handlers.push control2
+
 			control.do_after.each do |do_after|
-				control2 = EventHandler.new @event_handlers.last
-				@event_handlers.push control2
-
 				_numeric_at position, control2, &do_after
-
-				@event_handlers.pop
 			end
+
+			#@event_handlers.pop
 		end
 
 		nil

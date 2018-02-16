@@ -205,18 +205,24 @@ class Musa::BaseSequencer
 			@handlers = {}
 		end
 
-		def on event, &block
+		def on event, only_once: nil, &block
+			only_once ||= false
+
 			@handlers[event] ||= []
-			@handlers[event] << KeyParametersProcedureBinder.new(block)
+			@handlers[event] << { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
 		end
 
 		def launch event, *value_parameters, **key_parameters
 			processed = false
 
 			if @handlers.has_key? event
-				@handlers[event].each do |handler|
-					handler.call *value_parameters, **key_parameters
-					processed = true
+				@handlers[event].each_index do |i|
+					handler = @handlers[event][i]
+					if handler
+						handler[:block].call *value_parameters, **key_parameters
+						@handlers[event][i] = nil if handler[:only_once]
+						processed = true
+					end
 				end
 			end
 
