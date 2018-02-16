@@ -9,9 +9,11 @@ X
 
 [ I III V || II IV VI [I I I]]
 
-#@a = [II.2.pp III]
+@a = [II.2.pp III]
 
-# @a
+@a
+
+[I II || III].reverse
 
 # @a.reverse
 

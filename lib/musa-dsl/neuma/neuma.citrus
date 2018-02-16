@@ -74,7 +74,7 @@ grammar Neuma
 	end
 
 	rule bracketed_2bar_sentences
-		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { parallel: [capture(:aa).value] + captures(:bb).collect { |c| c.value } } }
+		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { parallel: [ { serie: capture(:aa).value } ] + captures(:bb).collect { |c| { serie: c.value } } } }
 	end
 
 	rule bracketed_sentences

@@ -189,8 +189,15 @@ class Musa::BaseSequencer
 				elsif element.key? :parallel
 
 					value = { 	current_operation: :parallel_play, 
-								current_parameter: element[:parallel].collect { |e| S(*e) } }
+								current_parameter: element[:parallel].collect { |e| S(*e[:serie]) } }
 
+				elsif element.key? :assign_to
+
+					value = {  	current_operation: nil }
+
+				elsif element.key? :use_variable
+
+					value = {  	current_operation: nil }
 
 				end
 			end
