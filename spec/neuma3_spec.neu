@@ -9,11 +9,17 @@ X
 
 [ I III V || II IV VI [I I I]]
 
+V VI VII
+
 @a = [II.2.pp III]
 
 @a
 
-[I II || III].reverse
+::evento_raro
+
+I I I
+
+#[I II || III].reverse
 
 # @a.reverse
 

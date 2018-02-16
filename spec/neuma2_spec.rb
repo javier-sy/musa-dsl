@@ -54,7 +54,7 @@ RSpec.describe Musa::Neuma do
 			result = Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma2_spec.neu")
 
 			expect(result).to eq(
-				[{:assign_to=>[:b, :a],
+				[{:assign_to=>[:@b, :@a],
 				  :value=>
 				   {:serie=>
 				     [{:neuma=>["I", "1", "ff"]},
@@ -62,46 +62,46 @@ RSpec.describe Musa::Neuma do
 				      {:neuma=>[nil, "*1/2"]},
 				      {:neuma=>[]},
 				      {:neuma=>["2"]}]}},
-				 {:assign_to=>[:c],
+				 {:assign_to=>[:@c],
 				  :value=>
 				   {:parallel=>
 				     [{serie:[{:event=>:event1,
 				        :value_parameters=>
-				         [{:serie=>[{:neuma=>["100"]}]}, {:use_variable=>:b}]}]},
+				         [{:serie=>[{:neuma=>["100"]}]}, {:use_variable=>:@b}]}]},
 				      {serie: [{:event=>:event2}, {:neuma=>["100", "200", "300"]}]},
 				      {serie: [{:event=>:event3,
 				        :value_parameters=>
 				         [{:value=>100}, {:neuma=>["I", "2", "ff"]}, {:value=>300}]}]},
 				      {serie: [{:event=>:event4, :value_parameters=>[{:value=>:simbolo}]}] } ]}},
-				 {:use_variable=>:a},
+				 {:use_variable=>:@a},
 				 {:serie=>
-				   [{:use_variable=>:a}, {:neuma=>["silence", "2"]}, {:use_variable=>:a}]},
+				   [{:use_variable=>:@a}, {:neuma=>["silence", "2"]}, {:use_variable=>:@a}]},
 				 {:parallel=>
-				   [{serie: [{:use_variable=>:a1}, {:use_variable=>:a2}, {:use_variable=>:a3}] },
-				    {serie: [{:use_variable=>:b1}, {:use_variable=>:b2}] },
-				    {serie: [{:use_variable=>:c}] } ]},
+				   [{serie: [{:use_variable=>:@a1}, {:use_variable=>:@a2}, {:use_variable=>:@a3}] },
+				    {serie: [{:use_variable=>:@b1}, {:use_variable=>:@b2}] },
+				    {serie: [{:use_variable=>:@c}] } ]},
 
-				 {:parallel=>[ {serie: [{:use_variable=>:a}]}, { serie: [{:use_variable=>:b}] } ]},
+				 {:parallel=>[ {serie: [{:use_variable=>:@a}]}, { serie: [{:use_variable=>:@b}] } ]},
 				 {:parallel=>[ {serie: [{:neuma=>["a"]}] }, { serie: [{:neuma=>["b"]}] }, {serie: [{:neuma=>["c"]}] } ]},
 				 {:parallel=>
-				   [{ serie: [{:assign_to=>[:b],
+				   [{ serie: [{:assign_to=>[:@b],
 				      :value=>
 				       {:serie=>
 				         [{:neuma=>["1", "2", "p"]},
 				          {:neuma=>["2"]},
 				          {:neuma=>["1"]},
 				          {:neuma=>["2"]}]}},
-				     {:use_variable=>:b}] },
+				     {:use_variable=>:@b}] },
 				    { serie: [{:neuma=>["silence", "4"]},
 				     {:call_methods=>
 				       [{:method=>:reverse, :value_parameters=>[{:value=>199}]},
 				        {:method=>:other_operation,
-				         :value_parameters=>[{:use_variable=>:xxx}]},
+				         :value_parameters=>[{:use_variable=>:@xxx}]},
 				        {:method=>:another_more,
 				         :value_parameters=>
 				          [{:value=>"esto es un texto string"}]}],
-				          on: { :use_variable=>:b }},
-				     {:call_methods=>[{:method=>:inverse}], on: { :use_variable=>:b } }] } ]},
+				          on: { :use_variable=>:@b }},
+				     {:call_methods=>[{:method=>:inverse}], on: { :use_variable=>:@b } }] } ]},
 				 {:event=>:event_with_key_parameters,
 				  :key_parameters=>
 				   {:a=>{:value=>100},
@@ -122,7 +122,7 @@ RSpec.describe Musa::Neuma do
 				      {:a=>{:value=>100},
 				       :b=>{:value=>200},
 				       :c=>
-				        {:serie=>[{:neuma=>["1", "2", "f"]}, {:neuma=>["3", "2", "p"]}]}}}], on: { :use_variable=>:b } }])
+				        {:serie=>[{:neuma=>["1", "2", "f"]}, {:neuma=>["3", "2", "p"]}]}}}], on: { :use_variable=>:@b } }])
 		end
 	end
 end

@@ -82,7 +82,7 @@ grammar Neuma
 	end
 
 	rule use_variable
-		(at name) { { use_variable: capture(:name).value.to_sym } }
+		(at name) { { use_variable: "@#{capture(:name).value}".to_sym } }
 	end
 
 

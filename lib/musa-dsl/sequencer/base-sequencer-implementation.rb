@@ -118,20 +118,20 @@ class Musa::BaseSequencer
 		nil
 	end
 
-	# TODO si la serie es de tipo hash (los elementos son un hash), se podría hacer que el block se llamara bindeándole los parámetros por nombre simbólico
-
-	def _play(serie, control, mode: nil, decoder: nil, parameter: nil, block_procedure_binder: nil, **mode_args, &block)
+	def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, parameter: nil, block_procedure_binder: nil, **mode_args, &block)
 
 		block_procedure_binder ||= KeyParametersProcedureBinder.new block
 
 		if parameter.is_a? Proc
-			parameter_block = parameter
+			eval_block = parameter
 
 		elsif mode == :at
-			parameter_block = Proc.new do |element|
+
+			eval_block = Proc.new do |element|
 				value = nil
 
-				value = { 	current_operation: block_procedure_binder, 
+				value = { 	current_operation: :block,
+							current_block: block_procedure_binder, 
 							current_parameter: element, 
 							continue_operation: :at, 
 							continue_parameter: element[:at] } if element.is_a? Hash
@@ -143,7 +143,8 @@ class Musa::BaseSequencer
 			end
 
 		elsif mode == :wait
-			parameter_block = Proc.new do |element|
+
+			eval_block = Proc.new do |element|
 				value = nil
 			
 				if element.is_a? Hash
@@ -163,12 +164,16 @@ class Musa::BaseSequencer
 				value ||= { current_operation: :block,
 							current_block: block_procedure_binder, 
 							current_parameter: element, 
-							continue_operation: :wait, 
-							continue_parameter: 0 }
+							continue_operation: :now }
 			end
 
 		elsif mode == :neumalang
-			parameter_block = Proc.new do |element|
+
+			nl_context ||= Object.new
+
+			eval_block = nil
+
+			eval_block = Proc.new do |element|
 				value = nil
 			
 				if element.key? :neuma
@@ -193,12 +198,24 @@ class Musa::BaseSequencer
 
 				elsif element.key? :assign_to
 
-					value = {  	current_operation: nil }
+					value = {  	current_operation: :proc_block, 
+								current_block: proc do |variables, value|
+									element[:assign_to].each do |var_name|
+										nl_context.instance_variable_set var_name, element[:value]
+									end
+								end,
+								continue_operation: :now }
 
 				elsif element.key? :use_variable
 
-					value = {  	current_operation: nil }
+					value = eval_block.call nl_context.instance_variable_get element[:use_variable]
 
+				elsif element.key? :event
+
+					value = { 	current_operation: :event,
+								current_event: element[:event],
+								current_parameters: element[:parameters], .... ### TODO hay que convertir los parameters mediante eval_block 
+								continue_operation: :now }
 				end
 			end
 		else
@@ -208,13 +225,21 @@ class Musa::BaseSequencer
 		element = serie.next_value
 
 		if element
-			operation = parameter_block.call element
+			operation = eval_block.call element
 
 			case operation[:current_operation]
 			
 			when :block
 
 				operation[:current_block].call operation[:current_parameter], control: control
+
+			when :proc_block
+
+				operation[:current_block].call 
+
+			when :event
+
+				control.launch operation[:current_event], *operation[:current_parameters]
 			
 			when :play
 
@@ -222,10 +247,10 @@ class Musa::BaseSequencer
 				control3 = PlayControl.new control2
 				control3.after { control3.launch :sync }
 
-				_play operation[:current_parameter], control3, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				_play operation[:current_parameter], control3, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 
 				control2.on :sync do
-					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :parallel_play
@@ -237,31 +262,36 @@ class Musa::BaseSequencer
 					control3 = PlayControl.new control2
 					control3.after { control3.launch :sync }
 
-					_play current_parameter, control3, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play current_parameter, control3, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 				counter = operation[:current_parameter].size
 
 				control2.on :sync do
 					counter -= 1
-					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args if counter == 0
+					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args if counter == 0
 				end
 			end
 
 			case operation[:continue_operation]
+			when :now
+				now do
+					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+				end
+
 			when :at
-				at operation[:continue_parameter], **mode_args do
-					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				at operation[:continue_parameter] do
+					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :wait
-				wait operation[:continue_parameter], **mode_args do
-					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+				wait operation[:continue_parameter] do
+					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :on
 				control.on operation[:continue_parameter], only_once: true do
-					_play serie, control, parameter: parameter_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 			end
 		else

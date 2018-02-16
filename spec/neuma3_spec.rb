@@ -26,11 +26,16 @@ RSpec.describe Musa::Neuma do
 
 			sequencer = Musa::Sequencer.new 4, 4 do
 				at 1 do
-					play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+					handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
 						played[position] ||= []
 						gdv2 = gdv.duplicate
 						#gdv2[:grade] += 1
 						played[position] << gdv2 #.to_pdv(scale)
+					end
+
+					handler.on :evento_raro do
+						played[position] ||= []
+						played[position] << "EVENTO RARO"
 					end
 				end
 			end
