@@ -20,11 +20,11 @@ V VI VII
 @b = 100
 
 ::evento_raro(@a, 123, @b, { 1 + 2 }, kpar1: [V VI VII], kpar2: 10000, kpar3: &{ | a, b| a*b  } )
-#::evento_raro(@a, @b = [I II III], kpar1: [V VI VII], kpar2: 10000 )
+::evento_raro(@a, @b = [I II III], 3, 4, kpar1: [V VI VII], kpar2: 10000, kpar3: & { | a, b| 123456 } )
 
 I I I
 
-#[I II || III].reverse
+[I II III].reverse
 
 # @a.reverse
 
