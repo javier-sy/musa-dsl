@@ -18,6 +18,10 @@ class KeyParametersProcedureBinder
 	end
 
 	def call *value_parameters, **key_parameters
+		_call value_parameters, key_parameters
+	end
+
+	def _call value_parameters, key_parameters
 
 		effective_key_parameters = apply(key_parameters)
 

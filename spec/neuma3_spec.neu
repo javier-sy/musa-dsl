@@ -7,6 +7,8 @@ II
 IX
 X
 
+{ {:grade_x=>6, :octave_x=>0, :duration=>100, :velocity_x=>3} }
+
 [ I III V || II IV VI [I I I]]
 
 V VI VII
@@ -15,7 +17,10 @@ V VI VII
 
 @a
 
-::evento_raro(@a, [I II III], { bloque_de_codigo } )
+@b = 100
+
+::evento_raro(@a, 123, @b, { 1 + 2 }, kpar1: [V VI VII], kpar2: 10000, kpar3: &{ | a, b| a*b  } )
+#::evento_raro(@a, @b = [I II III], kpar1: [V VI VII], kpar2: 10000 )
 
 I I I
 

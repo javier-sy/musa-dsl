@@ -213,20 +213,24 @@ class Musa::BaseSequencer
 		end
 
 		def launch event, *value_parameters, **key_parameters
+			_launch event, value_parameters, key_parameters
+		end
+
+		def _launch event, value_parameters = nil, key_parameters = nil
 			processed = false
 
 			if @handlers.has_key? event
 				@handlers[event].each_index do |i|
 					handler = @handlers[event][i]
 					if handler
-						handler[:block].call *value_parameters, **key_parameters
+						handler[:block]._call value_parameters, key_parameters
 						@handlers[event][i] = nil if handler[:only_once]
 						processed = true
 					end
 				end
 			end
 
-			@parent.launch event, *value_parameters, **key_parameters if @parent && !processed
+			@parent._launch event, value_parameters, key_parameters if @parent && !processed
 		end
 
 		def inspect

@@ -33,9 +33,9 @@ RSpec.describe Musa::Neuma do
 						played[position] << gdv2 #.to_pdv(scale)
 					end
 
-					handler.on :evento_raro do
+					handler.on :evento_raro do |a, b, c, d, kpar1:, kpar2:, kpar3:|
 						played[position] ||= []
-						played[position] << "EVENTO RARO"
+						played[position] << [ "EVENTO RARO", a, b, c, d, "KPAR1", kpar1, "KPAR2", kpar2, "KPAR3", kpar3.call(10, 20) ]
 					end
 				end
 			end

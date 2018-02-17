@@ -13,9 +13,12 @@ grammar Neuma
 	end
 
 	rule sentence_inside_parameter
-		 command | expression_inside_parameter
+		 command_inside_parameter | expression_inside_parameter
 	end
 
+	rule command_inside_parameter
+		variable_assign | braced_command | referenced_braced_command
+	end
 
 	rule command
 		variable_assign | event | braced_command
@@ -39,9 +42,12 @@ grammar Neuma
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace) { { command: eval("lambda { #{capture(:complex_command).value.strip} }") } }
+		(lbrace spaces complex_command spaces rbrace) { { command: eval("proc { #{capture(:complex_command).value.strip} }") } }
 	end
 
+	rule referenced_braced_command
+		(ampersand spaces braced_command) { { reference_command: capture(:braced_command).value[:command] } }
+	end
 
 
 
@@ -194,7 +200,7 @@ grammar Neuma
 	end
 
 	rule everything_that_can_be_an_attribute
-		/[^({|}|\[|\]|.| |\t|\n|\r|#|@|,|\|)]+/m
+		/[^({|}|\[|\]|.| |\t|\n|\r|#|@|&|,|\|)]+/m
 	end
 
 	rule name
@@ -215,6 +221,7 @@ grammar Neuma
 	rule lbracket '[' end
 	rule rbracket ']' end
 	rule at '@' end
+	rule ampersand '&' end
 	rule equal '=' end
 	rule lcomment '/*' end
 	rule rcomment '*/' end

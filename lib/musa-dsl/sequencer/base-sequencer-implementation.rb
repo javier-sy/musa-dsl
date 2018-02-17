@@ -118,130 +118,215 @@ class Musa::BaseSequencer
 		nil
 	end
 
-	def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, parameter: nil, block_procedure_binder: nil, **mode_args, &block)
+	def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, eval_block: nil, run_eval_block: nil, block_procedure_binder: nil, **mode_args, &block)
 
 		block_procedure_binder ||= KeyParametersProcedureBinder.new block
 
-		if parameter.is_a? Proc
-			eval_block = parameter
+		if run_eval_block.nil?
+			
+			if mode == :at
 
-		elsif mode == :at
+				run_eval_block = Proc.new do |element|
+					value = nil
 
-			eval_block = Proc.new do |element|
-				value = nil
+					value = { 	current_operation: :block,
+								current_block: block_procedure_binder, 
+								current_parameter: element, 
+								continue_operation: :at, 
+								continue_parameter: element[:at] } if element.is_a? Hash
+					
+					value ||= { current_operation: block_procedure_binder, 
+								current_parameter: element, 
+								continue_operation: :at, 
+								continue_parameter: position }
+				end
 
-				value = { 	current_operation: :block,
-							current_block: block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :at, 
-							continue_parameter: element[:at] } if element.is_a? Hash
+			elsif mode == :wait
+
+				run_eval_block = Proc.new do |element|
+					value = nil
 				
-				value ||= { current_operation: block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :at, 
-							continue_parameter: position }
-			end
+					if element.is_a? Hash
+						value = { 	current_operation: :block,
+									current_block: block_procedure_binder, 
+									current_parameter: element, 
+									continue_operation: :wait, 
+									continue_parameter: element[:duration] } if element.key? :duration
 
-		elsif mode == :wait
+						value = { 	current_operation: :block,
+									current_block: block_procedure_binder, 
+									current_parameter: element, 
+									continue_operation: :on, 
+									continue_parameter: element[:wait_event] } if element.key? :wait_event
+					end
 
-			eval_block = Proc.new do |element|
-				value = nil
-			
-				if element.is_a? Hash
-					value = { 	current_operation: :block,
+					value ||= { current_operation: :block,
 								current_block: block_procedure_binder, 
 								current_parameter: element, 
-								continue_operation: :wait, 
-								continue_parameter: element[:duration] } if element.key? :duration
-
-					value = { 	current_operation: :block,
-								current_block: block_procedure_binder, 
-								current_parameter: element, 
-								continue_operation: :on, 
-								continue_parameter: element[:wait_event] } if element.key? :wait_event
-				end
-
-				value ||= { current_operation: :block,
-							current_block: block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :now }
-			end
-
-		elsif mode == :neumalang
-
-			nl_context ||= Object.new
-
-			eval_block = nil
-
-			eval_block = Proc.new do |element|
-				value = nil
-			
-				if element.key? :neuma
-
-					decoded_neuma = decoder.decode element
-
-					value = { 	current_operation: :block,
-								current_block: block_procedure_binder, 
-								current_parameter: decoded_neuma,
-								continue_operation: :wait, 
-								continue_parameter: decoded_neuma[:duration] }
-
-				elsif element.key? :serie
-
-					value = { 	current_operation: :play, 
-								current_parameter: S(*element[:serie]) }
-
-				elsif element.key? :parallel
-
-					value = { 	current_operation: :parallel_play, 
-								current_parameter: element[:parallel].collect { |e| S(*e[:serie]) } }
-
-				elsif element.key? :assign_to
-
-					value = {  	current_operation: :proc_block, 
-								current_block: proc do |variables, value|
-									element[:assign_to].each do |var_name|
-										nl_context.instance_variable_set var_name, element[:value]
-									end
-								end,
-								continue_operation: :now }
-
-				elsif element.key? :use_variable
-
-					value = eval_block.call nl_context.instance_variable_get element[:use_variable]
-
-				elsif element.key? :event
-
-					value = { 	current_operation: :event,
-								current_event: element[:event],
-								current_parameters: element[:parameters], .... ### TODO hay que convertir los parameters mediante eval_block 
 								continue_operation: :now }
 				end
 
-				value
+			elsif mode == :neumalang
+
+				nl_context ||= Object.new
+
+				eval_block = proc do |element|
+					value = nil
+				
+					if element.key? :value
+						
+						value = element[:value]
+
+					elsif element.key? :neuma
+
+						value = decoder.decode element
+
+					elsif element.key? :serie
+
+						value = S(*(element[:serie].collect { |e| eval_block.call(e) }))
+
+					elsif element.key? :parallel
+
+						value = element[:parallel].collect { |e| S(*e[:serie]) }
+
+					elsif element.key? :assign_to
+
+						_value = nil
+
+						element[:assign_to].each do |var_name|
+							nl_context.instance_variable_set var_name, _value = element[:value]
+						end
+
+						value = eval_block.call _value
+
+					elsif element.key? :use_variable
+
+						if nl_context.instance_variable_defined? element[:use_variable]
+							value = eval_block.call nl_context.instance_variable_get(element[:use_variable])
+						else
+							raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
+						end
+
+					elsif element.key? :command
+
+						value = nl_context.instance_eval &element[:command]
+
+					elsif element.key? :reference_command
+
+						value = element[:reference_command]
+
+					end
+
+					value
+				end
+
+				run_eval_block = proc do |element|
+					value = nil
+				
+					if element.key? :neuma
+
+						_value = decoder.decode element
+
+						value = { 	current_operation: :block,
+									current_block: block_procedure_binder, 
+									current_parameter: _value,
+									continue_operation: :wait, 
+									continue_parameter: _value[:duration] }
+
+					elsif element.key? :serie
+
+						value = { 	current_operation: :play, 
+									current_parameter: S(*element[:serie]) }
+
+					elsif element.key? :parallel
+
+						value = { 	current_operation: :parallel_play, 
+									current_parameter: element[:parallel].collect { |e| S(*e[:serie]) } }
+
+					elsif element.key? :assign_to
+
+						element[:assign_to].each do |var_name|
+							nl_context.instance_variable_set var_name, element[:value]
+						end
+
+						value = {  	current_operation: :none, 
+									continue_operation: :now }
+
+					elsif element.key? :use_variable
+
+						value = run_eval_block.call nl_context.instance_variable_get(element[:use_variable])
+
+					elsif element.key? :event
+
+						value = { 	current_operation: :event,
+									current_event: element[:event],
+									current_value_parameters: element[:value_parameters].collect { |e| eval_block.call(e) },
+									current_key_parameters: element[:key_parameters].collect { |k, e| [ k, eval_block.call(e) ] }.to_h,
+									continue_operation: :now }
+
+					elsif element.key? :command
+
+						_value = nl_context.instance_eval &element[:command]
+
+						if _value
+							if _value.is_a? Musa::Serie
+
+								value = { 	current_operation: :play, 
+											current_parameter: _value }
+
+							elsif _value.is_a? Array
+
+								value = { 	current_operation: :parallel_play, 
+											current_parameter: _value }
+
+							elsif _value.is_a? Hash
+
+								if _value.key? :duration
+
+									value = { 	current_operation: :block,
+												current_block: block_procedure_binder, 
+												current_parameter: _value,
+												continue_operation: :wait, 
+												continue_parameter: _value[:duration] }
+								else
+
+									value = { 	current_operation: :block,
+												current_block: block_procedure_binder, 
+												current_parameter: _value,
+												continue_operation: :now }
+								end
+							end
+						else
+							value = {  	current_operation: :none, 
+										continue_operation: :now }
+						end
+					end
+
+					value
+				end
+			else
+				raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Allowed modes are :wait, :at or :neumalang"
 			end
-		else
-			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Allowed modes are :wait, :at or :neumalang"
 		end
 
 		element = serie.next_value
 
 		if element
-			operation = eval_block.call element
+
+			operation = run_eval_block.call element
 
 			case operation[:current_operation]
 			
+			when :none
+
 			when :block
 
 				operation[:current_block].call operation[:current_parameter], control: control
 
-			when :proc_block
-
-				operation[:current_block].call 
-
 			when :event
 
-				control.launch operation[:current_event], *operation[:current_parameters]
+				puts "_play: _launch #{operation[:current_event]} operation[:current_value_parameters] = #{operation[:current_value_parameters]} operation[:current_key_parameters] = #{operation[:current_key_parameters]}"
+				control._launch operation[:current_event], operation[:current_value_parameters], operation[:current_key_parameters]
 			
 			when :play
 
@@ -249,10 +334,10 @@ class Musa::BaseSequencer
 				control3 = PlayControl.new control2
 				control3.after { control3.launch :sync }
 
-				_play operation[:current_parameter], control3, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+				_play operation[:current_parameter], control3, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 
 				control2.on :sync do
-					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :parallel_play
@@ -264,36 +349,36 @@ class Musa::BaseSequencer
 					control3 = PlayControl.new control2
 					control3.after { control3.launch :sync }
 
-					_play current_parameter, control3, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play current_parameter, control3, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 				counter = operation[:current_parameter].size
 
 				control2.on :sync do
 					counter -= 1
-					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args if counter == 0
+					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args if counter == 0
 				end
 			end
 
 			case operation[:continue_operation]
 			when :now
 				now do
-					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :at
 				at operation[:continue_parameter] do
-					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :wait
 				wait operation[:continue_parameter] do
-					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 
 			when :on
 				control.on operation[:continue_parameter], only_once: true do
-					_play serie, control, nl_context, parameter: eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
 				end
 			end
 		else
