@@ -15,7 +15,7 @@ V VI VII
 
 @a
 
-::evento_raro
+::evento_raro(@a, [I II III], { bloque_de_codigo } )
 
 I I I
 

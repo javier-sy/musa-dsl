@@ -217,6 +217,8 @@ class Musa::BaseSequencer
 								current_parameters: element[:parameters], .... ### TODO hay que convertir los parameters mediante eval_block 
 								continue_operation: :now }
 				end
+
+				value
 			end
 		else
 			raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Allowed modes are :wait, :at or :neumalang"
