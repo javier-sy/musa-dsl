@@ -34,19 +34,19 @@ grammar Neuma
 
 
 	rule variable_assign
-		((use_variable spaces equal spaces)+ expression) { { assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, value: capture(:expression).value } }
+		((use_variable spaces equal spaces)+ expression) { { kind: :assign_to, assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, assign_value: capture(:expression).value } }
 	end
 
 	rule event
-		(double_colon name parameters?) { { event: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
+		(double_colon name parameters?) { { kind: :event, event: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace) { { command: eval("proc { #{capture(:complex_command).value.strip} }") } }
+		(lbrace spaces complex_command spaces rbrace) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") } }
 	end
 
 	rule referenced_braced_command
-		(ampersand spaces braced_command) { { reference_command: capture(:braced_command).value[:command] } }
+		(ampersand spaces braced_command) { { kind: :reference_command, reference_command: capture(:braced_command).value[:command] } }
 	end
 
 
@@ -56,7 +56,7 @@ grammar Neuma
 	end
 
 	rule call_methods_expression
-		(simple_expression (dot method_call)+) { { call_methods: captures(:method_call).collect { |c| c.value }, on: capture(:simple_expression).value } }
+		(simple_expression (dot method_call)+) { { kind: :call_methods, call_methods: captures(:method_call).collect { |c| c.value }, on: capture(:simple_expression).value } }
 	end
 
 	rule simple_expression
@@ -80,15 +80,15 @@ grammar Neuma
 	end
 
 	rule bracketed_2bar_sentences
-		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { parallel: [ { serie: capture(:aa).value } ] + captures(:bb).collect { |c| { serie: c.value } } } }
+		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { kind: :parallel, parallel: [ { serie: capture(:aa).value } ] + captures(:bb).collect { |c| { serie: c.value } } } }
 	end
 
 	rule bracketed_sentences
-		(lbracket spaces sentences rbracket) { { serie: capture(:sentences).value } }
+		(lbracket spaces sentences rbracket) { { kind: :serie, serie: capture(:sentences).value } }
 	end
 
 	rule use_variable
-		(at name) { { use_variable: "@#{capture(:name).value}".to_sym } }
+		(at name) { { kind: :use_variable, use_variable: "@#{capture(:name).value}".to_sym } }
 	end
 
 
@@ -136,15 +136,15 @@ grammar Neuma
 
 
 	rule neuma_as_dotted_attributes_beginning_with_dot
-		(dot neuma_as_dotted_attributes) { { neuma: [ nil ] + capture(:neuma_as_dotted_attributes).value[:neuma] } }
+		(dot neuma_as_dotted_attributes) { { kind: :neuma, neuma: [ nil ] + capture(:neuma_as_dotted_attributes).value[:neuma] } }
 	end
 
 	rule neuma_as_dotted_attributes
-		 ((a:attribute (dot b:attribute?)*) | dot) { { neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
+		 ((a:attribute (dot b:attribute?)*) | dot) { { kind: :neuma, neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 	end
 
 	rule neuma_as_parenthesis_attributes
-		(lpar spaces (attribute spaces)* rpar) { { neuma: captures(:attribute).collect { |c| c.value } } }
+		(lpar spaces (attribute spaces)* rpar) { { kind: :neuma, neuma: captures(:attribute).collect { |c| c.value } } }
 	end
 
 	rule attribute
@@ -156,19 +156,19 @@ grammar Neuma
   	end
 
   	rule symbol
-  		(colon name) { { value: capture(:name).value.to_sym } }
+  		(colon name) { { kind: :value, value: capture(:name).value.to_sym } }
   	end
 
   	rule string
-  		(double_quote everything_except_double_quote double_quote) { { value: capture(:everything_except_double_quote).value } }
+  		(double_quote everything_except_double_quote double_quote) { { kind: :value, value: capture(:everything_except_double_quote).value } }
   	end
 
   	rule float
-    	(digits dot digits space*) { { value: to_str.to_f } }
+    	(digits dot digits space*) { { kind: :value, value: to_str.to_f } }
   	end
 
   	rule integer
-    	(digits spaces) { { value: to_str.to_i } }
+    	(digits spaces) { { kind: :value, value: to_str.to_i } }
   	end
 
   	rule digits

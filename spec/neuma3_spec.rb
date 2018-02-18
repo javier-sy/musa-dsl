@@ -28,9 +28,7 @@ RSpec.describe Musa::Neuma do
 				at 1 do
 					handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
 						played[position] ||= []
-						gdv2 = gdv.duplicate
-						#gdv2[:grade] += 1
-						played[position] << gdv2 #.to_pdv(scale)
+						played[position] << gdv #.to_pdv(scale)
 					end
 
 					handler.on :evento_raro do |a, b, c, d, kpar1:, kpar2:, kpar3:|

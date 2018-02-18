@@ -13,7 +13,7 @@ X
 
 V VI VII
 
-@a = [II.2.pp III]
+@a = [II.2.+p III IV V..+p VI VII]
 
 @a
 
@@ -24,10 +24,7 @@ V VI VII
 
 I I I
 
-[I II III].reverse
+[I II III].reverse.duplicate
 
-# @a.reverse
-
-
-# Modificar gramática para incluir play => la lógica de neuma_eval se incorpora al sequencer ????
+@a.reverse
 
