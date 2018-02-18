@@ -194,61 +194,6 @@ class Musa::BaseSequencer
 	end
 
 	alias inspect to_s
-
-	class EventHandler
-		@@counter = 0
-
-		def initialize parent = nil
-			@id = (@@counter += 1)
-			
-			@parent = parent
-			@handlers = {}
-		end
-
-		def on event, only_once: nil, &block
-			only_once ||= false
-
-			@handlers[event] ||= []
-			@handlers[event] << { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
-		end
-
-		def launch event, *value_parameters, **key_parameters
-			_launch event, value_parameters, key_parameters
-		end
-
-		def _launch event, value_parameters = nil, key_parameters = nil
-			processed = false
-
-			if @handlers.has_key? event
-				@handlers[event].each_index do |i|
-					handler = @handlers[event][i]
-					if handler
-						handler[:block]._call value_parameters, key_parameters
-						@handlers[event][i] = nil if handler[:only_once]
-						processed = true
-					end
-				end
-			end
-
-			@parent._launch event, value_parameters, key_parameters if @parent && !processed
-		end
-
-		def inspect
-			"EventHandler #{id}"
-		end
-
-		def id
-			if @parent
-				"#{@parent.id}.#{@id}"
-			else
-				"#{@id}"
-			end
-		end
-
-		alias to_s inspect
-	end
-
-	private_constant :EventHandler
 end
 
 module Musa::BaseTheme

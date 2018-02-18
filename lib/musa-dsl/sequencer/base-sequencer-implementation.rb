@@ -1,6 +1,8 @@
 require 'musa-dsl/mods/arrayfy'
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 
+require_relative 'base-sequencer-implementation-play-helper'
+
 class Musa::BaseSequencer
 
 	private
@@ -118,410 +120,15 @@ class Musa::BaseSequencer
 		nil
 	end
 
+	def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, __play_eval: nil, **mode_args, &block)
 
-
-	class PlayEval
-		def value_eval element, decoder, nl_context
-			raise NotImplementedError
-		end
-
-		def run_eval element, decoder, nl_context
-			raise NotImplementedError
-		end
-	end
-
-	class AtModePlayEval < PlayEval
-		def run_eval element, decoder, nl_context
-			value = nil
-
-			value = { 	current_operation: :block,
-						current_block: block_procedure_binder, 
-						current_parameter: element, 
-						continue_operation: :at, 
-						continue_parameter: element[:at] } if element.is_a? Hash
-			
-			value ||= { current_operation: block_procedure_binder, 
-						current_parameter: element, 
-						continue_operation: :at, 
-						continue_parameter: position }
-		end
-	end
-
-	class WaitModePlayEval < PlayEval
-		def run_eval element, decoder, nl_context
-			value = nil
-		
-			if element.is_a? Hash
-				value = { 	current_operation: :block,
-							current_block: block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :wait, 
-							continue_parameter: element[:duration] } if element.key? :duration
-
-				value = { 	current_operation: :block,
-							current_block: block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :on, 
-							continue_parameter: element[:wait_event] } if element.key? :wait_event
-			end
-
-			value ||= { current_operation: :block,
-						current_block: block_procedure_binder, 
-						current_parameter: element, 
-						continue_operation: :now }
-		end
-	end
-
-	class NeumalangModePlayEval < PlayEval
-
-		def value_eval element, decoder, nl_context
-			value = nil
-		
-			case element[:kind]
-			when :value
-				
-				value = element[:value]
-
-			when :neuma
-
-				value = decoder.decode element
-
-			when :serie
-
-				value = S(*(element[:serie].collect { |e| value_eval e }))
-
-			when :parallel
-
-				value = element[:parallel].collect { |e| S(*e[:serie]) }
-
-			when :assign_to
-
-				_value = nil
-
-				element[:assign_to].each do |var_name|
-					nl_context.instance_variable_set var_name, _value = element[:assign_value]
-				end
-
-				value = value_eval _value
-
-			when :use_variable
-
-				if nl_context.instance_variable_defined? element[:use_variable]
-					value = value_eval nl_context.instance_variable_get(element[:use_variable])
-				else
-					raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
-				end
-
-			when :command
-
-				value = nl_context.instance_eval &element[:command]
-
-			when :reference_command
-
-				value = element[:reference_command]
-
-			end
-
-			value
-		end
-
-
-		def run_eval element, decoder, nl_context
-
-			case element[:kind]
-			when :value
-
-				if element[:value].key? :duration
-					{ 	current_operation: :block,
-						current_parameter: element[:value],
-						continue_operation: :wait, 
-						continue_parameter: element[:value][:duration] }
-				else
-					{ 	current_operation: :block,
-						current_parameter: element[:value],
-						continue_operation: :now }
-				end
-
-			when :neuma
-
-				_value = decoder.decode element
-
-				{ 	current_operation: :block,
-					current_parameter: _value,
-					continue_operation: :wait, 
-					continue_parameter: _value[:duration] }
-
-			when :serie
-
-				{ 	current_operation: :play, 
-					current_parameter: S(*element[:serie]) }
-
-			when :parallel
-
-				{ 	current_operation: :parallel_play, 
-					current_parameter: element[:parallel].collect { |e| S(*e[:serie]) } }
-
-			when :assign_to
-
-				element[:assign_to].each do |var_name|
-					nl_context.instance_variable_set var_name, element[:assign_value]
-				end
-
-				{  	current_operation: :none, 
-					continue_operation: :now }
-
-			when :use_variable
-
-				run_eval_block.call nl_context.instance_variable_get(element[:use_variable])
-
-			when :event
-
-				{ 	current_operation: :event,
-					current_event: element[:event],
-					current_value_parameters: element[:value_parameters].collect { |e| value_eval e },
-					current_key_parameters: element[:key_parameters].collect { |k, e| [ k, value_eval(e) ] }.to_h,
-					continue_operation: :now }
-
-			when :command
-
-				__translate nl_context.instance_eval(&element[:command])
-
-			when :call_methods
-
-				_value = value_eval element[:on]
-
-				if _value.is_a? Array
-
-					values = _value.collect do |_value|
-						element[:call_methods].each do |methd|
-							value_parameters = methd[:value_parameters].collect { |e| value_eval e } if methd[:value_parameters]
-							key_parameters = methd[:key_parameters].collect { |k, e| [ k, value_eval(e) ] }.to_h if methd[:key_parameters]
-
-							_value = _value._send_nice methd[:method], value_parameters, key_parameters
-						end
-						 _value
-					end
-
-					__translate values
-
-				else
-					element[:call_methods].each do |methd|
-						value_parameters = methd[:value_parameters].collect { |e| value_eval e } if methd[:value_parameters]
-						key_parameters = methd[:key_parameters].collect { |k, e| [ k, value_eval(e) ] }.to_h if methd[:key_parameters]
-
-						_value = _value._send_nice methd[:method], value_parameters, key_parameters
-					end
-
-					__translate _value
-				end
-			end			
-		end
-	end
-
-	def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, eval_block: nil, run_eval_block: nil, block_procedure_binder: nil, **mode_args, &block)
-
-		block_procedure_binder ||= KeyParametersProcedureBinder.new block
-
-		if run_eval_block.nil?
-			
-			case mode
-			when :at
-
-				run_eval_block = proc do |element|
-					value = nil
-
-					value = { 	current_operation: :block,
-								current_block: block_procedure_binder, 
-								current_parameter: element, 
-								continue_operation: :at, 
-								continue_parameter: element[:at] } if element.is_a? Hash
-					
-					value ||= { current_operation: block_procedure_binder, 
-								current_parameter: element, 
-								continue_operation: :at, 
-								continue_parameter: position }
-				end
-
-			when :wait
-
-				run_eval_block = proc do |element|
-					value = nil
-				
-					if element.is_a? Hash
-						value = { 	current_operation: :block,
-									current_block: block_procedure_binder, 
-									current_parameter: element, 
-									continue_operation: :wait, 
-									continue_parameter: element[:duration] } if element.key? :duration
-
-						value = { 	current_operation: :block,
-									current_block: block_procedure_binder, 
-									current_parameter: element, 
-									continue_operation: :on, 
-									continue_parameter: element[:wait_event] } if element.key? :wait_event
-					end
-
-					value ||= { current_operation: :block,
-								current_block: block_procedure_binder, 
-								current_parameter: element, 
-								continue_operation: :now }
-				end
-
-			when :neumalang
-
-				nl_context ||= Object.new
-
-				eval_block = proc do |element|
-					value = nil
-				
-					case element[:kind]
-					when :value
-						
-						value = element[:value]
-
-					when :neuma
-
-						value = decoder.decode element
-
-					when :serie
-
-						value = S(*(element[:serie].collect { |e| eval_block.call(e) }))
-
-					when :parallel
-
-						value = element[:parallel].collect { |e| S(*e[:serie]) }
-
-					when :assign_to
-
-						_value = nil
-
-						element[:assign_to].each do |var_name|
-							nl_context.instance_variable_set var_name, _value = element[:assign_value]
-						end
-
-						value = eval_block.call _value
-
-					when :use_variable
-
-						if nl_context.instance_variable_defined? element[:use_variable]
-							value = eval_block.call nl_context.instance_variable_get(element[:use_variable])
-						else
-							raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
-						end
-
-					when :command
-
-						value = nl_context.instance_eval &element[:command]
-
-					when :reference_command
-
-						value = element[:reference_command]
-
-					end
-
-					value
-				end
-
-				run_eval_block = proc do |element|
-
-					case element[:kind]
-					when :value
-
-						if element[:value].key? :duration
-							{ 	current_operation: :block,
-								current_parameter: element[:value],
-								continue_operation: :wait, 
-								continue_parameter: element[:value][:duration] }
-						else
-							{ 	current_operation: :block,
-								current_parameter: element[:value],
-								continue_operation: :now }
-						end
-
-					when :neuma
-
-						_value = decoder.decode element
-
-						{ 	current_operation: :block,
-							current_parameter: _value,
-							continue_operation: :wait, 
-							continue_parameter: _value[:duration] }
-
-					when :serie
-
-						{ 	current_operation: :play, 
-							current_parameter: S(*element[:serie]) }
-
-					when :parallel
-
-						{ 	current_operation: :parallel_play, 
-							current_parameter: element[:parallel].collect { |e| S(*e[:serie]) } }
-
-					when :assign_to
-
-						element[:assign_to].each do |var_name|
-							nl_context.instance_variable_set var_name, element[:assign_value]
-						end
-
-						{  	current_operation: :none, 
-							continue_operation: :now }
-
-					when :use_variable
-
-						run_eval_block.call nl_context.instance_variable_get(element[:use_variable])
-
-					when :event
-
-						{ 	current_operation: :event,
-							current_event: element[:event],
-							current_value_parameters: element[:value_parameters].collect { |e| eval_block.call(e) },
-							current_key_parameters: element[:key_parameters].collect { |k, e| [ k, eval_block.call(e) ] }.to_h,
-							continue_operation: :now }
-
-					when :command
-
-						__translate nl_context.instance_eval(&element[:command])
-
-					when :call_methods
-
-						_value = eval_block.call element[:on]
-
-						if _value.is_a? Array
-
-							values = _value.collect do |_value|
-								element[:call_methods].each do |methd|
-									value_parameters = methd[:value_parameters].collect { |e| eval_block.call(e) } if methd[:value_parameters]
-									key_parameters = methd[:key_parameters].collect { |k, e| [ k, eval_block.call(e) ] }.to_h if methd[:key_parameters]
-
-									_value = _value._send_nice methd[:method], value_parameters, key_parameters
-								end
-								 _value
-							end
-
-							__translate values
-
-						else
-							element[:call_methods].each do |methd|
-								value_parameters = methd[:value_parameters].collect { |e| eval_block.call(e) } if methd[:value_parameters]
-								key_parameters = methd[:key_parameters].collect { |k, e| [ k, eval_block.call(e) ] }.to_h if methd[:key_parameters]
-
-								_value = _value._send_nice methd[:method], value_parameters, key_parameters
-							end
-
-							__translate _value
-						end
-					end
-				end
-			else
-				raise ArgumentError, "Sequencer.play: mode #{mode} not allowed. Allowed modes are :wait, :at or :neumalang"
-			end
-		end
+		__play_eval ||= PlayEval.create mode, KeyParametersProcedureBinder.new(block), decoder, nl_context
 
 		element = serie.next_value
 
 		if element
 
-			operation = run_eval_block.call element
+			operation = __play_eval.run_eval element
 
 			case operation[:current_operation]
 			
@@ -529,7 +136,7 @@ class Musa::BaseSequencer
 
 			when :block
 
-				block_procedure_binder.call operation[:current_parameter], control: control
+				__play_eval.block_procedure_binder.call operation[:current_parameter], control: control
 
 			when :event
 
@@ -541,10 +148,10 @@ class Musa::BaseSequencer
 				control3 = PlayControl.new control2
 				control3.after { control3.launch :sync }
 
-				_play operation[:current_parameter], control3, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+				_play operation[:current_parameter], control3, __play_eval: __play_eval, **mode_args
 
 				control2.on :sync do
-					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, __play_eval: __play_eval, **mode_args
 				end
 
 			when :parallel_play
@@ -556,36 +163,36 @@ class Musa::BaseSequencer
 					control3 = PlayControl.new control2
 					control3.after { control3.launch :sync }
 
-					_play current_parameter, control3, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play current_parameter, control3, __play_eval: __play_eval, **mode_args
 				end
 
 				counter = operation[:current_parameter].size
 
 				control2.on :sync do
 					counter -= 1
-					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args if counter == 0
+					_play serie, control, __play_eval: __play_eval, **mode_args if counter == 0
 				end
 			end
 
 			case operation[:continue_operation]
 			when :now
 				now do
-					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, __play_eval: __play_eval, **mode_args
 				end
 
 			when :at
 				at operation[:continue_parameter] do
-					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, __play_eval: __play_eval, **mode_args
 				end
 
 			when :wait
 				wait operation[:continue_parameter] do
-					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, __play_eval: __play_eval, **mode_args
 				end
 
 			when :on
 				control.on operation[:continue_parameter], only_once: true do
-					_play serie, control, nl_context, eval_block: eval_block, run_eval_block: run_eval_block, block_procedure_binder: block_procedure_binder, **mode_args
+					_play serie, control, __play_eval: __play_eval, **mode_args
 				end
 			end
 		else
@@ -598,39 +205,6 @@ class Musa::BaseSequencer
 
 		nil
 	end	
-
-	def __translate value
-		if value
-			if value.is_a? Musa::Serie 
-				# If value is a Serie, it's a "native" serie, not a tokens serie of kind: :neuma. 
-				# For this reason it needs to be converted to something interpretable by _play (i.e., kind: :value, similar to interpreted :neuma)
-
-				{ current_operation: :play, current_parameter: value.eval { |e| { kind: :value, value: e } } }
-
-			elsif value.is_a? Array
-
-				{ current_operation: :parallel_play, current_parameter: value }
-
-			elsif value.is_a? Hash
-
-				if value.key? :duration
-
-					{ 	current_operation: :block,
-						current_parameter: value,
-						continue_operation: :wait, 
-						continue_parameter: value[:duration] }
-				else
-					{ 	current_operation: :block,
-						current_parameter: value,
-						continue_operation: :now }
-				end
-			end
-		else
-			{ current_operation: :none, continue_operation: :now }
-		end
-	end
-
-	private :__translate
 
 	def _every(binterval, control, block_procedure_binder: nil, &block)
 		
@@ -793,97 +367,4 @@ class Musa::BaseSequencer
 
 		puts "#{self.position}#{m}"
 	end
-
-	class PlayControl < EventHandler
-
-		attr_reader :do_after
-
-		def initialize parent, after: nil
-
-			super parent
-
-			@do_after = []
-
-			if after
-				self.after &after
-			end
-		end
-
-		def after bars = nil, &block
-			@do_after << block
-		end
-	end
-
-	private_constant :PlayControl
-
-	class EveryControl < EventHandler
-		
-		attr_reader :duration_value, :till_value, :condition_block, :do_on_stop, :do_after
-
-		attr_accessor :_start
-
-		def initialize parent, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil
-
-			super parent
-
-			@duration_value = duration
-			@till_value = till
-			@condition_block = condition
-
-			@do_on_stop = []
-			@do_after = []
-
-			@do_on_stop << on_stop if on_stop
-
-			if after
-				self.after after_bars, &after
-			end
-
-			@stop = false
-		end
-
-		def stop
-			@stop = true
-		end
-
-		def stopped?
-			@stop
-		end
-
-		def duration value
-			@duration_value = value.rationalize
-		end
-
-		def till value
-			@till_value = value.rationalize
-		end
-
-		def condition &block
-			@condition_block = block
-		end
-
-		def on_stop &block
-			@do_on_stop << block
-		end
-
-		def after bars = nil, &block
-			bars ||= 0
-			@do_after << { bars: bars.rationalize, block: block }
-		end
-	end
-
-	private_constant :EveryControl
-
-	class MoveControl
-	
-		extend Forwardable
-
-		def initialize every_control
-			@every_control = every_control
-		end
-
-		def_delegators :@every_control, :on_stop, :after, :on, :launch
-	end
-
-	private_constant :MoveControl
 end
