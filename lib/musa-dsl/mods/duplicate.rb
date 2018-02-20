@@ -115,7 +115,7 @@ module Duplicate
 
 			o.tap do
 				object.singleton_class.included_modules.each do |m|
-					o.extend m
+					o.extend m unless o.is_a? m
 				end
 			end
 
