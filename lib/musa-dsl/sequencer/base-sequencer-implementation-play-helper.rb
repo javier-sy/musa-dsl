@@ -239,7 +239,7 @@ class Musa::BaseSequencer
 		def __translate value
 			if value
 				if value.is_a? Musa::Serie 
-					# If value is a Serie, it's a "native" serie, not a tokens serie of kind: :neuma. 
+					# If value is a Serie, it's a "native" serie, not a tokens serie of kind: :neuma. 
 					# For this reason it needs to be converted to something interpretable by _play (i.e., kind: :value, similar to interpreted :neuma)
 
 					{ current_operation: :play, current_parameter: value.eval { |e| { kind: :value, value: e } } }
