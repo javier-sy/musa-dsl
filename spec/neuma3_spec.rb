@@ -16,7 +16,73 @@ RSpec.describe Musa::Neuma do
 		scale = Musa::Scales.get(:major).based_on_pitch 60
 		gdv_decoder = Musa::Dataset::GDV::NeumaDecoder.new scale
 
+		it "Simple file neuma parsing" do
+			serie = S *(Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma3b_spec.neu"))
+			
+			if debug
+				puts
+				puts "SERIE"
+				puts "-----"
+				pp serie.to_a
+				puts
+			end
+
+			played = {} if debug
+			played = [] unless debug
+
+			sequencer = Musa::Sequencer.new 4, 4 do
+				at 1 do
+					handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+						played[position] ||= [] if debug
+						played[position] << gdv if debug #.to_pdv(scale)
+
+						played << { position: position } unless debug
+						played << gdv unless debug #.to_pdv(scale)
+					end
+				end
+			end
+
+			while sequencer.size > 0
+				sequencer.tick
+			end
+
+			if debug
+				puts
+				puts "PLAYED"
+				puts "------"
+				pp played
+			end
+
+			expect(played).to eq(
+				[{:position=>1},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>2},
+				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>3},
+				 {:grade=>2, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>4},
+				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>5},
+				 {:grade=>4, :octave=>0, :duration=>4, :velocity=>1},
+				 {:position=>9},
+				 {:grade=>5, :octave=>0, :duration=>4, :velocity=>1},
+				 {:position=>13},
+				 {:grade=>5, :octave=>0, :duration=>4, :velocity=>1},
+				 {:position=>17},
+				 {:grade=>4, :octave=>0, :duration=>4, :velocity=>1},
+				 {:position=>21},
+				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>22},
+				 {:grade=>6, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>23},
+				 {:grade=>7, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>24},
+				 {:grade=>8, :octave=>0, :duration=>1, :velocity=>1}])
+ 		end
+
+
 		it "Complex file neuma parsing" do
+
 			serie = S *(Musa::Neuma.parse_file File.join(File.dirname(__FILE__), "neuma3_spec.neu"))
 			
 			if debug
@@ -142,11 +208,11 @@ RSpec.describe Musa::Neuma do
 				   {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1}],
 				  [],
 				  123,
-				  {:grade=>100, :octave=>0, :duration=>8, :velocity=>-1},
+				  {:grade=>100, :octave=>0, :duration=>1, :velocity=>3},
 				  :kpar,
-				  [{:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
-				   {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
-				   {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1}],
+				  [{:grade=>4, :octave=>0, :duration=>1, :velocity=>3},
+				   {:grade=>5, :octave=>0, :duration=>1, :velocity=>3},
+				   {:grade=>6, :octave=>0, :duration=>1, :velocity=>3}],
 				  :kpar2,
 				  10000,
 				  :kpar3,
@@ -159,55 +225,55 @@ RSpec.describe Musa::Neuma do
 				   {:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
 				   {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
 				   {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1}],
-				  [{:grade=>0, :octave=>0, :duration=>8, :velocity=>-1},
-				   {:grade=>1, :octave=>0, :duration=>8, :velocity=>-1},
-				   {:grade=>2, :octave=>0, :duration=>8, :velocity=>-1}],
+				  [{:grade=>0, :octave=>0, :duration=>1, :velocity=>3},
+				   {:grade=>1, :octave=>0, :duration=>1, :velocity=>3},
+				   {:grade=>2, :octave=>0, :duration=>1, :velocity=>3}],
 				  3,
 				  4,
 				  :kpar,
-				  [{:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
-				   {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
-				   {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1}],
+				  [{:grade=>4, :octave=>0, :duration=>1, :velocity=>3},
+				   {:grade=>5, :octave=>0, :duration=>1, :velocity=>3},
+				   {:grade=>6, :octave=>0, :duration=>1, :velocity=>3}],
 				  :kpar2,
 				  10000,
 				  :kpar3,
 				  123456],
 				 {:position=>156},
-				 {:grade=>0, :octave=>0, :duration=>8, :velocity=>-1},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>157},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>158},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>159},
+				 {:grade=>2, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>160},
+				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>161},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>162},
+				 {:grade=>4, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>162},
+				 {:grade=>5, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>163},
+				 {:grade=>2, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>163},
+				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>3},
 				 {:position=>164},
-				 {:grade=>0, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>172},
-				 {:grade=>0, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>180},
-				 {:grade=>2, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>188},
-				 {:grade=>1, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>196},
-				 {:grade=>0, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>204},
-				 {:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>204},
-				 {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>212},
-				 {:grade=>2, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>212},
-				 {:grade=>3, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>220},
-				 {:grade=>0, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>220},
-				 {:grade=>1, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>228},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>164},
+				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>3},
+				 {:position=>165},
 				 {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>236},
+				 {:position=>173},
 				 {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>244},
+				 {:position=>181},
 				 {:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
-				 {:position=>252},
+				 {:position=>189},
 				 {:grade=>3, :octave=>0, :duration=>2, :velocity=>-1},
-				 {:position=>254},
+				 {:position=>191},
 				 {:grade=>2, :octave=>0, :duration=>2, :velocity=>-1},
-				 {:position=>256},
-				 {:grade=>1, :octave=>0, :duration=>2, :velocity=>-1}]) unless debug
+				 {:position=>193},
+				 {:grade=>1, :octave=>0, :duration=>2, :velocity=>-1}])
  		end
 	end
 end

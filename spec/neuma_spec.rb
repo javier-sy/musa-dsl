@@ -20,29 +20,29 @@ RSpec.describe Musa::Neuma do
 
 		it "Basic neuma inline parsing (1)" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 /* comentario 1 */ ::evento')).to eq(
-				[{ neuma: ["2", "3", "4"] }, { neuma: ["5", "6", "7"] }, { event: :evento }])
+				[{ kind: :neuma, neuma: ["2", "3", "4"] }, { kind: :neuma, neuma: ["5", "6", "7"] }, { kind: :event, event: :evento }])
 		end
 
 		it "Basic neuma inline parsing (2)" do
 			expect(Musa::Neuma.parse('2.3.4 5.6.7 ::evento /* comentario 1 */')).to eq(
-				[{ neuma: ["2", "3", "4"] }, { neuma: ["5", "6", "7"] }, { event: :evento }])
+				[{ kind: :neuma, neuma: ["2", "3", "4"] }, { kind: :neuma, neuma: ["5", "6", "7"] }, { kind: :event, event: :evento }])
 		end
 
 		it "Basic neuma inline parsing with octaves" do
 			expect(Musa::Neuma.parse('2.o-1.3.4 5.o2.6.7 ::evento')).to eq(
-				[{ neuma: ["2", "o-1", "3", "4"] }, { neuma: ["5", "o2", "6", "7"] }, { event: :evento }])
+				[{ kind: :neuma, neuma: ["2", "o-1", "3", "4"] }, { kind: :neuma, neuma: ["5", "o2", "6", "7"] }, { kind: :event, event: :evento }])
 		end
 
 		it "Basic neuma inline parsing with comment" do
-			expect(Musa::Neuma.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ neuma: ["2", "3", "4"] }])
+			expect(Musa::Neuma.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ kind: :neuma, neuma: ["2", "3", "4"] }])
 		end	
 
 		it "Basic neuma inline parsing only duration" do
 
 			result = Musa::Neuma.parse '0 .1/2'
 
-			expect(result[0]).to eq({ neuma: ["0"] })
-			expect(result[1]).to eq({ neuma: [nil, "1/2"] })
+			expect(result[0]).to eq({ kind: :neuma, neuma: ["0"] })
+			expect(result[1]).to eq({ kind: :neuma, neuma: [nil, "1/2"] })
 		end
 
 		differential_decoder = Musa::Dataset::GDV::NeumaDifferentialDecoder.new 

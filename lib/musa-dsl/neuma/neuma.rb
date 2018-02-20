@@ -70,12 +70,12 @@ module Musa::Neuma
 
 	class Decoder < DifferentialDecoder
 		def initialize start
-			@default = start.clone
+			@start = start.clone
 			@last = start.clone
 		end
 		
 		def subcontext
-			Decoder.new @default
+			Decoder.new @start
 		end
 
 		def decode attributes, following = nil

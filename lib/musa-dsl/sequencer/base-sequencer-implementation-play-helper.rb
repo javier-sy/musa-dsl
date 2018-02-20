@@ -89,9 +89,14 @@ class Musa::BaseSequencer
 
 	class NeumalangModePlayEval < PlayEval
 
+		@@id = 0
+
 		attr_reader :nl_context
 
-		def initialize block_procedure_binder, decoder, nl_context
+		def initialize block_procedure_binder, decoder, nl_context, parent: nil
+			@id = @@id += 1
+			@parent = parent
+
 			@block_procedure_binder = block_procedure_binder
 			@decoder = decoder
 			@nl_context = nl_context
@@ -99,7 +104,7 @@ class Musa::BaseSequencer
 		end
 
 		def subcontext
-			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context
+			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context, parent: self
 		end
 	
 		def value_eval element
@@ -205,8 +210,8 @@ class Musa::BaseSequencer
 
 				{ 	current_operation: :event,
 					current_event: element[:event],
-					current_value_parameters: element[:value_parameters].collect { |e| value_eval e },
-					current_key_parameters: element[:key_parameters].collect { |k, e| [ k, value_eval(e) ] }.to_h,
+					current_value_parameters: element[:value_parameters].collect { |e| subcontext.value_eval e },
+					current_key_parameters: element[:key_parameters].collect { |k, e| [ k, subcontext.value_eval(e) ] }.to_h,
 					continue_operation: :now }
 
 			when :command
@@ -215,14 +220,16 @@ class Musa::BaseSequencer
 
 			when :call_methods
 
-				_value = value_eval element[:on]
+				play_eval = subcontext
+
+				_value = play_eval.value_eval element[:on]
 
 				if _value.is_a? Array
 
 					values = _value.collect do |_value|
 						element[:call_methods].each do |methd|
-							value_parameters = methd[:value_parameters].collect { |e| value_eval e } if methd[:value_parameters]
-							key_parameters = methd[:key_parameters].collect { |k, e| [ k, value_eval(e) ] }.to_h if methd[:key_parameters]
+							value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.value_eval e } if methd[:value_parameters]
+							key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.value_eval(e) ] }.to_h if methd[:key_parameters]
 
 							_value = _value._send_nice methd[:method], value_parameters, key_parameters
 						end
@@ -233,8 +240,8 @@ class Musa::BaseSequencer
 
 				else
 					element[:call_methods].each do |methd|
-						value_parameters = methd[:value_parameters].collect { |e| value_eval e } if methd[:value_parameters]
-						key_parameters = methd[:key_parameters].collect { |k, e| [ k, value_eval(e) ] }.to_h if methd[:key_parameters]
+						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.value_eval e } if methd[:value_parameters]
+						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.value_eval(e) ] }.to_h if methd[:key_parameters]
 
 						_value = _value._send_nice methd[:method], value_parameters, key_parameters
 					end
@@ -276,6 +283,20 @@ class Musa::BaseSequencer
 		end
 
 		private :__translate
+
+		def inspect
+			"NeumalangModePlayEval #{id} #{@decoder}"
+		end
+
+		def id
+			if @parent
+				"#{@parent.id}.#{@id}"
+			else
+				"#{@id}"
+			end
+		end
+
+		alias to_s inspect
 	end
 
 	private_constant :NeumalangModePlayEval

@@ -319,9 +319,19 @@ module Musa::Dataset
 				super base
 			end
 
+			def subcontext
+				NeumaDecoder.new @scale, @last
+			end
+
 			def apply action, on:
 				action.to_gdv @scale, previous: on
 			end
+
+			def inspect
+				"GDV NeumaDecoder: @last = #{@last}"
+			end
+
+			alias to_s inspect
 		end
 	end
 end	

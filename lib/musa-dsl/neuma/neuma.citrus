@@ -80,7 +80,7 @@ grammar Neuma
 	end
 
 	rule bracketed_2bar_sentences
-		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { kind: :parallel, parallel: [ { serie: capture(:aa).value } ] + captures(:bb).collect { |c| { serie: c.value } } } }
+		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { kind: :parallel, parallel: [ { kind: :serie, serie: capture(:aa).value } ] + captures(:bb).collect { |c| { kind: :serie, serie: c.value } } } }
 	end
 
 	rule bracketed_sentences
