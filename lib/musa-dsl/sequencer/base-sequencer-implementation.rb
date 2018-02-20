@@ -148,7 +148,7 @@ class Musa::BaseSequencer
 				control3 = PlayControl.new control2
 				control3.after { control3.launch :sync }
 
-				_play operation[:current_parameter], control3, __play_eval: __play_eval, **mode_args
+				_play operation[:current_parameter], control3, __play_eval: __play_eval.subcontext, **mode_args
 
 				control2.on :sync do
 					_play serie, control, __play_eval: __play_eval, **mode_args
@@ -163,7 +163,7 @@ class Musa::BaseSequencer
 					control3 = PlayControl.new control2
 					control3.after { control3.launch :sync }
 
-					_play current_parameter, control3, __play_eval: __play_eval, **mode_args
+					_play current_parameter, control3, __play_eval: __play_eval.subcontext, **mode_args
 				end
 
 				counter = operation[:current_parameter].size

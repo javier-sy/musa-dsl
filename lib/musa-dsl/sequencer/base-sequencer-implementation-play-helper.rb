@@ -15,6 +15,10 @@ class Musa::BaseSequencer
 		end
 
 		attr_reader :block_procedure_binder
+		
+		def subcontext
+			self
+		end
 
 		def value_eval element
 			raise NotImplementedError
@@ -94,6 +98,10 @@ class Musa::BaseSequencer
 			@nl_context ||= Object.new
 		end
 
+		def subcontext
+			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context
+		end
+	
 		def value_eval element
 			value = nil
 		

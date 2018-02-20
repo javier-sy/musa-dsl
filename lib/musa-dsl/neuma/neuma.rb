@@ -48,6 +48,11 @@ module Musa::Neuma
 	register File.join(File.dirname(__FILE__), "neuma")
 
 	class ProtoDecoder
+		
+		def subcontext
+			self
+		end
+		
 		def decode element, following = nil
 			raise NotImplementedError
 		end
@@ -65,7 +70,12 @@ module Musa::Neuma
 
 	class Decoder < DifferentialDecoder
 		def initialize start
+			@default = start.clone
 			@last = start.clone
+		end
+		
+		def subcontext
+			Decoder.new @default
 		end
 
 		def decode attributes, following = nil
