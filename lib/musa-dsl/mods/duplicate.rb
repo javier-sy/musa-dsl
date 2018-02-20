@@ -110,9 +110,18 @@ module Duplicate
 	end
 
 	def try_dup(object)
-		object.dup
-	rescue NoMethodError, TypeError
-		object
+		begin
+			o = object.dup
+
+			o.tap do
+				object.singleton_class.included_modules.each do |m|
+					o.extend m
+				end
+			end
+
+		rescue NoMethodError, TypeError
+			object
+		end
 	end
 
 	def respond_to_instance_variables?(object)
