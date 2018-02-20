@@ -1,0 +1,15 @@
+I.1
+II
+III
+
+@a = [IV V.*4 VI]
+
+@a
+
+@a.reverse
+
+VII
+VIII
+IX
+
+
