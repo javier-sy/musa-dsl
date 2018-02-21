@@ -26,13 +26,13 @@ class KeyParametersProcedureBinder
 		effective_key_parameters = apply(key_parameters)
 
 		if effective_key_parameters.empty?
-			if value_parameters.empty? || @value_parameters_count == 0
+			if value_parameters.nil? || value_parameters.empty? || @value_parameters_count == 0
 				@procedure.call
 			else
 				@procedure.call *value_parameters.first(@value_parameters_count)
 			end
 		else
-			if value_parameters.empty?
+			if value_parameters.nil? || value_parameters.empty?
 				@procedure.call **effective_key_parameters
 			else
 				@procedure.call *value_parameters, **effective_key_parameters
@@ -45,6 +45,8 @@ class KeyParametersProcedureBinder
 	end
 
 	def apply hsh
+		hsh ||= {}
+
 		result = @parameters.clone
 
 		@parameters.each_key do |parameter_name|

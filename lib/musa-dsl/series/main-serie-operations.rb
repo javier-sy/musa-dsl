@@ -123,10 +123,6 @@ module Musa
 			return slave_serie
 		end
 
-		def duplicate
-			Duplicate.duplicate(self)
-		end
-
 		def to_a
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 

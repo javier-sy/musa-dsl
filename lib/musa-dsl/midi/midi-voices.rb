@@ -102,7 +102,7 @@ module Musa
 	 	private
 
 		class NoteControl
-			
+
 			def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: true)
 
 				raise ArgumentError, "MIDIVoice: note duration should be nil or Numeric: #{duration} (#{duration.class})" unless duration.nil? || duration.is_a?(Numeric)

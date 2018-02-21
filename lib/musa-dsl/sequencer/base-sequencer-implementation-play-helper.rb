@@ -208,10 +208,15 @@ class Musa::BaseSequencer
 
 			when :event
 
+				value_parameters = key_parameters = nil
+
+				value_parameters = element[:value_parameters].collect { |e| subcontext.value_eval e } if element[:value_parameters]
+				key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.value_eval(e) ] }.to_h if element[:key_parameters]
+
 				{ 	current_operation: :event,
 					current_event: element[:event],
-					current_value_parameters: element[:value_parameters].collect { |e| subcontext.value_eval e },
-					current_key_parameters: element[:key_parameters].collect { |k, e| [ k, subcontext.value_eval(e) ] }.to_h,
+					current_value_parameters: value_parameters,
+					current_key_parameters: key_parameters,
 					continue_operation: :now }
 
 			when :command
