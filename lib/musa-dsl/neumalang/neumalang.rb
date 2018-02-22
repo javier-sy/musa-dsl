@@ -1,13 +1,13 @@
 require 'citrus'
 
-module Musa::Neuma
+module Musa::Neumalang
 	def self.register grammar_path
 		Citrus.load grammar_path
 	end
 
 	def self.parse string_or_file, language: nil, decode_with: nil, debug: nil
 
-		language ||= Neuma
+		language ||= Neumalang
 
 		match = nil
 
@@ -45,7 +45,7 @@ module Musa::Neuma
 		end
 	end
 
-	register File.join(File.dirname(__FILE__), "neuma")
+	register File.join(File.dirname(__FILE__), "neumalang")
 
 	class ProtoDecoder
 		

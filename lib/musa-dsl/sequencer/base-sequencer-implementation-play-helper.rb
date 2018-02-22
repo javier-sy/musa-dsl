@@ -20,11 +20,11 @@ class Musa::BaseSequencer
 			self
 		end
 
-		def value_eval element
+		def eval_value element
 			raise NotImplementedError
 		end
 
-		def run_eval element
+		def eval_operation element
 			raise NotImplementedError
 		end
 	end
@@ -37,7 +37,7 @@ class Musa::BaseSequencer
 			@block_procedure_binder = block_procedure_binder
 		end
 
-		def run_eval element
+		def eval_operation element
 			value = nil
 
 			value = { 	current_operation: :block,
@@ -61,7 +61,7 @@ class Musa::BaseSequencer
 			@block_procedure_binder = block_procedure_binder
 		end
 
-		def run_eval element
+		def eval_operation element
 			value = nil
 		
 			if element.is_a? Hash
@@ -107,21 +107,13 @@ class Musa::BaseSequencer
 			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context, parent: self
 		end
 	
-		def value_eval element
+		def eval_value element
 			value = nil
 		
 			case element[:kind]
-			when :value
-				
-				value = element[:value]
-
-			when :neuma
-
-				value = @decoder.decode element
-
 			when :serie
 
-				value = S(*(element[:serie].collect { |e| value_eval e }))
+				value = S(*element[:serie])
 
 			when :parallel
 
@@ -135,12 +127,12 @@ class Musa::BaseSequencer
 					@nl_context.instance_variable_set var_name, _value = element[:assign_value]
 				end
 
-				value = value_eval _value
+				value = eval_value _value
 
 			when :use_variable
 
 				if @nl_context.instance_variable_defined? element[:use_variable]
-					value = value_eval @nl_context.instance_variable_get(element[:use_variable])
+					value = eval_value @nl_context.instance_variable_get(element[:use_variable])
 				else
 					raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
 				end
@@ -153,12 +145,57 @@ class Musa::BaseSequencer
 
 				value = element[:reference_command]
 
+			when :value
+
+				value = element[:value]
+
+			when :neuma
+
+				value = @decoder.decode element
+
+			when :call_methods
+
+				play_eval = subcontext
+
+				_value = play_eval.eval_value element[:on]
+
+				result = nil
+
+				if _value.is_a? Array # Array means the origin is a parallel
+
+					values = _value.collect do |_value|
+						element[:call_methods].each do |methd|
+							value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e) } if methd[:value_parameters]
+							key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e) ] }.to_h if methd[:key_parameters]
+
+							_value = _value._send_nice methd[:method], value_parameters, key_parameters
+						end
+						 _value
+					end
+
+					value = values
+
+				else
+					element[:call_methods].each do |methd|
+						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e) } if methd[:value_parameters]
+						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e) ] }.to_h if methd[:key_parameters]
+
+						_value = _value._send_nice methd[:method], value_parameters, key_parameters
+					end
+
+					value = _value
+				end
+
+				result
+
+			else
+				raise ArgumentError, "Don't know how to process #{element}"
 			end
 
 			value
 		end
 
-		def run_eval element
+		def eval_operation element
 
 			case element[:kind]
 			when :value
@@ -204,14 +241,14 @@ class Musa::BaseSequencer
 
 			when :use_variable
 
-				run_eval @nl_context.instance_variable_get(element[:use_variable])
+				eval_operation @nl_context.instance_variable_get(element[:use_variable])
 
 			when :event
 
 				value_parameters = key_parameters = nil
 
-				value_parameters = element[:value_parameters].collect { |e| subcontext.value_eval e } if element[:value_parameters]
-				key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.value_eval(e) ] }.to_h if element[:key_parameters]
+				value_parameters = element[:value_parameters].collect { |e| subcontext.eval_value(e) } if element[:value_parameters]
+				key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.eval_value(e) ] }.to_h if element[:key_parameters]
 
 				{ 	current_operation: :event,
 					current_event: element[:event],
@@ -221,48 +258,22 @@ class Musa::BaseSequencer
 
 			when :command
 
-				__translate @nl_context.instance_eval(&element[:command])
+				to_operation @nl_context.instance_eval(&element[:command])
 
 			when :call_methods
 
-				play_eval = subcontext
-
-				_value = play_eval.value_eval element[:on]
-
-				if _value.is_a? Array
-
-					values = _value.collect do |_value|
-						element[:call_methods].each do |methd|
-							value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.value_eval e } if methd[:value_parameters]
-							key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.value_eval(e) ] }.to_h if methd[:key_parameters]
-
-							_value = _value._send_nice methd[:method], value_parameters, key_parameters
-						end
-						 _value
-					end
-
-					__translate values
-
-				else
-					element[:call_methods].each do |methd|
-						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.value_eval e } if methd[:value_parameters]
-						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.value_eval(e) ] }.to_h if methd[:key_parameters]
-
-						_value = _value._send_nice methd[:method], value_parameters, key_parameters
-					end
-
-					__translate _value
-				end
+				to_operation eval_value(element)
 			end			
 		end
 
-		def __translate value
+		def to_operation value
+
 			if value
 				if value.is_a? Musa::Serie 
 					# If value is a Serie, it's a "native" serie, not a tokens serie of kind: :neuma. 
 					# For this reason it needs to be converted to something interpretable by _play (i.e., kind: :value, similar to interpreted :neuma)
 
-					{ current_operation: :play, current_parameter: value.eval { |e| { kind: :value, value: e } } }
+					{ current_operation: :play, current_parameter: value }
 
 				elsif value.is_a? Array
 
@@ -287,7 +298,7 @@ class Musa::BaseSequencer
 			end
 		end
 
-		private :__translate
+		private :to_operation
 
 		def inspect
 			"NeumalangModePlayEval #{id} #{@decoder}"

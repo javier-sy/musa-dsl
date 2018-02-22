@@ -1,4 +1,4 @@
-grammar Neuma
+grammar Neumalang
 
 	rule content
 		sentences
