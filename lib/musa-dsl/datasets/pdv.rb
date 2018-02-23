@@ -1,4 +1,4 @@
-require 'musa-dsl/neuma/neuma'
+require 'musa-dsl/neuma'
 
 module Musa::Dataset
 	module PDV # pitch duration velocity event command

@@ -34,7 +34,7 @@ RSpec.describe Musa::Neumalang do
 		end
 
 		it "Basic neuma inline parsing with comment" do
-			expect(Musa::Neuma.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ kind: :neuma, neuma: ["2", "3", "4"] }])
+			expect(Musa::Neumalang.parse("/* comentario (con parentesis) \n*/ 2.3.4")).to eq([{ kind: :neuma, neuma: ["2", "3", "4"] }])
 		end	
 
 		it "Basic neuma inline parsing only duration" do
