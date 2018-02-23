@@ -20,7 +20,6 @@ grammar Neumalang
 		 command | expression
 	end
 
-	
 	rule sentence_inside_parameter
 		direct_sentence_inside_parameter | reference_sentence_inside_parameter
 	end
@@ -33,9 +32,8 @@ grammar Neumalang
 		 command_inside_parameter | expression_inside_parameter
 	end
 
-
 	rule command_inside_parameter
-		variable_assign | braced_command # | referenced_braced_command
+		variable_assign | braced_command
 	end
 
 	rule command
@@ -47,9 +45,8 @@ grammar Neumalang
 	end
 
 	rule expression_inside_parameter
-		serie_expression | constant | neuma_as_parenthesis_attributes
+		serie_expression | constant | neuma_between_angles_attributes
 	end
-
 
 	rule variable_assign
 		((use_variable spaces equal spaces)+ expression) { { kind: :assign_to, assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, assign_value: capture(:expression).value } }
@@ -63,12 +60,6 @@ grammar Neumalang
 		(lbrace spaces complex_command spaces rbrace) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") } }
 	end
 
-	#rule referenced_braced_command
-	#	(ampersand spaces braced_command) { { kind: :reference_command, reference_command: capture(:braced_command).value[:command] } }
-	#end
-
-
-
 	rule serie_expression
 		call_methods_expression | simple_expression
 	end
@@ -81,16 +72,12 @@ grammar Neumalang
 		bracketed_2bar_sentences | bracketed_sentences | use_variable
 	end
 
-
-
 	rule method_call
 		(name parameters?) { { method: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
 	end
 
-
-
 	rule neuma
-		neuma_as_dotted_attributes_beginning_with_dot | neuma_as_dotted_attributes | neuma_as_parenthesis_attributes
+		neuma_as_dotted_attributes_beginning_with_dot | neuma_as_dotted_attributes | neuma_between_angles_attributes
 	end
 
 	rule constant
@@ -108,8 +95,6 @@ grammar Neumalang
 	rule use_variable
 		(at name) { { kind: :use_variable, use_variable: "@#{capture(:name).value}".to_sym } }
 	end
-
-
 
 	rule parameters
 		parameters_a | parameters_b | parameters_c
@@ -161,8 +146,8 @@ grammar Neumalang
 		 ((a:attribute (dot b:attribute?)*) | dot) { { kind: :neuma, neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 	end
 
-	rule neuma_as_parenthesis_attributes
-		(lpar spaces (attribute spaces)* rpar) { { kind: :neuma, neuma: captures(:attribute).collect { |c| c.value } } }
+	rule neuma_between_angles_attributes
+		(langle spaces (attribute spaces)* rangle) { { kind: :neuma, neuma: captures(:attribute).collect { |c| c.value } } }
 	end
 
 	rule attribute
@@ -218,7 +203,7 @@ grammar Neumalang
 	end
 
 	rule everything_that_can_be_an_attribute
-		/[^({|}|\[|\]|.| |\t|\n|\r|#|@|&|,|\|)]+/m
+		/[^({|}|\[|\]|\(|\)|\<|\>|.| |\t|\n|\r|#|@|&|,|\|)]+/m
 	end
 
 	rule name
@@ -238,6 +223,8 @@ grammar Neumalang
 	rule rbrace '}' end
 	rule lbracket '[' end
 	rule rbracket ']' end
+	rule langle '<' end
+	rule rangle '>' end
 	rule at '@' end
 	rule ampersand '&' end
 	rule equal '=' end

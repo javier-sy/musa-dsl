@@ -15,7 +15,7 @@ RSpec.describe Musa::Neumalang do
 		end
 
 		it "Basic bracketed neuma inline parsing with simple braced command" do
-			parsed = Musa::Neumalang.parse('(2 3 4) [9.8.7 6.5.4] (7 8 9) { 100 + 10 } # comentario 2')
+			parsed = Musa::Neumalang.parse('<2 3 4> [9.8.7 6.5.4] <7 8 9> { 100 + 10 } # comentario 2')
 			expect(parsed[0]).to eq({ kind: :neuma, neuma: ["2", "3", "4"] }) 
 			expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: ["9", "8", "7"] }, { kind: :neuma, neuma: [ "6", "5", "4" ] } ] })
 			expect(parsed[2]).to eq({ kind: :neuma, neuma: ["7", "8", "9"] })
@@ -23,7 +23,7 @@ RSpec.describe Musa::Neumalang do
 		end
 
 		it "Basic bracketed neuma inline parsing with complex braced command" do
-			parsed = Musa::Neumalang.parse('(2 3 4) [9.8.7 6.5.4] (7 8 9) { 100 + 10 + { a: 1000, b: 2000 }[:b] } # comentario 2')
+			parsed = Musa::Neumalang.parse('<2 3 4> [9.8.7 6.5.4] <7 8 9> { 100 + 10 + { a: 1000, b: 2000 }[:b] } # comentario 2')
 			expect(parsed[0]).to eq({ kind: :neuma, neuma: ["2", "3", "4"] }) 
 			expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: ["9", "8", "7"] }, { kind: :neuma, neuma: [ "6", "5", "4" ] } ] })
 			expect(parsed[2]).to eq({ kind: :neuma, neuma: ["7", "8", "9"] })
@@ -31,7 +31,7 @@ RSpec.describe Musa::Neumalang do
 		end
 
 		it "Basic bracketed neuma inline parsing with complex braced command" do
-			parsed = Musa::Neumalang.parse('(2 3 4) [9.8.7 6.5.4] (7 8 9) { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } # comentario 2')
+			parsed = Musa::Neumalang.parse('<2 3 4> [9.8.7 6.5.4] <7 8 9> { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } # comentario 2')
 			expect(parsed[0]).to eq({ kind: :neuma, neuma: ["2", "3", "4"] }) 
 			expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: ["9", "8", "7"] }, { kind: :neuma, neuma: [ "6", "5", "4" ] } ] })
 			expect(parsed[2]).to eq({ kind: :neuma, neuma: ["7", "8", "9"] })

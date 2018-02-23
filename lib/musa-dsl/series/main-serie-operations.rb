@@ -420,6 +420,8 @@ module Musa
 		private_constant :MergeSerieOfSeries
 
 		class BasicSerieLocker
+			include ProtoSerie
+
 			def initialize(serie)
 				@serie = serie
 				@values = []
