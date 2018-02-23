@@ -9,15 +9,33 @@ grammar Neumalang
 	end
 
 	rule sentence
+ 		direct_sentence | reference_sentence
+	end
+
+	rule reference_sentence
+		(ampersand spaces direct_sentence) { capture(:direct_sentence).value.merge({ reference: true }) }
+	end
+
+	rule direct_sentence
 		 command | expression
 	end
 
+	
 	rule sentence_inside_parameter
+		direct_sentence_inside_parameter | reference_sentence_inside_parameter
+	end
+
+	rule reference_sentence_inside_parameter
+		(ampersand spaces direct_sentence_inside_parameter) { capture(:direct_sentence_inside_parameter).value.merge({ reference: true }) }
+	end
+
+	rule direct_sentence_inside_parameter
 		 command_inside_parameter | expression_inside_parameter
 	end
 
+
 	rule command_inside_parameter
-		variable_assign | braced_command | referenced_braced_command
+		variable_assign | braced_command # | referenced_braced_command
 	end
 
 	rule command
@@ -45,9 +63,9 @@ grammar Neumalang
 		(lbrace spaces complex_command spaces rbrace) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") } }
 	end
 
-	rule referenced_braced_command
-		(ampersand spaces braced_command) { { kind: :reference_command, reference_command: capture(:braced_command).value[:command] } }
-	end
+	#rule referenced_braced_command
+	#	(ampersand spaces braced_command) { { kind: :reference_command, reference_command: capture(:braced_command).value[:command] } }
+	#end
 
 
 

@@ -106,44 +106,40 @@ class Musa::BaseSequencer
 		def subcontext
 			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context, parent: self
 		end
-	
-		def eval_value element
+
+		def eval_value element, deep_eval: nil
+			
+			deep_eval ||= false
+
 			value = nil
 		
+			reference = nil
+			reference ||= element[:reference] if element.key? :reference
+
 			case element[:kind]
 			when :serie
 
-				value = S(*element[:serie])
+				value = eval_serie element[:serie], deep_eval && !reference
 
 			when :parallel
 
-				value = element[:parallel].collect { |e| S(*e[:serie]) }
+				value = eval_parallel element[:parallel], deep_eval && !reference
 
 			when :assign_to
 
-				_value = nil
-
-				element[:assign_to].each do |var_name|
-					@nl_context.instance_variable_set var_name, _value = element[:assign_value]
-				end
-
-				value = eval_value _value
+				value = eval_assign_to element[:assign_to], element[:assign_value], deep_eval && !reference
 
 			when :use_variable
 
-				if @nl_context.instance_variable_defined? element[:use_variable]
-					value = eval_value @nl_context.instance_variable_get(element[:use_variable])
-				else
-					raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
-				end
+				value = eval_use_variable element[:use_variable], deep_eval && !reference
 
 			when :command
 
-				value = @nl_context.instance_eval &element[:command]
-
-			when :reference_command
-
-				value = element[:reference_command]
+				if reference
+					value = element[:command]
+				else
+					value = @nl_context.instance_eval &element[:command]
+				end
 
 			when :value
 
@@ -151,7 +147,11 @@ class Musa::BaseSequencer
 
 			when :neuma
 
-				value = @decoder.decode element
+				if reference
+					value = element[:neuma]
+				else
+					value = @decoder.decode element
+				end
 
 			when :call_methods
 
@@ -159,41 +159,75 @@ class Musa::BaseSequencer
 
 				_value = play_eval.eval_value element[:on]
 
-				result = nil
-
 				if _value.is_a? Array # Array means the origin is a parallel
 
-					values = _value.collect do |_value|
+					value = _value.collect do |_value|
 						element[:call_methods].each do |methd|
-							value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e) } if methd[:value_parameters]
-							key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e) ] }.to_h if methd[:key_parameters]
+							value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e, deep_eval: true) } if methd[:value_parameters]
+							key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e, deep_eval: true) ] }.to_h if methd[:key_parameters]
 
 							_value = _value._send_nice methd[:method], value_parameters, key_parameters
 						end
-						 _value
-					end
 
-					value = values
+						if deep_eval && !reference
+							_value.eval { |e| eval_value e, deep_eval: deep_eval }
+						else
+							_value
+						end
+					end
 
 				else
 					element[:call_methods].each do |methd|
-						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e) } if methd[:value_parameters]
-						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e) ] }.to_h if methd[:key_parameters]
+						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e, deep_eval: true) } if methd[:value_parameters]
+						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e, deep_eval: true) ] }.to_h if methd[:key_parameters]
 
 						_value = _value._send_nice methd[:method], value_parameters, key_parameters
 					end
 
-					value = _value
+					if deep_eval && !reference
+						value = _value.eval { |e| eval_value e, deep_eval: deep_eval }
+					else
+						value = _value
+					end
 				end
-
-				result
-
 			else
 				raise ArgumentError, "Don't know how to process #{element}"
 			end
 
 			value
 		end
+
+		def eval_serie values, deep_eval
+			if deep_eval
+				S(*values).eval { |e| self.eval_value e, deep_eval: deep_eval }
+			else
+				S(*values)
+			end
+		end
+
+		def eval_parallel values, deep_eval
+			values.collect { |e| eval_serie e[:serie], deep_eval }
+		end
+
+		def eval_assign_to variable_names, value, deep_eval
+			_value = nil
+
+			variable_names.each do |var_name|
+				@nl_context.instance_variable_set var_name, _value = value
+			end
+
+			eval_value _value, deep_eval: deep_eval
+		end
+
+		def eval_use_variable variable_name, deep_eval
+			if @nl_context.instance_variable_defined? variable_name
+				eval_value @nl_context.instance_variable_get(variable_name), deep_eval: deep_eval
+			else
+				raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
+			end
+		end
+
+		private :eval_serie, :eval_parallel, :eval_assign_to, :eval_use_variable		
 
 		def eval_operation element
 
@@ -247,8 +281,8 @@ class Musa::BaseSequencer
 
 				value_parameters = key_parameters = nil
 
-				value_parameters = element[:value_parameters].collect { |e| subcontext.eval_value(e) } if element[:value_parameters]
-				key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.eval_value(e) ] }.to_h if element[:key_parameters]
+				value_parameters = element[:value_parameters].collect { |e| subcontext.eval_value(e, deep_eval: true) } if element[:value_parameters]
+				key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.eval_value(e, deep_eval: true) ] }.to_h if element[:key_parameters]
 
 				{ 	current_operation: :event,
 					current_event: element[:event],
@@ -263,6 +297,9 @@ class Musa::BaseSequencer
 			when :call_methods
 
 				to_operation eval_value(element)
+
+			else
+				raise ArgumentError, "Don't know how to process #{element}"
 			end			
 		end
 

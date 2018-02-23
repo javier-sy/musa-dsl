@@ -20,7 +20,7 @@ V VI VII
 
 @b = 100
 
-::evento(@a, @a.reverse, 		123, 	@b, 	kpar1: [V VI VII], kpar2: 10000, kpar3: &{ | a, b| a*b  } )
+::evento(@a, @a.reverse, 		123, 	@b, 	kpar1: [V VI VII], kpar2: { 10 * 1000 }, kpar3: &{ | a, b| a*b  } )
 ::evento(@a, @b = [I II III], 	3, 		4, 		kpar1: @b, kpar2: 10000, kpar3: & { | a, b| 123456 } )
 
 I I I

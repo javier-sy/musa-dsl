@@ -158,7 +158,6 @@ class Musa::BaseSequencer
 				control2 = PlayControl.new control
 
 				operation[:current_parameter].each do |current_parameter|
-
 					control3 = PlayControl.new control2
 					control3.after { control3.launch :sync }
 
