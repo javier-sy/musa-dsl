@@ -190,6 +190,11 @@ class Musa::BaseSequencer
 						value = _value
 					end
 				end
+
+			when :eval
+
+				value = eval_value element[:eval]
+
 			else
 				raise ArgumentError, "Don't know how to process #{element}"
 			end
@@ -297,6 +302,10 @@ class Musa::BaseSequencer
 			when :call_methods
 
 				to_operation eval_value(element)
+
+			when :eval
+
+				eval_operation element[:eval]
 
 			else
 				raise ArgumentError, "Don't know how to process #{element}"

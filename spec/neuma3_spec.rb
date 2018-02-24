@@ -16,7 +16,7 @@ RSpec.describe Musa::Neumalang do
 		it "Simple file neuma parsing" do
 			debug = false
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3b_spec.neu"))
+			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3a_spec.neu"))
 			
 			if debug
 				puts
@@ -77,6 +77,70 @@ RSpec.describe Musa::Neumalang do
 				 {:grade=>7, :octave=>0, :duration=>1, :velocity=>1},
 				 {:position=>24},
 				 {:grade=>8, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
+ 		end
+
+		it "Simple file neuma parsing with parallel series and call methods" do
+
+			debug = false
+
+			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3b_spec.neu"))
+			
+			if debug
+				puts
+				puts "SERIE"
+				puts "-----"
+				pp serie.to_a
+				puts
+			end
+
+			played = {} if debug
+			played = [] unless debug
+
+			sequencer = Musa::Sequencer.new 4, 4 do
+				at 1 do
+					handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+						played[position] ||= [] if debug
+						played[position] << gdv if debug #.to_pdv(scale)
+
+						played << { position: position } unless debug
+						played << gdv unless debug #.to_pdv(scale)
+					end
+
+					handler.on :event do
+						played[position] ||= [] if debug
+						played[position] << [ :event ] if debug
+
+						played << { position: position } unless debug
+						played << [ :event ] unless debug
+					end				
+				end
+			end
+
+
+			while sequencer.size > 0
+				sequencer.tick
+			end
+
+			if debug
+				puts
+				puts "PLAYED"
+				puts "------"
+				pp played
+			end
+
+			expect(played).to eq(
+				[{:position=>1},
+				 {:grade=>4, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>1},
+				 {:grade=>5, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>2},
+				 {:grade=>2, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>2},
+				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>3},
+				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>1},
+				 {:position=>3},
+				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
  		end
 
 		it "Simple file neuma parsing with call_methods on simple serie" do
@@ -163,9 +227,9 @@ RSpec.describe Musa::Neumalang do
 				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
  		end
 
-		it "Simple file neuma parsing with parallel series and call methods" do
+		it "Advanced neumalang indirection features" do
 
-			debug = false
+			debug = true
 
 			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3d_spec.neu"))
 			
@@ -213,25 +277,13 @@ RSpec.describe Musa::Neumalang do
 			end
 
 			expect(played).to eq(
-				[{:position=>1},
-				 {:grade=>4, :octave=>0, :duration=>1, :velocity=>1},
-				 {:position=>1},
-				 {:grade=>5, :octave=>0, :duration=>1, :velocity=>1},
-				 {:position=>2},
-				 {:grade=>2, :octave=>0, :duration=>1, :velocity=>1},
-				 {:position=>2},
-				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1},
-				 {:position=>3},
-				 {:grade=>0, :octave=>0, :duration=>1, :velocity=>1},
-				 {:position=>3},
-				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
+				[]) unless debug
  		end
 
 		it "Complex file neuma parsing" do
 			debug = false
-			#debug = true
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3_spec.neu"))
+			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3z_spec.neu"))
 			
 			if debug
 				puts
@@ -361,7 +413,7 @@ RSpec.describe Musa::Neumalang do
 				   {:grade=>2, :octave=>0, :duration=>4, :velocity=>3},
 				   {:grade=>1, :octave=>0, :duration=>2, :velocity=>-1}],
 				  123,
-				  {:grade=>100, :octave=>0, :duration=>1, :velocity=>3},
+				  100,
 				  :kpar1,
 				  [{:grade=>4, :octave=>0, :duration=>1, :velocity=>3},
 				   {:grade=>5, :octave=>0, :duration=>1, :velocity=>3},

@@ -2,13 +2,15 @@ module Musa
 
 	module SerieOperations
 
-		def repeat times = nil, duplicate: nil, &condition_block
+		def repeat times = nil, duplicate: nil, condition: nil, &condition_block
 
 			duplicate ||= true
+			condition ||= condition_block
+
 			serie = duplicate ? self.duplicate : self
 
-			if times || condition_block
-				Serie.new BasicSerieRepeater.new(serie, times, &condition_block)
+			if times || condition
+				Serie.new BasicSerieRepeater.new(serie, times, &condition)
 			else
 				Serie.new BasicSerieInfiniteRepeater.new(serie)
 			end
@@ -62,9 +64,11 @@ module Musa
 			Serie.new BasicSerieRandomizer.new(serie)
 		end
 
-		def eval with: nil, duplicate: nil, &block
+		def eval with: nil, duplicate: nil, block: nil, &yield_block
 
 			duplicate ||= false
+			block ||= yield_block
+			
 			serie = duplicate ? self.duplicate : self
 
 			Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, &block)

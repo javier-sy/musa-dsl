@@ -17,35 +17,19 @@ grammar Neumalang
 	end
 
 	rule direct_sentence
-		 command | expression
-	end
-
-	rule sentence_inside_parameter
-		direct_sentence_inside_parameter | reference_sentence_inside_parameter
-	end
-
-	rule reference_sentence_inside_parameter
-		(ampersand spaces direct_sentence_inside_parameter) { capture(:direct_sentence_inside_parameter).value.merge({ reference: true }) }
-	end
-
-	rule direct_sentence_inside_parameter
-		 command_inside_parameter | expression_inside_parameter
-	end
-
-	rule command_inside_parameter
-		variable_assign | braced_command
-	end
-
-	rule command
-		variable_assign | event | braced_command
+		expression
 	end
 
 	rule expression
-		serie_expression | neuma
+		variable_assign | eval_expression | parenthesis_expression | serie_expression | constant | neuma | event | braced_command
 	end
 
-	rule expression_inside_parameter
-		serie_expression | constant | neuma_between_angles_attributes
+	rule parenthesis_expression
+		(lpar expression rpar) { capture(:expression).value }
+	end
+
+	rule eval_expression
+		(asterisk spaces lpar spaces expression spaces rpar) { { kind: :eval, eval: capture(:expression).value } }
 	end
 
 	rule variable_assign
@@ -113,7 +97,7 @@ grammar Neumalang
 	end
 
 	rule positional_parameters
-		(spaces a:sentence_inside_parameter (spaces comma spaces b:sentence_inside_parameter spaces)* spaces) { 
+		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) { 
 			[ capture(:a).value ] + captures(:b).collect { |c| c.value } 
 		}
 	end
@@ -130,7 +114,7 @@ grammar Neumalang
 	end
 
 	rule key_value
-		(key:name colon spaces value:sentence_inside_parameter) { { capture(:key).value.to_sym => capture(:value).value } }
+		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => capture(:value).value } }
 	end
 
 	rule complex_command
@@ -151,7 +135,7 @@ grammar Neumalang
 	end
 
 	rule attribute
-		everything_that_can_be_an_attribute
+		everything_that_can_be_an_attribute !colon
 	end
 
 	rule number
@@ -167,15 +151,11 @@ grammar Neumalang
   	end
 
   	rule float
-    	(digits dot digits space*) { { kind: :value, value: to_str.to_f } }
+    	(mid_dot str:(digits dot digits) spaces) { { kind: :value, value: capture(:str).value.to_f } }
   	end
 
   	rule integer
-    	(digits spaces) { { kind: :value, value: to_str.to_i } }
-  	end
-
-  	rule digits
-    	[0-9]+ ('_' [0-9]+)*
+    	(mid_dot digits spaces) { { kind: :value, value: capture(:digits).value.to_i } }
   	end
 
 	rule comment
@@ -184,6 +164,18 @@ grammar Neumalang
 
 	rule complex_comment
 		everything_except_comment? (lcomment complex_comment rcomment)* everything_except_comment?
+	end
+
+  	rule digits
+    	[0-9]+ ('_' [0-9]+)*
+  	end
+
+	rule name
+		/[[:alpha:]]\w*/
+	end
+
+	rule everything_that_can_be_an_attribute
+		/[^({|}|\[|\]|\(|\)|\<|\>|.|,|:|=| |\t|\n|\r|\"|#|@|&|\|)]+/m
 	end
 
 	rule everything_until_eol
@@ -202,16 +194,9 @@ grammar Neumalang
 		~/(\")/m
 	end
 
-	rule everything_that_can_be_an_attribute
-		/[^({|}|\[|\]|\(|\)|\<|\>|.| |\t|\n|\r|#|@|&|,|\|)]+/m
-	end
-
-	rule name
-		/[[:alpha:]]\w*/
-	end
-
 	rule double_quote '"' end
 	rule dot '.' end
+	rule mid_dot '·' end
 	rule comma ',' end
 	rule colon ':' end
 	rule double_colon '::' end
@@ -227,6 +212,7 @@ grammar Neumalang
 	rule rangle '>' end
 	rule at '@' end
 	rule ampersand '&' end
+	rule asterisk '*' end
 	rule equal '=' end
 	rule lcomment '/*' end
 	rule rcomment '*/' end

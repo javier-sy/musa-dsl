@@ -104,7 +104,7 @@ RSpec.describe Musa::Neumalang do
 				     {kind: :call_methods, :call_methods=>[{:method=>:inverse}], on: { kind: :use_variable, :use_variable=>:@b } }] } ]},
 				 {kind: :event, :event=>:event_with_key_parameters,
 				  :key_parameters=>
-				   {:a=>{kind: :value, :value=>100},
+				   {:a=>{kind: :value, :value=>100.25},
 				    :b=>{kind: :value, :value=>200},
 				    :c=>{kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", "f"]}, {kind: :neuma, :neuma=>["3", "2", "p"]}]}}},
 				 {kind: :event, :event=>:event_with_value_and_key_parameters,

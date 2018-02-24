@@ -1,1 +1,1 @@
-[I.1 ::event II III].after(&[IV [V VI] VII].reverse).repeat(2)
+[I.1 ::event II III].after(&[IV [V VI] VII].reverse).repeat(·2)
