@@ -16,13 +16,13 @@ RSpec.describe Musa::Neumalang do
 		it "Simple file neuma parsing" do
 			debug = false
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3a_spec.neu"))
+			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3a_spec.neu")
 			
 			if debug
 				puts
 				puts "SERIE"
 				puts "-----"
-				pp serie.to_a
+				pp serie.to_a(true)
 				puts
 			end
 
@@ -83,13 +83,13 @@ RSpec.describe Musa::Neumalang do
 
 			debug = false
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3b_spec.neu"))
+			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3b_spec.neu")
 			
 			if debug
 				puts
 				puts "SERIE"
 				puts "-----"
-				pp serie.to_a
+				pp serie.to_a(true)
 				puts
 			end
 
@@ -147,13 +147,13 @@ RSpec.describe Musa::Neumalang do
 
 			debug = false
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3c_spec.neu"))
+			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3c_spec.neu")
 			
 			if debug
 				puts
 				puts "SERIE"
 				puts "-----"
-				pp serie.to_a
+				pp serie.to_a(true)
 				puts
 			end
 
@@ -231,13 +231,13 @@ RSpec.describe Musa::Neumalang do
 
 			debug = true
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3d_spec.neu"))
+			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3d_spec.neu")
 			
 			if debug
 				puts
 				puts "SERIE"
 				puts "-----"
-				pp serie.to_a
+				pp serie.to_a(true)
 				puts
 			end
 
@@ -283,13 +283,13 @@ RSpec.describe Musa::Neumalang do
 		it "Complex file neuma parsing" do
 			debug = false
 
-			serie = S *(Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3z_spec.neu"))
+			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3z_spec.neu")
 			
 			if debug
 				puts
 				puts "SERIE"
 				puts "-----"
-				pp serie.to_a
+				pp serie.to_a(true)
 				puts
 			end
 

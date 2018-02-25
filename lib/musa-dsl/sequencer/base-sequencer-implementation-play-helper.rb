@@ -155,45 +155,11 @@ class Musa::BaseSequencer
 
 			when :call_methods
 
-				play_eval = subcontext
-
-				_value = play_eval.eval_value element[:on]
-
-				if _value.is_a? Array # Array means the origin is a parallel
-
-					value = _value.collect do |_value|
-						element[:call_methods].each do |methd|
-							value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e, deep_eval: true) } if methd[:value_parameters]
-							key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e, deep_eval: true) ] }.to_h if methd[:key_parameters]
-
-							_value = _value._send_nice methd[:method], value_parameters, key_parameters
-						end
-
-						if deep_eval && !reference
-							_value.eval { |e| eval_value e, deep_eval: deep_eval }
-						else
-							_value
-						end
-					end
-
-				else
-					element[:call_methods].each do |methd|
-						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e, deep_eval: true) } if methd[:value_parameters]
-						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e, deep_eval: true) ] }.to_h if methd[:key_parameters]
-
-						_value = _value._send_nice methd[:method], value_parameters, key_parameters
-					end
-
-					if deep_eval && !reference
-						value = _value.eval { |e| eval_value e, deep_eval: deep_eval }
-					else
-						value = _value
-					end
-				end
+				value = eval_call_methods element[:on], element[:call_methods], deep_eval && !reference
 
 			when :eval
 
-				value = eval_value element[:eval]
+				value = eval_value element[:eval], deep_eval: true
 
 			else
 				raise ArgumentError, "Don't know how to process #{element}"
@@ -202,19 +168,21 @@ class Musa::BaseSequencer
 			value
 		end
 
-		def eval_serie values, deep_eval
+		def eval_serie serie, deep_eval = nil
+			serie.restart
+
 			if deep_eval
-				S(*values).eval { |e| self.eval_value e, deep_eval: deep_eval }
+				serie.eval { |e| self.eval_value e, deep_eval: deep_eval }
 			else
-				S(*values)
+				serie
 			end
 		end
 
-		def eval_parallel values, deep_eval
-			values.collect { |e| eval_serie e[:serie], deep_eval }
+		def eval_parallel series, deep_eval = nil
+			series.collect { |e| eval_serie e[:serie], deep_eval }
 		end
 
-		def eval_assign_to variable_names, value, deep_eval
+		def eval_assign_to variable_names, value, deep_eval = nil
 			_value = nil
 
 			variable_names.each do |var_name|
@@ -224,11 +192,50 @@ class Musa::BaseSequencer
 			eval_value _value, deep_eval: deep_eval
 		end
 
-		def eval_use_variable variable_name, deep_eval
+		def eval_use_variable variable_name, deep_eval = nil
 			if @nl_context.instance_variable_defined? variable_name
 				eval_value @nl_context.instance_variable_get(variable_name), deep_eval: deep_eval
 			else
 				raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
+			end
+		end
+
+		def eval_call_methods on, call_methods, deep_eval = nil
+
+			play_eval = subcontext
+
+			value = play_eval.eval_value on
+
+			if value.is_a? Array # Array means the origin is a parallel
+
+				value.collect do |_value|
+					call_methods.each do |methd|
+						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e, deep_eval: true) } if methd[:value_parameters]
+						key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e, deep_eval: true) ] }.to_h if methd[:key_parameters]
+
+						_value = _value._send_nice methd[:method], value_parameters, key_parameters
+					end
+
+					if deep_eval
+						_value.eval { |e| eval_value e, deep_eval: deep_eval }
+					else
+						_value
+					end
+				end
+
+			else
+				call_methods.each do |methd|
+					value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_value(e, deep_eval: true) } if methd[:value_parameters]
+					key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_value(e, deep_eval: true) ] }.to_h if methd[:key_parameters]
+
+					value = value._send_nice methd[:method], value_parameters, key_parameters
+				end
+
+				if deep_eval
+					value.eval { |e| eval_value e, deep_eval: deep_eval }
+				else
+					value
+				end
 			end
 		end
 
@@ -262,12 +269,12 @@ class Musa::BaseSequencer
 			when :serie
 
 				{ 	current_operation: :play, 
-					current_parameter: S(*element[:serie]) }
+					current_parameter: eval_serie(element[:serie]) }
 
 			when :parallel
 
 				{ 	current_operation: :parallel_play, 
-					current_parameter: element[:parallel].collect { |e| S(*e[:serie]) } }
+					current_parameter: eval_parallel(element[:parallel]) }
 
 			when :assign_to
 
@@ -305,7 +312,7 @@ class Musa::BaseSequencer
 
 			when :eval
 
-				eval_operation element[:eval]
+				eval_operation element[:eval], deep_eval: true
 
 			else
 				raise ArgumentError, "Don't know how to process #{element}"

@@ -5,13 +5,13 @@ module Musa::Neuma
 			self
 		end
 		
-		def decode element, following = nil
+		def decode element
 			raise NotImplementedError
 		end
 	end
 
 	class DifferentialDecoder < ProtoDecoder
-		def decode attributes, following = nil
+		def decode attributes
 			parse attributes
 		end
 
@@ -30,7 +30,7 @@ module Musa::Neuma
 			Decoder.new @start
 		end
 
-		def decode attributes, following = nil
+		def decode attributes
 			result = apply parse(attributes), on: @last
 
 			@last = result.clone unless result[:event] || result[:command]

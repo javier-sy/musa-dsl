@@ -1,6 +1,32 @@
+require 'musa-dsl/series'
 require 'citrus'
 
 module Musa::Neumalang
+
+	module Sentences
+		include Musa::Series
+
+		def value
+			S(*captures(:sentence).collect { |c| c.value })
+		end
+	end
+
+	module Bracketed_2bar_sentences
+		include Musa::Series
+
+		def value
+			{ kind: :parallel, parallel: [ { kind: :serie, serie: S(*capture(:aa).value) } ] + captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } } }
+		end
+	end
+
+	module Bracketed_sentences
+		include Musa::Series
+
+		def value
+			{ kind: :serie, serie: S(*capture(:sentences).value) }
+		end
+	end
+
 	def self.register grammar_path
 		Citrus.load grammar_path
 	end
@@ -23,19 +49,12 @@ module Musa::Neumalang
 
 		match.dump if debug
 
-		list = match.value
+		serie = match.value
 
 		if decode_with
-			plan = []
-
-			until list.empty?
-				plan << decode_with.decode(list.shift, list)
-			end
-
-			plan
-
+			serie.eval { |e| decode_with.decode(e) }
 		else
-			list
+			serie
 		end
 	end
 

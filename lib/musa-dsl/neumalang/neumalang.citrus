@@ -5,23 +5,19 @@ grammar Neumalang
 	end
 
 	rule sentences
-		(spaces (sentence spaces)*) { captures(:sentence).collect { |c| c.value } }
+		(spaces (sentence spaces)*) <Musa::Neumalang::Sentences>
 	end
 
 	rule sentence
- 		direct_sentence | reference_sentence
-	end
-
-	rule reference_sentence
-		(ampersand spaces direct_sentence) { capture(:direct_sentence).value.merge({ reference: true }) }
-	end
-
-	rule direct_sentence
 		expression
 	end
 
 	rule expression
-		variable_assign | eval_expression | parenthesis_expression | serie_expression | constant | neuma | event | braced_command
+		variable_assign | call_methods_expression | object_expression | event
+	end
+
+	rule object_expression
+		braced_command | eval_expression | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
 	end
 
 	rule parenthesis_expression
@@ -29,7 +25,11 @@ grammar Neumalang
 	end
 
 	rule eval_expression
-		(asterisk spaces lpar spaces expression spaces rpar) { { kind: :eval, eval: capture(:expression).value } }
+		(asterisk spaces expression) { { kind: :eval, eval: capture(:expression).value } }
+	end
+
+	rule reference_expression
+		(ampersand spaces expression) { capture(:expression).value.merge({ reference: true }) }
 	end
 
 	rule variable_assign
@@ -44,16 +44,12 @@ grammar Neumalang
 		(lbrace spaces complex_command spaces rbrace) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") } }
 	end
 
-	rule serie_expression
-		call_methods_expression | simple_expression
-	end
-
 	rule call_methods_expression
-		(simple_expression (dot method_call)+) { { kind: :call_methods, call_methods: captures(:method_call).collect { |c| c.value }, on: capture(:simple_expression).value } }
+		(object_expression (dot method_call)+) { { kind: :call_methods, call_methods: captures(:method_call).collect { |c| c.value }, on: capture(:object_expression).value } }
 	end
 
-	rule simple_expression
-		bracketed_2bar_sentences | bracketed_sentences | use_variable
+	rule bracketed_expression
+		bracketed_2bar_sentences | bracketed_sentences
 	end
 
 	rule method_call
@@ -68,12 +64,12 @@ grammar Neumalang
 		number | symbol | string
 	end
 
-	rule bracketed_2bar_sentences
-		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) { { kind: :parallel, parallel: [ { kind: :serie, serie: capture(:aa).value } ] + captures(:bb).collect { |c| { kind: :serie, serie: c.value } } } }
+	rule bracketed_2bar_sentences 
+		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Bracketed_2bar_sentences>
 	end
 
 	rule bracketed_sentences
-		(lbracket spaces sentences rbracket) { { kind: :serie, serie: capture(:sentences).value } }
+		(lbracket spaces sentences rbracket) <Musa::Neumalang::Bracketed_sentences>
 	end
 
 	rule use_variable

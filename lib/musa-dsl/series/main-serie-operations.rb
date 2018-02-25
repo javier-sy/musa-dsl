@@ -64,11 +64,11 @@ module Musa
 			Serie.new BasicSerieRandomizer.new(serie)
 		end
 
-		def eval with: nil, duplicate: nil, block: nil, &yield_block
+		def eval block = nil, with: nil, duplicate: nil, &yield_block
 
 			duplicate ||= false
 			block ||= yield_block
-			
+
 			serie = duplicate ? self.duplicate : self
 
 			Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, &block)
@@ -127,7 +127,33 @@ module Musa
 			return slave_serie
 		end
 
-		def to_a
+		def to_a(recursive = nil)
+
+			def copy_singleton_methods source, target
+				target.tap do
+					source.singleton_class.included_modules.each do |m|
+						target.extend m unless target.is_a? m
+					end
+				end
+			end
+
+			def process value
+				case value
+				when Serie
+					value.to_a(true)
+				when Array
+					a = value.collect { |v| v.is_a?(Serie) ? v.to_a(true) : process(v) }
+					copy_singleton_methods value, a
+				when Hash
+					h = value.collect { |k, v| [ process(k), v.is_a?(Serie) ? v.to_a(true) : process(v) ] }.to_h
+					copy_singleton_methods value, h
+				else
+					value
+				end	
+			end
+
+			recursive ||= false
+			
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 
 			serie = @serie.duplicate
@@ -135,7 +161,11 @@ module Musa
 			array = []
 
 			while value = serie.next_value
-				array << value
+				if recursive 
+					array << process(value)
+				else
+					array << value
+				end
 			end
 
 			array

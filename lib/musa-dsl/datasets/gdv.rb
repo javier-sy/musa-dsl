@@ -91,7 +91,7 @@ module Musa::Dataset
 					end
 
 				elsif mode == :parenthesis
-					'(' + attributes.join(', ') + ')'
+					'<' + attributes.join(', ') + '>'
 				else
 					attributes
 				end
