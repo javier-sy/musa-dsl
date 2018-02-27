@@ -1,3 +1,3 @@
 @a = [I.1 II III]
 
-&(*@a).eval( &{ |e| e[:duration] = 2; e } ) # .eval( &{ |x| { kind: :value, value: x } } )
+&(*@a).eval( &{ |e| e[:duration] = 2; e } ) 				# .eval( &{ |x| { kind: :value, value: x } } )
