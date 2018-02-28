@@ -1,3 +1,19 @@
+
 @a = [I.1 II III]
 
-&(*@a).eval( &{ |e| e[:duration] = 2; e } ) 				# .eval( &{ |x| { kind: :value, value: x } } )
+@b = IV
+
+{ puts "@a = #{@a}" }
+{ puts "@b = #{@b}" }
+
+{ |a| puts "Con paso de parámetros: @a = #{a.to_a}" }(@a)
+{ |a| puts "Con paso de parámetros: *@a = #{a.to_a}" }(*@a)
+{ |a| puts "Con paso de parámetros: **@a = #{a.to_a}" }(**@a)
+
+
+
+
+
+
+
+#&(**@a).eval( &{ |e| e[:duration] = 2; e } ) 				# .eval( &{ |x| { kind: :value, value: x } } )

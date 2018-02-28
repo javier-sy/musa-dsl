@@ -14,7 +14,7 @@ RSpec.describe Musa::Neuma do
 
 			expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
 			expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
-			expect({ duration: 0, event: :evento }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ duration: 0, event: :evento})
+			expect({ duration: 0 }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ duration: 0})
 		end
 
 		it "GDV to PDVE (with module alias)" do
@@ -25,8 +25,8 @@ RSpec.describe Musa::Neuma do
 			expect({ grade: 3, duration: 1, velocity: 4 }.extend(GDV).to_pdv(scale)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
 			expect({ grade: 8, duration: 1, velocity: -3 }.extend(GDV).to_pdv(scale)).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
 			
-			h = { duration: 0, event: :evento }.extend GDV
-			expect(h.to_pdv(scale)).to eq({ duration: 0, event: :evento })
+			h = { duration: 0 }.extend GDV
+			expect(h.to_pdv(scale)).to eq({ duration: 0 })
 		end
 
 		it "GDV neuma to PDVE and back to neuma via GDV::NeumaDecoder" do

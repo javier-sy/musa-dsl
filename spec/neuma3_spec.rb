@@ -13,8 +13,10 @@ RSpec.describe Musa::Neumalang do
 		scale = Musa::Scales.get(:major).based_on_pitch 60
 		gdv_decoder = Musa::Dataset::GDV::NeumaDecoder.new scale
 
+=begin
 		it "Simple file neuma parsing" do
 			debug = false
+			#debug = true
 
 			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3a_spec.neu")
 			
@@ -226,7 +228,7 @@ RSpec.describe Musa::Neumalang do
 				 {:position=>14},
 				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
  		end
-
+=end
 		it "Advanced neumalang indirection features" do
 
 			debug = true
@@ -279,7 +281,7 @@ RSpec.describe Musa::Neumalang do
 			expect(played).to eq(
 				[]) unless debug
  		end
-
+=begin
 		it "Complex file neuma parsing" do
 			debug = false
 
@@ -480,5 +482,6 @@ RSpec.describe Musa::Neumalang do
 				 {:position=>179},
 				 {:grade=>1, :octave=>0, :duration=>2, :velocity=>-1}]) unless debug
  		end
+=end
 	end
 end

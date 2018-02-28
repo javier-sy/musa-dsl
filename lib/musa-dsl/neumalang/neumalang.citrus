@@ -17,7 +17,7 @@ grammar Neumalang
 	end
 
 	rule object_expression
-		braced_command | eval_expression | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
+		braced_command | double_eval_expression | eval_expression | double_reference_expression | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
 	end
 
 	rule parenthesis_expression
@@ -25,11 +25,19 @@ grammar Neumalang
 	end
 
 	rule eval_expression
-		(asterisk spaces expression) { { kind: :eval, eval: capture(:expression).value } }
+		(asterisk spaces expression) { { kind: :eval, level: 1, eval: capture(:expression).value } }
+	end
+
+	rule double_eval_expression
+		(double_asterisk spaces expression) { { kind: :eval, level: 2, eval: capture(:expression).value } }
 	end
 
 	rule reference_expression
-		(ampersand spaces expression) { capture(:expression).value.merge({ reference: true }) }
+		(ampersand spaces expression) { { kind: :reference, level: 1, reference: capture(:expression).value } }
+	end
+
+	rule double_reference_expression
+		(double_ampersand spaces expression) { { kind: :reference, level: 2, reference: capture(:expression).value } }
 	end
 
 	rule variable_assign
@@ -41,7 +49,7 @@ grammar Neumalang
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") } }
+		(lbrace spaces complex_command spaces rbrace parameters?) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") }.merge(capture(:parameters) ? capture(:parameters).value : {}) }
 	end
 
 	rule call_methods_expression
@@ -208,7 +216,9 @@ grammar Neumalang
 	rule rangle '>' end
 	rule at '@' end
 	rule ampersand '&' end
+	rule double_ampersand '&&' end
 	rule asterisk '*' end
+	rule double_asterisk '**' end
 	rule equal '=' end
 	rule lcomment '/*' end
 	rule rcomment '*/' end

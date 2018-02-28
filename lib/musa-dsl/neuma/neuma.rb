@@ -33,7 +33,7 @@ module Musa::Neuma
 		def decode attributes
 			result = apply parse(attributes), on: @last
 
-			@last = result.clone unless result[:event] || result[:command]
+			@last = result.clone
 
 			result
 		end

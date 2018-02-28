@@ -52,7 +52,13 @@ module Musa::Neumalang
 		serie = match.value
 
 		if decode_with
-			serie.eval { |e| decode_with.decode(e) }
+			serie.eval do |e| 
+				if e[:kind] == :neuma
+					decode_with.decode(e[:neuma])
+				else
+					raise ArgumentError, "Don't know how to convert #{e} to neuma to be decoded with #{decode_with}"
+				end
+			end
 		else
 			serie
 		end

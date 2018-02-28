@@ -80,7 +80,7 @@ RSpec.describe Musa::Neumalang do
 			expect(result[c+=1]).to eq({ abs_grade: 2, abs_velocity: -1 })
 			expect(result[c+=1]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: 3 })
 
-			expect(result[c+=1][:command].call).to eq(11110)
+			# expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
 
 			expect(result[c+=1]).to eq({ abs_grade: 0 })
 			expect(result[c+=1]).to eq({ })
@@ -90,7 +90,7 @@ RSpec.describe Musa::Neumalang do
 			expect(result[c+=1]).to eq({ abs_velocity: -1 })
 			expect(result[c+=1]).to eq({ delta_velocity: 1 })
 
-			expect(result[c+=1]).to eq({ event: :evento })
+			# expect(result[c+=1]).to eq({ event: :evento }) # no se puede procesar como neuma simple
 
 			expect(result[c+=1]).to eq({ delta_grade: -1 })
 		end
@@ -121,7 +121,7 @@ RSpec.describe Musa::Neumalang do
 			expect(result[c+=1]).to eq({ grade: 2, duration: Rational(1,2), velocity: -1 })
 			expect(result[c+=1]).to eq({ grade: 2, duration: Rational(1,2), velocity: 3 })
 
-			expect(result[c+=1][:command].call).to eq(11110)
+			# expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
 
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
@@ -131,7 +131,7 @@ RSpec.describe Musa::Neumalang do
 			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: -1 })
 			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 0 })
 			
-			expect(result[c+=1]).to eq({ duration: 0, event: :evento })
+			# expect(result[c+=1]).to eq({ duration: 0, event: :evento }) # no se puede procesar como neuma simple
 
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 0 })
 		end
