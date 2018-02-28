@@ -114,16 +114,16 @@ class Musa::BaseSequencer
 			decode_neumas ||= false
 			
 			case element[:kind]
-			when :serie then eval_serie element[:serie]
-			when :parallel then eval_parallel element[:parallel]
-			when :assign_to then eval_assign_to element[:assign_to], element[:assign_value]
-			when :use_variable then eval_use_variable element[:use_variable]
-			when :command then eval_command element[:command], element[:value_parameters], element[:key_parameters]
-			when :value then eval_value element[:value]
-			when :neuma then eval_neuma element[:neuma], decode_neumas
-			when :call_methods then eval_call_methods element[:on], element[:call_methods]
-			when :eval then eval_eval element[:eval], element[:level]
-			when :reference then eval_reference element[:reference], element[:level]
+			when :serie 		then eval_serie element[:serie]
+			when :parallel 		then eval_parallel element[:parallel]
+			when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value]
+			when :use_variable 	then eval_use_variable element[:use_variable]
+			when :command 		then eval_command element[:command], element[:value_parameters], element[:key_parameters]
+			when :value 		then eval_value element[:value]
+			when :neuma 		then eval_neuma element[:neuma], decode_neumas
+			when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
+			when :eval 			then eval_eval element[:eval], element[:level]
+			when :reference 	then eval_reference element[:reference], element[:level]
 			else
 				raise ArgumentError, "Don't know how to process #{element}"
 			end
