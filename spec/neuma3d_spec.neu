@@ -1,24 +1,70 @@
 
-@a = [I.1 II III]
+@s = [ I.1 II III ]
 
-@b = IV
+@p = [ III.1 V VII || IV.1 VI VIII ]
 
-@c = ·1010
+@n = IV
 
-{ puts "@a = #{@a}" }
-{ puts "@b = #{@b}" }
+@v = ·1010
 
-{ |a| puts "Con paso de parámetros: @a = #{a.to_a}" }(@a)
-{ |b| puts "Con paso de parámetros: @b = #{b}" }(@b)
+@c = { puts "hola"; 10000 }
+
+{ puts "@s = #{@s}" }
+{ puts "@p = #{@p}" }
+{ puts "@n = #{@n}" }
+{ puts "@v = #{@v}" }
+{ puts "@c = #{@c}" }
+
+/* 
+{ puts }
+{ |s| puts "Con paso de parámetros: @s = #{s.to_a}" }(@s)
+{ |p| puts "Con paso de parámetros: @p = #{p.collect { |pp| pp.to_a }}" }(@p)
+{ |n| puts "Con paso de parámetros: @n = #{n}" }(@n)
+{ |v| puts "Con paso de parámetros: @v = #{v}" }(@v)
 { |c| puts "Con paso de parámetros: @c = #{c}" }(@c)
-{ |a| puts "Con paso de parámetros: *@a = #{a.to_a}" }(*@a)
-{ |b| puts "Con paso de parámetros: *@b = #{b}" }(*@b)
+
+{ puts }
+{ |s| puts "Con paso de parámetros: *@s = #{s.to_a}" }(*@s)
+{ |p| puts "Con paso de parámetros: *@p = #{p.collect { |pp| pp.to_a }}" }(*@p)
+{ |n| puts "Con paso de parámetros: *@n = #{n}" }(*@n)
+{ |v| puts "Con paso de parámetros: *@v = #{v}" }(*@v)
 { |c| puts "Con paso de parámetros: *@c = #{c}" }(*@c)
-{ |a| puts "Con paso de parámetros: **@a = #{a.to_a}" }(**@a)
-{ |b| puts "Con paso de parámetros: **@b = #{b}" }(**@b)
-{ |c| puts "Con paso de parámetros: **@c = #{c}" }(**@c)
 
+{ puts }
+{ |s| puts "Con paso de parámetros: &@s = #{s}" }(&@s)
+{ |p| puts "Con paso de parámetros: &@p = #{p}" }(&@p)
+{ |n| puts "Con paso de parámetros: &@n = #{n}" }(&@n)
+{ |v| puts "Con paso de parámetros: &@v = #{v}" }(&@v)
+{ |c| puts "Con paso de parámetros: &@c = #{c}" }(&@c)
 
+{ puts }
+{ |s| puts "Con paso de parámetros: &&@s = #{s}" }(&&@s)
+{ |p| puts "Con paso de parámetros: &&@p = #{p}" }(&&@p)
+{ |n| puts "Con paso de parámetros: &&@n = #{n}" }(&&@n)
+{ |v| puts "Con paso de parámetros: &&@v = #{v}" }(&&@v)
+{ |c| puts "Con paso de parámetros: &&@c = #{c}" }(&&@c)
+
+{ puts }
+{ |s| puts "Con paso de parámetros: &&*@s = #{s}" }(&&*@s)
+{ |p| puts "Con paso de parámetros: &&*@p = #{p}" }(&&*@p)
+{ |n| puts "Con paso de parámetros: &&*@n = #{n}" }(&&*@n)
+{ |v| puts "Con paso de parámetros: &&*@v = #{v}" }(&&*@v)
+{ |c| puts "Con paso de parámetros: &&*@c = #{c}" }(&&*@c)
+
+{ puts }
+{ |s| puts "Con paso de parámetros: &*@s = #{s.to_a}" }(&*@s)
+{ |p| puts "Con paso de parámetros: &*@p = #{p.collect { |pp| pp.to_a }}" }(&*@p)
+{ |n| puts "Con paso de parámetros: &*@n = #{n}" }(&*@n)
+{ |v| puts "Con paso de parámetros: &*@v = #{v}" }(&*@v)
+{ |c| puts "Con paso de parámetros: &*@c = #{c}" }(&*@c)
+
+{ puts }
+{ |s| puts "Con paso de parámetros: *&@s = #{s.to_a}" }(*&@s)
+{ |p| puts "Con paso de parámetros: *&@p = #{p.collect { |pp| pp.to_a }}" }(*&@p)
+{ |n| puts "Con paso de parámetros: *&@n = #{n}" }(*&@n)
+{ |v| puts "Con paso de parámetros: *&@v = #{v}" }(*&@v)
+*/
+{ |c| puts "Con paso de parámetros: *&@c = #{c}" }(*&@c)
 
 
 

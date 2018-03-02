@@ -121,7 +121,7 @@ class Musa::BaseSequencer
 			when :value 		then eval_value element[:value]
 			when :neuma 		then eval_neuma element[:neuma], decode_neumas
 			when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
-			when :indirection	then eval_indirection element[:indirection], element[:level]
+			when :indirection	then eval_indirection element[:indirection]
 			when :reference 	then eval_reference element[:reference], element[:level]
 			else
 				raise ArgumentError, "Don't know how to process #{element}"
@@ -149,7 +149,7 @@ class Musa::BaseSequencer
 		end
 
 		def eval_parallel series, decode_neumas = nil
-			series.collect { |e| eval_serie e[:serie], decode_neumas }.extend Parallel
+			series.collect { |s| eval_serie s[:serie], decode_neumas }.extend Parallel
 		end
 
 		def eval_assign_to variable_names, value, decode_neumas = nil
@@ -207,27 +207,19 @@ class Musa::BaseSequencer
 			end
 		end
 
-		def eval_indirection element, level
-			raise ArgumentError, "Don't know how to process level #{level} for element #{element}" if level != 1 && level != 2
-
-			# puts "eval_indirection #{element}"
+		def eval_indirection element, level = 1
+			puts "eval_indirection #{element} #{level}"
 
 			if element.is_a?(Hash) && element.key?(:kind)
 				if element[:kind] == :reference
-					level -= element[:level]
-
-					if level < 0
-						eval_reference element[:reference], -level
-					elsif level > 0
-						eval_indirection element[:reference], level
-					else
-						element[:reference]
-					end
+					eval_reference element[:reference], element[:level] - 1
 				else
-					if level == 2
+					if level == 1
 						eval_element element, decode_neumas: true
-					else
+					elsif level == 0
 						eval_element element
+					else
+						raise ArgumentError, "Don't know how to process element #{element} with level #{level}"
 					end
 				end
 			else
@@ -236,48 +228,72 @@ class Musa::BaseSequencer
 		end
 
 		def eval_reference element, level # sin acabar, tentativo
-			if element.is_a?(Hash)
+			puts "eval_reference #{element} #{level}"
+
+			if element.is_a?(Hash) && element.key?(:kind)
 				case element[:kind]
-				when :eval
-					level -= element[:level]
-
-					if level < 0
-						eval_indirection element[:eval], -level
-					elsif level > 0
-						eval_reference element[:eval], level
-					else
-						element[:eval]
-					end
+				when :indirection
+					eval_indirection element[:indirection], 0
 				when :command
-					if level == 1
-						element[:command]
-					else
-						raise ArgumentError, "Don't know how to process level #{level} for kind: :command"
-					end
+					element[:command]
 				else
-					eval_reference eval_element(element), level
-				end 
-			else
-				if level == 2
+					case level
+					when 2
 
-					if element.is_a? Musa::Serie
-						{ kind: :serie, serie: element.eval { |e| { kind: :neuma, neuma: e.to_neuma(hash: true) } } }
+						case element
+						when Musa::Serie
+							{ 	kind: :serie, 
+								serie: element.eval { |e| 
+									{ 	kind: :neuma, 
+										neuma: e.to_neuma(hash: true) } } }
+						when Parallel
+							{ 	kind: :parallel, 
+								parallel: element.collect { |s| 
+									{ 	kind: :serie, 
+										serie: s.eval { |e| 
+											{ 	kind: :neuma, 
+												neuma: e.to_neuma(hash: true) } } } }.extend(Parallel) }
+						when Musa::Dataset
+							{ 	kind: :neuma, 
+								neuma: element.to_neuma(hash: true) }
+						else
+							{ 	kind: :value, 
+								value: element }
+						end
+
+					when 1
+
+						case element
+						when Musa::Serie
+							{ 	kind: :serie, 
+								serie: element.eval { |e| e.is_a?(Dataset) ? 
+									{ 	kind: :neuma, 
+										neuma: e.to_neuma(hash: true) } : 
+									{ 	kind: :value, 
+										value: e } } }
+
+						when Parallel
+							{ 	kind: :parallel, 
+								parallel: element.collect { |e| 
+									{ 	kind: :serie, 
+										serie: element } }.extend(Parallel) }
+
+						when Musa::Dataset
+							{ 	kind: :neuma, 
+								neuma: element.to_neuma(hash: true) }
+
+						else
+							{ 	kind: :value, 
+								value: element }
+						end
+
+					when 0
+
+						eval_element element
+
 					else
-						{ kind: :neuma, neuma: element.to_neuma(hash: true) }
+						raise ArgumentError, "Don't know how to process level #{level}"
 					end
-
-				elsif level == 1
-
-					if element.is_a? Musa::Serie
-						# Aquí habría que retornar kind: :neuma o :value según si el element es un neuma o cualquier otra cosa
-						{ kind: :serie, serie: element.eval { |e| { kind: :value, value: e } } }
-					else
-						# Aquí habría que retornar kind: :neuma o :value según si el element es un neuma o cualquier otra cosa
-						{ kind: :value, value: element }
-					end
-
-				else
-					raise ArgumentError, "Don't know how to process level #{level}"
 				end
 			end
 		end
@@ -355,7 +371,7 @@ class Musa::BaseSequencer
 
 			when :eval
 
-				run_operation eval_indirection(element[:eval], element[:level])
+				run_operation eval_indirection(element[:eval])
 
 			when :reference
 

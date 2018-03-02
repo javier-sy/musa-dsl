@@ -17,19 +17,15 @@ grammar Neumalang
 	end
 
 	rule object_expression
-		braced_command | double_eval_expression | eval_expression | double_reference_expression | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
+		braced_command | indirect_expression | double_reference_expression | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
 	end
 
 	rule parenthesis_expression
 		(lpar expression rpar) { capture(:expression).value }
 	end
 
-	rule eval_expression
-		(asterisk spaces expression) { { kind: :indirection, level: 1, indirection: capture(:expression).value } }
-	end
-
-	rule double_eval_expression
-		(double_asterisk spaces expression) { { kind: :indirection, level: 2, indirection: capture(:expression).value } }
+	rule indirect_expression
+		(asterisk spaces expression) { { kind: :indirection, indirection: capture(:expression).value } }
 	end
 
 	rule reference_expression
