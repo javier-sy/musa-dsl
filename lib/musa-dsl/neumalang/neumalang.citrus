@@ -25,11 +25,11 @@ grammar Neumalang
 	end
 
 	rule eval_expression
-		(asterisk spaces expression) { { kind: :eval, level: 1, eval: capture(:expression).value } }
+		(asterisk spaces expression) { { kind: :indirection, level: 1, indirection: capture(:expression).value } }
 	end
 
 	rule double_eval_expression
-		(double_asterisk spaces expression) { { kind: :eval, level: 2, eval: capture(:expression).value } }
+		(double_asterisk spaces expression) { { kind: :indirection, level: 2, indirection: capture(:expression).value } }
 	end
 
 	rule reference_expression

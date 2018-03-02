@@ -2,6 +2,9 @@ require 'musa-dsl/neuma'
 
 module Musa::Dataset
 	module PDV # pitch duration velocity
+		
+		extend Musa::Dataset
+
 		def to_gdv scale
 			r = {}
 

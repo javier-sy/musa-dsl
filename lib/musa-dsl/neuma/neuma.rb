@@ -1,4 +1,6 @@
 module Musa::Neuma
+	module Dataset end
+		
 	class ProtoDecoder
 		
 		def subcontext

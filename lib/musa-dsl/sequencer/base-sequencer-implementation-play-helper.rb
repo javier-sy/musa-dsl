@@ -89,8 +89,7 @@ class Musa::BaseSequencer
 
 	class NeumalangModePlayEval < PlayEval
 
-		module Parallel
-		end
+		module Parallel end
 
 		@@id = 0
 
@@ -110,19 +109,19 @@ class Musa::BaseSequencer
 			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context, parent: self
 		end
 
-		def eval_element element, decode_neumas: nil
+		def eval_element element, decode_neumas = nil
 			decode_neumas ||= false
 			
 			case element[:kind]
-			when :serie 		then eval_serie element[:serie]
-			when :parallel 		then eval_parallel element[:parallel]
-			when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value]
-			when :use_variable 	then eval_use_variable element[:use_variable]
+			when :serie 		then eval_serie element[:serie], decode_neumas
+			when :parallel 		then eval_parallel element[:parallel], decode_neumas
+			when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value], decode_neumas
+			when :use_variable 	then eval_use_variable element[:use_variable], decode_neumas
 			when :command 		then eval_command element[:command], element[:value_parameters], element[:key_parameters]
 			when :value 		then eval_value element[:value]
 			when :neuma 		then eval_neuma element[:neuma], decode_neumas
 			when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
-			when :eval 			then eval_eval element[:eval], element[:level]
+			when :indirection	then eval_indirection element[:indirection], element[:level]
 			when :reference 	then eval_reference element[:reference], element[:level]
 			else
 				raise ArgumentError, "Don't know how to process #{element}"
@@ -141,27 +140,31 @@ class Musa::BaseSequencer
 			end
 		end
 
-		def eval_serie serie
-			serie.tap { |s| s.restart }
+		def eval_serie serie, decode_neumas = nil
+			if decode_neumas
+				serie.tap { |s| s.restart }.eval { |e| eval_element e, decode_neumas }
+			else
+				serie.tap { |s| s.restart }
+			end
 		end
 
-		def eval_parallel series
-			series.collect { |e| eval_serie e[:serie] }.extend Parallel
+		def eval_parallel series, decode_neumas = nil
+			series.collect { |e| eval_serie e[:serie], decode_neumas }.extend Parallel
 		end
 
-		def eval_assign_to variable_names, value, eval_value = true
+		def eval_assign_to variable_names, value, decode_neumas = nil
 			_value = nil
 
 			variable_names.each do |var_name|
 				@nl_context.instance_variable_set var_name, _value = value
 			end
 
-			eval_element _value
+			eval_element _value, decode_neumas
 		end
 
-		def eval_use_variable variable_name
+		def eval_use_variable variable_name, decode_neumas = nil
 			if @nl_context.instance_variable_defined? variable_name
-				eval_element @nl_context.instance_variable_get(variable_name)
+				eval_element @nl_context.instance_variable_get(variable_name), decode_neumas
 			else
 				raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
 			end
@@ -204,8 +207,10 @@ class Musa::BaseSequencer
 			end
 		end
 
-		def eval_eval element, level
+		def eval_indirection element, level
 			raise ArgumentError, "Don't know how to process level #{level} for element #{element}" if level != 1 && level != 2
+
+			# puts "eval_indirection #{element}"
 
 			if element.is_a?(Hash) && element.key?(:kind)
 				if element[:kind] == :reference
@@ -214,38 +219,15 @@ class Musa::BaseSequencer
 					if level < 0
 						eval_reference element[:reference], -level
 					elsif level > 0
-						eval_eval element[:reference], level
+						eval_indirection element[:reference], level
 					else
 						element[:reference]
 					end
 				else
 					if level == 2
-
-						_element = eval_element element, decode_neumas: true
-
-						case _element
-						when Musa::Serie
-							_element.eval { |e| eval_element e, decode_neumas: true }
-
-						when Parallel
-							_element.collect { |s| s.eval { |e| eval_element e, decode_neumas: true } }
-
-						else
-							_element
-						end
+						eval_element element, decode_neumas: true
 					else
-						_element = eval_element element
-
-						case _element
-						when Musa::Serie
-							_element.eval { |e| eval_element e }
-
-						when Parallel
-							_element.collect { |s| s.eval { |e| eval_element e } }.extend Parallel
-
-						else
-							_element
-						end
+						eval_element element
 					end
 				end
 			else
@@ -253,14 +235,14 @@ class Musa::BaseSequencer
 			end
 		end
 
-		def eval_reference element, level
+		def eval_reference element, level # sin acabar, tentativo
 			if element.is_a?(Hash)
 				case element[:kind]
 				when :eval
 					level -= element[:level]
 
 					if level < 0
-						eval_eval element[:eval], -level
+						eval_indirection element[:eval], -level
 					elsif level > 0
 						eval_reference element[:eval], level
 					else
@@ -373,7 +355,7 @@ class Musa::BaseSequencer
 
 			when :eval
 
-				run_operation eval_eval(element[:eval], element[:level])
+				run_operation eval_indirection(element[:eval], element[:level])
 
 			when :reference
 

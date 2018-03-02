@@ -3,13 +3,20 @@
 
 @b = IV
 
+@c = ·1010
+
 { puts "@a = #{@a}" }
 { puts "@b = #{@b}" }
 
 { |a| puts "Con paso de parámetros: @a = #{a.to_a}" }(@a)
+{ |b| puts "Con paso de parámetros: @b = #{b}" }(@b)
+{ |c| puts "Con paso de parámetros: @c = #{c}" }(@c)
 { |a| puts "Con paso de parámetros: *@a = #{a.to_a}" }(*@a)
+{ |b| puts "Con paso de parámetros: *@b = #{b}" }(*@b)
+{ |c| puts "Con paso de parámetros: *@c = #{c}" }(*@c)
 { |a| puts "Con paso de parámetros: **@a = #{a.to_a}" }(**@a)
-
+{ |b| puts "Con paso de parámetros: **@b = #{b}" }(**@b)
+{ |c| puts "Con paso de parámetros: **@c = #{c}" }(**@c)
 
 
 

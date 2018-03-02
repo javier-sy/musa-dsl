@@ -4,6 +4,8 @@ module Musa::Dataset
 
 	module GDVd # abs_grade abs_octave delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
 
+		extend Musa::Dataset
+
 		def to_gdv scale, previous:
 
 			r = previous.clone.extend GDV
@@ -100,6 +102,9 @@ module Musa::Dataset
 	end
 
 	module GDV # grade duration velocity event command
+
+		extend Musa::Dataset
+
 		def to_pdv scale
 			r = {}
 
