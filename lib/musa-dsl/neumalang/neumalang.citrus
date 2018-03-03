@@ -98,12 +98,12 @@ grammar Neumalang
 
 	rule positional_parameters
 		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) { 
-			[ capture(:a).value ] + captures(:b).collect { |c| c.value } 
+			[ { kind: :indirection, indirection: capture(:a).value } ] + captures(:b).collect { |c| { kind: :indirection, indirection: c.value } } 
 		}
 	end
 
 	rule key_parameters
-		(spaces a:key_value (spaces comma spaces b:key_value spaces)* spaces) { 
+		(spaces a:key_value_parameter (spaces comma spaces b:key_value_parameter spaces)* spaces) { 
 			
 			result = capture(:a).value.clone
 			
@@ -113,8 +113,8 @@ grammar Neumalang
 		}
 	end
 
-	rule key_value
-		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => capture(:value).value } }
+	rule key_value_parameter
+		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => { kind: :indirection, indirection: capture(:value).value } } }
 	end
 
 	rule complex_command

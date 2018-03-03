@@ -15,7 +15,7 @@
 { puts "@v = #{@v}" }
 { puts "@c = #{@c}" }
 
-/* 
+
 { puts }
 { |s| puts "Con paso de parámetros: @s = #{s.to_a}" }(@s)
 { |p| puts "Con paso de parámetros: @p = #{p.collect { |pp| pp.to_a }}" }(@p)
@@ -63,7 +63,6 @@
 { |p| puts "Con paso de parámetros: *&@p = #{p.collect { |pp| pp.to_a }}" }(*&@p)
 { |n| puts "Con paso de parámetros: *&@n = #{n}" }(*&@n)
 { |v| puts "Con paso de parámetros: *&@v = #{v}" }(*&@v)
-*/
 { |c| puts "Con paso de parámetros: *&@c = #{c}" }(*&@c)
 
 

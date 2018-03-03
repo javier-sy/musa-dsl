@@ -115,8 +115,8 @@ class Musa::BaseSequencer
 			case element[:kind]
 			when :serie 		then eval_serie element[:serie], decode_neumas
 			when :parallel 		then eval_parallel element[:parallel], decode_neumas
-			when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value], decode_neumas
-			when :use_variable 	then eval_use_variable element[:use_variable], decode_neumas
+			when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value]
+			when :use_variable 	then eval_use_variable element[:use_variable]
 			when :command 		then eval_command element[:command], element[:value_parameters], element[:key_parameters]
 			when :value 		then eval_value element[:value]
 			when :neuma 		then eval_neuma element[:neuma], decode_neumas
@@ -152,19 +152,19 @@ class Musa::BaseSequencer
 			series.collect { |s| eval_serie s[:serie], decode_neumas }.extend Parallel
 		end
 
-		def eval_assign_to variable_names, value, decode_neumas = nil
+		def eval_assign_to variable_names, value
 			_value = nil
 
 			variable_names.each do |var_name|
-				@nl_context.instance_variable_set var_name, _value = value
+				@nl_context.instance_variable_set var_name, _value = eval_element(value)
 			end
 
-			eval_element _value, decode_neumas
+			_value
 		end
 
-		def eval_use_variable variable_name, decode_neumas = nil
+		def eval_use_variable variable_name
 			if @nl_context.instance_variable_defined? variable_name
-				eval_element @nl_context.instance_variable_get(variable_name), decode_neumas
+				@nl_context.instance_variable_get(variable_name)
 			else
 				raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
 			end
@@ -197,6 +197,7 @@ class Musa::BaseSequencer
 				end
 			else
 				call_methods.each do |methd|
+
 					value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } if methd[:value_parameters]
 					key_parameters = methd[:key_parameters].collect { |k, e| [ k, play_eval.subcontext.eval_element(e) ] }.to_h if methd[:key_parameters]
 
@@ -208,14 +209,12 @@ class Musa::BaseSequencer
 		end
 
 		def eval_indirection element, level = 1
-			puts "eval_indirection #{element} #{level}"
-
 			if element.is_a?(Hash) && element.key?(:kind)
 				if element[:kind] == :reference
 					eval_reference element[:reference], element[:level] - 1
 				else
 					if level == 1
-						eval_element element, decode_neumas: true
+						eval_element eval_element(element), true
 					elsif level == 0
 						eval_element element
 					else
@@ -227,9 +226,7 @@ class Musa::BaseSequencer
 			end
 		end
 
-		def eval_reference element, level # sin acabar, tentativo
-			puts "eval_reference #{element} #{level}"
-
+		def eval_reference element, level
 			if element.is_a?(Hash) && element.key?(:kind)
 				case element[:kind]
 				when :indirection
@@ -295,6 +292,8 @@ class Musa::BaseSequencer
 						raise ArgumentError, "Don't know how to process level #{level}"
 					end
 				end
+			else
+				raise ArgumentError, "Don't know how to process element #{element}"
 			end
 		end
 
@@ -302,6 +301,8 @@ class Musa::BaseSequencer
 
 		def run_operation element
 
+			puts "run_operation: element = #{element.inspect}"
+			
 			case element[:kind]
 			when :value
 
@@ -339,14 +340,14 @@ class Musa::BaseSequencer
 
 			when :assign_to
 
-				eval_assign_to element[:assign_to], element[:assign_value], false
+				eval_assign_to element[:assign_to], element[:assign_value]
 
 				{  	current_operation: :none, 
 					continue_operation: :now }
 
 			when :use_variable
 
-				run_operation @nl_context.instance_variable_get(element[:use_variable])
+				to_operation eval_use_variable(element[:use_variable])
 
 			when :event
 
