@@ -11,12 +11,12 @@ RSpec.describe Musa::Neumalang do
 	context "Neuma with neumalang advanced parsing" do
 
 		scale = Musa::Scales.get(:major).based_on_pitch 60
-		gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
-=begin
+
 		it "Simple file neuma parsing" do
 			debug = false
 			#debug = true
 
+			gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3a_spec.neu")
 			
 			if debug
@@ -67,11 +67,11 @@ RSpec.describe Musa::Neumalang do
 				 {:position=>9},
 				 {:grade=>5, :octave=>0, :duration=>4, :velocity=>1},
 				 {:position=>13},
-				 {:grade=>5, :octave=>0, :duration=>1, :velocity=>1},
-				 {:position=>14},
+				 {:grade=>5, :octave=>0, :duration=>4, :velocity=>1},
+				 {:position=>17},
 				 {:grade=>4, :octave=>0, :duration=>4, :velocity=>1},
-				 {:position=>18},
-				 {:grade=>3, :octave=>0, :duration=>4, :velocity=>1},
+				 {:position=>21},
+				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1},
 				 {:position=>22},
 				 {:grade=>6, :octave=>0, :duration=>1, :velocity=>1},
 				 {:position=>23},
@@ -85,6 +85,7 @@ RSpec.describe Musa::Neumalang do
 			debug = false
 			#debug = true
 
+			gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3b_spec.neu")
 			
 			if debug
@@ -143,13 +144,13 @@ RSpec.describe Musa::Neumalang do
 				 {:position=>3},
 				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
  		end
-=end
-#=begin
+
 		it "Simple file neuma parsing with call_methods on simple serie" do
 
 			debug = false
-			debug = true
+			#debug = true
 
+			gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3c_spec.neu")
 			
 			if debug
@@ -229,12 +230,13 @@ RSpec.describe Musa::Neumalang do
 				 {:position=>14},
 				 {:grade=>3, :octave=>0, :duration=>1, :velocity=>1}]) unless debug
  		end
-#=end
-=begin
+
 		it "Advanced neumalang indirection features" do
 
-			debug = true
+			debug = false
+			#debug = true
 
+			gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3d_spec.neu")
 			
 			if debug
@@ -248,9 +250,12 @@ RSpec.describe Musa::Neumalang do
 			played = {} if debug
 			played = [] unless debug
 
+			context = Object.new
+			context.instance_variable_set :@debug, debug
+
 			sequencer = Musa::Sequencer.new 4, 4 do
 				at 1 do
-					handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+					handler = play serie, decoder: gdv_decoder, mode: :neumalang, context: context do |gdv|
 						played[position] ||= [] if debug
 						played[position] << gdv if debug #.to_pdv(scale)
 
@@ -268,7 +273,6 @@ RSpec.describe Musa::Neumalang do
 				end
 			end
 
-
 			while sequencer.size > 0
 				sequencer.tick
 			end
@@ -280,15 +284,49 @@ RSpec.describe Musa::Neumalang do
 				pp played
 			end
 
+			expect(context.instance_variable_get(:@n)).to eq(
+					{ grade: 3, octave: 0, duration: Rational(1,4), velocity: 1 }) unless debug
+
+			expect(context.instance_variable_get(:@s).to_a).to eq(
+				[	{ grade: 0, octave: 0, duration: 1, velocity: 1 }, 
+					{ grade: 1, octave: 0, duration: 1, velocity: 1 }, 
+					{ grade: 2, octave: 0, duration: 1, velocity: 1 }]) unless debug
+
+			expect(context.instance_variable_get(:@p).collect {|s| s.to_a}).to eq(
+				[[{:grade=>2, :octave=>0, :duration=>1, :velocity=>1},
+				  {:grade=>4, :octave=>0, :duration=>1, :velocity=>1},
+				  {:grade=>6, :octave=>0, :duration=>1, :velocity=>1}],
+				 [{:grade=>3, :octave=>0, :duration=>1, :velocity=>1},
+				  {:grade=>5, :octave=>0, :duration=>1, :velocity=>1},
+				  {:grade=>0, :octave=>0, :duration=>1, :velocity=>1}]]) unless debug
+
+
+			expect(context.instance_variable_get(:@v)).to eq(1010) unless debug
+
+			expect(context.instance_variable_get(:@c)).to eq(10000) unless debug
+
+			expect(context.instance_variable_get(:@cc).call).to eq(10000) unless debug
+
 			expect(played).to eq(
-				[]) unless debug
+				[{:position=>1},
+				 {:grade=>0, :octave=>0, :duration=>2, :velocity=>1},
+				 {:position=>3},
+				 {:grade=>1, :octave=>0, :duration=>2, :velocity=>1},
+				 {:position=>5},
+				 {:grade=>2, :octave=>0, :duration=>2, :velocity=>1},
+				 {:position=>7},
+				 {:grade=>0, :octave=>0, :duration=>3, :velocity=>1},
+				 {:position=>10},
+				 {:grade=>1, :octave=>0, :duration=>3, :velocity=>1},
+				 {:position=>13},
+				 {:grade=>2, :octave=>0, :duration=>3, :velocity=>1}]) unless debug
  		end
-=end
-=begin
+
 		it "Complex file neuma parsing" do
 			debug = false
-			debug = true
+			#debug = true
 
+			gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 			serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), "neuma3z_spec.neu")
 			
 			if debug
@@ -412,11 +450,11 @@ RSpec.describe Musa::Neumalang do
 				   {:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
 				   {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
 				   {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1}],
-				  [{:grade=>6, :octave=>0, :duration=>1, :velocity=>3},
-				   {:grade=>5, :octave=>0, :duration=>1, :velocity=>3},
-				   {:grade=>4, :octave=>0, :duration=>4, :velocity=>3},
-				   {:grade=>3, :octave=>0, :duration=>4, :velocity=>3},
-				   {:grade=>2, :octave=>0, :duration=>4, :velocity=>3},
+				  [{:grade=>6, :octave=>0, :duration=>8, :velocity=>-1},
+				   {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
+				   {:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
+				   {:grade=>3, :octave=>0, :duration=>2, :velocity=>-1},
+				   {:grade=>2, :octave=>0, :duration=>2, :velocity=>-1},
 				   {:grade=>1, :octave=>0, :duration=>2, :velocity=>-1}],
 				  123,
 				  100,
@@ -474,18 +512,17 @@ RSpec.describe Musa::Neumalang do
 				 {:position=>164},
 				 {:grade=>1, :octave=>0, :duration=>1, :velocity=>3},
 				 {:position=>165},
-				 {:grade=>6, :octave=>0, :duration=>1, :velocity=>3},
-				 {:position=>166},
-				 {:grade=>5, :octave=>0, :duration=>1, :velocity=>3},
-				 {:position=>167},
-				 {:grade=>4, :octave=>0, :duration=>4, :velocity=>3},
-				 {:position=>171},
-				 {:grade=>3, :octave=>0, :duration=>4, :velocity=>3},
-				 {:position=>175},
-				 {:grade=>2, :octave=>0, :duration=>4, :velocity=>3},
-				 {:position=>179},
+				 {:grade=>6, :octave=>0, :duration=>8, :velocity=>-1},
+				 {:position=>173},
+				 {:grade=>5, :octave=>0, :duration=>8, :velocity=>-1},
+				 {:position=>181},
+				 {:grade=>4, :octave=>0, :duration=>8, :velocity=>-1},
+				 {:position=>189},
+				 {:grade=>3, :octave=>0, :duration=>2, :velocity=>-1},
+				 {:position=>191},
+				 {:grade=>2, :octave=>0, :duration=>2, :velocity=>-1},
+				 {:position=>193},
 				 {:grade=>1, :octave=>0, :duration=>2, :velocity=>-1}]) unless debug
  		end
-=end
 	end
 end

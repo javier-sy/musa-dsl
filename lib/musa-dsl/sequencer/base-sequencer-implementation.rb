@@ -126,12 +126,8 @@ class Musa::BaseSequencer
 
 		element = serie.next_value
 
-		# puts "_play: element = #{element}"
-
 		if element
 			operation = __play_eval.run_operation element
-
-			# puts "_play: operation = #{operation}"
 
 			case operation[:current_operation]
 			

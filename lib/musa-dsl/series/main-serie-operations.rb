@@ -64,14 +64,14 @@ module Musa
 			Serie.new BasicSerieRandomizer.new(serie)
 		end
 
-		def eval block = nil, with: nil, duplicate: nil, &yield_block
+		def eval block = nil, with: nil, duplicate: nil, on_restart: nil, &yield_block
 
 			duplicate ||= false
 			block ||= yield_block
 
 			serie = duplicate ? self.duplicate : self
 
-			Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, &block)
+			Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, on_restart: on_restart, &block)
 		end
 
 		def select *indexed_series, duplicate: nil, **hash_series
@@ -129,7 +129,7 @@ module Musa
 
 		def to_a(recursive = nil)
 
-			def copy_singleton_methods source, target
+			def copy_included_modules source, target
 				target.tap do
 					source.singleton_class.included_modules.each do |m|
 						target.extend m unless target.is_a? m
@@ -143,10 +143,10 @@ module Musa
 					value.to_a(true)
 				when Array
 					a = value.collect { |v| v.is_a?(Serie) ? v.to_a(true) : process(v) }
-					copy_singleton_methods value, a
+					copy_included_modules value, a
 				when Hash
 					h = value.collect { |k, v| [ process(k), v.is_a?(Serie) ? v.to_a(true) : process(v) ] }.to_h
-					copy_singleton_methods value, h
+					copy_included_modules value, h
 				else
 					value
 				end	
@@ -156,7 +156,7 @@ module Musa
 			
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 
-			serie = @serie.duplicate
+			serie = @serie.duplicate.restart
 
 			array = []
 
@@ -186,6 +186,8 @@ module Musa
 			def restart
 				@index = 0
 				@series[@index].restart
+
+				self
 			end
 
 			def next_value
@@ -230,6 +232,8 @@ module Musa
 				@selector.restart
 				@series.each { |serie| serie.restart } if @series.is_a? Array
 				@series.each { |key, serie| serie.restart } if @series.is_a? Hash
+
+				self
 			end
 
 			def next_value
@@ -267,6 +271,8 @@ module Musa
 			def restart
 				@selector.restart
 				@series.each { |serie| serie.restart }
+
+				self
 			end
 
 			def next_value
@@ -301,6 +307,8 @@ module Musa
 
 			def restart
 				@serie.restart
+
+				self
 			end
 
 			def next_value
@@ -336,9 +344,10 @@ module Musa
 			end
 
 			def restart
-				puts "BasicSerieRepeater.restart"
 				@serie.restart
 				@count = 0
+
+				self
 			end
 
 			def next_value
@@ -371,6 +380,8 @@ module Musa
 
 			def restart
 				@serie.restart
+
+				self
 			end
 
 			def next_value
@@ -398,6 +409,8 @@ module Musa
 
 				def restart
 					@count = 0
+
+					self
 				end
 
 				def next_value
@@ -429,6 +442,8 @@ module Musa
 			def restart
 				@serie.restart
 				@current = nil
+
+				self
 			end
 
 			def next_value
@@ -467,6 +482,8 @@ module Musa
 
 			def restart
 				@index = 0
+
+				self
 			end
 
 			def next_value
@@ -503,6 +520,8 @@ module Musa
 			def restart
 				@serie.restart
 				@reversed = BasicSerieFromArray.new next_values_array_of(@serie).reverse
+
+				self
 			end
 
 			def next_value
@@ -537,6 +556,8 @@ module Musa
 			def restart
 				@serie.restart
 				@values = @serie.to_a
+
+				self
 			end
 
 			def next_value
@@ -572,6 +593,8 @@ module Musa
 
 				@shifted = []
 				@shift.abs.times { || @shifted << @serie.next_value } if @shift < 0
+
+				self
 			end
 
 			def next_value
@@ -596,6 +619,8 @@ module Musa
 				@serie.restart
 
 				@remove.times { @serie.next_value }
+
+				self
 			end
 
 			def next_value
@@ -608,7 +633,7 @@ module Musa
 		class BasicSerieFromEvalBlockOnSerie
 			include ProtoSerie
 
-			def initialize(serie, with: nil, &block)
+			def initialize(serie, with: nil, on_restart: nil, &block)
 				
 				if serie.is_a? Array
 					@serie = BasicSerieFromArray.new serie
@@ -629,11 +654,16 @@ module Musa
 				end
 
 				@block = block
+				@on_restart = on_restart
 			end
 
-			def restart
+			def restart				
 				@serie.restart
 				@with_serie.restart if @with_serie
+
+				@on_restart.call if @on_restart
+
+				self
 			end
 
 			def next_value
@@ -665,6 +695,8 @@ module Musa
 
 			def restart
 				@serie.restart
+
+				self
 			end
 
 			def next_value

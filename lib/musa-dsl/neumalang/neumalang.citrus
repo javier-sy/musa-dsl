@@ -17,23 +17,15 @@ grammar Neumalang
 	end
 
 	rule object_expression
-		braced_command | indirect_expression | double_reference_expression | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
+		braced_command | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
 	end
 
 	rule parenthesis_expression
 		(lpar expression rpar) { capture(:expression).value }
 	end
 
-	rule indirect_expression
-		(asterisk spaces expression) { { kind: :indirection, indirection: capture(:expression).value } }
-	end
-
 	rule reference_expression
-		(ampersand spaces expression) { { kind: :reference, level: 1, reference: capture(:expression).value } }
-	end
-
-	rule double_reference_expression
-		(double_ampersand spaces expression) { { kind: :reference, level: 2, reference: capture(:expression).value } }
+		(ampersand spaces expression) { { kind: :reference, reference: capture(:expression).value } }
 	end
 
 	rule variable_assign
@@ -102,12 +94,6 @@ grammar Neumalang
 		}
 	end
 
-#	rule positional_parameters
-#		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) { 
-#			[ { kind: :indirection, indirection: capture(:a).value } ] + captures(:b).collect { |c| { kind: :indirection, indirection: c.value } } 
-#		}
-#	end
-
 	rule key_parameters
 		(spaces a:key_value_parameter (spaces comma spaces b:key_value_parameter spaces)* spaces) { 
 			
@@ -122,10 +108,6 @@ grammar Neumalang
 	rule key_value_parameter
 		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => capture(:value).value } }
 	end
-
-#	rule key_value_parameter
-#		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => { kind: :indirection, indirection: capture(:value).value } } }
-#	end
 
 	rule complex_command
 		(everything_except_braces? lbrace spaces complex_command spaces rbrace)* everything_except_braces?
@@ -222,9 +204,6 @@ grammar Neumalang
 	rule rangle '>' end
 	rule at '@' end
 	rule ampersand '&' end
-	rule double_ampersand '&&' end
-	rule asterisk '*' end
-	rule double_asterisk '**' end
 	rule equal '=' end
 	rule lcomment '/*' end
 	rule rcomment '*/' end

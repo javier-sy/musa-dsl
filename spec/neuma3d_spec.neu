@@ -1,97 +1,28 @@
-
 @s = [ I.1 II III ]
-
 @p = [ III.1 V VII || IV.1 VI VIII ]
-
 @n = IV
-
 @v = ·1010
+@c = { 10000 }
+@cc = &{ 10000 }
 
-@c = { puts "hola"; 10000 }
-@cc = &{ puts "hola"; 10000 }
+{ puts "@s = #{@s.inspect}" if @debug }
+{ puts "@p = #{@p.inspect}" if @debug  }
+{ puts "@n = #{@n.inspect}" if @debug  }
+{ puts "@v = #{@v.inspect}" if @debug  }
+{ puts "@c = #{@c.inspect}" if @debug  }
+{ puts "@cc = #{@cc.inspect}" if @debug  }
 
-{ puts "@s = #{@s.inspect}" }
-{ puts "@p = #{@p.inspect}" }
-{ puts "@n = #{@n.inspect}" }
-{ puts "@v = #{@v.inspect}" }
-{ puts "@c = #{@c.inspect}" }
-{ puts "@cc = #{@cc.inspect}" }
+{ puts if @debug }
+{ |i| puts "inline = #{i.inspect}" if @debug }([I.1 II III])
+{ |s| puts "Con paso de parámetros: @s = #{s.inspect}" if @debug }(@s)
+{ |p| puts "Con paso de parámetros: @p = #{p.collect { |pp| pp.inspect }}" if @debug}(@p)
+{ |n| puts "Con paso de parámetros: @n = #{n}" if @debug}(@n)
+{ |v| puts "Con paso de parámetros: @v = #{v}" if @debug}(@v)
+{ |c| puts "Con paso de parámetros: @c = #{c}" if @debug}(@c)
+{ |cc| puts "Con paso de parámetros: @cc = #{cc}" if @debug}(@cc)
 
+{ puts if @debug }
 
+[I II III].eval( &{ |e| e[:duration] = 2; e } )
 
-
-
-
-{ puts }
-{ |i| puts "inline = #{i.inspect}" }([I.1 II III])
-{ |s| puts "Con paso de parámetros: @s = #{s.inspect}" }(@s)
-{ |p| puts "Con paso de parámetros: @p = #{p.collect { |pp| pp.inspect }}" }(@p)
-{ |n| puts "Con paso de parámetros: @n = #{n}" }(@n)
-{ |v| puts "Con paso de parámetros: @v = #{v}" }(@v)
-{ |c| puts "Con paso de parámetros: @c = #{c}" }(@c)
-{ |cc| puts "Con paso de parámetros: @cc = #{cc}" }(@cc)
-
-{ puts }
-{ |i| puts "*inline = #{i.inspect}" }(*[I.1 II III])
-{ |s| puts "Con paso de parámetros: *@s = #{s.inspect}" }(*@s)
-{ |p| puts "Con paso de parámetros: *@p = #{p.collect { |pp| pp.inspect }}" }(*@p)
-{ |n| puts "Con paso de parámetros: *@n = #{n}" }(*@n)
-{ |v| puts "Con paso de parámetros: *@v = #{v}" }(*@v)
-{ |c| puts "Con paso de parámetros: *@c = #{c}" }(*@c)
-{ |cc| puts "Con paso de parámetros: *@cc = #{cc}" }(*@cc)
-
-{ puts }
-{ |i| puts "&inline = #{i.inspect}" }(&[I.1 II III])
-{ |s| puts "Con paso de parámetros: &@s = #{s}" }(&@s)
-{ |p| puts "Con paso de parámetros: &@p = #{p}" }(&@p)
-{ |n| puts "Con paso de parámetros: &@n = #{n}" }(&@n)
-{ |v| puts "Con paso de parámetros: &@v = #{v}" }(&@v)
-{ |c| puts "Con paso de parámetros: &@c = #{c}" }(&@c)
-{ |cc| puts "Con paso de parámetros: &@cc = #{cc}" }(&@cc)
-
-{ puts }
-{ |i| puts "&&inline = #{i.inspect}" }(&&[I.1 II III])
-{ |s| puts "Con paso de parámetros: &&@s = #{s}" }(&&@s)
-{ |p| puts "Con paso de parámetros: &&@p = #{p}" }(&&@p)
-{ |n| puts "Con paso de parámetros: &&@n = #{n}" }(&&@n)
-{ |v| puts "Con paso de parámetros: &&@v = #{v}" }(&&@v)
-{ |c| puts "Con paso de parámetros: &&@c = #{c}" }(&&@c)
-{ |cc| puts "Con paso de parámetros: &&@cc = #{cc}" }(&&@cc)
-
-{ puts }
-{ |i| puts "&&*inline = #{i.inspect}" }(&&*[I.1 II III])
-{ |s| puts "Con paso de parámetros: &&*@s = #{s}" }(&&*@s)
-{ |p| puts "Con paso de parámetros: &&*@p = #{p}" }(&&*@p)
-{ |n| puts "Con paso de parámetros: &&*@n = #{n}" }(&&*@n)
-{ |v| puts "Con paso de parámetros: &&*@v = #{v}" }(&&*@v)
-{ |c| puts "Con paso de parámetros: &&*@c = #{c}" }(&&*@c)
-{ |cc| puts "Con paso de parámetros: &&*@cc = #{cc}" }(&&*@cc)
-
-{ puts }
-{ |i| puts "&*inline = #{i.inspect}" }(&*[I.1 II III])
-{ |s| puts "Con paso de parámetros: &*@s = #{s.to_a}" }(&*@s)
-{ |p| puts "Con paso de parámetros: &*@p = #{p.collect { |pp| pp.to_a }}" }(&*@p)
-{ |n| puts "Con paso de parámetros: &*@n = #{n}" }(&*@n)
-{ |v| puts "Con paso de parámetros: &*@v = #{v}" }(&*@v)
-{ |c| puts "Con paso de parámetros: &*@c = #{c}" }(&*@c)
-{ |cc| puts "Con paso de parámetros: &*@cc = #{cc}" }(&*@cc)
-
-{ puts }
-{ |i| puts "*&inline = #{i.inspect}" }(*&[I.1 II III])
-{ |s| puts "Con paso de parámetros: *&@s = #{s.to_a}" }(*&@s)
-{ |p| puts "Con paso de parámetros: *&@p = #{p.collect { |pp| pp.to_a }}" }(*&@p)
-{ |n| puts "Con paso de parámetros: *&@n = #{n}" }(*&@n)
-{ |v| puts "Con paso de parámetros: *&@v = #{v}" }(*&@v)
-{ |c| puts "Con paso de parámetros: *&@c = #{c}" }(*&@c)
-{ |cc| puts "Con paso de parámetros: *&@cc = #{cc}" }(*&@cc)
-
-
-
-
-[I.1 II III]
-[I II III].clone
-
-
-[I II III].eval( &{ |e| puts "e = #{e}"; e[:duration] = 2; e } )
-
-@s.eval( &{ |e| puts "e = #{e}"; e[:duration] = 2; e } ) 				# .eval( &{ |x| { kind: :value, value: x } } )
+@s.eval( &{ |e| e[:duration] = 3; e } )

@@ -67,6 +67,8 @@ module Musa
 
 			def restart
 				@index = 0
+
+				self
 			end
 
 			def next_value
@@ -96,6 +98,8 @@ module Musa
 
 			def restart
 				@current = nil
+
+				self
 			end
 
 			def next_value
@@ -122,6 +126,8 @@ module Musa
 
 			def restart
 				@index = 0
+
+				self
 			end
 
 			def next_value
@@ -150,6 +156,8 @@ module Musa
 
 			def restart
 				@value = @from 
+
+				self
 			end
 
 			def next_value
@@ -176,6 +184,8 @@ module Musa
 
 			def restart
 				@value = @values[@random.rand(0...@values.size)]
+
+				self
 			end
 
 			def next_value
@@ -207,6 +217,8 @@ module Musa
 				while !@value || @value > @to
 					@value = @from + @random.rand(0..@range) * @step
 				end
+
+				self
 			end
 
 			def next_value
@@ -229,6 +241,8 @@ module Musa
 				@series.each_value do |serie|
 					serie.restart
 				end
+
+				self
 			end
 
 			def next_value
@@ -255,6 +269,8 @@ module Musa
 				@series.each do |serie|
 					serie.restart
 				end
+
+				self
 			end
 
 			def next_value
@@ -302,6 +318,8 @@ module Musa
 
 			def restart
 				@position = 0
+
+				self
 			end
 
 			def infinite?

@@ -2,6 +2,7 @@ module Musa
 
 	module ProtoSerie
 		def restart
+			self
 		end
 
 		def next_value
@@ -28,6 +29,8 @@ module Musa
 			@have_peeked_next_value = false
 			@peeked_next_value = nil
 			@serie.restart
+
+			self
 		end
 
 		def next_value
@@ -40,7 +43,7 @@ module Musa
 
 			propagate_value value
 
-			return value
+			value
 		end
 
 		def peek_next_value

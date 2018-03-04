@@ -123,10 +123,10 @@ class Musa::BaseSequencer
 				when :neuma 		then eval_neuma element[:neuma]
 				when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
 				when :indirection	then eval_indirection element[:indirection]
-				when :reference 	then eval_reference element[:reference], element[:level]
+				when :reference 	then eval_reference element[:reference]
 				when :event 		then element
 				else
-					raise ArgumentError, "Don't know how to process #{element}"
+					raise ArgumentError, "eval_element: don't know how to process #{element}"
 				end
 			end
 		end
@@ -140,18 +140,20 @@ class Musa::BaseSequencer
 		end
 
 		def eval_serie serie
-			serie.tap { |s| s.restart }.eval { |e| eval_element e }
+			context = subcontext
+			serie.eval on_restart: proc { context = subcontext } { |e| context.eval_element e }
 		end
 
 		def eval_parallel series
-			series.collect { |s| eval_serie s[:serie] }.extend Parallel
+			context = subcontext
+			series.collect { |s| context.eval_serie s[:serie] }.extend Parallel
 		end
 
 		def eval_assign_to variable_names, value
 			_value = nil
 
 			variable_names.each do |var_name|
-				@nl_context.instance_variable_set var_name, _value = eval_element(value)
+				@nl_context.instance_variable_set var_name, _value = subcontext.eval_element(value)
 			end
 
 			_value
@@ -161,7 +163,7 @@ class Musa::BaseSequencer
 			if @nl_context.instance_variable_defined? variable_name
 				@nl_context.instance_variable_get(variable_name)
 			else
-				raise NameError, "Variable #{element[:use_variable]} is not defined in #{element}"
+				raise NameError, "Variable #{variable_name} is not defined in context #{@nl_context}"
 			end
 		end
 
@@ -178,8 +180,7 @@ class Musa::BaseSequencer
 
 			value = play_eval.eval_element on
 
-			if value.is_a? Array # Array means the origin is a parallel
-
+			if value.is_a? Parallel
 				value.collect do |_value|
 					call_methods.each do |methd|
 						value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } if methd[:value_parameters]
@@ -189,7 +190,7 @@ class Musa::BaseSequencer
 					end
 
 					_value
-				end
+				end.extend Parallel
 			else
 				call_methods.each do |methd|
 
@@ -203,112 +204,25 @@ class Musa::BaseSequencer
 			end
 		end
 
-
-
-#REVISAR INDIRECTION Y REFERENCE... SIGUEN SIENDO NECESARIOS??????
-
-
-
-		def eval_indirection element, level = 1
-			if element.is_a?(Hash) && element.key?(:kind)
-				if element[:kind] == :reference
-					eval_reference element[:reference], element[:level] - 1
-				else
-					if level == 1
-
-						#puts "eval_indirection: element = #{element} level = #{level}"
-
-						eval_element element
-					elsif level == 0
-						eval_element element
-					else
-						raise ArgumentError, "Don't know how to process element #{element} with level #{level}"
-					end
-				end
-			else
-				raise ArgumentError, "Don't know how to process element #{element}"
-			end
-		end
-
-		def eval_reference element, level
+		def eval_reference element
 			if element.is_a?(Hash) && element.key?(:kind)
 				case element[:kind]
-				when :indirection
-					eval_indirection element[:indirection], 0
 				when :command
 					element[:command]
 				else
-					case level
-					when 2
-
-						case element
-						when Musa::Serie
-							{ 	kind: :serie, 
-								serie: element.eval { |e| 
-									{ 	kind: :neuma, 
-										neuma: e.to_neuma(hash: true) } } }
-						when Parallel
-							{ 	kind: :parallel, 
-								parallel: element.collect { |s| 
-									{ 	kind: :serie, 
-										serie: s.eval { |e| 
-											{ 	kind: :neuma, 
-												neuma: e.to_neuma(hash: true) } } } }.extend(Parallel) }
-						when Musa::Neuma::Dataset
-							{ 	kind: :neuma, 
-								neuma: element.to_neuma(hash: true) }
-						else
-							{ 	kind: :value, 
-								value: element }
-						end
-
-					when 1
-
-						case element
-						when Musa::Serie
-							{ 	kind: :serie, 
-								serie: element.eval { |e| e.is_a?(Dataset) ? 
-									{ 	kind: :neuma, 
-										neuma: e.to_neuma(hash: true) } : 
-									{ 	kind: :value, 
-										value: e } } }
-
-						when Parallel
-							{ 	kind: :parallel, 
-								parallel: element.collect { |e| 
-									{ 	kind: :serie, 
-										serie: element } }.extend(Parallel) }
-
-						when Musa::Neuma::Dataset
-							{ 	kind: :neuma, 
-								neuma: element.to_neuma(hash: true) }
-
-						else
-							{ 	kind: :value, 
-								value: element }
-						end
-
-					when 0
-
-						eval_element element
-
-					else
-						raise ArgumentError, "Don't know how to process level #{level}"
-					end
+					raise ArgumentError, "eval_reference(&): don't know how to process element #{element}"
 				end
 			else
-				raise ArgumentError, "Don't know how to process element #{element}"
+				raise ArgumentError, "eval_reference(&): don't know how to process element #{element}"
 			end
 		end
 
-		private :eval_serie, :eval_parallel, :eval_assign_to, :eval_use_variable # TODO falta poner el resto de privates
-
 		def run_operation element
-
-			#puts "run_operation: element = #{element.inspect} element.is_a?(Musa::Dataset) = #{element.is_a?(Musa::Neuma::Dataset)}"
-
-			
 			case element
+			when nil
+				{ 	current_operation: :none, 
+					continue_operation: :now }
+
 			when Musa::Neuma::Dataset
 			
 				{ 	current_operation: :block,
@@ -317,12 +231,13 @@ class Musa::BaseSequencer
 					continue_parameter: element[:duration] }
 			
 			when Musa::Serie
+
 				{ 	current_operation: :play, 
-					current_parameter: element }
+					current_parameter: element.restart }
 
 			when Parallel
 				{ 	current_operation: :parallel_play, 
-					current_parameter: value }
+					current_parameter: element }
 
 			else
 				case element[:kind]
@@ -392,16 +307,12 @@ class Musa::BaseSequencer
 
 					run_operation eval_call_methods(element[:on], element[:call_methods])
 
-				when :indirection
-
-					run_operation eval_indirection(element[:eval])
-
 				when :reference
 
-					run_operation eval_reference(element[:reference], element[:level])
+					run_operation eval_reference(element[:reference])
 
 				else
-					raise ArgumentError, "Don't know how to process #{element}"
+					raise ArgumentError, "run_operation: don't know how to process #{element}"
 				end
 			end	
 		end

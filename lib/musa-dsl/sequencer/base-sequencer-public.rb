@@ -147,14 +147,14 @@ class Musa::BaseSequencer
 		control
 	end
 
-	def play serie, mode: nil, parameter: nil, after: nil, **mode_args, &block
+	def play serie, mode: nil, parameter: nil, after: nil, context: nil, **mode_args, &block
 
 		mode ||= :wait
 
 		control = PlayControl.new @event_handlers.last, after: after
 		@event_handlers.push control
 
-		_play serie, control, mode: mode, parameter: parameter, **mode_args, &block
+		_play serie, control, context, mode: mode, parameter: parameter, **mode_args, &block
 
 		@event_handlers.pop
 
