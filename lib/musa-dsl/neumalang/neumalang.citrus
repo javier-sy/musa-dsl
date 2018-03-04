@@ -98,9 +98,15 @@ grammar Neumalang
 
 	rule positional_parameters
 		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) { 
-			[ { kind: :indirection, indirection: capture(:a).value } ] + captures(:b).collect { |c| { kind: :indirection, indirection: c.value } } 
+			[ capture(:a).value ] + captures(:b).collect { |c| c.value }
 		}
 	end
+
+#	rule positional_parameters
+#		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) { 
+#			[ { kind: :indirection, indirection: capture(:a).value } ] + captures(:b).collect { |c| { kind: :indirection, indirection: c.value } } 
+#		}
+#	end
 
 	rule key_parameters
 		(spaces a:key_value_parameter (spaces comma spaces b:key_value_parameter spaces)* spaces) { 
@@ -114,8 +120,12 @@ grammar Neumalang
 	end
 
 	rule key_value_parameter
-		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => { kind: :indirection, indirection: capture(:value).value } } }
+		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => capture(:value).value } }
 	end
+
+#	rule key_value_parameter
+#		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => { kind: :indirection, indirection: capture(:value).value } } }
+#	end
 
 	rule complex_command
 		(everything_except_braces? lbrace spaces complex_command spaces rbrace)* everything_except_braces?

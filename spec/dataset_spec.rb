@@ -6,15 +6,15 @@ RSpec.describe Musa::Neuma do
 
 	context "Dataset transformations" do
 
-		GDV = Musa::Dataset::GDV
+		GDV = Musa::Datasets::GDV
 
 		it "GDV to PDVE" do
 			
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 
-			expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
-			expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
-			expect({ duration: 0 }.extend(Musa::Dataset::GDV).to_pdv(scale)).to eq({ duration: 0})
+			expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
+			expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
+			expect({ duration: 0 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ duration: 0})
 		end
 
 		it "GDV to PDVE (with module alias)" do

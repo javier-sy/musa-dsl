@@ -1,10 +1,10 @@
 require 'musa-dsl/neuma'
 
-module Musa::Dataset
+module Musa::Datasets
 
 	module GDVd # abs_grade abs_octave delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
 
-		extend Musa::Dataset
+		include Musa::Neuma::Dataset
 
 		def to_gdv scale, previous:
 
@@ -103,7 +103,7 @@ module Musa::Dataset
 
 	module GDV # grade duration velocity event command
 
-		extend Musa::Dataset
+		include Musa::Neuma::Dataset
 
 		def to_pdv scale
 			r = {}
@@ -121,7 +121,7 @@ module Musa::Dataset
 				r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
 			end
 
-			r.extend Musa::Dataset::PDV
+			r.extend Musa::Datasets::PDV
 		end
 
 		def to_neuma mode = nil
@@ -198,7 +198,7 @@ module Musa::Dataset
 				r[:abs_velocity] = self[:velocity] if self[:velocity]
 			end
 
-			r.extend Musa::Dataset::GDVd
+			r.extend Musa::Datasets::GDVd
 		end
 
 		module Parser

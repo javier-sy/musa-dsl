@@ -109,22 +109,25 @@ class Musa::BaseSequencer
 			NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context, parent: self
 		end
 
-		def eval_element element, decode_neumas = nil
-			decode_neumas ||= false
-			
-			case element[:kind]
-			when :serie 		then eval_serie element[:serie], decode_neumas
-			when :parallel 		then eval_parallel element[:parallel], decode_neumas
-			when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value]
-			when :use_variable 	then eval_use_variable element[:use_variable]
-			when :command 		then eval_command element[:command], element[:value_parameters], element[:key_parameters]
-			when :value 		then eval_value element[:value]
-			when :neuma 		then eval_neuma element[:neuma], decode_neumas
-			when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
-			when :indirection	then eval_indirection element[:indirection]
-			when :reference 	then eval_reference element[:reference], element[:level]
+		def eval_element element
+			if element.is_a? Musa::Neuma::Dataset
+				element
 			else
-				raise ArgumentError, "Don't know how to process #{element}"
+				case element[:kind]
+				when :serie 		then eval_serie element[:serie]
+				when :parallel 		then eval_parallel element[:parallel]
+				when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value]
+				when :use_variable 	then eval_use_variable element[:use_variable]
+				when :command 		then eval_command element[:command], element[:value_parameters], element[:key_parameters]
+				when :value 		then eval_value element[:value]
+				when :neuma 		then eval_neuma element[:neuma]
+				when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
+				when :indirection	then eval_indirection element[:indirection]
+				when :reference 	then eval_reference element[:reference], element[:level]
+				when :event 		then element
+				else
+					raise ArgumentError, "Don't know how to process #{element}"
+				end
 			end
 		end
 
@@ -132,24 +135,16 @@ class Musa::BaseSequencer
 			value
 		end
 
-		def eval_neuma neuma, decode = nil
-			if decode
-				@decoder.decode neuma
-			else
-				neuma
-			end
+		def eval_neuma neuma
+			@decoder.decode neuma
 		end
 
-		def eval_serie serie, decode_neumas = nil
-			if decode_neumas
-				serie.tap { |s| s.restart }.eval { |e| eval_element e, decode_neumas }
-			else
-				serie.tap { |s| s.restart }
-			end
+		def eval_serie serie
+			serie.tap { |s| s.restart }.eval { |e| eval_element e }
 		end
 
-		def eval_parallel series, decode_neumas = nil
-			series.collect { |s| eval_serie s[:serie], decode_neumas }.extend Parallel
+		def eval_parallel series
+			series.collect { |s| eval_serie s[:serie] }.extend Parallel
 		end
 
 		def eval_assign_to variable_names, value
@@ -208,13 +203,22 @@ class Musa::BaseSequencer
 			end
 		end
 
+
+
+#REVISAR INDIRECTION Y REFERENCE... SIGUEN SIENDO NECESARIOS??????
+
+
+
 		def eval_indirection element, level = 1
 			if element.is_a?(Hash) && element.key?(:kind)
 				if element[:kind] == :reference
 					eval_reference element[:reference], element[:level] - 1
 				else
 					if level == 1
-						eval_element eval_element(element), true
+
+						#puts "eval_indirection: element = #{element} level = #{level}"
+
+						eval_element element
 					elsif level == 0
 						eval_element element
 					else
@@ -250,7 +254,7 @@ class Musa::BaseSequencer
 										serie: s.eval { |e| 
 											{ 	kind: :neuma, 
 												neuma: e.to_neuma(hash: true) } } } }.extend(Parallel) }
-						when Musa::Dataset
+						when Musa::Neuma::Dataset
 							{ 	kind: :neuma, 
 								neuma: element.to_neuma(hash: true) }
 						else
@@ -275,7 +279,7 @@ class Musa::BaseSequencer
 									{ 	kind: :serie, 
 										serie: element } }.extend(Parallel) }
 
-						when Musa::Dataset
+						when Musa::Neuma::Dataset
 							{ 	kind: :neuma, 
 								neuma: element.to_neuma(hash: true) }
 
@@ -301,121 +305,106 @@ class Musa::BaseSequencer
 
 		def run_operation element
 
-			puts "run_operation: element = #{element.inspect}"
+			#puts "run_operation: element = #{element.inspect} element.is_a?(Musa::Dataset) = #{element.is_a?(Musa::Neuma::Dataset)}"
+
 			
-			case element[:kind]
-			when :value
+			case element
+			when Musa::Neuma::Dataset
+			
+				{ 	current_operation: :block,
+					current_parameter: element,
+					continue_operation: :wait, 
+					continue_parameter: element[:duration] }
+			
+			when Musa::Serie
+				{ 	current_operation: :play, 
+					current_parameter: element }
 
-				_value = eval_value element[:value]
+			when Parallel
+				{ 	current_operation: :parallel_play, 
+					current_parameter: value }
 
-				if _value.is_a?(Hash) && _value.key?(:duration)
+			else
+				case element[:kind]
+				when :value
+
+					_value = eval_value element[:value]
+
+					if _value.is_a?(Hash) && _value.key?(:duration)
+						{ 	current_operation: :block,
+							current_parameter: _value,
+							continue_operation: :wait, 
+							continue_parameter: _value[:duration] }
+					else
+						{ 	current_operation: :block,
+							current_parameter: _value,
+							continue_operation: :now }
+					end
+
+				when :neuma
+
+					_value = eval_neuma element[:neuma]
+
 					{ 	current_operation: :block,
 						current_parameter: _value,
 						continue_operation: :wait, 
 						continue_parameter: _value[:duration] }
-				else
-					{ 	current_operation: :block,
-						current_parameter: _value,
+
+				when :serie
+
+					{ 	current_operation: :play, 
+						current_parameter: eval_serie(element[:serie]) }
+
+				when :parallel
+
+					{ 	current_operation: :parallel_play, 
+						current_parameter: eval_parallel(element[:parallel]) }
+
+				when :assign_to
+
+					eval_assign_to element[:assign_to], element[:assign_value]
+
+					{  	current_operation: :none, 
 						continue_operation: :now }
+
+				when :use_variable
+
+					run_operation eval_use_variable(element[:use_variable])
+
+				when :event
+
+					value_parameters = key_parameters = nil
+
+					value_parameters = element[:value_parameters].collect { |e| subcontext.eval_element(e) } if element[:value_parameters]
+					key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.eval_element(e) ] }.to_h if element[:key_parameters]
+
+					{ 	current_operation: :event,
+						current_event: element[:event],
+						current_value_parameters: value_parameters,
+						current_key_parameters: key_parameters,
+						continue_operation: :now }
+
+				when :command
+
+					run_operation eval_command(element[:command], element[:value_parameters], element[:key_parameters])
+
+				when :call_methods
+
+					run_operation eval_call_methods(element[:on], element[:call_methods])
+
+				when :indirection
+
+					run_operation eval_indirection(element[:eval])
+
+				when :reference
+
+					run_operation eval_reference(element[:reference], element[:level])
+
+				else
+					raise ArgumentError, "Don't know how to process #{element}"
 				end
-
-			when :neuma
-
-				_value = eval_neuma element[:neuma], true
-
-				{ 	current_operation: :block,
-					current_parameter: _value,
-					continue_operation: :wait, 
-					continue_parameter: _value[:duration] }
-
-			when :serie
-
-				{ 	current_operation: :play, 
-					current_parameter: eval_serie(element[:serie]) }
-
-			when :parallel
-
-				{ 	current_operation: :parallel_play, 
-					current_parameter: eval_parallel(element[:parallel]) }
-
-			when :assign_to
-
-				eval_assign_to element[:assign_to], element[:assign_value]
-
-				{  	current_operation: :none, 
-					continue_operation: :now }
-
-			when :use_variable
-
-				to_operation eval_use_variable(element[:use_variable])
-
-			when :event
-
-				value_parameters = key_parameters = nil
-
-				value_parameters = element[:value_parameters].collect { |e| subcontext.eval_element(e) } if element[:value_parameters]
-				key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.eval_element(e) ] }.to_h if element[:key_parameters]
-
-				{ 	current_operation: :event,
-					current_event: element[:event],
-					current_value_parameters: value_parameters,
-					current_key_parameters: key_parameters,
-					continue_operation: :now }
-
-			when :command
-
-				to_operation eval_command(element[:command], element[:value_parameters], element[:key_parameters])
-
-			when :call_methods
-
-				to_operation eval_call_methods(element[:on], element[:call_methods])
-
-			when :eval
-
-				run_operation eval_indirection(element[:eval])
-
-			when :reference
-
-				run_operation eval_reference(element[:reference], element[:level])
-
-			else
-				raise ArgumentError, "Don't know how to process #{element}"
-			end			
+			end	
 		end
-
-		def to_operation value
-
-			if value
-				if value.is_a? Musa::Serie 
-					# If value is a Serie, it's a "native" serie, not a tokens serie of kind: :neuma. 
-					# For this reason it needs to be converted to something interpretable by _play (i.e., kind: :value, similar to interpreted :neuma)
-
-					{ current_operation: :play, current_parameter: value }
-
-				elsif value.is_a? Array
-
-					{ current_operation: :parallel_play, current_parameter: value }
-
-				elsif value.is_a? Hash
-
-					if value.key? :duration
-
-						{ 	current_operation: :block,
-							current_parameter: value,
-							continue_operation: :wait, 
-							continue_parameter: value[:duration] }
-					else
-						{ 	current_operation: :block,
-							current_parameter: value,
-							continue_operation: :now }
-					end
-				end
-			else
-				{ current_operation: :none, continue_operation: :now }
-			end
-		end
-
-		private :to_operation
 
 		def inspect
 			"NeumalangModePlayEval #{id} #{@decoder}"

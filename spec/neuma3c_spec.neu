@@ -6,14 +6,15 @@
 [I.1 II.1 III.1].after([I.2 II.2 III.2].clone)
 
 { puts }
-{ puts "[I.1 II.1 III.1].after(&[I.2 II.2 III.2])" }
-{ puts }
-*/
+{ puts "[I.1 II.1 III.1].repeat(·2)" }
 
 [I.1 II.1 III.1].repeat(·2)
-# [I.1 II.1 III.1].after(&[I.2 II.2 III.2].reverse).repeat(·2)
 
-/*
+{ puts }
+{ puts "[I.1 II.1 III.1].after([I.2 II.2 III.2].reverse).repeat(·2)" }
+
+[I.1 II.1 III.1].after([I.2 II.2 III.2].reverse).repeat(·2)
+
 { puts }
 { puts "[I.1 II.1 III.1].after([I.2 II.2 III.2])" }
 { puts }
@@ -24,9 +25,8 @@
 
 
 
-
-
+[I.1 ::event II III].after([IV [I III] V].reverse).repeat(·2)
 
 
 # original
-# [I.1 ::event II III].after(&[IV [V VI] VII].reverse).repeat(·2)
+#[I.1 ::event II III].after([IV [V VI] VII].reverse).repeat(·2)

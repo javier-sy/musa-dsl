@@ -1,9 +1,10 @@
 require 'musa-dsl/neuma'
 
-module Musa::Dataset
+module Musa::Datasets
+
 	module PDV # pitch duration velocity
 		
-		extend Musa::Dataset
+		include Musa::Neuma::Dataset
 
 		def to_gdv scale
 			r = {}
@@ -26,7 +27,7 @@ module Musa::Dataset
 				r[:velocity] = [0..16, 17..32, 33..48, 49..64, 65..80, 81..96, 97..112, 113..127].index { |r| r.cover? self[:velocity] } - 3
 			end
 
-			r.extend Musa::Dataset::GDV
+			r.extend Musa::Datasets::GDV
 		end
 	end
 end	
