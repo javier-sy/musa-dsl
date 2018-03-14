@@ -1,7 +1,7 @@
 @s = [ I.1 II III ]
 @p = [ III.1 V VII || IV.1 VI VIII ]
 @n = IV
-@v = ·1010
+@v = '1010
 @c = { 10000 }
 @cc = &{ 10000 }
 

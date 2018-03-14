@@ -2,6 +2,8 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
+require 'pp'
+
 RSpec.describe Musa::Neumalang do
 
 	context "Neuma simple parsing" do
@@ -45,20 +47,32 @@ RSpec.describe Musa::Neumalang do
 			expect(result[1]).to eq({ kind: :neuma, neuma: [nil, "1/2"] })
 		end
 
-		differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new 
+		it "Basic neuma inline parsing silence" do
+
+			result = Musa::Neumalang.parse('0 silence.1/2').to_a(true)
+
+			expect(result[0]).to eq({ kind: :neuma, neuma: ["0"] })
+			expect(result[1]).to eq({ kind: :neuma, neuma: ["silence", "1/2"] })
+		end
 
 		it "Basic neuma inline parsing with differential decoder" do
 
-			result = Musa::Neumalang.parse('0 . +1 2.p 2.1/2.p /*comentario 1*/', decode_with: differential_decoder).to_a(true)
+			differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new 
+
+			result = Musa::Neumalang.parse('0 . +1 2.p silence silence.1/3 2.1/2.p /*comentario 1*/', decode_with: differential_decoder).to_a(true)
 
 			expect(result[0]).to eq({ abs_grade: 0 })
 			expect(result[1]).to eq({ })
 			expect(result[2]).to eq({ delta_grade: 1 })
 			expect(result[3]).to eq({ abs_grade: 2, abs_velocity: -1 })
-			expect(result[4]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
+			expect(result[4]).to eq({ abs_grade: :silence })
+			expect(result[5]).to eq({ abs_grade: :silence, abs_duration: Rational(1,3) })
+			expect(result[6]).to eq({ abs_grade: 2, abs_duration: Rational(1,2), abs_velocity: -1 })
 		end
 
 		it "Basic neuma file parsing with GDV differential decoder" do
+
+			differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new 
 
 			result = Musa::Neumalang.parse_file(File.join(File.dirname(__FILE__), "neuma_spec.neu"), decode_with: differential_decoder).to_a(true)
 
@@ -82,6 +96,7 @@ RSpec.describe Musa::Neumalang do
 
 			# expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
 
+			expect(result[c+=1]).to eq({ abs_grade: :silence })
 			expect(result[c+=1]).to eq({ abs_grade: 0 })
 			expect(result[c+=1]).to eq({ })
 			expect(result[c+=1]).to eq({ delta_grade: 1 })
@@ -92,7 +107,10 @@ RSpec.describe Musa::Neumalang do
 
 			# expect(result[c+=1]).to eq({ event: :evento }) # no se puede procesar como neuma simple
 
+			expect(result[c+=1]).to eq({ abs_grade: :silence, factor_duration: Rational(1,2) })
+
 			expect(result[c+=1]).to eq({ delta_grade: -1 })
+			expect(result[c+=1]).to eq({ abs_grade: :II })
 		end
 
 		it "Basic neuma file parsing with GDV decoder" do
@@ -123,6 +141,8 @@ RSpec.describe Musa::Neumalang do
 
 			# expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
 
+			expect(result[c+=1]).to eq({ grade: :silence, duration: Rational(1,2), velocity: 3 })
+
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
 			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 3 })
 			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,2), velocity: 3 })
@@ -133,7 +153,11 @@ RSpec.describe Musa::Neumalang do
 			
 			# expect(result[c+=1]).to eq({ duration: 0, event: :evento }) # no se puede procesar como neuma simple
 
-			expect(result[c+=1]).to eq({ grade: 0, duration: Rational(1,2), velocity: 0 })
+			expect(result[c+=1]).to eq({ grade: :silence, duration: Rational(1,4), velocity: 0 })
+
+			expect(result[c+=1]).to eq({ grade: :silence, duration: Rational(1,4), velocity: 0 })
+
+			expect(result[c+=1]).to eq({ grade: 1, duration: Rational(1,4), velocity: 0 })
 		end
 	end
 end

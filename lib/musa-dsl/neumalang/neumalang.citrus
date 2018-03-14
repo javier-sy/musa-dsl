@@ -143,11 +143,11 @@ grammar Neumalang
   	end
 
   	rule float
-    	(mid_dot str:(digits dot digits) spaces) { { kind: :value, value: capture(:str).value.to_f } }
+    	(single_quote str:(digits dot digits) spaces) { { kind: :value, value: capture(:str).value.to_f } }
   	end
 
   	rule integer
-    	(mid_dot digits spaces) { { kind: :value, value: capture(:digits).value.to_i } }
+    	(single_quote digits spaces) { { kind: :value, value: capture(:digits).value.to_i } }
   	end
 
 	rule comment
@@ -187,8 +187,8 @@ grammar Neumalang
 	end
 
 	rule double_quote '"' end
+	rule single_quote '\'' end
 	rule dot '.' end
-	rule mid_dot '·' end
 	rule comma ',' end
 	rule colon ':' end
 	rule double_colon '::' end

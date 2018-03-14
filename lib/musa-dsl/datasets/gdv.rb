@@ -11,9 +11,17 @@ module Musa::Datasets
 			r = previous.clone.extend GDV
 
 			if self[:abs_grade]
-				r[:grade] = scale.note_of self[:abs_grade]
+				if self[:abs_grade] == :silence
+					r[:grade] = self[:abs_grade]
+				else
+					r[:grade] = scale.note_of self[:abs_grade]
+				end
 			elsif self[:delta_grade]
-				r[:grade] = scale.note_of r[:grade] + self[:delta_grade]
+				if r[:grade] == :silence
+					# doesn't change silence
+				else
+					r[:grade] = scale.note_of r[:grade] + self[:delta_grade]
+				end
 			end
 
 			if self[:abs_octave]
@@ -109,7 +117,11 @@ module Musa::Datasets
 			r = {}
 
 			if self[:grade]
-				r[:pitch] = scale.pitch_of self[:grade], octave: self[:octave]
+				if self[:grade] == :silence
+					r[:pitch] = self[:grade] 
+				else
+					r[:pitch] = scale.pitch_of self[:grade], octave: self[:octave]
+				end
 			end
 
 			if self[:duration]
@@ -154,51 +166,31 @@ module Musa::Datasets
 
 		def to_gdvd scale, previous: nil
 
-			r = {}
+			r = {}.extend Musa::Datasets::GDVd
 
 			if previous
-				current_note = scale.reduced_grade(self[:grade]) + scale.number_of_grades * (scale.octave_of_grade(self[:grade]) + self[:octave])
-				previous_note = scale.reduced_grade(previous[:grade]) + scale.number_of_grades * (scale.octave_of_grade(previous[:grade]) + previous[:octave])
-				
-				note_diff = current_note - previous_note
-				
-				if note_diff < 0
-					r[:delta_grade] = -(note_diff.abs % scale.number_of_grades)
-					r[:delta_octave] = -(note_diff.abs / scale.number_of_grades)
-				else
-					r[:delta_grade] = note_diff % scale.number_of_grades
-					r[:delta_octave] = note_diff / scale.number_of_grades
-				end
-			else
-				r[:abs_grade] = self[:grade] if self[:grade]
-				r[:abs_octave] = self[:octave] if self[:octave] && self[:octave] != 0
-			end
 
-			if previous
-				if self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])
+				if self[:grade] == :silence || previous[:grade] == :silence
+					r[:abs_grade] = self[:grade]
+
+				elsif self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])
 					r[:delta_grade] = scale.note_of(self[:grade]) - scale.note_of(previous[:grade])
 				end
-			else
-				r[:abs_grade] = self[:grade] if self[:grade]
-			end
 
-			if previous
 				if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
 					r[:delta_duration] = self[:duration] - previous[:duration]
 				end
-			else
-				r[:abs_duration] = self[:duration] if self[:duration]
-			end
 
-			if previous
 				if self[:velocity] && previous[:velocity] && (self[:velocity] != previous[:velocity])
 					r[:delta_velocity] = self[:velocity] - previous[:velocity]
 				end
 			else
+				r[:abs_grade] = self[:grade] if self[:grade]
+				r[:abs_duration] = self[:duration] if self[:duration]
 				r[:abs_velocity] = self[:velocity] if self[:velocity]
 			end
 
-			r.extend Musa::Datasets::GDVd
+			r
 		end
 
 		module Parser

@@ -14,6 +14,7 @@ RSpec.describe Musa::Neuma do
 
 			expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ pitch: 60+5, duration: 1, velocity: 127})
 			expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ pitch: 60+12+2, duration: 1, velocity: 16})
+			expect({ grade: :silence, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ pitch: :silence, duration: 1, velocity: 16})
 			expect({ duration: 0 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq({ duration: 0})
 		end
 
@@ -31,7 +32,7 @@ RSpec.describe Musa::Neuma do
 
 		it "GDV neuma to PDVE and back to neuma via GDV::NeumaDecoder" do
 			
-			gdv_abs_neumas = '0.o0.1.p 0.o1.2.p 0.o-1.3.p 2.o0.3.fff 1.o0.2.fff 5.o1.1/2.ppp'
+			gdv_abs_neumas = '0.o0.1.p 0.o1.2.p 0.o-1.3.p 2.o0.3.fff 1.o0.2.fff 5.o1.1/2.ppp silence.1/2.ppp'
 			
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 
@@ -52,8 +53,8 @@ RSpec.describe Musa::Neuma do
 
 		it "GDV neuma to GDVd neuma via GDV::NeumaDecoder" do
 			
-			gdv_abs_neumas = '0.1.p 0.2.p 0.3.p 2.3.fff 1.2.fff 5.1/2.ppp'
-			gdv_diff_neumas = '0.1.p .+1 .+1 +2.+fffff -1.-1 +4.-3/2.-fffffff'
+			gdv_abs_neumas = '0.1.p 0.2.p 0.3.p 2.3.fff 1.2.fff 5.1/2.ppp silence.1'
+			gdv_diff_neumas = '0.1.p .+1 .+1 +2.+fffff -1.-1 +4.-3/2.-fffffff silence.+1/2'
 			
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 
@@ -73,7 +74,7 @@ RSpec.describe Musa::Neuma do
 
 		it "GDV neuma to GDVd and back to neuma via GDV::NeumaDifferentialDecoder" do
 			
-			gdv_diff_neumas = '0 . +1 2.p 2.1/2.p'
+			gdv_diff_neumas = '0 . +1 2.p 2.1/2.p silence.+2'
 
 			decoder = GDV::NeumaDifferentialDecoder.new 
 
@@ -88,8 +89,8 @@ RSpec.describe Musa::Neuma do
 
 		it "GDV diff neuma to GDV abs neuma via GDV::NeumaDecoder" do
 			
-			gdv_diff_neumas = '0.o1.1.mf . +1.+o1 2.p 2.-o3.1/2.p'
-			gdv_abs_neumas = '0.o1.1.mf 0.o1.1.mf 1.o2.1.mf 2.o2.1.p 2.o-1.1/2.p'
+			gdv_diff_neumas = '0.o1.1.mf . +1.+o1 2.p 2.-o3.1/2.p silence.+1'
+			gdv_abs_neumas = '0.o1.1.mf 0.o1.1.mf 1.o2.1.mf 2.o2.1.p 2.o-1.1/2.p silence.o-1.3/2.p'
 
 			scale = Musa::Scales.get(:major).based_on_pitch 60
 

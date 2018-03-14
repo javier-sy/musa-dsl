@@ -13,6 +13,8 @@ I.p 	/* piano */
 
 0 1 2.p 2.1/2.ff
 
+silence
+
 # { 10 + 100 + { a: 1000, b: 2000}[:a] + {a: 10000}.first[1] } # no se puede procesar como neuma simple
 
 # modo diferencial
@@ -26,8 +28,9 @@ I.p 	/* piano */
 .p 		/* como el anterior, con velocidad substituida por p */
 .-p 	/* como el anterior, con velocidad menos piano, es decir, un punto +forte */
 
+silence.*1/2
 
-/* ::evento */ -1  # no se puede procesar como neuma simple
+/* ::evento */ -1 II # no se puede procesar como neuma simple
 
 
 /* Sintaxis: Serie separada con .  */
