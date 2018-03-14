@@ -237,7 +237,7 @@ class Musa::BaseSequencer
 
 			when Parallel
 				{ 	current_operation: :parallel_play, 
-					current_parameter: element }
+					current_parameter: element.tap { |e| e.each {|s| s.restart } } }
 
 			else
 				case element[:kind]
