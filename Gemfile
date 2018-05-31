@@ -5,7 +5,6 @@ group :neuma do
 end
 
 group :transport do
-	gem "unimidi", "~> 0.4", ">= 0.4.7"
 	gem "midi-message", "~> 0.4", ">= 0.4.9"
 	gem "midi-nibbler", "~> 0.2", ">= 0.2.4"
 end
@@ -13,4 +12,3 @@ end
 group :test do
 	gem "rspec", "~> 3.0"
 end
-
