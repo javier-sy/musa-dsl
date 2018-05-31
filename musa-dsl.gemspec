@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.date        = '2018-05-31'
   s.summary     = "A Ruby DSL for making simple and complex music"
   s.description = "..."
-  s.authors     = ["Javier Sánchez"]
+  s.authors     = ["Javier Sánchez Yeste"]
   s.email       = 'javier.sy@gmail.com'
   s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   s.homepage    = 'http://rubygems.org/gems/musa-dsl'
