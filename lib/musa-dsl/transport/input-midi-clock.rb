@@ -24,10 +24,10 @@ module Musa
 						mm = [mm] unless mm.is_a? Array
 
 						mm.each do |m|
-							case m.name 
+							case m.name
 							when 'Start'
 								@on_start.each { |block| block.call }
-							
+
 							when 'Stop'
 								@on_stop.each { |block| block.call }
 
@@ -35,9 +35,9 @@ module Musa
 								yield if block_given?
 
 							when 'Song Position Pointer'
-								position = Rational(message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7), 16) + 1
+								midi_beat_position = message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7)
 
-								@on_song_position_pointer.each { |block| block.call position }
+								@on_song_position_pointer.each { |block| block.call midi_beat_position }
 							end
 						end
 					end

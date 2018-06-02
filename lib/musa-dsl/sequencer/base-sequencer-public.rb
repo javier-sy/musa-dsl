@@ -8,12 +8,12 @@ class Musa::BaseSequencer
 	attr_reader :ticks_per_bar, :running_position
 
 	def initialize quarter_notes_by_bar, quarter_note_divisions
-		
+
 		@on_debug_at = []
 		@on_fast_forward = []
 
 		@ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
-		
+
 		@score = Hash.new
 
 		reset
@@ -31,18 +31,17 @@ class Musa::BaseSequencer
 
 		if @score[position_to_run]
 			@score[position_to_run].each do |command|
+				@event_handlers.push command[:parent_control] if command.has_key?(:parent_control)
 
-				@event_handlers.push command[:parent_control]
-				
 				command[:block].call *command[:value_parameters], **command[:key_parameters]
 
-				@event_handlers.pop
+				@event_handlers.pop if command.has_key?(:parent_control)
 			end
 
 			@score.delete position_to_run
 		end
 	end
-	
+
 	def size
 		@score.size
 	end
@@ -112,9 +111,16 @@ class Musa::BaseSequencer
 		control
 	end
 
+	def raw_at bar_position, force_first: nil, &block
+		_raw_numeric_at bar_position, force_first: force_first, &block
+
+		nil
+	end
+
 	def at bar_position, with: nil, debug: nil, &block
 
 		debug ||= false
+		raw ||= false
 
 		control = EventHandler.new @event_handlers.last
 		@event_handlers.push control

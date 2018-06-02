@@ -7,6 +7,30 @@ class Musa::BaseSequencer
 
 	private
 
+	def _raw_numeric_at bar_position, force_first: nil, &block
+		force_first ||= false
+
+		position = bar_position.rationalize * @ticks_per_bar
+
+		if position == @position
+			block.call
+
+		elsif position > @position
+			@score[position] = [] if !@score[position]
+
+			value = { block: block, value_parameters: [], key_parameters: {} }
+			if force_first
+				@score[position].insert 0, value
+			else
+				@score[position] << value
+			end
+		else
+			_log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+		end
+
+		nil
+	end
+
 	def _numeric_at(bar_position, control, next_bar_position: nil, with: nil, debug: nil, &block)
 
 		raise ArgumentError, 'Block is mandatory' if !block
@@ -16,8 +40,7 @@ class Musa::BaseSequencer
 		if position != position.round
 			original_position = position
 			position = position.round.rationalize
-			# FIXME sublime text syntax highlight bug
-			#_log "Sequencer.numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})"
+			_log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})"
 		end
 
 		value_parameters = []
@@ -41,7 +64,7 @@ class Musa::BaseSequencer
 			@score[position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
 			@score[position] << { parent_control: control, block: block, value_parameters: value_parameters, key_parameters: key_parameters }
 		else
-			_log "Sequencer.numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+			_log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
 		end
 
 		nil
@@ -51,9 +74,9 @@ class Musa::BaseSequencer
 
 		bar_position = bar_position_serie.next_value
 		next_bar_position = bar_position_serie.peek_next_value
-		
+
 		if with.respond_to? :next_value
-			with_value = with.next_value 
+			with_value = with.next_value
 		else
 			with_value = with
 		end
@@ -78,7 +101,7 @@ class Musa::BaseSequencer
 		run_method = theme.instance_method(:run)
 		at_position_method = theme.instance_method(:at_position)
 		at_position_method_parameter_binder = KeyParametersProcedureBinder.new at_position_method
-		
+
 		run_parameters = run_method.parameters.collect {|p| [ p[1], nil ] }.compact.to_h
 		run_parameters.delete :next_position
 
@@ -97,8 +120,8 @@ class Musa::BaseSequencer
 		with_serie_at = H(run_parameters)
 		with_serie_run = with_serie_at.slave
 
-		_serie_at at.eval(with: with_serie_at) { 
-					|p, **parameters| 
+		_serie_at at.eval(with: with_serie_at) {
+					|p, **parameters|
 
 					if !parameters.empty?
 						effective_parameters = at_position_method_parameter_binder.apply parameters
@@ -107,9 +130,9 @@ class Musa::BaseSequencer
 						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
 						nil
 					end
-				}, 
+				},
 			control,
-			with: with_serie_run, 
+			with: with_serie_run,
 			debug: debug do
 				|**parameters|
 				# TODO optimizar inicialización KeyParamtersProcedureBinder
@@ -130,7 +153,7 @@ class Musa::BaseSequencer
 			operation = __play_eval.run_operation element
 
 			case operation[:current_operation]
-			
+
 			when :none
 
 			when :block
@@ -140,7 +163,7 @@ class Musa::BaseSequencer
 			when :event
 
 				control._launch operation[:current_event], operation[:current_value_parameters], operation[:current_key_parameters]
-			
+
 			when :play
 
 				control2 = PlayControl.new control
@@ -202,10 +225,10 @@ class Musa::BaseSequencer
 		end
 
 		nil
-	end	
+	end
 
 	def _every(binterval, control, block_procedure_binder: nil, &block)
-		
+
 		block_procedure_binder ||= KeyParametersProcedureBinder.new block
 
 		_numeric_at position, control do
@@ -237,7 +260,7 @@ class Musa::BaseSequencer
 	end
 
 	def _move(every:, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-		
+
 		array_mode = from.is_a?(Array) || to.is_a?(Array)
 
 		from = from.arrayfy

@@ -4,14 +4,14 @@ class Musa::Sequencer
 
 	extend Forwardable
 
-	def_delegators :@sequencer, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position=, :size, :event_handler
+	def_delegators :@sequencer, :raw_at, :tick, :on_debug_at, :on_fast_forward, :ticks_per_bar, :position=, :size, :event_handler
 
 	def_delegators :@context, :position, :log, :to_s, :inspect
 	def_delegators :@context, :with, :now, :at, :wait, :theme, :play, :every, :move
 	def_delegators :@context, :launch, :on
 
-	def initialize quarter_notes_by_bar = nil, quarter_note_divisions = nil, sequencer: nil, &block
-		@sequencer ||= Musa::BaseSequencer.new quarter_notes_by_bar, quarter_note_divisions if quarter_notes_by_bar && quarter_note_divisions
+	def initialize quarter_notes_by_bar, quarter_note_divisions, sequencer: nil, &block
+		@sequencer ||= Musa::BaseSequencer.new quarter_notes_by_bar, quarter_note_divisions
 		@context = DSLContext.new @sequencer
 
 		with &block if block
@@ -106,5 +106,4 @@ module Musa::Theme
 	def respond_to_missing? method_name, include_private
 		@context.respond_to?(method_name, include_private) || super
 	end
-end	
-
+end
