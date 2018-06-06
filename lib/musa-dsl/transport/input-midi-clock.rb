@@ -14,33 +14,50 @@ module Musa
 			@run = true
 
 			while @run
-				@messages = @input.gets
+				raw_messages = @input.gets
 
-				@messages.each do |message|
+				messages = []
+				stop_index = nil
 
+				raw_messages.each do |message|
 					mm = @nibbler.parse message[:data]
-
-					if mm
-						mm = [mm] unless mm.is_a? Array
-
+					if mm.is_a? Array
 						mm.each do |m|
-							case m.name
-							when 'Start'
-								@on_start.each { |block| block.call }
+							stop_index = messages.size if m.name == 'Stop' && !stop_index
+							messages << m
+						end
+					else
+						stop_index = messages.size if mm.name == 'Stop' && !stop_index
+						messages << mm
+					end
+				end
 
-							when 'Stop'
-								@on_stop.each { |block| block.call }
+				size = messages.size
+				index = 0
+				while index < size
+					if index == stop_index && size >= index + 3 &&
+						messages[index + 1].name == 'Song Position Pointer' &&
+						messages[index + 2].name == 'Continue'
 
-							when 'Clock'
-								yield if block_given?
+						puts "InputMidiClock: processing Stop + Song Position Pointer + Continue"
 
-							when 'Song Position Pointer'
-								midi_beat_position = message[:data][1] & 0x7F | ((message[:data][2] & 0x7F) << 7)
+						if !@started
+							process_start
+						end
 
-								@on_song_position_pointer.each { |block| block.call midi_beat_position }
-							end
+						process_message messages[index + 1] do
+							yield if block_given?
+						end
+
+						index += 2
+
+					else
+						process_message messages[index] do
+							yield if block_given?
 						end
 					end
+
+					index += 1
 				end
 
 				sleep 0.0001
@@ -50,6 +67,42 @@ module Musa
 
 		def terminate
 			@run = false
+		end
+
+		private
+
+		def process_message m
+			case m.name
+			when 'Start'
+				process_start
+
+			when 'Stop'
+				puts "InputMidiClock: processing Stop"
+
+				@on_stop.each { |block| block.call }
+				@started = false
+
+			when 'Continue'
+				puts "InputMidiClock: processing Continue"
+
+			when 'Clock'
+				yield if block_given? && @started
+
+			when 'Song Position Pointer'
+				midi_beat_position =
+					m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
+
+				puts "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}"
+
+				@on_song_position_pointer.each { |block| block.call midi_beat_position }
+			end
+		end
+
+		def process_start
+			puts "InputMidiClock: processing Start"
+
+			@on_start.each { |block| block.call }
+			@started = true
 		end
 	end
 end

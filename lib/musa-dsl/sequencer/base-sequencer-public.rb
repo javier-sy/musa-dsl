@@ -68,15 +68,13 @@ class Musa::BaseSequencer
 
 		raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
 
-		if position > @position
-			@on_fast_forward.each { |block| block.call(true) }
+		@on_fast_forward.each { |block| block.call(true) }
 
-			while @position < position
-				tick
-			end
-
-			@on_fast_forward.each { |block| block.call(false) }
+		while @position < position
+			tick
 		end
+
+		@on_fast_forward.each { |block| block.call(false) }
 	end
 
 	def on event, &block

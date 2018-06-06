@@ -37,6 +37,10 @@ module Musa
 
 			@clock.on_stop &after_stop if after_stop
 
+			@clock.on_stop do
+				do_stop
+			end
+
 			@clock.on_song_position_pointer do |midi_beat_position|
 
 				position = Rational(midi_beat_position, 4 * quarter_notes_by_bar) + 1
@@ -45,12 +49,10 @@ module Musa
 				puts "Transport: received message position change to #{position}"
 
 				if @sequencer.position > tick_before_position
-					puts "Transport: reseting sequencer"
-					@sequencer.reset
-					@before_begin.each { |block| block.call @sequencer }
+					do_stop
 				end
 
-				puts "Transport: setting sequencer position to #{tick_before_position}"
+				puts "Transport: setting sequencer position #{tick_before_position}"
 				@sequencer.position = tick_before_position
 
 				@sequencer.raw_at position, force_first: true do
@@ -76,12 +78,24 @@ module Musa
 		end
 
 		def start
-			@before_begin.each { |block| block.call @sequencer }
+			do_before_begin
 
 			@clock.run do
 				@before_each_tick.each { |block| block.call @sequencer }
 				@sequencer.tick
 			end
+		end
+
+		private
+
+		def do_stop
+			puts "Transport: restarting and setting sequencer to position 0"
+			@sequencer.reset
+			do_before_begin
+		end
+
+		def do_before_begin
+			@before_begin.each { |block| block.call @sequencer }
 		end
 	end
 end
