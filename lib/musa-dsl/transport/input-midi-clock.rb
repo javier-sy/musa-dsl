@@ -39,7 +39,7 @@ module Musa
 						messages[index + 1].name == 'Song Position Pointer' &&
 						messages[index + 2].name == 'Continue'
 
-						puts "InputMidiClock: processing Stop + Song Position Pointer + Continue"
+						puts "InputMidiClock: processing Stop + Song Position Pointer + Continue..."
 
 						if !@started
 							process_start
@@ -50,6 +50,8 @@ module Musa
 						end
 
 						index += 2
+
+						puts "InputMidiClock: processing Stop + Song Position Pointer + Continue... done"
 
 					else
 						process_message messages[index] do
@@ -77,13 +79,16 @@ module Musa
 				process_start
 
 			when 'Stop'
-				puts "InputMidiClock: processing Stop"
+				puts "InputMidiClock: processing Stop..."
 
 				@on_stop.each { |block| block.call }
 				@started = false
 
+				puts "InputMidiClock: processing Stop... done"
+
 			when 'Continue'
-				puts "InputMidiClock: processing Continue"
+				puts "InputMidiClock: processing Continue..."
+				puts "InputMidiClock: processing Continue... done"
 
 			when 'Clock'
 				yield if block_given? && @started
@@ -92,17 +97,19 @@ module Musa
 				midi_beat_position =
 					m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
 
-				puts "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}"
-
+				puts "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}..."
 				@on_song_position_pointer.each { |block| block.call midi_beat_position }
+				puts "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}... done"
 			end
 		end
 
 		def process_start
-			puts "InputMidiClock: processing Start"
+			puts "InputMidiClock: processing Start..."
 
 			@on_start.each { |block| block.call }
 			@started = true
+
+			puts "InputMidiClock: processing Start... done"
 		end
 	end
 end
