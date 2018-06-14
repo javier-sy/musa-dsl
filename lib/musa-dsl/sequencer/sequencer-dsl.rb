@@ -26,7 +26,7 @@ class Musa::Sequencer
 
 		attr_reader :sequencer
 
-		def_delegators :@sequencer, :launch, :on, :position, :log, :to_s, :inspect
+		def_delegators :@sequencer, :launch, :on, :position, :ticks_per_bar, :log, :to_s, :inspect
 
 		def initialize sequencer
 			@sequencer = sequencer

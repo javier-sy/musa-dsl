@@ -21,14 +21,16 @@ module Musa
 
 				raw_messages.each do |message|
 					mm = @nibbler.parse message[:data]
-					if mm.is_a? Array
-						mm.each do |m|
-							stop_index = messages.size if m.name == 'Stop' && !stop_index
-							messages << m
+					if mm
+						if mm.is_a? Array
+							mm.each do |m|
+								stop_index = messages.size if m.name == 'Stop' && !stop_index
+								messages << m
+							end
+						else
+							stop_index = messages.size if mm.name == 'Stop' && !stop_index
+							messages << mm
 						end
-					else
-						stop_index = messages.size if mm.name == 'Stop' && !stop_index
-						messages << mm
 					end
 				end
 
