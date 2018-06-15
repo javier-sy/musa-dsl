@@ -46,6 +46,10 @@ class Musa::BaseSequencer
 		@score.size
 	end
 
+	def round bar
+		Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
+	end
+
 	def event_handler
 		@event_handlers.last
 	end

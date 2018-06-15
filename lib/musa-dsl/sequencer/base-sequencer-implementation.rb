@@ -261,6 +261,8 @@ class Musa::BaseSequencer
 
 	def _move(every:, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 
+		# TODO revisar la combinación de parámetros every, from, to, step, duration, till y su semántica; implementarla
+
 		array_mode = from.is_a?(Array) || to.is_a?(Array)
 
 		from = from.arrayfy
