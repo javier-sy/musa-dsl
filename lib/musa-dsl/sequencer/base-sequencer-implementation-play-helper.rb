@@ -15,7 +15,7 @@ class Musa::BaseSequencer
 		end
 
 		attr_reader :block_procedure_binder
-		
+
 		def subcontext
 			self
 		end
@@ -41,14 +41,14 @@ class Musa::BaseSequencer
 			value = nil
 
 			value = { 	current_operation: :block,
-						current_block: @block_procedure_binder, 
-						current_parameter: element, 
-						continue_operation: :at, 
+						current_block: @block_procedure_binder,
+						current_parameter: element,
+						continue_operation: :at,
 						continue_parameter: element[:at] } if element.is_a? Hash
-			
-			value ||= { current_operation: @block_procedure_binder, 
-						current_parameter: element, 
-						continue_operation: :at, 
+
+			value ||= { current_operation: @block_procedure_binder,
+						current_parameter: element,
+						continue_operation: :at,
 						continue_parameter: position }
 		end
 	end
@@ -63,24 +63,24 @@ class Musa::BaseSequencer
 
 		def run_operation element
 			value = nil
-		
+
 			if element.is_a? Hash
 				value = { 	current_operation: :block,
-							current_block: @block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :wait, 
+							current_block: @block_procedure_binder,
+							current_parameter: element,
+							continue_operation: :wait,
 							continue_parameter: element[:duration] } if element.key? :duration
 
 				value = { 	current_operation: :block,
-							current_block: @block_procedure_binder, 
-							current_parameter: element, 
-							continue_operation: :on, 
+							current_block: @block_procedure_binder,
+							current_parameter: element,
+							continue_operation: :on,
 							continue_parameter: element[:wait_event] } if element.key? :wait_event
 			end
 
 			value ||= { current_operation: :block,
-						current_block: @block_procedure_binder, 
-						current_parameter: element, 
+						current_block: @block_procedure_binder,
+						current_parameter: element,
 						continue_operation: :now }
 		end
 	end
@@ -141,7 +141,7 @@ class Musa::BaseSequencer
 
 		def eval_serie serie
 			context = subcontext
-			serie.eval on_restart: proc { context = subcontext } { |e| context.eval_element e }
+			serie.eval(on_restart: proc { context = subcontext }) { |e| context.eval_element e }
 		end
 
 		def eval_parallel series
@@ -220,23 +220,23 @@ class Musa::BaseSequencer
 		def run_operation element
 			case element
 			when nil
-				{ 	current_operation: :none, 
+				{ 	current_operation: :none,
 					continue_operation: :now }
 
 			when Musa::Neuma::Dataset
-			
+
 				{ 	current_operation: :block,
 					current_parameter: element,
-					continue_operation: :wait, 
+					continue_operation: :wait,
 					continue_parameter: element[:duration] }
-			
+
 			when Musa::Serie
 
-				{ 	current_operation: :play, 
+				{ 	current_operation: :play,
 					current_parameter: element.restart }
 
 			when Parallel
-				{ 	current_operation: :parallel_play, 
+				{ 	current_operation: :parallel_play,
 					current_parameter: element.tap { |e| e.each {|s| s.restart } } }
 
 			else
@@ -248,7 +248,7 @@ class Musa::BaseSequencer
 					if _value.is_a?(Hash) && _value.key?(:duration)
 						{ 	current_operation: :block,
 							current_parameter: _value,
-							continue_operation: :wait, 
+							continue_operation: :wait,
 							continue_parameter: _value[:duration] }
 					else
 						{ 	current_operation: :block,
@@ -262,24 +262,24 @@ class Musa::BaseSequencer
 
 					{ 	current_operation: :block,
 						current_parameter: _value,
-						continue_operation: :wait, 
+						continue_operation: :wait,
 						continue_parameter: _value[:duration] }
 
 				when :serie
 
-					{ 	current_operation: :play, 
+					{ 	current_operation: :play,
 						current_parameter: eval_serie(element[:serie]) }
 
 				when :parallel
 
-					{ 	current_operation: :parallel_play, 
+					{ 	current_operation: :parallel_play,
 						current_parameter: eval_parallel(element[:parallel]) }
 
 				when :assign_to
 
 					eval_assign_to element[:assign_to], element[:assign_value]
 
-					{  	current_operation: :none, 
+					{  	current_operation: :none,
 						continue_operation: :now }
 
 				when :use_variable
@@ -314,7 +314,7 @@ class Musa::BaseSequencer
 				else
 					raise ArgumentError, "run_operation: don't know how to process #{element}"
 				end
-			end	
+			end
 		end
 
 		def inspect
@@ -339,7 +339,7 @@ class Musa::BaseSequencer
 
 		def initialize parent = nil
 			@id = (@@counter += 1)
-			
+
 			@parent = parent
 			@handlers = {}
 		end
@@ -387,7 +387,7 @@ class Musa::BaseSequencer
 		alias to_s inspect
 	end
 
-	private_constant :EventHandler	
+	private_constant :EventHandler
 
 	class PlayControl < EventHandler
 
@@ -412,7 +412,7 @@ class Musa::BaseSequencer
 	private_constant :PlayControl
 
 	class EveryControl < EventHandler
-		
+
 		attr_reader :duration_value, :till_value, :condition_block, :do_on_stop, :do_after
 
 		attr_accessor :_start
@@ -470,7 +470,7 @@ class Musa::BaseSequencer
 	private_constant :EveryControl
 
 	class MoveControl
-	
+
 		extend Forwardable
 
 		def initialize every_control
