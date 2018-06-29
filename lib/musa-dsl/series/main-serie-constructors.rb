@@ -46,7 +46,7 @@ module Musa
 		def SIN(start_value: 0.0, steps:, frequency: nil, period: nil, amplitude: 1, center: 0)
 			Serie.new BasicSerieSinFunction.new start_value: start_value, steps: steps, period: period || Rational(1, frequency), amplitude: amplitude, center: center
 		end
-		
+
 		###
 		### Implementation
 		###
@@ -155,7 +155,7 @@ module Musa
 			end
 
 			def restart
-				@value = @from 
+				@value = @from
 
 				self
 			end
@@ -246,7 +246,7 @@ module Musa
 			end
 
 			def next_value
-				value = @series.collect { |key, serie| puts "key #{key} has no serie" if serie.nil? ; [ key, serie.next_value ] }.to_h
+				value = @series.collect { |key, serie| warn "key #{key} has no serie" if serie.nil? ; [ key, serie.next_value ] }.to_h
 
 				if value.find { |key, value| value.nil? }
 					nil
@@ -299,7 +299,7 @@ module Musa
 				@center = center.to_f
 
 				y = (start_value - @center) / @amplitude
-				puts "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
+				warn "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
 				y = 1.0 if y > 1.0 # por los errores de precisión infinitesimal en el cálculo de y cuando es muy próximo a 1.0
 				y = -1.0 if y < -1.0
 
@@ -331,6 +331,6 @@ module Musa
 			end
 		end
 
-		private_constant :BasicSerieSinFunction	
+		private_constant :BasicSerieSinFunction
 	end
 end

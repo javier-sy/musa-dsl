@@ -388,6 +388,6 @@ class Musa::BaseSequencer
 		m = "..." unless msg
 		m = ": #{msg}" if msg
 
-		puts "#{self.position}#{m}"
+		warn "#{self.position}#{m}"
 	end
 end

@@ -5,7 +5,7 @@ module Musa
 	class Darwin
 
 		def initialize &block
-			
+
 			raise ArgumentError, "block is needed" unless block
 
 			main_context = MainContext.new block
@@ -15,11 +15,11 @@ module Musa
 		end
 
 		def select population
-			
+
 			measured_objects = []
 
 			population.each do |object|
-				context = MeasuresEvalContext.new 
+				context = MeasuresEvalContext.new
 
 				context.instance_exec object, &@measures
 				measure = context._measure
@@ -32,7 +32,7 @@ module Musa
 			measured_objects.each do |measured_object|
 
 				measure = measured_object[:measure]
-				
+
 				measure.dimensions.each do |measure_name, value|
 					limit = limits[measure_name] ||= { min: nil, max: nil }
 
@@ -43,18 +43,18 @@ module Musa
 				end
 			end
 
-			#puts "Darwin.select: weights #{@weights}"
+			#warn "Darwin.select: weights #{@weights}"
 
 			measured_objects.each do |measured_object|
 
 				measure = measured_object[:measure]
-				
+
 				measure.dimensions.each do |dimension_name, value|
 					limit = limits[dimension_name]
 					measure.normalized_dimensions[dimension_name] = ( value - limit[:min] ) / limit[:range]
 				end
 
-				#puts "Darwin.select: #{measured_object[:object]} #{measured_object[:measure]} weight=#{measured_object[:measure].evaluate_weight(@weights).round(2)}"
+				#warn "Darwin.select: #{measured_object[:object]} #{measured_object[:measure]} weight=#{measured_object[:measure].evaluate_weight(@weights).round(2)}"
 			end
 
 			measured_objects.sort! { |a, b|	evaluate_weights a[:measure], b[:measure] }

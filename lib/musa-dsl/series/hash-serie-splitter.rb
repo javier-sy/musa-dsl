@@ -4,7 +4,7 @@ module Musa
 		def split(buffered: nil, master: nil)
 
 			buffered ||= false
-			
+
 			return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(self) if master.nil? && !buffered
 			return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
 			return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(self) if buffered
@@ -48,9 +48,9 @@ module Musa
 					@values = @serie.next_value
 					value = @values[key] if @values
 
-					puts "Warning: splitted serie #{@serie} values #{before_values} are being lost" if !value.nil? && !before_values.empty?
+					warn "Warning: splitted serie #{@serie} values #{before_values} are being lost" if !value.nil? && !before_values.empty?
 				end
-				
+
 				@values[key] = nil if @values
 
 				value
@@ -61,7 +61,7 @@ module Musa
 
 				if value.nil?
 					peek_values = @serie.peek_next_value
-					value = peek_values[key] if peek_values				
+					value = peek_values[key] if peek_values
 				end
 
 				value
@@ -86,13 +86,13 @@ module Musa
 					hash_value = @serie.next_value
 
 					if hash_value
-						hash_value.each do |k, v| 
-							@values[k] = [] if @values[k].nil? 
+						hash_value.each do |k, v|
+							@values[k] = [] if @values[k].nil?
 							@values[k] << v
 						end
 					end
 				end
-								
+
 				value = @values[key].shift if @values[key]
 
 				value
@@ -137,12 +137,12 @@ module Musa
 
 					value = @values[key] if @values
 
-					#puts "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
+					#warn "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
 					@values_counter = {}
 				end
-				
+
 				@values_counter[key] ||= 0
-				@values_counter[key] += 1	
+				@values_counter[key] += 1
 
 				@values[key] = nil if key == @master && @values
 
@@ -185,5 +185,3 @@ module Musa
 
 	private_constant :HashSerieSplitter
 end
-
-

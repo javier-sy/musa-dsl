@@ -55,16 +55,16 @@ module Musa
 				position = Rational(midi_beat_position, 4 * quarter_notes_by_bar) + 1
 				tick_before_position = position - Rational(1, quarter_notes_by_bar * quarter_note_divisions)
 
-				puts "Transport: received message position change to #{position}"
+				warn "Transport: received message position change to #{position}"
 
 				start_again_later = false
-				
+
 				if @sequencer.position > tick_before_position
 					do_stop
 					start_again_later = true
 				end
 
-				puts "Transport: setting sequencer position #{tick_before_position}"
+				warn "Transport: setting sequencer position #{tick_before_position}"
 				@sequencer.position = tick_before_position
 
 				@sequencer.raw_at position, force_first: true do
@@ -104,28 +104,33 @@ module Musa
 			end
 		end
 
+		def stop
+			@clock.terminate
+			do_stop
+		end
+
 		private
 
 		def do_before_begin
-			puts "Transport: doing before_begin initialization..."
+			warn "Transport: doing before_begin initialization..." unless @before_begin.empty?
 			@before_begin.each { |block| block.call @sequencer }
-			puts "Transport: doing before_begin initialization... done"
+			warn "Transport: doing before_begin initialization... done" unless @before_begin.empty?
 		end
 
 		def do_on_start
-			puts "Transport: starting..."
+			warn "Transport: starting..." unless @on_start.empty?
 			@on_start.each { |block| block.call @sequencer }
-			puts "Transport: starting... done"
+			warn "Transport: starting... done" unless @on_start.empty?
 		end
 
 		def do_stop
-			puts "Transport: stoping..."
+			warn "Transport: stoping..." unless @after_stop.empty?
 			@after_stop.each { |block| block.call @sequencer }
-			puts "Transport: stoping... done"
+			warn "Transport: stoping... done" unless @after_stop.empty?
 
-			puts "Transport: resetting sequencer..."
+			warn "Transport: resetting sequencer..."
 			@sequencer.reset
-			puts "Transport: resetting sequencer... done"
+			warn "Transport: resetting sequencer... done"
 
 			do_before_begin
 		end
