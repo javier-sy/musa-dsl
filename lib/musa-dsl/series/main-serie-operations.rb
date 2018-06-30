@@ -2,125 +2,76 @@ module Musa
 
 	module SerieOperations
 
-		def repeat times = nil, duplicate: nil, condition: nil, &condition_block
-
-			duplicate ||= true
+		def repeat times = nil, condition: nil, &condition_block
 			condition ||= condition_block
 
-			serie = duplicate ? self.duplicate : self
-
 			if times || condition
-				Serie.new BasicSerieRepeater.new(serie, times, &condition)
+				Serie.new BasicSerieRepeater.new(self, times, &condition)
 			else
-				Serie.new BasicSerieInfiniteRepeater.new(serie)
+				Serie.new BasicSerieInfiniteRepeater.new(self)
 			end
 		end
 
-		def hashify *keys, duplicate: nil
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicHashSerieFromArraySerie.new(serie, keys)
+		def autorestart
+			Serie.new BasicSerieAutorestart.new(self)
 		end
 
-		def shift shift, duplicate: nil
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicSerieShifter.new(serie, shift)
+		def hashify *keys
+			Serie.new BasicHashSerieFromArraySerie.new(self, keys)
 		end
 
-		def remove positions, duplicate: nil
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicSerieRemover.new(serie, positions)
+		def shift shift
+			Serie.new BasicSerieShifter.new(self, shift)
 		end
 
-		def lock duplicate: nil
-
-			duplicate ||= true
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicSerieLocker.new(serie)
+		def remove positions
+			Serie.new BasicSerieRemover.new(self, positions)
 		end
 
-		def reverse duplicate: nil
+		def lock
+			Serie.new BasicSerieLocker.new(self)
+		end
 
-			duplicate ||= true
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicSerieReverser.new(serie)
+		def reverse
+			Serie.new BasicSerieReverser.new(self)
 		end
 
 		def randomize duplicate: nil
-
-			duplicate ||= true
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicSerieRandomizer.new(serie)
+			Serie.new BasicSerieRandomizer.new(self)
 		end
 
-		def eval block = nil, with: nil, duplicate: nil, on_restart: nil, &yield_block
-
-			duplicate ||= false
+		def eval block = nil, with: nil, on_restart: nil, &yield_block
 			block ||= yield_block
-
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new BasicSerieFromEvalBlockOnSerie.new(serie, with: with, on_restart: on_restart, &block)
+			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, on_restart: on_restart, &block)
 		end
 
-		def select *indexed_series, duplicate: nil, **hash_series
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new SelectorBasicSerie.new(serie, indexed_series, hash_series)
+		def select *indexed_series, **hash_series
+			Serie.new SelectorBasicSerie.new(self, indexed_series, hash_series)
 		end
 
-		def select_serie *indexed_series, duplicate: nil, **hash_series
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new SelectorFullSerieBasicSerie.new(serie, indexed_series, hash_series)
+		def select_serie *indexed_series, **hash_series
+			Serie.new SelectorFullSerieBasicSerie.new(self, indexed_series, hash_series)
 		end
 
-		def after *series, duplicate: nil
-
-			duplicate ||= true
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new SequenceBasicSerie.new([serie, *series])
+		def after *series
+			Serie.new SequenceBasicSerie.new([self, *series])
 		end
 
 		def + serie
 			Serie.new SequenceBasicSerie.new([self.duplicate, serie.duplicate])
 		end
 
-		def cut length, duplicate: nil
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new CutterSerie.new(serie, length)
+		def cut length
+			Serie.new CutterSerie.new(self, length)
 		end
 
-		def merge duplicate: nil
-
-			duplicate ||= false
-			serie = duplicate ? self.duplicate : self
-
-			Serie.new MergeSerieOfSeries.new(serie)
+		def merge
+			Serie.new MergeSerieOfSeries.new(self)
 		end
 
 		def slave
 			slave_serie = SlaveSerie.new self
-					
+
 			@slaves ||= []
 			@slaves << slave_serie
 
@@ -149,11 +100,11 @@ module Musa
 					copy_included_modules value, h
 				else
 					value
-				end	
+				end
 			end
 
 			recursive ||= false
-			
+
 			throw 'Cannot convert to array an infinite serie' if @serie.infinite?
 
 			serie = @serie.duplicate.restart
@@ -161,7 +112,7 @@ module Musa
 			array = []
 
 			while value = serie.next_value
-				if recursive 
+				if recursive
 					array << process(value)
 				else
 					array << value
@@ -177,7 +128,7 @@ module Musa
 
 		class SequenceBasicSerie
 			include ProtoSerie
-		
+
 			def initialize(series)
 				@series = series
 				@index = 0
@@ -192,7 +143,7 @@ module Musa
 
 			def next_value
 				value = nil
-				
+
 				if @index < @series.size
 					value = @series[@index].next_value
 
@@ -217,7 +168,7 @@ module Musa
 
 		class SelectorBasicSerie
 			include ProtoSerie
-		
+
 			def initialize(selector, indexed_series, hash_series)
 				@selector = selector
 
@@ -257,7 +208,7 @@ module Musa
 
 		class SelectorFullSerieBasicSerie
 			include ProtoSerie
-		
+
 			def initialize(selector, indexed_series, hash_series)
 				@selector = selector
 
@@ -313,7 +264,7 @@ module Musa
 
 			def next_value
 				value = @serie.next_value
-				
+
 				if value.nil?
 					@serie.restart
 					value = @serie.next_value
@@ -325,7 +276,7 @@ module Musa
 			def infinite?
 				true
 			end
-		end	
+		end
 
 		private_constant :BasicSerieInfiniteRepeater
 
@@ -334,7 +285,7 @@ module Musa
 
 			def initialize(serie, times = nil, &condition_block)
 				@serie = serie
-				
+
 				@count = 0
 
 				@condition_block = condition_block
@@ -364,9 +315,41 @@ module Musa
 
 				value
 			end
-		end	
+		end
 
 		private_constant :BasicSerieRepeater
+
+		class BasicSerieAutorestart
+			include ProtoSerie
+
+			def initialize(serie)
+				@serie = serie
+				@restart_on_next = false
+			end
+
+			def restart
+				@serie.restart
+
+				self
+			end
+
+			def next_value
+				if @restart_on_next
+					@serie.restart
+					@restart_on_next = false
+				end
+
+				value = @serie.next_value
+
+				if value.nil?
+					@restart_on_next = true
+				end
+
+				value
+			end
+		end
+
+		private_constant :BasicSerieAutorestart
 
 		class CutterSerie
 			include ProtoSerie
@@ -386,7 +369,7 @@ module Musa
 
 			def next_value
 				@previous.materialize if @previous
-				
+
 				if @serie.peek_next_value
 					Serie.new @previous = CutSerie.new(@serie, @length)
 				else
@@ -450,7 +433,7 @@ module Musa
 				value = nil
 
 				@current = @serie.next_value unless @current
-				
+
 				if @current
 					value = @current.next_value
 
@@ -549,13 +532,14 @@ module Musa
 			def initialize(serie)
 				raise ArgumentError, "cannot randomize an infinite serie #{serie}" if serie.infinite?
 				@serie = serie
-				@random = Random.new
 				restart
 			end
 
 			def restart
 				@serie.restart
 				@values = @serie.to_a
+
+				@random = Random.new
 
 				self
 			end
@@ -564,7 +548,7 @@ module Musa
 				if @values.size > 0
 					position = @random.rand(0...@values.size)
 					value = @values[position]
-					
+
 					@values.delete_at position
 				else
 					value = nil
@@ -634,7 +618,7 @@ module Musa
 			include ProtoSerie
 
 			def initialize(serie, with: nil, on_restart: nil, &block)
-				
+
 				if serie.is_a? Array
 					@serie = BasicSerieFromArray.new serie
 				elsif serie.is_a? Serie
@@ -657,7 +641,7 @@ module Musa
 				@on_restart = on_restart
 			end
 
-			def restart				
+			def restart
 				@serie.restart
 				@with_serie.restart if @with_serie
 

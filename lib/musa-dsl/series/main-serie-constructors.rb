@@ -13,6 +13,10 @@ module Musa
 			Serie.new BasicSerieFromArray.new(values.explode_ranges)
 		end
 
+		def H(**series_hash)
+			Serie.new BasicSerieFromHash.new(series_hash)
+		end
+
 		def E(start: nil, with: nil, &block)
 			if start
 				Serie.new BasicSerieFromAutoEvalBlockOnSeed.new(start: start, &block)
@@ -33,10 +37,6 @@ module Musa
 			else
 				raise ArgumentError, "cannot use values and from:/to:/step: simultaneously"
 			end
-		end
-
-		def H(**series_hash)
-			Serie.new BasicSerieFromHash.new(series_hash)
 		end
 
 		def A(*series)

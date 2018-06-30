@@ -4,5 +4,6 @@
 .rspec
 Gemfile.lock
 bin
+*.mindnode
 
 

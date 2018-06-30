@@ -1,3 +1,5 @@
+require 'forwardable'
+
 module Musa
 
 	module ProtoSerie
@@ -90,7 +92,7 @@ module Musa
 			value = @next_value.first
 
 			raise "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
-			
+
 			return value
 		end
 
