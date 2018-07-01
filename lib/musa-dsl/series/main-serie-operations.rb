@@ -2,6 +2,11 @@ module Musa
 
 	module SerieOperations
 
+		def autorestart skip_nil: nil
+			skip_nil ||= false
+			Serie.new BasicSerieAutorestart.new(self, skip_nil)
+		end
+
 		def repeat times = nil, condition: nil, &condition_block
 			condition ||= condition_block
 
@@ -10,10 +15,6 @@ module Musa
 			else
 				Serie.new BasicSerieInfiniteRepeater.new(self)
 			end
-		end
-
-		def autorestart
-			Serie.new BasicSerieAutorestart.new(self)
 		end
 
 		def hashify *keys
@@ -36,7 +37,7 @@ module Musa
 			Serie.new BasicSerieReverser.new(self)
 		end
 
-		def randomize duplicate: nil
+		def randomize
 			Serie.new BasicSerieRandomizer.new(self)
 		end
 
@@ -322,14 +323,14 @@ module Musa
 		class BasicSerieAutorestart
 			include ProtoSerie
 
-			def initialize(serie)
+			def initialize serie, skip_nil
 				@serie = serie
+				@skip_nil = skip_nil
 				@restart_on_next = false
 			end
 
 			def restart
 				@serie.restart
-
 				self
 			end
 
@@ -342,7 +343,12 @@ module Musa
 				value = @serie.next_value
 
 				if value.nil?
-					@restart_on_next = true
+					if @skip_nil
+						@serie.restart
+						value = @serie.next_value
+					else
+						@restart_on_next = true
+					end
 				end
 
 				value
@@ -536,7 +542,6 @@ module Musa
 			end
 
 			def restart
-				@serie.restart
 				@values = @serie.to_a
 
 				@random = Random.new

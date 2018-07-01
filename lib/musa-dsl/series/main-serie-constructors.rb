@@ -14,33 +14,63 @@ module Musa
 		end
 
 		def H(**series_hash)
-			Serie.new BasicSerieFromHash.new(series_hash)
+			Serie.new BasicSerieFromHash.new(series_hash, false)
 		end
 
-		def E(start: nil, with: nil, &block)
-			if start
-				Serie.new BasicSerieFromAutoEvalBlockOnSeed.new(start: start, &block)
-			else
+		def HC(**series_hash)
+			Serie.new BasicSerieFromHash.new(series_hash, true)
+		end
+
+		def A(*series)
+			Serie.new BasicSerieFromArrayOfSeries.new(series, false)
+		end
+
+		def AC(*series)
+			Serie.new BasicSerieFromArrayOfSeries.new(series, true)
+		end
+
+		def E(**args, &block)
+			if args.has_key?(:start) && args.length == 1
+				Serie.new BasicSerieFromAutoEvalBlockOnSeed.new(args[:start], &block)
+			elsif args.length == 0
 				Serie.new BasicSerieFromEvalBlock.new(&block)
+			else
+				raise ArgumentError, 'only optional start: argument is allowed'
 			end
 		end
 
-		def FOR(from: 0, to:, step: 1)
-			Serie.new ForLoopBasicSerie.new(from: from, to: to, step: step)
+		def FOR(from: nil, to:, step: nil)
+			from ||= 0
+			step ||= 1
+			Serie.new ForLoopBasicSerie.new(from, to, step)
 		end
 
-		def RND(*values, from: nil, to: nil, step: nil)
+		def RND(*values, from: nil, to: nil, step: nil, random: nil)
+			random ||= Random.new
+
 			if !values.empty? && from.nil? && to.nil? && step.nil?
-				Serie.new RandomFromArrayBasicSerie.new(values.explode_ranges)
-			elsif values.empty?
-				Serie.new RandomNumberBasicSerie.new(from: from, to: to, step: step)
+				Serie.new RandomValuesFromArrayBasicSerie.new(values.explode_ranges, random)
+			elsif values.empty? && !to.nil?
+				from ||= 0
+				step ||= 1
+				Serie.new RandomNumbersFromRangeBasicSerie.new(from, to, step, random)
 			else
 				raise ArgumentError, "cannot use values and from:/to:/step: simultaneously"
 			end
 		end
 
-		def A(*series)
-			Serie.new BasicSerieFromArrayOfSeries.new(series)
+		def RND1(*values, from: nil, to: nil, step: nil, random: nil)
+			random ||= Random.new
+
+			if !values.empty? && from.nil? && to.nil? && step.nil?
+				Serie.new RandomValueFromArrayBasicSerie.new(values.explode_ranges, random)
+			elsif values.empty? && !to.nil?
+				from ||= 0
+				step ||= 1
+				Serie.new RandomNumberFromRangeBasicSerie.new(from, to, step, random)
+			else
+				raise ArgumentError, "cannot use values and from:/to:/step: simultaneously"
+			end
 		end
 
 		def SIN(start_value: 0.0, steps:, frequency: nil, period: nil, amplitude: 1, center: 0)
@@ -89,7 +119,7 @@ module Musa
 			include ProtoSerie
 
 			def initialize start, &block
-				@value = start
+				@start = start
 				@block = block
 
 				@current = nil
@@ -98,6 +128,7 @@ module Musa
 
 			def restart
 				@current = nil
+				@first = true
 
 				self
 			end
@@ -105,9 +136,9 @@ module Musa
 			def next_value
 				if @first
 					@first = false
-					@current = @value
+					@current = @start
 				else
-					@current = @block.call @current
+					@current = @block.call @current unless @current.nil?
 				end
 
 				@current
@@ -135,7 +166,8 @@ module Musa
 					@have_peeked_next_value = false
 					value = @peek_next_value
 				else
-					value = @block.call @index
+					@value = @block.call @index unless @value.nil? && @index > 0
+					value = @value
 					@index += 1
 				end
 
@@ -146,7 +178,7 @@ module Musa
 		private_constant :BasicSerieFromEvalBlock
 
 		class ForLoopBasicSerie
-			def initialize from:, to:, step:
+			def initialize from, to, step
 				@from = from
 				@to = to
 				@step = step
@@ -156,7 +188,6 @@ module Musa
 
 			def restart
 				@value = @from
-
 				self
 			end
 
@@ -174,85 +205,154 @@ module Musa
 
 		private_constant :ForLoopBasicSerie
 
-		class RandomFromArrayBasicSerie
-			def initialize values
+		class RandomValueFromArrayBasicSerie
+			def initialize values, random
 				@values = values
-				@random = Random.new
+				@random = random
 
 				restart
 			end
 
 			def restart
-				@value = @values[@random.rand(0...@values.size)]
-
+				@value = nil
 				self
 			end
 
 			def next_value
-				v = @value
-				@value = nil
-				return v
+				@value = @values[@random.rand(0...@values.size)] unless @value
 			end
 		end
 
-		private_constant :RandomFromArrayBasicSerie
+		private_constant :RandomValueFromArrayBasicSerie
 
-		class RandomNumberBasicSerie
-			def initialize from: nil, to: nil, step: nil
-				from ||= 0
-				step ||= 1
-
+		class RandomNumberFromRangeBasicSerie
+			def initialize from, to, step, random
 				@from = from
 				@to = to
 				@step = step
 
-				@range = ((@to - @from) / @step).ceil
+				@random = random
 
-				@random = Random.new
+				@step_count = ((@to - @from) / @step).to_i
 
 				restart
 			end
 
 			def restart
-				while !@value || @value > @to
-					@value = @from + @random.rand(0..@range) * @step
-				end
-
+				@value = nil
 				self
 			end
 
 			def next_value
-				v = @value
-				@value = nil
-				return v
+				@value = @from + @random.rand(0..@step_count) * @step unless @value
 			end
 		end
 
-		private_constant :RandomNumberBasicSerie
+		private_constant :RandomNumberFromRangeBasicSerie
+
+		class RandomValuesFromArrayBasicSerie
+			def initialize values, random
+				@values = values
+				@random = random
+
+				restart
+			end
+
+			def restart
+				@available_values = @values.clone
+				self
+			end
+
+			def next_value
+				value = nil
+				unless @available_values.empty?
+					i = @random.rand(0...@available_values.size)
+					value = @available_values[i]
+					@available_values.delete_at i
+				end
+				value
+			end
+		end
+
+		private_constant :RandomValuesFromArrayBasicSerie
+
+		class RandomNumbersFromRangeBasicSerie
+			def initialize from, to, step, random
+				@from = from
+				@to = to
+				@step = step
+
+				@random = random
+
+				@step_count = ((@to - @from) / @step).to_i
+
+				restart
+			end
+
+			def restart
+				@available_steps = (0..@step_count).to_a
+				self
+			end
+
+			def next_value
+				value = nil
+				unless @available_steps.empty?
+					i = @random.rand(0...@available_steps.size)
+					value = @from + @available_steps[i] * @step unless @value
+					@available_steps.delete_at i
+				end
+				value
+			end
+		end
+
+		private_constant :RandomNumbersFromRangeBasicSerie
 
 		class BasicSerieFromHash
 			include ProtoSerie
 
-			def initialize series
+			def initialize series, cycle_all_series
 				@series = series
+				@cycle_all_series = cycle_all_series
+				@have_current = false
+				@value = nil
 			end
 
 			def restart
-				@series.each_value do |serie|
-					serie.restart
+				@have_current = false
+				@value = nil
+
+				@series.each do |key, serie|
+					serie.restart if serie.current_value.nil?
 				end
 
 				self
 			end
 
 			def next_value
-				value = @series.collect { |key, serie| warn "key #{key} has no serie" if serie.nil? ; [ key, serie.next_value ] }.to_h
+				unless @have_current && @value.nil?
+					pre_value = @series.collect { |key, serie| [ key, serie.peek_next_value ] }.to_h
 
-				if value.find { |key, value| value.nil? }
-					nil
-				else
-					value
+					nils = 0
+					pre_value.each do |key, value|
+						if value.nil?
+							@series[key].next_value
+							nils += 1
+						end
+					end
+
+					if nils == 0
+						@value = @series.collect { |key, serie| [ key, serie.next_value ] }.to_h
+					elsif nils < @series.size && @cycle_all_series
+						restart
+						@value = next_value
+					else
+						@value = nil
+					end
+
+					@have_current = true
 				end
+
+				@value
 			end
 		end
 
@@ -261,26 +361,49 @@ module Musa
 		class BasicSerieFromArrayOfSeries
 			include ProtoSerie
 
-			def initialize series
+			def initialize series, cycle_all_series
 				@series = series
+				@cycle_all_series = cycle_all_series
+				@have_current = false
+				@value = nil
 			end
 
 			def restart
+				@have_current = false
+				@value = nil
+
 				@series.each do |serie|
-					serie.restart
+					serie.restart if serie.current_value.nil?
 				end
 
 				self
 			end
 
 			def next_value
-				value = @series.collect { |serie| serie.next_value }
+				unless @have_current && @value.nil?
+					pre_value = @series.collect { |serie| serie.peek_next_value }
 
-				if value.find { |value| value.nil? }
-					nil
-				else
-					value
+					nils = 0
+					pre_value.each_index do |i|
+						if pre_value[i].nil?
+							@series[i].next_value
+							nils += 1
+						end
+					end
+
+					if nils == 0
+						@value = @series.collect { |serie| serie.next_value }
+					elsif nils < @series.size && @cycle_all_series
+						restart
+						@value = next_value
+					else
+						@value = nil
+					end
+
+					@have_current = true
 				end
+
+				@value
 			end
 		end
 
