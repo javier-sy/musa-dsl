@@ -46,6 +46,7 @@ module Musa
 		end
 
 		def RND(*values, from: nil, to: nil, step: nil, random: nil)
+			random = Random.new random if random.is_a?(Integer)
 			random ||= Random.new
 
 			if !values.empty? && from.nil? && to.nil? && step.nil?
@@ -55,11 +56,12 @@ module Musa
 				step ||= 1
 				Serie.new RandomNumbersFromRangeBasicSerie.new(from, to, step, random)
 			else
-				raise ArgumentError, "cannot use values and from:/to:/step: simultaneously"
+				raise ArgumentError, "cannot use values and from:/to:/step: together"
 			end
 		end
 
 		def RND1(*values, from: nil, to: nil, step: nil, random: nil)
+			random = Random.new random if random.is_a?(Integer)
 			random ||= Random.new
 
 			if !values.empty? && from.nil? && to.nil? && step.nil?
@@ -69,12 +71,15 @@ module Musa
 				step ||= 1
 				Serie.new RandomNumberFromRangeBasicSerie.new(from, to, step, random)
 			else
-				raise ArgumentError, "cannot use values and from:/to:/step: simultaneously"
+				raise ArgumentError, "cannot use values and from:/to:/step: parameters together"
 			end
 		end
 
-		def SIN(start_value: 0.0, steps:, frequency: nil, period: nil, amplitude: 1, center: 0)
-			Serie.new BasicSerieSinFunction.new start_value: start_value, steps: steps, period: period || Rational(1, frequency), amplitude: amplitude, center: center
+		def SIN(start_value: nil, steps:, amplitude: nil, center: nil)
+			start_value ||= 0.0
+			amplitude ||= 1
+			center ||= 0
+			Serie.new BasicSerieSinFunction.new start_value, steps, amplitude, center
 		end
 
 		###
@@ -412,12 +417,11 @@ module Musa
 		class BasicSerieSinFunction
 			include ProtoSerie
 
-			def initialize start_value:, steps:, period:, amplitude:, center:
+			def initialize start_value, steps, amplitude, center
 
-				start_value = start_value.to_f unless start_value.is_a? Float
+				start_value = start_value.to_f
 
-				@length = (steps * period).to_f if period
-
+				@steps = steps
 				@amplitude = amplitude.to_f
 				@center = center.to_f
 
@@ -428,25 +432,24 @@ module Musa
 
 				@offset = Math::asin(y)
 
-				@step_size = 2.0 * Math::PI / @length
+				@step_size = 2.0 * Math::PI / @steps
 
 				restart
 			end
 
 			def next_value
-				v = Math::sin(@offset + @step_size * @position) * @amplitude + @center
-				@position += 1
-				v
+				value = nil
+				unless @position == @steps
+					value = Math::sin(@offset + @step_size * @position) * @amplitude + @center
+					@position += 1
+				end
+				value
 			end
 
 			def restart
 				@position = 0
 
 				self
-			end
-
-			def infinite?
-				true
 			end
 
 			def to_s

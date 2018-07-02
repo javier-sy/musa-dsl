@@ -861,5 +861,50 @@ RSpec.describe Musa::Serie do
 
 			expect(s1.next_value).to eq([1, :a])
 		end
+
+		it "SIN(start_value: 1, steps: 27, amplitude: 10, center: 0)" do
+			s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0)
+
+			c = 0
+			while v = s1.next_value
+				expect(v).to eq 1.0 if c == 0
+				c += 1
+			end
+			expect(s1.next_value).to eq nil
+			expect(s1.next_value).to eq nil
+			expect(s1.next_value).to eq nil
+
+			expect(c).to eq 27
+		end
+
+		it "SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart" do
+			s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart
+
+			c = 0
+			while v = s1.next_value
+				expect(v).to eq 1.0 if c == 0
+				c += 1
+			end
+			expect(c).to eq 27
+
+			c = 0
+			while v = s1.next_value
+				expect(v).to eq 1.0 if c == 0
+				c += 1
+			end
+			expect(c).to eq 27
+		end
+
+		it "SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart(skip_nil: true)" do
+			s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart(skip_nil: true)
+
+			c = 0
+			while (v = s1.next_value) && c < 100
+				expect(v).to eq 1.0 if c == 0
+				expect(v).to eq 1.0 if c == 27
+				c += 1
+			end
+			expect(c).to eq 100
+		end
 	end
 end
