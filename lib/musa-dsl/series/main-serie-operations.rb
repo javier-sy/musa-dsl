@@ -17,39 +17,47 @@ module Musa
 			end
 		end
 
+		# TODO test case
 		def hashify *keys
 			Serie.new BasicHashSerieFromArraySerie.new(self, keys)
 		end
 
+		# TODO test case
 		def shift shift
 			Serie.new BasicSerieShifter.new(self, shift)
 		end
 
+		# TODO test case
 		def remove positions
 			Serie.new BasicSerieRemover.new(self, positions)
 		end
 
+		# TODO test case
 		def lock
 			Serie.new BasicSerieLocker.new(self)
 		end
 
+		# TODO test case
 		def reverse
 			Serie.new BasicSerieReverser.new(self)
 		end
 
+		# TODO test case
 		def randomize
 			Serie.new BasicSerieRandomizer.new(self)
 		end
 
-		def eval block = nil, with: nil, on_restart: nil, &yield_block
-			block ||= yield_block
+		# TODO test case
+		def eval block = nil, with: nil, on_restart: nil, &block
 			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, on_restart: on_restart, &block)
 		end
 
+		# TODO test case
 		def select *indexed_series, **hash_series
 			Serie.new SelectorBasicSerie.new(self, indexed_series, hash_series)
 		end
 
+		# TODO test case
 		def select_serie *indexed_series, **hash_series
 			Serie.new SelectorFullSerieBasicSerie.new(self, indexed_series, hash_series)
 		end
@@ -70,6 +78,7 @@ module Musa
 			Serie.new MergeSerieOfSeries.new(self)
 		end
 
+		# TODO test case
 		def slave
 			slave_serie = SlaveSerie.new self
 
@@ -79,7 +88,8 @@ module Musa
 			return slave_serie
 		end
 
-		def to_a(recursive = nil)
+		# TODO test case
+		def to_a recursive = nil
 
 			def copy_included_modules source, target
 				target.tap do

@@ -240,10 +240,6 @@ RSpec.describe Musa::Serie do
 
 		end
 
-		it "Hash serie repeated and split and H() should be equal to the original serie" do
-			# TODO
-		end
-
 		it "Cut: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3" do
 			s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
