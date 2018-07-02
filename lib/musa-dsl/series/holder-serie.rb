@@ -1,6 +1,7 @@
 module Musa
 
 	module Series
+		# TODO add test case
 		def HLD(serie = nil)
 			HolderSerie.new serie
 		end
@@ -53,6 +54,7 @@ module Musa
   end
 
   module SerieOperations
+		# TODO add test case
     def hold
 			Series::HolderSerie.new self
 		end
