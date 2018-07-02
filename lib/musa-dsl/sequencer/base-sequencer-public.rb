@@ -7,6 +7,8 @@ class Musa::BaseSequencer
 
 	attr_reader :ticks_per_bar, :running_position
 
+	@@tick_mutex = Mutex.new
+
 	def initialize quarter_notes_by_bar, quarter_note_divisions
 
 		@on_debug_at = []
@@ -31,11 +33,30 @@ class Musa::BaseSequencer
 
 		if @score[position_to_run]
 			@score[position_to_run].each do |command|
-				@event_handlers.push command[:parent_control] if command.has_key?(:parent_control)
 
-				command[:block].call *command[:value_parameters], **command[:key_parameters]
+				if command.has_key?(:parent_control)
+					@event_handlers.push command[:parent_control]
 
-				@event_handlers.pop if command.has_key?(:parent_control)
+					@@tick_mutex.synchronize do
+
+						original_stdout = $stdout
+						original_stderr = $stderr
+
+						$stdout = command[:parent_control].stdout
+						$stderr = command[:parent_control].stderr
+
+						command[:block].call *command[:value_parameters], **command[:key_parameters]
+
+						$stdout = original_stdout
+						$stderr = original_stderr
+					end
+
+					@event_handlers.pop
+				else
+					@@tick_mutex.synchronize do
+						command[:block].call *command[:value_parameters], **command[:key_parameters]
+					end
+				end
 			end
 
 			@score.delete position_to_run
@@ -92,7 +113,7 @@ class Musa::BaseSequencer
 	# TODO implementar series como parámetros (bdelay sería el wait respecto al evento programado anterior?)
 	def wait bdelay, with: nil, &block
 
-		control = EventHandler.new @event_handlers.last
+		control = EventHandler.new @event_handlers.last, capture_stdout: true
 		@event_handlers.push control
 
 		_numeric_at position + bdelay.rationalize, control, with: with, &block
@@ -103,7 +124,7 @@ class Musa::BaseSequencer
 	end
 
 	def now with: nil, &block
-		control = EventHandler.new @event_handlers.last
+		control = EventHandler.new @event_handlers.last, capture_stdout: true
 		@event_handlers.push control
 
 		_numeric_at position, control, with: with, &block
@@ -124,7 +145,7 @@ class Musa::BaseSequencer
 		debug ||= false
 		raw ||= false
 
-		control = EventHandler.new @event_handlers.last
+		control = EventHandler.new @event_handlers.last, capture_stdout: true
 		@event_handlers.push control
 
 		if bar_position.is_a? Numeric
@@ -145,7 +166,7 @@ class Musa::BaseSequencer
 
 		debug ||= false
 
-		control = EventHandler.new @event_handlers.last
+		control = EventHandler.new @event_handlers.last, capture_stdout: true
 		@event_handlers.push control
 
 		_theme theme, control, at: at, debug: debug, **parameters
@@ -159,7 +180,7 @@ class Musa::BaseSequencer
 
 		mode ||= :wait
 
-		control = PlayControl.new @event_handlers.last, after: after
+		control = PlayControl.new @event_handlers.last, after: after, capture_stdout: true
 		@event_handlers.push control
 
 		_play serie, control, context, mode: mode, parameter: parameter, **mode_args, &block
@@ -173,7 +194,7 @@ class Musa::BaseSequencer
 
 		binterval = binterval.rationalize
 
-		control = EveryControl.new @event_handlers.last, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
+		control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
 		@event_handlers.push control
 
 		_every binterval, control, &block

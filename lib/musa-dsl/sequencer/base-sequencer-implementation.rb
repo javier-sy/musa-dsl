@@ -1,6 +1,7 @@
 require 'musa-dsl/mods/arrayfy'
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 
+require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'
 
 class Musa::BaseSequencer
@@ -56,7 +57,25 @@ class Musa::BaseSequencer
 
 		if position == @position
 			@debug_at.call if debug && @debug_at
+
+			locked = @@tick_mutex.try_lock
+
+			if locked
+				original_stdout = $stdout
+				original_stderr = $stderr
+
+				$stdout = control.stdout
+				$stderr = control.stderr
+			end
+
 			block.call *value_parameters, **key_parameters
+
+			if locked
+				$stdout = original_stdout
+				$stderr = original_stderr
+			end
+
+			@@tick_mutex.unlock if locked
 
 		elsif position > @position
 			@score[position] = [] if !@score[position]
@@ -311,7 +330,6 @@ class Musa::BaseSequencer
 			eduration = till - position  - every if till
 			eduration = duration  - every if duration
 
-
 			steps = eduration * (1 / every) # número de pasos que habrá en el movimiento
 
 			size.times { |i| rstep[i] = (to[i] - from[i]) / steps } if to
@@ -320,7 +338,7 @@ class Musa::BaseSequencer
 			# TODO from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
 		end
 
-		control = EveryControl.new @event_handlers.last, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
+		control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
 		@event_handlers.push control
 
 		_numeric_at start_position, control do

@@ -48,7 +48,8 @@ module Musa
 		end
 
 		# TODO test case
-		def eval block = nil, with: nil, on_restart: nil, &block
+		def eval block = nil, with: nil, on_restart: nil, &yield_block
+			block ||= yield_block
 			Serie.new BasicSerieFromEvalBlockOnSerie.new(self, with: with, on_restart: on_restart, &block)
 		end
 
