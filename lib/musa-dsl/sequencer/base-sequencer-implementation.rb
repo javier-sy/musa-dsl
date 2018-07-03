@@ -30,7 +30,7 @@ class Musa::BaseSequencer
 				@score[position] << value
 			end
 		else
-			_log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+			_log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
 		end
 
 		nil
@@ -45,13 +45,13 @@ class Musa::BaseSequencer
 		if position != position.round
 			original_position = position
 			position = position.round.rationalize
-			_log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})"
+			_log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})" if @do_log
 		end
 
 		value_parameters = []
 		value_parameters << with if !with.nil? && !with.is_a?(Hash)
 
-		block_key_parameters_binder = KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
+		block_key_parameters_binder = KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
 
 		key_parameters = {}
 		key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
@@ -89,9 +89,9 @@ class Musa::BaseSequencer
 			@score[position] = [] if !@score[position]
 
 			@score[position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
-			@score[position] << { parent_control: control, block: block, value_parameters: value_parameters, key_parameters: key_parameters }
+			@score[position] << { parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
 		else
-			_log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+			_log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
 		end
 
 		nil
@@ -154,7 +154,7 @@ class Musa::BaseSequencer
 						effective_parameters = at_position_method_parameter_binder.apply parameters
 						theme_instance.at_position p, **effective_parameters
 					else
-						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
+						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished." if @do_log
 						nil
 					end
 				},

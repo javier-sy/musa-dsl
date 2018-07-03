@@ -4,12 +4,14 @@ module Musa
   class REPL
     @@repl_mutex = Mutex.new
 
-  	def initialize binder, port: nil, redirect_stderr: nil
+  	def initialize binder, port: nil, redirect_stderr: nil, after_eval: nil
   		port ||= 1327
       redirect_stderr ||= false
 
-      if binder.respond_to?(:on_error_block)
-        binder.on_error_block do |e|
+      if binder.receiver.respond_to?(:sequencer) &&
+        binder.receiver.sequencer.respond_to?(:on_block_error)
+        
+        binder.receiver.sequencer.on_block_error do |e|
           send_exception e
         end
       end
@@ -37,11 +39,16 @@ module Musa
                       $stdout = connection
                       $stderr = connection if redirect_stderr
 
+                      block_source = buffer.string
+
     									begin
-  					            binder.eval buffer.string
+  					            binder.eval block_source
 
     									rescue StandardError, ScriptError => e
                         send_exception e
+
+                      else
+                        after_eval.call block_source if after_eval
     									end
 
                       $stdout = original_stdout

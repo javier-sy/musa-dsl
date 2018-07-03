@@ -3,10 +3,14 @@ require 'nibbler'
 
 module Musa
 	class InputMidiClock < Clock
-		def initialize input
+		def initialize input, do_log: nil
+			do_log ||= false
+
 			super()
 
 			@input = input
+			@do_log = do_log
+
 			@nibbler = Nibbler.new
 		end
 
@@ -41,7 +45,7 @@ module Musa
 						messages[index + 1].name == 'Song Position Pointer' &&
 						messages[index + 2].name == 'Continue'
 
-						warn "InputMidiClock: processing Stop + Song Position Pointer + Continue..."
+						warn "InputMidiClock: processing Stop + Song Position Pointer + Continue..." if @do_log
 
 						if !@started
 							process_start
@@ -53,7 +57,7 @@ module Musa
 
 						index += 2
 
-						warn "InputMidiClock: processing Stop + Song Position Pointer + Continue... done"
+						warn "InputMidiClock: processing Stop + Song Position Pointer + Continue... done" if @do_log
 
 					else
 						process_message messages[index] do
@@ -81,16 +85,16 @@ module Musa
 				process_start
 
 			when 'Stop'
-				warn "InputMidiClock: processing Stop..."
+				warn "InputMidiClock: processing Stop..." if @do_log
 
 				@on_stop.each { |block| block.call }
 				@started = false
 
-				warn "InputMidiClock: processing Stop... done"
+				warn "InputMidiClock: processing Stop... done" if @do_log
 
 			when 'Continue'
-				warn "InputMidiClock: processing Continue..."
-				warn "InputMidiClock: processing Continue... done"
+				warn "InputMidiClock: processing Continue..." if @do_log
+				warn "InputMidiClock: processing Continue... done" if @do_log
 
 			when 'Clock'
 				yield if block_given? && @started
@@ -99,19 +103,19 @@ module Musa
 				midi_beat_position =
 					m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
 
-				warn "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}..."
+				warn "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}..." if @do_log
 				@on_song_position_pointer.each { |block| block.call midi_beat_position }
-				warn "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}... done"
+				warn "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}... done" if @do_log
 			end
 		end
 
 		def process_start
-			warn "InputMidiClock: processing Start..."
+			warn "InputMidiClock: processing Start..." if @do_log
 
 			@on_start.each { |block| block.call }
 			@started = true
 
-			warn "InputMidiClock: processing Start... done"
+			warn "InputMidiClock: processing Start... done" if @do_log
 		end
 	end
 end

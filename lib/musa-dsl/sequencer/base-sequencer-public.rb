@@ -11,7 +11,9 @@ class Musa::BaseSequencer
 
 	@@tick_mutex = Mutex.new
 
-	def initialize quarter_notes_by_bar, quarter_note_divisions
+	def initialize quarter_notes_by_bar, quarter_note_divisions, do_log: nil
+
+		do_log ||= false
 
 		@on_debug_at = []
 		@on_fast_forward = []
@@ -20,6 +22,8 @@ class Musa::BaseSequencer
 		@ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
 
 		@score = Hash.new
+
+		@do_log = do_log
 
 		reset
 	end

@@ -9,13 +9,13 @@ module Musa
 
 		attr_accessor :log
 
-		def initialize(sequencer:, output:, channels:, log: nil)
-			log ||= false
+		def initialize(sequencer:, output:, channels:, do_log: nil)
+			do_log ||= false
 
 			@sequencer = sequencer
 			@output = output
 			@channels = channels.arrayfy.explode_ranges
-			@do_log = log
+			@do_log = do_log
 
 			reset
 		end
