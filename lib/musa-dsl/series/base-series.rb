@@ -1,3 +1,5 @@
+require 'forwardable'
+
 module Musa
 
 	module ProtoSerie
@@ -28,31 +30,39 @@ module Musa
 		def restart
 			@have_peeked_next_value = false
 			@peeked_next_value = nil
+			@have_current_value = false
+			@current_value = nil
+
 			@serie.restart
 
 			self
 		end
 
 		def next_value
-			if @have_peeked_next_value
-				@have_peeked_next_value = false
-				value = @peeked_next_value
-			else
-				value = @serie.next_value
+			unless @have_current_value && @current_value.nil?
+				if @have_peeked_next_value
+					@have_peeked_next_value = false
+					@current_value = @peeked_next_value
+				else
+					@current_value = @serie.next_value
+				end
 			end
 
-			propagate_value value
+			propagate_value @current_value
 
-			value
+			@current_value
 		end
 
 		def peek_next_value
-			if @have_peeked_next_value
-				@peeked_next_value
-			else
+			unless @have_peeked_next_value
 				@have_peeked_next_value = true
 				@peeked_next_value = @serie.next_value
 			end
+			@peeked_next_value
+		end
+
+		def current_value
+			@current_value
 		end
 
 		def infinite?
@@ -90,7 +100,7 @@ module Musa
 			value = @next_value.first
 
 			raise "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
-			
+
 			return value
 		end
 

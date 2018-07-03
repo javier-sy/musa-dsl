@@ -1,6 +1,7 @@
 require 'musa-dsl/mods/arrayfy'
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 
+require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'
 
 class Musa::BaseSequencer
@@ -13,7 +14,11 @@ class Musa::BaseSequencer
 		position = bar_position.rationalize * @ticks_per_bar
 
 		if position == @position
-			block.call
+			begin
+				block.call
+			rescue StandardError, ScriptError => e
+				_rescue_block_error e
+			end
 
 		elsif position > @position
 			@score[position] = [] if !@score[position]
@@ -25,7 +30,7 @@ class Musa::BaseSequencer
 				@score[position] << value
 			end
 		else
-			_log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+			_log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
 		end
 
 		nil
@@ -40,13 +45,13 @@ class Musa::BaseSequencer
 		if position != position.round
 			original_position = position
 			position = position.round.rationalize
-			_log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})"
+			_log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})" if @do_log
 		end
 
 		value_parameters = []
 		value_parameters << with if !with.nil? && !with.is_a?(Hash)
 
-		block_key_parameters_binder = KeyParametersProcedureBinder.new block
+		block_key_parameters_binder = KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
 
 		key_parameters = {}
 		key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
@@ -56,15 +61,37 @@ class Musa::BaseSequencer
 
 		if position == @position
 			@debug_at.call if debug && @debug_at
-			block.call *value_parameters, **key_parameters
+
+			begin
+				locked = @@tick_mutex.try_lock
+
+				if locked
+					original_stdout = $stdout
+					original_stderr = $stderr
+
+					$stdout = control.stdout
+					$stderr = control.stderr
+				end
+
+				block_key_parameters_binder._call value_parameters, key_parameters
+
+			ensure
+				if locked
+					$stdout = original_stdout
+					$stderr = original_stderr
+				end
+
+				@@tick_mutex.unlock if locked
+			end
+
 
 		elsif position > @position
 			@score[position] = [] if !@score[position]
 
 			@score[position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
-			@score[position] << { parent_control: control, block: block, value_parameters: value_parameters, key_parameters: key_parameters }
+			@score[position] << { parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
 		else
-			_log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}"
+			_log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
 		end
 
 		nil
@@ -100,7 +127,7 @@ class Musa::BaseSequencer
 
 		run_method = theme.instance_method(:run)
 		at_position_method = theme.instance_method(:at_position)
-		at_position_method_parameter_binder = KeyParametersProcedureBinder.new at_position_method
+		at_position_method_parameter_binder = KeyParametersProcedureBinder.new at_position_method, on_rescue: proc { |e| _rescue_block_error(e) }
 
 		run_parameters = run_method.parameters.collect {|p| [ p[1], nil ] }.compact.to_h
 		run_parameters.delete :next_position
@@ -127,7 +154,7 @@ class Musa::BaseSequencer
 						effective_parameters = at_position_method_parameter_binder.apply parameters
 						theme_instance.at_position p, **effective_parameters
 					else
-						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished."
+						_log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished." if @do_log
 						nil
 					end
 				},
@@ -145,7 +172,7 @@ class Musa::BaseSequencer
 
 	def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, __play_eval: nil, **mode_args, &block)
 
-		__play_eval ||= PlayEval.create mode, KeyParametersProcedureBinder.new(block), decoder, nl_context
+		__play_eval ||= PlayEval.create mode, KeyParametersProcedureBinder.new(block, on_rescue: proc { |e| _rescue_block_error(e) }), decoder, nl_context
 
 		element = serie.next_value
 
@@ -229,7 +256,7 @@ class Musa::BaseSequencer
 
 	def _every(binterval, control, block_procedure_binder: nil, &block)
 
-		block_procedure_binder ||= KeyParametersProcedureBinder.new block
+		block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
 
 		_numeric_at position, control do
 
@@ -311,7 +338,6 @@ class Musa::BaseSequencer
 			eduration = till - position  - every if till
 			eduration = duration  - every if duration
 
-
 			steps = eduration * (1 / every) # número de pasos que habrá en el movimiento
 
 			size.times { |i| rstep[i] = (to[i] - from[i]) / steps } if to
@@ -320,7 +346,7 @@ class Musa::BaseSequencer
 			# TODO from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
 		end
 
-		control = EveryControl.new @event_handlers.last, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
+		control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
 		@event_handlers.push control
 
 		_numeric_at start_position, control do
@@ -384,10 +410,16 @@ class Musa::BaseSequencer
 		control
 	end
 
+	def _rescue_block_error e
+		@on_block_error.each do |block|
+			block.call e
+		end
+	end
+
 	def _log msg = nil
 		m = "..." unless msg
 		m = ": #{msg}" if msg
 
-		puts "#{self.position}#{m}"
+		warn "#{self.position}#{m}"
 	end
 end

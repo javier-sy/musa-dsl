@@ -1,15 +1,16 @@
 class KeyParametersProcedureBinder
-	
+
 	attr_reader :procedure
 
-	def initialize procedure
+	def initialize procedure, on_rescue: nil
 		@procedure = procedure
+		@on_rescue = on_rescue
 
 		@parameters = {}
 		@has_rest = false
 		@value_parameters_count = 0
 
-		procedure.parameters.each do |parameter| 
+		procedure.parameters.each do |parameter|
 			@parameters[parameter[1]] = nil if parameter[0] == :key || parameter[0] == :keyreq
 			@has_rest = true if parameter[0] == :keyrest
 
@@ -22,7 +23,18 @@ class KeyParametersProcedureBinder
 	end
 
 	def _call value_parameters, key_parameters
+		if @on_rescue
+			begin
+		 		__call value_parameters, key_parameters
+			rescue StandardError, ScriptError => e
+				@on_rescue.call e
+			end
+		else
+			__call value_parameters, key_parameters
+		end
+	end
 
+	def __call value_parameters, key_parameters
 		effective_key_parameters = apply(key_parameters)
 
 		if effective_key_parameters.empty?
@@ -39,6 +51,8 @@ class KeyParametersProcedureBinder
 			end
 		end
 	end
+
+	private :__call
 
 	def has_key? key
 		@has_rest || @parameters.include?(key)

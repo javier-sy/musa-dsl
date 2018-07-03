@@ -18,10 +18,12 @@ module Musa
 				on_start: nil,
 				after_stop: nil,
 				before_each_tick: nil,
-				on_position_change: nil
+				on_position_change: nil,
+				do_log: nil
 
 			quarter_notes_by_bar ||= 4
 			quarter_note_divisions ||= 24
+			do_log ||= false
 
 	 		@clock = clock
 
@@ -40,7 +42,9 @@ module Musa
 			@after_stop = []
 			@after_stop << KeyParametersProcedureBinder.new(after_stop) if after_stop
 
-			@sequencer = Sequencer.new quarter_notes_by_bar, quarter_note_divisions
+			@do_log = do_log
+
+			@sequencer = Sequencer.new quarter_notes_by_bar, quarter_note_divisions, do_log: @do_log
 
 			@clock.on_start do
 				do_on_start
@@ -55,16 +59,16 @@ module Musa
 				position = Rational(midi_beat_position, 4 * quarter_notes_by_bar) + 1
 				tick_before_position = position - Rational(1, quarter_notes_by_bar * quarter_note_divisions)
 
-				puts "Transport: received message position change to #{position}"
+				warn "Transport: received message position change to #{position}" if @do_log
 
 				start_again_later = false
-				
+
 				if @sequencer.position > tick_before_position
 					do_stop
 					start_again_later = true
 				end
 
-				puts "Transport: setting sequencer position #{tick_before_position}"
+				warn "Transport: setting sequencer position #{tick_before_position}" if @do_log
 				@sequencer.position = tick_before_position
 
 				@sequencer.raw_at position, force_first: true do
@@ -104,28 +108,33 @@ module Musa
 			end
 		end
 
+		def stop
+			@clock.terminate
+			do_stop
+		end
+
 		private
 
 		def do_before_begin
-			puts "Transport: doing before_begin initialization..."
+			warn "Transport: doing before_begin initialization..."  if @do_log unless @before_begin.empty?
 			@before_begin.each { |block| block.call @sequencer }
-			puts "Transport: doing before_begin initialization... done"
+			warn "Transport: doing before_begin initialization... done"  if @do_log unless @before_begin.empty?
 		end
 
 		def do_on_start
-			puts "Transport: starting..."
+			warn "Transport: starting..."  if @do_log unless @on_start.empty?
 			@on_start.each { |block| block.call @sequencer }
-			puts "Transport: starting... done"
+			warn "Transport: starting... done"  if @do_log unless @on_start.empty?
 		end
 
 		def do_stop
-			puts "Transport: stoping..."
+			warn "Transport: stoping..."  if @do_log unless @after_stop.empty?
 			@after_stop.each { |block| block.call @sequencer }
-			puts "Transport: stoping... done"
+			warn "Transport: stoping... done"  if @do_log unless @after_stop.empty?
 
-			puts "Transport: resetting sequencer..."
+			warn "Transport: resetting sequencer..." if @do_log
 			@sequencer.reset
-			puts "Transport: resetting sequencer... done"
+			warn "Transport: resetting sequencer... done" if @do_log
 
 			do_before_begin
 		end

@@ -9,13 +9,13 @@ module Musa
 
 		attr_accessor :log
 
-		def initialize(sequencer:, output:, channels:, log: nil)
-			log ||= false
+		def initialize(sequencer:, output:, channels:, do_log: nil)
+			do_log ||= false
 
 			@sequencer = sequencer
 			@output = output
 			@channels = channels.arrayfy.explode_ranges
-			@do_log = log
+			@do_log = do_log
 
 			reset
 		end
@@ -35,6 +35,16 @@ module Musa
 		def fast_forward=(enabled)
 			@voices.apply :fast_forward=, enabled
 		end
+
+		def panic reset: nil
+			reset ||= false
+
+			@voices.each do |voice|
+				voice.all_notes_off
+			end
+
+			@output.puts MIDIMessage::SystemRealtime.new(0xf) if reset
+		end
 	end
 
 	private
@@ -46,7 +56,7 @@ module Musa
 
 		def initialize(sequencer:, output:, channel:, name: nil, log: nil)
 			log ||= false
-			
+
 			@sequencer = sequencer
 			@output = output
 			@channel = channel
@@ -56,11 +66,8 @@ module Musa
 			@tick_duration = Rational(1, @sequencer.ticks_per_bar)
 
 			@used_pitches = []
-			
-			(0..127).each do |pitch|
-				@used_pitches[pitch] = { counter: 0, velocity: 0 }
-			end
-			
+			fill_used_pitches @used_pitches
+
 			log "Warning: voice without output" unless @output
 
 			self
@@ -91,6 +98,13 @@ module Musa
 			nil
 		end
 
+		def all_notes_off
+			@used_pitches.clear
+			fill_used_pitches @used_pitches
+
+			@output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x7b, 0)
+		end
+
 		def log(msg)
 			@sequencer.log "voice #{name || @channel}: #{msg}" if @do_log
 		end
@@ -100,6 +114,12 @@ module Musa
 	 	end
 
 	 	private
+
+		def fill_used_pitches pitches
+			(0..127).each do |pitch|
+				pitches[pitch] = { counter: 0, velocity: 0 }
+			end
+		end
 
 		class NoteControl
 
