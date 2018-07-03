@@ -27,6 +27,7 @@ class Musa::BaseSequencer
 			only_once ||= false
 
 			@handlers[event] ||= []
+			# TODO add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
 			@handlers[event] << { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
 		end
 

@@ -3,6 +3,8 @@ require 'musa-dsl/mods/key-parameters-procedure-binder'
 
 require 'musa-dsl/series'
 
+require 'method_source'
+
 class Musa::BaseSequencer
 
 	attr_reader :ticks_per_bar, :running_position
@@ -13,6 +15,7 @@ class Musa::BaseSequencer
 
 		@on_debug_at = []
 		@on_fast_forward = []
+		@on_block_error = []
 
 		@ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
 
@@ -77,6 +80,10 @@ class Musa::BaseSequencer
 
 	def on_debug_at &block
 		@on_debug_at << block
+	end
+
+	def on_block_error &block
+		@on_block_error << block
 	end
 
 	def on_fast_forward &block

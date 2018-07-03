@@ -8,6 +8,12 @@ module Musa
   		port ||= 1327
       redirect_stderr ||= false
 
+      if binder.respond_to?(:on_error_block)
+        binder.on_error_block do |e|
+          send_exception e
+        end
+      end
+
   		@client_threads = []
 
   		@main_thread = Thread.new do
@@ -35,13 +41,7 @@ module Musa
   					            binder.eval buffer.string
 
     									rescue StandardError, ScriptError => e
-    										send command: "//error"
-    										send content: e.inspect
-    										send command: "//backtrace"
-    										e.backtrace.each do |bt|
-    											send content: bt
-    										end
-    										send command: "//end"
+                        send_exception e
     									end
 
                       $stdout = original_stdout
@@ -70,6 +70,16 @@ module Musa
     end
 
     private
+
+    def send_exception e
+      send command: "//error"
+      send content: e.inspect
+      send command: "//backtrace"
+      e.backtrace.each do |bt|
+        send content: bt
+      end
+      send command: "//end"
+    end
 
     def send content: nil, command: nil
       puts escape(content) if content

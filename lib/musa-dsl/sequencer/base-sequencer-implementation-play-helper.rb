@@ -40,16 +40,18 @@ class Musa::BaseSequencer
 		def run_operation element
 			value = nil
 
-			value = { 	current_operation: :block,
-						current_block: @block_procedure_binder,
-						current_parameter: element,
-						continue_operation: :at,
-						continue_parameter: element[:at] } if element.is_a? Hash
+			value = {
+				current_operation: :block,
+				current_block: @block_procedure_binder,
+				current_parameter: element,
+				continue_operation: :at,
+				continue_parameter: element[:at] } if element.is_a? Hash
 
-			value ||= { current_operation: @block_procedure_binder,
-						current_parameter: element,
-						continue_operation: :at,
-						continue_parameter: position }
+			value ||= {
+				current_operation: @block_procedure_binder,
+				current_parameter: element,
+				continue_operation: :at,
+				continue_parameter: position }
 		end
 	end
 
@@ -65,23 +67,26 @@ class Musa::BaseSequencer
 			value = nil
 
 			if element.is_a? Hash
-				value = { 	current_operation: :block,
-							current_block: @block_procedure_binder,
-							current_parameter: element,
-							continue_operation: :wait,
-							continue_parameter: element[:duration] } if element.key? :duration
+				value = {
+					current_operation: :block,
+					current_block: @block_procedure_binder,
+					current_parameter: element,
+					continue_operation: :wait,
+					continue_parameter: element[:duration] } if element.key? :duration
 
-				value = { 	current_operation: :block,
-							current_block: @block_procedure_binder,
-							current_parameter: element,
-							continue_operation: :on,
-							continue_parameter: element[:wait_event] } if element.key? :wait_event
+				value = {
+					current_operation: :block,
+					current_block: @block_procedure_binder,
+					current_parameter: element,
+					continue_operation: :on,
+					continue_parameter: element[:wait_event] } if element.key? :wait_event
 			end
 
-			value ||= { current_operation: :block,
-						current_block: @block_procedure_binder,
-						current_parameter: element,
-						continue_operation: :now }
+			value ||= {
+				current_operation: :block,
+				current_block: @block_procedure_binder,
+				current_parameter: element,
+				continue_operation: :now }
 		end
 	end
 
@@ -114,17 +119,17 @@ class Musa::BaseSequencer
 				element
 			else
 				case element[:kind]
-				when :serie 		then eval_serie element[:serie]
-				when :parallel 		then eval_parallel element[:parallel]
-				when :assign_to 	then eval_assign_to element[:assign_to], element[:assign_value]
+				when :serie					then eval_serie element[:serie]
+				when :parallel 			then eval_parallel element[:parallel]
+				when :assign_to 		then eval_assign_to element[:assign_to], element[:assign_value]
 				when :use_variable 	then eval_use_variable element[:use_variable]
-				when :command 		then eval_command element[:command], element[:value_parameters], element[:key_parameters]
-				when :value 		then eval_value element[:value]
-				when :neuma 		then eval_neuma element[:neuma]
+				when :command 			then eval_command element[:command], element[:value_parameters], element[:key_parameters]
+				when :value 				then eval_value element[:value]
+				when :neuma 				then eval_neuma element[:neuma]
 				when :call_methods 	then eval_call_methods element[:on], element[:call_methods]
-				when :indirection	then eval_indirection element[:indirection]
-				when :reference 	then eval_reference element[:reference]
-				when :event 		then element
+				when :indirection		then eval_indirection element[:indirection]
+				when :reference 		then eval_reference element[:reference]
+				when :event 				then element
 				else
 					raise ArgumentError, "eval_element: don't know how to process #{element}"
 				end
@@ -220,23 +225,23 @@ class Musa::BaseSequencer
 		def run_operation element
 			case element
 			when nil
-				{ 	current_operation: :none,
+				{ current_operation: :none,
 					continue_operation: :now }
 
 			when Musa::Neuma::Dataset
 
-				{ 	current_operation: :block,
+				{ current_operation: :block,
 					current_parameter: element,
 					continue_operation: :wait,
 					continue_parameter: element[:duration] }
 
 			when Musa::Serie
 
-				{ 	current_operation: :play,
+				{ current_operation: :play,
 					current_parameter: element.restart }
 
 			when Parallel
-				{ 	current_operation: :parallel_play,
+				{ current_operation: :parallel_play,
 					current_parameter: element.tap { |e| e.each {|s| s.restart } } }
 
 			else
@@ -246,12 +251,12 @@ class Musa::BaseSequencer
 					_value = eval_value element[:value]
 
 					if _value.is_a?(Hash) && _value.key?(:duration)
-						{ 	current_operation: :block,
+						{ current_operation: :block,
 							current_parameter: _value,
 							continue_operation: :wait,
 							continue_parameter: _value[:duration] }
 					else
-						{ 	current_operation: :block,
+						{ current_operation: :block,
 							current_parameter: _value,
 							continue_operation: :now }
 					end
@@ -260,26 +265,26 @@ class Musa::BaseSequencer
 
 					_value = eval_neuma element[:neuma]
 
-					{ 	current_operation: :block,
+					{ current_operation: :block,
 						current_parameter: _value,
 						continue_operation: :wait,
 						continue_parameter: _value[:duration] }
 
 				when :serie
 
-					{ 	current_operation: :play,
+					{ current_operation: :play,
 						current_parameter: eval_serie(element[:serie]) }
 
 				when :parallel
 
-					{ 	current_operation: :parallel_play,
+					{ current_operation: :parallel_play,
 						current_parameter: eval_parallel(element[:parallel]) }
 
 				when :assign_to
 
 					eval_assign_to element[:assign_to], element[:assign_value]
 
-					{  	current_operation: :none,
+					{ current_operation: :none,
 						continue_operation: :now }
 
 				when :use_variable
@@ -293,7 +298,7 @@ class Musa::BaseSequencer
 					value_parameters = element[:value_parameters].collect { |e| subcontext.eval_element(e) } if element[:value_parameters]
 					key_parameters = element[:key_parameters].collect { |k, e| [ k, subcontext.eval_element(e) ] }.to_h if element[:key_parameters]
 
-					{ 	current_operation: :event,
+					{ current_operation: :event,
 						current_event: element[:event],
 						current_value_parameters: value_parameters,
 						current_key_parameters: key_parameters,
