@@ -121,13 +121,21 @@ class Musa::BaseSequencer
 		@event_handlers.last.launch event, *value_parameters, **key_parameters
 	end
 
-	# TODO implementar series como parámetros (bdelay sería el wait respecto al evento programado anterior?)
-	def wait bdelay, with: nil, &block
+	def wait bars_delay, with: nil, debug: nil, &block
+		debug ||= false
 
 		control = EventHandler.new @event_handlers.last, capture_stdout: true
 		@event_handlers.push control
 
-		_numeric_at position + bdelay.rationalize, control, with: with, &block
+		if bars_delay.is_a? Numeric
+			_numeric_at position + bars_delay.rationalize, control, with: with, debug: debug, &block
+		else
+			bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
+			with = Series::S(*with).repeat if with.is_a? Array
+
+			starting_position = position
+			_serie_at bars_delay.eval { |delay| starting_position + delay }, control, with: with, debug: debug, &block
+		end
 
 		@event_handlers.pop
 
@@ -152,9 +160,7 @@ class Musa::BaseSequencer
 	end
 
 	def at bar_position, with: nil, debug: nil, &block
-
 		debug ||= false
-		raw ||= false
 
 		control = EventHandler.new @event_handlers.last, capture_stdout: true
 		@event_handlers.push control

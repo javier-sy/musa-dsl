@@ -10,7 +10,7 @@ module Musa
 
       if binder.receiver.respond_to?(:sequencer) &&
         binder.receiver.sequencer.respond_to?(:on_block_error)
-        
+
         binder.receiver.sequencer.on_block_error do |e|
           send_exception e
         end
@@ -42,6 +42,8 @@ module Musa
                       block_source = buffer.string
 
     									begin
+                        send_echo block_source
+
   					            binder.eval block_source
 
     									rescue StandardError, ScriptError => e
@@ -77,6 +79,12 @@ module Musa
     end
 
     private
+
+    def send_echo e
+      send command: "//echo"
+      send content: e
+      send command: "//end"
+    end
 
     def send_exception e
       send command: "//error"

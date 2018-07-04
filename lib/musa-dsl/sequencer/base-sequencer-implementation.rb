@@ -111,7 +111,7 @@ class Musa::BaseSequencer
 		if bar_position
 			_numeric_at bar_position, control, next_bar_position: next_bar_position, with: with_value, debug: debug, &block
 
-			_numeric_at bar_position, debug: false do
+			_numeric_at bar_position, control, debug: false do
 				_serie_at bar_position_serie, control, with: with, debug: debug, &block
 			end
 		else
