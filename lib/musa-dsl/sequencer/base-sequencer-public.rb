@@ -3,8 +3,6 @@ require 'musa-dsl/mods/key-parameters-procedure-binder'
 
 require 'musa-dsl/series'
 
-require 'method_source'
-
 class Musa::BaseSequencer
 
 	attr_reader :ticks_per_bar, :running_position

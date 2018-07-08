@@ -1,1 +1,1 @@
-require 'musa-dsl/repl/repl'
+require 'musa-dsl/sequencer/sequencer'
