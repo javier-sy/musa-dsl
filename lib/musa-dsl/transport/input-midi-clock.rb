@@ -19,6 +19,7 @@ module Musa
 
 			while @run
 				raw_messages = @input.gets
+				@input.buffer.clear
 
 				messages = []
 				stop_index = nil
