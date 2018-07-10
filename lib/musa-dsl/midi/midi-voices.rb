@@ -94,7 +94,7 @@ module Musa
 
 		def note_off(pitchvalue = nil, pitch: nil, velocity_off: 63)
 			pitch ||= pitchvalue
-			NoteControl.new(self, pitch: pitch, velocity_off: velocity, play: false).note_off
+			NoteControl.new(self, pitch: pitch, velocity_off: velocity_off, play: false).note_off
 			nil
 		end
 
@@ -165,8 +165,10 @@ module Musa
 				self
 			end
 
-			def note_off(velocity: nil)
+			def note_off(velocity: nil, force: nil)
 				velocity ||= @velocity_off
+				force ||= false
+
 				velocity = velocity.arrayfy.explode_ranges
 
 				@pitch.each_index do |i|
@@ -174,6 +176,8 @@ module Musa
 					velocity_off = velocity[i % velocity.size]
 
 					if !silence?(pitch)
+						@voice.used_pitches[pitch][:counter] = 1 if force
+						
 						@voice.used_pitches[pitch][:counter] -= 1
 						@voice.used_pitches[pitch][:counter] = 0 if @voice.used_pitches[pitch][:counter] < 0
 
