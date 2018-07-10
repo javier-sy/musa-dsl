@@ -87,14 +87,17 @@ module Musa
 			@fast_forward
 		end
 
-		def note(pitchvalue = nil, pitch: nil, velocity: 63, duration: nil, velocity_off: 63)
+		def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, velocity_off: 63)
 			pitch ||= pitchvalue
+			velocity ||= 63
 			NoteControl.new self, pitch: pitch, velocity: velocity, duration: duration, velocity_off: velocity_off
 		end
 
-		def note_off(pitchvalue = nil, pitch: nil, velocity_off: 63)
+		def note_off(pitchvalue = nil, pitch: nil, velocity_off: nil, force: nil)
 			pitch ||= pitchvalue
-			NoteControl.new(self, pitch: pitch, velocity_off: velocity_off, play: false).note_off
+			velocity_off ||= 63
+			
+			NoteControl.new(self, pitch: pitch, velocity_off: velocity_off, play: false).note_off force: force
 			nil
 		end
 
@@ -177,7 +180,7 @@ module Musa
 
 					if !silence?(pitch)
 						@voice.used_pitches[pitch][:counter] = 1 if force
-						
+
 						@voice.used_pitches[pitch][:counter] -= 1
 						@voice.used_pitches[pitch][:counter] = 0 if @voice.used_pitches[pitch][:counter] < 0
 
