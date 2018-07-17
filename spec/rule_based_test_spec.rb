@@ -58,25 +58,21 @@ class Musa::Rules
 
   def generate_possibilities object, confirmed_node = nil, node = nil, rules = nil
     node ||= Node.new
-    rules ||= @context._rules.clone
+    rules ||= @context._rules
 
     history = confirmed_node.history if confirmed_node
     history ||= []
 
-    rule = rules.find { |r| r.applies_on? object, history }
+    rules = rules.clone
+    rule = rules.shift
 
     if rule
-      rules.delete rule
-
       rule.generate_possibilities(object, history).each do |new_object|
-
         new_node = Node.new new_object, node
         new_node.mark_as_ended! if @context._ended? new_object
 
-        rejection =
-          @context._rejections.find { |rejection|
-            rejection.applies_on?(new_object, history) &&
-            rejection.rejects?(new_object, history) }
+        rejection = @context._rejections.find { |rejection| rejection.rejects?(new_object, history) }
+        # TODO include rejection secondary reasons in rejection message
 
         new_node.reject! rejection if rejection
 
@@ -105,7 +101,7 @@ class Musa::Rules
 
       fished = result.fish
 
-      node.reject! Rejection::AllChildrenRejected if fished.empty?
+      node.reject! "All children are rejected" if fished.empty?
 
       fished.each do |object|
         subnode = node.add(object).mark_as_ended!
@@ -121,7 +117,7 @@ class Musa::Rules
 
     def rule name, &block
       @_rules ||= []
-      @_rules << Rule.new(name, self).tap { |r| r._as_context_run block }
+      @_rules << Rule.new(name, self, block)
     end
 
     def ended_when &block
@@ -132,9 +128,9 @@ class Musa::Rules
       end
     end
 
-    def reject reason, &block
+    def rejection reason, &block
       @_rejections ||= []
-      @_rejections << Rejection.new(reason, self).tap { |r| r._as_context_run block }
+      @_rejections << Rejection.new(reason, self, block)
     end
 
     def _ended? object
@@ -144,34 +140,47 @@ class Musa::Rules
     class Rule
       attr_reader :name
 
-      def initialize name, context
+      def initialize name, context, block
         @name = name
         @context = context
-
-        @apply_when = []
-        @possibilities = []
-      end
-
-      def apply_when &block
-        @apply_when << block
-      end
-
-      def possibility &block
-        @possibilities << block
-      end
-
-      def applies_on? object, history
-        @apply_when.each do |apply_when|
-          return true if @context.as_context_run(apply_when, object, history)
-        end
-        return false
+        @block = block
       end
 
       def generate_possibilities object, history
-        @possibilities.collect do |possibility|
-          object.duplicate.tap { |o| @context.as_context_run(possibility, o, history) }
-        end
+        # TODO optimize context using only one instance for all genereate_possibilities calls
+        context = RuleEvalContext.new @context
+        context.as_context_run @block, object, history
+        return context._possibilities
       end
+
+      class RuleEvalContext
+        attr_reader :_possibilities
+
+        def initialize parent_context
+          @_parent_context = parent_context
+          @_possibilities = []
+        end
+
+        def possibility object
+          @_possibilities << object
+        end
+
+        private
+
+      	def method_missing method_name, *args, **key_args, &block
+      		if @_parent_context.respond_to? method_name
+      			@_parent_context.send_nice method_name, *args, **key_args, &block
+      		else
+      			super
+      		end
+      	end
+
+      	def respond_to_missing? method_name, include_private
+      		@_parent_context.respond_to?(method_name, include_private) || super
+      	end
+      end
+
+      private_constant :RuleEvalContext
     end
 
     private_constant :Rule
@@ -179,37 +188,51 @@ class Musa::Rules
     class Rejection
       attr_reader :reason
 
-      def initialize reason, context
+      def initialize reason, context = nil, block = nil
         @reason = reason
         @context = context
-
-        @apply_on = []
-        @rejections_if = []
+        @block = block
       end
 
-      def apply_on &block
-        @apply_on << block
+      def rejects? object, history
+        # TODO optimize context using only one instance for all rejects? checks
+        context = RejectionEvalContext.new @context
+        context.as_context_run @block, object, history
+
+        reasons = context._secondary_reasons.collect { |_| @reason || ("#{@reason} (#{_})" if _) }
+
+        return reasons.empty? ? nil : reasons
       end
 
-      def reject_if &block
-        @rejections_if << block
-      end
+      class RejectionEvalContext
+        attr_reader :_secondary_reasons
 
-      def applies_on? object, previous_objects
-        @apply_on.each do |apply_on|
-          return true if @context.as_context_run(apply_on, object, previous_objects)
+        def initialize parent_context
+          @_parent_context = parent_context
+          @_secondary_reasons = []
         end
-        return false
-      end
 
-      def rejects? object, previous_objects
-        @rejections_if.each do |rejection|
-          return true if @context.as_context_run(rejection, object, previous_objects)
+        def reject secondary_reason = nil
+          secondary_reason ||= ""
+          @_secondary_reasons << secondary_reason
         end
-        return false
+
+        private
+
+      	def method_missing method_name, *args, **key_args, &block
+      		if @_parent_context.respond_to? method_name
+      			@_parent_context.send_nice method_name, *args, **key_args, &block
+      		else
+      			super
+      		end
+      	end
+
+      	def respond_to_missing? method_name, include_private
+      		@_parent_context.respond_to?(method_name, include_private) || super
+      	end
       end
 
-      AllChildrenRejected = Rejection.new "All children rejected", nil
+      private_constant :RejectionEvalContext
     end
 
     private_constant :Rejection
@@ -305,79 +328,76 @@ class Musa::Rules
 end
 
 ChordProgression = Musa::Rules.new do
-  rule "3º" do
-    apply_when { |chord| chord.fundamental && !chord.third }
 
-    possibility { |chord| chord.third = chord.fundamental + 4 - 12 }
-    possibility { |chord| chord.third = chord.fundamental + 4 }
-    possibility { |chord| chord.third = chord.fundamental + 4 + 12 }
-    possibility { |chord| chord.third = chord.fundamental + 4 + 24 }
+  rule "3º" do |chord|
+    if chord.fundamental && !chord.third
+      #possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 - 12 }
+      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 }
+      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 12 }
+      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 24 }
+    end
   end
 
-  rule "5º" do
-    apply_when { |chord| chord.fundamental && !chord.fifth }
-
-    possibility { |chord| chord.fifth = chord.fundamental + 7 - 12 }
-    possibility { |chord| chord.fifth = chord.fundamental + 7 }
-    possibility { |chord| chord.fifth = chord.fundamental + 7 + 12 }
-    possibility { |chord| chord.fifth = chord.fundamental + 7 + 24 }
+  rule "5º" do |chord|
+    if chord.fundamental && !chord.fifth
+      #possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 - 12 }
+      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 }
+      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 12 }
+      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 24 }
+    end
   end
 
-  rule "duplication" do
-    apply_when { |chord| chord.fundamental && !chord.duplicated }
-
-    possibility { |chord| chord.duplicated = :fundamental; chord.duplicate_on = -12 }
-    possibility { |chord| chord.duplicated = :fundamental; chord.duplicate_on = +12 }
-    possibility { |chord| chord.duplicated = :third; chord.duplicate_on = +12 }
-    possibility { |chord| chord.duplicated = :third; chord.duplicate_on = +24 }
-    possibility { |chord| chord.duplicated = :fifth; chord.duplicate_on = +12 }
-    possibility { |chord| chord.duplicated = :fifth; chord.duplicate_on = +24 }
+  rule "duplication" do |chord|
+    if chord.fundamental && !chord.duplicated
+      possibility chord.duplicate.tap { |_| _.duplicated = :fundamental; _.duplicate_on = -12 }
+      possibility chord.duplicate.tap { |_| _.duplicated = :fundamental; _.duplicate_on = +12 }
+      possibility chord.duplicate.tap { |_| _.duplicated = :third; _.duplicate_on = +12 }
+      possibility chord.duplicate.tap { |_| _.duplicated = :third; _.duplicate_on = +24 }
+      possibility chord.duplicate.tap { |_| _.duplicated = :fifth; _.duplicate_on = +12 }
+      possibility chord.duplicate.tap { |_| _.duplicated = :fifth; _.duplicate_on = +24 }
+    end
   end
 
   ended_when do |chord|
     chord.soprano && chord.alto && chord.tenor && chord.bass
   end
 
-  reject "more than octave apart bass - tenor" do
-    apply_on { |chord| chord.tenor && chord.bass }
-    reject_if { |chord| chord.tenor - chord.bass > 12 }
+  rejection "more than octave apart" do |chord|
+    if chord.tenor && chord.bass
+      reject "bass-tenor" if chord.tenor - chord.bass > 12
+    end
+
+    if chord.alto && chord.tenor
+      reject "alto-tenor" if chord.alto - chord.tenor > 12
+    end
+
+    if chord.soprano && chord.alto
+      reject "soprano-alto" if chord.soprano - chord.alto > 12
+    end
   end
 
-  reject "more than octave apart tenor - alto" do
-    apply_on { |chord| chord.alto && chord.tenor }
-    reject_if { |chord| chord.alto - chord.tenor > 12 }
-  end
+  rejection "parallel fifth" do |chord, history|
+    if !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass
 
-  reject "more than octave apart alto - soprano" do
-    apply_on { |chord| chord.soprano && chord.alto }
-    reject_if { |chord| chord.soprano - chord.alto > 12 }
-  end
-
-  reject "parallel fifth" do
-    apply_on { |chord, history| !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass }
-
-    reject_if do |chord, history|
       (0..3).find do |voice|
         (0..3).to_a.tap { |vv| vv.delete voice }.find do |voice2|
           # 5ª entre 2 voces del acorde
           # 5ª en el acorde anterior con las mismas voces
-          (chord.ordered[voice] - chord.ordered[voice2]) % 12 == 7 &&
-          (history.last.ordered[voice] - history.last.ordered[voice2]) % 12 == 7
+          reject if (chord.ordered[voice] - chord.ordered[voice2]) % 12 == 7 &&
+                    (history.last.ordered[voice] - history.last.ordered[voice2]) % 12 == 7
         end
       end
     end
   end
 
-  reject "parallel octave" do
-    apply_on { |chord, history| !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass }
-
-    reject_if do |chord, history|
+  rejection "parallel octave" do |chord, history|
+    if !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass
       (0..3).find do |voice|
         (0..3).to_a.tap { |vv| vv.delete voice }.find do |voice2|
           # 8ª entre 2 voces del acorde
           # 8ª en el acorde anterior con las mismas voces
-          (chord.ordered[voice] - chord.ordered[voice2]) % 12 == 0 &&
-          (history.last.ordered[voice] - history.last.ordered[voice2]) % 12 == 0
+          reject if (chord.ordered[voice] - chord.ordered[voice2]) % 12 == 0 &&
+                    (history.last.ordered[voice] - history.last.ordered[voice2]) % 12 == 0
         end
       end
     end
@@ -391,7 +411,7 @@ RSpec.describe "Rules" do # Musa::Rules
       n = ChordProgression.apply [Chord.new(60), Chord.new(65), Chord.new(67)]
 
       #pp n.fish
-      #pp n.combinations
+      pp n.combinations
 
       expect(result).to eq nil
     end
