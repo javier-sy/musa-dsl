@@ -82,7 +82,7 @@ class Musa::Rules
 
     unless rules.empty?
       node.children.each do |node|
-        generate_possibilities node.object, confirmed_node, node, rules.clone unless node.rejected || node.ended?
+        generate_possibilities node.object, confirmed_node, node, rules unless node.rejected || node.ended?
       end
     end
 
@@ -118,19 +118,18 @@ class Musa::Rules
     def rule name, &block
       @_rules ||= []
       @_rules << Rule.new(name, self, block)
+      self
     end
 
     def ended_when &block
-      if block_given?
-        @_ended_when = block
-      else
-        @_ended_when
-      end
+      @_ended_when = block
+      self
     end
 
     def rejection reason, &block
       @_rejections ||= []
       @_rejections << Rejection.new(reason, self, block)
+      self
     end
 
     def _ended? object
@@ -163,6 +162,7 @@ class Musa::Rules
 
         def possibility object
           @_possibilities << object
+          self
         end
 
         private
@@ -199,7 +199,7 @@ class Musa::Rules
         context = RejectionEvalContext.new @context
         context.as_context_run @block, object, history
 
-        reasons = context._secondary_reasons.collect { |_| @reason || ("#{@reason} (#{_})" if _) }
+        reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
 
         return reasons.empty? ? nil : reasons
       end
@@ -213,8 +213,8 @@ class Musa::Rules
         end
 
         def reject secondary_reason = nil
-          secondary_reason ||= ""
           @_secondary_reasons << secondary_reason
+          self
         end
 
         private
@@ -329,25 +329,57 @@ end
 
 ChordProgression = Musa::Rules.new do
 
-  rule "3º" do |chord|
+  rule "fundamental" do |seed|
+    #possibility Chord.new seed - 12
+    possibility Chord.new seed
+    #possibility Chord.new seed + 12
+    #possibility Chord.new seed + 24
+  end
+
+  rule "3º" do |chord, history|
     if chord.fundamental && !chord.third
-      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 - 12 }
-      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 }
-      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 12 }
-      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 24 }
+
+      last = history.last unless history.empty?
+
+      if last
+        [-12, 0, +12, +24].each do |offset|
+          last.ordered.find do |note|
+            if (note - (chord.fundamental + offset + 4)).abs <= 4
+              possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + offset }
+            end
+          end
+        end
+      else
+        possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 - 12 }
+        possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 }
+        possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 12 }
+        possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 24 }
+      end
     end
   end
 
-  rule "5º" do |chord|
+  rule "5º" do |chord, history|
     if chord.fundamental && !chord.fifth
-      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 - 12 }
-      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 }
-      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 12 }
-      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 24 }
+      last = history.last unless history.empty?
+
+      if last
+        [-12, 0, +12, +24].each do |offset|
+          last.ordered.find do |note|
+            if (note - (chord.fundamental + offset + 7)).abs <= 4
+              possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + offset }
+            end
+          end
+        end
+      else
+        possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 - 12 }
+        possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 }
+        possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 12 }
+        possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 24 }
+      end
     end
   end
 
-  rule "duplication" do |chord|
+  rule "duplication" do |chord, history|
     if chord.fundamental && !chord.duplicated
       possibility chord.duplicate.tap { |_| _.duplicated = :fundamental; _.duplicate_on = -12 }
       possibility chord.duplicate.tap { |_| _.duplicated = :fundamental; _.duplicate_on = +12 }
@@ -402,13 +434,22 @@ ChordProgression = Musa::Rules.new do
       end
     end
   end
+
+  rejection "bad voice leading" do |chord, history|
+    if !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass
+      last = history.last
+      (0..3).find do |voice|
+        reject "not gradual voice leading" if (last.ordered[voice] - chord.ordered[voice]).abs > 4
+      end
+    end
+  end
 end
 
 RSpec.describe "Rules" do # Musa::Rules
 
 	context "Prototype" do
 		it "Basic definition" do
-      n = ChordProgression.apply [Chord.new(60), Chord.new(65), Chord.new(67)]
+      n = ChordProgression.apply [60, 65, 67]
 
       #pp n.fish
       pp n.combinations
