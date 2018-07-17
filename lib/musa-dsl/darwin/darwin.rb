@@ -71,7 +71,7 @@ module Musa
 
 			def initialize block
 				@_weights = {}
-				self.as_context_run block
+				self._as_context_run block
 			end
 
 			def measures &block

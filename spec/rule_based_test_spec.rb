@@ -51,100 +51,171 @@ class Chord
   end
 end
 
-module Rules
-  class << self
-    def included base
-      base.extend ClassMethods
-    end
+class Musa::Rules
+  def initialize &block
+    @context = RulesEvalContext.new.tap { |_| _._as_context_run block }
   end
 
-  module ClassMethods
-    attr_reader :rules, :rejections
+  def generate_possibilities object, confirmed_node = nil, node = nil, rules = nil
+    node ||= Node.new
+    rules ||= @context._rules.clone
+
+    history = confirmed_node.history if confirmed_node
+    history ||= []
+
+    rule = rules.find { |r| r.applies_on? object, history }
+
+    if rule
+      rules.delete rule
+
+      rule.generate_possibilities(object, history).each do |new_object|
+
+        new_node = Node.new new_object, node
+        new_node.mark_as_ended! if @context._ended? new_object
+
+        rejection =
+          @context._rejections.find { |rejection|
+            rejection.applies_on?(new_object, history) &&
+            rejection.rejects?(new_object, history) }
+
+        new_node.reject! rejection if rejection
+
+        node.children << new_node
+      end
+    end
+
+    unless rules.empty?
+      node.children.each do |node|
+        generate_possibilities node.object, confirmed_node, node, rules.clone unless node.rejected || node.ended?
+      end
+    end
+
+    return node
+  end
+
+  def apply list, node = nil
+    list = list.clone
+
+    node ||= Node.new
+
+    seed = list.shift
+
+    if seed
+      result = generate_possibilities seed, node
+
+      fished = result.fish
+
+      node.reject! Rejection::AllChildrenRejected if fished.empty?
+
+      fished.each do |object|
+        subnode = node.add(object).mark_as_ended!
+        apply list, subnode
+      end
+    end
+
+    return node
+  end
+
+  class RulesEvalContext
+    attr_reader :_rules, :_ended_when, :_rejections
 
     def rule name, &block
-      @rules ||= []
-      @rules << Rule.new(name).tap { |r| r.as_context_run block }
+      @_rules ||= []
+      @_rules << Rule.new(name, self).tap { |r| r._as_context_run block }
     end
 
     def ended_when &block
       if block_given?
-        @ended_when = block
+        @_ended_when = block
       else
-        @ended_when
+        @_ended_when
       end
     end
 
     def reject reason, &block
-      @rejections ||= []
-      @rejections << Rejection.new(reason).tap { |r| r.as_context_run block }
+      @_rejections ||= []
+      @_rejections << Rejection.new(reason, self).tap { |r| r._as_context_run block }
     end
+
+    def _ended? object
+      as_context_run @_ended_when, object
+    end
+
+    class Rule
+      attr_reader :name
+
+      def initialize name, context
+        @name = name
+        @context = context
+
+        @apply_when = []
+        @possibilities = []
+      end
+
+      def apply_when &block
+        @apply_when << block
+      end
+
+      def possibility &block
+        @possibilities << block
+      end
+
+      def applies_on? object, history
+        @apply_when.each do |apply_when|
+          return true if @context.as_context_run(apply_when, object, history)
+        end
+        return false
+      end
+
+      def generate_possibilities object, history
+        @possibilities.collect do |possibility|
+          object.duplicate.tap { |o| @context.as_context_run(possibility, o, history) }
+        end
+      end
+    end
+
+    private_constant :Rule
+
+    class Rejection
+      attr_reader :reason
+
+      def initialize reason, context
+        @reason = reason
+        @context = context
+
+        @apply_on = []
+        @rejections_if = []
+      end
+
+      def apply_on &block
+        @apply_on << block
+      end
+
+      def reject_if &block
+        @rejections_if << block
+      end
+
+      def applies_on? object, previous_objects
+        @apply_on.each do |apply_on|
+          return true if @context.as_context_run(apply_on, object, previous_objects)
+        end
+        return false
+      end
+
+      def rejects? object, previous_objects
+        @rejections_if.each do |rejection|
+          return true if @context.as_context_run(rejection, object, previous_objects)
+        end
+        return false
+      end
+
+      AllChildrenRejected = Rejection.new "All children rejected", nil
+    end
+
+    private_constant :Rejection
   end
 
-  class Rule
-    attr_reader :name, :apply_on, :possibilities
-
-    def initialize name
-      @name = name
-      @apply_on = []
-      @possibilities = []
-    end
-
-    def apply_on &block
-      @apply_on << block
-    end
-
-    def possibility &block
-      @possibilities << block
-    end
-
-    def applies_on? object, history
-      @apply_on.each do |apply_on|
-        return true if apply_on.call(object, history)
-      end
-      return false
-    end
-
-    def generate_possibilities object, history
-      @possibilities.collect do |possibility|
-        object.duplicate.tap { |o| possibility.call o, history }
-      end
-    end
-  end
-
-  class Rejection
-    attr_reader :reason, :apply_on, :rejections_if
-
-    def initialize reason
-      @reason = reason
-
-      @apply_on = []
-      @rejections_if = []
-    end
-
-    def apply_on &block
-      @apply_on << block
-    end
-
-    def reject_if &block
-      @rejections_if << block
-    end
-
-    def applies_on? object, previous_objects
-      @apply_on.each do |apply_on|
-        return true if apply_on.call(object, previous_objects)
-      end
-      return false
-    end
-
-    def rejects? object, previous_objects
-      @rejections_if.each do |rejection|
-        return true if rejection.call(object, previous_objects)
-      end
-      return false
-    end
-
-    AllChildrenRejected = Rejection.new "All children rejected"
-  end
+  private_constant :RulesEvalContext
 
   class Node
     attr_reader :parent, :children, :object, :rejected
@@ -230,80 +301,12 @@ module Rules
     end
   end
 
-  def generate_possibilities object, confirmed_node = nil, node = nil, rules = nil
-    node ||= Node.new
-    rules ||= self.class.rules.clone
-
-    history = confirmed_node.history if confirmed_node
-    history ||= []
-
-    rule = rules.find { |r| r.applies_on? object, history }
-
-    if rule
-      rules.delete rule
-
-      rule.generate_possibilities(object, history).each do |new_object|
-
-        new_node = Node.new(new_object, node)
-        new_node.mark_as_ended! if self.class.ended_when.call new_object
-
-        rejection =
-          self.class.rejections.find { |rejection|
-            rejection.applies_on?(new_object, history) &&
-            rejection.rejects?(new_object, history) }
-
-        new_node.reject! rejection if rejection
-
-        node.children << new_node
-      end
-    end
-
-    unless rules.empty?
-      node.children.each do |node|
-        generate_possibilities node.object, confirmed_node, node, rules.clone unless node.rejected || node.ended?
-      end
-    end
-
-    return node
-  end
-
-  def apply list, node = nil
-    list = list.clone
-
-    node ||= Node.new
-
-    seed = list.shift
-
-    if seed
-      result = generate_possibilities seed, node
-
-      fished = result.fish
-
-      node.reject! Rejection::AllChildrenRejected if fished.empty?
-
-      fished.each do |object|
-        subnode = node.add(object).mark_as_ended!
-        apply list, subnode
-      end
-    end
-
-    return node
-  end
+  private_constant :Node
 end
 
-class ChordProgression
-  include Rules
-
-  rule "fundamental" do
-    apply_on { |chord| !chord.fundamental }
-
-    possibility { |chord| chord.fundamental = @fundamental }
-    possibility { |chord| chord.fundamental = @fundamental + 12 }
-    possibility { |chord| chord.fundamental = @fundamental - 12 }
-  end
-
+ChordProgression = Musa::Rules.new do
   rule "3º" do
-    apply_on { |chord| chord.fundamental && !chord.third }
+    apply_when { |chord| chord.fundamental && !chord.third }
 
     possibility { |chord| chord.third = chord.fundamental + 4 - 12 }
     possibility { |chord| chord.third = chord.fundamental + 4 }
@@ -312,7 +315,7 @@ class ChordProgression
   end
 
   rule "5º" do
-    apply_on { |chord| chord.fundamental && !chord.fifth }
+    apply_when { |chord| chord.fundamental && !chord.fifth }
 
     possibility { |chord| chord.fifth = chord.fundamental + 7 - 12 }
     possibility { |chord| chord.fifth = chord.fundamental + 7 }
@@ -321,7 +324,7 @@ class ChordProgression
   end
 
   rule "duplication" do
-    apply_on { |chord| chord.fundamental && !chord.duplicated }
+    apply_when { |chord| chord.fundamental && !chord.duplicated }
 
     possibility { |chord| chord.duplicated = :fundamental; chord.duplicate_on = -12 }
     possibility { |chord| chord.duplicated = :fundamental; chord.duplicate_on = +12 }
@@ -385,16 +388,10 @@ RSpec.describe "Rules" do # Musa::Rules
 
 	context "Prototype" do
 		it "Basic definition" do
-      include Musa::Series
-
-      rules = ChordProgression.new
-
-      l = [Chord.new(60), Chord.new(65), Chord.new(67)]
-
-      n = rules.apply l
+      n = ChordProgression.apply [Chord.new(60), Chord.new(65), Chord.new(67)]
 
       #pp n.fish
-      pp n.combinations
+      #pp n.combinations
 
       expect(result).to eq nil
     end
