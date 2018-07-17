@@ -183,6 +183,8 @@ module Musa
 		private_constant :BasicSerieFromEvalBlock
 
 		class ForLoopBasicSerie
+			include ProtoSerie
+
 			def initialize from, to, step
 				@from = from
 				@to = to
@@ -211,6 +213,8 @@ module Musa
 		private_constant :ForLoopBasicSerie
 
 		class RandomValueFromArrayBasicSerie
+			include ProtoSerie
+
 			def initialize values, random
 				@values = values
 				@random = random
@@ -231,6 +235,8 @@ module Musa
 		private_constant :RandomValueFromArrayBasicSerie
 
 		class RandomNumberFromRangeBasicSerie
+			include ProtoSerie
+
 			def initialize from, to, step, random
 				@from = from
 				@to = to
@@ -256,6 +262,8 @@ module Musa
 		private_constant :RandomNumberFromRangeBasicSerie
 
 		class RandomValuesFromArrayBasicSerie
+			include ProtoSerie
+
 			def initialize values, random
 				@values = values
 				@random = random
@@ -282,6 +290,8 @@ module Musa
 		private_constant :RandomValuesFromArrayBasicSerie
 
 		class RandomNumbersFromRangeBasicSerie
+			include ProtoSerie
+
 			def initialize from, to, step, random
 				@from = from
 				@to = to
