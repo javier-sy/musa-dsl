@@ -331,7 +331,7 @@ ChordProgression = Musa::Rules.new do
 
   rule "3º" do |chord|
     if chord.fundamental && !chord.third
-      #possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 - 12 }
+      possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 - 12 }
       possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 }
       possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 12 }
       possibility chord.duplicate.tap { |_| _.third = chord.fundamental + 4 + 24 }
@@ -340,7 +340,7 @@ ChordProgression = Musa::Rules.new do
 
   rule "5º" do |chord|
     if chord.fundamental && !chord.fifth
-      #possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 - 12 }
+      possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 - 12 }
       possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 }
       possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 12 }
       possibility chord.duplicate.tap { |_| _.fifth = chord.fundamental + 7 + 24 }
