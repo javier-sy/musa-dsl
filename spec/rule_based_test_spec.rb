@@ -35,7 +35,7 @@ class Chord
   end
 
   def to_s
-    "Chord: fundamental = #{@fundamental} third = #{@third} fifth = #{@fifth} duplicated = #{@duplicated} on #{@duplicate_on}"
+    "Chord<#{@fundamental}, #{@third}, #{@fifth}, dup #{@duplicated} on #{duplicated_note}>"
   end
 
   alias :inspect :to_s
@@ -97,16 +97,16 @@ module Rules
       @possibilities << block
     end
 
-    def applies_on? element, previous_objects
+    def applies_on? object, history
       @apply_on.each do |apply_on|
-        return true if apply_on.call(element, previous_objects)
+        return true if apply_on.call(object, history)
       end
       return false
     end
 
-    def generate_possibilities element, previous_objects
+    def generate_possibilities object, history
       @possibilities.collect do |possibility|
-        element.duplicate.tap { |e| possibility.call e, previous_objects }
+        object.duplicate.tap { |o| possibility.call o, history }
       end
     end
   end
@@ -162,26 +162,18 @@ module Rules
       Node.new(object, self).tap { |n| @children << n }
     end
 
-    def update_rejection_by_children!
-      reject! Rejection::AllChildrenRejected, propagate_parent: true if !@children.empty? && !@children.find { |n| !n.rejected }
-
-      self
-    end
-
-    def reject! rejection, propagate_parent: nil
-      propagate_parent ||= false
-
+    def reject! rejection
       @rejected = rejection
-      puts "reject!: propagate_parent #{@rejected.reason}" if propagate_parent
-
-      if @rejected && propagate_parent && @parent
-        @parent.update_rejection_by_children!
-      end
-
       self
     end
 
     def mark_as_ended!
+      @children.each { |n| n.update_rejection_by_children! }
+
+      if !@children.empty? && !@children.find { |n| !n.rejected }
+        reject! Rejection::AllChildrenRejected
+      end
+
       @ended = true
 
       self
@@ -191,7 +183,7 @@ module Rules
       @ended
     end
 
-    def previous_objects
+    def history
       objects = []
       n = self
       while n && n.object
@@ -202,137 +194,141 @@ module Rules
     end
 
     def fish
-      purged = []
+      fished = []
 
       @children.each do |node|
         unless node.rejected
           if node.ended?
-            purged << node.object
+            fished << node.object
           else
-            node.fish.each do |object|
-              purged << object
+            fished += node.fish
+          end
+        end
+      end
+
+      return fished
+    end
+
+    def combinations parent_combination = nil
+      parent_combination ||= []
+
+      combinations = []
+
+      unless rejected
+        if @children.empty?
+          combinations << parent_combination
+        else
+          @children.each do |node|
+            node.combinations(parent_combination + [node.object]).each do |object|
+              combinations << object
             end
           end
         end
       end
 
-      return purged
-    end
-
-    protected
-
-    def parent= new_parent
-      @parent = new_parent
+      return combinations
     end
   end
 
-  def compute_children object, confirmed_node = nil, node = nil, rules = nil
+  def generate_possibilities object, confirmed_node = nil, node = nil, rules = nil
     node ||= Node.new
     rules ||= self.class.rules.clone
 
-    previous_objects = confirmed_node.previous_objects if confirmed_node
-    previous_objects ||= []
+    history = confirmed_node.history if confirmed_node
+    history ||= []
 
-    puts "compute_children: previous_objects = #{previous_objects}"
-
-    rule = rules.find { |r| r.applies_on? object, previous_objects }
+    rule = rules.find { |r| r.applies_on? object, history }
 
     if rule
-      #puts "compute_children: checking rule #{rule.name}... applies!"
-
       rules.delete rule
 
-      rule.generate_possibilities(object, previous_objects).each do |new_object|
+      rule.generate_possibilities(object, history).each do |new_object|
 
         new_node = Node.new(new_object, node)
         new_node.mark_as_ended! if self.class.ended_when.call new_object
 
-        #puts "compute_children: generated #{new_object} [#{'Ended' if new_node.ended?}]"
+        rejection =
+          self.class.rejections.find { |rejection|
+            rejection.applies_on?(new_object, history) &&
+            rejection.rejects?(new_object, history) }
 
-        rejection = calc_rejected new_node, previous_objects
-        #puts "compute_children: generated #{new_object}... rejected because #{rejection.reason}" if rejection
         new_node.reject! rejection if rejection
 
         node.children << new_node
       end
-
-      node.update_rejection_by_children!
     end
 
     unless rules.empty?
       node.children.each do |node|
-        compute_children node.object, confirmed_node, node, rules.clone unless node.rejected || node.ended?
-      end
-    end
-
-    node
-  end
-
-  def calc_rejected node, previous_objects
-    self.class.rejections.find do |rejection|
-      rejection.applies_on?(node.object, previous_objects) && rejection.rejects?(node.object, previous_objects)
-    end
-  end
-
-  def process list, node = nil
-
-    list = list.clone
-
-    node ||= Node.new
-
-    object = list.shift
-
-    if object
-      result = compute_children object, node
-
-      result.fish.each do |o|
-        n = node.add(o).mark_as_ended!
-        process list, n
+        generate_possibilities node.object, confirmed_node, node, rules.clone unless node.rejected || node.ended?
       end
     end
 
     return node
   end
 
+  def apply list, node = nil
+    list = list.clone
 
+    node ||= Node.new
+
+    seed = list.shift
+
+    if seed
+      result = generate_possibilities seed, node
+
+      fished = result.fish
+
+      node.reject! Rejection::AllChildrenRejected if fished.empty?
+
+      fished.each do |object|
+        subnode = node.add(object).mark_as_ended!
+        apply list, subnode
+      end
+    end
+
+    return node
+  end
 end
 
 class ChordProgression
   include Rules
 
   rule "fundamental" do
-    apply_on { |chord, pre| !chord.fundamental }
+    apply_on { |chord| !chord.fundamental }
 
-    possibility { |chord, pre| chord.fundamental = @fundamental }
-    possibility { |chord, pre| chord.fundamental = @fundamental + 12 }
-    possibility { |chord, pre| chord.fundamental = @fundamental - 12 }
+    possibility { |chord| chord.fundamental = @fundamental }
+    possibility { |chord| chord.fundamental = @fundamental + 12 }
+    possibility { |chord| chord.fundamental = @fundamental - 12 }
   end
 
   rule "3º" do
-    apply_on { |chord, pre| chord.fundamental && !chord.third }
+    apply_on { |chord| chord.fundamental && !chord.third }
 
-    possibility { |chord, pre| chord.third = chord.fundamental + 4 }
-    possibility { |chord, pre| chord.third = chord.fundamental + 4 + 12 }
-    possibility { |chord, pre| chord.third = chord.fundamental + 4 + 24 }
+    possibility { |chord| chord.third = chord.fundamental + 4 - 12 }
+    possibility { |chord| chord.third = chord.fundamental + 4 }
+    possibility { |chord| chord.third = chord.fundamental + 4 + 12 }
+    possibility { |chord| chord.third = chord.fundamental + 4 + 24 }
   end
 
   rule "5º" do
-    apply_on { |chord, pre| chord.fundamental && !chord.fifth }
+    apply_on { |chord| chord.fundamental && !chord.fifth }
 
-    possibility { |chord, pre| chord.fifth = chord.fundamental + 7 }
-    possibility { |chord, pre| chord.fifth = chord.fundamental + 7 + 12 }
-    possibility { |chord, pre| chord.fifth = chord.fundamental + 7 + 24 }
+    possibility { |chord| chord.fifth = chord.fundamental + 7 - 12 }
+    possibility { |chord| chord.fifth = chord.fundamental + 7 }
+    possibility { |chord| chord.fifth = chord.fundamental + 7 + 12 }
+    possibility { |chord| chord.fifth = chord.fundamental + 7 + 24 }
   end
 
   rule "duplication" do
-    apply_on { |chord, pre| chord.fundamental && !chord.duplicated }
+    apply_on { |chord| chord.fundamental && !chord.duplicated }
 
-    possibility { |chord, pre| chord.duplicated = :fundamental; chord.duplicate_on = -12 }
-    possibility { |chord, pre| chord.duplicated = :fundamental; chord.duplicate_on = +12 }
-    possibility { |chord, pre| chord.duplicated = :third; chord.duplicate_on = +12 }
-    possibility { |chord, pre| chord.duplicated = :third; chord.duplicate_on = +24 }
-    possibility { |chord, pre| chord.duplicated = :fifth; chord.duplicate_on = +12 }
-    possibility { |chord, pre| chord.duplicated = :fifth; chord.duplicate_on = +24 }
+    possibility { |chord| chord.duplicated = :fundamental; chord.duplicate_on = -12 }
+    possibility { |chord| chord.duplicated = :fundamental; chord.duplicate_on = +12 }
+    possibility { |chord| chord.duplicated = :third; chord.duplicate_on = +12 }
+    possibility { |chord| chord.duplicated = :third; chord.duplicate_on = +24 }
+    possibility { |chord| chord.duplicated = :fifth; chord.duplicate_on = +12 }
+    possibility { |chord| chord.duplicated = :fifth; chord.duplicate_on = +24 }
   end
 
   ended_when do |chord|
@@ -340,51 +336,49 @@ class ChordProgression
   end
 
   reject "more than octave apart bass - tenor" do
-    apply_on { |chord, pre| chord.tenor && chord.bass }
-    reject_if { |chord, pre| chord.tenor - chord.bass > 12 }
+    apply_on { |chord| chord.tenor && chord.bass }
+    reject_if { |chord| chord.tenor - chord.bass > 12 }
   end
 
   reject "more than octave apart tenor - alto" do
-    apply_on { |chord, pre| chord.alto && chord.tenor }
-    reject_if { |chord, pre| chord.alto - chord.tenor > 12 }
+    apply_on { |chord| chord.alto && chord.tenor }
+    reject_if { |chord| chord.alto - chord.tenor > 12 }
   end
 
   reject "more than octave apart alto - soprano" do
-    apply_on { |chord, pre| chord.soprano && chord.alto }
-    reject_if { |chord, pre| chord.soprano - chord.alto > 12 }
+    apply_on { |chord| chord.soprano && chord.alto }
+    reject_if { |chord| chord.soprano - chord.alto > 12 }
   end
 
-=begin
   reject "parallel fifth" do
-    apply_on { |chord, pre| !pre.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass }
+    apply_on { |chord, history| !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass }
 
-    reject_if do |chord, pre|
+    reject_if do |chord, history|
       (0..3).find do |voice|
         (0..3).to_a.tap { |vv| vv.delete voice }.find do |voice2|
           # 5ª entre 2 voces del acorde
           # 5ª en el acorde anterior con las mismas voces
           (chord.ordered[voice] - chord.ordered[voice2]) % 12 == 7 &&
-          (pre.last.ordered[voice] - pre.last.ordered[voice2]) % 12 == 7
+          (history.last.ordered[voice] - history.last.ordered[voice2]) % 12 == 7
         end
       end
     end
   end
 
   reject "parallel octave" do
-    apply_on { |chord, pre| !pre.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass }
+    apply_on { |chord, history| !history.empty? && chord.soprano && chord.alto && chord.tenor && chord.bass }
 
-    reject_if do |chord, pre|
+    reject_if do |chord, history|
       (0..3).find do |voice|
         (0..3).to_a.tap { |vv| vv.delete voice }.find do |voice2|
           # 8ª entre 2 voces del acorde
           # 8ª en el acorde anterior con las mismas voces
           (chord.ordered[voice] - chord.ordered[voice2]) % 12 == 0 &&
-          (pre.last.ordered[voice] - pre.last.ordered[voice2]) % 12 == 0
+          (history.last.ordered[voice] - history.last.ordered[voice2]) % 12 == 0
         end
       end
     end
   end
-=end
 end
 
 RSpec.describe "Rules" do # Musa::Rules
@@ -395,12 +389,12 @@ RSpec.describe "Rules" do # Musa::Rules
 
       rules = ChordProgression.new
 
-      l = [Chord.new(60), Chord.new(63), Chord.new(65)]
+      l = [Chord.new(60), Chord.new(65), Chord.new(67)]
 
-      n = rules.process l
+      n = rules.apply l
 
       #pp n.fish
-      pp n
+      pp n.combinations
 
       expect(result).to eq nil
     end
