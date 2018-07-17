@@ -43,7 +43,7 @@ module Musa
 				voice.all_notes_off
 			end
 
-			@output.puts MIDIMessage::SystemRealtime.new(0xf) if reset
+			@output.puts MIDIMessage::SystemRealtime.new(0xff) if reset
 		end
 	end
 
@@ -96,7 +96,7 @@ module Musa
 		def note_off(pitchvalue = nil, pitch: nil, velocity_off: nil, force: nil)
 			pitch ||= pitchvalue
 			velocity_off ||= 63
-			
+
 			NoteControl.new(self, pitch: pitch, velocity_off: velocity_off, play: false).note_off force: force
 			nil
 		end
