@@ -59,7 +59,7 @@ module Musa
 			combinations
 		end
 
-		def run 
+		def run
 			on
 		end
 
@@ -97,7 +97,7 @@ module Musa
 
 				current.inner = a if current
 				root = a unless root
-				
+
 				current = a
 			end
 
@@ -159,7 +159,7 @@ module Musa
 				"A1 name: #{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'}"
 			end
 
-			alias to_s inspect 
+			alias to_s inspect
 		end
 
 		private_constant :A1
@@ -194,7 +194,7 @@ module Musa
 				"A2 name: #{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner ? @inner : 'nil'}"
 			end
 
-			alias to_s inspect 
+			alias to_s inspect
 		end
 
 		private_constant :A2
@@ -218,7 +218,7 @@ module Musa
 				@options.each do |option|
 
 					base = (@parameter_name == :_maincontext) ? parameters_with_depth : parameters_with_depth[@parameter_name][option]
-					
+
 					parameters = base.select { |k, v| @affected_field_names.include? k }.merge(parent_parameters)
 					parameters[@parameter_name] = option
 
@@ -242,7 +242,7 @@ module Musa
 				 "B name: #{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner}"
 			end
 
-			alias to_s inspect 
+			alias to_s inspect
 
 			private
 
@@ -254,7 +254,7 @@ module Musa
 			def initialize name, options = nil, block
 				@_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
 
-				self.as_context_run block
+				self._as_context_run block
 			end
 
 			def field name, options = nil

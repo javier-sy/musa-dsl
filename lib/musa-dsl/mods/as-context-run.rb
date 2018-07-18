@@ -2,7 +2,11 @@
 
 class Object
 
-	def as_context_run procedure, list_or_key_args = nil, key_args = nil
+	def as_context_run procedure, *list_or_key_args, **key_args
+		_as_context_run procedure, list_or_key_args, key_args
+	end
+
+	def _as_context_run procedure, list_or_key_args = nil, key_args = nil
 		if !list_or_key_args.nil? && list_or_key_args.is_a?(Hash)
 			key_args = list_or_key_args
 			list_or_key_args = nil
