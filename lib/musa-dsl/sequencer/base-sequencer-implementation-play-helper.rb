@@ -176,7 +176,7 @@ class Musa::BaseSequencer
 			_value_parameters = value_parameters.collect { |e| subcontext.eval_element(e) } if value_parameters
 			_key_parameters = key_parameters.collect { |k, e| [ k, subcontext.eval_element(e) ] }.to_h if key_parameters
 
-			@nl_context.as_context_run block, _value_parameters, _key_parameters
+			@nl_context._as_context_run block, _value_parameters, _key_parameters
 		end
 
 		def eval_call_methods on, call_methods
