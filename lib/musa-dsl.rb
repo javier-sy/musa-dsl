@@ -12,7 +12,6 @@ require 'musa-dsl/repl'
 
 require 'musa-dsl/midi'
 
-require 'musa-dsl/meta'
+require 'musa-dsl/music'
 
-require 'musa-dsl/variatio'
-require 'musa-dsl/darwin'
+require 'musa-dsl/generative'

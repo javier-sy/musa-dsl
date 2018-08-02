@@ -1,10 +1,5 @@
 module Musa
-	def self.Chord(*parameters)
-		Chord.new *parameters
-	end
-
-	class Chord
-
+	class ScaleChord
 		attr_reader :root_grade, :scale, :duplicated, :moved
 
 		def initialize(root_grade, grades: nil, octave: nil, scale:, duplicate: nil, move: nil)
@@ -27,7 +22,7 @@ module Musa
 					grade = @scale.symbol_of(scale_note)
 
 					@grades << grade
-					@voices << ChordNote.new(self, grade, index, @octave)
+					@voices << ScaleChordNote.new(self, grade, index, @octave)
 				end
 
 			elsif grades.is_a? Array
@@ -47,7 +42,7 @@ module Musa
 					end
 
 					@grades << grade
-					@voices << ChordNote.new(self, grade, index)
+					@voices << ScaleChordNote.new(self, grade, index)
 
 					index += 1
 				end
@@ -69,7 +64,7 @@ module Musa
 			@voices.clone
 		end
 
-		def grade(grade_or_grade_index) # -> Array de ChordNote
+		def grade(grade_or_grade_index) # -> Array de ScaleChordNote
 			if grade_or_grade_index.is_a? Symbol
 				return @voices.select { |note| note.grade == grade_or_grade_index }
 			else
@@ -81,10 +76,10 @@ module Musa
 			@voices.collect { |v| v.pitch }
 		end
 
-		def duplicate(grade_or_grade_index, octave: nil, to_voice: nil) # -> ChordNote
+		def duplicate(grade_or_grade_index, octave: nil, to_voice: nil) # -> ScaleChordNote
  			octave ||= 0
 
-			note = ChordNote.new self, grade_of(grade_or_grade_index), grade_index_of(grade_or_grade_index), @octave + octave
+			note = ScaleChordNote.new self, grade_of(grade_or_grade_index), grade_index_of(grade_or_grade_index), @octave + octave
 
 			if to_voice
 				@voices.insert to_voice, note
@@ -147,7 +142,7 @@ module Musa
 			end
 		end
 
-		class ChordNote
+		class ScaleChordNote
 			attr_reader :grade, :grade_index
 			attr_accessor :octave
 
@@ -170,12 +165,12 @@ module Musa
 			end
 
 			def to_s
-				"ChordNote \##{voice} #{@grade} octave: #{@octave}"
+				"ScaleChordNote \##{voice} #{@grade} octave: #{@octave}"
 			end
 
-			alias inspect to_s 
+			alias inspect to_s
 		end
 
-		private_constant :ChordNote
+		private_constant :ScaleChordNote
 	end
 end
