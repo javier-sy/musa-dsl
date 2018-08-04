@@ -23,7 +23,7 @@ module Musa
 		include ProtoSerie
 		include SerieOperations
 
-		def initialize(basic_serie)
+		def initialize basic_serie
 			@serie = basic_serie
 		end
 
