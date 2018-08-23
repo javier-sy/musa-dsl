@@ -1,89 +1,75 @@
-require 'forwardable'
-
 module Musa
 
-	module ProtoSerie
+	module SerieOperations
+	end
+
+	module Serie
+		include SerieOperations
+
 		def restart
+			@_have_peeked_next_value = false
+			@_peeked_next_value = nil
+			@_have_current_value = false
+			@_current_value = nil
+
+			_restart if respond_to? :_restart
+
 			self
 		end
 
 		def next_value
-			nil
+			unless @_have_current_value && @_current_value.nil?
+				if @_have_peeked_next_value
+					@_have_peeked_next_value = false
+					@_current_value = @_peeked_next_value
+				else
+					@_current_value = _next_value
+				end
+			end
+
+			propagate_value @_current_value
+
+			@_current_value
+		end
+
+		def peek_next_value
+			unless @_have_peeked_next_value
+				@_have_peeked_next_value = true
+				@_peeked_next_value = _next_value
+			end
+
+			@_peeked_next_value
+		end
+
+		def current_value
+			@_current_value
 		end
 
 		def infinite?
 			false
 		end
-	end
 
-	module SerieOperations
-	end
-
-	class Serie
-		include ProtoSerie
-		include SerieOperations
-
-		def initialize basic_serie
-			@serie = basic_serie
-		end
-
-		def restart
-			@have_peeked_next_value = false
-			@peeked_next_value = nil
-			@have_current_value = false
-			@current_value = nil
-
-			@serie.restart
-
-			self
-		end
-
-		def next_value
-			unless @have_current_value && @current_value.nil?
-				if @have_peeked_next_value
-					@have_peeked_next_value = false
-					@current_value = @peeked_next_value
-				else
-					@current_value = @serie.next_value
-				end
-			end
-
-			propagate_value @current_value
-
-			@current_value
-		end
-
-		def peek_next_value
-			unless @have_peeked_next_value
-				@have_peeked_next_value = true
-				@peeked_next_value = @serie.next_value
-			end
-			@peeked_next_value
-		end
-
-		def current_value
-			@current_value
-		end
-
-		def infinite?
-			@serie.infinite?
+		def deterministic?
+			true
 		end
 
 		protected
 
-		def propagate_value(value)
-			@slaves.each {|s| s.push_next_value value } if @slaves
+		def propagate_value value
+			@_slaves.each {|s| s.push_next_value value } if @_slaves
 		end
 	end
 
-	class SlaveSerie < Serie
-		def initialize(master)
+	class SlaveSerie
+		include Serie
+
+		def initialize master
 			@master = master
 			@next_value = []
 		end
 
-		def restart
-			throw OperationNotAllowedError, "SlaveSerie #{self}: slave series cannot be restart"
+		def _restart
+			throw OperationNotAllowedError, "SlaveSerie #{self}: slave series cannot be restarted"
 		end
 
 		def next_value
@@ -108,7 +94,11 @@ module Musa
 			@master.infinite?
 		end
 
-		def push_next_value(value)
+		def deterministic?
+			false
+		end
+
+		def push_next_value value
 			@next_value << value
 		end
 	end

@@ -6,80 +6,80 @@ module Musa
 	module Series
 
 		def NIL
-			Serie.new NilBasicSerie.new
+			NilBasicSerie.new
 		end
 
-		def S(*values)
-			Serie.new BasicSerieFromArray.new(values.explode_ranges)
+		def S *values
+			BasicSerieFromArray.new values.explode_ranges
 		end
 
-		def H(**series_hash)
-			Serie.new BasicSerieFromHash.new(series_hash, false)
+		def H **series_hash
+			BasicSerieFromHash.new series_hash, false
 		end
 
-		def HC(**series_hash)
-			Serie.new BasicSerieFromHash.new(series_hash, true)
+		def HC **series_hash
+			BasicSerieFromHash.new series_hash, true
 		end
 
-		def A(*series)
-			Serie.new BasicSerieFromArrayOfSeries.new(series, false)
+		def A *series
+			BasicSerieFromArrayOfSeries.new series, false
 		end
 
-		def AC(*series)
-			Serie.new BasicSerieFromArrayOfSeries.new(series, true)
+		def AC *series
+			BasicSerieFromArrayOfSeries.new series, true
 		end
 
-		def E(**args, &block)
+		def E **args, &block
 			if args.has_key?(:start) && args.length == 1
-				Serie.new BasicSerieFromAutoEvalBlockOnSeed.new(args[:start], &block)
+				BasicSerieFromAutoEvalBlockOnSeed.new args[:start], &block
 			elsif args.length == 0
-				Serie.new BasicSerieFromEvalBlock.new(&block)
+				BasicSerieFromEvalBlock.new &block
 			else
 				raise ArgumentError, 'only optional start: argument is allowed'
 			end
 		end
 
-		def FOR(from: nil, to:, step: nil)
+		def FOR from: nil, to:, step: nil
 			from ||= 0
 			step ||= 1
-			Serie.new ForLoopBasicSerie.new(from, to, step)
+			ForLoopBasicSerie.new from, to, step
 		end
 
-		def RND(*values, from: nil, to: nil, step: nil, random: nil)
+		def RND *values, from: nil, to: nil, step: nil, random: nil
 			random = Random.new random if random.is_a?(Integer)
 			random ||= Random.new
 
 			if !values.empty? && from.nil? && to.nil? && step.nil?
-				Serie.new RandomValuesFromArrayBasicSerie.new(values.explode_ranges, random)
+				RandomValuesFromArrayBasicSerie.new values.explode_ranges, random
 			elsif values.empty? && !to.nil?
 				from ||= 0
 				step ||= 1
-				Serie.new RandomNumbersFromRangeBasicSerie.new(from, to, step, random)
+				RandomNumbersFromRangeBasicSerie.new from, to, step, random
 			else
 				raise ArgumentError, "cannot use values and from:/to:/step: together"
 			end
 		end
 
-		def RND1(*values, from: nil, to: nil, step: nil, random: nil)
+		def RND1 *values, from: nil, to: nil, step: nil, random: nil
 			random = Random.new random if random.is_a?(Integer)
 			random ||= Random.new
 
 			if !values.empty? && from.nil? && to.nil? && step.nil?
-				Serie.new RandomValueFromArrayBasicSerie.new(values.explode_ranges, random)
+				RandomValueFromArrayBasicSerie.new values.explode_ranges, random
 			elsif values.empty? && !to.nil?
 				from ||= 0
 				step ||= 1
-				Serie.new RandomNumberFromRangeBasicSerie.new(from, to, step, random)
+				RandomNumberFromRangeBasicSerie.new from, to, step, random
 			else
 				raise ArgumentError, "cannot use values and from:/to:/step: parameters together"
 			end
 		end
 
-		def SIN(start_value: nil, steps:, amplitude: nil, center: nil)
+		def SIN start_value: nil, steps:, amplitude: nil, center: nil
 			start_value ||= 0.0
 			amplitude ||= 1
 			center ||= 0
-			Serie.new BasicSerieSinFunction.new start_value, steps, amplitude, center
+			BasicSerieSinFunction.new start_value, steps, amplitude, center
 		end
 
 		###
@@ -87,26 +87,27 @@ module Musa
 		###
 
 		class NilBasicSerie
-			include ProtoSerie
+			include Serie
+			def _next_value
+				nil
+			end
 		end
 
 		private_constant :NilBasicSerie
 
 		class BasicSerieFromArray
-			include ProtoSerie
+			include Serie
 
 			def initialize array
 				@array = array.clone
 				@index = 0
 			end
 
-			def restart
+			def _restart
 				@index = 0
-
-				self
 			end
 
-			def next_value
+			def _next_value
 				if @index < @array.size
 					value = @array[@index]
 					@index += 1
@@ -121,7 +122,7 @@ module Musa
 		private_constant :BasicSerieFromArray
 
 		class BasicSerieFromAutoEvalBlockOnSeed
-			include ProtoSerie
+			include Serie
 
 			def initialize start, &block
 				@start = start
@@ -131,14 +132,12 @@ module Musa
 				@first = true
 			end
 
-			def restart
+			def _restart
 				@current = nil
 				@first = true
-
-				self
 			end
 
-			def next_value
+			def _next_value
 				if @first
 					@first = false
 					@current = @start
@@ -153,28 +152,22 @@ module Musa
 		private_constant :BasicSerieFromAutoEvalBlockOnSeed
 
 		class BasicSerieFromEvalBlock
-			include ProtoSerie
+			include Serie
 
 			def initialize &block
 				@block = block
 				restart
 			end
 
-			def restart
+			def _restart
 				@index = 0
-
-				self
+				@value = nil
 			end
 
-			def next_value
-				if @have_peeked_next_value
-					@have_peeked_next_value = false
-					value = @peek_next_value
-				else
-					@value = @block.call @index unless @value.nil? && @index > 0
-					value = @value
-					@index += 1
-				end
+			def _next_value
+				@value = @block.call @index unless @value.nil? && @index > 0
+				value = @value
+				@index += 1
 
 				value
 			end
@@ -183,7 +176,7 @@ module Musa
 		private_constant :BasicSerieFromEvalBlock
 
 		class ForLoopBasicSerie
-			include ProtoSerie
+			include Serie
 
 			def initialize from, to, step
 				@from = from
@@ -193,12 +186,11 @@ module Musa
 				restart
 			end
 
-			def restart
+			def _restart
 				@value = @from
-				self
 			end
 
-			def next_value
+			def _next_value
 				if @value
 					value = @value
 					@value = @value + @step
@@ -213,7 +205,7 @@ module Musa
 		private_constant :ForLoopBasicSerie
 
 		class RandomValueFromArrayBasicSerie
-			include ProtoSerie
+			include Serie
 
 			def initialize values, random
 				@values = values
@@ -222,20 +214,23 @@ module Musa
 				restart
 			end
 
-			def restart
+			def _restart
 				@value = nil
-				self
 			end
 
-			def next_value
+			def _next_value
 				@value = @values[@random.rand(0...@values.size)] unless @value
+			end
+
+			def deterministic?
+				false
 			end
 		end
 
 		private_constant :RandomValueFromArrayBasicSerie
 
 		class RandomNumberFromRangeBasicSerie
-			include ProtoSerie
+			include Serie
 
 			def initialize from, to, step, random
 				@from = from
@@ -249,20 +244,23 @@ module Musa
 				restart
 			end
 
-			def restart
+			def _restart
 				@value = nil
-				self
 			end
 
-			def next_value
+			def _next_value
 				@value = @from + @random.rand(0..@step_count) * @step unless @value
+			end
+
+			def deterministic?
+				false
 			end
 		end
 
 		private_constant :RandomNumberFromRangeBasicSerie
 
 		class RandomValuesFromArrayBasicSerie
-			include ProtoSerie
+			include Serie
 
 			def initialize values, random
 				@values = values
@@ -271,12 +269,11 @@ module Musa
 				restart
 			end
 
-			def restart
+			def _restart
 				@available_values = @values.clone
-				self
 			end
 
-			def next_value
+			def _next_value
 				value = nil
 				unless @available_values.empty?
 					i = @random.rand(0...@available_values.size)
@@ -285,12 +282,16 @@ module Musa
 				end
 				value
 			end
+
+			def deterministic?
+				false
+			end
 		end
 
 		private_constant :RandomValuesFromArrayBasicSerie
 
 		class RandomNumbersFromRangeBasicSerie
-			include ProtoSerie
+			include Serie
 
 			def initialize from, to, step, random
 				@from = from
@@ -304,12 +305,11 @@ module Musa
 				restart
 			end
 
-			def restart
+			def _restart
 				@available_steps = (0..@step_count).to_a
-				self
 			end
 
-			def next_value
+			def _next_value
 				value = nil
 				unless @available_steps.empty?
 					i = @random.rand(0...@available_steps.size)
@@ -318,12 +318,16 @@ module Musa
 				end
 				value
 			end
+
+			def deterministic?
+				false
+			end
 		end
 
 		private_constant :RandomNumbersFromRangeBasicSerie
 
 		class BasicSerieFromHash
-			include ProtoSerie
+			include Serie
 
 			def initialize series, cycle_all_series
 				@series = series
@@ -332,18 +336,16 @@ module Musa
 				@value = nil
 			end
 
-			def restart
+			def _restart
 				@have_current = false
 				@value = nil
 
 				@series.each do |key, serie|
 					serie.restart if serie.current_value.nil?
 				end
-
-				self
 			end
 
-			def next_value
+			def _next_value
 				unless @have_current && @value.nil?
 					pre_value = @series.collect { |key, serie| [ key, serie.peek_next_value ] }.to_h
 
@@ -374,7 +376,7 @@ module Musa
 		private_constant :BasicSerieFromHash
 
 		class BasicSerieFromArrayOfSeries
-			include ProtoSerie
+			include Serie
 
 			def initialize series, cycle_all_series
 				@series = series
@@ -383,18 +385,16 @@ module Musa
 				@value = nil
 			end
 
-			def restart
+			def _restart
 				@have_current = false
 				@value = nil
 
 				@series.each do |serie|
 					serie.restart if serie.current_value.nil?
 				end
-
-				self
 			end
 
-			def next_value
+			def _next_value
 				unless @have_current && @value.nil?
 					pre_value = @series.collect { |serie| serie.peek_next_value }
 
@@ -425,7 +425,7 @@ module Musa
 		private_constant :BasicSerieFromArrayOfSeries
 
 		class BasicSerieSinFunction
-			include ProtoSerie
+			include Serie
 
 			def initialize start_value, steps, amplitude, center
 
@@ -447,7 +447,7 @@ module Musa
 				restart
 			end
 
-			def next_value
+			def _next_value
 				value = nil
 				unless @position == @steps
 					value = Math::sin(@offset + @step_size * @position) * @amplitude + @center
@@ -456,10 +456,8 @@ module Musa
 				value
 			end
 
-			def restart
+			def _restart
 				@position = 0
-
-				self
 			end
 
 			def to_s

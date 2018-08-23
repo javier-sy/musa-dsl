@@ -1,7 +1,9 @@
 module Musa
 
+	# TODO test case
+	
 	module SerieOperations
-		def split(buffered: nil, master: nil)
+		def split buffered: nil, master: nil
 
 			buffered ||= false
 
@@ -12,12 +14,12 @@ module Musa
 	end
 
 	class HashSerieSplitter
-		def initialize(proxy)
+		def initialize proxy
 			@proxy = proxy
 			@series = {}
 		end
 
-		def [](key)
+		def [] key
 			if @series.has_key? key
 				serie = @series[key]
 			else
@@ -26,7 +28,7 @@ module Musa
 		end
 
 		class HashSerieKeyProxy
-			def initialize(hash_serie)
+			def initialize hash_serie
 				@serie = hash_serie
 				@values = {}
 			end
@@ -36,7 +38,7 @@ module Musa
 				@values = {}
 			end
 
-			def next_value(key)
+			def next_value key
 
 				return nil unless @values
 
@@ -56,7 +58,7 @@ module Musa
 				value
 			end
 
-			def peek_next_value(key)
+			def peek_next_value key
 				value = @values[key]
 
 				if value.nil?
@@ -68,8 +70,10 @@ module Musa
 			end
 		end
 
+		private_constant :HashSerieKeyProxy
+
 		class HashSerieBufferedKeyProxy
-			def initialize(hash_serie)
+			def initialize hash_serie
 				@serie = hash_serie
 				@values = {}
 			end
@@ -79,7 +83,7 @@ module Musa
 				@values = {}
 			end
 
-			def next_value(key)
+			def next_value key
 				value = nil
 
 				if @values[key].nil? || @values[key].empty?
@@ -98,7 +102,7 @@ module Musa
 				value
 			end
 
-			def peek_next_value(key)
+			def peek_next_value key
 				value = nil
 
 				if @values[key] && !@values[key].empty?
@@ -111,6 +115,8 @@ module Musa
 				value
 			end
 		end
+
+		private_constant :HashSerieBufferedKeyProxy
 
 		class HashSerieMasterSlaveKeyProxy
 			def initialize(hash_serie, master)
@@ -126,7 +132,7 @@ module Musa
 				@values_counter = {}
 			end
 
-			def next_value(key)
+			def next_value key
 
 				return nil unless @values
 
@@ -149,7 +155,7 @@ module Musa
 				value
 			end
 
-			def peek_next_value(key)
+			def peek_next_value key
 				value = @values[key]
 
 				if value.nil?
@@ -161,26 +167,30 @@ module Musa
 			end
 		end
 
-		class HashSplittedSerie
-			include ProtoSerie
+		private_constant :HashSerieMasterSlaveKeyProxy
 
-			def initialize(proxy, key:)
+		class HashSplittedSerie
+			include Serie
+
+			def initialize proxy, key:
 				@proxy = proxy
 				@key = key
 			end
 
-			def restart
+			def _restart
 				@proxy.restart
 			end
 
 			def next_value
-				@proxy.next_value(@key)
+				@proxy.next_value @key
 			end
 
 			def peek_next_value
-				@proxy.peek_next_value(@key)
+				@proxy.peek_next_value @key
 			end
 		end
+
+		private_constant :HashSplittedSerie
 	end
 
 	private_constant :HashSerieSplitter

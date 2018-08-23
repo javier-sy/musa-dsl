@@ -4,7 +4,7 @@ require 'musa-dsl/mods/key-parameters-procedure-binder'
 module Musa
 
   class Rules
-    
+
     def initialize &block
       @context = RulesEvalContext.new.tap { |_| _._as_context_run block }
     end
@@ -42,8 +42,8 @@ module Musa
       return node
     end
 
-    def apply list, node = nil
-      list = list.clone
+    def apply object_or_list, node = nil
+      list = object_or_list.arrayfy.clone
 
       node ||= Node.new
 

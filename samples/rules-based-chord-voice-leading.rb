@@ -1,6 +1,7 @@
 require 'musa-dsl'
 
 ChordProgression = Musa::Rules.new do
+  
   rule "fundamental" do |seed|
     possibility Musa::Chord.new seed - 12
     possibility Musa::Chord.new seed

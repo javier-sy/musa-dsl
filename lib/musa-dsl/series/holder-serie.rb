@@ -2,11 +2,13 @@ module Musa
 
 	module Series
 		# TODO add test case
-		def HLD(serie = nil)
+		def HLD serie = nil
 			HolderSerie.new serie
 		end
 
-    class HolderSerie < Serie
+    class HolderSerie
+			include Serie
+
       def initialize serie
         @serie = serie
         @new_serie = nil
@@ -50,6 +52,10 @@ module Musa
       def infinite?
         @serie.infinite?
       end
+
+			def deterministic?
+				@serie.deterministic?
+			end
     end
   end
 
