@@ -1,5 +1,4 @@
 require 'musa-dsl/transport/clock'
-require 'nibbler'
 
 module Musa
 	class DummyClock < Clock

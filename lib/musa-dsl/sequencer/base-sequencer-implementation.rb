@@ -256,7 +256,7 @@ class Musa::BaseSequencer
 
 	def _every(binterval, control, block_procedure_binder: nil, &block)
 
-		block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
+		block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
 
 		_numeric_at position, control do
 
@@ -374,9 +374,11 @@ class Musa::BaseSequencer
 
 				if using && using.is_a?(Proc)
 					# TODO optimizar inicialización de KeyParametersProcedureBinder
-					key_parameters = KeyParametersProcedureBinder.new(using).apply every: every, from: from, step: step, steps: steps, start_position: start_position, position: position - start_position, abs_position: position
 
-					adjusted_value = using.call(**key_parameters).arrayfy
+					adjusted_value = KeyParametersProcedureBinder.new(using).call(
+						every: every, from: from, step: step, steps: steps,
+						start_position: start_position, position: position - start_position,
+						abs_position: position).arrayfy
 
 				elsif to
 					size.times do |i|
