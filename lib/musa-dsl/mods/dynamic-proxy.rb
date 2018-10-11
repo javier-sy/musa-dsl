@@ -1,57 +1,53 @@
 require_relative 'send-nice'
 
 class DynamicProxy
-  def initialize receiver
+  def initialize(receiver)
     @receiver = receiver
   end
 
-  def receiver= receiver
-    @receiver = receiver
+  attr_writer :receiver
+
+  attr_reader :receiver
+
+  def method_missing(method_name, *args, **key_args, &block)
+    if @receiver.respond_to? method_name
+      @receiver._send_nice method_name, args, key_args, &block
+    else
+      super
+    end
   end
 
-  def receiver
-    @receiver
+  def respond_to_missing?(method_name, include_private)
+    @receiver.respond_to?(method_name, include_private) || super
   end
 
-  def method_missing method_name, *args, **key_args, &block
-		if @receiver.respond_to? method_name
-			@receiver._send_nice method_name, args, key_args, &block
-		else
-			super
-		end
-	end
+  alias _is_a? is_a?
 
-	def respond_to_missing? method_name, include_private
-		@receiver.respond_to?(method_name, include_private) || super
-	end
-
-  alias_method :_is_a?, :is_a?
-
-  def is_a? klass
-      _is_a?(klass) || @receiver.is_a?(klass)
+  def is_a?(klass)
+    _is_a?(klass) || @receiver.is_a?(klass)
   end
 
-  alias_method :_kind_of?, :kind_of?
+  alias _kind_of? kind_of?
 
-  def kind_of? klass
-      _kind_of?(klass) || @receiver.kind_of?(klass)
+  def kind_of?(klass)
+    _kind_of?(klass) || @receiver.is_a?(klass)
   end
 
-  alias_method :_instance_of?, :instance_of?
+  alias _instance_of? instance_of?
 
-  def instance_of? klass
-      _instance_of?(klass) || @receiver.instance_of?(klass)
+  def instance_of?(klass)
+    _instance_of?(klass) || @receiver.instance_of?(klass)
   end
 
-  alias_method :_equalequal, :==
+  alias _equalequal ==
 
-  def == object
-      self._equalequal(object) || @receiver.==(object)
+  def ==(object)
+    _equalequal(object) || @receiver.==(object)
   end
 
-  alias_method :_eql?, :eql?
+  alias _eql? eql?
 
-  def eql? object
-      self._eql?(object) || @receiver.eql?(object)
+  def eql?(object)
+    _eql?(object) || @receiver.eql?(object)
   end
 end

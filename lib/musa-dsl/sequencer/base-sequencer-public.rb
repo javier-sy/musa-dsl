@@ -4,247 +4,235 @@ require 'musa-dsl/mods/key-parameters-procedure-binder'
 require 'musa-dsl/series'
 
 class Musa::BaseSequencer
+  attr_reader :ticks_per_bar, :running_position
 
-	attr_reader :ticks_per_bar, :running_position
+  @@tick_mutex = Mutex.new
 
-	@@tick_mutex = Mutex.new
+  def initialize(quarter_notes_by_bar, quarter_note_divisions, do_log: nil)
+    do_log ||= false
 
-	def initialize quarter_notes_by_bar, quarter_note_divisions, do_log: nil
+    @on_debug_at = []
+    @on_fast_forward = []
+    @on_block_error = []
 
-		do_log ||= false
+    @ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
 
-		@on_debug_at = []
-		@on_fast_forward = []
-		@on_block_error = []
+    @score = {}
 
-		@ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
+    @do_log = do_log
 
-		@score = Hash.new
+    reset
+  end
 
-		@do_log = do_log
+  def reset
+    @score.clear
+    @event_handlers = [EventHandler.new]
 
-		reset
-	end
+    @position = @ticks_per_bar - 1
+  end
 
-	def reset
-		@score.clear
-		@event_handlers = [ EventHandler.new ]
+  def tick
+    position_to_run = (@position += 1)
 
-		@position = @ticks_per_bar - 1
-	end
+    if @score[position_to_run]
+      @score[position_to_run].each do |command|
+        if command.key?(:parent_control)
+          @event_handlers.push command[:parent_control]
 
-	def tick
-		position_to_run = (@position += 1)
+          @@tick_mutex.synchronize do
+            original_stdout = $stdout
+            original_stderr = $stderr
 
-		if @score[position_to_run]
-			@score[position_to_run].each do |command|
+            $stdout = command[:parent_control].stdout
+            $stderr = command[:parent_control].stderr
 
-				if command.has_key?(:parent_control)
-					@event_handlers.push command[:parent_control]
+            command[:block].call *command[:value_parameters], **command[:key_parameters]
 
-					@@tick_mutex.synchronize do
+            $stdout = original_stdout
+            $stderr = original_stderr
+          end
 
-						original_stdout = $stdout
-						original_stderr = $stderr
+          @event_handlers.pop
+        else
+          @@tick_mutex.synchronize do
+            command[:block].call *command[:value_parameters], **command[:key_parameters]
+          end
+        end
+      end
 
-						$stdout = command[:parent_control].stdout
-						$stderr = command[:parent_control].stderr
+      @score.delete position_to_run
+    end
+  end
 
-						command[:block].call *command[:value_parameters], **command[:key_parameters]
+  def size
+    @score.size
+  end
 
-						$stdout = original_stdout
-						$stderr = original_stderr
-					end
+  def round(bar)
+    Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
+  end
 
-					@event_handlers.pop
-				else
-					@@tick_mutex.synchronize do
-						command[:block].call *command[:value_parameters], **command[:key_parameters]
-					end
-				end
-			end
+  def event_handler
+    @event_handlers.last
+  end
 
-			@score.delete position_to_run
-		end
-	end
+  def on_debug_at(&block)
+    @on_debug_at << block
+  end
 
-	def size
-		@score.size
-	end
+  def on_block_error(&block)
+    @on_block_error << block
+  end
 
-	def round bar
-		Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
-	end
+  def on_fast_forward(&block)
+    @on_fast_forward << block
+  end
 
-	def event_handler
-		@event_handlers.last
-	end
+  def position
+    Rational(@position, @ticks_per_bar)
+  end
 
-	def on_debug_at &block
-		@on_debug_at << block
-	end
+  def position=(bposition)
+    position = bposition * @ticks_per_bar
 
-	def on_block_error &block
-		@on_block_error << block
-	end
+    raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
 
-	def on_fast_forward &block
-		@on_fast_forward << block
-	end
+    @on_fast_forward.each { |block| block.call(true) }
 
-	def position
-		Rational(@position, @ticks_per_bar)
-	end
+    tick while @position < position
 
-	def position= bposition
+    @on_fast_forward.each { |block| block.call(false) }
+  end
 
-		position = bposition * @ticks_per_bar
+  def on(event, &block)
+    @event_handlers.last.on event, &block
+  end
 
-		raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
+  def launch(event, *value_parameters, **key_parameters)
+    @event_handlers.last.launch event, *value_parameters, **key_parameters
+  end
 
-		@on_fast_forward.each { |block| block.call(true) }
+  def wait(bars_delay, with: nil, debug: nil, &block)
+    debug ||= false
 
-		while @position < position
-			tick
-		end
+    control = EventHandler.new @event_handlers.last, capture_stdout: true
+    @event_handlers.push control
 
-		@on_fast_forward.each { |block| block.call(false) }
-	end
+    if bars_delay.is_a? Numeric
+      _numeric_at position + bars_delay.rationalize, control, with: with, debug: debug, &block
+    else
+      bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
+      with = Series::S(*with).repeat if with.is_a? Array
 
-	def on event, &block
-		@event_handlers.last.on event, &block
-	end
+      starting_position = position
+      _serie_at bars_delay.eval { |delay| starting_position + delay }, control, with: with, debug: debug, &block
+    end
 
-	def launch event, *value_parameters, **key_parameters
-		@event_handlers.last.launch event, *value_parameters, **key_parameters
-	end
+    @event_handlers.pop
 
-	def wait bars_delay, with: nil, debug: nil, &block
-		debug ||= false
+    control
+  end
 
-		control = EventHandler.new @event_handlers.last, capture_stdout: true
-		@event_handlers.push control
+  def now(with: nil, &block)
+    control = EventHandler.new @event_handlers.last, capture_stdout: true
+    @event_handlers.push control
 
-		if bars_delay.is_a? Numeric
-			_numeric_at position + bars_delay.rationalize, control, with: with, debug: debug, &block
-		else
-			bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
-			with = Series::S(*with).repeat if with.is_a? Array
+    _numeric_at position, control, with: with, &block
 
-			starting_position = position
-			_serie_at bars_delay.eval { |delay| starting_position + delay }, control, with: with, debug: debug, &block
-		end
+    @event_handlers.pop
 
-		@event_handlers.pop
+    control
+  end
 
-		control
-	end
+  def raw_at(bar_position, force_first: nil, &block)
+    _raw_numeric_at bar_position, force_first: force_first, &block
 
-	def now with: nil, &block
-		control = EventHandler.new @event_handlers.last, capture_stdout: true
-		@event_handlers.push control
+    nil
+  end
 
-		_numeric_at position, control, with: with, &block
+  def at(bar_position, with: nil, debug: nil, &block)
+    debug ||= false
 
-		@event_handlers.pop
+    control = EventHandler.new @event_handlers.last, capture_stdout: true
+    @event_handlers.push control
 
-		control
-	end
+    if bar_position.is_a? Numeric
+      _numeric_at bar_position, control, with: with, debug: debug, &block
+    else
+      bar_position = Series::S(*bar_position) if bar_position.is_a? Array
+      with = Series::S(*with).repeat if with.is_a? Array
 
-	def raw_at bar_position, force_first: nil, &block
-		_raw_numeric_at bar_position, force_first: force_first, &block
+      _serie_at bar_position, control, with: with, debug: debug, &block
+    end
 
-		nil
-	end
+    @event_handlers.pop
 
-	def at bar_position, with: nil, debug: nil, &block
-		debug ||= false
+    control
+  end
 
-		control = EventHandler.new @event_handlers.last, capture_stdout: true
-		@event_handlers.push control
+  def theme(theme, at:, debug: nil, **parameters)
+    debug ||= false
 
-		if bar_position.is_a? Numeric
-			_numeric_at bar_position, control, with: with, debug: debug, &block
-		else
-			bar_position = Series::S(*bar_position) if bar_position.is_a? Array
-			with = Series::S(*with).repeat if with.is_a? Array
+    control = EventHandler.new @event_handlers.last, capture_stdout: true
+    @event_handlers.push control
 
-			_serie_at bar_position, control, with: with, debug: debug, &block
-		end
+    _theme theme, control, at: at, debug: debug, **parameters
 
-		@event_handlers.pop
+    @event_handlers.pop
 
-		control
-	end
+    control
+  end
 
-	def theme theme, at:, debug: nil, **parameters
+  def play(serie, mode: nil, parameter: nil, after: nil, context: nil, **mode_args, &block)
+    mode ||= :wait
 
-		debug ||= false
+    control = PlayControl.new @event_handlers.last, after: after, capture_stdout: true
+    @event_handlers.push control
 
-		control = EventHandler.new @event_handlers.last, capture_stdout: true
-		@event_handlers.push control
+    _play serie, control, context, mode: mode, parameter: parameter, **mode_args, &block
 
-		_theme theme, control, at: at, debug: debug, **parameters
+    @event_handlers.pop
 
-		@event_handlers.pop
+    control
+  end
 
-		control
-	end
+  def every(binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+    binterval = binterval.rationalize
 
-	def play serie, mode: nil, parameter: nil, after: nil, context: nil, **mode_args, &block
+    control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
+    @event_handlers.push control
 
-		mode ||= :wait
+    _every binterval, control, &block
 
-		control = PlayControl.new @event_handlers.last, after: after, capture_stdout: true
-		@event_handlers.push control
+    @event_handlers.pop
 
-		_play serie, control, context, mode: mode, parameter: parameter, **mode_args, &block
+    control
+  end
 
-		@event_handlers.pop
+  # TODO: estaría bien que from y to pudiera tener un Hash, de modo que el movimiento se realice entre los valores de sus atributos
+  # TODO tb estaría bien que pudiera ser un Array de Hash, con la misma semántica en modo polifónico
+  def move(every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+    every ||= Rational(1, @ticks_per_bar)
+    every = every.rationalize unless every.is_a?(Rational)
 
-		control
-	end
+    _move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+  end
 
-	def every binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block
+  def log(msg = nil)
+    _log msg
+  end
 
-		binterval = binterval.rationalize
+  def to_s
+    super + ": position=#{position}"
+  end
 
-		control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
-		@event_handlers.push control
-
-		_every binterval, control, &block
-
-		@event_handlers.pop
-
-		control
-	end
-
-	# TODO estaría bien que from y to pudiera tener un Hash, de modo que el movimiento se realice entre los valores de sus atributos
-	# TODO tb estaría bien que pudiera ser un Array de Hash, con la misma semántica en modo polifónico
-	def move every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block
-
-		every ||= Rational(1, @ticks_per_bar)
-		every = every.rationalize unless every.is_a?(Rational)
-
-		_move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
-	end
-
-	def log msg = nil
-		_log msg
-	end
-
-	def to_s
-		super + ": position=#{self.position}"
-	end
-
-	alias inspect to_s
+  alias inspect to_s
 end
 
 module Musa::BaseTheme
-	def at_position p, **parameters
-		p
-	end
+  def at_position(p, **_parameters)
+    p
+  end
 
-	def run
-	end
+  def run; end
 end

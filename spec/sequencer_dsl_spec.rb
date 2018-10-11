@@ -6,550 +6,528 @@ require 'pp'
 include Musa::Series
 
 module Test
-	@c = nil
-	def self.c= value
-		@c = value
-	end
+  @c = nil
+  def self.c=(value)
+    @c = value
+  end
 
-	def self.c
-		@c
-	end
+  def self.c
+    @c
+  end
 end
 
 RSpec.describe Musa::Sequencer do
+  context 'DSL Sequencing' do
+    it 'Basic at sequencing' do
+      c = 0
 
-	context "DSL Sequencing" do
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          every 1 do
+            c += 1
+          end
+        end
+      end
 
-		it "Basic at sequencing" do
+      expect(c).to eq(0)
 
-			c = 0
+      s.tick
 
-			s = Musa::Sequencer.new 4, 4 do
-				at 1 do
-					every 1 do
-						c += 1
-					end
-				end
-			end
+      expect(c).to eq(1)
 
-			expect(c).to eq(0)
+      s.tick
 
-			s.tick
+      expect(c).to eq(1)
 
-			expect(c).to eq(1)
+      14.times do
+        s.tick
+      end
 
-			s.tick
+      expect(c).to eq(1)
 
-			expect(c).to eq(1)
+      s.tick
 
-			14.times do
-				s.tick
-			end
+      expect(c).to eq(2)
 
-			expect(c).to eq(1)
+      s.tick
 
-			s.tick
+      expect(c).to eq(2)
 
-			expect(c).to eq(2)
+      15.times do
+        s.tick
+      end
 
-			s.tick
+      expect(c).to eq(3)
+    end
 
-			expect(c).to eq(2)
+    it 'Basic every sequencing with control' do
+      c = 0
+      d = 0
 
-			15.times do
-				s.tick
-			end
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          every 1 do |control:|
+            c += 1
 
-			expect(c).to eq(3)
-		end
+            if c == 2
+              control.after do
+                d = 1
+              end
+            end
 
-		it "Basic every sequencing with control" do
+            control.stop if c == 3
+          end
+        end
+      end
 
-			c = 0
-			d = 0
+      expect(c).to eq(0)
 
-			s = Musa::Sequencer.new 4, 4 do
-				at 1 do
-					every 1 do |control:|
-						c += 1
+      s.tick
 
-						if c == 2
-							control.after do 
-								d = 1
-							end
-						end
+      expect(c).to eq(1)
 
-						if c == 3
-							control.stop
-						end
-					end
-				end
-			end
+      s.tick
 
-			expect(c).to eq(0)
+      expect(c).to eq(1)
 
-			s.tick
+      14.times do
+        s.tick
+      end
 
-			expect(c).to eq(1)
+      expect(c).to eq(1)
 
-			s.tick
+      s.tick
 
-			expect(c).to eq(1)
+      expect(c).to eq(2)
 
-			14.times do
-				s.tick
-			end
+      s.tick
 
-			expect(c).to eq(1)
+      expect(c).to eq(2)
 
-			s.tick
+      15.times do
+        s.tick
+      end
 
-			expect(c).to eq(2)
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			s.tick
+      s.tick
 
-			expect(c).to eq(2)
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			15.times do
-				s.tick
-			end
+      15.times do
+        s.tick
+      end
 
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      expect(c).to eq(3)
+      expect(d).to eq(1)
+    end
 
-			s.tick
+    it 'Basic play sequencing' do
+      serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      c = -1
+      d = 0
 
-			15.times do
-				s.tick
-			end
+      s = Musa::Sequencer.new 4, 4 do
+        play serie do |element, control:|
+          c = element[:value]
 
-			expect(c).to eq(3)
-			expect(d).to eq(1)
-		end
+          control.after do # this will be executed 4 times
+            d += 1
+          end
+        end
+      end
 
-		it "Basic play sequencing" do
+      expect(c).to eq(0)
+      expect(d).to eq(0)
 
-			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
+      s.tick
+      expect(c).to eq(1)
 
-			c = -1
-			d = 0
+      s.tick
+      expect(c).to eq(2)
 
-			s = Musa::Sequencer.new 4, 4 do 
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-				play serie do |element, control:|
-					c = element[:value]
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(4)
+    end
 
-					control.after do # this will be executed 4 times
-						d += 1
-					end
-				end
-			end
+    it 'Play sequencing with event syncing' do
+      serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
-			expect(c).to eq(0)
-			expect(d).to eq(0)
+      serie += S(wait_event: :event_to_wait)
 
-			s.tick
-			expect(c).to eq(1)
+      serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1, 16)).repeat
 
-			s.tick
-			expect(c).to eq(2)
+      c = 0
+      d = 0
+      inner_control = nil
+      cat = cplay = nil
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      s = Musa::Sequencer.new 4, 4 do
+        cat = at 1 do
+          play serie do |element, control:|
+            inner_control = control
+            c = element[:value] if element[:value]
+          end
+        end
+      end
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(4)
-		end
+      s.tick
+      expect(c).to eq(0)
+      expect(d).to eq(0)
 
-		it "Play sequencing with event syncing" do
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(0)
 
-			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
+      s.tick
+      expect(c).to eq(2)
+      expect(d).to eq(0)
 
-			serie += S({ wait_event: :event_to_wait })
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1,16)).repeat
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			c = 0
-			d = 0
-			inner_control = nil
-			cat = cplay = nil
+      16.times { s.tick }
 
-			s = Musa::Sequencer.new 4, 4 do 
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-				cat = at 1 do
-					play serie do |element, control:|
-						inner_control = control
-						c = element[:value] if element[:value]
-					end
-				end
-			end
+      s.now do
+        inner_control.launch :event_to_wait
+      end
 
-			s.tick
-			expect(c).to eq(0)
-			expect(d).to eq(0)
+      expect(c).to eq(4)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(5)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(2)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(6)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(7)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(7)
+      expect(d).to eq(0)
+    end
 
-			16.times { s.tick }
+    it 'Play sequencing with event syncing (II)' do
+      serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      serie += S(wait_event: :event_to_wait)
 
-			s.now do
-				inner_control.launch :event_to_wait
-			end
-			
-			expect(c).to eq(4)
-			expect(d).to eq(0)
+      serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1, 16)).repeat
 
-			s.tick
-			expect(c).to eq(5)
-			expect(d).to eq(0)
+      c = 0
+      d = 0
+      inner_control = nil
+      cat = cplay = nil
 
-			s.tick
-			expect(c).to eq(6)
-			expect(d).to eq(0)
+      s = Musa::Sequencer.new 4, 4 do
+        cat = at 1 do
+          cplay = play serie do |element, control:|
+            c = element[:value] if element[:value]
+          end
+        end
+      end
 
-			s.tick
-			expect(c).to eq(7)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(0)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(7)
-			expect(d).to eq(0)
-		end
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(0)
 
-		it "Play sequencing with event syncing (II)" do
+      s.tick
+      expect(c).to eq(2)
+      expect(d).to eq(0)
 
-			serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1,16)).repeat
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			serie += S({ wait_event: :event_to_wait })
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			serie += H value: FOR(from: 4, to: 7), duration: S(Rational(1,16)).repeat
+      16.times { s.tick }
 
-			c = 0
-			d = 0
-			inner_control = nil
-			cat = cplay = nil
+      s.tick
+      expect(c).to eq(3)
+      expect(d).to eq(0)
 
-			s = Musa::Sequencer.new 4, 4 do 
+      s.now do
+        cplay.launch :event_to_wait
+      end
 
-				cat = at 1 do
-					cplay = play serie do |element, control:|
-						c = element[:value] if element[:value]
-					end
-				end
-			end
+      expect(c).to eq(4)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(0)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(5)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(6)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(2)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(7)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+      s.tick
+      expect(c).to eq(7)
+      expect(d).to eq(0)
+    end
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+    it 'Basic theme sequencing' do
+      Test.c = 0
 
-			16.times { s.tick }
+      class Theme1
+        include Musa::Theme
 
-			s.tick
-			expect(c).to eq(3)
-			expect(d).to eq(0)
+        def initialize(context:, parameter1:, parameter2:)
+          super context
 
-			s.now do
-				cplay.launch :event_to_wait
-			end
-			
-			expect(c).to eq(4)
-			expect(d).to eq(0)
+          @parameter1 = parameter1
+          @parameter2 = parameter2
+        end
 
-			s.tick
-			expect(c).to eq(5)
-			expect(d).to eq(0)
+        def run(parameter3:)
+          Test.c = @parameter1 + @parameter2 + parameter3
 
-			s.tick
-			expect(c).to eq(6)
-			expect(d).to eq(0)
+          wait 1 do
+            # puts "tras 1..."
+          end
+        end
+      end
 
-			s.tick
-			expect(c).to eq(7)
-			expect(d).to eq(0)
+      s = Musa::Sequencer.new 4, 4
 
-			s.tick
-			expect(c).to eq(7)
-			expect(d).to eq(0)
-		end
+      s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30)
 
-		it "Basic theme sequencing" do
+      expect(Test.c).to eq(0)
 
-			Test.c = 0
+      s.tick
 
-			class Theme1 
-				include Musa::Theme
+      expect(Test.c).to eq(1210)
 
-				def initialize(context:, parameter1:, parameter2:)
-					super context
+      16.times { s.tick }
 
-					@parameter1 = parameter1
-					@parameter2 = parameter2
-				end
+      expect(Test.c).to eq(1220)
 
-				def run(parameter3:)
-					Test.c = @parameter1 + @parameter2 + parameter3
+      15.times { s.tick }
 
-					wait 1 do
-						# puts "tras 1..."
-					end
-				end
-			end
+      expect(Test.c).to eq(1220)
 
-			s = Musa::Sequencer.new 4, 4
+      s.tick
 
-			s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
+      expect(Test.c).to eq(1230)
+    end
+  end
 
-			expect(Test.c).to eq(0)
+  context 'Advanced sequencing' do
+    it 'Event passing on at' do
+      s = Musa::Sequencer.new 4, 4
 
-			s.tick
+      c = 0
+      d = 0
 
-			expect(Test.c).to eq(1210)
+      control = s.at 1 do
+        c += 1
+        launch :event, 100
+      end
 
-			16.times { || s.tick }
+      control.on :event do |param|
+        d += param
+      end
 
-			expect(Test.c).to eq(1220)
+      expect(c).to eq(0)
+      expect(d).to eq(0)
 
-			15.times { || s.tick }
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(100)
 
-			expect(Test.c).to eq(1220)
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(100)
+    end
 
-			s.tick
-			
-			expect(Test.c).to eq(1230)
-		end
+    it 'Event passing on at with event listener on sequencer' do
+      c = 0
+      d = 0
 
-	end
+      s = Musa::Sequencer.new 4, 4
 
-	context "Advanced sequencing" do
+      s.with do
+        at 1 do
+          c += 1
+          now do
+            launch :event, 100
+          end
+        end
 
-		it "Event passing on at" do
-			s = Musa::Sequencer.new 4, 4
+        on :event do |param|
+          d += param
+        end
+      end
 
-			c = 0
-			d = 0
+      expect(c).to eq(0)
+      expect(d).to eq(0)
 
-			control = s.at 1 do
-				c += 1
-				launch :event, 100
-			end
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(100)
 
-			control.on :event do |param|
-				d += param
-			end
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(100)
+    end
 
-			expect(c).to eq(0)
-			expect(d).to eq(0)
+    it 'Event passing on at with inner at' do
+      s = Musa::Sequencer.new 4, 4
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
+      c = 0
+      d = 0
+      e = 0
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
-		end
+      control2in = []
 
-		it "Event passing on at with event listener on sequencer" do
-			c = 0
-			d = 0
+      control0 = s.at 1 do
+        c += 1
 
-			s = Musa::Sequencer.new 4, 4
+        control1 = at 2 do
+          launch :event, 100
+        end
 
-			s.with do
-				at 1 do
-					c += 1
-					now do
-						launch :event, 100
-					end
-				end
+        control2 = at 2 do
+          launch :event, 100
+        end
 
-				on :event do |param|
-					d += param
-				end
-			end
+        control2.on :event do |param|
+          e += param
+        end
+      end
 
-			expect(c).to eq(0)
-			expect(d).to eq(0)
+      control0.on :event do |param|
+        d += param
+      end
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
+      expect(c).to eq(0)
+      expect(d).to eq(0)
+      expect(e).to eq(0)
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
-		end
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(0)
+      expect(d).to eq(0)
 
-		it "Event passing on at with inner at" do
+      95.times { s.tick }
 
-			s = Musa::Sequencer.new 4, 4
+      expect(c).to eq(1)
+      expect(d).to eq(100)
+      expect(e).to eq(100)
 
-			c = 0
-			d = 0
-			e = 0
+      s.tick
+      expect(c).to eq(1)
+      expect(d).to eq(100)
+      expect(e).to eq(100)
+    end
 
-			control2in = []
+    it 'Event passing on theme' do
+      class Theme1
+        include Musa::Theme
 
-			control0 = s.at 1 do
+        def initialize(context:, parameter1:, parameter2:)
+          super context
 
-				c += 1
-				
-				control1 = at 2 do
-					launch :event, 100
-				end
+          @parameter1 = parameter1
+          @parameter2 = parameter2
+        end
 
-				control2 = at 2 do
-					launch :event, 100
-				end
+        def run(parameter3:)
+          launch :event, @parameter1 + @parameter2 + parameter3
 
-				control2.on :event do |param|
-					e += param
-				end
+          at position + Rational(1, 16) do
+            launch :event2, position
+          end
+        end
+      end
 
-			end
+      s = Musa::Sequencer.new 4, 4
 
-			control0.on :event do |param|
-				d += param
-			end
+      s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30)
 
-			expect(c).to eq(0)
-			expect(d).to eq(0)
-			expect(e).to eq(0)
+      c = 0
+      d = 0
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(0)
-			expect(d).to eq(0)
+      s.with do
+        on :event do |param|
+          c = param
+        end
 
-			95.times { || s.tick }
+        on :event2 do |_pos|
+          d += 1
+        end
+      end
 
-			expect(c).to eq(1)
-			expect(d).to eq(100)
-			expect(e).to eq(100)
+      expect(c).to eq(0)
+      expect(d).to eq(0)
 
-			s.tick
-			expect(c).to eq(1)
-			expect(d).to eq(100)
-			expect(e).to eq(100)
-		end
+      s.tick
 
-		it "Event passing on theme" do
+      expect(c).to eq(1210)
+      expect(d).to eq(0)
 
-			class Theme1
-				include Musa::Theme
-				
-				def initialize(context:, parameter1:, parameter2:)
-					super context
+      s.tick
 
-					@parameter1 = parameter1
-					@parameter2 = parameter2
-				end
+      expect(c).to eq(1210)
+      expect(d).to eq(1)
 
-				def run(parameter3:)
-					launch :event, @parameter1 + @parameter2 + parameter3
+      15.times { s.tick }
 
-					at position + Rational(1,16) do
-						launch :event2, position
-					end
-				end
-			end
+      expect(c).to eq(1220)
+      expect(d).to eq(1)
 
-			s = Musa::Sequencer.new 4, 4
+      s.tick
 
-			s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30) 
+      expect(c).to eq(1220)
+      expect(d).to eq(2)
 
-			c = 0
-			d = 0
+      14.times { s.tick }
 
-			s.with do
-				on :event do |param|
-					c = param
-				end
+      expect(c).to eq(1220)
+      expect(d).to eq(2)
 
-				on :event2 do |pos|
-					d += 1
-				end
-			end
+      s.tick
 
+      expect(c).to eq(1230)
+      expect(d).to eq(2)
 
-			expect(c).to eq(0)
-			expect(d).to eq(0)
+      s.tick
 
-			s.tick
-
-			expect(c).to eq(1210)
-			expect(d).to eq(0)
-
-			s.tick
-
-			expect(c).to eq(1210)
-			expect(d).to eq(1)
-
-			15.times { || s.tick }
-
-			expect(c).to eq(1220)
-			expect(d).to eq(1)
-
-			s.tick
-
-			expect(c).to eq(1220)
-			expect(d).to eq(2)
-
-			14.times { || s.tick }
-
-			expect(c).to eq(1220)
-			expect(d).to eq(2)
-
-			s.tick
-
-			expect(c).to eq(1230)
-			expect(d).to eq(2)
-
-			s.tick
-
-			expect(c).to eq(1230)
-			expect(d).to eq(3)
-		end
-
-	end	
-
+      expect(c).to eq(1230)
+      expect(d).to eq(3)
+    end
+  end
 end

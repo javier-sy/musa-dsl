@@ -1,339 +1,331 @@
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 require 'musa-dsl/mods/arrayfy'
 
-# TODO permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
+# TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
-	class Variatio
+  class Variatio
+    def initialize(instance_name, &block)
+      raise ArgumentError, 'instance_name should be a symbol' unless instance_name.is_a?(Symbol)
+      raise ArgumentError, 'block is needed' unless block
 
-		def initialize instance_name, &block
+      @instance_name = instance_name
 
-			raise ArgumentError, "instance_name should be a symbol" unless instance_name.is_a?(Symbol)
-			raise ArgumentError, "block is needed" unless block
+      main_context = MainContext.new block
 
-			@instance_name = instance_name
+      @constructor = main_context._constructor
+      @fieldset = main_context._fieldset
+      @finalize = main_context._finalize
+    end
 
-			main_context = MainContext.new block
+    def on(**values)
+      constructor_binder = KeyParametersProcedureBinder.new @constructor
+      finalize_binder = KeyParametersProcedureBinder.new @finalize if @finalize
 
-			@constructor = main_context._constructor
-			@fieldset = main_context._fieldset
-			@finalize = main_context._finalize
-		end
+      run_fieldset = @fieldset.clone # TODO: verificar que esto no da problemas
 
-		def on **values
+      run_fieldset.components.each do |component|
+        if values.key? component.name
+          component.options = values[component.name].arrayfy.explode_ranges
+        end
+      end
 
-			constructor_binder = KeyParametersProcedureBinder.new @constructor
-			finalize_binder = KeyParametersProcedureBinder.new @finalize if @finalize
+      tree_A = generate_eval_tree_A run_fieldset
+      tree_B = generate_eval_tree_B run_fieldset
 
-			run_fieldset = @fieldset.clone # TODO verificar que esto no da problemas
+      parameters_set = tree_A.calc_parameters
 
-			run_fieldset.components.each do |component|
-				if values.has_key? component.name
-					component.options = values[component.name].arrayfy.explode_ranges
-				end
-			end
+      combinations = []
 
-			tree_A = generate_eval_tree_A run_fieldset
-			tree_B = generate_eval_tree_B run_fieldset
+      parameters_set.each do |parameters_with_depth|
+        instance = @constructor.call constructor_binder.apply(parameters_with_depth)
 
-			parameters_set = tree_A.calc_parameters
+        tree_B.run parameters_with_depth, @instance_name => instance
 
-			combinations = []
+        if @finalize
+          finalize_parameters = finalize_binder.apply parameters_with_depth
+          finalize_parameters[@instance_name] = instance
 
-			parameters_set.each do |parameters_with_depth|
+          @finalize.call finalize_parameters
+        end
 
-				instance = @constructor.call constructor_binder.apply(parameters_with_depth)
+        combinations << instance
+      end
 
-				tree_B.run parameters_with_depth, { @instance_name => instance }
+      combinations
+    end
 
-				if @finalize
-					finalize_parameters = finalize_binder.apply parameters_with_depth
-					finalize_parameters[@instance_name] = instance
+    def run
+      on
+    end
 
-					@finalize.call finalize_parameters
-				end
+    module Helper
+      module_function
 
-				combinations << instance
-			end
+      def list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
+        result = []
 
-			combinations
-		end
+        list_of_hashes_1.each do |hash1|
+          list_of_hashes_2.each do |hash2|
+            result << hash1.merge(hash2)
+          end
+        end
 
-		def run
-			on
-		end
+        result
+      end
+    end
 
-		module Helper
-			extend self
+    private_constant :Helper
 
-			def list_of_hashes_product(list_of_hashes_1, list_of_hashes_2)
-				result = []
+    private
 
-				list_of_hashes_1.each do |hash1|
-					list_of_hashes_2.each do |hash2|
-						result << hash1.merge(hash2)
-					end
-				end
+    def generate_eval_tree_A(fieldset)
+      root = nil
+      current = nil
 
-				result
-			end
-		end
+      fieldset.components.each do |component|
+        if component.is_a? Field
+          a = A1.new component.name, component.options
+        elsif component.is_a? Fieldset
+          a = A2.new component.name, component.options, generate_eval_tree_A(component)
+        end
 
-		private_constant :Helper
+        current.inner = a if current
+        root ||= a
 
-		private
+        current = a
+      end
 
-		def generate_eval_tree_A fieldset
-			root = nil
-			current = nil
+      root
+    end
 
-			fieldset.components.each do |component|
+    def generate_eval_tree_B(fieldset)
+      affected_field_names = []
+      inner = []
 
-				if component.is_a? Field
-					a = A1.new component.name, component.options
-				elsif component.is_a? Fieldset
-					a = A2.new component.name, component.options, generate_eval_tree_A(component)
-				end
+      fieldset.components.each do |component|
+        if component.is_a? Fieldset
+          inner << generate_eval_tree_B(component)
+        elsif component.is_a? Field
+          affected_field_names << component.name
+        end
+      end
 
-				current.inner = a if current
-				root = a unless root
+      B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
+    end
 
-				current = a
-			end
+    class A
+      attr_reader :parameter_name, :options
+      attr_accessor :inner
 
-			root
-		end
+      def initialize(parameter_name, options)
+        @parameter_name = parameter_name
+        @options = options
+        @inner = nil
+      end
 
-		def generate_eval_tree_B fieldset
-			affected_field_names = []
-			inner = []
-
-			fieldset.components.each do |component|
-				if component.is_a? Fieldset
-					inner << generate_eval_tree_B(component)
-				elsif component.is_a? Field
-					affected_field_names << component.name
-				end
-			end
+      def calc_parameters
+        unless @calc_parameters
+          if inner
+            @calc_parameters = Helper.list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
+          else
+            @calc_parameters = calc_own_parameters
+          end
+        end
+
+        @calc_parameters
+      end
+    end
+
+    private_constant :A
+
+    class A1 < A
+      def initialize(parameter_name, options)
+        super parameter_name, options
+
+        @own_parameters = @options.collect { |option| { @parameter_name => option } }
+      end
+
+      def calc_own_parameters
+        @own_parameters
+      end
 
-			B.new fieldset.name, fieldset.options, affected_field_names, inner, fieldset.with_attributes
-		end
+      def inspect
+        "A1 name: #{@parameter_name}, options: #{@options}, inner: #{@inner || 'nil'}"
+      end
 
-		class A
-			attr_reader :parameter_name, :options
-			attr_accessor :inner
+      alias to_s inspect
+    end
 
-			def initialize parameter_name, options
-				@parameter_name = parameter_name
-				@options = options
-				@inner = nil
-			end
+    private_constant :A1
 
-			def calc_parameters
-				if !@calc_parameters
-					if inner
-						@calc_parameters = Helper.list_of_hashes_product(calc_own_parameters, @inner.calc_parameters)
-					else
-						@calc_parameters = calc_own_parameters
-					end
-				end
-
-				@calc_parameters
-			end
-		end
-
-		private_constant :A
+    class A2 < A
+      def initialize(parameter_name, options, subcomponent)
+        super parameter_name, options
+
+        @subcomponent = subcomponent
 
-		class A1 < A
-			def initialize parameter_name, options
-				super parameter_name, options
+        sub_parameters_set = @subcomponent.calc_parameters
+        result = nil
 
-				@own_parameters = @options.collect { |option| { @parameter_name => option } }
-			end
+        @options.each do |option|
+          if result.nil?
+            result = sub_parameters_set.collect { |v| { option => v } }
+          else
+            result = Helper.list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
+          end
+        end
 
-			def calc_own_parameters
-				@own_parameters
-			end
+        result = result.collect { |v| { @parameter_name => v } }
 
-			def inspect
-				"A1 name: #{@parameter_name}, options: #{@options}, inner: #{@inner ? @inner: 'nil'}"
-			end
+        @own_parameters = result
+      end
 
-			alias to_s inspect
-		end
+      def calc_own_parameters
+        @own_parameters
+      end
 
-		private_constant :A1
+      def inspect
+        "A2 name: #{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner || 'nil'}"
+      end
 
-		class A2 < A
-			def initialize parameter_name, options, subcomponent
-				super parameter_name, options
+      alias to_s inspect
+    end
 
-				@subcomponent = subcomponent
+    private_constant :A2
 
-				sub_parameters_set = @subcomponent.calc_parameters
-				result = nil
+    class B
+      attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner
 
-				@options.each do |option|
-					if result.nil?
-						result = sub_parameters_set.collect { |v| { option => v } }
-					else
-						result = Helper.list_of_hashes_product result, sub_parameters_set.collect { |v| { option => v } }
-					end
-				end
+      def initialize(parameter_name, options, affected_field_names, inner, blocks)
+        @parameter_name = parameter_name
+        @options = options
+        @affected_field_names = affected_field_names
+        @inner = inner
 
-				result = result.collect { |v| { @parameter_name => v } }
+        @procedures = blocks.collect { |proc| KeyParametersProcedureBinder.new proc }
+      end
 
-				@own_parameters = result
-			end
+      def run(parameters_with_depth, parent_parameters = nil)
+        parent_parameters ||= {}
 
-			def calc_own_parameters
-				@own_parameters
-			end
+        @options.each do |option|
+          base = @parameter_name == :_maincontext ? parameters_with_depth : parameters_with_depth[@parameter_name][option]
 
-			def inspect
-				"A2 name: #{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner ? @inner : 'nil'}"
-			end
+          parameters = base.select { |k, _v| @affected_field_names.include? k }.merge(parent_parameters)
+          parameters[@parameter_name] = option
 
-			alias to_s inspect
-		end
+          @procedures.each do |procedure_binder|
+            procedure_binder.call parameters
+          end
 
-		private_constant :A2
+          if @parameter_name == :_maincontext
+            @inner.each do |inner|
+              inner.run parameters_with_depth, parameters
+            end
+          else
+            @inner.each do |inner|
+              inner.run parameters_with_depth[@parameter_name][option], parameters
+            end
+          end
+        end
+      end
 
-		class B
-			attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner
+      def inspect
+        "B name: #{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner}"
+      end
 
-			def initialize parameter_name, options, affected_field_names, inner, blocks
-				@parameter_name = parameter_name
-				@options = options
-				@affected_field_names = affected_field_names
-				@inner = inner
+      alias to_s inspect
 
-				@procedures = blocks.collect { |proc| KeyParametersProcedureBinder.new proc }
-			end
+      private
+    end
 
-			def run parameters_with_depth, parent_parameters = nil
+    class FieldsetContext
+      attr_reader :_fieldset
 
-				parent_parameters ||= {}
+      def initialize(name, options = nil, block)
+        @_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
 
-				@options.each do |option|
+        _as_context_run block
+      end
 
-					base = (@parameter_name == :_maincontext) ? parameters_with_depth : parameters_with_depth[@parameter_name][option]
+      def field(name, options = nil)
+        @_fieldset.components << Field.new(name, options.arrayfy.explode_ranges)
+      end
 
-					parameters = base.select { |k, v| @affected_field_names.include? k }.merge(parent_parameters)
-					parameters[@parameter_name] = option
+      def fieldset(name, options = nil, &block)
+        fieldset_context = FieldsetContext.new name, options, block
+        @_fieldset.components << fieldset_context._fieldset
+      end
 
-					@procedures.each do |procedure_binder|
-						procedure_binder.call parameters
-					end
+      def with_attributes(&block)
+        @_fieldset.with_attributes << block
+      end
+    end
 
-					if @parameter_name == :_maincontext
-						@inner.each do |inner|
-							inner.run parameters_with_depth, parameters
-						end
-					else
-						@inner.each do |inner|
-							inner.run parameters_with_depth[@parameter_name][option], parameters
-						end
-					end
-				end
-			end
+    private_constant :FieldsetContext
 
-			def inspect
-				 "B name: #{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner}"
-			end
+    class MainContext < FieldsetContext
+      attr_reader :_constructor, :_finalize
 
-			alias to_s inspect
+      def initialize(block)
+        @_constructor = nil
+        @_finalize = nil
 
-			private
+        super :_maincontext, [nil], block
+      end
 
-		end
+      def constructor(&block)
+        @_constructor = block
+      end
 
-		class FieldsetContext
-			attr_reader :_fieldset
+      def finalize(&block)
+        @_finalize = block
+      end
+    end
 
-			def initialize name, options = nil, block
-				@_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
+    private_constant :MainContext
 
-				self._as_context_run block
-			end
+    class Field
+      attr_reader :name
+      attr_accessor :options
 
-			def field name, options = nil
-				@_fieldset.components << Field.new(name, options.arrayfy.explode_ranges)
-			end
+      def inspect
+        "Field #{@name} options: #{@options}"
+      end
 
-			def fieldset name, options = nil, &block
-				fieldset_context = FieldsetContext.new name, options, block
-				@_fieldset.components << fieldset_context._fieldset
-			end
+      alias to_s inspect
 
-			def with_attributes &block
-				@_fieldset.with_attributes << block
-			end
-		end
+      private
 
-		private_constant :FieldsetContext
+      def initialize(name, options)
+        @name = name
+        @options = options
+      end
+    end
 
-		class MainContext < FieldsetContext
-			attr_reader :_constructor, :_finalize
+    private_constant :Field
 
-			def initialize block
-				@_constructor = nil
-				@_finalize = nil
+    class Fieldset
+      attr_reader :name, :with_attributes, :components
+      attr_accessor :options
 
-				super :_maincontext, [nil], block
-			end
+      def inspect
+        "Fieldset #{@name} options: #{@options} components: #{@components}"
+      end
 
-			def constructor &block
-				@_constructor = block
-			end
+      alias to_s inspect
 
-			def finalize &block
-				@_finalize = block
-			end
-		end
+      private
 
-		private_constant :MainContext
+      def initialize(name, options)
+        @name = name
+        @options = options || [nil]
+        @components = []
+        @with_attributes = []
+      end
+    end
 
-		class Field
-			attr_reader :name
-			attr_accessor :options
-
-			def inspect
-				"Field #{@name} options: #{@options}"
-			end
-
-			alias to_s inspect
-
-			private
-
-			def initialize name, options
-				@name = name
-				@options = options
-			end
-		end
-
-		private_constant :Field
-
-		class Fieldset
-			attr_reader :name, :with_attributes, :components
-			attr_accessor :options
-
-			def inspect
-				"Fieldset #{@name} options: #{@options} components: #{@components}"
-			end
-
-			alias to_s inspect
-
-			private
-
-			def initialize name, options
-				@name = name
-				@options = options || [nil]
-				@components = []
-				@with_attributes = []
-			end
-		end
-
-		private_constant :Fieldset
-	end
+    private_constant :Fieldset
+  end
 end

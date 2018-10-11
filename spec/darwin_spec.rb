@@ -5,77 +5,71 @@ require 'musa-dsl'
 include Musa::Series
 
 RSpec.describe Musa::Darwin do
+  context 'Select over a range of variations' do
+    it 'Simple selection 1' do
+      v = Musa::Variatio.new :object do
+        field :a, 1..10
+        field :b, %i[alfa beta gamma delta]
 
-	context "Select over a range of variations" do
+        constructor do |a:, b:|
+          { a: a, b: b }
+        end
+      end
 
-		it "Simple selection 1" do
+      d = Musa::Darwin.new do
+        measures do |object|
+          die if object[:b] == :gamma
 
-			v = Musa::Variatio.new :object do
-				field :a, 1..10
-				field :b, [:alfa, :beta, :gamma, :delta]
+          feature :alfa_feature if object[:b] == :alfa
+          feature :beta_feature if object[:b] == :beta
 
-				constructor do |a:, b:|
-					{ a: a, b: b }
-				end
-			end
+          dimension :a_dimension, -object[:a].to_f
+        end
 
-			d = Musa::Darwin.new do
+        weight a_dimension: 2, alfa_feature: 1, beta_feature: -0.5
+      end
 
-				measures do |object|
-					die if object[:b] == :gamma
+      population = S(*v.run).randomize.to_a
 
-					feature :alfa_feature if object[:b] == :alfa
-					feature :beta_feature if object[:b] == :beta
+      survivors = d.select population
 
-					dimension :a_dimension, -object[:a].to_f
-				end
+      expect(survivors.size).to eq(population.size - 10)
 
-				weight a_dimension: 2, alfa_feature: 1, beta_feature: -0.5
-			end
+      expect(survivors[0]).to eq(a: 1, b: :alfa)
+      expect(survivors.last).to eq(a: 10, b: :beta)
+    end
 
-			population = S(*v.run).randomize.to_a
+    it 'Simple selection 2' do
+      v = Musa::Variatio.new :object do
+        field :a, 1..10
+        field :b, %i[alfa beta gamma delta]
 
-			survivors = d.select population
+        constructor do |a:, b:|
+          { a: a, b: b }
+        end
+      end
 
-			expect(survivors.size).to eq(population.size - 10)
+      d = Musa::Darwin.new do
+        measures do |object|
+          die if object[:b] == :gamma
 
-			expect(survivors[0]).to eq({ a: 1, b: :alfa })
-			expect(survivors.last).to eq({ a: 10, b: :beta })
-		end
+          feature :alfa_feature if object[:b] == :alfa
+          feature :beta_feature if object[:b] == :beta
 
-		it "Simple selection 2" do
+          dimension :a_dimension, -object[:a].to_f
+        end
 
-			v = Musa::Variatio.new :object do
-				field :a, 1..10
-				field :b, [:alfa, :beta, :gamma, :delta]
+        weight a_dimension: 1, beta_feature: 1, alfa_feature: -0.5
+      end
 
-				constructor do |a:, b:|
-					{ a: a, b: b }
-				end
-			end
+      population = S(*v.run).randomize.to_a
 
-			d = Musa::Darwin.new do
+      survivors = d.select population
 
-				measures do |object|
-					die if object[:b] == :gamma
+      expect(survivors.size).to eq(population.size - 10)
 
-					feature :alfa_feature if object[:b] == :alfa
-					feature :beta_feature if object[:b] == :beta
-
-					dimension :a_dimension, -object[:a].to_f
-				end
-
-				weight a_dimension: 1, beta_feature: 1, alfa_feature: -0.5
-			end
-
-			population = S(*v.run).randomize.to_a
-
-			survivors = d.select population
-
-			expect(survivors.size).to eq(population.size - 10)
-
-			expect(survivors[0]).to eq({ a: 1, b: :beta })
-			expect(survivors.last).to eq({ a: 10, b: :alfa })
-		end
-	end
+      expect(survivors[0]).to eq(a: 1, b: :beta)
+      expect(survivors.last).to eq(a: 10, b: :alfa)
+    end
+  end
 end

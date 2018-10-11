@@ -1,152 +1,145 @@
 require 'musa-dsl/mods/as-context-run'
 
 module Musa
+  class Darwin
+    def initialize(&block)
+      raise ArgumentError, 'block is needed' unless block
 
-	class Darwin
+      main_context = MainContext.new block
 
-		def initialize &block
+      @measures = main_context._measures
+      @weights = main_context._weights
+    end
 
-			raise ArgumentError, "block is needed" unless block
+    def select(population)
+      measured_objects = []
 
-			main_context = MainContext.new block
+      population.each do |object|
+        context = MeasuresEvalContext.new
 
-			@measures = main_context._measures
-			@weights = main_context._weights
-		end
+        context.instance_exec object, &@measures
+        measure = context._measure
 
-		def select population
+        measured_objects << { object: object, measure: context._measure } unless measure.died?
+      end
 
-			measured_objects = []
+      limits = {}
 
-			population.each do |object|
-				context = MeasuresEvalContext.new
+      measured_objects.each do |measured_object|
+        measure = measured_object[:measure]
 
-				context.instance_exec object, &@measures
-				measure = context._measure
+        measure.dimensions.each do |measure_name, value|
+          limit = limits[measure_name] ||= { min: nil, max: nil }
 
-				measured_objects << { object: object, measure: context._measure } unless measure.died?
-			end
+          limit[:min] = value.to_f if limit[:min].nil? || limit[:min] > value
+          limit[:max] = value.to_f if limit[:max].nil? || limit[:max] < value
 
-			limits = {}
+          limit[:range] = limit[:max] - limit[:min]
+        end
+      end
 
-			measured_objects.each do |measured_object|
+      # warn "Darwin.select: weights #{@weights}"
 
-				measure = measured_object[:measure]
+      measured_objects.each do |measured_object|
+        measure = measured_object[:measure]
 
-				measure.dimensions.each do |measure_name, value|
-					limit = limits[measure_name] ||= { min: nil, max: nil }
+        measure.dimensions.each do |dimension_name, value|
+          limit = limits[dimension_name]
+          measure.normalized_dimensions[dimension_name] = (value - limit[:min]) / limit[:range]
+        end
 
-					limit[:min] = value.to_f if limit[:min].nil? || limit[:min] > value
-					limit[:max] = value.to_f if limit[:max].nil? || limit[:max] < value
+        # warn "Darwin.select: #{measured_object[:object]} #{measured_object[:measure]} weight=#{measured_object[:measure].evaluate_weight(@weights).round(2)}"
+      end
 
-					limit[:range] = limit[:max] - limit[:min]
-				end
-			end
+      measured_objects.sort! { |a, b| evaluate_weights a[:measure], b[:measure] }
 
-			#warn "Darwin.select: weights #{@weights}"
+      measured_objects.collect { |measured_object| measured_object[:object] }
+    end
 
-			measured_objects.each do |measured_object|
+    def evaluate_weights(measure_a, measure_b)
+      measure_b.evaluate_weight(@weights) <=> measure_a.evaluate_weight(@weights)
+    end
 
-				measure = measured_object[:measure]
+    class MainContext
+      attr_reader :_measures, :_weights
 
-				measure.dimensions.each do |dimension_name, value|
-					limit = limits[dimension_name]
-					measure.normalized_dimensions[dimension_name] = ( value - limit[:min] ) / limit[:range]
-				end
+      def initialize(block)
+        @_weights = {}
+        _as_context_run block
+      end
 
-				#warn "Darwin.select: #{measured_object[:object]} #{measured_object[:measure]} weight=#{measured_object[:measure].evaluate_weight(@weights).round(2)}"
-			end
+      def measures(&block)
+        @_measures = block
+      end
 
-			measured_objects.sort! { |a, b|	evaluate_weights a[:measure], b[:measure] }
+      def weight(**feature_or_dimension_weights)
+        feature_or_dimension_weights.each do |name, value|
+          @_weights[name] = value
+        end
+      end
+    end
 
-			return measured_objects.collect { |measured_object| measured_object[:object] }
-		end
+    class MeasuresEvalContext
+      def initialize
+        @_features = {}
+        @_dimensions = {}
+        @_died = false
+      end
 
-		def evaluate_weights measure_a, measure_b
-			measure_b.evaluate_weight(@weights) <=> measure_a.evaluate_weight(@weights)
-		end
+      def _measure
+        Measure.new @_features, @_dimensions, @_died
+      end
 
-		class MainContext
-			attr_reader :_measures, :_weights
+      def feature(feature_name)
+        @_features[feature_name] = true
+      end
 
-			def initialize block
-				@_weights = {}
-				self._as_context_run block
-			end
+      def dimension(dimension_name, value)
+        @_dimensions[dimension_name] = value
+      end
 
-			def measures &block
-				@_measures = block
-			end
+      def die
+        @_died = true
+      end
 
-			def weight **feature_or_dimension_weights
-				feature_or_dimension_weights.each do |name, value|
-					@_weights[name] = value
-				end
-			end
-		end
+      def died?
+        @_died
+      end
+    end
 
-		class MeasuresEvalContext
-			def initialize
-				@_features = {}
-				@_dimensions = {}
-				@_died = false
-			end
+    class Measure
+      attr_reader :features, :dimensions, :normalized_dimensions
 
-			def _measure
-				Measure.new @_features, @_dimensions, @_died
-			end
+      def initialize(features, dimensions, died)
+        @features = features
+        @dimensions = dimensions
+        @died = died
 
-			def feature feature_name
-				@_features[feature_name] = true
-			end
+        @normalized_dimensions = {}
+      end
 
-			def dimension dimension_name, value
-				@_dimensions[dimension_name] = value
-			end
+      def died?
+        @died
+      end
 
-			def die
-				@_died = true
-			end
+      def evaluate_weight(weights)
+        total = 0.0
 
-			def died?
-				@_died
-			end
-		end
+        unless @died
+          weights.each do |name, weight|
+            total += @normalized_dimensions[name] * weight if @normalized_dimensions.key? name
+            total += weight if @features[name]
+          end
+        end
 
-		class Measure
-			attr_reader :features, :dimensions, :normalized_dimensions
+        total
+      end
 
-			def initialize(features, dimensions, died)
-				@features = features
-				@dimensions = dimensions
-				@died = died
+      def inspect
+        "Measure features=#{@features.collect { |k, _v| k }} dimensions=#{@normalized_dimensions.collect { |k, v| [k, [@dimensions[k].round(5), v.round(2)]] }.to_h}"
+      end
 
-				@normalized_dimensions = {}
-			end
-
-			def died?
-				@died
-			end
-
-			def evaluate_weight weights
-				total = 0.0
-
-				unless @died then
-					weights.each do |name, weight|
-						total += @normalized_dimensions[name] * weight if @normalized_dimensions.has_key? name
-						total += weight if @features[name]
-					end
-				end
-
-				return total
-			end
-
-			def inspect
-				"Measure features=#{@features.collect {|k,v| k}} dimensions=#{@normalized_dimensions.collect { |k, v| [k, [@dimensions[k].round(5), v.round(2)]] }.to_h }"
-			end
-
-			alias to_s inspect
-
-		end
-	end
+      alias to_s inspect
+    end
+  end
 end

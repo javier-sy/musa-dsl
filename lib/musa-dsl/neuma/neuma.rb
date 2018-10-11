@@ -1,47 +1,46 @@
 module Musa::Neuma
-	module Dataset end
-		
-	class ProtoDecoder
-		
-		def subcontext
-			self
-		end
-		
-		def decode element
-			raise NotImplementedError
-		end
-	end
+  module Dataset end
 
-	class DifferentialDecoder < ProtoDecoder
-		def decode attributes
-			parse attributes
-		end
+  class ProtoDecoder
+    def subcontext
+      self
+    end
 
-		def parse attributes
-			raise NotImplementedError
-		end
-	end
+    def decode(_element)
+      raise NotImplementedError
+    end
+  end
 
-	class Decoder < DifferentialDecoder
-		def initialize start
-			@start = start.clone
-			@last = start.clone
-		end
-		
-		def subcontext
-			Decoder.new @start
-		end
+  class DifferentialDecoder < ProtoDecoder
+    def decode(attributes)
+      parse attributes
+    end
 
-		def decode attributes
-			result = apply parse(attributes), on: @last
+    def parse(_attributes)
+      raise NotImplementedError
+    end
+  end
 
-			@last = result.clone
+  class Decoder < DifferentialDecoder
+    def initialize(start)
+      @start = start.clone
+      @last = start.clone
+    end
 
-			result
-		end
+    def subcontext
+      Decoder.new @start
+    end
 
-		def apply action, on:
-			raise NotImplementedError
-		end
-	end
+    def decode(attributes)
+      result = apply parse(attributes), on: @last
+
+      @last = result.clone
+
+      result
+    end
+
+    def apply(_action, on:)
+      raise NotImplementedError
+    end
+  end
 end

@@ -2,6 +2,7 @@
 *.gem
 .bundle
 .rspec
+.idea
 Gemfile.lock
 bin
 *.mindnode

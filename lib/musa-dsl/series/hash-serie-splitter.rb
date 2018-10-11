@@ -1,191 +1,187 @@
 module Musa
+  # TODO: full test cases
 
-	# TODO full test cases
+  module SerieOperations
+    def split(buffered: nil, master: nil)
+      buffered ||= false
 
-	module SerieOperations
-		def split buffered: nil, master: nil
+      return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(self) if master.nil? && !buffered
+      return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
+      return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(self) if buffered
+    end
 
-			buffered ||= false
+    class HashSerieSplitter
+      def initialize(proxy)
+        @proxy = proxy
+        @series = {}
+      end
 
-			return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(self) if master.nil? && !buffered
-			return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
-			return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(self) if buffered
-		end
+      def [](key)
+        serie = if @series.key? key
+                  @series[key]
+                else
+                  @series[key] = HashSplittedSerie.new(@proxy, key: key)
+                end
+      end
 
-		class HashSerieSplitter
-			def initialize proxy
-				@proxy = proxy
-				@series = {}
-			end
+      class HashSerieKeyProxy
+        def initialize(hash_serie)
+          @serie = hash_serie
+          @values = {}
+        end
 
-			def [] key
-				if @series.has_key? key
-					serie = @series[key]
-				else
-					serie = @series[key] = HashSplittedSerie.new(@proxy, key: key)
-				end
-			end
+        def restart
+          @serie.restart
+          @values = {}
+        end
 
-			class HashSerieKeyProxy
-				def initialize hash_serie
-					@serie = hash_serie
-					@values = {}
-				end
+        def next_value(key)
+          return nil unless @values
 
-				def restart
-					@serie.restart
-					@values = {}
-				end
+          value = @values[key]
 
-				def next_value key
+          if value.nil?
+            before_values = @values.collect { |k, v| [k, v] unless v.nil? }.compact.to_h
 
-					return nil unless @values
+            @values = @serie.next_value
+            value = @values[key] if @values
 
-					value = @values[key]
+            warn "Warning: splitted serie #{@serie} values #{before_values} are being lost" if !value.nil? && !before_values.empty?
+          end
 
-					if value.nil?
-						before_values = @values.collect { |k, v| [k, v] if !v.nil? }.compact.to_h
+          @values[key] = nil if @values
 
-						@values = @serie.next_value
-						value = @values[key] if @values
+          value
+        end
 
-						warn "Warning: splitted serie #{@serie} values #{before_values} are being lost" if !value.nil? && !before_values.empty?
-					end
+        def peek_next_value(key)
+          value = @values[key]
 
-					@values[key] = nil if @values
+          if value.nil?
+            peek_values = @serie.peek_next_value
+            value = peek_values[key] if peek_values
+          end
 
-					value
-				end
+          value
+        end
+      end
 
-				def peek_next_value key
-					value = @values[key]
+      class HashSerieBufferedKeyProxy
+        def initialize(hash_serie)
+          @serie = hash_serie
+          @values = {}
+        end
 
-					if value.nil?
-						peek_values = @serie.peek_next_value
-						value = peek_values[key] if peek_values
-					end
+        def restart
+          @serie.restart
+          @values = {}
+        end
 
-					value
-				end
-			end
+        def next_value(key)
+          value = nil
 
-			class HashSerieBufferedKeyProxy
-				def initialize hash_serie
-					@serie = hash_serie
-					@values = {}
-				end
+          if @values[key].nil? || @values[key].empty?
+            hash_value = @serie.next_value
 
-				def restart
-					@serie.restart
-					@values = {}
-				end
+            if hash_value
+              hash_value.each do |k, v|
+                @values[k] = [] if @values[k].nil?
+                @values[k] << v
+              end
+            end
+          end
 
-				def next_value key
-					value = nil
+          value = @values[key].shift if @values[key]
 
-					if @values[key].nil? || @values[key].empty?
-						hash_value = @serie.next_value
+          value
+        end
 
-						if hash_value
-							hash_value.each do |k, v|
-								@values[k] = [] if @values[k].nil?
-								@values[k] << v
-							end
-						end
-					end
+        def peek_next_value(key)
+          value = nil
 
-					value = @values[key].shift if @values[key]
+          if @values[key] && !@values[key].empty?
+            value = @values[key].first
+          else
+            peek_values = @serie.peek_next_value
+            value = peek_values[key] if peek_values
+          end
 
-					value
-				end
+          value
+        end
+      end
 
-				def peek_next_value key
-					value = nil
+      class HashSerieMasterSlaveKeyProxy
+        def initialize(hash_serie, master)
+          @serie = hash_serie
+          @master = master
+          @values = {}
+          @values_counter = {}
+        end
 
-					if @values[key] && !@values[key].empty?
-						value = @values[key].first
-					else
-						peek_values = @serie.peek_next_value
-						value = peek_values[key] if peek_values
-					end
+        def restart
+          @serie.restart
+          @values = {}
+          @values_counter = {}
+        end
 
-					value
-				end
-			end
+        def next_value(key)
+          return nil unless @values
 
-			class HashSerieMasterSlaveKeyProxy
-				def initialize hash_serie, master
-					@serie = hash_serie
-					@master = master
-					@values = {}
-					@values_counter = {}
-				end
+          value = @values[key]
 
-				def restart
-					@serie.restart
-					@values = {}
-					@values_counter = {}
-				end
+          if value.nil?
+            @values = @serie.next_value
 
-				def next_value key
+            value = @values[key] if @values
 
-					return nil unless @values
+            # warn "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
+            @values_counter = {}
+          end
 
-					value = @values[key]
+          @values_counter[key] ||= 0
+          @values_counter[key] += 1
 
-					if value.nil?
-						@values = @serie.next_value
+          @values[key] = nil if key == @master && @values
 
-						value = @values[key] if @values
+          value
+        end
 
-						#warn "Info: splitted serie #{@serie} use count on next_value: #{@values_counter}"
-						@values_counter = {}
-					end
+        def peek_next_value(key)
+          return nil unless @values
 
-					@values_counter[key] ||= 0
-					@values_counter[key] += 1
+          value = @values[key]
 
-					@values[key] = nil if key == @master && @values
+          if value.nil?
+            peek_values = @serie.peek_next_value
+            value = peek_values[key] if peek_values
+          end
 
-					value
-				end
+          value
+        end
+      end
 
-				def peek_next_value key
-					return nil unless @values
+      class HashSplittedSerie
+        include Serie
 
-					value = @values[key]
+        def initialize(proxy, key:)
+          @proxy = proxy
+          @key = key
+        end
 
-					if value.nil?
-						peek_values = @serie.peek_next_value
-						value = peek_values[key] if peek_values
-					end
+        def _restart
+          @proxy.restart
+        end
 
-					value
-				end
-			end
+        def next_value
+          @proxy.next_value @key
+        end
 
-			class HashSplittedSerie
-				include Serie
+        def peek_next_value
+          @proxy.peek_next_value @key
+        end
+      end
+    end
 
-				def initialize proxy, key:
-					@proxy = proxy
-					@key = key
-				end
-
-				def _restart
-					@proxy.restart
-				end
-
-				def next_value
-					@proxy.next_value @key
-				end
-
-				def peek_next_value
-					@proxy.peek_next_value @key
-				end
-			end
-		end
-
-		private_constant :HashSerieSplitter
-	end
+    private_constant :HashSerieSplitter
+  end
 end

@@ -1,20 +1,19 @@
 module Musa
-
-	module Series
-		# TODO add test case
-		def HLD serie = nil
-			HolderSerie.new serie
-		end
+  module Series
+    #  TODO add test case
+    def HLD(serie = nil)
+      HolderSerie.new serie
+    end
 
     class HolderSerie
-			include Serie
+      include Serie
 
-      def initialize serie
+      def initialize(serie)
         @serie = serie
         @new_serie = nil
       end
 
-      def hold_next= serie
+      def hold_next=(serie)
         @new_serie = serie
       end
 
@@ -22,7 +21,7 @@ module Musa
         @new_serie
       end
 
-      def hold= serie
+      def hold=(serie)
         @serie = serie
       end
 
@@ -53,16 +52,16 @@ module Musa
         @serie.infinite?
       end
 
-			def deterministic?
-				@serie.deterministic?
-			end
+      def deterministic?
+        @serie.deterministic?
+      end
     end
   end
 
   module SerieOperations
-		# TODO add test case
+    # TODO add test case
     def hold
-			Series::HolderSerie.new self
-		end
+      Series::HolderSerie.new self
+     end
   end
 end

@@ -2,14 +2,12 @@ require 'musa-dsl/mods/as-context-run'
 require 'musa-dsl/mods/key-parameters-procedure-binder'
 
 module Musa
-
   class Rules
-
-    def initialize &block
+    def initialize(&block)
       @context = RulesEvalContext.new.tap { |_| _._as_context_run block }
     end
 
-    def generate_possibilities object, confirmed_node = nil, node = nil, rules = nil
+    def generate_possibilities(object, confirmed_node = nil, node = nil, rules = nil)
       node ||= Node.new
       rules ||= @context._rules
 
@@ -25,7 +23,7 @@ module Musa
           new_node.mark_as_ended! if @context._ended? new_object
 
           rejection = @context._rejections.find { |rejection| rejection.rejects?(new_object, history) }
-          # TODO include rejection secondary reasons in rejection message
+          # TODO: include rejection secondary reasons in rejection message
 
           new_node.reject! rejection if rejection
 
@@ -39,10 +37,10 @@ module Musa
         end
       end
 
-      return node
+      node
     end
 
-    def apply object_or_list, node = nil
+    def apply(object_or_list, node = nil)
       list = object_or_list.arrayfy.clone
 
       node ||= Node.new
@@ -54,7 +52,7 @@ module Musa
 
         fished = result.fish
 
-        node.reject! "All children are rejected" if fished.empty?
+        node.reject! 'All children are rejected' if fished.empty?
 
         fished.each do |object|
           subnode = node.add(object).mark_as_ended!
@@ -62,75 +60,76 @@ module Musa
         end
       end
 
-      return node
+      node
     end
 
     class RulesEvalContext
       attr_reader :_rules, :_ended_when, :_rejections
 
-      def rule name, &block
+      def rule(name, &block)
         @_rules ||= []
         @_rules << Rule.new(name, self, block)
         self
       end
 
-      def ended_when &block
+      def ended_when(&block)
         @_ended_when = block
         self
       end
 
-      def rejection reason, &block
+      def rejection(reason, &block)
         @_rejections ||= []
         @_rejections << Rejection.new(reason, self, block)
         self
       end
 
-      def _ended? object
+      def _ended?(object)
         as_context_run @_ended_when, object
       end
 
       class Rule
         attr_reader :name
 
-        def initialize name, context, block
+        def initialize(name, context, block)
           @name = name
           @context = context
           @block = block
         end
 
-        def generate_possibilities object, history
-          # TODO optimize context using only one instance for all genereate_possibilities calls
+        def generate_possibilities(object, history)
+          # TODO: optimize context using only one instance for all genereate_possibilities calls
           context = RuleEvalContext.new @context
           context.as_context_run @block, object, history
-          return context._possibilities
+
+          context._possibilities
         end
 
         class RuleEvalContext
           attr_reader :_possibilities
 
-          def initialize parent_context
+          def initialize(parent_context)
             @_parent_context = parent_context
             @_possibilities = []
           end
 
-          def possibility object
+          def possibility(object)
             @_possibilities << object
             self
           end
 
           private
 
-        	def method_missing method_name, *args, **key_args, &block
-        		if @_parent_context.respond_to? method_name
-        			@_parent_context.send_nice method_name, *args, **key_args, &block
-        		else
-        			super
-        		end
-        	end
+          def method_missing(method_name, *args, **key_args, &block)
+            if @_parent_context.respond_to? method_name
+              @_parent_context.send_nice method_name, *args, **key_args, &block
+            else
+              super
+            end
+          end
 
-        	def respond_to_missing? method_name, include_private
-        		@_parent_context.respond_to?(method_name, include_private) || super
-        	end
+          def respond_to_missing?(method_name, include_private)
+            @_parent_context.respond_to?(method_name, include_private) || super
+          end
         end
 
         private_constant :RuleEvalContext
@@ -141,48 +140,48 @@ module Musa
       class Rejection
         attr_reader :reason
 
-        def initialize reason, context = nil, block = nil
+        def initialize(reason, context = nil, block = nil)
           @reason = reason
           @context = context
           @block = block
         end
 
-        def rejects? object, history
-          # TODO optimize context using only one instance for all rejects? checks
+        def rejects?(object, history)
+          # TODO: optimize context using only one instance for all rejects? checks
           context = RejectionEvalContext.new @context
           context.as_context_run @block, object, history
 
           reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
 
-          return reasons.empty? ? nil : reasons
+          reasons.empty? ? nil : reasons
         end
 
         class RejectionEvalContext
           attr_reader :_secondary_reasons
 
-          def initialize parent_context
+          def initialize(parent_context)
             @_parent_context = parent_context
             @_secondary_reasons = []
           end
 
-          def reject secondary_reason = nil
+          def reject(secondary_reason = nil)
             @_secondary_reasons << secondary_reason
             self
           end
 
           private
 
-        	def method_missing method_name, *args, **key_args, &block
-        		if @_parent_context.respond_to? method_name
-        			@_parent_context.send_nice method_name, *args, **key_args, &block
-        		else
-        			super
-        		end
-        	end
+          def method_missing(method_name, *args, **key_args, &block)
+            if @_parent_context.respond_to? method_name
+              @_parent_context.send_nice method_name, *args, **key_args, &block
+            else
+              super
+            end
+          end
 
-        	def respond_to_missing? method_name, include_private
-        		@_parent_context.respond_to?(method_name, include_private) || super
-        	end
+          def respond_to_missing?(method_name, include_private)
+            @_parent_context.respond_to?(method_name, include_private) || super
+          end
         end
 
         private_constant :RejectionEvalContext
@@ -196,7 +195,7 @@ module Musa
     class Node
       attr_reader :parent, :children, :object, :rejected
 
-      def initialize object = nil, parent = nil
+      def initialize(object = nil, parent = nil)
         @parent = parent
         @children = []
         @object = object
@@ -205,17 +204,17 @@ module Musa
         @rejected = nil
       end
 
-      def add object
+      def add(object)
         Node.new(object, self).tap { |n| @children << n }
       end
 
-      def reject! rejection
+      def reject!(rejection)
         @rejected = rejection
         self
       end
 
       def mark_as_ended!
-        @children.each { |n| n.update_rejection_by_children! }
+        @children.each(&:update_rejection_by_children!)
 
         if !@children.empty? && !@children.find { |n| !n.rejected }
           reject! Rejection::AllChildrenRejected
@@ -237,7 +236,8 @@ module Musa
           objects << n.object
           n = n.parent
         end
-        return objects.reverse
+
+        objects.reverse
       end
 
       def fish
@@ -253,10 +253,10 @@ module Musa
           end
         end
 
-        return fished
+        fished
       end
 
-      def combinations parent_combination = nil
+      def combinations(parent_combination = nil)
         parent_combination ||= []
 
         combinations = []
@@ -273,7 +273,7 @@ module Musa
           end
         end
 
-        return combinations
+        combinations
       end
     end
 

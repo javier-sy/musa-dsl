@@ -34,7 +34,7 @@ module Musa
       "Chord<#{@fundamental}, #{@third}, #{@fifth}, dup #{@duplicated} on #{duplicated_note}>"
     end
 
-    alias :inspect :to_s
+    alias inspect to_s
 
     private
 

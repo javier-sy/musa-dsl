@@ -5,288 +5,277 @@ require 'musa-dsl'
 include Musa::Series
 
 RSpec.describe Musa::Serie do
+  context 'Series operations' do
+    it 'Duplicate: S(1, 2, 3, 4, 5, 6).duplicate' do
+      s1 = S(1, 2, 3, 4, 5, 6)
 
-	context "Series operations" do
+      s2 = s1.duplicate
 
-		it "Duplicate: S(1, 2, 3, 4, 5, 6).duplicate" do
-			s1 = S(1, 2, 3, 4, 5, 6)
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
 
-			s2 = s1.duplicate
+      expect(s2.next_value).to eq 1
+      expect(s2.next_value).to eq 2
+      expect(s2.next_value).to eq 3
+
+      expect(s1.next_value).to eq 4
+      expect(s1.next_value).to eq 5
 
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
+      expect(s2.next_value).to eq 4
+      expect(s2.next_value).to eq 5
+      expect(s2.next_value).to eq 6
 
-			expect(s2.next_value).to eq 1
-			expect(s2.next_value).to eq 2
-			expect(s2.next_value).to eq 3
+      expect(s2.next_value).to eq nil
+      expect(s2.next_value).to eq nil
 
-			expect(s1.next_value).to eq 4
-			expect(s1.next_value).to eq 5
+      expect(s1.next_value).to eq 6
+
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+    end
+
+    it 'Autorestart: S(1, 2, 3).autorestart' do
+      s1 = S(1, 2, 3).autorestart
+
+      expect(s1.current_value).to eq nil
+
+      expect(s1.next_value).to eq 1
+      expect(s1.current_value).to eq 1
+
+      expect(s1.next_value).to eq 2
+      expect(s1.current_value).to eq 2
+
+      expect(s1.next_value).to eq 3
+
+      expect(s1.next_value).to eq nil
+      expect(s1.current_value).to eq nil
+
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq 1
+
+      s1.restart
+
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq 1
 
-			expect(s2.next_value).to eq 4
-			expect(s2.next_value).to eq 5
-			expect(s2.next_value).to eq 6
+      s1.restart
+
+      expect(s1.current_value).to eq nil
 
-			expect(s2.next_value).to eq nil
-			expect(s2.next_value).to eq nil
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.peek_next_value).to eq 3
+      expect(s1.peek_next_value).to eq 3
+      expect(s1.next_value).to eq 3
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+    end
 
-			expect(s1.next_value).to eq 6
+    it 'Autorestart: S(1, 2, 3).autorestart(skip_nil: true)' do
+      s1 = S(1, 2, 3).autorestart(skip_nil: true)
 
-			expect(s1.next_value).to eq nil
-			expect(s1.next_value).to eq nil
-			expect(s1.next_value).to eq nil
-		end
+      expect(s1.current_value).to eq nil
 
-    it "Autorestart: S(1, 2, 3).autorestart" do
+      expect(s1.next_value).to eq 1
+      expect(s1.current_value).to eq 1
 
-			s1 = S(1, 2, 3).autorestart
+      expect(s1.next_value).to eq 2
+      expect(s1.current_value).to eq 2
 
-			expect(s1.current_value).to eq nil
+      expect(s1.next_value).to eq 3
 
-			expect(s1.next_value).to eq 1
-			expect(s1.current_value).to eq 1
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
 
-			expect(s1.next_value).to eq 2
-			expect(s1.current_value).to eq 2
+      s1.restart
 
-			expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+      expect(s1.next_value).to eq 1
 
-			expect(s1.next_value).to eq nil
-			expect(s1.current_value).to eq nil
+      s1.restart
 
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-			expect(s1.next_value).to eq nil
-			expect(s1.next_value).to eq 1
+      expect(s1.current_value).to eq nil
 
-			s1.restart
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.peek_next_value).to eq 3
+      expect(s1.peek_next_value).to eq 3
+      expect(s1.next_value).to eq 3
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.peek_next_value).to eq 1
+      expect(s1.next_value).to eq 1
+      expect(s1.next_value).to eq 2
+      expect(s1.next_value).to eq 3
+    end
 
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-			expect(s1.next_value).to eq nil
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-			expect(s1.next_value).to eq nil
-			expect(s1.next_value).to eq 1
+    it 'Repeat: S(1, 2, 3).repeat 3' do
+      s1 = S(1, 2, 3)
 
-			s1.restart
+      s2 = s1.repeat 3
 
-			expect(s1.current_value).to eq nil
+      r = []
 
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.peek_next_value).to eq 3
-			expect(s1.peek_next_value).to eq 3
-			expect(s1.next_value).to eq 3
-			expect(s1.peek_next_value).to eq nil
-			expect(s1.peek_next_value).to eq nil
-			expect(s1.next_value).to eq nil
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-		end
+      while value = s2.next_value
+        r << value
+      end
 
-		it "Autorestart: S(1, 2, 3).autorestart(skip_nil: true)" do
+      expect(r).to eq [1, 2, 3, 1, 2, 3, 1, 2, 3]
+      expect(s2.next_value).to eq nil
+      expect(s2.next_value).to eq nil
+      expect(s2.next_value).to eq nil
+    end
 
-			s1 = S(1, 2, 3).autorestart(skip_nil: true)
+    it 'Repeat and +: s1 = S(1, 2, 3); s2 = S(4, 5, 6); (s1 + s2).repeat 3' do
+      s1 = S(1, 2, 3)
+      s2 = S(4, 5, 6)
 
-			expect(s1.current_value).to eq nil
+      s3 = (s1 + s2).repeat 3
 
-			expect(s1.next_value).to eq 1
-			expect(s1.current_value).to eq 1
+      r = []
 
-			expect(s1.next_value).to eq 2
-			expect(s1.current_value).to eq 2
+      while value = s3.next_value
+        r << value
+      end
 
-			expect(s1.next_value).to eq 3
+      expect(r).to eq [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6]
+      expect(s3.next_value).to eq nil
+      expect(s3.next_value).to eq nil
+      expect(s3.next_value).to eq nil
+    end
 
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
+    it 'Repeat and +: s1 = S(1, 2, 3); s2 = S(4, 5, 6); s3 = (s1 + s2).repeat 3; s4 = s3 + S(10, 11, 12)' do
+      s1 = S(1, 2, 3)
+      s2 = S(4, 5, 6)
 
-			s1.restart
+      s3 = (s1 + s2).repeat 3
 
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-			expect(s1.next_value).to eq 1
+      s4 = s3 + S(10, 11, 12)
 
-			s1.restart
+      r = []
 
-			expect(s1.current_value).to eq nil
+      while value = s4.next_value
+        r << value
+      end
 
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.peek_next_value).to eq 3
-			expect(s1.peek_next_value).to eq 3
-			expect(s1.next_value).to eq 3
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.peek_next_value).to eq 1
-			expect(s1.next_value).to eq 1
-			expect(s1.next_value).to eq 2
-			expect(s1.next_value).to eq 3
-		end
+      expect(r).to eq [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 10, 11, 12]
+      expect(s4.next_value).to eq nil
+      expect(s4.next_value).to eq nil
+      expect(s4.next_value).to eq nil
+    end
 
-		it "Repeat: S(1, 2, 3).repeat 3" do
+    it 'After: s1 = S(1, 2, 3, 4); s2 = S(5, 6, 7, 8); s3 = s1.after(s2)' do
+      s1 = S(1, 2, 3, 4)
+      s2 = S(5, 6, 7, 8)
 
-			s1 = S(1, 2, 3)
+      s3 = s1.after(s2)
 
-			s2 = s1.repeat 3
+      r = []
 
-			r = []
+      while value = s3.next_value
+        r << value
+      end
 
-			while value = s2.next_value
-				r << value
-			end
+      expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
+      expect(s3.next_value).to eq nil
+      expect(s3.next_value).to eq nil
+      expect(s3.next_value).to eq nil
+    end
 
-			expect(r).to eq [1, 2, 3, 1, 2, 3, 1, 2, 3]
-			expect(s2.next_value).to eq nil
-			expect(s2.next_value).to eq nil
-			expect(s2.next_value).to eq nil
-		end
+    it '+: s1 = S(1, 2, 3, 4); s2 = S(5, 6, 7, 8); s3 = s1 + s2' do
+      s1 = S(1, 2, 3, 4)
+      s2 = S(5, 6, 7, 8)
 
-		it "Repeat and +: s1 = S(1, 2, 3); s2 = S(4, 5, 6); (s1 + s2).repeat 3" do
+      s3 = s1 + s2
 
-			s1 = S(1, 2, 3)
-			s2 = S(4, 5, 6)
+      r = []
 
-			s3 = (s1 + s2).repeat 3
+      while value = s3.next_value
+        r << value
+      end
 
-			r = []
+      expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
+      expect(s3.next_value).to eq nil
+      expect(s3.next_value).to eq nil
+      expect(s3.next_value).to eq nil
+    end
 
-			while value = s3.next_value
-				r << value
-			end
+    it 'Cut: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3' do
+      s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-			expect(r).to eq [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6]
-			expect(s3.next_value).to eq nil
-			expect(s3.next_value).to eq nil
-			expect(s3.next_value).to eq nil
-		end
+      ss = s.cut 3
 
-		it "Repeat and +: s1 = S(1, 2, 3); s2 = S(4, 5, 6); s3 = (s1 + s2).repeat 3; s4 = s3 + S(10, 11, 12)" do
+      sss1 = ss.next_value
 
-			s1 = S(1, 2, 3)
-			s2 = S(4, 5, 6)
+      expect(sss1.to_a).to eq [1, 2, 3]
 
-			s3 = (s1 + s2).repeat 3
+      sss2 = ss.next_value
+      sss3 = ss.next_value
+      sss4 = ss.next_value
 
-			s4 = s3 + S(10, 11, 12)
+      expect(sss2.to_a).to eq [4, 5, 6]
+      expect(sss3.to_a).to eq [7, 8, 9]
+      expect(sss4.to_a).to eq [10, 11, 12]
 
-			r = []
+      sss5 = ss.next_value
 
-			while value = s4.next_value
-				r << value
-			end
+      expect(sss5.to_a).to eq []
+    end
 
-			expect(r).to eq [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 10, 11, 12]
-			expect(s4.next_value).to eq nil
-			expect(s4.next_value).to eq nil
-			expect(s4.next_value).to eq nil
-		end
+    it 'Cut and Merge: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3; sss = ss.merge' do
+      s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-		it "After: s1 = S(1, 2, 3, 4); s2 = S(5, 6, 7, 8); s3 = s1.after(s2)" do
+      ss = s.cut 3
 
-			s1 = S(1, 2, 3, 4)
-			s2 = S(5, 6, 7, 8)
+      sss = ss.merge
 
-			s3 = s1.after(s2)
+      expect(sss.to_a).to eq [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    end
 
-			r = []
+    it 'Remove: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.remove 3' do
+      s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-			while value = s3.next_value
-				r << value
-			end
+      ss = s.remove 3
 
-			expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
-			expect(s3.next_value).to eq nil
-			expect(s3.next_value).to eq nil
-			expect(s3.next_value).to eq nil
+      r = []
 
-		end
+      while value = ss.next_value
+        r << value
+      end
 
-		it "+: s1 = S(1, 2, 3, 4); s2 = S(5, 6, 7, 8); s3 = s1 + s2" do
-
-			s1 = S(1, 2, 3, 4)
-			s2 = S(5, 6, 7, 8)
-
-			s3 = s1 + s2
-
-			r = []
-
-			while value = s3.next_value
-				r << value
-			end
-
-			expect(r).to eq [1, 2, 3, 4, 5, 6, 7, 8]
-			expect(s3.next_value).to eq nil
-			expect(s3.next_value).to eq nil
-			expect(s3.next_value).to eq nil
-
-		end
-
-		it "Cut: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3" do
-			s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-
-			ss = s.cut 3
-
-			sss1 = ss.next_value
-
-			expect(sss1.to_a).to eq [1, 2, 3]
-
-			sss2 = ss.next_value
-			sss3 = ss.next_value
-			sss4 = ss.next_value
-
-			expect(sss2.to_a).to eq [4, 5, 6]
-			expect(sss3.to_a).to eq [7, 8, 9]
-			expect(sss4.to_a).to eq [10, 11, 12]
-
-			sss5 = ss.next_value
-
-			expect(sss5.to_a).to eq []
-		end
-
-		it "Cut and Merge: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3; sss = ss.merge" do
-			s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-
-			ss = s.cut 3
-
-			sss = ss.merge
-
-			expect(sss.to_a).to eq [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-		end
-
-		it "Remove: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.remove 3" do
-			s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-
-			ss = s.remove 3
-
-			r = []
-
-			while value = ss.next_value
-				r << value
-			end
-
-			expect(r).to eq [4, 5, 6, 7, 8, 9, 10, 11, 12]
-			expect(ss.next_value).to eq nil
-			expect(ss.next_value).to eq nil
-			expect(ss.next_value).to eq nil
-		end
-	end
+      expect(r).to eq [4, 5, 6, 7, 8, 9, 10, 11, 12]
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+    end
+  end
 end

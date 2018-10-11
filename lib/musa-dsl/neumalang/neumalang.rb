@@ -2,73 +2,71 @@ require 'musa-dsl/series'
 require 'citrus'
 
 module Musa::Neumalang
+  module Sentences
+    include Musa::Series
 
-	module Sentences
-		include Musa::Series
+    def value
+      S(*captures(:sentence).collect(&:value))
+    end
+  end
 
-		def value
-			S(*captures(:sentence).collect { |c| c.value })
-		end
-	end
+  module Bracketed_2bar_sentences
+    include Musa::Series
 
-	module Bracketed_2bar_sentences
-		include Musa::Series
+    def value
+      { kind: :parallel, parallel: [{ kind: :serie, serie: S(*capture(:aa).value) }] + captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } } }
+    end
+  end
 
-		def value
-			{ kind: :parallel, parallel: [ { kind: :serie, serie: S(*capture(:aa).value) } ] + captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } } }
-		end
-	end
+  module Bracketed_sentences
+    include Musa::Series
 
-	module Bracketed_sentences
-		include Musa::Series
+    def value
+      { kind: :serie, serie: S(*capture(:sentences).value) }
+    end
+  end
 
-		def value
-			{ kind: :serie, serie: S(*capture(:sentences).value) }
-		end
-	end
+  def self.register(grammar_path)
+    Citrus.load grammar_path
+  end
 
-	def self.register grammar_path
-		Citrus.load grammar_path
-	end
+  def self.parse(string_or_file, language: nil, decode_with: nil, debug: nil)
+    language ||= Neumalang
 
-	def self.parse string_or_file, language: nil, decode_with: nil, debug: nil
+    match = nil
 
-		language ||= Neumalang
+    if string_or_file.is_a? String
+      match = language.parse string_or_file
 
-		match = nil
+    elsif string_or_file.is_a? File
+      match = language.parse string_or_file.read
 
-		if string_or_file.is_a? String
-			match = language.parse string_or_file
+    else
+      raise ArgumentError, 'Only String or File allowed to be parsed'
+    end
 
-		elsif string_or_file.is_a? File
-			match = language.parse string_or_file.read
+    match.dump if debug
 
-		else
-			raise ArgumentError, 'Only String or File allowed to be parsed'
-		end
+    serie = match.value
 
-		match.dump if debug
+    if decode_with
+      serie.eval do |e|
+        if e[:kind] == :neuma
+          decode_with.decode(e[:neuma])
+        else
+          raise ArgumentError, "Don't know how to convert #{e} to neuma to be decoded with #{decode_with}"
+        end
+      end
+    else
+      serie
+    end
+  end
 
-		serie = match.value
+  def self.parse_file(filename, decode_with: nil, debug: nil)
+    File.open filename do |file|
+      parse file, decode_with: decode_with, debug: debug
+    end
+  end
 
-		if decode_with
-			serie.eval do |e| 
-				if e[:kind] == :neuma
-					decode_with.decode(e[:neuma])
-				else
-					raise ArgumentError, "Don't know how to convert #{e} to neuma to be decoded with #{decode_with}"
-				end
-			end
-		else
-			serie
-		end
-	end
-
-	def self.parse_file filename, decode_with: nil, debug: nil
-		File.open filename do |file|
-			parse file, decode_with: decode_with, debug: debug
-		end
-	end
-
-	register File.join(File.dirname(__FILE__), "neumalang")
+  register File.join(File.dirname(__FILE__), 'neumalang')
 end
