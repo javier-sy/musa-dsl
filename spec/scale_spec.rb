@@ -89,7 +89,7 @@ module Musa
     attr_reader :tuning
 
     def [](based_on_pitch)
-      @scales[based_on_pitch] = Scale.new self, based_on_pitch: based_on_pitch unless @scales.key? based_on_pitch
+      @scales[based_on_pitch] = Scale.new(self, based_on_pitch: based_on_pitch) unless @scales.key? based_on_pitch
       @scales[based_on_pitch]
     end
 
@@ -264,8 +264,19 @@ module Musa
       scale.note_of_pitch @pitch
     end
 
-    def chord(size_or_interval = nil, _features)
+    def chord(size_or_interval = nil, **features)
       size_or_interval ||= 3
+
+      puts "Note.chord: size_or_interval = #{size_or_interval} features = #{features}"
+      # TODO: ...
+
+
+      { :major, 3, [0, 4, 7] }
+      { :major, 4, [0, 4, 7, 11] }
+
+      { :minor, 3, [0, 3, 7] }
+      { [:minor, :diminished], 3, [0, 3, 6] }
+
     end
 
     private
@@ -284,7 +295,8 @@ module Musa
   end
 
   class Chord
-    def initialize; end
+    def initialize()
+    end
 
     def scale; end
 
@@ -321,11 +333,11 @@ module Musa
     class << self
       def id
         :et12
-  end
+      end
 
       def notes_in_octave
         12
-  end
+      end
     end
     Scales.register EquallyTempered12ToneScaleSystem
   end
@@ -350,11 +362,11 @@ module Musa
 
       def pitches
         @@pitches
-  end
+      end
 
       def id
         :major
-  end
+      end
     end
 
     EquallyTempered12ToneScaleSystem.register MajorScaleKind
@@ -380,11 +392,11 @@ module Musa
 
       def pitches
         @@pitches
-  end
+      end
 
       def id
         :minor
-  end
+      end
     end
 
     EquallyTempered12ToneScaleSystem.register MinorScaleKind
@@ -410,11 +422,11 @@ module Musa
 
       def pitches
         @@pitches
-  end
+      end
 
       def id
         :minor_harmonic
-  end
+      end
     end
 
     EquallyTempered12ToneScaleSystem.register MinorHarmonicScaleKind
@@ -438,11 +450,11 @@ module Musa
 
       def pitches
         @@pitches
-  end
+      end
 
       def id
         :chromatic
-  end
+      end
     end
 
     EquallyTempered12ToneScaleSystem.register ChromaticScaleKind
@@ -553,6 +565,7 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
 
     it 'Basic triad major chord creation' do
       maj3 = major.tonic.chord
+
       expect(maj3.scale).to be major
       expect(maj3.fundamental.pitch).to eq 60
       expect(maj3.features).to include :major
@@ -599,7 +612,7 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(min3[2].pitch).to eq 67
       expect(min3[2].grade).to eq 4
       expect(min3[2].octave).to eq 0
-      expect(min3min3[2].scale).to be major
+      expect(min3[2].scale).to be major
 
       expect(maj3[3]).to eq nil
       expect(min3.size).to eq 3
@@ -735,15 +748,15 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
     end
 
     it '' do
-      major.dominant.octave(-1).major.dominant.chord :seventh # V/V
+      major.dominant.octave(-1).major.dominant.chord :seventh # V7/V
     end
 
     it '' do
       c1 = major.tonic.chord inversion: 1
 
-      # c1 = major.tonic.chord(inversion: 1, { duplicate: :fundamental, octave: -1 })
+      c1 = major.tonic.chord inversion: 1, duplicate: { fundamental: -1, third: -2 }
 
-      # c1 = major.tonic.chord(:minor, inversion: 1, { duplicate: :fundamn, octave: -1 })
+      c1 = major.tonic.chord :minor, inversion: 1, duplicate: { fundamental: -1, third: -2 }
 
       c1 = major.dominant.chord 2, inversion: 1
 
