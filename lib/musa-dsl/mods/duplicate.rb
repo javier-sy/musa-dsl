@@ -2,12 +2,12 @@
 # Modifications by JSY
 
 module Duplicate
-  module_function
+  extend self
 
   def duplicate(object)
     register = {}
 
-    dup(register, object)
+    _dup(register, object)
   end
 
   protected
@@ -21,7 +21,7 @@ module Duplicate
     duplicate
   end
 
-  def dup(register, object)
+  def _dup(register, object)
     return registered(object, register) if registered(object, register)
     return register_duplication(register, object, object) unless identifiable?(object)
 
@@ -56,16 +56,16 @@ module Duplicate
 
   def dup_array(register, object)
     duplication = dup_object(register, object)
-    duplication.map! { |e| dup(register, e) }
+    duplication.map! { |e| _dup(register, e) }
   end
 
   def dup_hash(register, object)
     duplication = dup_object(register, object)
-    object.reduce(duplication) { |hash, (k, v)| hash.merge!(dup(register, k) => dup(register, v)) }
+    object.reduce(duplication) { |hash, (k, v)| hash.merge!(_dup(register, k) => _dup(register, v)) }
   end
 
   def dup_range(register, range)
-    register_duplication(register, range, range.class.new(dup(register, range.first), dup(register, range.last)))
+    register_duplication(register, range, range.class.new(_dup(register, range.first), _dup(register, range.last)))
   rescue StandardError
     register_duplication(register, range, range.dup)
   end
@@ -74,7 +74,7 @@ module Duplicate
     duplication = register_duplication(register, struct, struct.dup)
 
     struct.each_pair do |attr, value|
-      duplication.__send__("#{attr}=", dup(register, value))
+      duplication.__send__("#{attr}=", _dup(register, value))
     end
 
     duplication
@@ -90,7 +90,7 @@ module Duplicate
     object.instance_variables.each do |instance_variable|
       value = get_instance_variable(object, instance_variable)
 
-      set_instance_variable(duplication, instance_variable, dup(register, value))
+      set_instance_variable(duplication, instance_variable, _dup(register, value))
     end
 
     duplication

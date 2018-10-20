@@ -218,7 +218,11 @@ module Musa
       end
 
       def _next_value
-        @value ||= @values[@random.rand(0...@values.size)]
+        if @value
+          nil
+        else
+          @value = @values[@random.rand(0...@values.size)]
+        end
       end
 
       def deterministic?
@@ -248,7 +252,11 @@ module Musa
       end
 
       def _next_value
-        @value ||= @from + @random.rand(0..@step_count) * @step
+        if @value
+          nil
+        else
+          @value = @from + @random.rand(0..@step_count) * @step
+        end
       end
 
       def deterministic?

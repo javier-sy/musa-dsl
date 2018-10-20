@@ -53,9 +53,11 @@ class KeyParametersProcedureBinder
 
   private :__call
 
-  def has_key?(key)
+  def key?(key)
     @has_rest || @parameters.include?(key)
   end
+
+  alias has_key? key?
 
   def apply(hsh)
     hsh ||= {}
