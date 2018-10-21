@@ -1,49 +1,66 @@
 module Musa
   class Chord
-    attr_accessor :fundamental, :third, :fifth, :duplicated, :duplicate_on
+    def initialize(root_or_name_or_size = nil, # root | name | size | [notes_in_scale] | [pitches]
+                   name: nil,
+                   root: nil,
+                   notes: nil,
 
-    def initialize fundamental = nil
-      @fundamental = fundamental
-      @third = nil
-      @fifth = nil
-      @duplicated = nil
-      @duplicate_on = nil
+                   scale: nil, scale_system: nil,
+                   size: nil,
+                   add: nil,
+                   inversion: nil, state: nil,
+                   position: nil,
+                   duplicate: nil,
+                   move: nil,
+                   drop: nil)
     end
 
-    def soprano
-      notes[3]
-    end
+    c = Chord.new root: 60,
+                  root: major.tonic,
+                  scale_system: scale_system[:major],
+                  scale: major,
+                  # NO: specie: :major,
+                  name: :major, # :minor, :maj7, :min
+                  size: 3, # :fifth, :seventh, :sixth?, ...
+                  # NO: generative_interval: :third, # :fourth, :fifth?
+                  inversion: 1,
+                  state: :third,
+                  position: :fifth,
+                  duplicate: { third: -1 },
+                  move: { fifth: 1 },
+                  drop: { third: 0 }, # drop: :third, drop: [ :third, :root ]
 
-    def alto
-      notes[2]
-    end
+        def scale; end
 
-    def tenor
-      notes[1]
-    end
+    # Converts the chord to a specific scale with the notes in the chord
+    def as_scale; end
 
-    def bass
-      notes[0]
-    end
+    def fundamental; end
 
-    def ordered
-      [bass, tenor, alto, soprano]
-    end
+    def [](position); end
 
-    def to_s
-      "Chord<#{@fundamental}, #{@third}, #{@fifth}, dup #{@duplicated} on #{duplicated_note}>"
-    end
+    def features; end
 
-    alias inspect to_s
+    def size; end
+
+    def match(cosas); end
+
+    alias length size
 
     private
 
-    def notes
-      [@fundamental, @third, @fifth, duplicated_note].compact.sort
+    # minor, major, ...? features?
+
+    def method_missing(method_name, *args, **key_args, &block)
+      if args.empty? && key_args.empty? && !block
+        scale(method_name) || super
+      else
+        super
+      end
     end
 
-    def duplicated_note
-      @duplicate_on + send(@duplicated) if @duplicated
+    def respond_to_missing?(method_name, include_private)
+      @scale.kind.class.tuning[method_name] || super
     end
   end
 end
