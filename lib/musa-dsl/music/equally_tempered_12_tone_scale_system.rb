@@ -1,5 +1,5 @@
 module Musa
-  class EquallyTempered12ToneScaleSystem < ScaleSystem
+  class TwelveSemitonesScaleSystem < ScaleSystem
     class << self
       def id
         :et12
@@ -9,9 +9,18 @@ module Musa
         12
       end
     end
+  end
+
+  class EquallyTempered12ToneScaleSystem < TwelveSemitonesScaleSystem
+    class << self
+      def frequency_of_pitch(pitch, _root_pitch, a_frequency)
+        (a_frequency * Rational(2)**Rational(pitch - 69, 12)).to_f
+      end
+    end
 
     Scales.register EquallyTempered12ToneScaleSystem
   end
+
 
   class ChromaticScaleKind < ScaleKind
     class << self

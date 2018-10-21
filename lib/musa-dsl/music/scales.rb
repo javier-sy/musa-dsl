@@ -34,15 +34,28 @@ module Musa
     class << self
       # @abstract Subclass is expected to implement names
       # @!method id
-      #   Returns the id of the ScaleSystem as a symbol
+      # @return [Symbol] the id of the ScaleSystem as a symbol
+      #
       def id
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
       # @abstract Subclass is expected to implement notes_in_octave
       # @!method notes_in_octave
-      #   Returns the number of notes in one octave in the ScaleSystem
+      # @return [Integer] the number of notes in one octave in the ScaleSystem
+      #
       def notes_in_octave
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
+      # @abstract Subclass is expected to implement frequency_of_pitch
+      # @!method frequency_of_pitch
+      # @param pitch [Number] The pitch (MIDI note numbers based) of the note to get the fundamental frequency
+      # @param root_pitch [Number] The pitch (MIDI note numbers based) of the root note of the scale (needed for not equally tempered scales)
+      # @param a_frequency [Number] The reference frequency of the mid A note
+      # @return [Number] the frequency of the fundamental tone of the pitch
+      #
+      def frequency_of_pitch(pitch, root_pitch, a_frequency)
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
@@ -107,6 +120,10 @@ module Musa
       @canonical_scale_kind
     end
 
+    def frequency_of_pitch(pitch, root)
+      @scale_system.frequency_of_pitch(pitch, root, @a_frequency)
+    end
+
     private
 
     def method_missing(method_name, *args, **key_args, &block)
@@ -132,29 +149,29 @@ module Musa
 
     attr_reader :tuning
 
-    def [](based_on_pitch)
-      @scales[based_on_pitch] = Scale.new(self, based_on_pitch: based_on_pitch) unless @scales.key? based_on_pitch
-      @scales[based_on_pitch]
+    def [](root_pitch)
+      @scales[root_pitch] = Scale.new(self, root_pitch: root_pitch) unless @scales.key? root_pitch
+      @scales[root_pitch]
     end
 
     class << self
       # @abstract Subclass is expected to implement id
       # @!method id
-      #   Returns the id of the ScaleKind as a symbol
+      # @return [Symbol] the id of the ScaleKind as a symbol
       def id
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
       # @abstract Subclass is expected to implement pitches
       # @!method pitches
-      #   Returns the pitches array of the ScaleKind as [ { functions: [ <symbol>, ...], pitch: <Number> }, ... ]
+      # @return [Array] the pitches array of the ScaleKind as [ { functions: [ <symbol>, ...], pitch: <Number> }, ... ]
       def pitches
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
       # @abstract Subclass is expected to implement full_canonical?. Only one of the subclasses should return true.
       # @!method full_canonical?
-      #   Returns wether the scales is a full scale (with all the notes in the ScaleSystem), sorted and to be considered canonical. I.e. a chromatic 12 semitones uprising serie in a 12 tone tempered ScaleSystem.
+      # @return [Boolean] wether the scales is a full scale (with all the notes in the ScaleSystem), sorted and to be considered canonical. I.e. a chromatic 12 semitones uprising serie in a 12 tone tempered ScaleSystem.
       def full_canonical?
         false
       end
@@ -185,25 +202,25 @@ module Musa
   class Scale
     extend Forwardable
 
-    def initialize(kind, based_on_pitch:)
+    def initialize(kind, root_pitch:)
       @notes_by_grade = {}
       @notes_by_pitch = {}
 
       @kind = kind
 
-      @based_on_pitch = based_on_pitch
+      @root_pitch = root_pitch
     end
 
-    def_delegators :@kind, :la_tuning
+    def_delegators :@kind, :a_tuning
 
     attr_reader :kind
 
-    def based_on
+    def root
       self[0]
     end
 
     def full_canonical
-      @kind.tuning.full_canonical[@based_on_pitch]
+      @kind.tuning.full_canonical[@root_pitch]
     end
 
     alias chromatic full_canonical
@@ -211,7 +228,7 @@ module Musa
     def octave(octave)
       raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
 
-      @kind[@based_on_pitch + octave * @kind.class.grades]
+      @kind[@root_pitch + octave * @kind.class.grades]
     end
 
     def [](grade_or_symbol)
@@ -231,7 +248,7 @@ module Musa
 
       unless @notes_by_grade.key? wide_grade
 
-        pitch = @based_on_pitch +
+        pitch = @root_pitch +
                 octave * @kind.tuning.notes_in_octave +
                 @kind.class.pitches[grade][:pitch]
 
@@ -247,7 +264,7 @@ module Musa
       note = @notes_by_pitch[pitch]
 
       unless note
-        pitch_offset = pitch - @based_on_pitch
+        pitch_offset = pitch - @root_pitch
 
         pitch_offset_in_octave = pitch_offset % @kind.class.grades
         pitch_offset_octave = pitch_offset / @kind.class.grades
@@ -284,11 +301,17 @@ module Musa
   end
 
   class NoteInScale
+
+    # @param scale [Scale]
+    # @param grade []
+    # @param octave [Integer]
+    # @param pitch [Number] pitch of the note, based on MIDI note numbers. Can be Integer, Rational or Float to express fractions of a semitone
+    #
     def initialize(scale, grade, octave, pitch)
       @scale = scale
       @grade = grade
       @octave = octave
-      @pitch = pitch # MIDI note, can be Rational or Float to express parts of semitone
+      @pitch = pitch
     end
 
     attr_reader :grade, :pitch
@@ -318,8 +341,7 @@ module Musa
     end
 
     def frequency
-      # TODO: allow different tuning systems (well tempered, perfect thirds, perfect fifths, etc) to be inherited from ScaleSystem
-      (@scale.kind.tuning.a_frequency * Rational(2)**Rational(@pitch - 69, 12)).to_f
+      @scale.kind.tuning.frequency_of_pitch(@pitch, @scale.root)
     end
 
     def scale(kind_id_or_kind = nil)

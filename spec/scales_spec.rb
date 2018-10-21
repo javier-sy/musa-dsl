@@ -31,8 +31,8 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
 
       expect(scale.kind.class.id).to eq :major
       expect(scale.kind.class.grades).to eq 7
-      expect(scale.based_on.pitch).to eq 60
-      expect(scale.based_on.scale).to be scale
+      expect(scale.root.pitch).to eq 60
+      expect(scale.root.scale).to be scale
 
       expect(scale[0].grade).to eq 0
       expect(scale[0].octave).to eq 0
@@ -66,7 +66,7 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       scale = scale_system[:minor][60]
 
       expect(scale.kind.class.id).to eq :minor
-      expect(scale.based_on.pitch).to eq 60
+      expect(scale.root.pitch).to eq 60
 
       expect(scale[:i].functions).to include :tonic
 
@@ -96,8 +96,8 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale2).to eq scale3
 
       expect(scale2.kind.class.id).to eq :minor
-      expect(scale2.based_on.pitch).to eq 57
-      expect(scale2.based_on.scale).to eq scale2
+      expect(scale2.root.pitch).to eq 57
+      expect(scale2.root.scale).to eq scale2
       expect(scale2.relative_major.major).to eq scale
 
       expect(scale2.tonic.pitch).to eq 57
