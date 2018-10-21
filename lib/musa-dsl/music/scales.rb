@@ -5,12 +5,27 @@ module Musa
     class << self
       def register(scale_system)
         @@scale_systems[scale_system.id] = scale_system
+        self
       end
 
       def [](id)
         raise KeyError, "Scale system :#{id} not found" unless @@scale_systems.key? id
 
         @@scale_systems[id]
+      end
+
+      private
+
+      def method_missing(method_name, *args, **key_args, &block)
+        if args.empty? && key_args.empty? && !block
+          self[method_name] || super
+        else
+          super
+        end
+      end
+
+      def respond_to_missing?(method_name, include_private)
+        @@scale_systems.has_key?(method_name) || super
       end
     end
   end
@@ -40,15 +55,29 @@ module Musa
         @a_tunings[a_frequency]
       end
 
-      def register(scale_kind)
-        @scale_kinds ||= {}
-        @scale_kinds[scale_kind.id] = scale_kind
+      def register(scale_kind_class)
+        @scale_kind_classes ||= {}
+        @scale_kind_classes[scale_kind_class.id] = scale_kind_class
+        if scale_kind_class.full_canonical?
+          @full_canonical_scale_kind_class = scale_kind_class
+        end
+        self
       end
 
-      def scale_kind(id)
-        raise KeyError, "Scale kind :#{id} not found in scale system :#{self.id}" unless @scale_kinds.key? id
+      def scale_kind_class(id)
+        raise KeyError, "Scale kind class [#{id}] not found in scale system [#{self.id}]" unless @scale_kind_classes.key? id
 
-        @scale_kinds[id]
+        @scale_kind_classes[id]
+      end
+
+      def scale_kind_class?(id)
+        @scale_kind_classes.key? id
+      end
+
+      def full_canonical_class
+        raise "Full-canonical scale kind class for [#{self.id}] scale system undefined" if @full_canonical_scale_kind_class.nil?
+
+        @full_canonical_scale_kind_class
       end
     end
   end
@@ -60,6 +89,8 @@ module Musa
       @scale_system = scale_system
       @a_frequency = a_frequency
       @scale_kinds = {}
+
+      @canonical_scale_kind = self[@scale_system.full_canonical_class.id]
     end
 
     # TODO: allow scales not based in octaves but in other intervals (like fifths or other ratios)
@@ -68,9 +99,26 @@ module Musa
 
     attr_reader :a_frequency, :scale_system
 
-    def [](scale_kind_id)
-      @scale_kinds[scale_kind_id] = @scale_system.scale_kind(scale_kind_id).new self unless @scale_kinds.key? scale_kind_id
-      @scale_kinds[scale_kind_id]
+    def [](scale_kind_class_id)
+      @scale_kinds[scale_kind_class_id] ||= @scale_system.scale_kind_class(scale_kind_class_id).new self
+    end
+
+    def full_canonical
+      @canonical_scale_kind
+    end
+
+    private
+
+    def method_missing(method_name, *args, **key_args, &block)
+      if args.empty? && key_args.empty? && !block
+        self[method_name] || super
+      else
+        super
+      end
+    end
+
+    def respond_to_missing?(method_name, include_private)
+      @scale_system.scale_kind_class?(method_name) || super
     end
   end
 
@@ -104,6 +152,13 @@ module Musa
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
+      # @abstract Subclass is expected to implement full_canonical?. Only one of the subclasses should return true.
+      # @!method full_canonical?
+      #   Returns wether the scales is a full scale (with all the notes in the ScaleSystem), sorted and to be considered canonical. I.e. a chromatic 12 semitones uprising serie in a 12 tone tempered ScaleSystem.
+      def full_canonical?
+        false
+      end
+
       def find_index(symbol)
         init unless @index
         @index[symbol]
@@ -122,6 +177,7 @@ module Musa
             @index[function] = i
           end
         end
+        self
       end
     end
   end
@@ -146,9 +202,11 @@ module Musa
       self[0]
     end
 
-    def chromatic
-      # TODO: devuelve la escala cromática que tiene la misma fundamental (como abreviación)
+    def full_canonical
+      @kind.tuning.full_canonical[@based_on_pitch]
     end
+
+    alias chromatic full_canonical
 
     def octave(octave)
       raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
@@ -174,8 +232,8 @@ module Musa
       unless @notes_by_grade.key? wide_grade
 
         pitch = @based_on_pitch +
-            octave * @kind.tuning.notes_in_octave +
-            @kind.class.pitches[grade][:pitch]
+                octave * @kind.tuning.notes_in_octave +
+                @kind.class.pitches[grade][:pitch]
 
         note = NoteInScale.new self, grade, octave, pitch
 
@@ -207,6 +265,7 @@ module Musa
     end
 
     def chord_of(*grades_or_symbols)
+      # TODO: implementar Scale.chord_of
     end
 
     private
@@ -253,7 +312,7 @@ module Musa
       # TODO: sube un intérvalo de interval tonos (natural true) o semitonos (chromatic true)
     end
 
-    def down(interval)
+    def down(interval, natural: nil, chromatic: nil)
       interval ||= 1
       # TODO:
     end
@@ -263,11 +322,15 @@ module Musa
       (@scale.kind.tuning.a_frequency * Rational(2)**Rational(@pitch - 69, 12)).to_f
     end
 
-    def scale(kind_id = nil)
-      if kind_id.nil?
+    def scale(kind_id_or_kind = nil)
+      if kind_id_or_kind.nil?
         @scale
       else
-        @scale.kind.tuning[kind_id][@pitch]
+        if kind_id_or_kind.is_a? ScaleKind
+          kind_id_or_kind[@pitch]
+        else
+          @scale.kind.tuning[kind_id_or_kind][@pitch]
+        end
       end
     end
 
@@ -279,15 +342,7 @@ module Musa
       size_or_interval ||= 3
 
       puts "Note.chord: size_or_interval = #{size_or_interval} features = #{features}"
-      # TODO: ...
-
-
-      { :major, 3, [0, 4, 7] }
-      { :major, 4, [0, 4, 7, 11] }
-
-      { :minor, 3, [0, 3, 7] }
-      { [:minor, :diminished], 3, [0, 3, 6] }
-
+      # TODO: implementar NoteInScale.chord
     end
 
     private
@@ -303,135 +358,5 @@ module Musa
     def respond_to_missing?(method_name, include_private)
       @scale.kind.class.tuning[method_name] || super
     end
-  end
-  class EquallyTempered12ToneScaleSystem < ScaleSystem
-    class << self
-      def id
-        :et12
-      end
-
-      def notes_in_octave
-        12
-      end
-    end
-    Scales.register EquallyTempered12ToneScaleSystem
-  end
-
-  class MajorScaleKind < ScaleKind
-    class << self
-      @@pitches =
-          [{ functions: %i[I _1 tonic],
-             pitch: 0 },
-           { functions: %i[II _2 supertonic],
-             pitch: 2 },
-           { functions: %i[III _3 mediant],
-             pitch: 4 },
-           { functions: %i[IV _4 subdominant],
-             pitch: 5 },
-           { functions: %i[V _5 dominant],
-             pitch: 7 },
-           { functions: %i[VI _6 submediant relative relative_minor],
-             pitch: 9 },
-           { functions: %i[VII _7 leading],
-             pitch: 11 }].freeze
-
-      def pitches
-        @@pitches
-      end
-
-      def id
-        :major
-      end
-    end
-
-    EquallyTempered12ToneScaleSystem.register MajorScaleKind
-  end
-
-  class MinorScaleKind < ScaleKind
-    class << self
-      @@pitches =
-          [{ functions: %i[i _1 tonic],
-             pitch: 0 },
-           { functions: %i[ii _2 supertonic],
-             pitch: 2 },
-           { functions: %i[iii _3 mediant relative relative_major],
-             pitch: 3 },
-           { functions: %i[iv _4 subdominant],
-             pitch: 5 },
-           { functions: %i[v _5 dominant],
-             pitch: 7 },
-           { functions: %i[vi _6 submediant],
-             pitch: 8 },
-           { functions: %i[vii _7],
-             pitch: 10 }].freeze
-
-      def pitches
-        @@pitches
-      end
-
-      def id
-        :minor
-      end
-    end
-
-    EquallyTempered12ToneScaleSystem.register MinorScaleKind
-  end
-
-  class MinorHarmonicScaleKind < ScaleKind
-    class << self
-      @@pitches =
-          [{ functions: %i[i _1 tonic],
-             pitch: 0 },
-           { functions: %i[ii _2 supertonic],
-             pitch: 2 },
-           { functions: %i[iii _3 mediant relative relative_major],
-             pitch: 3 },
-           { functions: %i[iv _4 subdominant],
-             pitch: 5 },
-           { functions: %i[v _5 dominant],
-             pitch: 7 },
-           { functions: %i[vi _6 submediant],
-             pitch: 8 },
-           { functions: %i[vii _7 leading],
-             pitch: 11 }].freeze
-
-      def pitches
-        @@pitches
-      end
-
-      def id
-        :minor_harmonic
-      end
-    end
-
-    EquallyTempered12ToneScaleSystem.register MinorHarmonicScaleKind
-  end
-
-  class ChromaticScaleKind < ScaleKind
-    class << self
-      @@pitches =
-          [{ functions: [:_1], pitch: 0 },
-           { functions: [:_2], pitch: 1 },
-           { functions: [:_3], pitch: 2 },
-           { functions: [:_4], pitch: 3 },
-           { functions: [:_5], pitch: 4 },
-           { functions: [:_6], pitch: 5 },
-           { functions: [:_7], pitch: 6 },
-           { functions: [:_8], pitch: 7 },
-           { functions: [:_9], pitch: 8 },
-           { functions: [:_10], pitch: 9 },
-           { functions: [:_11], pitch: 10 },
-           { functions: [:_12], pitch: 11 }].freeze
-
-      def pitches
-        @@pitches
-      end
-
-      def id
-        :chromatic
-      end
-    end
-
-    EquallyTempered12ToneScaleSystem.register ChromaticScaleKind
   end
 end

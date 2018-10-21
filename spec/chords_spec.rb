@@ -237,7 +237,7 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
                     position: :fifth,
                     duplicate: { third: -1 },
                     move: { fifth: 1 },
-                    drop: { third: 0 }, # drop: :third, drop: [ :third, :root ]
+                    drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
 
 
     end

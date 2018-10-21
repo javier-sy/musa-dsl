@@ -6,6 +6,26 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
   context 'Equally tempered 12 semitones scales' do
     scale_system = Musa::Scales[:et12][440.0]
 
+    it 'Access to ScaleSystems by :symbol and by .method' do
+      sst1 = Musa::Scales[:et12][440.0]
+      sst2 = Musa::Scales.et12[440.0]
+
+      expect(sst1).to be sst2
+    end
+
+    it 'Access to ScaleKind by :symbol and by .method' do
+      sst = Musa::Scales.et12[440.0]
+
+      expect(sst.major).to be sst[:major]
+    end
+
+    it 'Access to Scale by :symbol and by .method' do
+      sst = Musa::Scales.et12[440.0]
+
+      expect(sst.major).to be sst[:major]
+      expect(sst.major[60]).to be sst[:major][60]
+    end
+
     it 'Basic major scale pitch and functions' do
       scale = scale_system[:major][60]
 
@@ -94,6 +114,12 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale[0].octave(-1).on(scale2).grade).to eq 11
       expect(scale[0].octave(-1).on(scale2).octave).to eq -2
       expect(scale[0].octave(-1).on(scale2).pitch).to eq 48
+    end
+
+    it 'Getting a chromatic scale from a non-chromatic scale' do
+      scale = scale_system[:major][60]
+
+      expect(scale.chromatic).to be scale_system[:chromatic][60]
     end
   end
 end

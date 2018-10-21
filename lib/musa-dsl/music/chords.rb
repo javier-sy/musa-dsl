@@ -1,10 +1,11 @@
+require_relative 'scales'
+
 module Musa
   class Chord
     def initialize(root_or_name_or_size = nil, # root | name | size | [notes_in_scale] | [pitches]
                    name: nil,
                    root: nil,
                    notes: nil,
-
                    scale: nil, scale_system: nil,
                    size: nil,
                    add: nil,
@@ -15,10 +16,11 @@ module Musa
                    drop: nil)
     end
 
-    c = Chord.new root: 60,
-                  root: major.tonic,
-                  scale_system: scale_system[:major],
-                  scale: major,
+    c = Chord.new root: 60, # root: major.tonic,
+                  scale_system: nil, # scale_system[:major],
+                  scale: nil, # major,
+                  notes: [1, 2, 3],
+                  add: [],
                   # NO: specie: :major,
                   name: :major, # :minor, :maj7, :min
                   size: 3, # :fifth, :seventh, :sixth?, ...
@@ -28,9 +30,16 @@ module Musa
                   position: :fifth,
                   duplicate: { third: -1 },
                   move: { fifth: 1 },
-                  drop: { third: 0 }, # drop: :third, drop: [ :third, :root ]
+                  drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
 
-        def scale; end
+    # { :major, 3, [0, 4, 7] }
+    # { :major, 4, [0, 4, 7, 11] }
+
+    # { :minor, 3, [0, 3, 7] }
+    # { [:minor, :diminished], 3, [0, 3, 6] }
+
+
+    def scale; end
 
     # Converts the chord to a specific scale with the notes in the chord
     def as_scale; end
