@@ -1,17 +1,16 @@
 module Musa
   module Scales
-    @@scale_systems = {}
-
     class << self
       def register(scale_system)
-        @@scale_systems[scale_system.id] = scale_system
+        @scale_systems ||= {}
+        @scale_systems[scale_system.id] = scale_system
         self
       end
 
       def [](id)
-        raise KeyError, "Scale system :#{id} not found" unless @@scale_systems.key? id
+        raise KeyError, "Scale system :#{id} not found" unless @scale_systems.key? id
 
-        @@scale_systems[id]
+        @scale_systems[id]
       end
 
       private
@@ -25,7 +24,7 @@ module Musa
       end
 
       def respond_to_missing?(method_name, include_private)
-        @@scale_systems.has_key?(method_name) || super
+        @scale_systems.has_key?(method_name) || super
       end
     end
   end
@@ -232,19 +231,7 @@ module Musa
     end
 
     def [](grade_or_symbol)
-      symbol = grade_or_symbol.to_sym if grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String)
-      wide_grade = grade_or_symbol.to_i if grade_or_symbol.is_a? Numeric
-
-      raise ArgumentError, 'grade_or_symbol should be a Numeric, String or Symbol' unless wide_grade || symbol
-
-      octave = wide_grade / @kind.class.grades if wide_grade
-      grade = wide_grade % @kind.class.grades if wide_grade
-
-      grade = @kind.class.find_index symbol if symbol
-
-      octave ||= 0
-
-      wide_grade = octave * @kind.class.grades + grade
+      wide_grade = grade_of(grade_or_symbol)
 
       unless @notes_by_grade.key? wide_grade
 
@@ -258,6 +245,22 @@ module Musa
       end
 
       @notes_by_grade[wide_grade]
+    end
+
+    def grade_of(grade_or_symbol)
+      symbol = grade_or_symbol.to_sym if grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String)
+      wide_grade = grade_or_symbol.to_i if grade_or_symbol.is_a? Numeric
+
+      raise ArgumentError, 'grade_or_symbol should be a Numeric, String or Symbol' unless wide_grade || symbol
+
+      octave = wide_grade / @kind.class.grades if wide_grade
+      grade = wide_grade % @kind.class.grades if wide_grade
+
+      grade = @kind.class.find_index symbol if symbol
+
+      octave ||= 0
+
+      octave * @kind.class.grades + grade
     end
 
     def note_of_pitch(pitch)

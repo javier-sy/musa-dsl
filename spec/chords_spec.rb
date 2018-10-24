@@ -71,7 +71,7 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
 
       min3 = maj3.minor
 
-      matches = min3.match(major.tonic.minor, major.relative_minor.minor, chomatic)
+      matches = min3.match(major.tonic.minor, major.relative_minor.minor, chromatic)
 
       expect(matches.size).to eq 2
 
