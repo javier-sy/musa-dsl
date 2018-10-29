@@ -26,6 +26,26 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(sst.major[60]).to be sst[:major][60]
     end
 
+    it 'Access to default scale system an default tuning' do
+      ss = Musa::Scales[:et12]
+      sst = Musa::Scales[:et12][440.0]
+
+      expect(ss).to be Musa::Scales.default_system
+      expect(sst).to be Musa::Scales.default_system.default_tuning
+      expect(sst.chromatic).to be Musa::Scales.default_system.default_tuning.chromatic
+    end
+
+    it 'Access to intervals with ScaleSystem and tuning' do
+      expect(Musa::Scales.default_system.offset_of_interval(:m2)).to eq 1
+      expect(Musa::Scales.default_system.default_tuning.offset_of_interval(:m2)).to eq 1
+    end
+
+    it 'Access to intervals' do
+      scale = scale_system[:major][60]
+
+      expect(scale.offset_of_interval(:m2)).to eq 1
+    end
+
     it 'Basic major scale pitch and functions' do
       scale = scale_system[:major][60]
 

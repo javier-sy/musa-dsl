@@ -1,30 +1,36 @@
 module Musa
   module Scales
     class << self
-      def register(scale_system)
+      def register(scale_system, default: nil)
         @scale_systems ||= {}
         @scale_systems[scale_system.id] = scale_system
+
+        @default_scale_system = scale_system if default
         self
       end
 
       def [](id)
-        raise KeyError, "Scale system :#{id} not found" unless @scale_systems.key? id
+        raise KeyError, "Scale system :#{id} not found" unless @scale_systems.key?(id)
 
         @scale_systems[id]
+      end
+
+      def default_system
+        @default_scale_system
       end
 
       private
 
       def method_missing(method_name, *args, **key_args, &block)
-        if args.empty? && key_args.empty? && !block
-          self[method_name] || super
+        if args.empty? && key_args.empty? && !block && @scale_systems.key?(method_name)
+          self[method_name]
         else
           super
         end
       end
 
       def respond_to_missing?(method_name, include_private)
-        @scale_systems.has_key?(method_name) || super
+        @scale_systems.key?(method_name) || super
       end
     end
   end
@@ -47,6 +53,17 @@ module Musa
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
+      # @abstract Subclass is expected to implement intervals
+      # @!method intervals
+      # @return [Hash] the intervals of the ScaleSystem as { name: semitones#, ... }
+      #
+      def intervals
+        # TODO: implementar intérvalos sinónimos (p.ej, m3 = A2)
+        # TODO: implementar identificación de intérvalos, teniendo en cuenta no sólo los semitonos sino los grados de separación
+        # TODO: implementar inversión de intérvalos
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
       # @abstract Subclass is expected to implement frequency_of_pitch
       # @!method frequency_of_pitch
       # @param pitch [Number] The pitch (MIDI note numbers based) of the note to get the fundamental frequency
@@ -58,20 +75,36 @@ module Musa
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
+      # @abstract Subclass can implement default_a_frequency. If subclass doesn't implement default_a_frequency 440.0 Hz is assumed.
+      # @!method default_a_frequency
+      # @return [Number] the frequency A by default
+      #
+      def default_a_frequency
+        440.0
+      end
+
       def [](a_frequency)
         a_frequency = a_frequency.to_f
 
         @a_tunings ||= {}
-        @a_tunings[a_frequency] = ScaleSystemTuning.new self, a_frequency unless @a_tunings.key? a_frequency
+        @a_tunings[a_frequency] = ScaleSystemTuning.new self, a_frequency unless @a_tunings.key?(a_frequency)
 
         @a_tunings[a_frequency]
+      end
+
+      def offset_of_interval(name)
+        intervals[name]
+      end
+
+      def default_tuning
+        self[default_a_frequency]
       end
 
       def register(scale_kind_class)
         @scale_kind_classes ||= {}
         @scale_kind_classes[scale_kind_class.id] = scale_kind_class
-        if scale_kind_class.full_canonical?
-          @full_canonical_scale_kind_class = scale_kind_class
+        if scale_kind_class.chromatic?
+          @chromatic_scale_kind_class = scale_kind_class
         end
         self
       end
@@ -86,10 +119,10 @@ module Musa
         @scale_kind_classes.key? id
       end
 
-      def full_canonical_class
-        raise "Full-canonical scale kind class for [#{self.id}] scale system undefined" if @full_canonical_scale_kind_class.nil?
+      def chromatic_class
+        raise "Chromatic scale kind class for [#{self.id}] scale system undefined" if @chromatic_scale_kind_class.nil?
 
-        @full_canonical_scale_kind_class
+        @chromatic_scale_kind_class
       end
     end
   end
@@ -102,12 +135,12 @@ module Musa
       @a_frequency = a_frequency
       @scale_kinds = {}
 
-      @canonical_scale_kind = self[@scale_system.full_canonical_class.id]
+      @chromatic_scale_kind = self[@scale_system.chromatic_class.id]
     end
 
-    # TODO: allow scales not based in octaves but in other intervals (like fifths or other ratios)
+    # TODO: allow scales not based in octaves but in other intervals (like fifths or other ratios). Possibly based on intervals definition of ScaleSystem plus a "generator interval" attribute
 
-    def_delegators :@scale_system, :notes_in_octave
+    def_delegators :@scale_system, :notes_in_octave, :offset_of_interval
 
     attr_reader :a_frequency, :scale_system
 
@@ -115,8 +148,8 @@ module Musa
       @scale_kinds[scale_kind_class_id] ||= @scale_system.scale_kind_class(scale_kind_class_id).new self
     end
 
-    def full_canonical
-      @canonical_scale_kind
+    def chromatic
+      @chromatic_scale_kind
     end
 
     def frequency_of_pitch(pitch, root)
@@ -126,8 +159,8 @@ module Musa
     private
 
     def method_missing(method_name, *args, **key_args, &block)
-      if args.empty? && key_args.empty? && !block
-        self[method_name] || super
+      if args.empty? && key_args.empty? && !block && @scale_system.scale_kind_class?(method_name)
+        self[method_name]
       else
         super
       end
@@ -149,8 +182,12 @@ module Musa
     attr_reader :tuning
 
     def [](root_pitch)
-      @scales[root_pitch] = Scale.new(self, root_pitch: root_pitch) unless @scales.key? root_pitch
+      @scales[root_pitch] = Scale.new(self, root_pitch: root_pitch) unless @scales.key?(root_pitch)
       @scales[root_pitch]
+    end
+
+    def absolut
+      self[0]
     end
 
     class << self
@@ -168,10 +205,10 @@ module Musa
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
-      # @abstract Subclass is expected to implement full_canonical?. Only one of the subclasses should return true.
-      # @!method full_canonical?
+      # @abstract Subclass is expected to implement chromatic?. Only one of the subclasses should return true.
+      # @!method chromatic?
       # @return [Boolean] wether the scales is a full scale (with all the notes in the ScaleSystem), sorted and to be considered canonical. I.e. a chromatic 12 semitones uprising serie in a 12 tone tempered ScaleSystem.
-      def full_canonical?
+      def chromatic?
         false
       end
 
@@ -218,11 +255,13 @@ module Musa
       self[0]
     end
 
-    def full_canonical
-      @kind.tuning.full_canonical[@root_pitch]
+    def chromatic
+      @kind.tuning.chromatic[@root_pitch]
     end
 
-    alias chromatic full_canonical
+    def absolut
+      @kind[0]
+    end
 
     def octave(octave)
       raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
@@ -233,7 +272,10 @@ module Musa
     def [](grade_or_symbol)
       wide_grade = grade_of(grade_or_symbol)
 
-      unless @notes_by_grade.key? wide_grade
+      unless @notes_by_grade.key?(wide_grade)
+
+        octave = wide_grade / @kind.class.grades
+        grade = wide_grade % @kind.class.grades
 
         pitch = @root_pitch +
                 octave * @kind.tuning.notes_in_octave +
@@ -282,6 +324,10 @@ module Musa
       end
 
       note
+    end
+
+    def offset_of_interval(interval_name)
+      @kind.tuning.offset_of_interval(interval_name)
     end
 
     def chord_of(*grades_or_symbols)
@@ -336,6 +382,7 @@ module Musa
     def up(interval = nil, natural: nil, chromatic: nil)
       interval ||= 1
       # TODO: sube un intérvalo de interval tonos (natural true) o semitonos (chromatic true)
+      # TODO: que acepte intervals tal como se hayan definido con nombre (tipo :P5, :m3)
     end
 
     def down(interval, natural: nil, chromatic: nil)

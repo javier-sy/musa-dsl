@@ -1,12 +1,18 @@
 module Musa
   class TwelveSemitonesScaleSystem < ScaleSystem
     class << self
+      @@intervals = { P0: 0, m2: 1, M2: 2, m3: 3, M3: 4, P4: 5, TT: 6, P5: 7, m6: 8, M6: 9, m7: 10, M7: 11, P8: 12 }
+
       def id
         :et12
       end
 
       def notes_in_octave
         12
+      end
+
+      def intervals
+        @@intervals
       end
     end
   end
@@ -18,7 +24,7 @@ module Musa
       end
     end
 
-    Scales.register EquallyTempered12ToneScaleSystem
+    Scales.register EquallyTempered12ToneScaleSystem, default: true
   end
 
 
@@ -46,7 +52,7 @@ module Musa
         :chromatic
       end
 
-      def full_canonical?
+      def chromatic?
         true
       end
     end
