@@ -111,7 +111,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neuma file parsing with GDV decoder' do
-      scale = Musa::Scales.get :major
+      scale = Musa::Scales.default_system.default_tuning.major[60]
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, grade: 0, duration: 1, velocity: 1
 

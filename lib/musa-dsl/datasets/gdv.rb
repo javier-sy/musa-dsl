@@ -11,13 +11,13 @@ module Musa::Datasets
         r[:grade] = if self[:abs_grade] == :silence
                       self[:abs_grade]
                     else
-                      scale.note_of self[:abs_grade]
+                      scale[self[:abs_grade]].wide_grade
                     end
       elsif self[:delta_grade]
         if r[:grade] == :silence
-          #  doesn't change silence
+          # doesn't change silence
         else
-          r[:grade] = scale.note_of r[:grade] + self[:delta_grade]
+          r[:grade] = scale[r[:grade]].wide_grade + self[:delta_grade]
         end
       end
 
@@ -116,7 +116,7 @@ module Musa::Datasets
         r[:pitch] = if self[:grade] == :silence
                       self[:grade]
                     else
-                      scale.pitch_of self[:grade], octave: self[:octave]
+                      scale[self[:grade]].octave(self[:octave] || 0).pitch
                     end
       end
 
@@ -167,7 +167,7 @@ module Musa::Datasets
           r[:abs_grade] = self[:grade]
 
         elsif self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])
-          r[:delta_grade] = scale.note_of(self[:grade]) - scale.note_of(previous[:grade])
+          r[:delta_grade] = scale[self[:grade]].wide_grade - scale[previous[:grade]].wide_grade
         end
 
         if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])

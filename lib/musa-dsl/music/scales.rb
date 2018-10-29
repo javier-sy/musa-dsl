@@ -270,6 +270,9 @@ module Musa
     end
 
     def [](grade_or_symbol)
+
+      raise ArgumentError, "grade_or_symbol #{grade_or_symbol} should be a Numeric, String or Symbol" unless grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String) || grade_or_symbol.is_a?(Integer)
+
       wide_grade = grade_of(grade_or_symbol)
 
       unless @notes_by_grade.key?(wide_grade)
@@ -293,7 +296,7 @@ module Musa
       symbol = grade_or_symbol.to_sym if grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String)
       wide_grade = grade_or_symbol.to_i if grade_or_symbol.is_a? Numeric
 
-      raise ArgumentError, 'grade_or_symbol should be a Numeric, String or Symbol' unless wide_grade || symbol
+      raise ArgumentError, "grade_or_symbol #{grade_or_symbol} should be a Numeric, String or Symbol" unless wide_grade || symbol
 
       octave = wide_grade / @kind.class.grades if wide_grade
       grade = wide_grade % @kind.class.grades if wide_grade
@@ -377,6 +380,10 @@ module Musa
 
         @scale[@grade + octave * @scale.kind.class.grades]
       end
+    end
+
+    def wide_grade
+      @grade + @octave * @scale.kind.class.grades
     end
 
     def up(interval = nil, natural: nil, chromatic: nil)

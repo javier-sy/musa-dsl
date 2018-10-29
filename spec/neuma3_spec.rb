@@ -8,7 +8,7 @@ include Musa::Series
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma with neumalang advanced parsing' do
-    scale = Musa::Scales.get(:major).based_on_pitch 60
+    scale = Musa::Scales.default_system.default_tuning.major[60]
 
     it 'Simple file neuma parsing' do
       debug = false
