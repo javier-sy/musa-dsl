@@ -212,14 +212,18 @@ module Musa
         false
       end
 
+      # @abstract Subclass is expected to implement grades when the ScaleKind is defining more pitches than notes by octave has the scale. This can happen when there are pitches defined on upper octaves (i.e., to define XII grade, as a octave + fifth)
+      # @!method grades
+      # @return [Integer] Number of grades inside of a octave of the scale
+      def grades
+        pitches.length
+      end
+
       def find_index(symbol)
         init unless @index
         @index[symbol]
       end
 
-      def grades
-        pitches.length
-      end
 
       private
 
@@ -378,7 +382,7 @@ module Musa
       else
         raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
 
-        @scale[@grade + octave * @scale.kind.class.grades]
+        @scale[@grade + (@octave + octave) * @scale.kind.class.grades]
       end
     end
 

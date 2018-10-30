@@ -300,7 +300,7 @@ RSpec.describe Musa::Neumalang do
             { grade: 6, octave: 0, duration: 1, velocity: 1 }],
            [{ grade: 3, octave: 0, duration: 1, velocity: 1 },
             { grade: 5, octave: 0, duration: 1, velocity: 1 },
-            { grade: 0, octave: 0, duration: 1, velocity: 1 }]]
+            { grade: 7, octave: 0, duration: 1, velocity: 1 }]]
         )
       end
 

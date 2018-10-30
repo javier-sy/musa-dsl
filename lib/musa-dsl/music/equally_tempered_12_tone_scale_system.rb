@@ -76,10 +76,26 @@ module Musa
          { functions: %i[VI _6 submediant relative relative_minor],
            pitch: 9 },
          { functions: %i[VII _7 leading],
-           pitch: 11 }].freeze
+           pitch: 11 },
+         { functions: %i[VIII _8],
+           pitch: 12 },
+         { functions: %i[IX _9],
+           pitch: 12 + 2 },
+         { functions: %i[X _10],
+           pitch: 12 + 4 },
+         { functions: %i[XI _11],
+           pitch: 12 + 5 },
+         { functions: %i[XII _12],
+           pitch: 12 + 7 },
+         { functions: %i[XIII _13],
+           pitch: 12 + 9 }].freeze
 
       def pitches
         @@pitches
+      end
+
+      def grades
+        7
       end
 
       def id
@@ -106,10 +122,26 @@ module Musa
          { functions: %i[vi _6 submediant],
            pitch: 8 },
          { functions: %i[vii _7],
-           pitch: 10 }].freeze
+           pitch: 10 },
+         { functions: %i[viii _8],
+           pitch: 12 },
+         { functions: %i[ix _9],
+           pitch: 12 + 2 },
+         { functions: %i[x _10],
+           pitch: 12 + 3 },
+         { functions: %i[xi _11],
+           pitch: 12 + 5 },
+         { functions: %i[xii _12],
+           pitch: 12 + 7 },
+         { functions: %i[xiii _13],
+           pitch: 12 + 8 }].freeze
 
       def pitches
         @@pitches
+      end
+
+      def grades
+        7
       end
 
       def id
@@ -136,10 +168,26 @@ module Musa
          { functions: %i[vi _6 submediant],
            pitch: 8 },
          { functions: %i[vii _7 leading],
-           pitch: 11 }].freeze
+           pitch: 11 },
+         { functions: %i[viii _8],
+           pitch: 12 },
+         { functions: %i[ix _9],
+           pitch: 12 + 2 },
+         { functions: %i[x _10],
+           pitch: 12 + 3 },
+         { functions: %i[xi _11],
+           pitch: 12 + 5 },
+         { functions: %i[xii _12],
+           pitch: 12 + 7 },
+         { functions: %i[xiii _13],
+           pitch: 12 + 8 }].freeze
 
       def pitches
         @@pitches
+      end
+
+      def grades
+        7
       end
 
       def id

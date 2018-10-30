@@ -46,6 +46,22 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale.offset_of_interval(:m2)).to eq 1
     end
 
+    it 'Basic grade to pitch conversion' do
+      scale = scale_system.major[60]
+
+      expect(scale[0].grade).to eq 0
+      expect(scale[0].octave).to eq 0
+
+      expect(scale[7].grade).to eq 0
+      expect(scale[7].octave).to eq 1
+
+      expect(scale[8].grade).to eq 1
+      expect(scale[8].octave).to eq 1
+
+      expect(scale[8].octave(0).grade).to eq 1
+      expect(scale[8].octave(0).octave).to eq 1
+    end
+
     it 'Basic major scale pitch and functions' do
       scale = scale_system[:major][60]
 
