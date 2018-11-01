@@ -203,8 +203,60 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
+    it 'FOR(from: 10, to: 11.25, step: -Rational(1, 4))' do
+      s1 = FOR(from: 10, to: 11.25, step: -Rational(1, 4))
+
+      expect(s1.next_value).to eq 10
+      expect(s1.next_value).to eq 10.25
+      expect(s1.next_value).to eq 10.50
+      expect(s1.next_value).to eq 10.75
+      expect(s1.next_value).to eq 11
+      expect(s1.next_value).to eq 11.25
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+
+      s1.restart
+
+      expect(s1.next_value).to eq 10
+      expect(s1.next_value).to eq 10.25
+      expect(s1.next_value).to eq 10.50
+      expect(s1.next_value).to eq 10.75
+      expect(s1.next_value).to eq 11
+      expect(s1.next_value).to eq 11.25
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+    end
+
     it 'FOR(from: 10, to: 8.75, step: -Rational(1, 4))' do
       s1 = FOR(from: 10, to: 8.75, step: -Rational(1, 4))
+
+      expect(s1.next_value).to eq 10
+      expect(s1.next_value).to eq 9.75
+      expect(s1.next_value).to eq 9.50
+      expect(s1.next_value).to eq 9.25
+      expect(s1.next_value).to eq 9
+      expect(s1.next_value).to eq 8.75
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+
+      s1.restart
+
+      expect(s1.next_value).to eq 10
+      expect(s1.next_value).to eq 9.75
+      expect(s1.next_value).to eq 9.50
+      expect(s1.next_value).to eq 9.25
+      expect(s1.next_value).to eq 9
+      expect(s1.next_value).to eq 8.75
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+    end
+
+    it 'FOR(from: 10, to: 8.75, step: Rational(1, 4))' do
+      s1 = FOR(from: 10, to: 8.75, step: Rational(1, 4))
 
       expect(s1.next_value).to eq 10
       expect(s1.next_value).to eq 9.75
