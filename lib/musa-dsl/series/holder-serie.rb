@@ -14,7 +14,11 @@ module Musa
       end
 
       def hold_next=(serie)
-        @new_serie = serie
+        if @serie.nil?
+          @serie = serie
+        else
+          @new_serie = serie
+        end
       end
 
       def hold_next
@@ -41,23 +45,23 @@ module Musa
       end
 
       def current_value
-        @serie.current_value
+        @serie.current_value if @serie
       end
 
       def next_value
-        @serie.next_value
+        @serie.next_value if @serie
       end
 
       def peek_next_value
-        @serie.peek_next_value
+        @serie.peek_next_value if @serie
       end
 
       def infinite?
-        @serie.infinite?
+        @serie.infinite? if @serie
       end
 
       def deterministic?
-        @serie.deterministic?
+        @serie.deterministic? if @serie
       end
     end
   end
