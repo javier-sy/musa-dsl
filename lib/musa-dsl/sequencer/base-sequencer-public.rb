@@ -137,8 +137,7 @@ class Musa::BaseSequencer
       bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
       with = Series::S(*with).repeat if with.is_a? Array
 
-      starting_position = position
-      _serie_at bars_delay.eval { |delay| starting_position + delay }, control, with: with, debug: debug, &block
+      _serie_at bars_delay.eval { |delay| position + delay }, control, with: with, debug: debug, &block
     end
 
     @event_handlers.pop

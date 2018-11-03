@@ -35,7 +35,7 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _numeric_at(bar_position, control, next_bar_position: nil, with: nil, debug: nil, &block)
+  def _numeric_at(bar_position, control, with: nil, debug: nil, &block)
     raise ArgumentError, 'Block is mandatory' unless block
 
     position = bar_position.rationalize * @ticks_per_bar
@@ -54,7 +54,6 @@ class Musa::BaseSequencer
     key_parameters = {}
     key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
 
-    key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.key?(:next_position)
     key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
     if position == @position
@@ -95,7 +94,6 @@ class Musa::BaseSequencer
 
   def _serie_at(bar_position_serie, control, with: nil, debug: nil, &block)
     bar_position = bar_position_serie.next_value
-    next_bar_position = bar_position_serie.peek_next_value
 
     with_value = if with.respond_to? :next_value
                    with.next_value
@@ -104,7 +102,7 @@ class Musa::BaseSequencer
                  end
 
     if bar_position
-      _numeric_at bar_position, control, next_bar_position: next_bar_position, with: with_value, debug: debug, &block
+      _numeric_at bar_position, control, with: with_value, debug: debug, &block
 
       _numeric_at bar_position, control, debug: false do
         _serie_at bar_position_serie, control, with: with, debug: debug, &block

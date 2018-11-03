@@ -60,6 +60,70 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(3)
     end
 
+    it 'Basic wait sequencing with a serie' do
+      c = 0
+      w = S(1, 1, 1)
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          wait w do
+            c += 1
+          end
+        end
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(0)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(2)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(2)
+
+      s.tick
+
+      expect(c).to eq(3)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(3)
+
+      s.tick
+
+      expect(c).to eq(3)
+
+      30.times do
+        s.tick
+      end
+
+      expect(c).to eq(3)
+    end
+
     it 'Basic every sequencing with control' do
       c = 0
       d = 0
