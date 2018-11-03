@@ -3,11 +3,12 @@ require 'forwardable'
 class Musa::Sequencer
   extend Forwardable
 
-  def_delegators :@sequencer, :raw_at, :tick, :on_debug_at, :on_block_error,
-                 :on_fast_forward, :ticks_per_bar, :round, :position=, :size, :event_handler, :empty?
+  def_delegators :@sequencer, :raw_at, :tick, :on_debug_at, :on_block_error
+  def_delegators :@sequencer, :on_fast_forward, :ticks_per_bar, :round, :position=, :size, :event_handler, :empty?
 
   def_delegators :@context, :position, :log
   def_delegators :@context, :with, :now, :at, :wait, :theme, :play, :every, :move
+  def_delegators :@context, :everying, :playing
   def_delegators :@context, :launch, :on
 
   def initialize(quarter_notes_by_bar, quarter_note_divisions, sequencer: nil, do_log: nil, &block)
@@ -26,7 +27,7 @@ class Musa::Sequencer
 
     attr_reader :sequencer
 
-    def_delegators :@sequencer, :launch, :on, :position, :ticks_per_bar, :round, :log, :inspect
+    def_delegators :@sequencer, :launch, :on, :position, :everying, :playing, :ticks_per_bar, :round, :log, :inspect
 
     def initialize(sequencer)
       @sequencer = sequencer

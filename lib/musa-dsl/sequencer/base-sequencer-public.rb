@@ -5,6 +5,7 @@ require 'musa-dsl/series'
 
 class Musa::BaseSequencer
   attr_reader :ticks_per_bar, :running_position
+  attr_reader :everying, :playing
 
   @@tick_mutex = Mutex.new
 
@@ -18,6 +19,9 @@ class Musa::BaseSequencer
     @ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
 
     @score = {}
+
+    @everying = []
+    @playing = []
 
     @do_log = do_log
 
@@ -197,6 +201,12 @@ class Musa::BaseSequencer
 
     @event_handlers.pop
 
+    @playing << control
+
+    control.after do
+      @playing.delete control
+    end
+
     control
   end
 
@@ -209,6 +219,14 @@ class Musa::BaseSequencer
     _every binterval, control, &block
 
     @event_handlers.pop
+
+    puts "every: adding control #{control} to @everying"
+
+    @everying << control
+
+    control.after do
+      @everying.delete control
+    end
 
     control
   end

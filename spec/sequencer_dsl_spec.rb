@@ -64,9 +64,11 @@ RSpec.describe Musa::Sequencer do
       c = 0
       d = 0
 
+      every_control = nil
+
       s = Musa::Sequencer.new 4, 4 do
         at 1 do
-          every 1 do |control:|
+          every_control = every 1 do |control:|
             c += 1
 
             if c == 2
@@ -81,28 +83,34 @@ RSpec.describe Musa::Sequencer do
       end
 
       expect(c).to eq(0)
+      expect(s.everying.size).to eq 0
 
       s.tick
 
       expect(c).to eq(1)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(1)
+      expect(s.everying).to include(every_control)
 
       14.times do
         s.tick
       end
 
       expect(c).to eq(1)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(2)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(2)
+      expect(s.everying).to include(every_control)
 
       15.times do
         s.tick
@@ -110,11 +118,13 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq(3)
       expect(d).to eq(0)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(3)
       expect(d).to eq(0)
+      expect(s.everying).to include(every_control)
 
       15.times do
         s.tick
@@ -122,6 +132,7 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq(3)
       expect(d).to eq(1)
+      expect(s.everying.size).to eq 0
     end
 
     it 'Basic play sequencing' do
@@ -130,8 +141,14 @@ RSpec.describe Musa::Sequencer do
       c = -1
       d = 0
 
-      s = Musa::Sequencer.new 4, 4 do
-        play serie do |element, control:|
+      play_control = nil
+
+      s = Musa::Sequencer.new 4, 4
+
+      expect(s.playing.size).to eq 0
+
+      s.with do
+        play_control = play serie do |element, control:|
           c = element[:value]
 
           control.after do # this will be executed 4 times
@@ -142,20 +159,25 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq(0)
       expect(d).to eq(0)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(1)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(2)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(3)
       expect(d).to eq(0)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(3)
       expect(d).to eq(4)
+      expect(s.playing.size).to eq 0
     end
 
     it 'Play sequencing with event syncing' do
