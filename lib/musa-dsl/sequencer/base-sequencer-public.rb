@@ -34,7 +34,7 @@ class Musa::BaseSequencer
     @everying.clear
     @playing.clear
     @moving.clear
-    
+
     @event_handlers = [EventHandler.new]
 
     @position = @ticks_per_bar - 1
