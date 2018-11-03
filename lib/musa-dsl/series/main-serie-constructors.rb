@@ -238,7 +238,7 @@ module Musa
       def initialize(from, to, step, random)
         @from = from
         @to = to
-        @step = step
+        @step = (-step if from < to && step < 0 || from > to && step > 0) || step
 
         @random = random
 
@@ -303,7 +303,7 @@ module Musa
       def initialize(from, to, step, random)
         @from = from
         @to = to
-        @step = step
+        @step = (-step if from < to && step < 0 || from > to && step > 0) || step
 
         @random = random
 

@@ -341,6 +341,36 @@ RSpec.describe Musa::Serie do
       expect(r.sort).to eq [8.75, 9, 9.25, 9.50, 9.75, 10]
     end
 
+    it 'RND(from: 10, to: 8.75, step: Rational(1, 4))' do
+      s1 = RND(from: 10, to: 8.75, step: Rational(1, 4))
+
+      r = []
+      while v = s1.next_value
+        r << v
+      end
+
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+
+      expect(r.size).to eq 6
+      expect(r.sort).to eq [8.75, 9, 9.25, 9.50, 9.75, 10]
+
+      s1.restart
+
+      r = []
+      while v = s1.next_value
+        r << v
+      end
+
+      expect(r.size).to eq 6
+      expect(r.sort).to eq [8.75, 9, 9.25, 9.50, 9.75, 10]
+    end
+
     it 'RND1(8.75, 9, 9.25, 9.50, 9.75, 10)' do
       s1 = RND1(8.75, 9, 9.25, 9.50, 9.75, 10)
 
@@ -371,6 +401,34 @@ RSpec.describe Musa::Serie do
 
     it 'RND1(from: 10, to: 8.75, step: -Rational(1, 4))' do
       s1 = RND1(from: 10, to: 8.75, step: -Rational(1, 4))
+
+      r = []
+      while v = s1.next_value
+        r << v
+      end
+
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.peek_next_value).to eq nil
+
+      expect(r.size).to eq 1
+
+      99.times do
+        s1.restart
+        r << s1.next_value
+      end
+
+      expect(r.size).to eq 100
+
+      expect(r.sort.uniq).to eq [8.75, 9, 9.25, 9.50, 9.75, 10]
+    end
+
+    it 'RND1(from: 10, to: 8.75, step: Rational(1, 4))' do
+      s1 = RND1(from: 10, to: 8.75, step: Rational(1, 4))
 
       r = []
       while v = s1.next_value
