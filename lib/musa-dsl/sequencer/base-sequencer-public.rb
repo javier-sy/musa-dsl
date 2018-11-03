@@ -31,6 +31,10 @@ class Musa::BaseSequencer
 
   def reset
     @score.clear
+    @everying.clear
+    @playing.clear
+    @moving.clear
+    
     @event_handlers = [EventHandler.new]
 
     @position = @ticks_per_bar - 1
