@@ -221,8 +221,6 @@ class Musa::BaseSequencer
 
     @event_handlers.pop
 
-    puts "every: adding control #{control} to @everying"
-
     @everying << control
 
     control.after do
