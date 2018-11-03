@@ -328,7 +328,7 @@ class Musa::BaseSequencer
       size.times { |i| rstep[i] = (to[i] - from[i]) / steps } if to
     else
       # TODO: from to every (sin till/duration): no cubierto (=> duration = (to - from) / step) if to
-      # TODO from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
+      # TODO: from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
     end
 
     control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after

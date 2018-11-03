@@ -135,6 +135,66 @@ RSpec.describe Musa::Sequencer do
       expect(s.everying.size).to eq 0
     end
 
+    it 'Basic move sequencing' do
+
+      c = 0
+      move_control = nil
+
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          move_control = move from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
+            c = value
+          end
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(1 + Rational(1, 16))
+      expect(s.moving).to include move_control
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1 + Rational(15, 16))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(2))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(3))
+      expect(s.moving).to include move_control
+
+      (16 * 2).times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
+    end
+
     it 'Basic play sequencing' do
       serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 

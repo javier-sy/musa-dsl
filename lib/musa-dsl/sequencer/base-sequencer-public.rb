@@ -5,7 +5,7 @@ require 'musa-dsl/series'
 
 class Musa::BaseSequencer
   attr_reader :ticks_per_bar, :running_position
-  attr_reader :everying, :playing
+  attr_reader :everying, :playing, :moving
 
   @@tick_mutex = Mutex.new
 
@@ -22,6 +22,7 @@ class Musa::BaseSequencer
 
     @everying = []
     @playing = []
+    @moving = []
 
     @do_log = do_log
 
@@ -237,7 +238,15 @@ class Musa::BaseSequencer
     every ||= Rational(1, @ticks_per_bar)
     every = every.rationalize unless every.is_a?(Rational)
 
-    _move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+    control = _move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+
+    @moving << control
+
+    control.after do
+      @moving.delete control
+    end
+
+    control
   end
 
   def log(msg = nil)

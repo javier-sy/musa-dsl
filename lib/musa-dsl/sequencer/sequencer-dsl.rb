@@ -8,7 +8,7 @@ class Musa::Sequencer
 
   def_delegators :@context, :position, :log
   def_delegators :@context, :with, :now, :at, :wait, :theme, :play, :every, :move
-  def_delegators :@context, :everying, :playing
+  def_delegators :@context, :everying, :playing, :moving
   def_delegators :@context, :launch, :on
 
   def initialize(quarter_notes_by_bar, quarter_note_divisions, sequencer: nil, do_log: nil, &block)
@@ -27,7 +27,7 @@ class Musa::Sequencer
 
     attr_reader :sequencer
 
-    def_delegators :@sequencer, :launch, :on, :position, :everying, :playing, :ticks_per_bar, :round, :log, :inspect
+    def_delegators :@sequencer, :launch, :on, :position, :everying, :playing, :moving, :ticks_per_bar, :round, :log, :inspect
 
     def initialize(sequencer)
       @sequencer = sequencer
