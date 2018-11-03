@@ -23,11 +23,13 @@ module Musa
         self
       end
 
-      def now=(serie)
+      def now(serie)
         @serie = serie
+
+        self
       end
 
-      def now
+      def current
         @serie
       end
 
