@@ -40,6 +40,10 @@ module Musa
         self
       end
 
+      def current_value
+        @serie.current_value
+      end
+
       def next_value
         @serie.next_value
       end

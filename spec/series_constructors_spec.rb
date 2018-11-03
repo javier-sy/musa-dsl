@@ -669,6 +669,48 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
+    it 'HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4))' do
+      s1 = HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4))
+
+      expect(s1.current_value).to eq nil
+
+      expect(s1.next_value).to eq(x: 1, y: :a, z: 1)
+      expect(s1.next_value).to eq(x: 2, y: :b, z: 2)
+      expect(s1.next_value).to eq(x: 1, y: :c, z: 3)
+      expect(s1.next_value).to eq(x: 2, y: :a, z: 4)
+      expect(s1.next_value).to eq(x: 1, y: :b, z: 1)
+      expect(s1.next_value).to eq(x: 2, y: :c, z: 2)
+      expect(s1.next_value).to eq(x: 1, y: :a, z: 3)
+      expect(s1.next_value).to eq(x: 2, y: :b, z: 4)
+      expect(s1.next_value).to eq(x: 1, y: :c, z: 1)
+      expect(s1.next_value).to eq(x: 2, y: :a, z: 2)
+      expect(s1.next_value).to eq(x: 1, y: :b, z: 3)
+      expect(s1.next_value).to eq(x: 2, y: :c, z: 4)
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+
+      s1.restart
+
+      expect(s1.next_value).to eq(x: 1, y: :a, z: 1)
+      expect(s1.next_value).to eq(x: 2, y: :b, z: 2)
+      expect(s1.next_value).to eq(x: 1, y: :c, z: 3)
+      expect(s1.next_value).to eq(x: 2, y: :a, z: 4)
+      expect(s1.next_value).to eq(x: 1, y: :b, z: 1)
+      expect(s1.next_value).to eq(x: 2, y: :c, z: 2)
+      expect(s1.next_value).to eq(x: 1, y: :a, z: 3)
+      expect(s1.next_value).to eq(x: 2, y: :b, z: 4)
+      expect(s1.next_value).to eq(x: 1, y: :c, z: 1)
+      expect(s1.next_value).to eq(x: 2, y: :a, z: 2)
+      expect(s1.next_value).to eq(x: 1, y: :b, z: 3)
+      expect(s1.next_value).to eq(x: 2, y: :c, z: 4)
+      expect(s1.peek_next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq nil
+    end
+
     it 'HC(x: S(1,2), y: S(:a, :b, :c)).autorestart' do
       s1 = HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart
 
