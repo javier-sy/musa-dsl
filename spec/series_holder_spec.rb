@@ -6,12 +6,12 @@ include Musa::Series
 
 RSpec.describe Musa::Serie do
   context 'Series holders' do
-    it '' do
+    it 'Basic HLD series substitution' do
       s = HLD()
 
       expect(s.next_value).to eq nil
 
-      s.hold_next= S(1, 2, 3)
+      s.next S(1, 2, 3)
 
       expect(s.next_value).to eq 1
       expect(s.current_value).to eq 1
@@ -25,13 +25,88 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq 1
       expect(s.next_value).to eq 2
 
-      s.hold = S(5, 6, 7)
+      s.now = S(5, 6, 7)
 
       expect(s.next_value).to eq 5
       expect(s.next_value).to eq 6
       expect(s.next_value).to eq 7
 
       expect(s.next_value).to eq nil
+    end
+
+    it 'Basic HLD series queuing' do
+      s = HLD()
+
+      expect(s.next_value).to eq nil
+
+      s.next S(1, 2, 3)
+      s.next S(4, 5, 6)
+      s.next S(7, 8, 9)
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+    it 'Basic HLD series queuing with restart and skip nil' do
+      h = HLD()
+      s = h.autorestart(skip_nil: true)
+
+      expect(s.next_value).to eq nil
+
+      h.next S(1, 2, 3)
+      h.next S(4, 5, 6)
+      h.next S(7, 8, 9)
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
     end
 
     it 'HLD(S(1, 2, 3))' do

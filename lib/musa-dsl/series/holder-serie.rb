@@ -10,35 +10,32 @@ module Musa
 
       def initialize(serie)
         @serie = serie
-        @new_serie = nil
+        @new_serie = []
       end
 
-      def hold_next=(serie)
+      def next(serie)
         if @serie.nil?
           @serie = serie
         else
-          @new_serie = serie
+          @new_serie << serie
         end
+
+        self
       end
 
-      def hold_next
-        @new_serie
-      end
-
-      def hold=(serie)
+      def now=(serie)
         @serie = serie
       end
 
-      def hold
+      def now
         @serie
       end
 
       def restart
-        if @new_serie
-          @serie = @new_serie
-          @new_serie = nil
-        else
+        if @new_serie.empty? && @serie
           @serie.restart
+        else
+          @serie = @new_serie.shift
         end
 
         self
