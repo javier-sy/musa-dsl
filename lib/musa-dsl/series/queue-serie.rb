@@ -34,7 +34,7 @@ module Musa
 
           if value.nil?
             forward
-            value = _next_value
+            value = next_value
           end
         end
 

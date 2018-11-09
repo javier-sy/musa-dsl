@@ -173,6 +173,10 @@ module Musa
       end
     end
 
+    def deterministic?
+      !@sources.find() { |t| !t.deterministic? }
+    end
+
     private_constant :SequenceBasicSerie
 
     class SelectorBasicSerie
