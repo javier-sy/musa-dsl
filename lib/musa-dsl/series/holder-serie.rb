@@ -1,66 +1,72 @@
 module Musa
   module Series
-    #  TODO add test case
-    def HLD(serie = nil)
-      HolderSerie.new serie
+    def HOLDER(serie = nil)
+      HolderSerie.new(serie)
     end
 
     class HolderSerie
       include Serie
 
+      attr_accessor :hold
+      attr_reader :next
+
       def initialize(serie)
-        @serie = serie
-        @new_serie = []
+        @hold = serie
+        @next = []
       end
 
-      def next(serie)
-        if @serie.nil?
-          @serie = serie
+      def <<(serie)
+        if @hold.nil?
+          @hold = serie
         else
-          @new_serie << serie
+          @next << serie
         end
 
         self
       end
 
-      def now(serie)
-        @serie = serie
-
-        self
-      end
-
-      def current
-        @serie
-      end
-
       def restart
-        if @new_serie.empty? && @serie
-          @serie.restart
+        if @next.empty? && @hold
+          @hold.restart
         else
-          @serie = @new_serie.shift
+          @hold = @next.shift
         end
 
         self
       end
 
       def current_value
-        @serie.current_value if @serie
+        @hold.current_value if @hold
       end
 
       def next_value
-        @serie.next_value if @serie
+        @hold.next_value if @hold
       end
 
       def peek_next_value
-        @serie.peek_next_value if @serie
+        @hold.peek_next_value if @hold
       end
 
       def infinite?
-        @serie.infinite? if @serie
+        @hold.infinite? if @hold
       end
 
       def deterministic?
-        @serie.deterministic? if @serie
+        @hold.deterministic? if @hold
+      end
+
+      private
+
+      def method_missing(method_name, *args, **key_args, &block)
+        if @hold && @hold.respond_to?(method_name)
+          @hold.send_nice method_name, *args, **key_args, &block
+        else
+          super
+        end
+      end
+
+      def respond_to_missing?(method_name, include_private)
+        @hold && @hold.respond_to?(method_name, include_private) || super
       end
     end
   end

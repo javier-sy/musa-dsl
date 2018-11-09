@@ -252,7 +252,7 @@ class Musa::BaseSequencer
 
       duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
       till_exceeded = control.till_value - binterval <= position if control.till_value
-      condition_failed = !instance_eval(&control.condition_block) if control.condition_block
+      condition_failed = !instance_eval(&control.condition) if control.condition
 
       if !control.stopped? && !duration_exceeded && !till_exceeded && !condition_failed
         _numeric_at position + binterval, control do

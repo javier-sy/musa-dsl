@@ -173,11 +173,11 @@ module Musa
         end
 
         def next_value
-          @proxy.next_value @key
+          @proxy.next_value(@key)
         end
 
         def peek_next_value
-          @proxy.peek_next_value @key
+          @proxy.peek_next_value(@key)
         end
       end
     end

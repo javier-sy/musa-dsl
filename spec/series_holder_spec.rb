@@ -6,12 +6,11 @@ include Musa::Series
 
 RSpec.describe Musa::Serie do
   context 'Series holders' do
-    it 'Basic HLD series substitution' do
-      s = HLD()
-
+    it 'Basic HOLDER series substitution' do
+      s = HOLDER()
       expect(s.next_value).to eq nil
 
-      s.next S(1, 2, 3)
+      s << S(1, 2, 3)
 
       expect(s.next_value).to eq 1
       expect(s.current_value).to eq 1
@@ -25,7 +24,7 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq 1
       expect(s.next_value).to eq 2
 
-      s.now = S(5, 6, 7)
+      s.hold = S(5, 6, 7)
 
       expect(s.next_value).to eq 5
       expect(s.next_value).to eq 6
@@ -34,14 +33,14 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
-    it 'Basic HLD series queuing' do
-      s = HLD()
+    it 'Basic HOLDER series queuing' do
+      s = HOLDER()
 
       expect(s.next_value).to eq nil
 
-      s.next S(1, 2, 3)
-      s.next S(4, 5, 6)
-      s.next S(7, 8, 9)
+      s << S(1, 2, 3)
+      s << S(4, 5, 6)
+      s << S(7, 8, 9)
 
       expect(s.next_value).to eq 1
       expect(s.current_value).to eq 1
@@ -76,15 +75,15 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
-    it 'Basic HLD series queuing with restart and skip nil' do
-      h = HLD()
+    it 'Basic HOLDER series queuing with restart and skip nil' do
+      h = HOLDER()
       s = h.autorestart(skip_nil: true)
 
       expect(s.next_value).to eq nil
 
-      h.next S(1, 2, 3)
-      h.next S(4, 5, 6)
-      h.next S(7, 8, 9)
+      h << S(1, 2, 3)
+      h << S(4, 5, 6)
+      h << S(7, 8, 9)
 
       expect(s.next_value).to eq 1
       expect(s.current_value).to eq 1
@@ -109,8 +108,8 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq 9
     end
 
-    it 'HLD(S(1, 2, 3))' do
-      s1 = HLD(S(1, 2, 3))
+    it 'HOLDER(S(1, 2, 3))' do
+      s1 = HOLDER(S(1, 2, 3))
 
       expect(s1.current_value).to eq nil
 
@@ -150,8 +149,8 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
-    it 'HLD(E(start: nil) { |v| v ? v + 1 : 1 })' do
-      s1 = HLD(E(start: nil) { |v| v ? v + 1 : 1 })
+    it 'HOLDER(E(start: nil) { |v| v ? v + 1 : 1 })' do
+      s1 = HOLDER(E(start: nil) { |v| v ? v + 1 : 1 })
 
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
@@ -174,7 +173,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'E() { |i| i + 1 unless i == 3 }' do
-      s1 = HLD(E() { |i| i + 1 unless i == 3 })
+      s1 = HOLDER(E() { |i| i + 1 unless i == 3 })
 
       expect(s1.next_value).to eq 1
       expect(s1.next_value).to eq 2
@@ -207,8 +206,8 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
-    it 'HLD(HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)))' do
-      s1 = HLD(HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)))
+    it 'HOLDER(HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)))' do
+      s1 = HOLDER(HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)))
 
       expect(s1.current_value).to eq nil
 
@@ -249,8 +248,8 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
-    it 'HLD(HC(x: S(1,2), y: S(:a, :b, :c)).autorestart)' do
-      s1 = HLD(HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart)
+    it 'HOLDER(HC(x: S(1,2), y: S(:a, :b, :c)).autorestart)' do
+      s1 = HOLDER(HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart)
 
       expect(s1.current_value).to eq nil
 
@@ -276,8 +275,8 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq(x: 1, y: :a)
     end
 
-    it 'HLD(HC(x: S(1,2), y: S(:a, :b, :c)).autorestart(skip_nil: true))' do
-      s1 = HLD(HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart(skip_nil: true))
+    it 'HOLDER(HC(x: S(1,2), y: S(:a, :b, :c)).autorestart(skip_nil: true))' do
+      s1 = HOLDER(HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart(skip_nil: true))
 
       expect(s1.current_value).to eq nil
 
@@ -297,6 +296,5 @@ RSpec.describe Musa::Serie do
 
       expect(s1.next_value).to eq(x: 1, y: :a)
     end
-
   end
 end

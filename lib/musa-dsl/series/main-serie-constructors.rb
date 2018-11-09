@@ -38,7 +38,7 @@ module Musa
       end
     end
 
-    def FOR(from: nil, to:, step: nil)
+    def FOR(from: nil, to: nil, step: nil)
       from ||= 0
       step ||= 1
       ForLoopBasicSerie.new from, to, step
@@ -74,10 +74,10 @@ module Musa
       end
     end
 
-    def SIN(start_value: nil, steps:, amplitude: nil, center: nil)
+    def SIN(start_value: nil, steps: nil, amplitude: nil, center: nil)
       start_value ||= 0.0
-      amplitude ||= 1
-      center ||= 0
+      amplitude ||= 1.0
+      center ||= 0.0
       BasicSerieSinFunction.new start_value, steps, amplitude, center
     end
 
@@ -97,8 +97,10 @@ module Musa
     class BasicSerieFromArray
       include Serie
 
-      def initialize(array)
-        @array = array.clone
+      attr_accessor :values
+
+      def initialize(values = nil)
+        @values = values
         @index = 0
       end
 
@@ -107,8 +109,8 @@ module Musa
       end
 
       def _next_value
-        if @index < @array.size
-          value = @array[@index]
+        if @values && @index < @values.size
+          value = @values[@index]
           @index += 1
         else
           value = nil
@@ -122,6 +124,8 @@ module Musa
 
     class BasicSerieFromAutoEvalBlockOnSeed
       include Serie
+
+      attr_accessor :start, :block
 
       def initialize(start, &block)
         @start = start
@@ -141,6 +145,8 @@ module Musa
           @first = false
           @current = @start
         else
+          raise 'Block is undefined' unless @block
+
           @current = @block.call @current unless @current.nil?
         end
 
@@ -153,6 +159,8 @@ module Musa
     class BasicSerieFromEvalBlock
       include Serie
 
+      attr_accessor :block
+
       def initialize(&block)
         @block = block
         restart
@@ -164,6 +172,8 @@ module Musa
       end
 
       def _next_value
+        raise 'Block is undefined' unless @block
+
         @value = @block.call @index unless @value.nil? && @index > 0
         value = @value
         @index += 1
@@ -177,12 +187,31 @@ module Musa
     class ForLoopBasicSerie
       include Serie
 
+      attr_reader :from, :to, :step
+
       def initialize(from, to, step)
         @from = from
         @to = to
-        @step = (-step if from < to && step < 0 || from > to && step > 0) || step
+        @step = step
+
+        sign_adjust_step
 
         restart
+      end
+
+      def from=(from)
+        @from = from
+        sign_adjust_step
+      end
+
+      def to=(to)
+        @to = to
+        sign_adjust_step
+      end
+
+      def step=(step)
+        @step = step
+        sign_adjust_step
       end
 
       def _restart
@@ -199,12 +228,20 @@ module Musa
 
         value
       end
+
+      private
+
+      def sign_adjust_step
+        @step = (-@step if @from < @to && @step < 0 || @from > @to && @step > 0) || @step
+      end
     end
 
     private_constant :ForLoopBasicSerie
 
     class RandomValueFromArrayBasicSerie
       include Serie
+
+      attr_accessor :values, :random
 
       def initialize(values, random)
         @values = values
@@ -235,16 +272,34 @@ module Musa
     class RandomNumberFromRangeBasicSerie
       include Serie
 
+      attr_reader :from, :to, :step
+      attr_accessor :random
+
       def initialize(from, to, step, random)
         @from = from
         @to = to
-        @step = (-step if from < to && step < 0 || from > to && step > 0) || step
+        @step = step
+
+        adjust_step
 
         @random = random
 
-        @step_count = ((@to - @from) / @step).to_i
-
         restart
+      end
+
+      def from=(from)
+        @from = from
+        adjust_step
+      end
+
+      def to=(to)
+        @to = to
+        adjust_step
+      end
+
+      def step=(step)
+        @step = step
+        adjust_step
       end
 
       def _restart
@@ -262,12 +317,21 @@ module Musa
       def deterministic?
         false
       end
+
+      private
+
+      def adjust_step
+        @step = (-@step if @from < @to && @step < 0 || @from > @to && @step > 0) || @step
+        @step_count = ((@to - @from) / @step).to_i
+      end
     end
 
     private_constant :RandomNumberFromRangeBasicSerie
 
     class RandomValuesFromArrayBasicSerie
       include Serie
+
+      attr_accessor :values, :random
 
       def initialize(values, random)
         @values = values
@@ -300,16 +364,34 @@ module Musa
     class RandomNumbersFromRangeBasicSerie
       include Serie
 
+      attr_reader :from, :to, :step
+      attr_accessor :random
+
       def initialize(from, to, step, random)
         @from = from
         @to = to
-        @step = (-step if from < to && step < 0 || from > to && step > 0) || step
+        @step = step
+
+        adjust_step
 
         @random = random
 
-        @step_count = ((@to - @from) / @step).to_i
-
         restart
+      end
+
+      def from=(from)
+        @from = from
+        adjust_step
+      end
+
+      def to=(to)
+        @to = to
+        adjust_step
+      end
+
+      def step=(step)
+        @step = step
+        adjust_step
       end
 
       def _restart
@@ -329,6 +411,13 @@ module Musa
       def deterministic?
         false
       end
+
+      private
+
+      def adjust_step
+        @step = (-@step if @from < @to && @step < 0 || @from > @to && @step > 0) || @step
+        @step_count = ((@to - @from) / @step).to_i
+      end
     end
 
     private_constant :RandomNumbersFromRangeBasicSerie
@@ -336,9 +425,11 @@ module Musa
     class BasicSerieFromHash
       include Serie
 
-      def initialize(series, cycle_all_series)
-        @series = series
-        @cycle_all_series = cycle_all_series
+      attr_accessor :sources, :cycle
+
+      def initialize(series_hash, cycle_all_series)
+        @sources = series_hash
+        @cycle = cycle_all_series
         @have_current = false
         @value = nil
       end
@@ -347,28 +438,30 @@ module Musa
         @have_current = false
         @value = nil
 
-        @series.each do |_key, serie|
+        @sources.each do |_key, serie|
           serie.restart if serie.current_value.nil?
         end
       end
 
       def _next_value
         unless @have_current && @value.nil?
-          pre_value = @series.collect { |key, serie| [key, serie.peek_next_value] }.to_h
+          pre_value = @sources.collect { |key, serie| [key, serie.peek_next_value] }.to_h
 
           nils = 0
           pre_value.each do |key, value|
             if value.nil?
-              @series[key].next_value
+              @sources[key].next_value
               nils += 1
             end
           end
 
-          if nils == 0
-            @value = @series.collect { |key, serie| [key, serie.next_value] }.to_h
-          elsif nils < @series.size && @cycle_all_series
+          if nils.zero?
+            @value = @sources.collect { |key, serie| [key, serie.next_value] }.to_h
+
+          elsif nils < @sources.size && @cycle
             restart
             @value = next_value
+
           else
             @value = nil
           end
@@ -385,9 +478,11 @@ module Musa
     class BasicSerieFromArrayOfSeries
       include Serie
 
-      def initialize(series, cycle_all_series)
-        @series = series
-        @cycle_all_series = cycle_all_series
+      attr_accessor :sources, :cycle
+
+      def initialize(series_array, cycle_all_series)
+        @sources = series_array
+        @cycle = cycle_all_series
         @have_current = false
         @value = nil
       end
@@ -396,28 +491,30 @@ module Musa
         @have_current = false
         @value = nil
 
-        @series.each do |serie|
+        @sources.each do |serie|
           serie.restart if serie.current_value.nil?
         end
       end
 
       def _next_value
         unless @have_current && @value.nil?
-          pre_value = @series.collect(&:peek_next_value)
+          pre_value = @sources.collect(&:peek_next_value)
 
           nils = 0
           pre_value.each_index do |i|
             if pre_value[i].nil?
-              @series[i].next_value
+              @sources[i].next_value
               nils += 1
             end
           end
 
-          if nils == 0
-            @value = @series.collect(&:next_value)
-          elsif nils < @series.size && @cycle_all_series
+          if nils.zero?
+            @value = @sources.collect(&:next_value)
+
+          elsif nils < @sources.size && @cycle
             restart
             @value = next_value
+
           else
             @value = nil
           end
@@ -434,28 +531,45 @@ module Musa
     class BasicSerieSinFunction
       include Serie
 
-      def initialize(start_value, steps, amplitude, center)
-        start_value = start_value.to_f
+      attr_reader :start, :steps, :amplitude, :center
+
+      def initialize(start, steps, amplitude, center)
+        @start = start.to_f
 
         @steps = steps
         @amplitude = amplitude.to_f
         @center = center.to_f
 
-        y = (start_value - @center) / @amplitude
-        warn "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
-        y = 1.0 if y > 1.0 # por los errores de precisión infinitesimal en el cálculo de y cuando es muy próximo a 1.0
-        y = -1.0 if y < -1.0
-
-        @offset = Math.asin(y)
-
-        @step_size = 2.0 * Math::PI / @steps
+        @require_update = true
 
         restart
       end
 
+      def start=(start)
+        @start = start.to_f
+        @require_update = true
+      end
+
+      def steps=(steps)
+        @steps = steps
+        @require_update = true
+      end
+
+      def amplitude=(amplitude)
+        @amplitude = amplitude.to_f
+        @require_update = true
+      end
+
+      def center=(center)
+        @center = center.to_f
+        @require_update = true
+      end
+
       def _next_value
+        update if @require_update
+
         value = nil
-        unless @position == @steps
+        unless @position >= @steps
           value = Math.sin(@offset + @step_size * @position) * @amplitude + @center
           @position += 1
         end
@@ -468,6 +582,20 @@ module Musa
 
       def to_s
         "offset: #{@offset.round(3)}rd amplitude: #{@amplitude.round(3)} center: #{@center.round(3)} length: #{@length} step_size: #{@step_size.round(6)}"
+      end
+
+      private
+
+      def update
+        @require_update = false
+
+        y = (@start - @center) / @amplitude
+        warn "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
+        y = 1.0 if y > 1.0 # por los errores de precisión infinitesimal en el cálculo de y cuando es muy próximo a 1.0
+        y = -1.0 if y < -1.0
+
+        @offset = Math.asin(y)
+        @step_size = 2.0 * Math::PI / @steps
       end
     end
 
