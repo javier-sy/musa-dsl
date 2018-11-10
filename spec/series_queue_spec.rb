@@ -89,6 +89,50 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it 'Basic QUEUE series: from source with .queued method' do
+      s = S(1, 2, 3).queued
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s << S(4, 5, 6)
+
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
     it 'Basic QUEUE series: clearing and adding' do
       s = QUEUE(S(1, 2, 3), S(4, 5, 6))
 
