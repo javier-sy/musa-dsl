@@ -81,6 +81,10 @@ module Musa
       BasicSerieSinFunction.new start_value, steps, amplitude, center
     end
 
+    def FIBO()
+      FibonacciSerie.new
+    end
+
     ###
     ### Implementation
     ###
@@ -600,5 +604,32 @@ module Musa
     end
 
     private_constant :BasicSerieSinFunction
+
+    class FibonacciSerie
+      include Serie
+
+      def initialize()
+        _restart
+      end
+
+      def _restart
+        @a = 0
+        @b = 1
+      end
+
+      def _next_value
+        initial_b = @b
+        @b = @a + @b
+        @a = initial_b
+
+        @a
+      end
+
+      def infinite?
+        true
+      end
+    end
+
+    private_constant :FibonacciSerie
   end
 end

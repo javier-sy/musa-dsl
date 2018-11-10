@@ -1045,5 +1045,62 @@ RSpec.describe Musa::Serie do
       end
       expect(c).to eq 100
     end
+
+    it 'FIBO()' do
+      s = FIBO()
+
+      expect(s.infinite?).to eq true
+      expect(s.deterministic?).to eq true
+
+      expect(s.current_value).to eq nil
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 13
+    end
+
+    it 'FIBO().length(10)' do
+      s = FIBO().length(10)
+
+      expect(s.infinite?).to eq false
+      expect(s.deterministic?).to eq true
+
+      expect(s.current_value).to eq nil
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 13
+      expect(s.next_value).to eq 21
+      expect(s.next_value).to eq 34
+      expect(s.next_value).to eq 55
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 13
+      expect(s.next_value).to eq 21
+      expect(s.next_value).to eq 34
+      expect(s.next_value).to eq 55
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
   end
 end
