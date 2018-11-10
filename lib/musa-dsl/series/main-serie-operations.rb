@@ -285,6 +285,10 @@ module Musa
       def infinite?
         true
       end
+
+      def deterministic?
+        @source.deterministic?
+      end
     end
 
     private_constant :BasicSerieInfiniteRepeater
@@ -335,6 +339,14 @@ module Musa
         end
 
         value
+      end
+
+      def infinite?
+        @source.infinite?
+      end
+
+      def deterministic?
+        @source.deterministic?
       end
 
       private

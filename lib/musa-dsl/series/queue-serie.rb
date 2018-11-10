@@ -1,6 +1,4 @@
 module Musa
-  # TODO add test case
-  #
   module Series
     def QUEUE(*series)
       QueueSerie.new(series)
@@ -14,10 +12,19 @@ module Musa
       def initialize(series)
         @targets = series.clone
         @targets ||= []
+
+        _restart
       end
 
       def <<(serie)
         @targets << serie
+        check_current
+        self
+      end
+
+      def clear
+        @targets.clear
+        restart
         self
       end
 
@@ -57,6 +64,10 @@ module Musa
         @target = @targets[@index].restart if @index < @targets.size
       end
 
+      def check_current
+        @target = @targets[@index].restart unless @target
+      end
+
       def method_missing(method_name, *args, **key_args, &block)
         if @target && @target.respond_to?(method_name)
           @target.send_nice method_name, *args, **key_args, &block
@@ -72,9 +83,8 @@ module Musa
   end
 
   module SerieOperations
-    # TODO add test case
-    def proxied
-      Series::ProxySerie.new self
+    def queued
+      Series::QueueSerie.new [self]
     end
   end
 end
