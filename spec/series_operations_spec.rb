@@ -6,6 +6,41 @@ include Musa::Series
 
 RSpec.describe Musa::Serie do
   context 'Series operations' do
+
+    it 'Length: FOR(from: 1, to: 100).length(3)' do
+      s = FOR(from: 1, to: 100).length(3)
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+    it 'Length: FOR(from: 1, to: 100).length(3)' do
+      s = FOR(from: 1, to: 100).length(0)
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
     it 'Duplicate: S(1, 2, 3, 4, 5, 6).duplicate' do
       s1 = S(1, 2, 3, 4, 5, 6)
 
