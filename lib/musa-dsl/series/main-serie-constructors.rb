@@ -29,11 +29,7 @@ module Musa
     end
 
     def SS(serie)
-      BasicSerieFromSerieOfSeries.new serie, false
-    end
-
-    def SSC(serie)
-      BasicSerieFromSerieOfSeries.new serie, true
+      BasicSerieFromSerieOfSeries.new serie
     end
 
     def E(**args, &block)
