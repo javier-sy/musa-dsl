@@ -28,6 +28,14 @@ module Musa
       BasicSerieFromArrayOfSeries.new series, true
     end
 
+    def SS(serie)
+      BasicSerieFromSerieOfSeries.new serie, false
+    end
+
+    def SSC(serie)
+      BasicSerieFromSerieOfSeries.new serie, true
+    end
+
     def E(**args, &block)
       if args.key?(:start) && args.length == 1
         BasicSerieFromAutoEvalBlockOnSeed.new args[:start], &block
@@ -531,6 +539,42 @@ module Musa
     end
 
     private_constant :BasicSerieFromArrayOfSeries
+
+    class BasicSerieFromSerieOfSeries
+      include Serie
+
+      attr_accessor :source, :cycle
+
+      def initialize(serie, cycle_all_series)
+        @source = serie
+        @cycle = cycle_all_series
+      end
+
+      def _restart
+        @source.restart
+        @source.current_value.restart if @source.next_value
+      end
+
+      def _next_value
+        value = nil
+
+        @source.next_value if @source.current_value.nil?
+
+        if @source.current_value
+          value = @source.current_value.next_value
+
+          if value.nil?
+            @source.next_value
+            @source.current_value.restart if @source.current_value
+            value = next_value
+          end
+        end
+
+        value
+      end
+    end
+
+    private_constant :BasicSerieFromSerieOfSeries
 
     class BasicSerieSinFunction
       include Serie
