@@ -647,7 +647,7 @@ module Musa
     class FibonacciSerie
       include Serie
 
-      def initialize()
+      def initialize
         _restart
       end
 
