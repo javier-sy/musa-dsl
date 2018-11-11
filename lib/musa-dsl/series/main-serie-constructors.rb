@@ -539,11 +539,10 @@ module Musa
     class BasicSerieFromSerieOfSeries
       include Serie
 
-      attr_accessor :source, :cycle
+      attr_accessor :source
 
-      def initialize(serie, cycle_all_series)
+      def initialize(serie)
         @source = serie
-        @cycle = cycle_all_series
       end
 
       def _restart
