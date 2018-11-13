@@ -50,8 +50,8 @@ class Musa::Sequencer
     end
 
     def wait(*value_parameters, **key_parameters, &block)
-      @sequencer.wait *value_parameters, **key_parameters do
-        _as_context_run block
+      @sequencer.wait *value_parameters, **key_parameters do | *values, **key_values |
+        _as_context_run block, values, key_values
       end
     end
 

@@ -93,6 +93,7 @@ class Musa::BaseSequencer
   end
 
   def _serie_at(bar_position_serie, control, with: nil, debug: nil, &block)
+
     bar_position = bar_position_serie.next_value
 
     with_value = if with.respond_to? :next_value
