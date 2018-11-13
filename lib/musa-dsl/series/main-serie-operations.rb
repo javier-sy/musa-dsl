@@ -15,8 +15,12 @@ module Musa
       end
     end
 
-    def length(size)
-      BasicSerieLengthLimiter.new self, size
+    def max_size(length)
+      BasicSerieLengthLimiter.new self, length
+    end
+
+    def skip(length)
+      BasicSerieSkipper.new self, length
     end
 
     # TODO: test case
@@ -397,6 +401,77 @@ module Musa
         @source.deterministic?
       end
     end
+
+    private_constant :BasicSerieRepeater
+
+    class BasicSerieLengthLimiter
+      include Serie
+
+      attr_accessor :source, :length
+
+      def initialize(serie, length)
+        @source = serie
+        @length = length
+
+        _restart
+      end
+
+      def _restart
+        @position = 0
+        @source.restart
+      end
+
+      def _next_value
+        if @position < @length
+          @position += 1
+          @source.next_value
+        else
+          nil
+        end
+      end
+
+      def infinite?
+        false
+      end
+
+      def deterministic?
+        @source.deterministic?
+      end
+    end
+
+    private_constant :BasicSerieLengthLimiter
+
+    class BasicSerieSkipper
+      include Serie
+
+      attr_accessor :source, :length
+
+      def initialize(serie, length)
+        @source = serie
+        @length = length
+
+        _restart
+      end
+
+      def _restart
+        @source.restart
+        @length.times { @source.next_value }
+      end
+
+      def _next_value
+        @source.next_value
+      end
+
+      def infinite?
+        @source.infinite?
+      end
+
+      def deterministic?
+        @source.deterministic?
+      end
+    end
+
+    private_constant :BasicSerieLengthLimiter
 
     class BasicSerieAutorestart
       include Serie

@@ -7,8 +7,8 @@ include Musa::Series
 RSpec.describe Musa::Serie do
   context 'Series operations' do
 
-    it 'Length: FOR(from: 1, to: 100).length(3)' do
-      s = FOR(from: 1, to: 100).length(3)
+    it 'Length: FOR(from: 1, to: 100).max_size(3)' do
+      s = FOR(from: 1, to: 100).max_size(3)
 
       expect(s.next_value).to eq 1
       expect(s.next_value).to eq 2
@@ -27,8 +27,8 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
-    it 'Length: FOR(from: 1, to: 100).length(3)' do
-      s = FOR(from: 1, to: 100).length(0)
+    it 'Length: FOR(from: 1, to: 100).max_size(0)' do
+      s = FOR(from: 1, to: 100).max_size(0)
 
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil
@@ -36,6 +36,26 @@ RSpec.describe Musa::Serie do
 
       s.restart
 
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+    it 'Skip: FOR(from: 1, to: 100).skip(3).max_size(3)' do
+      s = FOR(from: 1, to: 100).skip(3).max_size(3)
+
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil

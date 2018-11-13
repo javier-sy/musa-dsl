@@ -1152,8 +1152,8 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq 13
     end
 
-    it 'FIBO().length(10)' do
-      s = FIBO().length(10)
+    it 'FIBO().max_size(10)' do
+      s = FIBO().max_size(10)
 
       expect(s.infinite?).to eq false
       expect(s.deterministic?).to eq true
