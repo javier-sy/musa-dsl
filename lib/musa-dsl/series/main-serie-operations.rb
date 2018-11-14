@@ -146,11 +146,16 @@ module Musa
     class SequenceBasicSerie
       include Serie
 
-      attr_accessor :sources
+      attr_reader :sources
 
       def initialize(series)
         @sources = series
-        @index = 0
+        _restart
+      end
+
+      def sources=(series)
+        @sources = series
+        restart
       end
 
       def _restart
@@ -190,7 +195,7 @@ module Musa
     class SelectorBasicSerie
       include Serie
 
-      attr_accessor :selector, :sources
+      attr_reader :selector, :sources
 
       def initialize(selector, indexed_series, hash_series)
         @selector = selector
@@ -200,15 +205,31 @@ module Musa
         elsif hash_series && !hash_series.empty?
           @sources = hash_series
         end
+
+        _restart
+      end
+
+      def selector=(serie)
+        @selector = serie
+        @needs_restart = true
+      end
+
+      def sources=(series)
+        @sources = series
+        @needs_restart = true
       end
 
       def _restart
         @selector.restart
         @sources.each(&:restart) if @sources.is_a? Array
         @sources.each { |_key, serie| serie.restart } if @sources.is_a? Hash
+
+        @needs_restart = false
       end
 
       def _next_value
+        restart if @needs_restart
+
         value = nil
 
         index_or_key = @selector.next_value
@@ -228,7 +249,7 @@ module Musa
     class SelectorFullSerieBasicSerie
       include Serie
 
-      attr_accessor :selector, :sources
+      attr_reader :selector, :sources
 
       def initialize(selector, indexed_series, hash_series)
         @selector = selector
@@ -238,6 +259,18 @@ module Musa
         elsif hash_series && !hash_series.empty?
           @sources = hash_series
         end
+
+        _restart
+      end
+
+      def selector=(serie)
+        @selector = serie
+        @needs_restart = true
+      end
+
+      def sources=(series)
+        @sources = series
+        @needs_restart = true
       end
 
       def _restart
@@ -246,6 +279,8 @@ module Musa
       end
 
       def _next_value
+        restart if @needs_restart
+
         value = nil
 
         value = @sources[@index_or_key].next_value unless @index_or_key.nil?
@@ -269,10 +304,16 @@ module Musa
     class BasicSerieInfiniteRepeater
       include Serie
 
-      attr_accessor :source
+      attr_reader :source
 
       def initialize(serie)
         @source = serie
+        _restart
+      end
+
+      def source=(serie)
+        @source = serie
+        restart
       end
 
       def _restart
@@ -304,18 +345,21 @@ module Musa
     class BasicSerieRepeater
       include Serie
 
-      attr_accessor :source
-      attr_reader :times, :condition
+      attr_reader :source, :times, :condition
 
       def initialize(serie, times = nil, &condition_block)
         @source = serie
-
-        @count = 0
 
         @times = times
         @condition = condition_block
 
         update_condition
+        _restart
+      end
+
+      def source=(serie)
+        @source = serie
+        restart
       end
 
       def times=(times)
@@ -370,13 +414,19 @@ module Musa
     class BasicSerieLengthLimiter
       include Serie
 
-      attr_accessor :source, :length
+      attr_reader :source
+      attr_accessor :length
 
       def initialize(serie, length)
         @source = serie
         @length = length
 
         _restart
+      end
+
+      def source=(serie)
+        @source = serie
+        restart
       end
 
       def _restart
@@ -407,13 +457,19 @@ module Musa
     class BasicSerieLengthLimiter
       include Serie
 
-      attr_accessor :source, :length
+      attr_reader :source
+      attr_accessor :length
 
       def initialize(serie, length)
         @source = serie
         @length = length
 
         _restart
+      end
+
+      def source=(serie)
+        @source = serie
+        restart
       end
 
       def _restart
@@ -444,7 +500,7 @@ module Musa
     class BasicSerieSkipper
       include Serie
 
-      attr_accessor :source, :length
+      attr_reader :source, :length
 
       def initialize(serie, length)
         @source = serie
@@ -453,12 +509,24 @@ module Musa
         _restart
       end
 
+      def source=(serie)
+        @source = serie
+        @needs_restart = true
+      end
+
+      def length=(length)
+        @length = length
+        @needs_restart = true
+      end
+
       def _restart
         @source.restart
         @length.times { @source.next_value }
+        @needs_restart = false
       end
 
       def _next_value
+        restart if @needs_restart
         @source.next_value
       end
 
@@ -484,11 +552,13 @@ module Musa
         @skip_nil = skip_nil
 
         @restart_on_next = false
+        _restart
       end
 
       def source=(serie)
         @source = serie
         @restart_on_next = false
+        restart
       end
 
       def _restart
@@ -525,7 +595,7 @@ module Musa
         @source = serie
         @length = length
 
-        restart
+        _restart
       end
 
       def _restart
@@ -548,7 +618,7 @@ module Musa
           @length = length
 
           @values = []
-          restart
+          _restart
         end
 
         def _restart
@@ -575,11 +645,15 @@ module Musa
     class MergeSerieOfSeries
       include Serie
 
-      attr_accessor :source
+      attr_reader :source
 
       def initialize(serie)
         @source = serie
+        _restart
+      end
 
+      def source=(serie)
+        @source = serie
         restart
       end
 
@@ -616,7 +690,11 @@ module Musa
       attr_reader :source
 
       def initialize(serie)
-        self.source = serie
+        @source = serie
+        @values = []
+        @first_round = true
+
+        _restart
       end
 
       def source=(serie)
@@ -629,8 +707,6 @@ module Musa
 
       def _restart
         @index = 0
-
-        self
       end
 
       def _next_value
@@ -660,7 +736,8 @@ module Musa
       attr_reader :source
 
       def initialize(serie)
-        self.source = serie
+        @source = serie
+        _restart
       end
 
       def source=(serie)
@@ -673,8 +750,6 @@ module Musa
       def _restart
         @source.restart
         @reversed = BasicSerieFromArray.new next_values_array_of(@source).reverse
-
-        self
       end
 
       def _next_value
@@ -702,7 +777,8 @@ module Musa
       attr_reader :source
 
       def initialize(serie)
-        self.source = serie
+        @source = serie
+        _restart
       end
 
       def source=(serie)
@@ -714,10 +790,7 @@ module Musa
 
       def _restart
         @values = @source.to_a
-
         @random = Random.new
-
-        self
       end
 
       def _next_value
@@ -731,6 +804,10 @@ module Musa
         end
 
         value
+      end
+
+      def deterministic?
+        false
       end
     end
 
@@ -753,12 +830,12 @@ module Musa
 
       def source=(serie)
         @source = serie
-        @update = true
+        @needs_restart = true
       end
 
       def shift=(shift)
         @shift = shift
-        @update = true
+        @needs_restart = true
       end
 
       def _restart
@@ -767,21 +844,17 @@ module Musa
         @shifted = []
         @shift.abs.times { @shifted << @source.next_value } if @shift < 0
 
-        @update = false
-
-        self
+        @needs_restart = false
       end
 
       def _next_value
-        restart if @update
+        restart if @needs_restart
 
         value = @source.next_value
         return value unless value.nil?
 
         @shifted.shift
       end
-
-
     end
 
     private_constant :BasicSerieShifter
@@ -792,34 +865,31 @@ module Musa
       attr_reader :source, :remove
 
       def initialize(serie, remove)
-        self.source = serie
-        self.remove = remove
+        @source = serie
+        @remove = remove
 
-        restart
+        _restart
       end
 
       def source=(serie)
         @source = serie
-        @update = true
+        @needs_restart = true
       end
 
       def remove=(remove)
         @remove = remove
-        @update = true
+        @needs_restart = true
       end
 
       def _restart
         @source.restart
-
         @remove.times { @source.next_value }
 
-        @update = false
-
-        self
+        @needs_restart = false
       end
 
       def _next_value
-        restart if @update
+        restart if @needs_restart
         @source.next_value
       end
     end
@@ -833,11 +903,13 @@ module Musa
       attr_accessor :on_restart, :block
 
       def initialize(serie, with: nil, on_restart: nil, &block)
-        self.source = serie
-        self.with = with if with
+        @source = serie
+        @with = with if with
 
         @block = block
         @on_restart = on_restart
+
+        _restart
       end
 
       def source=(serie_or_array)
@@ -848,6 +920,7 @@ module Musa
         else
           raise ArgumentError, "serie is not an Array nor a Serie: #{serie_or_array}"
         end
+        @needs_restart = true
       end
 
       def with=(with)
@@ -861,18 +934,21 @@ module Musa
         else
           raise ArgumentError, "with is not an Array nor a Serie: #{with}"
         end
+        @needs_restart = true
       end
 
       def _restart
         @source.restart
         @with.restart if @with
 
-        @on_restart.call if @on_restart
+        @needs_restart = false
 
-        self
+        @on_restart.call if @on_restart
       end
 
       def _next_value
+        restart if @needs_restart
+
         next_value = @source.next_value
 
         if @block && !next_value.nil?
@@ -894,16 +970,22 @@ module Musa
     class BasicHashSerieFromArraySerie
       include Serie
 
-      attr_accessor :source, :keys
+      attr_reader :source
+      attr_accessor :keys
 
       def initialize(serie, keys)
         @source = serie
         @keys = keys
+        _restart
+      end
+
+      def source=(serie)
+        @source = serie
+        restart
       end
 
       def _restart
         @source.restart
-        self
       end
 
       def _next_value

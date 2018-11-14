@@ -82,7 +82,7 @@ module Musa
       start_value ||= 0.0
       amplitude ||= 1.0
       center ||= 0.0
-      BasicSerieSinFunction.new start_value, steps, amplitude, center
+      SinFunctionSerie.new start_value, steps, amplitude, center
     end
 
     def FIBO()
@@ -438,8 +438,8 @@ module Musa
       def initialize(series_hash, cycle_all_series)
         @sources = series_hash
         @cycle = cycle_all_series
-        @have_current = false
-        @value = nil
+
+        _restart
       end
 
       def _restart
@@ -491,8 +491,8 @@ module Musa
       def initialize(series_array, cycle_all_series)
         @sources = series_array
         @cycle = cycle_all_series
-        @have_current = false
-        @value = nil
+
+        _restart
       end
 
       def _restart
@@ -543,6 +543,7 @@ module Musa
 
       def initialize(serie)
         @source = serie
+        _restart
       end
 
       def _restart
@@ -571,7 +572,7 @@ module Musa
 
     private_constant :BasicSerieFromSerieOfSeries
 
-    class BasicSerieSinFunction
+    class SinFunctionSerie
       include Serie
 
       attr_reader :start, :steps, :amplitude, :center
@@ -642,7 +643,7 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieSinFunction
+    private_constant :SinFunctionSerie
 
     class FibonacciSerie
       include Serie
