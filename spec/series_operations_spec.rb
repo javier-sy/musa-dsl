@@ -41,6 +41,32 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it 'Length: FOR(from: 1, to: 3).max_size(5)' do
+      s = FOR(from: 1, to: 3).max_size(5)
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
     it 'Skip: FOR(from: 1, to: 100).skip(3).max_size(3)' do
       s = FOR(from: 1, to: 100).skip(3).max_size(3)
 
