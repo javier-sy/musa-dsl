@@ -63,6 +63,8 @@ module Musa
       @used_pitches = []
       fill_used_pitches @used_pitches
 
+      @controller = {}
+
       log 'Warning: voice without output' unless @output
 
       self
@@ -96,9 +98,14 @@ module Musa
       nil
     end
 
-    def sustain_pedal(value)
+    def sustain_pedal=(value)
+      @controller[:sustain_pedal] = value
       @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x40, value % 128)
       nil
+    end
+
+    def sustain_pedal
+      @controller[:sustain_pedal]
     end
 
     def all_notes_off
