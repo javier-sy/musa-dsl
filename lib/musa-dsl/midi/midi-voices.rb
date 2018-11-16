@@ -96,6 +96,11 @@ module Musa
       nil
     end
 
+    def sustain_pedal(value)
+      @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x40, value % 128)
+      nil
+    end
+
     def all_notes_off
       @used_pitches.clear
       fill_used_pitches @used_pitches
@@ -144,7 +149,7 @@ module Musa
 
               msg = MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity)
               @voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{duration}"
-              @voice.output.puts MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity) if @voice.output && !@voice.fast_forward?
+              @voice.output.puts msg if @voice.output && !@voice.fast_forward?
             else
               @voice.log "silence duration: #{duration}"
             end
