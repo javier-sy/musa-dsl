@@ -64,6 +64,10 @@ module Musa
       SelectorBasicSerie.new self, indexed_series, hash_series
     end
 
+    def multiplex(*indexed_series, **hash_series)
+      MultiplexSelectorBasicSerie.new self, indexed_series, hash_series
+    end
+
     # TODO: test case
     def select_serie(*indexed_series, **hash_series)
       SelectorFullSerieBasicSerie.new self, indexed_series, hash_series
@@ -240,11 +244,77 @@ module Musa
       end
 
       def infinite?
-        !!(@selector.infinite? && !(@sources.find { |serie| !serie.infinite? }))
+        @selector.infinite? && @sources.any? { |serie| serie.infinite? }
+      end
+
+      def deterministic?
+        @selector.deterministic? && @sources.all? { |serie| serie.deterministic? }
       end
     end
 
     private_constant :SelectorBasicSerie
+
+    class MultiplexSelectorBasicSerie
+      include Serie
+
+      attr_reader :selector, :sources
+
+      def initialize(selector, indexed_series, hash_series)
+        @selector = selector
+
+        if indexed_series && !indexed_series.empty?
+          @sources = indexed_series
+        elsif hash_series && !hash_series.empty?
+          @sources = hash_series
+        end
+
+        _restart
+      end
+
+      def selector=(serie)
+        @selector = serie
+        @needs_restart = true
+      end
+
+      def sources=(series)
+        @sources = series
+        @needs_restart = true
+      end
+
+      def _restart
+        @current_value = nil
+        @selector.restart
+        @sources.each(&:restart) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.restart } if @sources.is_a? Hash
+
+        @needs_restart = false
+        @first = true
+      end
+
+      def _next_value
+        restart if @needs_restart
+
+        @current_value =
+          if @first || !@current_value.nil?
+            @first = false
+            index_or_key = @selector.next_value
+            unless index_or_key.nil?
+              @sources.each(&:next_value)
+              @sources[index_or_key].current_value
+            end
+          end
+      end
+
+      def infinite?
+        @selector.infinite? && @sources.any? { |serie| serie.infinite? }
+      end
+
+      def deterministic?
+        @selector.deterministic? && @sources.all? { |serie| serie.deterministic? }
+      end
+    end
+
+    private_constant :MultiplexSelectorBasicSerie
 
     class SelectorFullSerieBasicSerie
       include Serie

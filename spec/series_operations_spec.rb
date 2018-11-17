@@ -358,5 +358,28 @@ RSpec.describe Musa::Serie do
       expect(ss.next_value).to eq nil
       expect(ss.next_value).to eq nil
     end
+
+    it 'Multiplex' do
+      s = S(0, 1, 2).multiplex(S(100, 200, 300, 400, 500), S(1000, 2000, 3000, 4000, 5000), S(10000, 20000, 30000, 40000, 50000))
+
+      expect(s.next_value).to eq 100
+      expect(s.next_value).to eq 2000
+      expect(s.next_value).to eq 30000
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 100
+      expect(s.next_value).to eq 2000
+      expect(s.next_value).to eq 30000
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      expect(s.infinite?).to eq false
+      expect(s.deterministic?).to eq true
+    end
   end
 end
