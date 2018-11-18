@@ -403,6 +403,6 @@ class Musa::BaseSequencer
     m = '...' unless msg
     m = ": #{msg}" if msg
 
-    warn "#{position}#{m}"
+    warn "#{position.round(3)} [#{position}]#{m}"
   end
 end
