@@ -89,6 +89,12 @@ module Musa
       FibonacciSerie.new
     end
 
+    def HARMO(error: nil, unique: nil)
+      error ||= 0.005
+      unique ||= false
+      HarmonicNotesSerie.new error, unique
+    end
+
     ###
     ### Implementation
     ###
@@ -671,5 +677,75 @@ module Musa
     end
 
     private_constant :FibonacciSerie
+
+    class HarmonicNotesSerie
+      include Serie
+
+      attr_reader :error, :unique
+
+      def initialize(error, unique)
+        @error = error
+        @unique = unique
+        _restart
+      end
+
+      def error=(error)
+        @error = error
+        @needs_restart = true
+      end
+
+      def unique=(unique)
+        @unique = unique
+        @needs_restart = true
+      end
+
+      def _restart
+        lo_error = 1.0 - @error
+        hi_error = 1.0 + @error
+
+        r = []
+
+        (0..127).each do |n|
+          old_pitch ||= 1.0
+          pitch = 2**Rational(n, 12)
+          pitch_hi_error = pitch * hi_error
+
+          h = old_pitch.to_i
+          while h <= pitch * hi_error
+            if h.between?(pitch * lo_error, pitch_hi_error)
+              r << n
+            end
+
+            h += 1
+          end
+
+          old_pitch = pitch
+        end
+
+        @s = if @unique
+               BasicSerieFromArray.new(r.uniq)
+            else
+              BasicSerieFromArray.new(r)
+            end
+
+        @needs_restart = false
+      end
+
+      def _next_value
+        restart if @needs_restart
+        @s.next_value
+      end
+
+      def infinite?
+        false
+      end
+
+      def deterministic?
+        true
+      end
+    end
+
+    private_constant :HarmonicNotesSerie
+
   end
 end
