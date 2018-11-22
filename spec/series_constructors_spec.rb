@@ -1193,13 +1193,22 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it 'HARMO(error: 0.1).max_size(10)' do
+      s = HARMO(error: 0.1).max_size(10)
+
+      expect(s.infinite?).to eq false
+      expect(s.deterministic?).to eq true
+
+      expect(s.to_a).to eq [0, 12, 19, 24, 31, 36, 38, 43, 48, 49]
+    end
+
     it 'HARMO().max_size(10)' do
       s = HARMO().max_size(10)
 
       expect(s.infinite?).to eq false
       expect(s.deterministic?).to eq true
 
-      expect(s.to_a).to eq [0, 12, 19, 24, 31, 36, 38, 43, 48, 49]
+      expect(s.to_a).to eq [0, 12, 19, 24, 28, 31, 34, 36, 38, 40]
     end
   end
 end

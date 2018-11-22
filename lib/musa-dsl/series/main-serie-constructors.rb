@@ -89,10 +89,10 @@ module Musa
       FibonacciSerie.new
     end
 
-    def HARMO(error: nil, unique: nil)
-      error ||= 0.005
-      unique ||= false
-      HarmonicNotesSerie.new error, unique
+    def HARMO(error: nil, extended: nil)
+      error ||= 0.5
+      extended ||= false
+      HarmonicNotesSerie.new error, extended
     end
 
     ###
@@ -681,11 +681,11 @@ module Musa
     class HarmonicNotesSerie
       include Serie
 
-      attr_reader :error, :unique
+      attr_reader :error, :extended
 
-      def initialize(error, unique)
+      def initialize(error, extended)
         @error = error
-        @unique = unique
+        @extended = extended
         _restart
       end
 
@@ -694,50 +694,42 @@ module Musa
         @needs_restart = true
       end
 
-      def unique=(unique)
-        @unique = unique
+      def extended=(extended)
+        @extended = extended
         @needs_restart = true
       end
 
       def _restart
-        lo_error = 1.0 - @error
-        hi_error = 1.0 + @error
-
-        r = []
-
-        (0..127).each do |n|
-          old_pitch ||= 1.0
-          pitch = 2**Rational(n, 12)
-          pitch_hi_error = pitch * hi_error
-
-          h = old_pitch.to_i
-          while h <= pitch * hi_error
-            if h.between?(pitch * lo_error, pitch_hi_error)
-              r << n
-            end
-
-            h += 1
-          end
-
-          old_pitch = pitch
-        end
-
-        @s = if @unique
-               BasicSerieFromArray.new(r.uniq)
-            else
-              BasicSerieFromArray.new(r)
-            end
-
+        @harmonic = 0
         @needs_restart = false
       end
 
       def _next_value
         restart if @needs_restart
-        @s.next_value
+
+        begin
+          @harmonic += 1
+
+          candidate_note = 12 * Math::log(@harmonic, 2)
+
+          lo = candidate_note.floor
+          hi = candidate_note.ceil
+
+          best = (candidate_note - lo) <= (hi - candidate_note) ? lo : hi
+
+          error = candidate_note - best
+
+        end until error.abs <= @error
+
+        if @extended
+          { pitch: best, error: error }
+        else
+          best
+        end
       end
 
       def infinite?
-        false
+        true
       end
 
       def deterministic?
