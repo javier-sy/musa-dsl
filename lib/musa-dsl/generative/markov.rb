@@ -7,7 +7,7 @@ module Musa
 
     attr_accessor :start, :finish, :random, :transitions
 
-    def initialize transitions:, start:, finish:, random: nil
+    def initialize(transitions:, start:, finish:, random: nil)
       @transitions = transitions
 
       @start = start
