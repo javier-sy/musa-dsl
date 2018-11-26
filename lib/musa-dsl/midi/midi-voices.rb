@@ -149,7 +149,7 @@ module Musa
         value ||= 0
 
         @controller[number] = [[0, value].max, 0xff].min
-        @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x40, @controller[number])
+        @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, number, @controller[number])
       end
 
       def [](controller_number_or_symbol)
