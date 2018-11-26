@@ -60,10 +60,10 @@ module Musa
 
       @tick_duration = Rational(1, @sequencer.ticks_per_bar)
 
+      @controllers_control = ControllerControl.new(@output, @channel)
+
       @used_pitches = []
       fill_used_pitches @used_pitches
-
-      @controller = {}
 
       log 'Warning: voice without output' unless @output
 
@@ -84,9 +84,11 @@ module Musa
       @fast_forward
     end
 
-    def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, velocity_off: 63)
+    def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, velocity_off: nil)
       pitch ||= pitchvalue
       velocity ||= 63
+      velocity_off ||= 63
+
       NoteControl.new self, pitch: pitch, velocity: velocity, duration: duration, velocity_off: velocity_off
     end
 
@@ -98,14 +100,16 @@ module Musa
       nil
     end
 
+    def controller
+      @controllers_control
+    end
+
     def sustain_pedal=(value)
-      @controller[:sustain_pedal] = value
-      @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x40, value % 128)
-      nil
+      @controllers_control[:sustain_pedal] = value
     end
 
     def sustain_pedal
-      @controller[:sustain_pedal]
+      @controllers_control[:sustain_pedal]
     end
 
     def all_notes_off
@@ -130,6 +134,40 @@ module Musa
         pitches[pitch] = { counter: 0, velocity: 0 }
       end
     end
+
+    class ControllersControl
+      def initialize(output, channel)
+        @output = output
+        @channel = channel
+
+        @controller_map = { sustain_pedal: 0x40 }
+        @controller = []
+      end
+
+      def []=(controller_number_or_symbol, value)
+        number = number_of(controller_number_or_symbol)
+
+        @controller[number] = [[0, value].max, 0xff].min
+        @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x40, @controller[number])
+      end
+
+      def [](controller_number_or_symbol)
+        @controller[number_of(controller_number_or_symbol)]
+      end
+
+      def number_of(controller_number_or_symbol)
+        case controller_number_or_symbol
+        when Numeric
+          controller_number_or_symbol.to_i
+        when Symbol
+          @controller_map[controller_number_or_symbol]
+        else
+          raise ArgumentError, "#{controller_number_or_symbol} is not a Numeric nor a Symbol. Only MIDI controller numbers are allowed"
+        end
+      end
+    end
+
+    private_constant :ControllersControl
 
     class NoteControl
       def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: true)
@@ -222,5 +260,7 @@ module Musa
         nil
       end
     end
+
+    private_constant :NoteControl
   end
 end
