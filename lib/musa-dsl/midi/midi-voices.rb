@@ -60,7 +60,7 @@ module Musa
 
       @tick_duration = Rational(1, @sequencer.ticks_per_bar)
 
-      @controllers_control = ControllerControl.new(@output, @channel)
+      @controllers_control = ControllersControl.new(@output, @channel)
 
       @used_pitches = []
       fill_used_pitches @used_pitches
