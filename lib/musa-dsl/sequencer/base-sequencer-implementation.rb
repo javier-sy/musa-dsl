@@ -165,7 +165,7 @@ class Musa::BaseSequencer
 
     element = serie.next_value
 
-    if element
+    if element && !control.stopped?
       operation = __play_eval.run_operation element
 
       case operation[:current_operation]

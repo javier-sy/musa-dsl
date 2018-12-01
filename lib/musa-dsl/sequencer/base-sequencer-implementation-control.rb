@@ -25,7 +25,7 @@ class Musa::BaseSequencer
       only_once ||= false
 
       @handlers[event] ||= []
-      # TODO: add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
+      # TODO: add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
       @handlers[event] << { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
     end
 
@@ -76,6 +76,16 @@ class Musa::BaseSequencer
       @do_after = []
 
       self.after &after if after
+
+      @stop = false
+    end
+
+    def stop
+      @stop = true
+    end
+
+    def stopped?
+      @stop
     end
 
     def after(_bars = nil, &block)
