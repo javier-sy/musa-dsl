@@ -14,7 +14,7 @@ module Musa
          binder.receiver.sequencer.respond_to?(:on_block_error)
 
         binder.receiver.sequencer.on_block_error do |e|
-          send_exception e, e.backtrace_locations.first.lineno
+          send_exception e
         end
       end
 
@@ -48,7 +48,7 @@ module Musa
 
                         binder.eval @block_source, "(repl)", 1
                       rescue StandardError, ScriptError => e
-                        send_exception e, e.backtrace_locations.first.lineno
+                        send_exception e
                       else
                         after_eval.call @block_source if after_eval
                       end
@@ -86,12 +86,15 @@ module Musa
       send command: '//end'
     end
 
-    def send_exception(e, lineno)
+    def send_exception(e)
+      selected_backtrace_locations = e.backtrace_locations.select {|bt| bt.path == '(repl)' }
       lines = @block_source.split("\n")
 
-      source_before = lines[e.backtrace_locations.first.lineno - 2] if e.backtrace_locations.first.lineno >= 2
-      source_error = lines[e.backtrace_locations.first.lineno - 1]
-      source_after = lines[e.backtrace_locations.first.lineno]
+      lineno = selected_backtrace_locations.first.lineno
+
+      source_before = lines[lineno - 2] if lineno >= 2
+      source_error = lines[lineno - 1]
+      source_after = lines[lineno]
 
       send command: '//error'
       send content: '***'
@@ -101,7 +104,7 @@ module Musa
       send content: '***'
       send content: e.inspect
       send command: '//backtrace'
-      e.backtrace_locations.select { |bt| bt.path == '(repl)' }.each do |bt|
+      selected_backtrace_locations.each do |bt|
         send content: bt.to_s
       end
       send content: ' '
