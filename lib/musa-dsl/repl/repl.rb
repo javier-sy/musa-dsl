@@ -8,11 +8,13 @@ module Musa
       port ||= 1327
       redirect_stderr ||= false
 
+      @block_source = nil
+
       if binder.receiver.respond_to?(:sequencer) &&
          binder.receiver.sequencer.respond_to?(:on_block_error)
 
         binder.receiver.sequencer.on_block_error do |e|
-          send_exception e
+          send_exception e, e.backtrace_locations.first.lineno
         end
       end
 
@@ -39,16 +41,16 @@ module Musa
                       $stdout = connection
                       $stderr = connection if redirect_stderr
 
-                      block_source = buffer.string
+                      @block_source = buffer.string
 
                       begin
-                        send_echo block_source
+                        send_echo @block_source
 
-                        binder.eval block_source
+                        binder.eval @block_source, "(repl)", 1
                       rescue StandardError, ScriptError => e
-                        send_exception e
+                        send_exception e, e.backtrace_locations.first.lineno
                       else
-                        after_eval.call block_source if after_eval
+                        after_eval.call @block_source if after_eval
                       end
 
                       $stdout = original_stdout
@@ -84,13 +86,25 @@ module Musa
       send command: '//end'
     end
 
-    def send_exception(e)
+    def send_exception(e, lineno)
+      lines = @block_source.split("\n")
+
+      source_before = lines[e.backtrace_locations.first.lineno - 2] if e.backtrace_locations.first.lineno >= 2
+      source_error = lines[e.backtrace_locations.first.lineno - 1]
+      source_after = lines[e.backtrace_locations.first.lineno]
+
       send command: '//error'
+      send content: '***'
+      send content: "[#{lineno - 1}] #{source_before}" if source_before
+      send content: "[#{lineno}] #{source_error} \t\t<<< ERROR !!!"
+      send content: "[#{lineno + 1}] #{source_after}" if source_after
+      send content: '***'
       send content: e.inspect
       send command: '//backtrace'
-      e.backtrace.each do |bt|
-        send content: bt
+      e.backtrace_locations.select { |bt| bt.path == '(repl)' }.each do |bt|
+        send content: bt.to_s
       end
+      send content: ' '
       send command: '//end'
     end
 
