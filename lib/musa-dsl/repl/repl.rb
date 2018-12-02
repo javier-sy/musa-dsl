@@ -110,7 +110,8 @@ module Musa
         send content: "[#{lineno}] #{source_error} \t\t<<< ERROR !!!"
         send content: "[#{lineno + 1}] #{source_after}" if source_after
         send content: '***'
-        send content: e.inspect
+        send content: e.class.name
+        send content: e.message
         send command: '//backtrace'
         selected_backtrace_locations.each do |bt|
           send content: bt.to_s
