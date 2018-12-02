@@ -22,7 +22,7 @@ module Musa
       @voices = @channels.collect { |channel| MIDIVoice.new sequencer: @sequencer, output: @output, channel: channel, log: @do_log }
     end
 
-    def voice(index)
+    def [](index)
       @voices[index]
     end
 
