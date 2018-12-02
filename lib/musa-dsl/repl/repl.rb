@@ -87,25 +87,34 @@ module Musa
     end
 
     def send_exception(e)
-      selected_backtrace_locations = e.backtrace_locations.select {|bt| bt.path == '(repl)' }
-      lines = @block_source.split("\n")
-
-      lineno = selected_backtrace_locations.first.lineno
-
-      source_before = lines[lineno - 2] if lineno >= 2
-      source_error = lines[lineno - 1]
-      source_after = lines[lineno]
 
       send command: '//error'
-      send content: '***'
-      send content: "[#{lineno - 1}] #{source_before}" if source_before
-      send content: "[#{lineno}] #{source_error} \t\t<<< ERROR !!!"
-      send content: "[#{lineno + 1}] #{source_after}" if source_after
-      send content: '***'
-      send content: e.inspect
-      send command: '//backtrace'
-      selected_backtrace_locations.each do |bt|
-        send content: bt.to_s
+
+      if e.is_a? ScriptError
+        send content: e.class.name
+        send command: '//backtrace'
+        send content: e.message
+      else
+        selected_backtrace_locations = e.backtrace_locations.select {|bt| bt.path == '(repl)' }
+
+        lines = @block_source.split("\n")
+
+        lineno = selected_backtrace_locations.first.lineno
+
+        source_before = lines[lineno - 2] if lineno >= 2
+        source_error = lines[lineno - 1]
+        source_after = lines[lineno]
+
+        send content: '***'
+        send content: "[#{lineno - 1}] #{source_before}" if source_before
+        send content: "[#{lineno}] #{source_error} \t\t<<< ERROR !!!"
+        send content: "[#{lineno + 1}] #{source_after}" if source_after
+        send content: '***'
+        send content: e.inspect
+        send command: '//backtrace'
+        selected_backtrace_locations.each do |bt|
+          send content: bt.to_s
+        end
       end
       send content: ' '
       send command: '//end'
