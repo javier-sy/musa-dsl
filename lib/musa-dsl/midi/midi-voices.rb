@@ -84,12 +84,17 @@ module Musa
       @fast_forward
     end
 
-    def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, velocity_off: nil)
+    def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, duration_offset: nil, effective_duration: nil, velocity_off: nil)
       pitch ||= pitchvalue
+
       velocity ||= 63
+
+      duration_offset ||= -@tick_duration
+      effective_duration ||= duration + duration_offset
+
       velocity_off ||= 63
 
-      NoteControl.new self, pitch: pitch, velocity: velocity, duration: duration, velocity_off: velocity_off
+      NoteControl.new self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off
     end
 
     def note_off(pitchvalue = nil, pitch: nil, velocity_off: nil, force: nil)
@@ -171,7 +176,9 @@ module Musa
     private_constant :ControllersControl
 
     class NoteControl
-      def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: true)
+      def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: nil)
+        play ||= true
+
         raise ArgumentError, "MIDIVoice: note duration should be nil or Numeric: #{duration} (#{duration.class})" unless duration.nil? || duration.is_a?(Numeric)
 
         @voice = voice
@@ -203,7 +210,7 @@ module Musa
 
           if duration
             this = self
-            @voice.sequencer.wait duration - @voice.tick_duration do
+            @voice.sequencer.wait duration do
               this.note_off velocity: velocity_off
             end
           end
