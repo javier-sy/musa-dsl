@@ -49,8 +49,9 @@ module Musa
     end
 
     # TODO: test case
-    def randomize
-      BasicSerieRandomizer.new self
+    def randomize(random: nil)
+      random ||= Random.new
+      BasicSerieRandomizer.new self, random
     end
 
     # TODO: test case
@@ -128,7 +129,7 @@ module Musa
 
       throw 'Cannot convert to array an infinite serie' if infinite?
 
-      serie = duplicate.restart
+      serie = restart
 
       array = []
 
@@ -522,49 +523,6 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieRepeater
-
-    class BasicSerieLengthLimiter
-      include Serie
-
-      attr_reader :source
-      attr_accessor :length
-
-      def initialize(serie, length)
-        @source = serie
-        @length = length
-
-        _restart
-      end
-
-      def source=(serie)
-        @source = serie
-        restart
-      end
-
-      def _restart
-        @position = 0
-        @source.restart
-      end
-
-      def _next_value
-        if @position < @length
-          @position += 1
-          @source.next_value
-        else
-          nil
-        end
-      end
-
-      def infinite?
-        false
-      end
-
-      def deterministic?
-        @source.deterministic?
-      end
-    end
-
     private_constant :BasicSerieLengthLimiter
 
     class BasicSerieSkipper
@@ -844,10 +802,12 @@ module Musa
     class BasicSerieRandomizer
       include Serie
 
-      attr_reader :source
+      attr_reader :source, :random
 
-      def initialize(serie)
+      def initialize(serie, random)
         @source = serie
+        @random = random
+
         _restart
       end
 
@@ -855,15 +815,22 @@ module Musa
         raise ArgumentError, "cannot randomize an infinite serie #{serie}" if serie.infinite?
 
         @source = serie
-        restart
+        @needs_restart = true
+      end
+
+      def random=(random)
+        @random = random
+        @needs_restart = true
       end
 
       def _restart
         @values = @source.to_a
-        @random = Random.new
+        @needs_restart = false
       end
 
       def _next_value
+        restart if @needs_restart
+
         if !@values.empty?
           position = @random.rand(0...@values.size)
           value = @values[position]

@@ -738,6 +738,5 @@ module Musa
     end
 
     private_constant :HarmonicNotesSerie
-
   end
 end
