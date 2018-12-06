@@ -90,13 +90,19 @@ module Musa
 
       send command: '//error'
 
-      if e.is_a? ScriptError
+      selected_backtrace_locations = e.backtrace_locations.select { |bt| bt.path == '(repl)' }
+
+      if e.is_a?(ScriptError)
         send content: e.class.name
         send command: '//backtrace'
         send content: e.message
-      else
-        selected_backtrace_locations = e.backtrace_locations.select {|bt| bt.path == '(repl)' }
 
+      elsif selected_backtrace_locations.empty?
+        send content: "#{e.class.name}: #{e.message}"
+        send command: '//backtrace'
+        send content: e.backtrace_locations.first.to_s
+
+      else
         lines = @block_source.split("\n")
 
         lineno = selected_backtrace_locations.first.lineno
