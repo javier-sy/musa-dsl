@@ -35,7 +35,7 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _numeric_at(bar_position, control, next_bar_position: nil, with: nil, debug: nil, &block)
+  def _numeric_at(bar_position, control, with: nil, debug: nil, &block)
     raise ArgumentError, 'Block is mandatory' unless block
 
     position = bar_position.rationalize * @ticks_per_bar
@@ -54,7 +54,6 @@ class Musa::BaseSequencer
     key_parameters = {}
     key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
 
-    key_parameters[:next_position] = next_bar_position if next_bar_position && block_key_parameters_binder.key?(:next_position)
     key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
     if position == @position
@@ -94,8 +93,8 @@ class Musa::BaseSequencer
   end
 
   def _serie_at(bar_position_serie, control, with: nil, debug: nil, &block)
+
     bar_position = bar_position_serie.next_value
-    next_bar_position = bar_position_serie.peek_next_value
 
     with_value = if with.respond_to? :next_value
                    with.next_value
@@ -104,7 +103,7 @@ class Musa::BaseSequencer
                  end
 
     if bar_position
-      _numeric_at bar_position, control, next_bar_position: next_bar_position, with: with_value, debug: debug, &block
+      _numeric_at bar_position, control, with: with_value, debug: debug, &block
 
       _numeric_at bar_position, control, debug: false do
         _serie_at bar_position_serie, control, with: with, debug: debug, &block
@@ -166,7 +165,7 @@ class Musa::BaseSequencer
 
     element = serie.next_value
 
-    if element
+    if element && !control.stopped?
       operation = __play_eval.run_operation element
 
       case operation[:current_operation]
@@ -254,7 +253,7 @@ class Musa::BaseSequencer
 
       duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
       till_exceeded = control.till_value - binterval <= position if control.till_value
-      condition_failed = !instance_eval(&control.condition_block) if control.condition_block
+      condition_failed = !instance_eval(&control.condition) if control.condition
 
       if !control.stopped? && !duration_exceeded && !till_exceeded && !condition_failed
         _numeric_at position + binterval, control do
@@ -328,7 +327,7 @@ class Musa::BaseSequencer
       size.times { |i| rstep[i] = (to[i] - from[i]) / steps } if to
     else
       # TODO: from to every (sin till/duration): no cubierto (=> duration = (to - from) / step) if to
-      # TODO from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
+      # TODO: from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
     end
 
     control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
@@ -404,6 +403,6 @@ class Musa::BaseSequencer
     m = '...' unless msg
     m = ": #{msg}" if msg
 
-    warn "#{position}#{m}"
+    warn "#{position.to_f.round(3)} [#{position}]#{m}"
   end
 end

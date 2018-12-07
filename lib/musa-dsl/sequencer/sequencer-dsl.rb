@@ -3,11 +3,12 @@ require 'forwardable'
 class Musa::Sequencer
   extend Forwardable
 
-  def_delegators :@sequencer, :raw_at, :tick, :on_debug_at, :on_block_error,
-                 :on_fast_forward, :ticks_per_bar, :round, :position=, :size, :event_handler, :empty?
+  def_delegators :@sequencer, :raw_at, :tick, :on_debug_at, :on_block_error
+  def_delegators :@sequencer, :on_fast_forward, :ticks_per_bar, :round, :position=, :size, :event_handler, :empty?
 
   def_delegators :@context, :position, :log
   def_delegators :@context, :with, :now, :at, :wait, :theme, :play, :every, :move
+  def_delegators :@context, :everying, :playing, :moving
   def_delegators :@context, :launch, :on
 
   def initialize(quarter_notes_by_bar, quarter_note_divisions, sequencer: nil, do_log: nil, &block)
@@ -26,7 +27,7 @@ class Musa::Sequencer
 
     attr_reader :sequencer
 
-    def_delegators :@sequencer, :launch, :on, :position, :ticks_per_bar, :round, :log, :inspect
+    def_delegators :@sequencer, :launch, :on, :position, :everying, :playing, :moving, :ticks_per_bar, :round, :log, :inspect
 
     def initialize(sequencer)
       @sequencer = sequencer
@@ -49,8 +50,8 @@ class Musa::Sequencer
     end
 
     def wait(*value_parameters, **key_parameters, &block)
-      @sequencer.wait *value_parameters, **key_parameters do
-        _as_context_run block
+      @sequencer.wait *value_parameters, **key_parameters do | *values, **key_values |
+        _as_context_run block, values, key_values
       end
     end
 

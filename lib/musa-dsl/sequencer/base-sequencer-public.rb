@@ -5,6 +5,7 @@ require 'musa-dsl/series'
 
 class Musa::BaseSequencer
   attr_reader :ticks_per_bar, :running_position
+  attr_reader :everying, :playing, :moving
 
   @@tick_mutex = Mutex.new
 
@@ -19,6 +20,10 @@ class Musa::BaseSequencer
 
     @score = {}
 
+    @everying = []
+    @playing = []
+    @moving = []
+
     @do_log = do_log
 
     reset
@@ -26,6 +31,10 @@ class Musa::BaseSequencer
 
   def reset
     @score.clear
+    @everying.clear
+    @playing.clear
+    @moving.clear
+
     @event_handlers = [EventHandler.new]
 
     @position = @ticks_per_bar - 1
@@ -46,7 +55,7 @@ class Musa::BaseSequencer
             $stdout = command[:parent_control].stdout
             $stderr = command[:parent_control].stderr
 
-            command[:block].call *command[:value_parameters], **command[:key_parameters]
+            command[:block]._call command[:value_parameters], command[:key_parameters]
 
             $stdout = original_stdout
             $stderr = original_stderr
@@ -55,7 +64,7 @@ class Musa::BaseSequencer
           @event_handlers.pop
         else
           @@tick_mutex.synchronize do
-            command[:block].call *command[:value_parameters], **command[:key_parameters]
+            command[:block]._call command[:value_parameters], command[:key_parameters]
           end
         end
       end
@@ -128,8 +137,7 @@ class Musa::BaseSequencer
       bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
       with = Series::S(*with).repeat if with.is_a? Array
 
-      starting_position = position
-      _serie_at bars_delay.eval { |delay| starting_position + delay }, control, with: with, debug: debug, &block
+      _serie_at bars_delay.eval { |delay| position + delay }, control, with: with, debug: debug, &block
     end
 
     @event_handlers.pop
@@ -197,6 +205,12 @@ class Musa::BaseSequencer
 
     @event_handlers.pop
 
+    @playing << control
+
+    control.after do
+      @playing.delete control
+    end
+
     control
   end
 
@@ -210,6 +224,12 @@ class Musa::BaseSequencer
 
     @event_handlers.pop
 
+    @everying << control
+
+    control.after do
+      @everying.delete control
+    end
+
     control
   end
 
@@ -219,7 +239,15 @@ class Musa::BaseSequencer
     every ||= Rational(1, @ticks_per_bar)
     every = every.rationalize unless every.is_a?(Rational)
 
-    _move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+    control = _move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+
+    @moving << control
+
+    control.after do
+      @moving.delete control
+    end
+
+    control
   end
 
   def log(msg = nil)

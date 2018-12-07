@@ -62,6 +62,8 @@ module Musa
   class SlaveSerie
     include Serie
 
+    attr_reader :master
+
     def initialize(master)
       @master = master
       @next_value = []

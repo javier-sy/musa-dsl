@@ -22,7 +22,7 @@ module Musa
       @voices = @channels.collect { |channel| MIDIVoice.new sequencer: @sequencer, output: @output, channel: channel, log: @do_log }
     end
 
-    def voice(index)
+    def [](index)
       @voices[index]
     end
 
@@ -60,6 +60,8 @@ module Musa
 
       @tick_duration = Rational(1, @sequencer.ticks_per_bar)
 
+      @controllers_control = ControllersControl.new(@output, @channel)
+
       @used_pitches = []
       fill_used_pitches @used_pitches
 
@@ -82,10 +84,17 @@ module Musa
       @fast_forward
     end
 
-    def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, velocity_off: 63)
+    def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, duration_offset: nil, effective_duration: nil, velocity_off: nil)
       pitch ||= pitchvalue
+
       velocity ||= 63
-      NoteControl.new self, pitch: pitch, velocity: velocity, duration: duration, velocity_off: velocity_off
+
+      duration_offset ||= -@tick_duration
+      effective_duration ||= duration + duration_offset
+
+      velocity_off ||= 63
+
+      NoteControl.new self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off
     end
 
     def note_off(pitchvalue = nil, pitch: nil, velocity_off: nil, force: nil)
@@ -94,6 +103,18 @@ module Musa
 
       NoteControl.new(self, pitch: pitch, velocity_off: velocity_off, play: false).note_off force: force
       nil
+    end
+
+    def controller
+      @controllers_control
+    end
+
+    def sustain_pedal=(value)
+      @controllers_control[:sustain_pedal] = value
+    end
+
+    def sustain_pedal
+      @controllers_control[:sustain_pedal]
     end
 
     def all_notes_off
@@ -119,8 +140,45 @@ module Musa
       end
     end
 
+    class ControllersControl
+      def initialize(output, channel)
+        @output = output
+        @channel = channel
+
+        @controller_map = { sustain_pedal: 0x40 }
+        @controller = []
+      end
+
+      def []=(controller_number_or_symbol, value)
+        number = number_of(controller_number_or_symbol)
+        value ||= 0
+
+        @controller[number] = [[0, value].max, 0xff].min
+        @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, number, @controller[number])
+      end
+
+      def [](controller_number_or_symbol)
+        @controller[number_of(controller_number_or_symbol)]
+      end
+
+      def number_of(controller_number_or_symbol)
+        case controller_number_or_symbol
+        when Numeric
+          controller_number_or_symbol.to_i
+        when Symbol
+          @controller_map[controller_number_or_symbol]
+        else
+          raise ArgumentError, "#{controller_number_or_symbol} is not a Numeric nor a Symbol. Only MIDI controller numbers are allowed"
+        end
+      end
+    end
+
+    private_constant :ControllersControl
+
     class NoteControl
-      def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: true)
+      def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: nil)
+        play ||= true
+
         raise ArgumentError, "MIDIVoice: note duration should be nil or Numeric: #{duration} (#{duration.class})" unless duration.nil? || duration.is_a?(Numeric)
 
         @voice = voice
@@ -144,7 +202,7 @@ module Musa
 
               msg = MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity)
               @voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{duration}"
-              @voice.output.puts MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity) if @voice.output && !@voice.fast_forward?
+              @voice.output.puts msg if @voice.output && !@voice.fast_forward?
             else
               @voice.log "silence duration: #{duration}"
             end
@@ -152,7 +210,7 @@ module Musa
 
           if duration
             this = self
-            @voice.sequencer.wait duration - @voice.tick_duration do
+            @voice.sequencer.wait duration do
               this.note_off velocity: velocity_off
             end
           end
@@ -210,5 +268,7 @@ module Musa
         nil
       end
     end
+
+    private_constant :NoteControl
   end
 end

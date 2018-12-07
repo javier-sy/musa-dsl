@@ -5,9 +5,9 @@ module Musa
   class Markov
     include Serie
 
-    attr_accessor :start, :finish, :random, :transitions
+    attr_accessor :start, :end, :random, :transitions
 
-    def initialize transitions:, start:, finish:, random: nil
+    def initialize(transitions:, start:, finish: nil, random: nil)
       @transitions = transitions
 
       @start = start
@@ -62,15 +62,14 @@ module Musa
         end
 
         @history << @current
-        @finished = true if @current == @finish
+        @finished = true if !@finish.nil? && (@current == @finish)
       end
 
       @current
     end
 
-    # TODO implement infinite? regarding finish and transitions graph
     def infinite?
-      false
+      @finish.nil?
     end
 
     def deterministic?

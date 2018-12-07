@@ -18,6 +18,7 @@ end
 
 RSpec.describe Musa::Sequencer do
   context 'DSL Sequencing' do
+
     it 'Basic at sequencing' do
       c = 0
 
@@ -60,13 +61,159 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(3)
     end
 
+    it 'Basic wait sequencing with a serie' do
+      c = 0
+      w = S(1, 1, 1)
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          wait w do
+            c += 1
+          end
+        end
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(0)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(2)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(2)
+
+      s.tick
+
+      expect(c).to eq(3)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(3)
+
+      s.tick
+
+      expect(c).to eq(3)
+
+      30.times do
+        s.tick
+      end
+
+      expect(c).to eq(3)
+    end
+
+    it 'Basic wait sequencing with a serie and a with: serie parameter' do
+      w = S(1, 1, 1)
+      p = S(10, 20, 30, 40)
+
+      c = 0
+      pp = nil
+
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          wait w, with: p do |with|
+            c += 1
+            pp = with
+          end
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(pp).to eq(nil)
+
+      s.tick
+
+      expect(c).to eq(0)
+      expect(pp).to eq(nil)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(0)
+      expect(pp).to eq(nil)
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(pp).to eq(10)
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(pp).to eq(10)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(2)
+      expect(pp).to eq(20)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(2)
+      expect(pp).to eq(20)
+
+      s.tick
+
+      expect(c).to eq(3)
+      expect(pp).to eq(30)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(3)
+      expect(pp).to eq(30)
+
+      s.tick
+
+      expect(c).to eq(3)
+      expect(pp).to eq(30)
+
+      30.times do
+        s.tick
+      end
+
+      expect(c).to eq(3)
+      expect(pp).to eq(30)
+    end
+
     it 'Basic every sequencing with control' do
       c = 0
       d = 0
 
+      every_control = nil
+
       s = Musa::Sequencer.new 4, 4 do
         at 1 do
-          every 1 do |control:|
+          every_control = every 1 do |control:|
             c += 1
 
             if c == 2
@@ -81,28 +228,34 @@ RSpec.describe Musa::Sequencer do
       end
 
       expect(c).to eq(0)
+      expect(s.everying.size).to eq 0
 
       s.tick
 
       expect(c).to eq(1)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(1)
+      expect(s.everying).to include(every_control)
 
       14.times do
         s.tick
       end
 
       expect(c).to eq(1)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(2)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(2)
+      expect(s.everying).to include(every_control)
 
       15.times do
         s.tick
@@ -110,11 +263,13 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq(3)
       expect(d).to eq(0)
+      expect(s.everying).to include(every_control)
 
       s.tick
 
       expect(c).to eq(3)
       expect(d).to eq(0)
+      expect(s.everying).to include(every_control)
 
       15.times do
         s.tick
@@ -122,6 +277,67 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq(3)
       expect(d).to eq(1)
+      expect(s.everying.size).to eq 0
+    end
+
+    it 'Basic move sequencing' do
+
+      c = 0
+      move_control = nil
+
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          move_control = move from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
+            c = value
+          end
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(1 + Rational(1, 16))
+      expect(s.moving).to include move_control
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1 + Rational(15, 16))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(2))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(3))
+      expect(s.moving).to include move_control
+
+      (16 * 2).times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
     end
 
     it 'Basic play sequencing' do
@@ -130,8 +346,14 @@ RSpec.describe Musa::Sequencer do
       c = -1
       d = 0
 
-      s = Musa::Sequencer.new 4, 4 do
-        play serie do |element, control:|
+      play_control = nil
+
+      s = Musa::Sequencer.new 4, 4
+
+      expect(s.playing.size).to eq 0
+
+      s.with do
+        play_control = play serie do |element, control:|
           c = element[:value]
 
           control.after do # this will be executed 4 times
@@ -142,20 +364,25 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq(0)
       expect(d).to eq(0)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(1)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(2)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(3)
       expect(d).to eq(0)
+      expect(s.playing).to include(play_control)
 
       s.tick
       expect(c).to eq(3)
       expect(d).to eq(4)
+      expect(s.playing.size).to eq 0
     end
 
     it 'Play sequencing with event syncing' do

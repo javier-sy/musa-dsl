@@ -1,59 +1,72 @@
 module Musa
   module Series
-    #  TODO add test case
-    def HLD(serie = nil)
-      HolderSerie.new serie
+    def HOLDER(serie = nil)
+      HolderSerie.new(serie)
     end
 
     class HolderSerie
       include Serie
 
+      attr_accessor :hold
+      attr_reader :next
+
       def initialize(serie)
-        @serie = serie
-        @new_serie = nil
+        @hold = serie
+        @next = []
       end
 
-      def hold_next=(serie)
-        @new_serie = serie
-      end
-
-      def hold_next
-        @new_serie
-      end
-
-      def hold=(serie)
-        @serie = serie
-      end
-
-      def hold
-        @serie
-      end
-
-      def restart
-        if @new_serie
-          @serie = @new_serie
-          @new_serie = nil
+      def <<(serie)
+        if @hold.nil?
+          @hold = serie
         else
-          @serie.restart
+          @next << serie
         end
 
         self
       end
 
+      def restart
+        if @next.empty? && @hold
+          @hold.restart
+        else
+          @hold = @next.shift
+        end
+
+        self
+      end
+
+      def current_value
+        @hold.current_value if @hold
+      end
+
       def next_value
-        @serie.next_value
+        @hold.next_value if @hold
       end
 
       def peek_next_value
-        @serie.peek_next_value
+        @hold.peek_next_value if @hold
       end
 
       def infinite?
-        @serie.infinite?
+        @hold.infinite? if @hold
       end
 
       def deterministic?
-        @serie.deterministic?
+        @hold.deterministic? if @hold
+      end
+
+      private
+
+      def method_missing(method_name, *args, **key_args, &block)
+        if @hold && @hold.respond_to?(method_name)
+          @hold.send_nice method_name, *args, **key_args, &block
+        else
+          super
+        end
+      end
+
+      def respond_to_missing?(method_name, include_private)
+        @hold && @hold.respond_to?(method_name, include_private) || super
       end
     end
   end
