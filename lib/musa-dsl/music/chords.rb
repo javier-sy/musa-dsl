@@ -65,13 +65,35 @@ module Musa
       @name = name
       @features = features.clone.freeze
       @pitch_offsets = offsets.clone.freeze
-      @pitch_names = offsets.each_pair { |k, v| [v, k] }.to_h
+      @pitch_names = offsets.collect { |k, v| [v, k] }.to_h
     end
 
-    attr_reader :name, :features, :pitch_offsets
+    attr_reader :name, :features, :pitch_offsets, :pitch_names
 
     def pitches(root_pitch)
       @pitch_offsets.values.collect { |offset| root_pitch + offset }
+    end
+
+    def named_pitches(elements_or_pitches, &block)
+      pitches = elements_or_pitches.collect do |element_or_pitch|
+        [if block
+           yield element_or_pitch
+         else
+           element_or_pitch
+         end,
+         element_or_pitch]
+      end.to_h
+
+      root_pitch = pitches.keys.find do |candidate_root_pitch|
+        candidate_pitches = pitches.keys.collect { |p| p - candidate_root_pitch }
+        octave_reduce(candidate_pitches).uniq == octave_reduce(@pitch_offsets.values).uniq
+      end
+
+      # TODO: OJO: problema con las notas duplicadas, con la identificación de inversiones y con las notas a distancias de más de una octava
+
+      pitches.collect do |pitch, element|
+        [@pitch_names[pitch - root_pitch], element]
+      end.to_h
     end
 
     def matches(pitches)
@@ -272,12 +294,30 @@ module Musa
       end
     end
 
+    def scale
+      scales = @notes.values.collect(&:scale).uniq
+      scales.first if scales.size == 1
+    end
+
     # Converts the chord to a specific scale with the notes in the chord
     def as_scale
     end
 
 
-    def match(*scales_or_chords)
+    def project_on_all(*scales)
+      # TODO add match to other chords... what does it means?
+
+      note_sets = {}
+      scales.each do |scale|
+        note_sets[scale] = @notes.values.collect { |n| n.on(scale) }
+      end
+
+      note_sets_in_scale = note_sets.values.reject { |notes| notes.include?(nil) }
+      note_sets_in_scale.collect { |notes| Chord.new(notes: notes) }
+    end
+
+    def project_on(*scales)
+      project_on_all(*scales).first
     end
 
     def ==(other)
@@ -308,26 +348,41 @@ module Musa
 
         chord_definitions = ChordDefinition.find_by_features(features)
 
-        selected_chord_definitions = chord_definitions.reject do |chord_definition|
+        in_scale_chord_definitions = chord_definitions.reject do |chord_definition|
           chord_definition.pitches(root_pitch).find { |chord_pitch| scale.note_of_pitch(chord_pitch).nil? }
         end
 
-        raise ArgumentError, "Don't know how to create a chord with root pitch #{root_pitch} and features #{features} based on #{scale.root}: #{selected_chord_definitions.size} found" if selected_chord_definitions.size != 1
+        selected =
+          if in_scale_chord_definitions.size == 1
+            in_scale_chord_definitions.first
+          elsif in_scale_chord_definitions.size.zero? && chord_definitions.size == 1
+            chord_definitions.first
+          end
 
-        selected_chord_definitions.first.pitch_offsets.transform_values do |offset|
+        unless selected
+          raise ArgumentError, "Don't know how to create a chord with root pitch #{root_pitch}"\
+            " and features #{features} based on scale #{scale.kind.class} with root on #{scale.root}: "\
+            " found #{in_scale_chord_definitions.size}"\
+            " in-scale chord definitions and #{chord_definitions.size - in_scale_chord_definitions.size}"\
+            " out-of-scale chord definitions"
+        end
+
+        selected.pitch_offsets.transform_values do |offset|
           pitch = root_pitch + offset
           scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)
         end
 
       elsif (notes || pitches && scale) && !(name || root_pitch || features)
 
-        notes += pitches.collect { |p| scale.note_of_pitch(p) }
-        chord_definition = ChordDefinition.find(notes.collect(&:pitch))
+        notes ||= []
+
+        notes += pitches.collect { |p| scale.note_of_pitch(p) } if pitches
+
+        chord_definition = ChordDefinition.find_by_pitches(notes.collect(&:pitch))
 
         raise "Can't find a chord definition for pitches #{pitches} on scale #{scale.kind.id} based on #{scale.root}" unless chord_definition
 
-        notes.collect { |g| [chord_definition.pitch_names[g.pitch], [g]] }.to_h
-
+        chord_definition.named_pitches(notes, &:pitch)
       else
         pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features }
         raise ArgumentError, "Can't understand chord definition pattern #{pattern}"

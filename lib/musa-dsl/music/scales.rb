@@ -349,11 +349,10 @@ module Musa
 
         grade = @kind.class.pitches.find_index { |pitch_definition| pitch_definition[:pitch] == pitch_offset_in_octave }
 
-        return nil unless grade
-
-        wide_grade = pitch_offset_octave * @kind.class.grades + grade
-
-        note = self[wide_grade]
+        if grade
+          wide_grade = pitch_offset_octave * @kind.class.grades + grade
+          note = self[wide_grade]
+        end
       end
 
       note
@@ -364,7 +363,7 @@ module Musa
     end
 
     def chord_of(*grades_or_symbols)
-      # TODO implementar Scale.chord_of
+      Chord.new(notes: grades_or_symbols.collect { |g| self[g] })
     end
 
     def ==(other)
@@ -481,7 +480,7 @@ module Musa
     private
 
     def method_missing(method_name, *args, **key_args, &block)
-      if @scale.kind.class.tuning[method_name] && args.empty? && key_args.empty? && !block
+      if @scale.kind.tuning[method_name] && args.empty? && key_args.empty? && !block
         scale(method_name)
       else
         super
@@ -489,7 +488,7 @@ module Musa
     end
 
     def respond_to_missing?(method_name, include_private)
-      @scale.kind.class.tuning[method_name] || super
+      @scale.kind.tuning[method_name] || super
     end
   end
 end
