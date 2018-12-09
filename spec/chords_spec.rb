@@ -13,9 +13,8 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
     it 'Basic triad major chord creation' do
       maj3 = major.tonic.chord
 
-      expect(maj3.scale).to be major
-      expect(maj3.fundamental.pitch).to eq 60
-      expect(maj3.features).to include :major
+      expect(maj3.root.pitch).to eq 60
+      expect(maj3.features).to include({quality: :major})
 
       expect(maj3[0].pitch).to eq 60
       expect(maj3[0].grade).to eq 0
@@ -33,8 +32,14 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(maj3[2].scale).to be major
 
       expect(maj3[3]).to eq nil
-      expect(maj3.size).to eq 3
-      expect(maj3.length).to eq 3
+      expect(maj3.notes.size).to eq 3
+    end
+
+    it 'Basic triad major chord creation from scale, with and without :triad feature' do
+      maj3_a = major.tonic.chord
+      maj3_b = major.tonic.chord :triad
+
+      expect(maj3_a).to eq maj3_b
     end
 
     it 'Basic triad major to minor chord navigation' do
