@@ -151,23 +151,23 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
 
       expect(c.notes.size).to eq 4
 
-      c = major.dominant.chord :ninth
+      c = major.dominant.chord :ninth, :major
 
       expect(c[0].pitch).to eq 67
       expect(c[1].pitch).to eq 71
       expect(c[2].pitch).to eq 74
-      expect(c[3].pitch).to eq 77
+      expect(c[3].pitch).to eq 78
       expect(c[4].pitch).to eq 81
       expect(c[5]).to eq nil
 
       expect(c.notes.size).to eq 5
 
-      c = major.dominant.chord :eleventh
+      c = major.dominant.chord :eleventh, :major
 
       expect(c[0].pitch).to eq 67
       expect(c[1].pitch).to eq 71
       expect(c[2].pitch).to eq 74
-      expect(c[3].pitch).to eq 77
+      expect(c[3].pitch).to eq 78
       expect(c[4].pitch).to eq 81
       expect(c[5].pitch).to eq 84
       expect(c[6]).to eq nil
@@ -175,8 +175,13 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(c.notes.size).to eq 6
     end
 
-    it '' do
-      major.dominant.octave(-1).major.dominant.chord :seventh # V7/V
+    it 'V7/V chord' do
+      chord = major.dominant.octave(-1).major.dominant.chord :seventh
+
+      expect(chord.features).to include({dominant: :dominant})
+
+      expect(chord.project_on(major)).to eq nil
+      expect(chord.project_on(major, allow_chromatic: true).notes.size).to eq 4
     end
 
     it '' do

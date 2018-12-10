@@ -1,4 +1,5 @@
 require_relative 'scales'
+require_relative 'chord-definition'
 
 =begin
 c = Chord.new root: 60, # root: major.tonic,
@@ -19,104 +20,6 @@ c = Chord.new root: 60, # root: major.tonic,
 =end
 
 module Musa
-  class ChordDefinition
-    class << self
-      def [](name)
-        @definitions[name]
-      end
-
-      def register(name, offsets:, **features)
-        definition = ChordDefinition.new(name, offsets: offsets, **features)
-
-        @definitions ||= {}
-        @definitions[definition.name] = definition
-
-        @features_by_value ||= {}
-        definition.features.each { |k, v| @features_by_value[v] = k }
-
-        self
-      end
-
-      def find_by_pitches(pitches)
-        @definitions.values.find { |d| d.matches(pitches) }
-      end
-
-      def find_by_features(feature_values_or_features)
-        feature_values_or_features = [feature_values_or_features] if feature_values_or_features.is_a?(Symbol)
-
-        case feature_values_or_features
-        when Array
-          features = feature_values_or_features.collect { |v| [@features_by_value[v], v] }.to_h
-        when Hash
-          features = feature_values_or_features
-        else
-          raise ArgumentError, "Don't know how to find features #{feature_values_or_features}"
-        end
-
-        @definitions.values.select { |d| features <= d.features }
-      end
-
-      def feature_key_of(feature_value)
-        @features_by_value[feature_value]
-      end
-    end
-
-    def initialize(name, offsets:, **features)
-      @name = name
-      @features = features.clone.freeze
-      @pitch_offsets = offsets.clone.freeze
-      @pitch_names = offsets.collect { |k, v| [v, k] }.to_h
-    end
-
-    attr_reader :name, :features, :pitch_offsets, :pitch_names
-
-    def pitches(root_pitch)
-      @pitch_offsets.values.collect { |offset| root_pitch + offset }
-    end
-
-    def named_pitches(elements_or_pitches, &block)
-      pitches = elements_or_pitches.collect do |element_or_pitch|
-        [if block
-           yield element_or_pitch
-         else
-           element_or_pitch
-         end,
-         element_or_pitch]
-      end.to_h
-
-      root_pitch = pitches.keys.find do |candidate_root_pitch|
-        candidate_pitches = pitches.keys.collect { |p| p - candidate_root_pitch }
-        octave_reduce(candidate_pitches).uniq == octave_reduce(@pitch_offsets.values).uniq
-      end
-
-      # TODO: OJO: problema con las notas duplicadas, con la identificación de inversiones y con las notas a distancias de más de una octava
-
-      pitches.collect do |pitch, element|
-        [@pitch_names[pitch - root_pitch], element]
-      end.to_h
-    end
-
-    def matches(pitches)
-      reduced_pitches = octave_reduce(pitches).uniq
-
-      !!reduced_pitches.find do |candidate_root_pitch|
-        reduced_pitches.sort == octave_reduce(pitches(candidate_root_pitch)).uniq.sort
-      end
-    end
-
-    def to_s
-      "<ChordDefinition: name = #{@name} features = #{@features} pitch_offsets = #{@pitch_offsets}>"
-    end
-
-    alias inspect to_s
-
-    protected
-
-    def octave_reduce(pitches)
-      pitches.collect { |p| p % 12 }
-    end
-  end
-
   class Chord
     def initialize(name_or_notes_or_pitches = nil, # name | [notes] | [pitches]
                    # definitory
@@ -126,6 +29,7 @@ module Musa
                    features: nil,
                    # target scale (or scale reference)
                    scale: nil,
+                   allow_chromatic: nil,
                    # operations
                    inversion: nil, state: nil,
                    position: nil,
@@ -159,6 +63,8 @@ module Musa
       root_pitch = nil
 
       raise ArgumentError, "Duplicate parameter: root: #{root} and root_grade: #{root_grade}" if root && root_grade
+
+      allow_chromatic ||= scale.nil?
 
       if root && root.is_a?(Musa::NoteInScale)
         root_pitch = root.pitch
@@ -208,9 +114,9 @@ module Musa
       #
 
       if _source.nil?
-        @notes = compute_notes(name, root_pitch, scale, notes, pitches, features)
+        @notes = compute_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
       else
-        @notes = compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, features)
+        @notes = compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
       end
 
       # Eval adding / droping operations
@@ -259,22 +165,13 @@ module Musa
       @chord_definition.features if @chord_definition
     end
 
-    def featuring(feature_values_or_features)
+    def featuring(*values, allow_chromatic: nil, **hash)
       features = @chord_definition.features.dup if @chord_definition
       features ||= {}
 
-      feature_values_or_features = [feature_values_or_features] if feature_values_or_features.is_a?(Symbol)
+      ChordDefinition.features_from(values, hash).each { |k, v| features[k] = v }
 
-      case feature_values_or_features
-      when Array
-        feature_values_or_features.each { |v| features[ChordDefinition.feature_key_of(v)] = v }
-      when Hash
-        feature_values_or_features.each { |k, v| features[k] = v }
-      else
-        raise ArgumentError, "Don't know how to find features #{feature_values_or_features}"
-      end
-
-      Chord.new(_source: self, features: features)
+      Chord.new(_source: self, allow_chromatic: allow_chromatic, features: features)
     end
 
     def root(root = nil)
@@ -304,20 +201,26 @@ module Musa
     end
 
 
-    def project_on_all(*scales)
+    def project_on_all(*scales, allow_chromatic: nil)
       # TODO add match to other chords... what does it means?
+      allow_chromatic ||= false
 
       note_sets = {}
       scales.each do |scale|
-        note_sets[scale] = @notes.values.collect { |n| n.on(scale) }
+        if allow_chromatic
+          note_sets[scale] = @notes.values.collect { |n| n.on(scale) || n.on(scale.chromatic) }
+        else
+          note_sets[scale] = @notes.values.collect { |n| n.on(scale) }
+        end
       end
 
       note_sets_in_scale = note_sets.values.reject { |notes| notes.include?(nil) }
       note_sets_in_scale.collect { |notes| Chord.new(notes: notes) }
     end
 
-    def project_on(*scales)
-      project_on_all(*scales).first
+    def project_on(*scales, allow_chromatic: nil)
+      allow_chromatic ||= false
+      project_on_all(*scales, allow_chromatic: allow_chromatic).first
     end
 
     def ==(other)
@@ -332,7 +235,7 @@ module Musa
 
     private
 
-    def compute_notes(name, root_pitch, scale, notes, pitches, features)
+    def compute_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
       if name && root_pitch && scale && !(notes || pitches || features)
 
         chord_definition = ChordDefinition[name]
@@ -346,25 +249,20 @@ module Musa
 
       elsif root_pitch && features && scale && !(name || notes || pitches)
 
-        chord_definitions = ChordDefinition.find_by_features(features)
+        chord_definitions = ChordDefinition.find_by_features(**features)
 
-        in_scale_chord_definitions = chord_definitions.reject do |chord_definition|
-          chord_definition.pitches(root_pitch).find { |chord_pitch| scale.note_of_pitch(chord_pitch).nil? }
+        unless allow_chromatic
+          chord_definitions.reject! do |chord_definition|
+            chord_definition.pitches(root_pitch).find { |chord_pitch| scale.note_of_pitch(chord_pitch).nil? }
+          end
         end
 
-        selected =
-          if in_scale_chord_definitions.size == 1
-            in_scale_chord_definitions.first
-          elsif in_scale_chord_definitions.size.zero? && chord_definitions.size == 1
-            chord_definitions.first
-          end
+        selected = chord_definitions.first
 
         unless selected
           raise ArgumentError, "Don't know how to create a chord with root pitch #{root_pitch}"\
             " and features #{features} based on scale #{scale.kind.class} with root on #{scale.root}: "\
-            " found #{in_scale_chord_definitions.size}"\
-            " in-scale chord definitions and #{chord_definitions.size - in_scale_chord_definitions.size}"\
-            " out-of-scale chord definitions"
+            " no suitable definition found (allow_chromatic is #{allow_chromatic})"
         end
 
         selected.pitch_offsets.transform_values do |offset|
@@ -384,21 +282,21 @@ module Musa
 
         chord_definition.named_pitches(notes, &:pitch)
       else
-        pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features }
+        pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
         raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
       end
 
     end
 
-    def compute_notes_from_source(source, name, root_pitch, scale, notes, pitches, features)
+    def compute_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
       if !(name || root_pitch || scale || notes || pitches || features)
         source.notes
 
       elsif features && !(name || root_pitch || scale || notes || pitches)
-        compute_notes(nil, source.root.pitch, source.root.scale, nil, nil, features)
+        compute_notes(nil, source.root.pitch, source.root.scale, nil, nil, features, allow_chromatic)
 
       else
-        pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features }
+        pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
         raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
       end
     end

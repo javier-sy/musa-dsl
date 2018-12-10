@@ -431,11 +431,13 @@ module Musa
       interval ||= 1
       # TODO: sube un intérvalo de interval tonos (natural true) o semitonos (chromatic true)
       # TODO: que acepte intervals tal como se hayan definido con nombre (tipo :P5, :m3)
+      raise "Not implemented yet"
     end
 
     def down(interval, natural: nil, chromatic: nil)
       interval ||= 1
       # TODO:
+      raise "Not implemented yet"
     end
 
     def frequency
@@ -458,9 +460,11 @@ module Musa
       scale.note_of_pitch @pitch
     end
 
-    def chord(*features)
-      features = [:triad] if features.size.zero?
-      Musa::Chord.new(root: self, features: features)
+    def chord(*feature_values, allow_chromatic: nil, **features_hash)
+      features = { size: :triad } if feature_values.empty? && features_hash.empty?
+      features ||= ChordDefinition.features_from(feature_values, features_hash)
+
+      Musa::Chord.new(root: self, allow_chromatic: allow_chromatic, features: features)
     end
 
     def ==(other)
