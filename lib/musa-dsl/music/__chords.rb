@@ -1,3 +1,6 @@
+# TODO integrar opciones de modificación que da esta estructura en los nuevos acordes
+# TODO ...para que funcionen con el ejemplo de rules-based-chord-voice-leading
+
 module Musa
   class Chord
     attr_accessor :fundamental, :third, :fifth, :duplicated, :duplicate_on
