@@ -177,7 +177,7 @@ module Musa
 
       def initialize(&block)
         @block = block
-        restart
+        _restart
       end
 
       def _restart
@@ -210,7 +210,7 @@ module Musa
 
         sign_adjust_step
 
-        restart
+        _restart
       end
 
       def from=(from)
@@ -261,7 +261,7 @@ module Musa
         @values = values
         @random = random
 
-        restart
+        _restart
       end
 
       def _restart
@@ -298,7 +298,7 @@ module Musa
 
         @random = random
 
-        restart
+        _restart
       end
 
       def from=(from)
@@ -351,7 +351,7 @@ module Musa
         @values = values
         @random = random
 
-        restart
+        _restart
       end
 
       def _restart
@@ -390,7 +390,7 @@ module Musa
 
         @random = random
 
-        restart
+        _restart
       end
 
       def from=(from)
@@ -445,13 +445,21 @@ module Musa
         @sources = series_hash
         @cycle = cycle_all_series
 
-        _restart
+        _restart false
       end
 
-      def _restart
+      def _restart(restart_sources = true)
         @have_current = false
         @value = nil
 
+        if restart_sources
+          @sources.each do |_key, serie|
+            serie.restart
+          end
+        end
+      end
+
+      def _soft_restart
         @sources.each do |_key, serie|
           serie.restart if serie.current_value.nil?
         end
@@ -473,7 +481,7 @@ module Musa
             @value = @sources.collect { |key, serie| [key, serie.next_value] }.to_h
 
           elsif nils < @sources.size && @cycle
-            restart
+            _soft_restart
             @value = next_value
 
           else
@@ -498,13 +506,21 @@ module Musa
         @sources = series_array
         @cycle = cycle_all_series
 
-        _restart
+        _restart false
       end
 
-      def _restart
+      def _restart(restart_sources = true)
         @have_current = false
         @value = nil
 
+        if restart_sources
+          @sources.each do |serie|
+            serie.restart if serie.current_value.nil?
+          end
+        end
+      end
+
+      def _soft_restart
         @sources.each do |serie|
           serie.restart if serie.current_value.nil?
         end
@@ -526,7 +542,7 @@ module Musa
             @value = @sources.collect(&:next_value)
 
           elsif nils < @sources.size && @cycle
-            restart
+            _soft_restart
             @value = next_value
 
           else
@@ -549,12 +565,14 @@ module Musa
 
       def initialize(serie)
         @source = serie
-        _restart
+        _restart false
       end
 
-      def _restart
-        @source.restart
-        @source.current_value.restart if @source.next_value
+      def _restart(restart_sources = true)
+        if restart_sources
+          @source.restart
+          @source.current_value.restart if @source.next_value
+        end
       end
 
       def _next_value
@@ -592,7 +610,7 @@ module Musa
 
         @require_update = true
 
-        restart
+        _restart
       end
 
       def start=(start)

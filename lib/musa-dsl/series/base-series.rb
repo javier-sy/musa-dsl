@@ -52,6 +52,13 @@ module Musa
       true
     end
 
+    alias r restart
+    alias d duplicate
+
+    def dr
+      duplicate.restart
+    end
+
     protected
 
     def propagate_value(value)

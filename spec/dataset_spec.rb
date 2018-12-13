@@ -32,7 +32,7 @@ RSpec.describe Musa::Neuma do
 
       decoder = GDV::NeumaDecoder.new scale
 
-      result_gdv = Musa::Neumalang.parse(gdv_abs_neumas, decode_with: decoder).to_a(true)
+      result_gdv = Musa::Neumalang.parse(gdv_abs_neumas, decode_with: decoder).to_a(recursive: true)
 
       result_pdv = result_gdv.collect { |g| g.to_pdv(scale) }
 
@@ -53,7 +53,7 @@ RSpec.describe Musa::Neuma do
 
       decoder = GDV::NeumaDecoder.new scale
 
-      result_gdv = Musa::Neumalang.parse(gdv_abs_neumas, decode_with: decoder).to_a(true)
+      result_gdv = Musa::Neumalang.parse(gdv_abs_neumas, decode_with: decoder).to_a(recursive: true)
 
       result_gdvd = result_gdv.each_index.collect { |i| result_gdv[i].to_gdvd scale, previous: (i > 0 ? result_gdv[i - 1] : nil) }
 
@@ -69,7 +69,7 @@ RSpec.describe Musa::Neuma do
 
       decoder = GDV::NeumaDifferentialDecoder.new
 
-      result_gdvd = Musa::Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(true)
+      result_gdvd = Musa::Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(recursive: true)
 
       result_neuma = result_gdvd.collect(&:to_neuma)
 
@@ -86,7 +86,7 @@ RSpec.describe Musa::Neuma do
 
       decoder = GDV::NeumaDecoder.new scale
 
-      result_gdv = Musa::Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(true)
+      result_gdv = Musa::Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(recursive: true)
 
       result_neuma = result_gdv.collect(&:to_neuma)
 

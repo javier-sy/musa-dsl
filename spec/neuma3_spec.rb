@@ -240,7 +240,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.to_a(true)
+        pp serie.duplicate.restart.to_a(true)
         puts
       end
 
@@ -286,7 +286,7 @@ RSpec.describe Musa::Neumalang do
       end
 
       unless debug
-        expect(context.instance_variable_get(:@s).to_a).to eq(
+        expect(context.instance_variable_get(:@s).restart.to_a).to eq(
           [{ grade: 0, octave: 0, duration: 1, velocity: 1 },
            { grade: 1, octave: 0, duration: 1, velocity: 1 },
            { grade: 2, octave: 0, duration: 1, velocity: 1 }]
@@ -330,7 +330,7 @@ RSpec.describe Musa::Neumalang do
 
     it 'Complex file neuma parsing' do
       debug = false
-      # debug = true
+      #debug = true
 
       gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
       serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3z_spec.neu')
@@ -339,7 +339,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.to_a(true)
+        pp serie.duplicate.to_a(true)
         puts
       end
 
