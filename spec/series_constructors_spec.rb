@@ -306,7 +306,7 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq 8.50
       expect(s1.next_value).to eq 8.25
       expect(s1.next_value).to eq 8.0
-      
+
     end
 
     it 'RND(8.75, 9, 9.25, 9.50, 9.75, 10)' do
