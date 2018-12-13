@@ -90,7 +90,7 @@ module Musa
       velocity ||= 63
 
       duration_offset ||= -@tick_duration
-      effective_duration ||= duration + duration_offset
+      effective_duration ||= [0, duration + duration_offset].max
 
       velocity_off ||= 63
 

@@ -126,17 +126,17 @@ class Musa::BaseSequencer
         element
       else
         case element[:kind]
-        when :serie then eval_serie element[:serie]
-        when :parallel then eval_parallel element[:parallel]
+        when :serie         then eval_serie element[:serie]
+        when :parallel      then eval_parallel element[:parallel]
         when :assign_to     then eval_assign_to element[:assign_to], element[:assign_value]
         when :use_variable  then eval_use_variable element[:use_variable]
-        when :command then eval_command element[:command], element[:value_parameters], element[:key_parameters]
+        when :command       then eval_command element[:command], element[:value_parameters], element[:key_parameters]
         when :value         then eval_value element[:value]
         when :neuma         then eval_neuma element[:neuma]
         when :call_methods  then eval_call_methods element[:on], element[:call_methods]
-        when :indirection then eval_indirection element[:indirection]
-        when :reference then eval_reference element[:reference]
-        when :event then element
+        when :indirection   then eval_indirection element[:indirection]
+        when :reference     then eval_reference element[:reference]
+        when :event         then element
         else
           raise ArgumentError, "eval_element: don't know how to process #{element}"
         end
