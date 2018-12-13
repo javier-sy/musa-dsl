@@ -258,6 +258,8 @@ RSpec.describe Musa::Serie do
     it 'FOR(from: 10, to: 8.75, step: Rational(1, 4))' do
       s1 = FOR(from: 10, to: 8.75, step: Rational(1, 4))
 
+      expect(s1.infinite?).to eq false
+
       expect(s1.next_value).to eq 10
       expect(s1.next_value).to eq 9.75
       expect(s1.next_value).to eq 9.50
@@ -279,6 +281,32 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
+    end
+
+    it 'FOR(from: 10, step: Rational(1, 4))' do
+      s1 = FOR(from: 10, step: -Rational(1, 4))
+
+      expect(s1.infinite?).to eq true
+
+      expect(s1.next_value).to eq 10
+      expect(s1.next_value).to eq 9.75
+      expect(s1.next_value).to eq 9.50
+      expect(s1.next_value).to eq 9.25
+      expect(s1.next_value).to eq 9
+      expect(s1.next_value).to eq 8.75
+
+      s1.restart
+
+      expect(s1.next_value).to eq 10
+      expect(s1.next_value).to eq 9.75
+      expect(s1.next_value).to eq 9.50
+      expect(s1.next_value).to eq 9.25
+      expect(s1.next_value).to eq 9
+      expect(s1.next_value).to eq 8.75
+      expect(s1.next_value).to eq 8.50
+      expect(s1.next_value).to eq 8.25
+      expect(s1.next_value).to eq 8.0
+      
     end
 
     it 'RND(8.75, 9, 9.25, 9.50, 9.75, 10)' do

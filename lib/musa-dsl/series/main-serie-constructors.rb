@@ -238,15 +238,19 @@ module Musa
           @value += @step
         end
 
-        @value = nil if @value && (@value > @to && @step.positive? || @value < @to && @step.negative?)
+        @value = nil if @to && @value && (@value > @to && @step.positive? || @value < @to && @step.negative?)
 
         value
+      end
+
+      def infinite?
+        @to.nil?
       end
 
       private
 
       def sign_adjust_step
-        @step = (-@step if @from < @to && @step < 0 || @from > @to && @step > 0) || @step
+        @step = (-@step if @to && (@from < @to && @step < 0 || @from > @to && @step > 0)) || @step
       end
     end
 
@@ -571,22 +575,37 @@ module Musa
       def _restart(restart_sources = true)
         if restart_sources
           @source.restart
-          @source.current_value.restart if @source.next_value
+          @restart_each_serie = true
         end
+        @current_serie = nil
       end
 
       def _next_value
         value = nil
 
-        @source.next_value if @source.current_value.nil?
+        restart_current_serie_if_needed = false
 
-        if @source.current_value
-          value = @source.current_value.next_value
+        if @current_serie.nil?
+          @current_serie = @source.next_value
+
+          if @restart_each_serie
+            @current_serie.restart if @current_serie
+          else
+            restart_current_serie_if_needed = true
+          end
+        end
+
+        if @current_serie
+          value = @current_serie.next_value
 
           if value.nil?
-            @source.next_value
-            @source.current_value.restart if @source.current_value
-            value = next_value
+            if restart_current_serie_if_needed
+              @current_serie.restart
+            else
+              @current_serie = nil
+            end
+
+            value = _next_value
           end
         end
 
