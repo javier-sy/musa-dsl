@@ -88,7 +88,7 @@ RSpec.describe Musa do
       d = (c + (dp = ProxyNode.new) | (a | b)).repeat.limit(:size, :sum, :==, 3)
       dp.node = d
 
-      dd = d.options(:size, :sum, :<=, 4).collect { |o| o.collect { |e| e.content }.join }
+      dd = d.options(:size, :sum, :<=, 4).collect { |o| o.collect { |e| e.content } }
 
       expect(dd).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
     end

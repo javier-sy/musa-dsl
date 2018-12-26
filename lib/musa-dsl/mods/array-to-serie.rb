@@ -5,9 +5,9 @@ class Array
     of_series ||= false
 
     if of_series
-      S(self)
-    else
       S(collect { |_| S(_) })
+    else
+      S(self)
     end
   end
 end
