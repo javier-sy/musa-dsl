@@ -9,9 +9,9 @@ RSpec.describe Musa do
     it 'Node repetition with min and max limit' do
       a = N("a") + N("b")
 
-      ar = a.next(a.next(a.repeat(max: 2))).options
+      ar = a.next(a.next(a.repeat(max: 2))).options(raw: true)
 
-      br = a.repeat(min: 2, max: 4).options
+      br = a.repeat(min: 2, max: 4).options(raw: true)
 
       expect(ar).to eq br
     end
@@ -25,7 +25,7 @@ RSpec.describe Musa do
 
       a = m.repeat + c
 
-      options = a.options { |o| o.collect { |e| e.attributes[:length] }.sum <= 2.0 }
+      options = a.options(raw: true) { |o| o.collect { |e| e.attributes[:length] }.sum <= 2.0 }
                     .select { |o| o.collect { |e| e.attributes[:length] }.sum == 2.0 }
                     .collect { |o| [o.collect { |e| e.content }, o.collect { |e| e.attributes[:length] }.sum] }
 
@@ -42,7 +42,7 @@ RSpec.describe Musa do
 
       d = (a | b | c).repeat(4)
 
-      dd = d.options.collect { |o| o.collect { |e| "#{e.content}" } }
+      dd = d.options
 
       expect(dd.length).to eq 3 * 3 * 3 * 3
 
@@ -61,8 +61,7 @@ RSpec.describe Musa do
 
       c = (a | b).repeat.limit { |o| o.collect { |_| _.attributes[:size] }.sum == 3 }
 
-      cc = c.options { |o| o.collect { |e| e.attributes[:size] }.sum <= 4 }
-            .collect { |o| o.collect { |e| e.content }.join }
+      cc = c.options(content: :join) { |o| o.collect { |e| e.attributes[:size] }.sum <= 4 }
 
       expect(cc).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
     end
@@ -75,7 +74,7 @@ RSpec.describe Musa do
 
       c = (a | b).repeat.limit(:size, :sum, :==, 3)
 
-      cc = c.options(:size, :sum, :<=, 4).collect { |o| o.collect { |e| e.content }.join }
+      cc = c.options(:size, :sum, :<=, 4, content: :join)
 
       expect(cc).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
     end
@@ -88,9 +87,9 @@ RSpec.describe Musa do
       d = (c + (dp = ProxyNode.new) | (a | b)).repeat.limit(:size, :sum, :==, 3)
       dp.node = d
 
-      dd = d.options(:size, :sum, :<=, 4).collect { |o| o.collect { |e| e.content } }
+      dd = d.options(:size, :sum, :<=, 4, content: :join)
 
-      expect(dd).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
+      expect(dd).to eq ["cca", "ccb", "caa", "cab", "cba", "cbb", "aca", "acb", "aaa", "aab", "aba", "abb", "bca", "bcb", "baa", "bab", "bba", "bbb"]
     end
   end
 

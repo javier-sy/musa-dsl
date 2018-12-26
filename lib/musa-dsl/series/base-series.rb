@@ -1,3 +1,5 @@
+require 'musa-dsl/mods/duplicate'
+
 module Musa
   module SerieOperations
   end

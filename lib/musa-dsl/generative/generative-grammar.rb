@@ -20,7 +20,11 @@ module Musa
 
     private
 
-    def generate_simple_condition_block(attribute = nil, after_collect_operation = nil, comparison_method = nil, comparison_value = nil)
+    def generate_simple_condition_block(attribute = nil,
+                                        after_collect_operation = nil,
+                                        comparison_method = nil,
+                                        comparison_value = nil)
+
       if attribute && after_collect_operation && comparison_method && comparison_value
         proc { |o| (o.collect { |_| _.attributes[attribute] }.send(after_collect_operation)).send(comparison_method, comparison_value) }
       end
@@ -69,12 +73,27 @@ module Musa
 
       alias + next
 
-      def options(attribute = nil, after_collect_operation = nil, comparison_method = nil, comparison_value = nil, parent: nil, &condition)
+      def options(attribute = nil,
+                  after_collect_operation = nil,
+                  comparison_method = nil,
+                  comparison_value = nil,
+                  raw: nil,
+                  content: nil,
+                  &condition)
+
         raise ArgumentError, 'Cannot use simplified arguments and yield block at the same time' if (attribute || after_collect_operation || comparison_method || comparison_value) && @condition
+        raise ArgumentError, 'Cannot use raw: true and content: option at the same time' if raw && content
+
+        raw ||= false
+        content ||= :itself
 
         condition ||= generate_simple_condition_block(attribute, after_collect_operation, comparison_method, comparison_value)
 
-        _options(parent: parent, &condition)
+        if raw
+          _options(&condition)
+        else
+          _options(&condition).collect { |o| o.collect { |e| e.content }.send(content) }
+        end
       end
 
       def _options(parent: nil, &condition)
@@ -229,7 +248,7 @@ module Musa
         r = []
 
         if @max.nil? || depth < @max
-          node_options = @node.options(parent: parent, &condition)
+          node_options = @node._options(parent: parent, &condition)
 
           node_options.each do |node_option|
             r << node_option
