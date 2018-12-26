@@ -61,12 +61,36 @@ RSpec.describe Musa do
 
       c = (a | b).repeat.limit { |o| o.collect { |_| _.attributes[:size] }.sum == 3 }
 
-      pp c
-
       cc = c.options { |o| o.collect { |e| e.attributes[:size] }.sum <= 4 }
             .collect { |o| o.collect { |e| e.content }.join }
 
       expect(cc).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
+    end
+
+    # TODO añadir métodos simplificados para obtener la lista de options->content y su versión en forma de serie
+
+    it 'Simple grammar, using simplified methods for filtering and retrieving' do
+      a = N('a', size: 1)
+      b = N('b', size: 1)
+
+      c = (a | b).repeat.limit(:size, :sum, :==, 3)
+
+      cc = c.options(:size, :sum, :<=, 4).collect { |o| o.collect { |e| e.content }.join }
+
+      expect(cc).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
+    end
+
+    it 'Simple recursive grammar' do
+      a = N('a', size: 1)
+      b = N('b', size: 1)
+      c = N('c', size: 1)
+
+      d = (c + (dp = ProxyNode.new) | (a | b)).repeat.limit(:size, :sum, :==, 3)
+      dp.node = d
+
+      dd = d.options(:size, :sum, :<=, 4).collect { |o| o.collect { |e| e.content }.join }
+
+      expect(dd).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
     end
   end
 

@@ -18,6 +18,14 @@ module Musa
       end
     end
 
+    private
+
+    def generate_simple_condition_block(attribute = nil, after_collect_operation = nil, comparison_method = nil, comparison_value = nil)
+      if attribute && after_collect_operation && comparison_method && comparison_value
+        proc { |o| (o.collect { |_| _.attributes[attribute] }.send(after_collect_operation)).send(comparison_method, comparison_value) }
+      end
+    end
+
     class Node
       def or(other)
         OrNode.new(self, other)
@@ -47,7 +55,11 @@ module Musa
         end
       end
 
-      def limit(&block)
+      def limit(attribute = nil, after_collect_operation = nil, comparison_method = nil, comparison_value = nil, &block)
+        raise ArgumentError, 'Cannot use simplified arguments and yield block at the same time' if (attribute || after_collect_operation || comparison_method || comparison_value) && @block
+
+        block ||= generate_simple_condition_block(attribute, after_collect_operation, comparison_method, comparison_value)
+
         ConditionNode.new(self, &block)
       end
 
@@ -57,12 +69,28 @@ module Musa
 
       alias + next
 
-      def options(parent: nil, &condition)
+      def options(attribute = nil, after_collect_operation = nil, comparison_method = nil, comparison_value = nil, parent: nil, &condition)
+        raise ArgumentError, 'Cannot use simplified arguments and yield block at the same time' if (attribute || after_collect_operation || comparison_method || comparison_value) && @condition
+
+        condition ||= generate_simple_condition_block(attribute, after_collect_operation, comparison_method, comparison_value)
+
+        _options(parent: parent, &condition)
+      end
+
+      def _options(parent: nil, &condition)
         raise NotImplementedError
       end
     end
 
     private_constant :Node
+
+    class ProxyNode < Node
+      attr_accessor :node
+
+      def _options(parent: nil, &condition)
+        @node._options parent: parent, &condition
+      end
+    end
 
     class FinalNode < Node
       attr_reader :content
@@ -73,7 +101,7 @@ module Musa
         @element = OptionElement.new(content, attributes)
       end
 
-      def options(parent: nil, &condition)
+      def _options(parent: nil, &condition)
         parent ||= []
 
         if block_given?
@@ -97,7 +125,7 @@ module Musa
         @block = block
       end
 
-      def options(parent: nil, &condition)
+      def _options(parent: nil, &condition)
         parent ||= []
 
         element = @block.call(parent, @attributes)
@@ -123,12 +151,12 @@ module Musa
         @block = block
       end
 
-      def options(parent: nil, &condition)
+      def _options(parent: nil, &condition)
         parent ||= []
 
         r = []
 
-        @node.options(parent: parent, &condition).each do |node_option|
+        @node._options(parent: parent, &condition).each do |node_option|
           r << node_option if (!block_given? || yield(parent + node_option)) && @block.call(parent + node_option)
         end
 
@@ -145,16 +173,16 @@ module Musa
         super()
       end
 
-      def options(parent: nil, &condition)
+      def _options(parent: nil, &condition)
         parent ||= []
 
         r = []
 
-        @node1.options(parent: parent, &condition).each do |node_option|
+        @node1._options(parent: parent, &condition).each do |node_option|
           r << node_option if !block_given? || yield(parent + node_option)
         end
 
-        @node2.options(parent: parent, &condition).each do |node_option|
+        @node2._options(parent: parent, &condition).each do |node_option|
           r << node_option if !block_given? || yield(parent + node_option)
         end
 
@@ -171,12 +199,12 @@ module Musa
         super()
       end
 
-      def options(parent: nil, &condition)
+      def _options(parent: nil, &condition)
         parent ||= []
 
         r = []
-        @node.options(parent: parent, &condition).each do |node_option|
-          @after.options(parent: parent + node_option, &condition).each do |after_option|
+        @node._options(parent: parent, &condition).each do |node_option|
+          @after._options(parent: parent + node_option, &condition).each do |after_option|
             r << node_option + after_option unless after_option.empty?
           end
         end
@@ -194,7 +222,7 @@ module Musa
         super()
       end
 
-      def options(parent: nil, depth: nil, &condition)
+      def _options(parent: nil, depth: nil, &condition)
         parent ||= []
         depth ||= 0
 
@@ -206,7 +234,7 @@ module Musa
           node_options.each do |node_option|
             r << node_option
 
-            node_suboptions = options(parent: parent + node_option, depth: depth + 1, &condition)
+            node_suboptions = _options(parent: parent + node_option, depth: depth + 1, &condition)
 
             node_suboptions.each do |node_suboption|
               r << node_option + node_suboption

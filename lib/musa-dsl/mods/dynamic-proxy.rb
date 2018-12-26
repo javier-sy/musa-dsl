@@ -1,14 +1,6 @@
 require_relative 'send-nice'
 
-class DynamicProxy
-  def initialize(receiver)
-    @receiver = receiver
-  end
-
-  attr_writer :receiver
-
-  attr_reader :receiver
-
+module DynamicProxyModule
   def method_missing(method_name, *args, **key_args, &block)
     if @receiver.respond_to? method_name
       @receiver._send_nice method_name, args, key_args, &block
@@ -50,4 +42,14 @@ class DynamicProxy
   def eql?(object)
     _eql?(object) || @receiver.eql?(object)
   end
+end
+
+class DynamicProxy
+  include DynamicProxyModule
+
+  def initialize(receiver = nil)
+    @receiver = receiver
+  end
+
+  attr_accessor :receiver
 end
