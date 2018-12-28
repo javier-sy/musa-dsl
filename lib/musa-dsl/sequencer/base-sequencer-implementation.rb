@@ -249,7 +249,7 @@ class Musa::BaseSequencer
     _numeric_at position, control do
       control._start ||= position
 
-      block_procedure_binder.call(control: control)
+      block_procedure_binder.call(control: control) unless control.stopped?
 
       duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
       till_exceeded = control.till_value - binterval <= position if control.till_value
