@@ -66,8 +66,6 @@ RSpec.describe Musa do
       expect(cc).to eq ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
     end
 
-    # TODO añadir métodos simplificados para obtener la lista de options->content y su versión en forma de serie
-
     it 'Simple grammar, using simplified methods for filtering and retrieving' do
       a = N('a', size: 1)
       b = N('b', size: 1)
