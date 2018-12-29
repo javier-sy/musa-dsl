@@ -302,7 +302,6 @@ class Musa::BaseSequencer
 
       elsif !to && step && every
         # ok
-        #
       elsif !to && !step && every
         step = 1r
 
@@ -312,6 +311,8 @@ class Musa::BaseSequencer
     else
       if to && step && every
         # ok
+      elsif to && !step && every
+        step = (to <=> from).to_r
       else
         raise ArgumentError, 'Cannot use this parameters combination'
       end
