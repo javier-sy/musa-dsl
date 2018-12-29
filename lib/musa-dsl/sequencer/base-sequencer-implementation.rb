@@ -249,13 +249,13 @@ class Musa::BaseSequencer
     _numeric_at position, control do
       control._start ||= position
 
-      block_procedure_binder.call(control: control) unless control.stopped?
-
       duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
       till_exceeded = control.till_value - binterval <= position if control.till_value
       condition_failed = !instance_eval(&control.condition) if control.condition
 
       if !control.stopped? && !duration_exceeded && !till_exceeded && !condition_failed
+        block_procedure_binder.call(control: control) unless control.stopped?
+
         _numeric_at position + binterval, control do
           _every binterval, control, block_procedure_binder: block_procedure_binder
         end
@@ -271,8 +271,11 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _move(every:, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+  def _move(every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
     # TODO: revisar la combinación de parámetros every, from, to, step, duration, till y su semántica; implementarla
+
+    every ||= Rational(1, @ticks_per_bar)
+    every = every.rationalize unless every.is_a?(Rational)
 
     array_mode = from.is_a?(Array) || to.is_a?(Array)
 
