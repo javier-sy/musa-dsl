@@ -89,6 +89,18 @@ RSpec.describe Musa do
 
       expect(dd).to eq ["cca", "ccb", "caa", "cab", "cba", "cbb", "aca", "acb", "aaa", "aab", "aba", "abb", "bca", "bcb", "baa", "bab", "bba", "bbb"]
     end
+
+    it 'Simple repeating' do
+      a = N('a')
+      b = N('b')
+      c = N('c')
+
+      d = (a | b).repeat(3) + c
+
+      dd = d.options(content: :join)
+
+      expect(dd).to eq ["aaac", "aabc", "abac", "abbc", "baac", "babc", "bbac", "bbbc"]
+    end
   end
 
 end
