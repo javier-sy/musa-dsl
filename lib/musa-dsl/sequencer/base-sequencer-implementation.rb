@@ -294,7 +294,7 @@ class Musa::BaseSequencer
 
       elsif to && !step && !every
         step = (to <=> from).to_r
-        every = Rational(effective_duration, to - from)
+        every = Rational(effective_duration, (to - from).abs)
 
       elsif to && !step && every
         steps = (to - from) / every
