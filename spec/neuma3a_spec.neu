@@ -2,7 +2,7 @@ I.1
 II
 III
 
-@a = [IV V.*4 VI]
+@a = [IV V.*4 VI./2]
 
 @a
 

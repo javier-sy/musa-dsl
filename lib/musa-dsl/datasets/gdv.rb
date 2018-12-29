@@ -241,6 +241,9 @@ module Musa::Datasets
           elsif duration[0] == '*'
             command[:factor_duration] = duration[1..-1].to_r
 
+          elsif duration[0] == '/'
+            command[:factor_duration] = Rational(1, duration[1..-1])
+
           else
             command[:abs_duration] = duration.to_r
           end
