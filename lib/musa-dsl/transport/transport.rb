@@ -1,5 +1,3 @@
-# TODO: allow several kinds of clocks: midi-input-clock, topaz-auto-generated-clock, etc
-
 require 'musa-dsl/transport/input-midi-clock'
 require 'musa-dsl/transport/dummy-clock'
 require 'musa-dsl/sequencer'

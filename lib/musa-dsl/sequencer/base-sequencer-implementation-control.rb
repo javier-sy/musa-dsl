@@ -156,7 +156,7 @@ class Musa::BaseSequencer
       @every_control = every_control
     end
 
-    def_delegators :@every_control, :stdout, :stderr, :on_stop, :after, :on, :launch
+    def_delegators :@every_control, :stdout, :stderr, :on_stop, :after, :on, :launch, :stop
   end
 
   private_constant :MoveControl

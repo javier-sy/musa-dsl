@@ -233,10 +233,8 @@ class Musa::BaseSequencer
     control
   end
 
-  # TODO: estaría bien que from y to pudiera tener un Hash, de modo que el movimiento se realice entre los valores de sus atributos
-  # TODO tb estaría bien que pudiera ser un Array de Hash, con la misma semántica en modo polifónico
-  def move(every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-    control = _move every: every, from: from, to: to, diff: diff, using_init: using_init, using: using, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+  def move(every: nil, from: nil, to: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+    control = _move every: every, from: from, to: to, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
 
     @moving << control
 

@@ -253,8 +253,9 @@ class Musa::BaseSequencer
       till_exceeded = control.till_value - binterval <= position if control.till_value
       condition_failed = !instance_eval(&control.condition) if control.condition
 
+      block_procedure_binder.call(control: control) unless control.stopped?
+
       if !control.stopped? && !duration_exceeded && !till_exceeded && !condition_failed
-        block_procedure_binder.call(control: control) unless control.stopped?
 
         _numeric_at position + binterval, control do
           _every binterval, control, block_procedure_binder: block_procedure_binder
@@ -271,122 +272,65 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _move(every: nil, from: nil, to: nil, diff: nil, using_init: nil, using: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-    # TODO: revisar la combinación de parámetros every, from, to, step, duration, till y su semántica; implementarla
+  def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 
-    every ||= Rational(1, @ticks_per_bar)
-    every = every.rationalize unless every.is_a?(Rational)
+    raise ArgumentError, "Cannot use duration: #{duration} and till: #{till} parameters at the same time. Use only one of them." if till && duration
 
-    array_mode = from.is_a?(Array) || to.is_a?(Array)
+    # from, to, step, every
+    # from, to, step, (duration | till)
+    # from, to, every, (duration | till)
+    # from, step, every, (duration | till)
 
-    from = from.arrayfy
-    diff = diff.arrayfy if diff
-    to = to.arrayfy if to
-
-    step ||= Float::MIN
-    step = step.arrayfy
-
-    size = [from.size, step.size].max
-    size = [size, to.size].max if to
-
-    from.collect!(&:rationalize)
-    diff.collect!(&:rationalize) if diff
-    to.collect!(&:rationalize) if to
-    step.collect!(&:rationalize)
-
-    till = till.rationalize if till
-    duration = duration.rationalize if duration
-
-    from = from.repeat_to_size size
-    diff = diff.repeat_to_size size if diff
-    to = to.repeat_to_size size if to
-    step = step.repeat_to_size size
+    step = -step if step && to && ((step > 0 && to < from) || (step < 0 && from < to))
 
     start_position = position
 
-    if diff
-      if to
-        size.times { |i| to[i] = to[i] + diff[i] }
+    if duration || till
+      effective_duration = duration || till - start_position
+
+      if to && step && !every
+        steps = (to - from) / step
+        every = Rational(effective_duration, steps)
+
+      elsif to && !step && every
+        steps = (to - from) / every
+        step = (to - from) / steps
+
+      elsif !to && step && every
+        # ok
       else
-        size.times { |i| to[i] = from[i] + diff[i] }
+        raise ArgumentError, 'Cannot use this parameters combination'
+      end
+    else
+      if to && step && every
+        # ok
+      else
+        raise ArgumentError, 'Cannot use this parameters combination'
       end
     end
 
-    size.times { |i| step[i] = -step[i] if from[i] > to[i] } if to
 
-    value = from.dup
-    rstep = []
+    binder = KeyParametersProcedureBinder.new(block)
 
-    if duration || till
+    every_control = EveryControl.new(@event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
 
-      # from to duration every
-      # from to till every
+    control = MoveControl.new(every_control)
 
-      eduration = till - position - every if till
-      eduration = duration - every if duration
-
-      steps = eduration * (1 / every) # número de pasos que habrá en el movimiento
-
-      size.times { |i| rstep[i] = (to[i] - from[i]) / steps } if to
-    else
-      # TODO: from to every (sin till/duration): no cubierto (=> duration = (to - from) / step) if to
-      # TODO: from to every (sin till/duration): no cubierto (=> using.call retorne true/false continue) if using
-    end
-
-    control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after
     @event_handlers.push control
 
     _numeric_at start_position, control do
-      adjusted_value = []
-      previous_adjusted_value = []
-      size.times { adjusted_value << nil; previous_adjusted_value << nil }
+      value = from
 
-      if using_init && using_init.is_a?(Proc)
-        # TODO: optimizar inicialización de KeyParametersProcedureBinder
-        parameters = KeyParametersProcedureBinder.new(using_init).apply every: every, from: from, step: step, steps: steps, start_position: start_position, position: position - start_position, abs_position: position
+      _every every, every_control do
 
-        from_candidate = if parameters.empty?
-                           instance_exec &using_init
-                         else
-                           instance_exec **parameters, &using_init
-                         end
+        parameters = binder.apply(control: control)
 
-        from = from_candidate.arrayfy if from_candidate
-      end
+        yield value, **parameters
 
-      _every every, control do
-        new_value = []
-
-        if using && using.is_a?(Proc)
-          # TODO: optimizar inicialización de KeyParametersProcedureBinder
-
-          adjusted_value = KeyParametersProcedureBinder.new(using).call(
-            every: every, from: from, step: step, steps: steps,
-            start_position: start_position, position: position - start_position,
-            abs_position: position
-          ).arrayfy
-
-        elsif to
-          size.times do |i|
-            adjusted_value[i] = from[i] + step[i] * ((value[i] - from[i]) / step[i])
-            value[i] += rstep[i]
-          end
-        end
-
-        size.times do |i|
-          new_value[i] = if adjusted_value[i] != previous_adjusted_value[i]
-                           previous_adjusted_value[i] = adjusted_value[i]
-                         end
-        end
-
-        # TODO: se podría hacer que los parámetros que llegasen aquí tb se parsearan como key_parameters si es posible
-
-        parameters = KeyParametersProcedureBinder.new(block).apply(control: MoveControl.new(control))
-
-        if array_mode
-          yield new_value, **parameters
+        if to && (value >= to && step.positive? || value <= to && step.negative?)
+          control.stop
         else
-          new_value.compact.each { |v| yield v, **parameters }
+          value += step
         end
       end
     end

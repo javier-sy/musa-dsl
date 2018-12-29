@@ -280,14 +280,191 @@ RSpec.describe Musa::Sequencer do
       expect(d).to eq(1)
     end
 
-    it 'Basic move sequencing' do
+    it 'Basic move sequencing (every, from, to, duration)' do
       s = Musa::BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
 
       s.at 1 do
-        move_control = s.move from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
+        move_control = s.move every: 1/16r, from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(1 + Rational(1, 16))
+      expect(s.moving).to include move_control
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1 + Rational(15, 16))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(2))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(3))
+      expect(s.moving).to include move_control
+
+      (16 * 2).times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
+    end
+
+    it 'Basic move sequencing (from, to, step, duration)' do
+      s = Musa::BaseSequencer.new 4, 4
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move from: 1, to: 5, duration: 4 + Rational(1, 16), step: 1/16r do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(1 + Rational(1, 16))
+      expect(s.moving).to include move_control
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1 + Rational(15, 16))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(2))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(3))
+      expect(s.moving).to include move_control
+
+      (16 * 2).times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
+    end
+
+    it 'Basic move sequencing (from, to, step, every)' do
+      s = Musa::BaseSequencer.new 4, 4
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move every: 1/16r, from: 1, to: 5, step: 1/16r do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      s.tick
+
+      expect(c).to eq(1)
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(1 + Rational(1, 16))
+      expect(s.moving).to include move_control
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1 + Rational(15, 16))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(2))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(3))
+      expect(s.moving).to include move_control
+
+      (16 * 2).times do
+        s.tick
+      end
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
+    end
+
+    it 'Basic move sequencing (from, step, every, duration)' do
+      s = Musa::BaseSequencer.new 4, 4, do_log: true
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move every: 1/16r, from: 1, step: 1/16r, duration: 4 + Rational(1, 16) do |value|
           c = value
         end
       end

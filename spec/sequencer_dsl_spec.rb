@@ -287,7 +287,7 @@ RSpec.describe Musa::Sequencer do
 
       s = Musa::Sequencer.new 4, 4 do
         at 1 do
-          move_control = move from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
+          move_control = move every: 1/16r, from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
             c = value
           end
         end
