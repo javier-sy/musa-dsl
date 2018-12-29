@@ -381,5 +381,229 @@ RSpec.describe Musa::Serie do
       expect(s.infinite?).to eq false
       expect(s.deterministic?).to eq true
     end
+
+
+    it '.flatten(serie_of_series: true): S(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9))' do
+      s = S(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9)).flatten(serie_of_series: true)
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+    it '.flatten: S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9))' do
+      s = S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9)).flatten
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 33
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 33
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 33
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 33
+      expect(s.next_value).to eq 4
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 33
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+    it 'Complex .flatten(serie_of_series: true) extraction I' do
+      perm = [1, 2, 3].permutation.to_a
+
+      values = S(*perm)
+
+      values_serie = E() { S(*values.next_value) }
+
+      s = values_serie.flatten(serie_of_series: true)
+
+      expect(s.next_value).to eq perm[0][0]
+      expect(s.next_value).to eq perm[0][1]
+      expect(s.next_value).to eq perm[0][2]
+
+      expect(s.next_value).to eq perm[1][0]
+      expect(s.next_value).to eq perm[1][1]
+      expect(s.next_value).to eq perm[1][2]
+
+      expect(s.next_value).to eq perm[2][0]
+      expect(s.next_value).to eq perm[2][1]
+      expect(s.next_value).to eq perm[0][2]
+    end
+
+    it 'Complex .flatten(serie_of_series: true) extraction II' do
+      perm = [1, 2, 3].permutation.to_a
+
+      values = S(*perm)
+
+      values_serie = E() { S(*values.next_value) }
+
+      s = values_serie.flatten(serie_of_series: true)
+
+      expect(s.max_size(3).to_a).to eq perm[0]
+      expect(s.max_size(3).to_a).to eq perm[1]
+      expect(s.max_size(3).to_a).to eq perm[2]
+    end
+
+
   end
 end

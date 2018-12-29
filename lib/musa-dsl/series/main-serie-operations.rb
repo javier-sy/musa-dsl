@@ -23,6 +23,16 @@ module Musa
       BasicSerieSkipper.new self, length
     end
 
+    def flatten(serie_of_series: nil)
+      serie_of_series ||= false
+
+      if serie_of_series
+        FlattenSerieFromSerieOfSeries.new self
+      else
+        SerieFlattener.new self
+      end
+    end
+
     # TODO: test case
     def hashify(*keys)
       BasicHashSerieFromArraySerie.new self, keys
@@ -519,8 +529,6 @@ module Musa
         if @position < @length
           @position += 1
           @source.next_value
-        else
-          nil
         end
       end
 
@@ -579,7 +587,124 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieLengthLimiter
+    private_constant :BasicSerieSkipper
+
+    class SerieFlattener
+      include Serie
+
+      attr_reader :source
+
+      def initialize(serie)
+        @source = serie
+
+        _restart false
+      end
+
+      def source=(serie)
+        @source = serie
+        @needs_restart = true
+      end
+
+      def length=(length)
+        @length = length
+        @needs_restart = true
+      end
+
+      def _restart(restart_sources = true)
+        if restart_sources
+          @source.restart
+          @restart_each_serie = true
+        else
+          @restart_each_serie = false
+        end
+
+        @stack = [@source]
+        @needs_restart = false
+      end
+
+      def _next_value
+        _restart(false) if @needs_restart
+
+        if @stack.last
+          value = @stack.last.next_value
+
+          case value
+          when Serie
+            value.restart if @restart_each_serie
+            @stack.push(value)
+            _next_value
+          when nil
+            @stack.pop
+            _next_value
+          else
+            value
+          end
+        end
+      end
+
+      def infinite?
+        @source.infinite? # TODO revisar porque las series hijas sí que pueden ser infinitas
+      end
+
+      def deterministic?
+        false # TODO revisar porque no se puede saber sin evaluar las subseries
+      end
+    end
+
+    private_constant :SerieFlattener
+
+    class FlattenSerieFromSerieOfSeries
+      include Serie
+
+      attr_accessor :source
+
+      def initialize(serie)
+        @source = serie
+        _restart false
+      end
+
+      def _restart(restart_sources = true)
+        if restart_sources
+          @source.restart
+          @restart_each_serie = true
+        end
+        @current_serie = nil
+      end
+
+      def _next_value
+        value = nil
+
+        restart_current_serie_if_needed = false
+
+        if @current_serie.nil?
+          @current_serie = @source.next_value
+
+          if @restart_each_serie
+            @current_serie.restart if @current_serie
+          else
+            restart_current_serie_if_needed = true
+          end
+        end
+
+        if @current_serie
+          value = @current_serie.next_value
+
+          if value.nil?
+            if restart_current_serie_if_needed
+              @current_serie.restart
+            else
+              @current_serie = nil
+            end
+
+            value = _next_value
+          end
+        end
+
+        value
+      end
+    end
+
+    private_constant :FlattenSerieFromSerieOfSeries
 
     class BasicSerieAutorestart
       include Serie

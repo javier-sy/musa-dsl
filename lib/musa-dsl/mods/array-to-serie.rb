@@ -1,13 +1,16 @@
 require 'musa-dsl/series'
 
 class Array
-  def to_serie(of_series: nil)
+  def to_serie(of_series: nil, recursive: nil)
     of_series ||= false
+    recursive ||= false
 
-    if of_series
-      S(collect { |_| S(_) })
+    if recursive
+      S(*(collect { |_| _.is_a?(Array) ? _.to_serie(recursive: true) : _ }))
+    elsif of_series
+      S(*(collect { |_| S(*_) }))
     else
-      S(self)
+      S(*self)
     end
   end
 end

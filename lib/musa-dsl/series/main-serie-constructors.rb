@@ -562,59 +562,6 @@ module Musa
 
     private_constant :BasicSerieFromArrayOfSeries
 
-    class BasicSerieFromSerieOfSeries
-      include Serie
-
-      attr_accessor :source
-
-      def initialize(serie)
-        @source = serie
-        _restart false
-      end
-
-      def _restart(restart_sources = true)
-        if restart_sources
-          @source.restart
-          @restart_each_serie = true
-        end
-        @current_serie = nil
-      end
-
-      def _next_value
-        value = nil
-
-        restart_current_serie_if_needed = false
-
-        if @current_serie.nil?
-          @current_serie = @source.next_value
-
-          if @restart_each_serie
-            @current_serie.restart if @current_serie
-          else
-            restart_current_serie_if_needed = true
-          end
-        end
-
-        if @current_serie
-          value = @current_serie.next_value
-
-          if value.nil?
-            if restart_current_serie_if_needed
-              @current_serie.restart
-            else
-              @current_serie = nil
-            end
-
-            value = _next_value
-          end
-        end
-
-        value
-      end
-    end
-
-    private_constant :BasicSerieFromSerieOfSeries
-
     class SinFunctionSerie
       include Serie
 
