@@ -292,12 +292,20 @@ class Musa::BaseSequencer
         steps = (to - from) / step
         every = Rational(effective_duration, steps)
 
+      elsif to && !step && !every
+        step = (to <=> from).to_r
+        every = Rational(effective_duration, to - from)
+
       elsif to && !step && every
         steps = (to - from) / every
         step = (to - from) / steps
 
       elsif !to && step && every
         # ok
+        #
+      elsif !to && !step && every
+        step = 1r
+
       else
         raise ArgumentError, 'Cannot use this parameters combination'
       end
