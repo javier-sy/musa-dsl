@@ -236,20 +236,53 @@ module Musa::Datasets
 
         if duration && !duration.empty?
           if duration[0] == '+' || duration[0] == '-'
-            command[:delta_duration] = duration.to_r
+            command[:delta_duration] = (duration[0] == '-' ? -1 : 1) * eval_duration(duration[1..-1])
 
           elsif duration[0] == '*'
-            command[:factor_duration] = duration[1..-1].to_r
+            command[:factor_duration] = eval_duration(duration[1..-1])
+
+          elsif /\A[\/]+[\·]*\Z/x.match(duration)
+            command[:abs_duration] = eval_duration(duration)
 
           elsif duration[0] == '/'
-            command[:factor_duration] = Rational(1, duration[1..-1])
+            command[:factor_duration] = Rational(1, eval_duration(duration[1..-1]))
 
           else
-            command[:abs_duration] = duration.to_r
+            command[:abs_duration] = eval_duration(duration)
           end
         end
 
         command
+      end
+
+      private
+
+      def eval_duration(string)
+        # format: ///···
+        #
+        if match = /\A(?<slashes>\/+)(?<dots>\·*)\Z/x.match(string)
+          base = Rational(1, 2**match[:slashes].length.to_r)
+          dots_extension = 0
+          match[:dots].length.times do |i|
+            dots_extension += Rational(base, 2**(i+1))
+          end
+
+          base + dots_extension
+
+        # format: 1··
+        #
+        elsif match = /\A(?<number>\d*\/?\d+?)(?<dots>\·*)\Z/x.match(string)
+          base = match[:number].to_r
+          dots_extension = 0
+          match[:dots].length.times do |i|
+            dots_extension += Rational(base, 2**(i+1))
+          end
+
+          base + dots_extension
+
+        else
+          string.to_r
+        end
       end
     end
 

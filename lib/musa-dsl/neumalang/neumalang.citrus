@@ -33,7 +33,7 @@ grammar Neumalang
 	end
 
 	rule event
-		(double_colon name parameters?) { { kind: :event, event: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
+		(double_colon name parameters?) { { kind: :event, event: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) }
 	end
 
 	rule braced_command
@@ -49,7 +49,7 @@ grammar Neumalang
 	end
 
 	rule method_call
-		(name parameters?) { { method: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) } 
+		(name parameters?) { { method: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) }
 	end
 
 	rule neuma
@@ -60,7 +60,7 @@ grammar Neumalang
 		number | symbol | string
 	end
 
-	rule bracketed_2bar_sentences 
+	rule bracketed_2bar_sentences
 		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Bracketed_2bar_sentences>
 	end
 
@@ -89,18 +89,18 @@ grammar Neumalang
 	end
 
 	rule positional_parameters
-		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) { 
+		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) {
 			[ capture(:a).value ] + captures(:b).collect { |c| c.value }
 		}
 	end
 
 	rule key_parameters
-		(spaces a:key_value_parameter (spaces comma spaces b:key_value_parameter spaces)* spaces) { 
-			
+		(spaces a:key_value_parameter (spaces comma spaces b:key_value_parameter spaces)* spaces) {
+
 			result = capture(:a).value.clone
-			
+
 			captures(:b).each { |c| result.merge! c.value }
-			
+
 			result
 		}
 	end
@@ -192,7 +192,6 @@ grammar Neumalang
 	rule comma ',' end
 	rule colon ':' end
 	rule double_colon '::' end
-	rule bar '|' end
 	rule double_bar '||' end
 	rule lpar '(' end
 	rule rpar ')' end
