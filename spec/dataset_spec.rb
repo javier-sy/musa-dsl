@@ -6,20 +6,20 @@ RSpec.describe Musa::Neuma do
   context 'Dataset transformations' do
     GDV = Musa::Datasets::GDV
 
-    it 'GDV to PDVE' do
+    it 'GDV to PDV' do
       scale = Musa::Scales.default_system.default_tuning.major[60]
 
-      expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: 60 + 5, duration: 1, velocity: 127)
-      expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: 60 + 12 + 2, duration: 1, velocity: 16)
-      expect({ grade: :silence, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: :silence, duration: 1, velocity: 16)
+      expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: 60 + 5, duration: 1/4r, velocity: 127)
+      expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: 60 + 12 + 2, duration: 1/4r, velocity: 16)
+      expect({ grade: :silence, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: :silence, duration: 1/4r, velocity: 16)
       expect({ duration: 0 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(duration: 0)
     end
 
-    it 'GDV to PDVE (with module alias)' do
+    it 'GDV to PDV (with module alias)' do
       scale = Musa::Scales.default_system.default_tuning.major[60]
 
-      expect({ grade: 3, duration: 1, velocity: 4 }.extend(GDV).to_pdv(scale)).to eq(pitch: 60 + 5, duration: 1, velocity: 127)
-      expect({ grade: 8, duration: 1, velocity: -3 }.extend(GDV).to_pdv(scale)).to eq(pitch: 60 + 12 + 2, duration: 1, velocity: 16)
+      expect({ grade: 3, duration: 1, velocity: 4 }.extend(GDV).to_pdv(scale)).to eq(pitch: 60 + 5, duration: 1/4r, velocity: 127)
+      expect({ grade: 8, duration: 1, velocity: -3 }.extend(GDV).to_pdv(scale)).to eq(pitch: 60 + 12 + 2, duration: 1/4r, velocity: 16)
 
       h = { duration: 0 }.extend GDV
       expect(h.to_pdv(scale)).to eq(duration: 0)

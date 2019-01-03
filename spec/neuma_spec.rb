@@ -122,38 +122,38 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 0, duration: 1, velocity: 1)
       expect(result[c += 1]).to eq(grade: 1, duration: 1, velocity: 1)
       expect(result[c += 1]).to eq(grade: 0, duration: 2, velocity: 1)
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: 1)
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: -1)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: 1)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: -1)
 
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: -1)
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1), velocity: -1)
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: -1)
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: 4)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: -1)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1, velocity: -1)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: -1)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: 4)
 
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: 4)
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1, 2), velocity: 4)
-      expect(result[c += 1]).to eq(grade: 2, duration: Rational(1, 2), velocity: -1)
-      expect(result[c += 1]).to eq(grade: 2, duration: Rational(1, 2), velocity: 3)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: 4)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: 4)
+      expect(result[c += 1]).to eq(grade: 2, duration: 1/2r, velocity: -1)
+      expect(result[c += 1]).to eq(grade: 2, duration: 1/2r, velocity: 3)
 
       # expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
 
-      expect(result[c += 1]).to eq(grade: :silence, duration: Rational(1, 2), velocity: 3)
+      expect(result[c += 1]).to eq(grade: :silence, duration: 1/2r, velocity: 3)
 
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: 3)
-      expect(result[c += 1]).to eq(grade: 0, duration: Rational(1, 2), velocity: 3)
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1, 2), velocity: 3)
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1), velocity: 3)
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1, 2), velocity: 3)
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1, 2), velocity: -1)
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1, 2), velocity: 0)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: 3)
+      expect(result[c += 1]).to eq(grade: 0, duration: 1/2r, velocity: 3)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: 3)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1, velocity: 3)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: 3)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: -1)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: 0)
 
       # expect(result[c+=1]).to eq({ duration: 0, event: :evento }) # no se puede procesar como neuma simple
 
-      expect(result[c += 1]).to eq(grade: :silence, duration: Rational(1, 4), velocity: 0)
+      expect(result[c += 1]).to eq(grade: :silence, duration: 1/4r, velocity: 0)
 
-      expect(result[c += 1]).to eq(grade: :silence, duration: Rational(1, 4), velocity: 0)
+      expect(result[c += 1]).to eq(grade: :silence, duration: 1/4r, velocity: 0)
 
-      expect(result[c += 1]).to eq(grade: 1, duration: Rational(1, 4), velocity: 0)
+      expect(result[c += 1]).to eq(grade: 1, duration: 1/4r, velocity: 0)
     end
 
     it 'Neuma parsing with extended notation' do

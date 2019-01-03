@@ -4,7 +4,9 @@ module Musa::Datasets
   module PDV # pitch duration velocity
     include Musa::Neuma::Dataset
 
-    def to_gdv(scale)
+    def to_gdv(scale, base_duration: nil)
+      base_duration ||= Rational(1,4)
+
       r = {}
 
       if self[:pitch]
@@ -17,7 +19,7 @@ module Musa::Datasets
         end
       end
 
-      r[:duration] = self[:duration] if self[:duration]
+      r[:duration] = self[:duration] / base_duration if self[:duration]
 
       if self[:velocity]
         # ppp = 16 ... fff = 127

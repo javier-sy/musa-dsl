@@ -5,6 +5,7 @@ module Musa::Datasets
     include Musa::Neuma::Dataset
 
     def to_gdv(scale, previous:)
+
       r = previous.clone.extend GDV
 
       if self[:abs_grade]
@@ -109,7 +110,8 @@ module Musa::Datasets
   module GDV # grade duration velocity event command
     include Musa::Neuma::Dataset
 
-    def to_pdv(scale)
+    def to_pdv(scale, base_duration: nil)
+      base_duration ||= Rational(1,4)
       r = {}
 
       if self[:grade]
@@ -120,7 +122,7 @@ module Musa::Datasets
                     end
       end
 
-      r[:duration] = self[:duration] if self[:duration]
+      r[:duration] = self[:duration] * base_duration if self[:duration]
 
       if self[:velocity]
         # ppp = 16 ... fff = 127
@@ -132,6 +134,7 @@ module Musa::Datasets
 
     def to_neuma(mode = nil)
       mode ||= :dotted # :parenthesis
+      base_duration ||= Rational(1,4)
 
       attributes = []
 
@@ -162,7 +165,6 @@ module Musa::Datasets
       r = {}.extend Musa::Datasets::GDVd
 
       if previous
-
         if self[:grade] == :silence || previous[:grade] == :silence
           r[:abs_grade] = self[:grade]
 
@@ -171,7 +173,7 @@ module Musa::Datasets
         end
 
         if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
-          r[:delta_duration] = self[:duration] - previous[:duration]
+          r[:delta_duration] = (self[:duration] - previous[:duration])
         end
 
         if self[:velocity] && previous[:velocity] && (self[:velocity] != previous[:velocity])
@@ -295,8 +297,8 @@ module Musa::Datasets
     class NeumaDecoder < Musa::Neuma::Decoder
       include Parser
 
-      def initialize(scale, base = nil)
-        base ||= { grade: 0, octave: 0, duration: Rational(1, 4), velocity: 1 }
+      def initialize(scale, **base)
+        base = { grade: 0, octave: 0, duration: Rational(1,4), velocity: 1 } if base.empty?
 
         @scale = scale
 
