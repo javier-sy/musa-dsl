@@ -20,7 +20,7 @@ silence
 # modo diferencial
 /* otra línea */
 
-0.		/* suena la tónica de la escala con los demás parámetros como el anterior */
+0		/* suena la tónica de la escala con los demás parámetros como el anterior */
 .		/* como el anterior */
 +1		# elemento +1 en la escala respecto al anterior
 .+1/2	/* como el anterior pero con duración incrementada en 1/2 */

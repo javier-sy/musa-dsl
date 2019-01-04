@@ -4,10 +4,15 @@ module Musa::Datasets
   module GDVd # abs_grade abs_octave delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
     include Musa::Neuma::Dataset
 
+    NaturalKeys = [:abs_grade, :delta_grade,
+                   :abs_octave, :delta_octave,
+                   :abs_duration, :delta_duration, :factor_duration,
+                   :abs_velocity, :delta_velocity].freeze
+
     attr_accessor :base_duration
 
     def to_gdv(scale, previous:)
-      r = previous.clone.extend GDV
+      r = previous.clone.delete_if {|k,_| !GDV::NaturalKeys.include?(k)}.extend GDV
 
       r.base_duration = @base_duration
 
@@ -17,6 +22,7 @@ module Musa::Datasets
                     else
                       scale[self[:abs_grade]].wide_grade
                     end
+
       elsif self[:delta_grade]
         if r[:grade] == :silence
           # doesn't change silence
@@ -45,6 +51,8 @@ module Musa::Datasets
         r[:velocity] += self[:delta_velocity]
       end
 
+      (keys - NaturalKeys).each { |k| r[k] = self[k] }
+
       r
     end
 
@@ -59,14 +67,14 @@ module Musa::Datasets
 
       if self[:abs_grade]
         attributes[c] = self[:abs_grade].to_s
-      elsif self[:delta_grade] && self[:delta_grade] != 0
-        attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s
+      elsif self[:delta_grade]
+        attributes[c] = positive_sign_of(self[:delta_grade]) + self[:delta_grade].to_s if self[:delta_grade] != 0
       end
 
       if self[:abs_octave]
-        attributes[c += 1] = 'o' + self[:abs_octave].to_s
-      elsif self[:delta_octave] && self[:delta_octave] != 0
-        attributes[c += 1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s
+        attributes[c += 1] = 'o' + positive_sign_of(self[:abs_octave]) + self[:abs_octave].to_s
+      elsif self[:delta_octave]
+        attributes[c += 1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s if  self[:delta_octave] != 0
       end
 
       if self[:abs_duration]
@@ -81,6 +89,17 @@ module Musa::Datasets
         attributes[c += 1] = velocity_of(self[:abs_velocity])
       elsif self[:delta_velocity]
         attributes[c += 1] = sign_of(self[:delta_velocity]) + 'f' * self[:delta_velocity].abs
+      end
+
+      (keys - NaturalKeys).each do |k|
+        attributes[c += 1] = case self[k]
+                             when String
+                               "\"#{self[k]}\""
+                             when Numeric
+                               "#{self[k]}"
+                             when Symbol
+                               ":#{self[k]}"
+                             end
       end
 
       if mode == :dotted
@@ -100,7 +119,7 @@ module Musa::Datasets
     private
 
     def positive_sign_of(x)
-      x > 0 ? '+' : ''
+      x >= 0 ? '+' : ''
     end
 
     def sign_of(x)
@@ -113,7 +132,10 @@ module Musa::Datasets
   end
 
   module GDV # grade duration velocity event command
+
     include Musa::Neuma::Dataset
+
+    NaturalKeys = [:grade, :octave, :duration, :velocity].freeze
 
     attr_accessor :base_duration
 
@@ -129,12 +151,16 @@ module Musa::Datasets
                     end
       end
 
-      r[:duration] = self[:duration] if self[:duration]
+      if self[:duration]
+        r[:duration] = self[:duration]
+      end
 
       if self[:velocity]
         # ppp = 16 ... fff = 127
         r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
       end
+
+      (keys - NaturalKeys).each { |k| r[k] = self[k] }
 
       r
     end
@@ -149,9 +175,20 @@ module Musa::Datasets
       c = 0
 
       attributes[c] = self[:grade].to_s if self[:grade]
-      attributes[c += 1] = 'o' + self[:octave].to_s if self[:octave]
+      attributes[c += 1] = 'o' +  positive_sign_of(self[:octave]) + self[:octave].to_s if self[:octave]
       attributes[c += 1] = (self[:duration] / @base_duration).to_s if self[:duration]
       attributes[c += 1] = velocity_of(self[:velocity]) if self[:velocity]
+
+      (keys - NaturalKeys).each do |k|
+        attributes[c += 1] = case self[k]
+                             when String
+                               "\"#{self[k]}\""
+                             when Numeric
+                               "#{self[k]}"
+                             when Symbol
+                               ":#{self[k]}"
+                             end
+      end
 
       if mode == :dotted
         attributes.join '.'
@@ -194,7 +231,15 @@ module Musa::Datasets
         r[:abs_velocity] = self[:velocity] if self[:velocity]
       end
 
+      (keys - NaturalKeys).each { |k| r[k] = self[k] }
+
       r
+    end
+
+    private
+
+    def positive_sign_of(x)
+      x >= 0 ? '+' : ''
     end
 
     module Parser
@@ -220,7 +265,7 @@ module Musa::Datasets
           end
         end
 
-        octave = neuma.find { |a| /\A [+-]?o[-]?[0-9]+ \Z/x.match a }
+        octave = neuma.reject {|a| a.is_a?(Hash)}.find { |a| /\A[+-]?o[+-]?[0-9]+\Z/x.match a }
 
         if octave
           if (octave[0] == '+' || octave[0] == '-') && octave[1] == 'o'
@@ -232,7 +277,10 @@ module Musa::Datasets
           neuma.delete octave
         end
 
-        velocity = neuma.find { |a| /\A (mp | mf | (\+|\-)?(p+|f+)) \Z/x.match a }
+        to_delete = velocity = neuma.select {|a| a.is_a?(Hash)}.find { |a| /\A(mp | mf | (\+|\-)?(p+|f+))\Z/x.match a[:modifier] }
+        velocity = velocity[:modifier].to_s if velocity
+
+        velocity ||= to_delete = neuma.reject {|a| a.is_a?(Hash)}.find { |a| /\A(mp | mf | (\+|\-)?(p+|f+))\Z/x.match a }
 
         if velocity
           if velocity[0] == '+' || velocity[0] == '-'
@@ -243,10 +291,10 @@ module Musa::Datasets
             command[:abs_velocity] = velocity.length * (velocity[0] == 'f' ? 1 : -1) + (velocity[0] == 'f' ? 1 : 0)
           end
 
-          neuma.delete velocity
+          neuma.delete to_delete
         end
 
-        duration = neuma.shift
+        duration = neuma.reject {|a| a.is_a?(Hash)}.first
 
         if duration && !duration.empty?
           if duration[0] == '+' || duration[0] == '-'
@@ -265,6 +313,14 @@ module Musa::Datasets
             command[:abs_duration] = eval_duration(duration) * base_duration
           end
         end
+
+        neuma.delete duration if duration
+
+        neuma.select {|a| a.is_a?(Hash)}.each do |a|
+          command[a[:modifier]] = a[:parameters] || true
+        end
+
+        raise EncodingError, "Neuma #{neuma} cannot be decoded" unless neuma.reject {|a| a.is_a?(Hash)}.size.zero?
 
         command
       end

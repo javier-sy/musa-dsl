@@ -6,6 +6,7 @@ include Musa::Series
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma simple parsing' do
+
     it 'Basic neuma inline parsing (only a comment)' do
       expect(Musa::Neumalang.parse('/* comentario 1 */').to_a(recursive: true)).to eq([])
     end
@@ -31,8 +32,8 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neuma inline parsing with octaves' do
-      expect(Musa::Neumalang.parse('2.o-1.3.4 5.o2.6.7 ::evento').to_a(recursive: true)).to eq(
-        [{ kind: :neuma, neuma: ['2', 'o-1', '3', '4'] }, { kind: :neuma, neuma: %w[5 o2 6 7] }, { kind: :event, event: :evento }]
+      expect(Musa::Neumalang.parse('2.o-1.3.4 5.o+2.6.7 ::evento').to_a(recursive: true)).to eq(
+        [{ kind: :neuma, neuma: ['2', 'o-1', '3', '4'] }, { kind: :neuma, neuma: %w[5 o+2 6 7] }, { kind: :event, event: :evento }]
       )
     end
 
@@ -162,5 +163,6 @@ RSpec.describe Musa::Neumalang do
 
       expect(result[c += 1]).to eq(grade: 1, duration: 1/4r, velocity: 0)
     end
+
   end
 end

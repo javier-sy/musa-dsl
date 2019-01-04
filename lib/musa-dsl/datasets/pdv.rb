@@ -4,6 +4,8 @@ module Musa::Datasets
   module PDV # pitch duration velocity
     include Musa::Neuma::Dataset
 
+    NaturalKeys = [:pitch, :duration, :velocity].freeze
+
     attr_accessor :base_duration
 
     def to_gdv(scale)
@@ -26,6 +28,8 @@ module Musa::Datasets
         # ppp = 16 ... fff = 127
         r[:velocity] = [0..16, 17..32, 33..48, 49..64, 65..80, 81..96, 97..112, 113..127].index { |r| r.cover? self[:velocity] } - 3
       end
+
+      (keys - NaturalKeys).each { |k| r[k] = self[k] }
 
       r
     end

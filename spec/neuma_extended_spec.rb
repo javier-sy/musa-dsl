@@ -17,7 +17,7 @@ RSpec.describe Musa::Neumalang do
 
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['0'])
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: [])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['+1', '+·', 'tr'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['+1', '+·', { modifier: :tr }])
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['+1', '/'])
 
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1', '//'])
@@ -53,19 +53,27 @@ RSpec.describe Musa::Neumalang do
       expect(result[6]).to eq(abs_grade: 2, abs_duration: 1/8r, abs_velocity: -1)
     end
 
-    it 'Neuma parsing with extended notation' do
-      result = Musa::Neumalang.parse('0   .   .tr   .tr(:up, 3)').to_a(recursive: true)
+    it 'Neuma parsing with extended notation with GDV decoding' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100, 200)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      result = Musa::Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
 
       c = -1
 
-      expect(result[c += 1]).to eq(kind: :neuma, neuma: ['0'])
-      expect(result[c += 1]).to eq(kind: :neuma, neuma: [])
-      expect(result[c += 1]).to eq(kind: :neuma, neuma: ['tr'])
-      expect(result[c += 1]).to eq(kind: :neuma, neuma: ['tr(:up, 3)'])
-
-      expect(result.size).to eq 4
+      expect(result[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result[c += 1]).to eq(grade: 1, octave: 0, duration: 1/2r, velocity: -3)
+      expect(result[c += 1]).to eq(grade: 2, octave: 0, duration: 1/2r, velocity: -3, tr: true)
+      expect(result[c += 1]).to eq(grade: 3, octave: 0, duration: 1/2r, velocity: -3, tr: [100])
+      expect(result[c += 1]).to eq(grade: 4, octave: 0, duration: 1/2r, velocity: -3, tr: [100, 200])
+      expect(result[c += 1]).to eq(grade: 5, octave: 0, duration: 1/2r, velocity: -3, tr: ["hola"], st: [1,2,3], xy: [1, 2, 3])
+      expect(result[c += 1]).to eq(grade: 6, octave: 0, duration: 1/2r, velocity: -3, tr: [:up])
+      expect(result[c += 1]).to eq(grade: 7, octave: 0, duration: 1/2r, velocity: -3)
+      expect(result[c += 1]).to eq(grade: 8, octave: 1, duration: 1, velocity: -1)
     end
-
 
   end
 end

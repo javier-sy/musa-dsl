@@ -53,7 +53,7 @@ grammar Neumalang
 	end
 
 	rule neuma
-		neuma_as_dotted_attributes_beginning_with_dot | neuma_as_dotted_attributes | neuma_between_angles_attributes
+		neuma_as_dotted_attributes_beginning_with_dot | neuma_as_dotted_attributes_beginning_with_simple_attribute | neuma_between_angles_attributes
 	end
 
 	rule constant
@@ -114,40 +114,90 @@ grammar Neumalang
 	end
 
 
-	rule neuma_as_dotted_attributes_beginning_with_dot
-		(dot neuma_as_dotted_attributes) { { kind: :neuma, neuma: [ nil ] + capture(:neuma_as_dotted_attributes).value[:neuma] } }
+	rule neuma_as_dotted_attributes_beginning_with_simple_attribute
+		 (a:simple_attribute (dot b:attribute)*) { { kind: :neuma, neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
 	end
 
-	rule neuma_as_dotted_attributes
-		 ((a:attribute (dot b:attribute?)*) | dot) { { kind: :neuma, neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
+	rule neuma_as_dotted_attributes_beginning_with_dot
+		((dot attribute)+ | dot) { { kind: :neuma, neuma: (capture(:attribute) ? [ nil ] : []) + captures(:attribute).collect { |c| c.value } } }
 	end
 
 	rule neuma_between_angles_attributes
-		(langle spaces (attribute spaces)* rangle) { { kind: :neuma, neuma: captures(:attribute).collect { |c| c.value } } }
+		(langle spaces simple_attribute? spaces (attribute spaces)* rangle) { { kind: :neuma, neuma: (capture(:simple_attribute) ? [capture(:simple_attribute).value] : []) + captures(:attribute).collect { |c| c.value } } }
 	end
 
-	rule attribute
+    rule attribute
+        (modifier_attribute | simple_attribute)
+    end
+
+	rule simple_attribute
 		everything_that_can_be_an_attribute !colon
 	end
 
+	rule modifier_attribute
+	    modifier_call_without_parameters | modifier_call_with_parameters
+	end
+
+	rule modifier_call_without_parameters
+		(name &attribute_change) { { modifier: capture(:name).value.to_sym } }
+	end
+
+	rule modifier_call_with_parameters
+		(name modifier_parameters) { { modifier: capture(:name).value.to_sym }.merge(capture(:modifier_parameters) ? capture(:modifier_parameters).value : {}) }
+	end
+
+    rule modifier_parameters
+        (lpar modifier_positional_parameters rpar) { { parameters: capture(:modifier_positional_parameters).value } }
+    end
+
+	rule modifier_positional_parameters
+		(spaces a:modifier_parameter_constant (spaces comma spaces b:modifier_parameter_constant spaces)* spaces) {
+			[ capture(:a).value ] + captures(:b).collect { |c| c.value }
+		}
+	end
+
+    rule modifier_parameter_constant
+        raw_number | raw_symbol | raw_string
+    end
+
 	rule number
     	float | integer
+  	end
+
+	rule raw_number
+    	raw_float | raw_integer
   	end
 
   	rule symbol
   		(colon name) { { kind: :value, value: capture(:name).value.to_sym } }
   	end
 
+  	rule raw_symbol
+  		(name &spaces) { capture(:name).value.to_sym }
+  	end
+
   	rule string
   		(double_quote everything_except_double_quote double_quote) { { kind: :value, value: capture(:everything_except_double_quote).value } }
+  	end
+
+  	rule raw_string
+  		(double_quote everything_except_double_quote double_quote) { capture(:everything_except_double_quote).value }
   	end
 
   	rule float
     	(single_quote str:(digits dot digits) spaces) { { kind: :value, value: capture(:str).value.to_f } }
   	end
 
+  	rule raw_float
+    	(str:(digits dot digits) spaces) { capture(:str).value.to_f }
+  	end
+
   	rule integer
     	(single_quote digits spaces) { { kind: :value, value: capture(:digits).value.to_i } }
+  	end
+
+  	rule raw_integer
+    	(digits spaces) { capture(:digits).value.to_i }
   	end
 
 	rule comment
@@ -169,6 +219,10 @@ grammar Neumalang
 	rule everything_that_can_be_an_attribute
 		/[^({|}|\[|\]|\(|\)|\<|\>|.|,|:|=| |\t|\n|\r|\"|#|@|&|\|)]+/m
 	end
+
+    rule attribute_change
+        space | dot | rbracket | rpar | rbrace | eol
+    end
 
 	rule everything_until_eol
 		~/$/
@@ -207,7 +261,9 @@ grammar Neumalang
 	rule lcomment '/*' end
 	rule rcomment '*/' end
 	rule hsh '#' end
+	rule eol /$/ end
 
 	rule space /[ \t\n\r]/m end
 	rule spaces (space | comment)* end
+
 end
