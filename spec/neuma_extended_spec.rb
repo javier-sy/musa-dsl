@@ -53,5 +53,19 @@ RSpec.describe Musa::Neumalang do
       expect(result[6]).to eq(abs_grade: 2, abs_duration: 1/8r, abs_velocity: -1)
     end
 
+    it 'Neuma parsing with extended notation' do
+      result = Musa::Neumalang.parse('0   .   .tr   .tr(:up, 3)').to_a(recursive: true)
+
+      c = -1
+
+      expect(result[c += 1]).to eq(kind: :neuma, neuma: ['0'])
+      expect(result[c += 1]).to eq(kind: :neuma, neuma: [])
+      expect(result[c += 1]).to eq(kind: :neuma, neuma: ['tr'])
+      expect(result[c += 1]).to eq(kind: :neuma, neuma: ['tr(:up, 3)'])
+
+      expect(result.size).to eq 4
+    end
+
+
   end
 end
