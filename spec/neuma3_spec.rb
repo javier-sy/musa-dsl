@@ -14,7 +14,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1
       serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3a_spec.neu')
 
       if debug
@@ -83,7 +83,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1
       serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3b_spec.neu')
 
       if debug
@@ -148,7 +148,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1
       serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3c_spec.neu')
 
       if debug
@@ -287,20 +287,20 @@ RSpec.describe Musa::Neumalang do
 
       unless debug
         expect(context.instance_variable_get(:@s).restart.to_a).to eq(
-          [{ grade: 0, octave: 0, duration: 1, velocity: 1 },
-           { grade: 1, octave: 0, duration: 1, velocity: 1 },
-           { grade: 2, octave: 0, duration: 1, velocity: 1 }]
+          [{ grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
+           { grade: 1, octave: 0, duration: 1/4r, velocity: 1 },
+           { grade: 2, octave: 0, duration: 1/4r, velocity: 1 }]
         )
       end
 
       unless debug
         expect(context.instance_variable_get(:@p).collect(&:to_a)).to eq(
-          [[{ grade: 2, octave: 0, duration: 1, velocity: 1 },
-            { grade: 4, octave: 0, duration: 1, velocity: 1 },
-            { grade: 6, octave: 0, duration: 1, velocity: 1 }],
-           [{ grade: 3, octave: 0, duration: 1, velocity: 1 },
-            { grade: 5, octave: 0, duration: 1, velocity: 1 },
-            { grade: 7, octave: 0, duration: 1, velocity: 1 }]]
+          [[{ grade: 2, octave: 0, duration: 1/4r, velocity: 1 },
+            { grade: 4, octave: 0, duration: 1/4r, velocity: 1 },
+            { grade: 6, octave: 0, duration: 1/4r, velocity: 1 }],
+           [{ grade: 3, octave: 0, duration: 1/4r, velocity: 1 },
+            { grade: 5, octave: 0, duration: 1/4r, velocity: 1 },
+            { grade: 7, octave: 0, duration: 1/4r, velocity: 1 }]]
         )
       end
 
@@ -313,16 +313,16 @@ RSpec.describe Musa::Neumalang do
       unless debug
         expect(played).to eq(
           [{ position: 1 },
-           { grade: 0, octave: 0, duration: 2, velocity: 1 },
-           { position: 3 },
-           { grade: 1, octave: 0, duration: 2, velocity: 1 },
-           { position: 5 },
-           { grade: 2, octave: 0, duration: 2, velocity: 1 },
-           { position: 7 },
+           { grade: 0, octave: 0, duration: 1/2r, velocity: 1 },
+           { position: 1.5 },
+           { grade: 1, octave: 0, duration: 1/2r, velocity: 1 },
+           { position: 2 },
+           { grade: 2, octave: 0, duration: 1/2r, velocity: 1 },
+           { position: 2.5 },
            { grade: 0, octave: 0, duration: 3, velocity: 1 },
-           { position: 10 },
+           { position: 5.5 },
            { grade: 1, octave: 0, duration: 3, velocity: 1 },
-           { position: 13 },
+           { position: 8.5 },
            { grade: 2, octave: 0, duration: 3, velocity: 1 }]
         )
       end
@@ -332,7 +332,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       #debug = true
 
-      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1
       serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3z_spec.neu')
 
       if debug

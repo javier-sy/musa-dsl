@@ -4,9 +4,12 @@ module Musa::Datasets
   module GDVd # abs_grade abs_octave delta_grade abs_duration delta_duration factor_duration abs_velocity delta_velocity
     include Musa::Neuma::Dataset
 
-    def to_gdv(scale, previous:)
+    attr_accessor :base_duration
 
+    def to_gdv(scale, previous:)
       r = previous.clone.extend GDV
+
+      r.base_duration = @base_duration
 
       if self[:abs_grade]
         r[:grade] = if self[:abs_grade] == :silence
@@ -48,6 +51,8 @@ module Musa::Datasets
     def to_neuma(mode = nil)
       mode ||= :dotted # :parenthesis
 
+      @base_duration ||= Rational(1,4)
+
       attributes = []
 
       c = 0
@@ -65,9 +70,9 @@ module Musa::Datasets
       end
 
       if self[:abs_duration]
-        attributes[c += 1] = self[:abs_duration].to_s
+        attributes[c += 1] = (self[:abs_duration] / @base_duration).to_s
       elsif self[:delta_duration]
-        attributes[c += 1] = positive_sign_of(self[:delta_duration]) + self[:delta_duration].to_s
+        attributes[c += 1] = positive_sign_of(self[:delta_duration]) + (self[:delta_duration] / @base_duration).to_s
       elsif self[:factor_duration]
         attributes[c += 1] = '*' + self[:factor_duration].to_s
       end
@@ -110,9 +115,11 @@ module Musa::Datasets
   module GDV # grade duration velocity event command
     include Musa::Neuma::Dataset
 
-    def to_pdv(scale, base_duration: nil)
-      base_duration ||= Rational(1,4)
-      r = {}
+    attr_accessor :base_duration
+
+    def to_pdv(scale)
+      r = {}.extend Musa::Datasets::PDV
+      r.base_duration = @base_duration
 
       if self[:grade]
         r[:pitch] = if self[:grade] == :silence
@@ -122,19 +129,20 @@ module Musa::Datasets
                     end
       end
 
-      r[:duration] = self[:duration] * base_duration if self[:duration]
+      r[:duration] = self[:duration] if self[:duration]
 
       if self[:velocity]
         # ppp = 16 ... fff = 127
         r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
       end
 
-      r.extend Musa::Datasets::PDV
+      r
     end
 
     def to_neuma(mode = nil)
       mode ||= :dotted # :parenthesis
-      base_duration ||= Rational(1,4)
+
+      @base_duration ||= Rational(1,4)
 
       attributes = []
 
@@ -142,7 +150,7 @@ module Musa::Datasets
 
       attributes[c] = self[:grade].to_s if self[:grade]
       attributes[c += 1] = 'o' + self[:octave].to_s if self[:octave]
-      attributes[c += 1] = self[:duration].to_s if self[:duration]
+      attributes[c += 1] = (self[:duration] / @base_duration).to_s if self[:duration]
       attributes[c += 1] = velocity_of(self[:velocity]) if self[:velocity]
 
       if mode == :dotted
@@ -163,6 +171,7 @@ module Musa::Datasets
 
     def to_gdvd(scale, previous: nil)
       r = {}.extend Musa::Datasets::GDVd
+      r.base_duration = @base_duration
 
       if previous
         if self[:grade] == :silence || previous[:grade] == :silence
@@ -189,10 +198,13 @@ module Musa::Datasets
     end
 
     module Parser
-      def parse(expression)
+      def _parse(expression, base_duration: nil)
+        base_duration ||= Rational(1,4)
+
         neuma = expression.clone
 
         command = {}.extend GDVd
+        command.base_duration = base_duration
 
         grade = neuma.shift
 
@@ -238,19 +250,19 @@ module Musa::Datasets
 
         if duration && !duration.empty?
           if duration[0] == '+' || duration[0] == '-'
-            command[:delta_duration] = (duration[0] == '-' ? -1 : 1) * eval_duration(duration[1..-1])
+            command[:delta_duration] = (duration[0] == '-' ? -1 : 1) * eval_duration(duration[1..-1]) * base_duration
+
+          elsif /\A[\/]+[\·]*\Z/x.match(duration)
+            command[:abs_duration] = eval_duration(duration) * base_duration
 
           elsif duration[0] == '*'
             command[:factor_duration] = eval_duration(duration[1..-1])
-
-          elsif /\A[\/]+[\·]*\Z/x.match(duration)
-            command[:abs_duration] = eval_duration(duration)
 
           elsif duration[0] == '/'
             command[:factor_duration] = Rational(1, eval_duration(duration[1..-1]))
 
           else
-            command[:abs_duration] = eval_duration(duration)
+            command[:abs_duration] = eval_duration(duration) * base_duration
           end
         end
 
@@ -292,21 +304,35 @@ module Musa::Datasets
 
     class NeumaDifferentialDecoder < Musa::Neuma::DifferentialDecoder
       include Parser
+
+      def initialize(base_duration: nil)
+        @base_duration = base_duration || Rational(1,4)
+      end
+
+      def parse(expression)
+        _parse(expression, base_duration: @base_duration)
+      end
     end
 
     class NeumaDecoder < Musa::Neuma::Decoder
       include Parser
 
-      def initialize(scale, **base)
-        base = { grade: 0, octave: 0, duration: Rational(1,4), velocity: 1 } if base.empty?
+      def initialize(scale, base_duration: nil, **base)
+        @base_duration = base_duration || Rational(1,4)
+
+        base = { grade: 0, octave: 0, duration: @base_duration, velocity: 1 } if base.empty?
 
         @scale = scale
 
         super base
       end
 
+      def parse(expression)
+        _parse(expression, base_duration: @base_duration)
+      end
+
       def subcontext
-        NeumaDecoder.new @scale, @last
+        NeumaDecoder.new @scale, base_duration: @base_duration, **@last
       end
 
       def apply(action, on:)

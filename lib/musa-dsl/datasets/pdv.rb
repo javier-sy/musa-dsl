@@ -4,10 +4,11 @@ module Musa::Datasets
   module PDV # pitch duration velocity
     include Musa::Neuma::Dataset
 
-    def to_gdv(scale, base_duration: nil)
-      base_duration ||= Rational(1,4)
+    attr_accessor :base_duration
 
-      r = {}
+    def to_gdv(scale)
+      r = {}.extend Musa::Datasets::GDV
+      r.base_duration = @base_duration
 
       if self[:pitch]
         if self[:pitch] == :silence
@@ -19,14 +20,14 @@ module Musa::Datasets
         end
       end
 
-      r[:duration] = self[:duration] / base_duration if self[:duration]
+      r[:duration] = self[:duration] if self[:duration]
 
       if self[:velocity]
         # ppp = 16 ... fff = 127
         r[:velocity] = [0..16, 17..32, 33..48, 49..64, 65..80, 81..96, 97..112, 113..127].index { |r| r.cover? self[:velocity] } - 3
       end
 
-      r.extend Musa::Datasets::GDV
+      r
     end
   end
 end

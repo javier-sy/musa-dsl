@@ -54,7 +54,7 @@ module Musa::Neumalang
         if e[:kind] == :neuma
           decode_with.decode(e[:neuma])
         else
-          raise ArgumentError, "Don't know how to convert #{e} to neuma to be decoded with #{decode_with}"
+          raise ArgumentError, "Don't know how to convert #{e} to neuma"
         end
       end
     else

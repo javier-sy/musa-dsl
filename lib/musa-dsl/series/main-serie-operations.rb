@@ -123,13 +123,13 @@ module Musa
       def process(value)
         case value
         when Serie
-          value.to_a(recursive: true)
+          value.to_a(recursive: true, restart: false, duplicate: false)
         when Array
-          a = value.collect { |v| v.is_a?(Serie) ? v.to_a(recursive: true) : process(v) }
-          copy_included_modules value, a
+          a = value.clone
+          a.collect! { |v| v.is_a?(Serie) ? v.to_a(recursive: true, restart: false, duplicate: false) : process(v) }
         when Hash
-          h = value.collect { |k, v| [process(k), v.is_a?(Serie) ? v.to_a(recursive: true) : process(v)] }.to_h
-          copy_included_modules value, h
+          h = value.clone
+          h.transform_values! { |v| v.is_a?(Serie) ? v.to_a(recursive: true, restart: false, duplicate: false) : process(v) }
         else
           value
         end

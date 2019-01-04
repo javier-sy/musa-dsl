@@ -2,7 +2,7 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-require 'pp'
+include Musa::Series
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma simple parsing' do
@@ -55,9 +55,12 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neuma inline parsing with differential decoder' do
-      differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new
+
+      differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new(base_duration: 1)
 
       result = Musa::Neumalang.parse('0 . +1 2.p silence silence.1/3 2.1/2.p /*comentario 1*/', decode_with: differential_decoder).to_a(recursive: true)
+
+      expect(result[0].base_duration).to eq 1
 
       expect(result[0]).to eq(abs_grade: 0)
       expect(result[1]).to eq({})
@@ -75,21 +78,23 @@ RSpec.describe Musa::Neumalang do
 
       c = -1
 
+      expect(result[0].base_duration).to eq 1/4r
+
       expect(result[c += 1]).to eq({})
       expect(result[c += 1]).to eq(abs_grade: :II)
-      expect(result[c += 1]).to eq(abs_grade: :I, abs_duration: Rational(2))
       expect(result[c += 1]).to eq(abs_grade: :I, abs_duration: Rational(1, 2))
+      expect(result[c += 1]).to eq(abs_grade: :I, abs_duration: Rational(1, 8))
       expect(result[c += 1]).to eq(abs_grade: :I, abs_velocity: -1)
 
       expect(result[c += 1]).to eq(abs_grade: 0)
-      expect(result[c += 1]).to eq(abs_grade: 0, abs_duration: Rational(1))
-      expect(result[c += 1]).to eq(abs_grade: 0, abs_duration: Rational(1, 2))
+      expect(result[c += 1]).to eq(abs_grade: 0, abs_duration: Rational(1, 4))
+      expect(result[c += 1]).to eq(abs_grade: 0, abs_duration: Rational(1, 8))
       expect(result[c += 1]).to eq(abs_grade: 0, abs_velocity: 4)
 
       expect(result[c += 1]).to eq(abs_grade: 0)
       expect(result[c += 1]).to eq(abs_grade: 1)
       expect(result[c += 1]).to eq(abs_grade: 2, abs_velocity: -1)
-      expect(result[c += 1]).to eq(abs_grade: 2, abs_duration: Rational(1, 2), abs_velocity: 3)
+      expect(result[c += 1]).to eq(abs_grade: 2, abs_duration: Rational(1, 8), abs_velocity: 3)
 
       # expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
 
@@ -97,7 +102,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(abs_grade: 0)
       expect(result[c += 1]).to eq({})
       expect(result[c += 1]).to eq(delta_grade: 1)
-      expect(result[c += 1]).to eq(delta_duration: Rational(1, 2))
+      expect(result[c += 1]).to eq(delta_duration: Rational(1, 8))
       expect(result[c += 1]).to eq(factor_duration: Rational(1, 2))
       expect(result[c += 1]).to eq(abs_velocity: -1)
       expect(result[c += 1]).to eq(delta_velocity: 1)
@@ -113,11 +118,13 @@ RSpec.describe Musa::Neumalang do
     it 'Basic neuma file parsing with GDV decoder' do
       scale = Musa::Scales.default_system.default_tuning.major[60]
 
-      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, grade: 0, duration: 1, velocity: 1
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1, grade: 0, duration: 1, velocity: 1
 
       result = Musa::Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: decoder).to_a(recursive: true)
 
       c = -1
+
+      expect(result[0].base_duration).to eq 1
 
       expect(result[c += 1]).to eq(grade: 0, duration: 1, velocity: 1)
       expect(result[c += 1]).to eq(grade: 1, duration: 1, velocity: 1)
@@ -192,14 +199,15 @@ RSpec.describe Musa::Neumalang do
 
       result = Musa::Neumalang.parse('0 . +1.1· 2.+/·.p silence silence./· 2./.p', decode_with: differential_decoder).to_a(recursive: true)
 
+      expect(result[0].base_duration).to eq 1/4r
+
       expect(result[0]).to eq(abs_grade: 0)
       expect(result[1]).to eq({})
-      expect(result[2]).to eq(delta_grade: 1, abs_duration: 1.5)
-      expect(result[3]).to eq(abs_grade: 2, delta_duration: 3/4r, abs_velocity: -1)
+      expect(result[2]).to eq(delta_grade: 1, abs_duration: 1.5/4r)
+      expect(result[3]).to eq(abs_grade: 2, delta_duration: 3/16r, abs_velocity: -1)
       expect(result[4]).to eq(abs_grade: :silence)
-      expect(result[5]).to eq(abs_grade: :silence, abs_duration: Rational(3, 4))
-      expect(result[6]).to eq(abs_grade: 2, abs_duration: Rational(1, 2), abs_velocity: -1)
+      expect(result[5]).to eq(abs_grade: :silence, abs_duration: 3/16r)
+      expect(result[6]).to eq(abs_grade: 2, abs_duration: 1/8r, abs_velocity: -1)
     end
-
   end
 end
