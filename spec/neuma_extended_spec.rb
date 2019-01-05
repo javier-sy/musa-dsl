@@ -76,7 +76,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 8, octave: 1, duration: 1, velocity: -1)
     end
 
-    it 'Neuma parsing with extended notation: GDV decoding, to PDV conversion, and back to GDV' do
+    it 'Neuma parsing with extended notation: GDV decoding, to PDV conversion, and back to GDVd' do
       scale = Musa::Scales.et12[440.0].major[60]
 
       neumas    = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100, 200)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
