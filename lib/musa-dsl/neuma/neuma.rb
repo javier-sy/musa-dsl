@@ -1,5 +1,38 @@
 module Musa::Neuma
-  module Dataset end
+  module Dataset
+    protected
+
+    def positive_sign_of(x)
+      x >= 0 ? '+' : ''
+    end
+
+    def sign_of(x)
+      '++-'[x <=> 0]
+    end
+
+    def velocity_of(x)
+      %w[ppp pp p mp mf f ff fff][x + 3]
+    end
+
+    def modificator_string(modificator, parameters)
+      case parameters
+      when true
+        modificator
+      when Array
+        modificator.to_s + '(' +
+          parameters.collect do |parameter|
+            case parameter
+            when String
+              "\"#{parameter}\""
+            when Numeric
+              "#{parameter}"
+            when Symbol
+              "#{parameter}"
+            end
+          end.join(', ') + ')'
+      end
+    end
+  end
 
   class ProtoDecoder
     def subcontext

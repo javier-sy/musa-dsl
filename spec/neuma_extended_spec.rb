@@ -6,6 +6,7 @@ include Musa::Series
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma extended parsing' do
+
     it 'Neuma parsing with extended notation' do
       result = Musa::Neumalang.parse(
           '[ 0 	.	+1.+·.tr 	+1./
@@ -53,7 +54,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[6]).to eq(abs_grade: 2, abs_duration: 1/8r, abs_velocity: -1)
     end
 
-    it 'Neuma parsing with extended notation with GDV decoding' do
+    it 'Neuma parsing with extended notation: GDV decoding' do
       scale = Musa::Scales.et12[440.0].major[60]
 
       neumas = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100, 200)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
@@ -73,6 +74,31 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 6, octave: 0, duration: 1/2r, velocity: -3, tr: [:up])
       expect(result[c += 1]).to eq(grade: 7, octave: 0, duration: 1/2r, velocity: -3)
       expect(result[c += 1]).to eq(grade: 8, octave: 1, duration: 1, velocity: -1)
+    end
+
+    it 'Neuma parsing with extended notation: GDV decoding, to PDV conversion, and back to GDV' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas    = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100, 200)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
+
+      neumas_ok = '0.1.mf +1.+1.-ffff +1.tr +1.tr(100) +1.tr(100, 200) +1.tr("hola").st(1, 2, 3).xy(1, 2, 3) +1.tr(up) +1 +8.+2.+ff'
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
+
+      result_pdv = result_gdv.collect { |gdv| gdv.to_pdv(scale) }
+
+      result_gdv2 = result_pdv.collect { |pdv| pdv.to_gdv(scale) }
+
+      previous = current = nil
+
+      result_gdvd2 = result_gdv2.collect { |gdv| previous = current; current = gdv; gdv.to_gdvd(scale, previous: previous) }
+
+      neumas2 = result_gdvd2.collect(&:to_neuma)
+
+      expect(neumas2.join ' ').to eq neumas_ok
+
     end
 
   end

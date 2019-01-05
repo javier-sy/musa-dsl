@@ -57,7 +57,7 @@ module Musa::Datasets
     end
 
     def to_neuma(mode = nil)
-      mode ||= :dotted # :parenthesis
+      mode ||= :dots # :parenthesis
 
       @base_duration ||= Rational(1,4)
 
@@ -92,17 +92,10 @@ module Musa::Datasets
       end
 
       (keys - NaturalKeys).each do |k|
-        attributes[c += 1] = case self[k]
-                             when String
-                               "\"#{self[k]}\""
-                             when Numeric
-                               "#{self[k]}"
-                             when Symbol
-                               ":#{self[k]}"
-                             end
+        attributes[c += 1] = modificator_string(k, self[k])
       end
 
-      if mode == :dotted
+      if mode == :dots
         if !attributes.empty?
           attributes.join '.'
         else
@@ -116,19 +109,6 @@ module Musa::Datasets
       end
     end
 
-    private
-
-    def positive_sign_of(x)
-      x >= 0 ? '+' : ''
-    end
-
-    def sign_of(x)
-      '++-'[x <=> 0]
-    end
-
-    def velocity_of(x)
-      %w[ppp pp p mp mf f ff fff][x + 3]
-    end
   end
 
   module GDV # grade duration velocity event command
@@ -180,14 +160,7 @@ module Musa::Datasets
       attributes[c += 1] = velocity_of(self[:velocity]) if self[:velocity]
 
       (keys - NaturalKeys).each do |k|
-        attributes[c += 1] = case self[k]
-                             when String
-                               "\"#{self[k]}\""
-                             when Numeric
-                               "#{self[k]}"
-                             when Symbol
-                               ":#{self[k]}"
-                             end
+        attributes[c += 1] = modificator_string(k, self[k])
       end
 
       if mode == :dotted
@@ -215,7 +188,7 @@ module Musa::Datasets
           r[:abs_grade] = self[:grade]
 
         elsif self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])
-          r[:delta_grade] = scale[self[:grade]].wide_grade - scale[previous[:grade]].wide_grade
+          r[:delta_grade] = scale[self[:grade]].octave(self[:octave]).wide_grade - scale[previous[:grade]].octave(previous[:octave]).wide_grade
         end
 
         if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
@@ -234,12 +207,6 @@ module Musa::Datasets
       (keys - NaturalKeys).each { |k| r[k] = self[k] }
 
       r
-    end
-
-    private
-
-    def positive_sign_of(x)
-      x >= 0 ? '+' : ''
     end
 
     module Parser

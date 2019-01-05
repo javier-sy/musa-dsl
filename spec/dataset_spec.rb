@@ -94,6 +94,5 @@ RSpec.describe Musa::Neuma do
 
       expect(result).to eq(gdv_abs_neumas)
     end
-
   end
 end
