@@ -152,8 +152,12 @@ grammar Neumalang
 
 	rule modifier_positional_parameters
 		(spaces a:modifier_parameter_constant (spaces comma spaces b:modifier_parameter_constant spaces)* spaces) {
-			[ capture(:a).value ] + captures(:b).collect { |c| c.value }
-		}
+		    if capture(:b)
+			    [ capture(:a).value ] + captures(:b).collect { |c| c.value }
+            else
+                capture(:a).value
+            end
+        }
 	end
 
     rule modifier_parameter_constant

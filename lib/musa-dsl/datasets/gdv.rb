@@ -115,6 +115,116 @@ module Musa::Datasets
 
     include Musa::Neuma::Dataset
 
+    class Processor
+      def process(gdv, **_parameters)
+        gdv
+      end
+    end
+
+    # Process: .mord
+    class MordentProcessor < Processor
+      # TODO use a base note duration with a parameter, in order to allow mordent notes duration to be equally short independently of the duration of the original note
+      def process(gdv, tick_duration:)
+        if gdv[:mor]
+
+          direction = gdv.delete(:mor)
+
+          short_duration = [gdv[:duration] / 8r, tick_duration].max
+
+          gdvs = []
+
+          gdvs << gdv.dup.tap { |gdv| gdv[:duration] = short_duration }
+
+          case direction
+          when true, :up
+            gdvs << gdv.dup.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = short_duration }
+          when :down, :low
+            gdvs << gdv.dup.tap { |gdv| gdv[:grade] -= 1; gdv[:duration] = short_duration }
+          end
+
+          gdvs << gdv.dup.tap { |gdv| gdv[:duration] -= 2 * short_duration }
+
+          gdvs
+        else
+          gdv
+        end
+      end
+    end
+
+    # Process: .tr
+    class TrillProcessor < Processor
+      # TODO include lower note at the end, confirm if the last note is the base or the lower one
+      # TODO refine timing when repetitions is not divisible by 2
+      #
+      def initialize(note_duration: nil)
+        @note_duration = note_duration || 4/96r
+      end
+
+      def process(gdv, tick_duration:)
+        if gdv[:tr]
+          gdv.delete :tr
+
+          repetitions = (gdv[:duration] / @note_duration).to_i / 2
+
+          gdvs = []
+          repetitions.times do
+            gdvs << gdv.dup.tap { |gdv| gdv[:duration] = @note_duration }
+            gdvs << gdv.dup.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = @note_duration }
+          end
+
+          gdvs
+        else
+          gdv
+        end
+      end
+    end
+
+    # Process: .st .st(1) .st(2) .st(3): staccato level 1 2 3
+    class StaccatoProcessor < Processor
+      def initialize(min_duration: nil)
+        @min_duration = min_duration
+      end
+
+      def process(gdv, tick_duration:)
+        if gdv[:st]
+          case gdv[:st]
+          when true
+            calculated = gdv[:duration] / 2r
+          when Numeric
+            calculated = gdv[:duration] / 2**gdv[:st] if gdv[:st] >= 1
+          end
+          gdv.delete :st
+
+          gdv[:effective_duration] = [calculated, (@min_duration || tick_duration)].max
+        end
+
+        gdv
+      end
+    end
+
+    class Processors
+      attr_reader :processors
+
+      def initialize(*processors, tick_duration: nil)
+        @tick_duration = tick_duration || 1/96r
+        @processors = processors
+      end
+
+      def process(gdv)
+        @processors.each do |processor|
+          if gdv
+            if gdv.is_a?(Array)
+              gdv = gdv.collect { |gdv_i| processor.process(gdv_i, tick_duration: @tick_duration) }.flatten(1)
+            elsif gdv.is_a?(GDV)
+              gdv = processor.process(gdv, tick_duration: @tick_duration)
+            end
+          end
+        end
+
+        gdv
+      end
+    end
+
     NaturalKeys = [:grade, :octave, :duration, :velocity].freeze
 
     attr_accessor :base_duration
@@ -267,7 +377,7 @@ module Musa::Datasets
           if duration[0] == '+' || duration[0] == '-'
             command[:delta_duration] = (duration[0] == '-' ? -1 : 1) * eval_duration(duration[1..-1]) * base_duration
 
-          elsif /\A[\/]+[\·]*\Z/x.match(duration)
+          elsif /\A\/+·*\Z/x.match(duration)
             command[:abs_duration] = eval_duration(duration) * base_duration
 
           elsif duration[0] == '*'

@@ -604,6 +604,47 @@ RSpec.describe Musa::Serie do
       expect(s.max_size(3).to_a).to eq perm[2]
     end
 
+    it 'Serie process_with' do
+      s = S(1, 2, 3, 4, 5, 6)
+
+      ss = s.process_with do |i|
+        if i.even?
+          [100 + i, 200 + i]
+        else
+          i
+        end
+      end
+
+      expect(ss.next_value).to eq 1
+      expect(ss.next_value).to eq 102
+      expect(ss.next_value).to eq 202
+      expect(ss.next_value).to eq 3
+      expect(ss.next_value).to eq 104
+      expect(ss.next_value).to eq 204
+      expect(ss.next_value).to eq 5
+      expect(ss.next_value).to eq 106
+      expect(ss.next_value).to eq 206
+
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+
+      ss.restart
+
+      expect(ss.next_value).to eq 1
+      expect(ss.next_value).to eq 102
+      expect(ss.next_value).to eq 202
+      expect(ss.next_value).to eq 3
+      expect(ss.next_value).to eq 104
+      expect(ss.next_value).to eq 204
+      expect(ss.next_value).to eq 5
+      expect(ss.next_value).to eq 106
+      expect(ss.next_value).to eq 206
+
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+    end
 
   end
 end

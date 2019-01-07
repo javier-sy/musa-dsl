@@ -33,6 +33,10 @@ module Musa
       end
     end
 
+    def process_with(**parameters, &processor)
+      SerieProcessor.new self, parameters, &processor
+    end
+
     # TODO: test case
     def hashify(*keys)
       BasicHashSerieFromArraySerie.new self, keys
@@ -112,6 +116,7 @@ module Musa
 
     # TODO: test case
     def to_a(recursive: nil, duplicate: nil, restart: nil)
+
       def copy_included_modules(source, target)
         target.tap do
           source.singleton_class.included_modules.each do |m|
@@ -705,6 +710,66 @@ module Musa
     end
 
     private_constant :FlattenSerieFromSerieOfSeries
+
+    class SerieProcessor
+      include Serie
+
+      attr_reader :source
+
+      def initialize(serie, parameters, &processor)
+        @source = serie
+        @parameters = parameters
+        @processor = KeyParametersProcedureBinder.new(processor)
+
+        _restart false
+      end
+
+      def source=(serie)
+        @source = serie
+        _restart false
+      end
+
+      def _restart(restart_source = true)
+        @source.restart if restart_source
+        @pending_values = []
+      end
+
+      def _next_value
+        if @pending_values.empty?
+
+          v = @source.next_value
+
+          if v.nil?
+            nil
+          else
+            value = @processor.call(v, **@parameters)
+
+            if value.is_a?(Array)
+              @pending_values = value
+              value = _next_value
+            end
+
+            value
+          end
+        else
+          value = @pending_values.shift
+
+          if value.nil?
+            value = _next_value
+          end
+
+          value
+        end
+      end
+
+      def infinite?
+        @source.infinite?
+      end
+
+      def deterministic?
+        false
+      end
+    end
 
     class BasicSerieAutorestart
       include Serie

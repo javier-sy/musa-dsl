@@ -14,22 +14,27 @@ module Musa::Neuma
       %w[ppp pp p mp mf f ff fff][x + 3]
     end
 
-    def modificator_string(modificator, parameters)
-      case parameters
+    def modificator_string(modificator, parameter_or_parameters)
+      case parameter_or_parameters
       when true
-        modificator
+        modificator.to_s
       when Array
-        modificator.to_s + '(' +
-          parameters.collect do |parameter|
-            case parameter
-            when String
-              "\"#{parameter}\""
-            when Numeric
-              "#{parameter}"
-            when Symbol
-              "#{parameter}"
-            end
-          end.join(', ') + ')'
+        "#{modificator.to_s}(#{parameter_or_parameters.collect { |p| parameter_to_string(p) }.join(', ')})"
+      else
+        "#{modificator.to_s}(#{parameter_to_string(parameter_or_parameters)})"
+      end
+    end
+
+    private
+
+    def parameter_to_string(parameter)
+      case parameter
+      when String
+        "\"#{parameter}\""
+      when Numeric
+        "#{parameter}"
+      when Symbol
+        "#{parameter}"
       end
     end
   end

@@ -68,10 +68,10 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
       expect(result[c += 1]).to eq(grade: 1, octave: 0, duration: 1/2r, velocity: -3)
       expect(result[c += 1]).to eq(grade: 2, octave: 0, duration: 1/2r, velocity: -3, tr: true)
-      expect(result[c += 1]).to eq(grade: 3, octave: 0, duration: 1/2r, velocity: -3, tr: [100])
+      expect(result[c += 1]).to eq(grade: 3, octave: 0, duration: 1/2r, velocity: -3, tr: 100)
       expect(result[c += 1]).to eq(grade: 4, octave: 0, duration: 1/2r, velocity: -3, tr: [100, 200])
-      expect(result[c += 1]).to eq(grade: 5, octave: 0, duration: 1/2r, velocity: -3, tr: ["hola"], st: [1,2,3], xy: [1, 2, 3])
-      expect(result[c += 1]).to eq(grade: 6, octave: 0, duration: 1/2r, velocity: -3, tr: [:up])
+      expect(result[c += 1]).to eq(grade: 5, octave: 0, duration: 1/2r, velocity: -3, tr: "hola", st: [1,2,3], xy: [1, 2, 3])
+      expect(result[c += 1]).to eq(grade: 6, octave: 0, duration: 1/2r, velocity: -3, tr: :up)
       expect(result[c += 1]).to eq(grade: 7, octave: 0, duration: 1/2r, velocity: -3)
       expect(result[c += 1]).to eq(grade: 8, octave: 1, duration: 1, velocity: -1)
     end
@@ -101,5 +101,79 @@ RSpec.describe Musa::Neumalang do
 
     end
 
+    it 'Neuma parsing with staccato extended notation' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas    = '0.1.mf +1.st .st(1) .st(2) .st(3) .st(4)'
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      processor = Musa::Datasets::GDV::Processors.new \
+        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r)
+
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| processor.process(gdv) }.to_a(recursive: true)
+
+      c = -1
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1, effective_duration: 1/8r)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1, effective_duration: 1/8r)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1, effective_duration: 1/16r)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1, effective_duration: 1/24r)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1, effective_duration: 1/24r)
+    end
+
+    it 'Neuma parsing with trill extended notation' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas    = '0.1.mf +1.tr'
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      processor = Musa::Datasets::GDV::Processors.new \
+        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillProcessor.new(note_duration: 4/96r),
+        tick_duration: 1/96r
+
+        result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| processor.process(gdv) }.to_a(recursive: true)
+
+      c = -1
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
+    end
+
+    it 'Neuma parsing with mordent extended notation' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas    = '0.1.mf +1.mor +3.+1.mor(low)'
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      processor = Musa::Datasets::GDV::Processors.new \
+        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillProcessor.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::MordentProcessor.new,
+        tick_duration: 1/96r
+
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| processor.process(gdv) }.to_a(recursive: true)
+
+      c = -1
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/32r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/32r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 3/16r, velocity: 1)
+
+      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 1/16r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/16r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 3/8r, velocity: 1)
+    end
   end
 end
