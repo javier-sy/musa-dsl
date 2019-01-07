@@ -465,7 +465,7 @@ module Musa::Datasets
       end
 
       def subcontext
-        NeumaDecoder.new @scale, base_duration: @base_duration, **@last
+        NeumaDecoder.new @scale, base_duration: @base_duration, processor: @processor, **@last
       end
 
       def apply(action, on:)
