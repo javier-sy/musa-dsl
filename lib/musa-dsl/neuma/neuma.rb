@@ -1,5 +1,11 @@
 module Musa::Neuma
   module Dataset
+    class Processor
+      def process(element, **_parameters)
+        element
+      end
+    end
+
     protected
 
     def positive_sign_of(x)

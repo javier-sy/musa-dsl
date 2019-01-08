@@ -115,12 +115,6 @@ module Musa::Datasets
 
     include Musa::Neuma::Dataset
 
-    class Processor
-      def process(gdv, **_parameters)
-        gdv
-      end
-    end
-
     # Process: .mord
     class MordentProcessor < Processor
       # TODO use a base note duration with a parameter, in order to allow mordent notes duration to be equally short independently of the duration of the original note
