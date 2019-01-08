@@ -60,9 +60,11 @@ module Musa::Neuma
   end
 
   class Decoder < DifferentialDecoder
-    def initialize(start)
+    def initialize(start, processor: nil)
       @start = start.clone
       @last = start.clone
+
+      @processor = processor
     end
 
     def subcontext
@@ -74,7 +76,11 @@ module Musa::Neuma
 
       @last = result.clone
 
-      result
+      if @processor
+        @processor.process(result)
+      else
+        result
+      end
     end
 
     def apply(_action, on:)

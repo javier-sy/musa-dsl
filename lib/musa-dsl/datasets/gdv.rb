@@ -450,14 +450,14 @@ module Musa::Datasets
     class NeumaDecoder < Musa::Neuma::Decoder
       include Parser
 
-      def initialize(scale, base_duration: nil, **base)
+      def initialize(scale, base_duration: nil, processor: nil, **base)
         @base_duration = base_duration || Rational(1,4)
 
         base = { grade: 0, octave: 0, duration: @base_duration, velocity: 1 } if base.empty?
 
         @scale = scale
 
-        super base
+        super base, processor: processor
       end
 
       def parse(expression)

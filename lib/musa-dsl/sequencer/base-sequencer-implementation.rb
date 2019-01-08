@@ -192,6 +192,18 @@ class Musa::BaseSequencer
           _play serie, control, __play_eval: __play_eval, **mode_args
         end
 
+      when :no_eval_play
+
+        control2 = PlayControl.new control
+        control3 = PlayControl.new control2
+        control3.after { control3.launch :sync }
+
+        _play operation[:current_parameter], control3, __play_eval: WaitModePlayEval.new(__play_eval.block_procedure_binder), **mode_args
+
+        control2.on :sync do
+          _play serie, control, __play_eval: __play_eval, **mode_args
+        end
+
       when :parallel_play
 
         control2 = PlayControl.new control
@@ -350,6 +362,8 @@ class Musa::BaseSequencer
   end
 
   def _rescue_block_error(e)
+    puts "BaseSequencer._rescue_block_error: e = #{e}"
+    pp e.backtrace
     @on_block_error.each do |block|
       block.call e
     end

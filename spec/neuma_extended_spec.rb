@@ -175,106 +175,89 @@ RSpec.describe Musa::Neumalang do
       expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/16r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 3/8r, velocity: 1)
     end
-  end
 
-  it 'Extended neuma parsing with sequencer play' do
-    debug = false
-    debug = true
+    it 'Extended neuma parsing with sequencer play' do
+      debug = false
+      #debug = true
 
-    scale = Musa::Scales.et12[440.0].major[60]
+      scale = Musa::Scales.et12[440.0].major[60]
 
-    neumas = '0.1.mf +1.mor +3.+1.mor(low)'
+      neumas = '0.1.mf +1.mor +3.+1.mor(low) -2'
 
-    processor = Musa::Datasets::GDV::Processors.new \
+      processor = Musa::Datasets::GDV::Processors.new \
         Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r),
         Musa::Datasets::GDV::TrillProcessor.new(note_duration: 4/96r),
         Musa::Datasets::GDV::MordentProcessor.new,
         tick_duration: 1/96r
 
-    gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1/4r, processor: processor
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: processor, base_duration: 1/4r
 
-    serie = Musa::Neumalang.parse(neumas)
+      serie = Musa::Neumalang.parse(neumas)
 
-    if debug
-      puts
-      puts 'SERIE'
-      puts '-----'
-      pp serie.to_a(recursive: true)
-      puts
-    end
+      if debug
+        puts
+        puts 'SERIE'
+        puts '-----'
+        pp serie.to_a(recursive: true)
+        puts
+      end
 
-    played = {} if debug
-    played = [] unless debug
+      played = {} if debug
+      played = [] unless debug
 
-    sequencer = Musa::Sequencer.new 4, 24 do
-      at 1 do
-        handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
-          if debug
-            played[position] ||= []
-            played[position] << gdv
-          else
-            played << { position: position }
-            played << gdv
+      sequencer = Musa::Sequencer.new 4, 24 do
+        at 1 do
+          handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+            if debug
+              played[position] ||= []
+              played[position] << gdv
+            else
+              played << { position: position }
+              played << gdv
+            end
           end
-        end
 
-        handler.on :event do
-          if debug
-            played[position] ||= []
-            played[position] << [:event]
-          else
-            played << { position: position }
-            played << [:event]
+          handler.on :event do
+            if debug
+              played[position] ||= []
+              played[position] << [:event]
+            else
+              played << { position: position }
+              played << [:event]
+            end
           end
         end
       end
+
+      sequencer.tick until sequencer.empty?
+
+      if debug
+        puts
+        puts 'PLAYED'
+        puts '------'
+        pp played
+      end
+
+      unless debug
+        expect(played).to eq(
+        [{ position: 1 },
+         { grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
+         { position: 1+1/4r },
+         { grade: 1, octave: 0, duration: 1/32r, velocity: 1 },
+         { position: 1+9/32r },
+         { grade: 2, octave: 0, duration: 1/32r, velocity: 1 },
+         { position: 1+5/16r },
+         { grade: 1, octave: 0, duration: 3/16r, velocity: 1 },
+         { position: 1+1/2r },
+         { grade: 4, octave: 0, duration: 1/16r, velocity: 1 },
+         { position: 1+9/16r },
+         { grade: 3, octave: 0, duration: 1/16r, velocity: 1 },
+         { position: 1+5/8r },
+         { grade: 4, octave: 0, duration: 3/8r, velocity: 1 },
+         { position: 2 },
+         { grade: 2, octave: 0, duration: 1/2r, velocity: 1 }])
+      end
     end
 
-    sequencer.tick until sequencer.empty?
-
-    if debug
-      puts
-      puts 'PLAYED'
-      puts '------'
-      pp played
-    end
-
-    unless debug
-      expect(played).to eq(
-                            [{ position: 1 },
-                             { grade: 0, octave: 0, duration: 1, velocity: 1 },
-                             { position: 2 },
-                             [:event],
-                             { position: 2 },
-                             { grade: 1, octave: 0, duration: 1, velocity: 1 },
-                             { position: 3 },
-                             { grade: 2, octave: 0, duration: 1, velocity: 1 },
-                             { position: 4 },
-                             { grade: 6, octave: 0, duration: 1, velocity: 1 },
-                             { position: 5 },
-                             { grade: 4, octave: 0, duration: 1, velocity: 1 },
-                             { position: 6 },
-                             { grade: 5, octave: 0, duration: 1, velocity: 1 },
-                             { position: 7 },
-                             { grade: 3, octave: 0, duration: 1, velocity: 1 },
-                             { position: 8 },
-                             { grade: 0, octave: 0, duration: 1, velocity: 1 },
-                             { position: 9 },
-                             [:event],
-                             { position: 9 },
-                             { grade: 1, octave: 0, duration: 1, velocity: 1 },
-                             { position: 10 },
-                             { grade: 2, octave: 0, duration: 1, velocity: 1 },
-                             { position: 11 },
-                             { grade: 6, octave: 0, duration: 1, velocity: 1 },
-                             { position: 12 },
-                             { grade: 4, octave: 0, duration: 1, velocity: 1 },
-                             { position: 13 },
-                             { grade: 5, octave: 0, duration: 1, velocity: 1 },
-                             { position: 14 },
-                             { grade: 3, octave: 0, duration: 1, velocity: 1 }]
-                        )
-    end
   end
-
 end

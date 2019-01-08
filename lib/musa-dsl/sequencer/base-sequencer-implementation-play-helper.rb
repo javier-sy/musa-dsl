@@ -106,6 +106,7 @@ class Musa::BaseSequencer
     @@id = 0
 
     attr_reader :nl_context
+    attr_reader :block_procedure_binder
 
     def initialize(block_procedure_binder, decoder, nl_context, parent: nil)
       @id = @@id += 1
@@ -249,6 +250,9 @@ class Musa::BaseSequencer
         { current_operation: :parallel_play,
           current_parameter: element.tap { |e| e.each(&:restart) } }
 
+      when Array
+        { current_operation: :no_eval_play,
+          current_parameter: S(*element) }
       else
         case element[:kind]
         when :value
@@ -267,13 +271,17 @@ class Musa::BaseSequencer
           end
 
         when :neuma
-
           _value = eval_neuma element[:neuma]
 
-          { current_operation: :block,
-            current_parameter: _value,
-            continue_operation: :wait,
-            continue_parameter: _value[:duration] }
+          if _value.is_a?(Array)
+            { current_operation: :no_eval_play,
+              current_parameter: S(*_value) }
+          else
+            { current_operation: :block,
+              current_parameter: _value,
+              continue_operation: :wait,
+              continue_parameter: _value[:duration] }
+          end
 
         when :serie
 
