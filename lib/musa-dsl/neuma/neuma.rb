@@ -1,7 +1,42 @@
 module Musa::Neuma
   module Dataset
-    class Processor
+    class Decorator
       def process(element, **_parameters)
+        element
+      end
+    end
+
+    class TwoNeumasDecorator
+      def process(element1, element2, **_parameters)
+        element2
+      end
+    end
+
+    class Decorators
+      attr_reader :decorators
+      attr_accessor :appogiatura_decorator
+
+      def initialize(*decorators, appogiatura_decorator: nil, tick_duration: nil)
+        @tick_duration = tick_duration || 1/96r
+        @appogiatura_decorator = appogiatura_decorator
+        @decorators = decorators
+      end
+
+      def process(element)
+        if @appogiatura_decorator
+          element = @appogiatura_decorator.process(element, tick_duration: @tick_duration)
+        end
+
+        @decorators.each do |processor|
+          if element
+            if element.is_a?(Array)
+              element = element.collect { |element_i| processor.process(element_i, tick_duration: @tick_duration) }.flatten(1)
+            else
+              element = processor.process(element, tick_duration: @tick_duration)
+            end
+          end
+        end
+
         element
       end
     end

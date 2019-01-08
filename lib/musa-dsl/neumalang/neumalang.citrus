@@ -17,11 +17,7 @@ grammar Neumalang
 	end
 
 	rule object_expression
-		braced_command | reference_expression | parenthesis_expression | bracketed_expression | use_variable | constant | neuma
-	end
-
-	rule parenthesis_expression
-		(lpar expression rpar) { capture(:expression).value }
+		braced_command | reference_expression | bracketed_expression | use_variable | constant | neuma
 	end
 
 	rule reference_expression
@@ -53,6 +49,15 @@ grammar Neumalang
 	end
 
 	rule neuma
+        (appogiatura_neuma | simple_neuma)
+#	    ((appogiatura_neuma a:simple_neuma) | b:simple_neuma) { capture(:b).value }
+	end
+
+	rule appogiatura_neuma
+	    (lpar spaces a:simple_neuma spaces rpar spaces b:simple_neuma) { capture(:b).value.tap { |_| _[:neuma] << { appogiatura: capture(:a).value[:neuma] } } }
+	end
+
+	rule simple_neuma
 		neuma_as_dotted_attributes_beginning_with_dot | neuma_as_dotted_attributes_beginning_with_simple_attribute | neuma_between_angles_attributes
 	end
 

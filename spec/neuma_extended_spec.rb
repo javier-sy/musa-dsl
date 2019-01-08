@@ -108,10 +108,10 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      processor = Musa::Datasets::GDV::Processors.new \
-        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r)
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r)
 
-      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| processor.process(gdv) }.to_a(recursive: true)
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -130,12 +130,12 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      processor = Musa::Datasets::GDV::Processors.new \
-        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillProcessor.new(note_duration: 4/96r),
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
         tick_duration: 1/96r
 
-        result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| processor.process(gdv) }.to_a(recursive: true)
+        result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -148,6 +148,7 @@ RSpec.describe Musa::Neumalang do
       expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
     end
 
+
     it 'Neuma parsing with mordent extended notation' do
       scale = Musa::Scales.et12[440.0].major[60]
 
@@ -155,18 +156,17 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      processor = Musa::Datasets::GDV::Processors.new \
-        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillProcessor.new(note_duration: 4/96r),
-        Musa::Datasets::GDV::MordentProcessor.new,
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::MordentDecorator.new,
         tick_duration: 1/96r
 
-      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| processor.process(gdv) }.to_a(recursive: true)
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
 
       c = -1
 
       expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
-
       expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/32r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/32r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 3/16r, velocity: 1)
@@ -176,7 +176,7 @@ RSpec.describe Musa::Neumalang do
       expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 3/8r, velocity: 1)
     end
 
-    it 'Extended neuma parsing with sequencer play' do
+    it 'Modifiers extended neuma parsing with sequencer play' do
       debug = false
       #debug = true
 
@@ -184,13 +184,13 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1.mor +3.+1.mor(low) -2'
 
-      processor = Musa::Datasets::GDV::Processors.new \
-        Musa::Datasets::GDV::StaccatoProcessor.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillProcessor.new(note_duration: 4/96r),
-        Musa::Datasets::GDV::MordentProcessor.new,
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::MordentDecorator.new,
         tick_duration: 1/96r
 
-      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: processor, base_duration: 1/4r
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
 
       serie = Musa::Neumalang.parse(neumas)
 
@@ -256,6 +256,113 @@ RSpec.describe Musa::Neumalang do
          { grade: 4, octave: 0, duration: 3/8r, velocity: 1 },
          { position: 2 },
          { grade: 2, octave: 0, duration: 1/2r, velocity: 1 }])
+      end
+    end
+
+    it 'Neuma parsing with apoggiatura extended notation' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas = '0.1.mf +1 (+2.//)+3 0'
+
+      result = Musa::Neumalang.parse(neumas).to_a(recursive: true)
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::MordentDecorator.new,
+        appogiatura_decorator: Musa::Datasets::GDV::AppogiaturaDecorator.new,
+        tick_duration: 1/96r
+
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
+
+      c = -1
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/16r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 3/16r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+    end
+
+    it 'Appogiatura extended neuma parsing with sequencer play' do
+      debug = false
+      #debug = true
+
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas = '0.1.mf +1 (+2.//)+3 0 +1'
+
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
+        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::MordentDecorator.new,
+        appogiatura_decorator: Musa::Datasets::GDV::AppogiaturaDecorator.new,
+        tick_duration: 1/96r
+
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
+
+      serie = Musa::Neumalang.parse(neumas)
+
+      if debug
+        puts
+        puts 'SERIE'
+        puts '-----'
+        pp serie.to_a(recursive: true)
+        puts
+      end
+
+      played = {} if debug
+      played = [] unless debug
+
+      sequencer = Musa::Sequencer.new 4, 24 do
+        at 1 do
+          handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+            if debug
+              played[position] ||= []
+              played[position] << gdv
+            else
+              played << { position: position }
+              played << gdv
+            end
+          end
+
+          handler.on :event do
+            if debug
+              played[position] ||= []
+              played[position] << [:event]
+            else
+              played << { position: position }
+              played << [:event]
+            end
+          end
+        end
+      end
+
+      sequencer.tick until sequencer.empty?
+
+      if debug
+        puts
+        puts 'PLAYED'
+        puts '------'
+        pp played
+      end
+
+      unless debug
+        expect(played).to eq(
+                              [{ position: 1 },
+                               { grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
+                               { position: 1+1/4r },
+                               { grade: 1, octave: 0, duration: 1/4r, velocity: 1 },
+                               { position: 1+1/2r },
+                               { grade: 3, octave: 0, duration: 1/16r, velocity: 1 },
+                               { position: 1+9/16r },
+                               { grade: 4, octave: 0, duration: 3/16r, velocity: 1 },
+                               { position: 1+3/4r },
+                               { grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
+                               { position: 2 },
+                               { grade: 1, octave: 0, duration: 1/4r, velocity: 1 }])
       end
     end
 
