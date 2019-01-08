@@ -127,16 +127,16 @@ module Musa::Datasets
 
           gdvs = []
 
-          gdvs << gdv.dup.tap { |gdv| gdv[:duration] = short_duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:duration] = short_duration }
 
           case direction
           when true, :up
-            gdvs << gdv.dup.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = short_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = short_duration }
           when :down, :low
-            gdvs << gdv.dup.tap { |gdv| gdv[:grade] -= 1; gdv[:duration] = short_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] -= 1; gdv[:duration] = short_duration }
           end
 
-          gdvs << gdv.dup.tap { |gdv| gdv[:duration] -= 2 * short_duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:duration] -= 2 * short_duration }
 
           gdvs
         else
@@ -162,8 +162,8 @@ module Musa::Datasets
 
           gdvs = []
           repetitions.times do
-            gdvs << gdv.dup.tap { |gdv| gdv[:duration] = @note_duration }
-            gdvs << gdv.dup.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = @note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:duration] = @note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = @note_duration }
           end
 
           gdvs
