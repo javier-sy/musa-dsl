@@ -17,18 +17,16 @@ module Musa::Datasets
       r.base_duration = @base_duration
 
       if self[:abs_grade]
-        r[:grade] = if self[:abs_grade] == :silence
-                      self[:abs_grade]
-                    else
-                      scale[self[:abs_grade]].wide_grade
-                    end
+        if self[:abs_grade] == :silence
+          r[:silence] = true
+        else
+          r.delete :silence
+          r[:grade] = scale[self[:abs_grade]].wide_grade
+        end
 
       elsif self[:delta_grade]
-        if r[:grade] == :silence
-          # doesn't change silence
-        else
-          r[:grade] = scale[r[:grade]].wide_grade + self[:delta_grade]
-        end
+        r.delete :silence
+        r[:grade] = scale[r[:grade]].wide_grade + self[:delta_grade]
       end
 
       if self[:abs_octave]
@@ -115,7 +113,7 @@ module Musa::Datasets
 
     include Musa::Neuma::Dataset
 
-    NaturalKeys = [:grade, :octave, :duration, :velocity].freeze
+    NaturalKeys = [:grade, :octave, :duration, :velocity, :silence].freeze
 
     attr_accessor :base_duration
 
@@ -124,8 +122,8 @@ module Musa::Datasets
       r.base_duration = @base_duration
 
       if self[:grade]
-        r[:pitch] = if self[:grade] == :silence
-                      self[:grade]
+        r[:pitch] = if self[:silence]
+                      :silence
                     else
                       scale[self[:grade]].octave(self[:octave] || 0).pitch
                     end
@@ -154,7 +152,12 @@ module Musa::Datasets
 
       c = 0
 
-      attributes[c] = self[:grade].to_s if self[:grade]
+      if self[:silence]
+        attributes[c] = :silence
+      else
+        attributes[c] = self[:grade].to_s if self[:grade]
+      end
+
       attributes[c += 1] = 'o' +  positive_sign_of(self[:octave]) + self[:octave].to_s if self[:octave]
       attributes[c += 1] = (self[:duration] / @base_duration).to_s if self[:duration]
       attributes[c += 1] = velocity_of(self[:velocity]) if self[:velocity]
@@ -184,7 +187,11 @@ module Musa::Datasets
       r.base_duration = @base_duration
 
       if previous
-        if self[:grade] == :silence || previous[:grade] == :silence
+
+        if self[:silence]
+          r[:abs_grade] = :silence
+
+        elsif self[:grade] && !previous[:grade]
           r[:abs_grade] = self[:grade]
 
         elsif self[:grade] && previous[:grade] && (self[:grade] != previous[:grade])

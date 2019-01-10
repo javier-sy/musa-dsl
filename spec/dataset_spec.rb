@@ -11,7 +11,7 @@ RSpec.describe Musa::Neuma do
 
       expect({ grade: 3, duration: 1, velocity: 4 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: 60 + 5, duration: 1, velocity: 127)
       expect({ grade: 8, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: 60 + 12 + 2, duration: 1, velocity: 16)
-      expect({ grade: :silence, duration: 1, velocity: -3 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: :silence, duration: 1, velocity: 16)
+      expect({ grade: 0, duration: 1, velocity: -3, silence: true }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(pitch: :silence, duration: 1, velocity: 16)
       expect({ duration: 0 }.extend(Musa::Datasets::GDV).to_pdv(scale)).to eq(duration: 0)
     end
 

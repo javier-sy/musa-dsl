@@ -30,6 +30,8 @@ silence
 
 silence.*1/2
 
++2
+
 /* ::evento */ -1 II # no se puede procesar como neuma simple
 
 
