@@ -64,9 +64,6 @@ module Musa::Datasets::GDV
 
   # Process: .tr
   class TrillDecorator < Decorator
-    # TODO include lower note at the end, confirm if the last note is the base or the lower one
-    # TODO refine timing when repetitions is not divisible by 2
-    #
     def initialize(duration_factor: nil)
       @duration_factor = duration_factor || 1/4r
     end
