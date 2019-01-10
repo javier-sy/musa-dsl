@@ -362,8 +362,9 @@ class Musa::BaseSequencer
   end
 
   def _rescue_block_error(e)
-    puts "BaseSequencer._rescue_block_error: e = #{e}"
-    pp e.backtrace
+    _log e
+    _log e.full_message(order: :top)
+
     @on_block_error.each do |block|
       block.call e
     end

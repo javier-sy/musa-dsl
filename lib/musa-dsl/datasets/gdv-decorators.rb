@@ -2,11 +2,13 @@ module Musa::Datasets::GDV
 
   # Process: appogiatura (neuma)neuma
   class AppogiaturaDecorator < TwoNeumasDecorator
-    def process(gdv, tick_duration:)
+    def process(gdv, base_duration:, tick_duration:)
       if gdv_appogiatura = gdv[:appogiatura]
         gdv.delete :appogiatura
 
         # TODO process with Decorators the gdv_appogiatura
+        # TODO implement also posterior appogiatura neuma(neuma)
+        # TODO implement also multiple appogiatura with several notes (neuma neuma)neuma or neuma(neuma neuma)
 
         gdv[:duration] = gdv[:duration] - gdv_appogiatura[:duration]
 
@@ -19,16 +21,26 @@ module Musa::Datasets::GDV
 
   # Process: .mord
   class MordentDecorator < Decorator
-    def initialize(note_duration: nil)
-      @note_duration = note_duration
+    def initialize(duration_factor: nil)
+      @duration_factor = duration_factor || 1/4r
     end
 
-    def process(gdv, tick_duration:)
-      if gdv[:mor]
+    def process(gdv, base_duration:, tick_duration:)
+      mor = gdv.delete :mor
 
-        direction = gdv.delete(:mor)
+      if mor
+        direction = :up
 
-        short_duration = [(@noteduration || gdv[:duration] / 8r), tick_duration].max
+        check(mor) do |mor|
+          case mor
+          when :true, :up
+            direction = :up
+          when :down, :low
+            direction = :down
+          end
+        end
+
+        short_duration = [base_duration * @duration_factor, tick_duration].max
 
         gdvs = []
 
@@ -55,20 +67,53 @@ module Musa::Datasets::GDV
     # TODO include lower note at the end, confirm if the last note is the base or the lower one
     # TODO refine timing when repetitions is not divisible by 2
     #
-    def initialize(note_duration: nil)
-      @note_duration = note_duration || 4/96r
+    def initialize(duration_factor: nil)
+      @duration_factor = duration_factor || 1/4r
     end
 
-    def process(gdv, tick_duration:)
+    def process(gdv, base_duration:, tick_duration:)
       if gdv[:tr]
-        gdv.delete :tr
+        tr = gdv.delete :tr
 
-        repetitions = (gdv[:duration] / @note_duration).to_i / 2
+        note_duration = base_duration * @duration_factor
+
+        check(tr) do |tr|
+          case tr
+          when Numeric # duration factor
+            note_duration *= base_duration * tr
+          end
+        end
+
+        used_duration = 0r
+        last = nil
 
         gdvs = []
-        repetitions.times do
-          gdvs << gdv.clone.tap { |gdv| gdv[:duration] = @note_duration }
-          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = @note_duration }
+
+        check(tr) do |tr|
+          case tr
+          when :low # start with lower note
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = -1); gdv[:duration] = note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
+            used_duration += 2 * note_duration
+
+          when :same # start with the same note
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
+            used_duration += note_duration
+          end
+        end
+
+        while used_duration + 2 * note_duration <= gdv[:duration]
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 1); gdv[:duration] = note_duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
+
+          used_duration += 2 * note_duration
+        end
+
+        duration_diff = gdv[:duration] - used_duration
+        if duration_diff >= note_duration
+          # ???
+        elsif duration_diff > 0
+          gdvs.last[:duration] += duration_diff
         end
 
         gdvs
@@ -80,21 +125,26 @@ module Musa::Datasets::GDV
 
   # Process: .st .st(1) .st(2) .st(3): staccato level 1 2 3
   class StaccatoDecorator < Decorator
-    def initialize(min_duration: nil)
-      @min_duration = min_duration
+    def initialize(min_duration_factor: nil)
+      @min_duration_factor = min_duration_factor || 1/8r
     end
 
-    def process(gdv, tick_duration:)
-      if gdv[:st]
-        case gdv[:st]
-        when true
-          calculated = gdv[:duration] / 2r
-        when Numeric
-          calculated = gdv[:duration] / 2**gdv[:st] if gdv[:st] >= 1
-        end
-        gdv.delete :st
+    def process(gdv, base_duration:, tick_duration:)
+      st = gdv.delete :st
 
-        gdv[:effective_duration] = [calculated, (@min_duration || tick_duration)].max
+      if st
+        calculated = 0
+
+        check(st) do |st|
+        case st
+          when true
+            calculated = gdv[:duration] / 2r
+          when Numeric
+            calculated = gdv[:duration] / 2**st if st >= 1
+          end
+        end
+
+        gdv[:effective_duration] = [calculated, base_duration * @min_duration_factor].max
       end
 
       gdv

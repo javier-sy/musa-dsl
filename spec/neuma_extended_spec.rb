@@ -109,7 +109,7 @@ RSpec.describe Musa::Neumalang do
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r)
+        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration_factor: 1/6r)
 
       result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
 
@@ -123,7 +123,7 @@ RSpec.describe Musa::Neumalang do
       expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1, effective_duration: 1/24r)
     end
 
-    it 'Neuma parsing with trill extended notation' do
+    it 'Neuma parsing with basic trill extended notation' do
       scale = Musa::Scales.et12[440.0].major[60]
 
       neumas    = '0.1.mf +1.tr'
@@ -131,8 +131,9 @@ RSpec.describe Musa::Neumalang do
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::StaccatoDecorator.new,
+        Musa::Datasets::GDV::TrillDecorator.new(duration_factor: 1/6r),
+        base_duration: 1/4r,
         tick_duration: 1/96r
 
         result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
@@ -140,14 +141,13 @@ RSpec.describe Musa::Neumalang do
       c = -1
 
       expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
-      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
     end
-
 
     it 'Neuma parsing with mordent extended notation' do
       scale = Musa::Scales.et12[440.0].major[60]
@@ -157,9 +157,10 @@ RSpec.describe Musa::Neumalang do
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
-        Musa::Datasets::GDV::MordentDecorator.new,
+        Musa::Datasets::GDV::StaccatoDecorator.new,
+        Musa::Datasets::GDV::TrillDecorator.new,
+        Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/6r),
+        base_duration: 1/4r,
         tick_duration: 1/96r
 
       result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
@@ -167,13 +168,13 @@ RSpec.describe Musa::Neumalang do
       c = -1
 
       expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
-      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/32r, velocity: 1)
-      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/32r, velocity: 1)
-      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 3/16r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 4/24r, velocity: 1)
 
-      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 1/16r, velocity: 1)
-      expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/16r, velocity: 1)
-      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 3/8r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/24r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 10/24r, velocity: 1)
     end
 
     it 'Modifiers extended neuma parsing with sequencer play' do
@@ -185,9 +186,10 @@ RSpec.describe Musa::Neumalang do
       neumas = '0.1.mf +1.mor +3.+1.mor(low) -2'
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
-        Musa::Datasets::GDV::MordentDecorator.new,
+        Musa::Datasets::GDV::StaccatoDecorator.new,
+        Musa::Datasets::GDV::TrillDecorator.new,
+        Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/8r),
+        base_duration: 1/4r,
         tick_duration: 1/96r
 
       gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
@@ -249,11 +251,11 @@ RSpec.describe Musa::Neumalang do
          { position: 1+5/16r },
          { grade: 1, octave: 0, duration: 3/16r, velocity: 1 },
          { position: 1+1/2r },
-         { grade: 4, octave: 0, duration: 1/16r, velocity: 1 },
+         { grade: 4, octave: 0, duration: 1/32r, velocity: 1 },
+         { position: 1+17/32r },
+         { grade: 3, octave: 0, duration: 1/32r, velocity: 1 },
          { position: 1+9/16r },
-         { grade: 3, octave: 0, duration: 1/16r, velocity: 1 },
-         { position: 1+5/8r },
-         { grade: 4, octave: 0, duration: 3/8r, velocity: 1 },
+         { grade: 4, octave: 0, duration: 14/32r, velocity: 1 },
          { position: 2 },
          { grade: 2, octave: 0, duration: 1/2r, velocity: 1 }])
       end
@@ -269,10 +271,11 @@ RSpec.describe Musa::Neumalang do
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::StaccatoDecorator.new,
+        Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new,
         appogiatura_decorator: Musa::Datasets::GDV::AppogiaturaDecorator.new,
+        base_duration: 1/4r,
         tick_duration: 1/96r
 
       result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
@@ -295,10 +298,11 @@ RSpec.describe Musa::Neumalang do
       neumas = '0.1.mf +1 (+2.//)+3 0 +1'
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::StaccatoDecorator.new(min_duration: 4/96r),
-        Musa::Datasets::GDV::TrillDecorator.new(note_duration: 4/96r),
+        Musa::Datasets::GDV::StaccatoDecorator.new,
+        Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new,
         appogiatura_decorator: Musa::Datasets::GDV::AppogiaturaDecorator.new,
+        base_duration: 1/4r,
         tick_duration: 1/96r
 
       gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
