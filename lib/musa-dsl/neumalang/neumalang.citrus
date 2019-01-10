@@ -170,11 +170,11 @@ grammar Neumalang
     end
 
 	rule number
-    	float | integer
+    	float | rational | integer
   	end
 
 	rule raw_number
-    	raw_float | raw_integer
+    	raw_float | raw_rational | raw_integer
   	end
 
   	rule symbol
@@ -207,6 +207,14 @@ grammar Neumalang
 
   	rule raw_integer
     	(digits spaces) { capture(:digits).value.to_i }
+  	end
+
+  	rule rational
+    	(single_quote str:(digits slash digits) spaces) { { kind: :value, value: capture(:str).value.to_r } }
+  	end
+
+  	rule raw_rational
+    	(str: (digits slash digits) spaces) { capture(:str).value.to_r }
   	end
 
 	rule comment
@@ -256,6 +264,7 @@ grammar Neumalang
 	rule colon ':' end
 	rule double_colon '::' end
 	rule double_bar '||' end
+	rule slash '/' end
 	rule lpar '(' end
 	rule rpar ')' end
 	rule lbrace '{' end

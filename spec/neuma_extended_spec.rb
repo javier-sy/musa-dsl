@@ -57,7 +57,7 @@ RSpec.describe Musa::Neumalang do
     it 'Neuma parsing with extended notation: GDV decoding' do
       scale = Musa::Scales.et12[440.0].major[60]
 
-      neumas = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100, 200)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
+      neumas = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100/1, 400/2)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
