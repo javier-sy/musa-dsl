@@ -80,7 +80,7 @@ module Musa::Datasets::GDV
         check(tr) do |tr|
           case tr
           when Numeric # duration factor
-            note_duration *= base_duration * tr
+            note_duration *= base_duration * tr.to_r
           end
         end
 
@@ -96,17 +96,33 @@ module Musa::Datasets::GDV
             gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
             used_duration += 2 * note_duration
 
+          when :low2 # start with upper note but go to lower note once
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 1); gdv[:duration] = note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = -1); gdv[:duration] = note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
+            used_duration += 4 * note_duration
+
           when :same # start with the same note
             gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
             used_duration += note_duration
           end
         end
 
-        while used_duration + 2 * note_duration <= gdv[:duration]
-          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 1); gdv[:duration] = note_duration }
-          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
+        2.times do
+          if used_duration + 2 * note_duration <= gdv[:duration]
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 1); gdv[:duration] = note_duration }
+            gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration }
 
-          used_duration += 2 * note_duration
+            used_duration += 2 * note_duration
+          end
+        end
+
+        while used_duration + 2 * note_duration * 2/3r <= gdv[:duration]
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 1); gdv[:duration] = note_duration * 2/3r }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = note_duration * 2/3r }
+
+          used_duration += 2 * note_duration * 2/3r
         end
 
         duration_diff = gdv[:duration] - used_duration
