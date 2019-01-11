@@ -1,5 +1,7 @@
 require 'musa-dsl'
 
+# TODO: reimplement with new Chord
+
 ChordProgression = Musa::Rules.new do
 
   rule "fundamental" do |seed|
