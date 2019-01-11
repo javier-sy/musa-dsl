@@ -92,6 +92,9 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
 
       expect(scale[0].down(2, :chromatic).pitch).to eq 58
       expect(scale[0].down(2, :chromatic).scale).to be scale.chromatic
+
+      expect(scale[0].down(2).pitch).to eq 57
+      expect(scale[0].down(2).scale).to be scale
     end
 
     it 'Basic grade to pitch conversion' do
