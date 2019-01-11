@@ -22,7 +22,7 @@ module Musa
       private
 
       def method_missing(method_name, *args, **key_args, &block)
-        if args.empty? && key_args.empty? && !block && @scale_systems.key?(method_name)
+        if @scale_systems.key?(method_name) && args.empty? && key_args.empty? && !block
           self[method_name]
         else
           super
@@ -125,6 +125,10 @@ module Musa
         @chromatic_scale_kind_class
       end
     end
+
+    def ==(other)
+      self.class == other.class
+    end
   end
 
   class ScaleSystemTuning
@@ -156,10 +160,22 @@ module Musa
       @scale_system.frequency_of_pitch(pitch, root, @a_frequency)
     end
 
+    def ==(other)
+      self.class == other.class &&
+        @scale_system == other.scale_system &&
+        @a_frequency == other.a_frequency
+    end
+
+    def to_s
+      "<ScaleSystemTuning: scale_system = #{@scale_system} a_frequency = #{@a_frequency}>"
+    end
+
+    alias inspect to_s
+
     private
 
     def method_missing(method_name, *args, **key_args, &block)
-      if args.empty? && key_args.empty? && !block && @scale_system.scale_kind_class?(method_name)
+      if @scale_system.scale_kind_class?(method_name) && args.empty? && key_args.empty? && !block
         self[method_name]
       else
         super
@@ -189,6 +205,16 @@ module Musa
     def absolut
       self[0]
     end
+
+    def ==(other)
+      self.class == other.class && @tuning == other.tuning
+    end
+
+    def to_s
+      "<#{self.class.name}: tuning = #{@tuning}>"
+    end
+
+    alias inspect to_s
 
     class << self
       # @abstract Subclass is expected to implement id
@@ -253,7 +279,7 @@ module Musa
 
     def_delegators :@kind, :a_tuning
 
-    attr_reader :kind
+    attr_reader :kind, :root_pitch
 
     def root
       self[0]
@@ -318,16 +344,15 @@ module Musa
       unless note
         pitch_offset = pitch - @root_pitch
 
-        pitch_offset_in_octave = pitch_offset % @kind.class.grades
-        pitch_offset_octave = pitch_offset / @kind.class.grades
+        pitch_offset_in_octave = pitch_offset % @kind.tuning.scale_system.notes_in_octave
+        pitch_offset_octave = pitch_offset / @kind.tuning.scale_system.notes_in_octave
 
         grade = @kind.class.pitches.find_index { |pitch_definition| pitch_definition[:pitch] == pitch_offset_in_octave }
 
-        return nil unless grade
-
-        wide_grade = pitch_offset_octave * @kind.class.grades + grade
-
-        note = self[wide_grade]
+        if grade
+          wide_grade = pitch_offset_octave * @kind.class.grades + grade
+          note = self[wide_grade]
+        end
       end
 
       note
@@ -338,14 +363,26 @@ module Musa
     end
 
     def chord_of(*grades_or_symbols)
-      # TODO: implementar Scale.chord_of
+      Chord.new(notes: grades_or_symbols.collect { |g| self[g] })
     end
+
+    def ==(other)
+      self.class == other.class &&
+        @kind == other.kind &&
+        @root_pitch == other.root_pitch
+    end
+
+    def to_s
+      "<Scale: kind = #{@kind} root_pitch = #{@root_pitch}>"
+    end
+
+    alias inspect to_s
 
     private
 
     def method_missing(method_name, *args, **key_args, &block)
-      if args.empty? && key_args.empty? && !block
-        self[method_name] || super
+      if @kind.class.find_index(method_name) && args.empty? && key_args.empty? && !block
+        self[method_name]
       else
         super
       end
@@ -394,11 +431,13 @@ module Musa
       interval ||= 1
       # TODO: sube un intérvalo de interval tonos (natural true) o semitonos (chromatic true)
       # TODO: que acepte intervals tal como se hayan definido con nombre (tipo :P5, :m3)
+      raise "Not implemented yet"
     end
 
     def down(interval, natural: nil, chromatic: nil)
       interval ||= 1
       # TODO:
+      raise "Not implemented yet"
     end
 
     def frequency
@@ -421,25 +460,39 @@ module Musa
       scale.note_of_pitch @pitch
     end
 
-    def chord(size_or_interval = nil, **features)
-      size_or_interval ||= 3
+    def chord(*feature_values, allow_chromatic: nil, **features_hash)
+      features = { size: :triad } if feature_values.empty? && features_hash.empty?
+      features ||= ChordDefinition.features_from(feature_values, features_hash)
 
-      puts "Note.chord: size_or_interval = #{size_or_interval} features = #{features}"
-      # TODO: implementar NoteInScale.chord
+      Musa::Chord.new(root: self, allow_chromatic: allow_chromatic, features: features)
     end
+
+    def ==(other)
+      self.class == other.class &&
+        @scale == other.scale &&
+        @grade == other.grade &&
+        @octave == other.octave &&
+        @pitch == other.pitch
+    end
+
+    def to_s
+      "<NoteInScale: grade = #{@grade} octave = #{@octave} pitch = #{@pitch} scale = #{@scale}>"
+    end
+
+    alias inspect to_s
 
     private
 
     def method_missing(method_name, *args, **key_args, &block)
-      if args.empty? && key_args.empty? && !block
-        scale(method_name) || super
+      if @scale.kind.tuning[method_name] && args.empty? && key_args.empty? && !block
+        scale(method_name)
       else
         super
       end
     end
 
     def respond_to_missing?(method_name, include_private)
-      @scale.kind.class.tuning[method_name] || super
+      @scale.kind.tuning[method_name] || super
     end
   end
 end
