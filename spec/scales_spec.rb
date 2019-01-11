@@ -46,6 +46,54 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale.offset_of_interval(:m2)).to eq 1
     end
 
+    it 'Sharp and flat to natural note' do
+      scale = scale_system[:major][60]
+
+      expect(scale[0].sharp.pitch).to eq 61
+      expect(scale[0].sharp.scale).to be scale.chromatic
+
+      expect(scale[0].sharp(2).pitch).to eq 62
+      expect(scale[0].sharp(2).scale).to be scale
+
+      expect(scale[0].flat.pitch).to eq 59
+      expect(scale[0].flat.scale).to be scale
+
+      expect(scale[0].flat(2).pitch).to eq 58
+      expect(scale[0].flat(2).scale).to be scale.chromatic
+    end
+
+    it 'Intervals up and down' do
+      scale = scale_system[:major][60]
+
+      expect(scale[0].up(:m2).pitch).to eq 61
+      expect(scale[0].up(:m2).scale).to be scale.chromatic
+
+      expect(scale[0].up(:M2).pitch).to eq 62
+      expect(scale[0].up(:M2).scale).to be scale
+
+      expect(scale[0].down(:m2).pitch).to eq 59
+      expect(scale[0].down(:m2).scale).to be scale
+
+      expect(scale[0].down(:M2).pitch).to eq 58
+      expect(scale[0].down(:M2).scale).to be scale.chromatic
+    end
+
+    it 'Intervals up and down' do
+      scale = scale_system[:major][60]
+
+      expect(scale[0].up(1, :chromatic).pitch).to eq 61
+      expect(scale[0].up(1, :chromatic).scale).to be scale.chromatic
+
+      expect(scale[0].up(1).pitch).to eq 62
+      expect(scale[0].up(1).scale).to be scale
+
+      expect(scale[0].down(1).pitch).to eq 59
+      expect(scale[0].down(1).scale).to be scale
+
+      expect(scale[0].down(2, :chromatic).pitch).to eq 58
+      expect(scale[0].down(2, :chromatic).scale).to be scale.chromatic
+    end
+
     it 'Basic grade to pitch conversion' do
       scale = scale_system.major[60]
 

@@ -50,7 +50,6 @@ grammar Neumalang
 
 	rule neuma
         (appogiatura_neuma | simple_neuma)
-#	    ((appogiatura_neuma a:simple_neuma) | b:simple_neuma) { capture(:b).value }
 	end
 
 	rule appogiatura_neuma
@@ -218,7 +217,11 @@ grammar Neumalang
   	end
 
 	rule comment
-		(lcomment complex_comment rcomment) | (hsh everything_until_eol)
+		(lcomment complex_comment rcomment) | hash_comment
+	end
+
+	rule hash_comment
+	    (hsh_at_start_of_line | space+) everything_until_eol
 	end
 
 	rule complex_comment
@@ -234,7 +237,7 @@ grammar Neumalang
 	end
 
 	rule everything_that_can_be_an_attribute
-		/[^({|}|\[|\]|\(|\)|\<|\>|.|,|:|=| |\t|\n|\r|\"|#|@|&|\|)]+/m
+		/[^({|}|\[|\]|\(|\)|\<|\>|.|,|:|=| |\t|\n|\r|\"|@|&|\|)]+/m
 	end
 
     rule attribute_change
@@ -255,6 +258,10 @@ grammar Neumalang
 
 	rule everything_except_double_quote
 		~/(\")/m
+	end
+
+	rule hsh_at_start_of_line
+	    /\A#/
 	end
 
 	rule double_quote '"' end

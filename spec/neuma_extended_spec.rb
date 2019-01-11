@@ -38,6 +38,19 @@ RSpec.describe Musa::Neumalang do
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1', '2'])
     end
 
+    it 'Neuma parsing with extended notation (2): sharps and flats' do
+      result = Musa::Neumalang.parse(
+          '[ 0.1 . 1./ 1#./ 2b./ ]').to_a(recursive: true)
+
+      c = -1
+
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['0', '1'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: [])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1', '/'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1#', '/'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['2b', '/'])
+    end
+
     it 'Neuma parsing with extended notation and differential decoder' do
       differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new
 

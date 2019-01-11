@@ -53,6 +53,14 @@ module Musa
         raise 'Method not implemented. Should be implemented in subclass.'
       end
 
+      # @abstract Subclass is expected to implement part_of_tone_size
+      # @!method part_of_tone_size
+      # @return [Integer] the size inside the ScaleSystem of the smaller part of a tone; used for calculate sharp and flat notes
+      #
+      def part_of_tone_size
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
       # @abstract Subclass is expected to implement intervals
       # @!method intervals
       # @return [Hash] the intervals of the ScaleSystem as { name: semitones#, ... }
@@ -427,17 +435,47 @@ module Musa
       @grade + @octave * @scale.kind.class.grades
     end
 
-    def up(interval = nil, natural: nil, chromatic: nil)
-      interval ||= 1
-      # TODO: sube un intérvalo de interval tonos (natural true) o semitonos (chromatic true)
-      # TODO: que acepte intervals tal como se hayan definido con nombre (tipo :P5, :m3)
-      raise "Not implemented yet"
+    def up(interval_name_or_interval, natural_or_chromatic = nil, _operation: nil)
+
+      _operation ||= :+
+
+      if interval_name_or_interval.is_a?(Numeric)
+        natural_or_chromatic ||= :natural
+      else
+        natural_or_chromatic = :chromatic
+      end
+
+      if natural_or_chromatic == :chromatic
+        interval = if interval_name_or_interval.is_a?(Symbol)
+                     @scale.kind.tuning.offset_of_interval(interval_name_or_interval)
+                   else
+                     interval_name_or_interval
+                   end
+
+        chromatic_note = @scale.chromatic.note_of_pitch(@pitch.send(_operation,  interval))
+        note = chromatic_note.on(@scale)
+
+        note || chromatic_note
+      else
+        @scale[@grade.send(_operation, interval_name_or_interval)]
+      end
     end
 
-    def down(interval, natural: nil, chromatic: nil)
-      interval ||= 1
-      # TODO:
-      raise "Not implemented yet"
+    def down(interval_name_or_interval, natural_or_chromatic = nil)
+      up(interval_name_or_interval, natural_or_chromatic, _operation: :-)
+    end
+
+    def sharp(count = nil)
+      count ||= 1
+      chromatic_note = @scale.chromatic.note_of_pitch(@pitch + count * @scale.kind.tuning.scale_system.part_of_tone_size)
+      note = chromatic_note.on(@scale)
+
+      note || chromatic_note
+    end
+
+    def flat(count = nil)
+      count ||= 1
+      sharp(-count)
     end
 
     def frequency

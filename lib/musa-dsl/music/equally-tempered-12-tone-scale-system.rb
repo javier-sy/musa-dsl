@@ -11,6 +11,10 @@ module Musa
         12
       end
 
+      def part_of_tone_size
+        1
+      end
+
       def intervals
         @@intervals
       end
