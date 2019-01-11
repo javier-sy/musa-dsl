@@ -1,24 +1,6 @@
 require_relative 'scales'
 require_relative 'chord-definition'
 
-=begin
-c = Chord.new root: 60, # root: major.tonic,
-              scale_system: nil, # scale_system[:major],
-              scale: nil, # major,
-              notes: [1, 2, 3],
-              add: [0, :m6, NoteInScale],
-              # NO: specie: :major,
-              name: :major, # :minor, :maj7, :min
-              size: 3, # :fifth, :seventh, :sixth?, ...
-              # NO: generative_interval: :third, # :fourth, :fifth?
-              inversion: 1,
-              state: :third,
-              position: :fifth,
-              duplicate: { third: -1 },
-              move: { fifth: 1 },
-              drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
-=end
-
 module Musa
   class Chord
     def initialize(name_or_notes_or_pitches = nil, # name | [notes] | [pitches]
@@ -151,7 +133,7 @@ module Musa
       @chord_definition = ChordDefinition.find_by_pitches(@notes.values.collect(&:pitch))
     end
 
-    attr_reader :notes
+    attr_reader :notes, :chord_definition
 
     def name(name = nil)
       if name.nil?
@@ -189,6 +171,14 @@ module Musa
       when Symbol
         @notes[position]
       end
+    end
+
+    def move(**octaves)
+
+    end
+
+    def duplicate(**octaves)
+
     end
 
     def scale
@@ -285,7 +275,6 @@ module Musa
         pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
         raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
       end
-
     end
 
     def compute_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)

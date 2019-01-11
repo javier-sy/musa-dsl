@@ -6,7 +6,7 @@ module Musa
       end
 
       def register(name, offsets:, **features)
-        definition = ChordDefinition.new(name, offsets: offsets, **features)
+        definition = ChordDefinition.new(name, offsets: offsets, **features).freeze
 
         @definitions ||= {}
         @definitions[definition.name] = definition

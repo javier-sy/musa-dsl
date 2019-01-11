@@ -124,9 +124,12 @@ module Musa::Datasets::GDV
 
         duration_diff = gdv[:duration] - used_duration
         if duration_diff >= note_duration
-          # ???
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 1); gdv[:duration] = duration_diff / 2 }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += (last = 0); gdv[:duration] = duration_diff / 2 }
+
         elsif duration_diff > 0
-          gdvs.last[:duration] += duration_diff
+          gdvs[-1][:duration] += duration_diff / 2
+          gdvs[-2][:duration] += duration_diff / 2
         end
 
         gdvs
