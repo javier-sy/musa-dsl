@@ -15,8 +15,8 @@ module Musa
                    # operations
                    inversion: nil, state: nil,
                    position: nil,
-                   duplicate: nil,
                    move: nil,
+                   duplicate: nil,
                    add: nil,
                    drop: nil,
                    #
@@ -123,14 +123,31 @@ module Musa
 
       # Eval voice increment operations
       #
-      # ????
+
+      if move
+        raise ArgumentError, 'move: expected a Hash' unless move.is_a?(Hash)
+
+        move.each do |position, octave|
+          @notes[position][0] = @notes[position][0].octave(octave)
+        end
+      end
+
+      if duplicate
+        raise ArgumentError, 'duplicate: expected a Hash' unless duplicate.is_a?(Hash)
+
+        duplicate.each do |position, octave|
+          octave.arrayfy.each do |octave|
+            @notes[position] << @notes[position][0].octave(octave)
+          end
+        end
+      end
 
       # Identify chord
       #
 
       @notes.freeze
 
-      @chord_definition = ChordDefinition.find_by_pitches(@notes.values.collect(&:pitch))
+      @chord_definition = ChordDefinition.find_by_pitches(@notes.values.flatten(1).collect(&:pitch))
     end
 
     attr_reader :notes, :chord_definition
@@ -174,15 +191,15 @@ module Musa
     end
 
     def move(**octaves)
-
+      Chord.new(_source: self, move: octaves)
     end
 
     def duplicate(**octaves)
-
+      Chord.new(_source: self, duplicate: octaves)
     end
 
     def scale
-      scales = @notes.values.collect(&:scale).uniq
+      scales = @notes.values.flatten(1).collect(&:scale).uniq
       scales.first if scales.size == 1
     end
 
@@ -198,9 +215,9 @@ module Musa
       note_sets = {}
       scales.each do |scale|
         if allow_chromatic
-          note_sets[scale] = @notes.values.collect { |n| n.on(scale) || n.on(scale.chromatic) }
+          note_sets[scale] = @notes.values.flatten(1).collect { |n| n.on(scale) || n.on(scale.chromatic) }
         else
-          note_sets[scale] = @notes.values.collect { |n| n.on(scale) }
+          note_sets[scale] = @notes.values.flatten(1).collect { |n| n.on(scale) }
         end
       end
 
@@ -234,7 +251,7 @@ module Musa
 
         chord_definition.pitch_offsets.transform_values do |offset|
           pitch = root_pitch + offset
-          scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)
+          [scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)]
         end
 
       elsif root_pitch && features && scale && !(name || notes || pitches)
@@ -257,7 +274,7 @@ module Musa
 
         selected.pitch_offsets.transform_values do |offset|
           pitch = root_pitch + offset
-          scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)
+          [scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)]
         end
 
       elsif (notes || pitches && scale) && !(name || root_pitch || features)
@@ -282,7 +299,7 @@ module Musa
         source.notes
 
       elsif features && !(name || root_pitch || scale || notes || pitches)
-        compute_notes(nil, source.root.pitch, source.root.scale, nil, nil, features, allow_chromatic)
+        compute_notes(nil, source.root.first.pitch, source.root.first.scale, nil, nil, features, allow_chromatic)
 
       else
         pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }

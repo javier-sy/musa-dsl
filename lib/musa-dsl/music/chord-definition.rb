@@ -56,7 +56,7 @@ module Musa
 
     def named_pitches(elements_or_pitches, &block)
       pitches = elements_or_pitches.collect do |element_or_pitch|
-        [if block
+        [if block_given?
            yield element_or_pitch
          else
            element_or_pitch
@@ -72,7 +72,7 @@ module Musa
       # TODO: OJO: problema con las notas duplicadas, con la identificación de inversiones y con las notas a distancias de más de una octava
 
       pitches.collect do |pitch, element|
-        [@pitch_names[pitch - root_pitch], element]
+        [@pitch_names[pitch - root_pitch], [element]]
       end.to_h
     end
 
