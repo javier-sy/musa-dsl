@@ -121,6 +121,10 @@ module Musa
         end
       end
 
+      # TODO: Missing chord operations: drop, inversion, state, position
+      #
+      raise NotImplementedError, 'Missing chord operations: drop, inversion, state, position' if drop || inversion || state || position
+
       # Eval voice increment operations
       #
 
