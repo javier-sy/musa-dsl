@@ -57,7 +57,7 @@ RSpec.describe Musa::Neumalang do
 
     it 'Basic neuma inline parsing with differential decoder' do
 
-      differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new(base_duration: 1)
+      differential_decoder = Musa::Datasets::GDVd::NeumaDifferentialDecoder.new(base_duration: 1)
 
       result = Musa::Neumalang.parse('0 . +1 2.p silence silence.1/3 2.1/2.p /*comentario 1*/', decode_with: differential_decoder).to_a(recursive: true)
 
@@ -73,7 +73,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neuma file parsing with GDV differential decoder' do
-      differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new
+      differential_decoder = Musa::Datasets::GDVd::NeumaDifferentialDecoder.new
 
       result = Musa::Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: differential_decoder).to_a(recursive: true)
 

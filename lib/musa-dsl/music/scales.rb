@@ -309,9 +309,9 @@ module Musa
 
     def [](grade_or_symbol)
 
-      raise ArgumentError, "grade_or_symbol #{grade_or_symbol} should be a Numeric, String or Symbol" unless grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String) || grade_or_symbol.is_a?(Integer)
+      raise ArgumentError, "grade_or_symbol '#{grade_or_symbol}' should be a Numeric, String or Symbol" unless grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String) || grade_or_symbol.is_a?(Integer)
 
-      wide_grade = grade_of(grade_or_symbol)
+      wide_grade, sharps = grade_of(grade_or_symbol)
 
       unless @notes_by_grade.key?(wide_grade)
 
@@ -327,26 +327,29 @@ module Musa
         @notes_by_grade[wide_grade] = @notes_by_pitch[pitch] = note
       end
 
-      @notes_by_grade[wide_grade]
+
+      @notes_by_grade[wide_grade].sharp(sharps)
     end
 
-    def grade_of(grade_or_symbol)
-      symbol = grade_or_symbol.to_sym if grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String)
-      wide_grade = grade_or_symbol.to_i if grade_or_symbol.is_a? Numeric
+    def grade_of(grade_or_string_or_symbol)
+      sign, name, wide_grade, accidentals = Musa::Datasets::GDVd::Parser.parse_grade(grade_or_string_or_symbol)
 
-      raise ArgumentError, "grade_or_symbol #{grade_or_symbol} should be a Numeric, String or Symbol" unless wide_grade || symbol
+      raise ArgumentError, "Cannot parse sign on #{grade_or_string_or_symbol}" if sign
+
+      grade = @kind.class.find_index name if name
 
       octave = wide_grade / @kind.class.grades if wide_grade
       grade = wide_grade % @kind.class.grades if wide_grade
 
-      grade = @kind.class.find_index symbol if symbol
-
       octave ||= 0
 
-      octave * @kind.class.grades + grade
+      return octave * @kind.class.grades + grade, accidentals
     end
 
-    def note_of_pitch(pitch)
+    def note_of_pitch(pitch, allow_chromatic: nil, allow_nearest: nil)
+      allow_chromatic ||= false
+      allow_nearest ||= false
+
       note = @notes_by_pitch[pitch]
 
       unless note
@@ -360,6 +363,19 @@ module Musa
         if grade
           wide_grade = pitch_offset_octave * @kind.class.grades + grade
           note = self[wide_grade]
+
+        elsif allow_nearest
+          sharps = 0
+
+          until note
+            note = note_of_pitch(pitch - (sharps += 1) * @kind.tuning.scale_system.part_of_tone_size)
+            note ||= note_of_pitch(pitch + sharps * @kind.tuning.scale_system.part_of_tone_size)
+          end
+
+        elsif allow_chromatic
+          nearest = note_of_pitch(pitch, allow_nearest: true)
+
+          note = chromatic.note_of_pitch(pitch).with_background(scale: self, grade: nearest.grade, octave: nearest.octave, sharps: (pitch - nearest.pitch) / @kind.tuning.scale_system.part_of_tone_size)
         end
       end
 
@@ -408,11 +424,16 @@ module Musa
     # @param octave [Integer]
     # @param pitch [Number] pitch of the note, based on MIDI note numbers. Can be Integer, Rational or Float to express fractions of a semitone
     #
-    def initialize(scale, grade, octave, pitch)
+    def initialize(scale, grade, octave, pitch, background_scale: nil, background_grade: nil, background_octave: nil, background_sharps: nil)
       @scale = scale
       @grade = grade
       @octave = octave
       @pitch = pitch
+
+      @background_scale = background_scale
+      @background_grade = background_grade
+      @background_octave = background_octave
+      @background_sharps = background_sharps
     end
 
     attr_reader :grade, :pitch
@@ -431,13 +452,29 @@ module Musa
       end
     end
 
+    def with_background(scale:, grade: nil, octave: nil, sharps: nil)
+      NoteInScale.new(@scale, @grade, @octave, @pitch,
+                      background_scale: scale,
+                      background_grade: grade,
+                      background_octave: octave,
+                      background_sharps: sharps)
+    end
+
+    attr_reader :background_scale
+
+    def background_note
+      @background_scale[@background_grade + (@background_octave || 0) * @background_scale.kind.class.grades] if @background_grade
+    end
+
+    attr_reader :background_sharps
+
     def wide_grade
       @grade + @octave * @scale.kind.class.grades
     end
 
-    def up(interval_name_or_interval, natural_or_chromatic = nil, _operation: nil)
+    def up(interval_name_or_interval, natural_or_chromatic = nil, sign: nil)
 
-      _operation ||= :+
+      sign ||= 1
 
       if interval_name_or_interval.is_a?(Numeric)
         natural_or_chromatic ||= :natural
@@ -452,25 +489,36 @@ module Musa
                      interval_name_or_interval
                    end
 
-        chromatic_note = @scale.chromatic.note_of_pitch(@pitch.send(_operation,  interval))
-        note = chromatic_note.on(@scale)
-
-        note || chromatic_note
+        calculate_note_of_pitch(@pitch, sign * interval)
       else
-        @scale[@grade.send(_operation, interval_name_or_interval)]
+        @scale[@grade + sign * interval_name_or_interval]
       end
     end
 
+    def calculate_note_of_pitch(in_scale_pitch, sharps)
+      pitch = in_scale_pitch + sharps * @scale.kind.tuning.scale_system.part_of_tone_size
+
+      if pitch == @pitch
+        self
+      else
+        note = @scale.note_of_pitch(pitch, allow_chromatic: true)
+        if @background_scale
+          note.on(@background_scale) || note
+        else
+          note
+        end
+      end
+    end
+
+    private :calculate_note_of_pitch
+
     def down(interval_name_or_interval, natural_or_chromatic = nil)
-      up(interval_name_or_interval, natural_or_chromatic, _operation: :-)
+      up(interval_name_or_interval, natural_or_chromatic, sign: -1)
     end
 
     def sharp(count = nil)
       count ||= 1
-      chromatic_note = @scale.chromatic.note_of_pitch(@pitch + count * @scale.kind.tuning.scale_system.part_of_tone_size)
-      note = chromatic_note.on(@scale)
-
-      note || chromatic_note
+      calculate_note_of_pitch(@pitch, count)
     end
 
     def flat(count = nil)

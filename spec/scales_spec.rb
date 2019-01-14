@@ -49,6 +49,8 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
     it 'Sharp and flat to natural note' do
       scale = scale_system[:major][60]
 
+      expect(scale[0].sharp(0)).to be scale[0]
+
       expect(scale[0].sharp.pitch).to eq 61
       expect(scale[0].sharp.scale).to be scale.chromatic
 
@@ -62,7 +64,27 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale[0].flat(2).scale).to be scale.chromatic
     end
 
-    it 'Intervals up and down' do
+    it 'Repeated sharp and flat to natural note' do
+      scale = scale_system[:major][60]
+
+      a = scale[0].sharp
+      expect(a.pitch).to eq 61
+      expect(a.scale).to be scale.chromatic
+
+      b = a.sharp
+      expect(b.pitch).to eq 62
+      expect(b.scale).to be scale
+
+      c = b.sharp
+      expect(c.pitch).to eq 63
+      expect(c.scale).to be scale.chromatic
+
+      d = c.sharp
+      expect(d.pitch).to eq 64
+      expect(d.scale).to be scale
+    end
+
+    it 'Intervals up and down with named intervals' do
       scale = scale_system[:major][60]
 
       expect(scale[0].up(:m2).pitch).to eq 61
@@ -78,8 +100,28 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale[0].down(:M2).scale).to be scale.chromatic
     end
 
-    it 'Intervals up and down' do
+    it 'Intervals up with named intervals with chromatic movements' do
       scale = scale_system[:major][60]
+
+      a = scale[0].up(:m2)
+
+      expect(a.pitch).to eq 61
+      expect(a.scale).to be scale.chromatic
+
+      b = a.up(:m2)
+
+      expect(b.pitch).to eq 62
+      expect(b.scale).to be scale
+
+      c = b.up(:M3)
+      expect(c.pitch).to eq 66
+      expect(c.scale).to be scale.chromatic
+    end
+
+    it 'Intervals up and down with numeric intervals' do
+      scale = scale_system[:major][60]
+
+      expect(scale[0].up(0)).to be scale[0]
 
       expect(scale[0].up(1, :chromatic).pitch).to eq 61
       expect(scale[0].up(1, :chromatic).scale).to be scale.chromatic

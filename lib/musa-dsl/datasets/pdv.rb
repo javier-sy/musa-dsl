@@ -1,7 +1,7 @@
 require 'musa-dsl/neuma'
 
 module Musa::Datasets
-  module PDV # pitch duration velocity
+  module PDV
     include Musa::Neuma::Dataset
 
     NaturalKeys = [:pitch, :duration, :velocity].freeze
@@ -16,9 +16,16 @@ module Musa::Datasets
         if self[:pitch] == :silence
           r[:grade] = :silence
         else
-          note = scale.note_of_pitch(self[:pitch])
-          r[:grade] = note.grade
-          r[:octave] = note.octave
+          note = scale.note_of_pitch(self[:pitch], allow_chromatic: true)
+
+          if background_note = note.background_note
+            r[:grade] = background_note.grade
+            r[:octave] = background_note.octave
+            r[:sharps] = note.background_sharps
+          else
+            r[:grade] = note.grade
+            r[:octave] = note.octave
+          end
         end
       end
 

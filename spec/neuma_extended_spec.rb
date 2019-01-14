@@ -40,7 +40,7 @@ RSpec.describe Musa::Neumalang do
 
     it 'Neuma parsing with extended notation (2): sharps and flats' do
       result = Musa::Neumalang.parse(
-          '[ 0.1 . 1./ 1#./ 2b./ ]').to_a(recursive: true)
+          '[ 0.1 . 1./ 1#./ 2_./ ]').to_a(recursive: true)
 
       c = -1
 
@@ -48,11 +48,27 @@ RSpec.describe Musa::Neumalang do
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: [])
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1', '/'])
       expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1#', '/'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['2b', '/'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['2_', '/'])
+    end
+
+    it 'Neuma parsing with extended notation (2): sharps and flats with differential decoder' do
+      differential_decoder = Musa::Datasets::GDVd::NeumaDifferentialDecoder.new
+
+      result = Musa::Neumalang.parse('0.1 . 1./ 1#./ 2_./', decode_with: differential_decoder).to_a(recursive: true)
+
+      expect(result[0].base_duration).to eq 1/4r
+
+      c = -1
+
+      expect(result[c += 1]).to eq(abs_grade: 0, abs_duration: 1/4r)
+      expect(result[c += 1]).to eq({})
+      expect(result[c += 1]).to eq(abs_grade: 1, abs_duration: 1/8r)
+      expect(result[c += 1]).to eq(abs_grade: 1, abs_sharps: 1, abs_duration: 1/8r)
+      expect(result[c += 1]).to eq(abs_grade: 2, abs_sharps: -1, abs_duration: 1/8r)
     end
 
     it 'Neuma parsing with extended notation and differential decoder' do
-      differential_decoder = Musa::Datasets::GDV::NeumaDifferentialDecoder.new
+      differential_decoder = Musa::Datasets::GDVd::NeumaDifferentialDecoder.new
 
       result = Musa::Neumalang.parse('0 . +1.1· 2.+/·.p silence silence./· 2./.p', decode_with: differential_decoder).to_a(recursive: true)
 
