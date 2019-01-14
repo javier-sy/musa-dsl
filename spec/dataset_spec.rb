@@ -6,7 +6,7 @@ RSpec.describe Musa::Neuma do
   context 'Dataset transformations' do
     GDV = Musa::Datasets::GDV
     GDVd = Musa::Datasets::GDVd
-
+=begin
     it 'GDV to PDV' do
       scale = Musa::Scales.default_system.default_tuning.major[60]
 
@@ -100,6 +100,31 @@ RSpec.describe Musa::Neuma do
       result = result_neuma.join ' '
 
       expect(result).to eq(gdv_abs_neumas)
+    end
+=end
+    it 'GDV diff neuma with sharps and flats to GDV via GDV::NeumaDecoder' do
+      gdv_diff_neumas = '0 +3#.1 . -# _ -0#    0 +## +## +## _'
+
+      scale = Musa::Scales.default_system.default_tuning.major[60]
+
+      decoder = GDV::NeumaDecoder.new scale
+
+      result_gdv = Musa::Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(recursive: true)
+
+      c = -1
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, sharps: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, sharps: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, sharps: 1, octave: 0, duration: 1/4r, velocity: 1)
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 2, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, sharps: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/4r, velocity: 1)
     end
   end
 end

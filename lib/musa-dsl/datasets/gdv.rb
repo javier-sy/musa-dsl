@@ -30,28 +30,34 @@ module Musa::Datasets
       elsif include?(:delta_grade)
         r.delete :silence
 
-        r[:grade] = scale[r[:grade]].wide_grade + self[:delta_grade]
-        r[:sharps] += self[:sharps] if include?(:sharps)
+        r[:grade], r[:sharps] =
+            normalize_to_scale(scale,
+                               scale[r[:grade]].wide_grade + self[:delta_grade],
+                               (r[:sharps] || 0) + (self[:delta_sharps] || 0))
+
+        r.delete :sharps if r[:sharps].zero?
 
       elsif include?(:delta_interval)
         r.delete :silence
 
         sign = self[:delta_interval_sign] || 1
 
-        r[:grade] = scale[r[:grade]].wide_grade
-        r[:sharps] = sign * scale.kind.tuning.scale_system.intervals[self[:delta_interval]]
+        r[:grade], r[:sharps] =
+            normalize_to_scale scale,
+                               scale[r[:grade]].wide_grade,
+                               sign * scale.kind.tuning.scale_system.intervals[self[:delta_interval]]
 
-        # TODO: recalculate grade when sharps is > 1 (so the nearest diatonic grade and differential sharps is used as result)
+        r.delete :sharps if r[:sharps].zero?
 
       elsif include?(:delta_sharps)
         r.delete :silence
 
-        if self[:delta_sharps] != 0
-          r[:sharps] = 0
-          r[:sharps] += self[:delta_sharps]
-        end
+        r[:grade], r[:sharps] =
+            normalize_to_scale scale,
+                               scale[r[:grade]].wide_grade,
+                               (r[:sharps] || 0) + self[:delta_sharps]
 
-        # TODO: ¿? recalculate grade when sharps is > 1 (so the nearest diatonic grade and differential sharps is used as result)
+        r.delete :sharps if r[:sharps].zero?
       end
 
       if include?(:abs_octave)
@@ -77,6 +83,17 @@ module Musa::Datasets
       (keys - NaturalKeys).each { |k| r[k] = self[k] }
 
       r
+    end
+
+    def normalize_to_scale(scale, grade, sharps)
+      note = scale[grade].sharp(sharps)
+      background = note.background_note
+
+      if background
+        return background.wide_grade, note.background_sharps
+      else
+        return note.wide_grade, 0
+      end
     end
 
     def to_neuma(mode = nil)

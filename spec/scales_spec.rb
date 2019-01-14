@@ -46,7 +46,7 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale.offset_of_interval(:m2)).to eq 1
     end
 
-    it 'Sharp and flat to natural note' do
+    it 'Sharp and flat to natural note (eval pitch and scale)' do
       scale = scale_system[:major][60]
 
       expect(scale[0].sharp(0)).to be scale[0]
@@ -61,6 +61,26 @@ RSpec.describe Musa::EquallyTempered12ToneScaleSystem do
       expect(scale[0].flat.scale).to be scale
 
       expect(scale[0].flat(2).pitch).to eq 58
+      expect(scale[0].flat(2).scale).to be scale.chromatic
+    end
+
+    it 'Sharp and flat to natural note (eval grade and scale)' do
+      scale = scale_system[:major][60]
+
+      expect(scale[0].sharp(0)).to be scale[0]
+
+      expect(scale[0].sharp.grade).to eq 1
+      expect(scale[0].sharp.scale).to be scale.chromatic
+
+      expect(scale[0].sharp(2).grade).to eq 1
+      expect(scale[0].sharp(2).scale).to be scale
+
+      expect(scale[0].flat.grade).to eq 6
+      expect(scale[0].flat.octave).to eq -1
+      expect(scale[0].flat.scale).to be scale
+
+      expect(scale[0].flat(2).grade).to eq 10
+      expect(scale[0].flat.octave).to eq -1
       expect(scale[0].flat(2).scale).to be scale.chromatic
     end
 
