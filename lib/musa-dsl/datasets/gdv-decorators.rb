@@ -33,7 +33,7 @@ module Musa::Datasets::GDV
 
         check(mor) do |mor|
           case mor
-          when :true, :up
+          when true, :up
             direction = :up
           when :down, :low
             direction = :down
@@ -47,13 +47,54 @@ module Musa::Datasets::GDV
         gdvs << gdv.clone.tap { |gdv| gdv[:duration] = short_duration }
 
         case direction
-        when true, :up
+        when :up
           gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = short_duration }
-        when :down, :low
+        when :down
           gdvs << gdv.clone.tap { |gdv| gdv[:grade] -= 1; gdv[:duration] = short_duration }
         end
 
         gdvs << gdv.clone.tap { |gdv| gdv[:duration] -= 2 * short_duration }
+
+        gdvs
+      else
+        gdv
+      end
+    end
+  end
+
+  # Process: .turn
+  class TurnDecorator < Decorator
+    def process(gdv, base_duration:, tick_duration:)
+      turn = gdv.delete :turn
+
+      if turn
+        start = :up
+
+        check(turn) do |turn|
+          case turn
+          when :true, :up
+            start = :up
+          when :down, :low
+            start = :down
+          end
+        end
+
+        duration = gdv[:duration] / 4r
+
+        gdvs = []
+
+        case start
+        when :up
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 0; gdv[:duration] = duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += -1; gdv[:duration] = duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 0; gdv[:duration] = duration }
+        when :down
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += -1; gdv[:duration] = duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 0; gdv[:duration] = duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 1; gdv[:duration] = duration }
+          gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 0; gdv[:duration] = duration }
+        end
 
         gdvs
       else

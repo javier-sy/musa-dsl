@@ -448,10 +448,6 @@ module Musa::Datasets
     end
 
     class NeumaDecoder < Musa::Neuma::Decoder # to get a GDV
-      include GDVd::Parser
-
-      alias_method :_parse, :parse
-
       def initialize(scale, base_duration: nil, processor: nil, **base)
         @base_duration = base_duration || Rational(1,4)
 

@@ -113,15 +113,22 @@ module Musa::Neuma
   end
 
   class Decoder < DifferentialDecoder
-    def initialize(start, processor: nil)
-      @start = start.clone
-      @last = start.clone
+    def initialize(base, processor: nil)
+      @base = base
+      @last = base.clone
 
       @processor = processor
     end
 
+    attr_reader :base
+
+    def base=(base)
+      @base = base
+      @last = base.clone
+    end
+
     def subcontext
-      Decoder.new @start
+      Decoder.new @base
     end
 
     def decode(attributes)
