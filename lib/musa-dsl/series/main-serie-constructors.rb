@@ -28,10 +28,6 @@ module Musa
       BasicSerieFromArrayOfSeries.new series, true
     end
 
-    def SS(serie)
-      BasicSerieFromSerieOfSeries.new serie
-    end
-
     def E(**args, &block)
       if args.key?(:start) && args.length == 1
         BasicSerieFromAutoEvalBlockOnSeed.new args[:start], &block

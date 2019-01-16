@@ -2,6 +2,7 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
+
 include Musa::Series
 
 RSpec.describe Musa::Serie do
@@ -646,5 +647,36 @@ RSpec.describe Musa::Serie do
       expect(ss.next_value).to eq nil
     end
 
+    it 'Serie to generative grammar node' do
+      a = S(1, 2).to_node
+      b = S(3, 4).to_node
+
+      s = (a + b | b).options.to_serie(of_series: true)
+
+      expect(s.to_a(recursive: true).flatten).to eq [1, 2, 3, 4, 3, 4]
+    end
+
+    include Musa::GenerativeGrammar
+
+    it 'Generative grammar nodes of series to serie' do
+      a = S(1, 2).to_node
+      b = S(3, 4).to_node
+
+      s = (a + b | b)
+
+      expect(a.to_serie.to_a).to eq [1, 2]
+
+      expect(s.to_serie.to_a).to eq [1, 2, 3, 4, 3, 4]
+    end
+
+    it 'Generative grammar nodes of series to serie' do
+      a = N(1)
+      b = N(2)
+
+      s = (a + b | b)
+
+      expect(a.to_serie.to_a).to eq [1]
+      expect(s.to_serie.to_a).to eq [1, 2, 2]
+    end
   end
 end

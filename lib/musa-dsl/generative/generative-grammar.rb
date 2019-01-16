@@ -18,18 +18,6 @@ module Musa
       end
     end
 
-    private
-
-    def generate_simple_condition_block(attribute = nil,
-                                        after_collect_operation = nil,
-                                        comparison_method = nil,
-                                        comparison_value = nil)
-
-      if attribute && after_collect_operation && comparison_method && comparison_value
-        proc { |o| (o.collect { |_| _.attributes[attribute] }.send(after_collect_operation)).send(comparison_method, comparison_value) }
-      end
-    end
-
     class Node
       def or(other)
         OrNode.new(self, other)
@@ -96,8 +84,29 @@ module Musa
         end
       end
 
+      def to_serie(flatten: nil, &condition)
+        flatten ||= true
+
+        serie = _options(&condition).collect { |o| o.collect(&:content) }.to_serie(of_series: true).flatten(serie_of_series: true)
+        serie = serie.flatten if flatten
+
+        serie
+      end
+
       def _options(parent: nil, &condition)
         raise NotImplementedError
+      end
+
+      protected
+
+      def generate_simple_condition_block(attribute = nil,
+                                          after_collect_operation = nil,
+                                          comparison_method = nil,
+                                          comparison_value = nil)
+
+        if attribute && after_collect_operation && comparison_method && comparison_value
+          proc { |o| (o.collect { |_| _.attributes[attribute] }.send(after_collect_operation)).send(comparison_method, comparison_value) }
+        end
       end
     end
 
@@ -136,7 +145,7 @@ module Musa
 
     end
 
-    private_constant :FinalNode
+    #private_constant :FinalNode
 
     class BlockNode < Node
       def initialize(attributes, &block)

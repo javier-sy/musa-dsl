@@ -1,3 +1,5 @@
+require 'musa-dsl/generative/generative-grammar'
+
 module Musa
   module SerieOperations
     def autorestart(skip_nil: nil)
@@ -112,6 +114,18 @@ module Musa
       @_slaves << slave_serie
 
       slave_serie
+    end
+
+    def to_node(**attributes)
+      Nodificator.to_node(self, **attributes)
+    end
+
+    class Nodificator
+      extend Musa::GenerativeGrammar
+
+      def self.to_node(serie, **attributes)
+        N(serie, **attributes)
+      end
     end
 
     # TODO: test case

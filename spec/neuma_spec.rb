@@ -49,7 +49,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neuma inline parsing silence' do
-      result = Musa::Neumalang.parse('0 silence.1/2').to_a(recursive: true)
+      result = '0 silence.1/2'.to_neumas.to_a(recursive: true)
 
       expect(result[0]).to eq(kind: :neuma, neuma: ['0'])
       expect(result[1]).to eq(kind: :neuma, neuma: ['silence', '1/2'])
