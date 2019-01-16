@@ -16,13 +16,13 @@ class Rational
     end
   end
 
-  alias _to_s_original to_s
+  alias _to_s to_s
 
   def to_s
     if to_i == self
       to_i.to_s
     else
-      _to_s_original
+      _to_s
     end
   end
 end

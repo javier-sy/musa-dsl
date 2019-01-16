@@ -2,6 +2,13 @@ require 'musa-dsl/generative/generative-grammar'
 
 module Musa
   module SerieOperations
+
+    alias_method :d, :duplicate
+
+    def dr
+      duplicate.restart
+    end
+
     def autorestart(skip_nil: nil)
       skip_nil ||= false
       BasicSerieAutorestart.new self, skip_nil
@@ -16,6 +23,8 @@ module Musa
         BasicSerieInfiniteRepeater.new self
       end
     end
+
+    alias_method :r, :repeat
 
     def max_size(length)
       BasicSerieLengthLimiter.new self, length
@@ -120,6 +129,8 @@ module Musa
       Nodificator.to_node(self, **attributes)
     end
 
+    alias_method :n, :to_node
+
     class Nodificator
       extend Musa::GenerativeGrammar
 
@@ -176,6 +187,8 @@ module Musa
 
       array
     end
+
+    alias_method :a, :to_a
 
     ###
     ### Implementation

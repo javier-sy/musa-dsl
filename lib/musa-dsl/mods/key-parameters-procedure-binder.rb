@@ -57,7 +57,7 @@ class KeyParametersProcedureBinder
     @has_rest || @parameters.include?(key)
   end
 
-  alias has_key? key?
+  alias_method :has_key?, :key?
 
   def apply(hsh)
     hsh ||= {}

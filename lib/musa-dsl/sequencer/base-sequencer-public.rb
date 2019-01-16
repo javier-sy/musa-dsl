@@ -249,11 +249,11 @@ class Musa::BaseSequencer
     _log msg
   end
 
-  def to_s
+  def inspect
     super + ": position=#{position}"
   end
 
-  alias inspect to_s
+  alias to_s inspect
 end
 
 module Musa::BaseTheme

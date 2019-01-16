@@ -238,11 +238,11 @@ module Musa
       self.class == other.class && @notes == other.notes
     end
 
-    def to_s
+    def inspect
       "<Chord: notes = #{@notes}>"
     end
 
-    alias inspect to_s
+    alias to_s inspect
 
     private
 

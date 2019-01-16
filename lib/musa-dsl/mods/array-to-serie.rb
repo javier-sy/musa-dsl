@@ -13,4 +13,6 @@ class Array
       S(*self)
     end
   end
+
+  alias_method :s, :to_serie
 end

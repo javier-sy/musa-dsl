@@ -84,11 +84,11 @@ module Musa
       end
     end
 
-    def to_s
+    def inspect
       "<ChordDefinition: name = #{@name} features = #{@features} pitch_offsets = #{@pitch_offsets}>"
     end
 
-    alias inspect to_s
+    alias to_s inspect
 
     protected
 

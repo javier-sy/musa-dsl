@@ -174,11 +174,11 @@ module Musa
         @a_frequency == other.a_frequency
     end
 
-    def to_s
+    def inspect
       "<ScaleSystemTuning: scale_system = #{@scale_system} a_frequency = #{@a_frequency}>"
     end
 
-    alias inspect to_s
+    alias to_s inspect
 
     private
 
@@ -218,11 +218,11 @@ module Musa
       self.class == other.class && @tuning == other.tuning
     end
 
-    def to_s
+    def inspect
       "<#{self.class.name}: tuning = #{@tuning}>"
     end
 
-    alias inspect to_s
+    alias to_s inspect
 
     class << self
       # @abstract Subclass is expected to implement id
@@ -396,11 +396,11 @@ module Musa
         @root_pitch == other.root_pitch
     end
 
-    def to_s
+    def inspect
       "<Scale: kind = #{@kind} root_pitch = #{@root_pitch}>"
     end
 
-    alias inspect to_s
+    alias to_s inspect
 
     private
 
@@ -561,11 +561,11 @@ module Musa
         @pitch == other.pitch
     end
 
-    def to_s
+    def inspect
       "<NoteInScale: grade = #{@grade} octave = #{@octave} pitch = #{@pitch} scale = #{@scale}>"
     end
 
-    alias inspect to_s
+    alias to_s inspect
 
     private
 

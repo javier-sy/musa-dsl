@@ -23,7 +23,7 @@ module Musa
         OrNode.new(self, other)
       end
 
-      alias | or
+      alias_method :|, :or
 
       def repeat(exactly = nil, min: nil, max: nil)
         raise ArgumentError, 'Only exactly value or min/max values are allowed' if exactly && (min || max)
@@ -59,7 +59,7 @@ module Musa
         NextNode.new(self, other)
       end
 
-      alias + next
+      alias_method :+, :next
 
       def options(attribute = nil,
                   after_collect_operation = nil,
@@ -92,6 +92,8 @@ module Musa
 
         serie
       end
+
+      alias_method :s, :to_serie
 
       def _options(parent: nil, &condition)
         raise NotImplementedError
