@@ -1023,7 +1023,6 @@ RSpec.describe Musa::Serie do
       s = FIBO()
 
       expect(s.infinite?).to eq true
-      expect(s.deterministic?).to eq true
 
       expect(s.current_value).to eq nil
       expect(s.next_value).to eq 1
@@ -1039,7 +1038,6 @@ RSpec.describe Musa::Serie do
       s = FIBO().max_size(10)
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq true
 
       expect(s.current_value).to eq nil
       expect(s.next_value).to eq 1
@@ -1080,7 +1078,6 @@ RSpec.describe Musa::Serie do
       s = HARMO(error: 0.1).max_size(10)
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq true
 
       expect(s.to_a).to eq [0, 12, 19, 24, 31, 36, 38, 43, 48, 49]
     end
@@ -1089,7 +1086,6 @@ RSpec.describe Musa::Serie do
       s = HARMO().max_size(10)
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq true
 
       expect(s.to_a).to eq [0, 12, 19, 24, 28, 31, 34, 36, 38, 40]
     end

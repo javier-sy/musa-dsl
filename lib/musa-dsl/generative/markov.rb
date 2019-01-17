@@ -71,10 +71,6 @@ module Musa
     def infinite?
       @finish.nil?
     end
-
-    def deterministic?
-      false
-    end
   end
 end
 

@@ -380,7 +380,6 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq true
     end
 
 
@@ -647,9 +646,19 @@ RSpec.describe Musa::Serie do
       expect(ss.next_value).to eq nil
     end
 
+    it 'Generative grammar nodes of series to serie' do
+      a = N(1)
+      b = N(2)
+
+      s = (a + b | b)
+
+      expect(a.to_serie.to_a).to eq [1]
+      expect(s.to_serie.to_a).to eq [1, 2, 2]
+    end
+
     it 'Serie to generative grammar node' do
-      a = S(1, 2).to_node
-      b = S(3, 4).to_node
+      a = S(1, 2).mark_as_prototype!.to_node
+      b = S(3, 4).mark_as_prototype!.to_node
 
       s = (a + b | b).options.to_serie(of_series: true)
 
@@ -659,8 +668,8 @@ RSpec.describe Musa::Serie do
     include Musa::GenerativeGrammar
 
     it 'Generative grammar nodes of series to serie' do
-      a = S(1, 2).to_node
-      b = S(3, 4).to_node
+      a = S(1, 2).pn
+      b = S(3, 4).pn
 
       s = (a + b | b)
 
@@ -669,14 +678,13 @@ RSpec.describe Musa::Serie do
       expect(s.to_serie.to_a).to eq [1, 2, 3, 4, 3, 4]
     end
 
-    it 'Generative grammar nodes of series to serie' do
-      a = N(1)
-      b = N(2)
+    it 'Generative grammar nodes and series interoperability' do
+      a = '1'.neu.pn
+      b = '2'.neu.pn
 
-      s = (a + b | b)
+      s = a + b
 
-      expect(a.to_serie.to_a).to eq [1]
-      expect(s.to_serie.to_a).to eq [1, 2, 2]
+      expect(s.s.a).to eq [{ kind: :neuma, neuma: ['1'] }, { kind: :neuma, neuma: ['2'] }]
     end
   end
 end

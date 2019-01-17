@@ -182,19 +182,6 @@ class Musa::BaseSequencer
     control
   end
 
-  def theme(theme, at:, debug: nil, **parameters)
-    debug ||= false
-
-    control = EventHandler.new @event_handlers.last, capture_stdout: true
-    @event_handlers.push control
-
-    _theme theme, control, at: at, debug: debug, **parameters
-
-    @event_handlers.pop
-
-    control
-  end
-
   def play(serie, mode: nil, parameter: nil, after: nil, context: nil, **mode_args, &block)
     mode ||= :wait
 
@@ -254,12 +241,4 @@ class Musa::BaseSequencer
   end
 
   alias to_s inspect
-end
-
-module Musa::BaseTheme
-  def at_position(p, **_parameters)
-    p
-  end
-
-  def run; end
 end

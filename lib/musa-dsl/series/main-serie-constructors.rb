@@ -5,34 +5,34 @@ require 'musa-dsl/mods/arrayfy'
 module Musa
   module Series
     def NIL
-      NilBasicSerie.new
+      NilSerie.new
     end
 
     def S(*values)
-      BasicSerieFromArray.new values.explode_ranges
+      FromArray.new values.explode_ranges
     end
 
     def H(**series_hash)
-      BasicSerieFromHash.new series_hash, false
+      FromHash.new series_hash, false
     end
 
     def HC(**series_hash)
-      BasicSerieFromHash.new series_hash, true
+      FromHash.new series_hash, true
     end
 
     def A(*series)
-      BasicSerieFromArrayOfSeries.new series, false
+      FromArrayOfSeries.new series, false
     end
 
     def AC(*series)
-      BasicSerieFromArrayOfSeries.new series, true
+      FromArrayOfSeries.new series, true
     end
 
     def E(**args, &block)
       if args.key?(:start) && args.length == 1
-        BasicSerieFromAutoEvalBlockOnSeed.new args[:start], &block
+        FromAutoEvalBlockOnSeed.new args[:start], &block
       elsif args.empty?
-        BasicSerieFromEvalBlock.new &block
+        FromEvalBlock.new &block
       else
         raise ArgumentError, 'only optional start: argument is allowed'
       end
@@ -41,7 +41,7 @@ module Musa
     def FOR(from: nil, to: nil, step: nil)
       from ||= 0
       step ||= 1
-      ForLoopBasicSerie.new from, to, step
+      ForLoop.new from, to, step
     end
 
     def RND(*values, from: nil, to: nil, step: nil, random: nil)
@@ -49,11 +49,11 @@ module Musa
       random ||= Random.new
 
       if !values.empty? && from.nil? && to.nil? && step.nil?
-        RandomValuesFromArrayBasicSerie.new values.explode_ranges, random
+        RandomValuesFromArray.new values.explode_ranges, random
       elsif values.empty? && !to.nil?
         from ||= 0
         step ||= 1
-        RandomNumbersFromRangeBasicSerie.new from, to, step, random
+        RandomNumbersFromRange.new from, to, step, random
       else
         raise ArgumentError, 'cannot use values and from:/to:/step: together'
       end
@@ -64,11 +64,11 @@ module Musa
       random ||= Random.new
 
       if !values.empty? && from.nil? && to.nil? && step.nil?
-        RandomValueFromArrayBasicSerie.new values.explode_ranges, random
+        RandomValueFromArray.new values.explode_ranges, random
       elsif values.empty? && !to.nil?
         from ||= 0
         step ||= 1
-        RandomNumberFromRangeBasicSerie.new from, to, step, random
+        RandomNumberFromRange.new from, to, step, random
       else
         raise ArgumentError, 'cannot use values and from:/to:/step: parameters together'
       end
@@ -78,33 +78,33 @@ module Musa
       start_value ||= 0.0
       amplitude ||= 1.0
       center ||= 0.0
-      SinFunctionSerie.new start_value, steps, amplitude, center
+      SinFunction.new start_value, steps, amplitude, center
     end
 
     def FIBO()
-      FibonacciSerie.new
+      Fibonacci.new
     end
 
     def HARMO(error: nil, extended: nil)
       error ||= 0.5
       extended ||= false
-      HarmonicNotesSerie.new error, extended
+      HarmonicNotes.new error, extended
     end
 
     ###
     ### Implementation
     ###
 
-    class NilBasicSerie
+    class NilSerie
       include Serie
       def _next_value
         nil
       end
     end
 
-    private_constant :NilBasicSerie
+    private_constant :NilSerie
 
-    class BasicSerieFromArray
+    class FromArray
       include Serie
 
       attr_accessor :values
@@ -130,9 +130,9 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieFromArray
+    private_constant :FromArray
 
-    class BasicSerieFromAutoEvalBlockOnSeed
+    class FromAutoEvalBlockOnSeed
       include Serie
 
       attr_accessor :start, :block
@@ -164,9 +164,9 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieFromAutoEvalBlockOnSeed
+    private_constant :FromAutoEvalBlockOnSeed
 
-    class BasicSerieFromEvalBlock
+    class FromEvalBlock
       include Serie
 
       attr_accessor :block
@@ -192,9 +192,9 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieFromEvalBlock
+    private_constant :FromEvalBlock
 
-    class ForLoopBasicSerie
+    class ForLoop
       include Serie
 
       attr_reader :from, :to, :step
@@ -250,9 +250,9 @@ module Musa
       end
     end
 
-    private_constant :ForLoopBasicSerie
+    private_constant :ForLoop
 
-    class RandomValueFromArrayBasicSerie
+    class RandomValueFromArray
       include Serie
 
       attr_accessor :values, :random
@@ -275,15 +275,11 @@ module Musa
           @value = @values[@random.rand(0...@values.size)]
         end
       end
-
-      def deterministic?
-        false
-      end
     end
 
-    private_constant :RandomValueFromArrayBasicSerie
+    private_constant :RandomValueFromArray
 
-    class RandomNumberFromRangeBasicSerie
+    class RandomNumberFromRange
       include Serie
 
       attr_reader :from, :to, :step
@@ -328,10 +324,6 @@ module Musa
         end
       end
 
-      def deterministic?
-        false
-      end
-
       private
 
       def adjust_step
@@ -340,9 +332,9 @@ module Musa
       end
     end
 
-    private_constant :RandomNumberFromRangeBasicSerie
+    private_constant :RandomNumberFromRange
 
-    class RandomValuesFromArrayBasicSerie
+    class RandomValuesFromArray
       include Serie
 
       attr_accessor :values, :random
@@ -367,15 +359,11 @@ module Musa
         end
         value
       end
-
-      def deterministic?
-        false
-      end
     end
 
-    private_constant :RandomValuesFromArrayBasicSerie
+    private_constant :RandomValuesFromArray
 
-    class RandomNumbersFromRangeBasicSerie
+    class RandomNumbersFromRange
       include Serie
 
       attr_reader :from, :to, :step
@@ -422,10 +410,6 @@ module Musa
         value
       end
 
-      def deterministic?
-        false
-      end
-
       private
 
       def adjust_step
@@ -434,9 +418,9 @@ module Musa
       end
     end
 
-    private_constant :RandomNumbersFromRangeBasicSerie
+    private_constant :RandomNumbersFromRange
 
-    class BasicSerieFromHash
+    class FromHash
       include Serie
 
       attr_accessor :sources, :cycle
@@ -495,9 +479,9 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieFromHash
+    private_constant :FromHash
 
-    class BasicSerieFromArrayOfSeries
+    class FromArrayOfSeries
       include Serie
 
       attr_accessor :sources, :cycle
@@ -556,9 +540,9 @@ module Musa
       end
     end
 
-    private_constant :BasicSerieFromArrayOfSeries
+    private_constant :FromArrayOfSeries
 
-    class SinFunctionSerie
+    class SinFunction
       include Serie
 
       attr_reader :start, :steps, :amplitude, :center
@@ -629,9 +613,9 @@ module Musa
       end
     end
 
-    private_constant :SinFunctionSerie
+    private_constant :SinFunction
 
-    class FibonacciSerie
+    class Fibonacci
       include Serie
 
       def initialize
@@ -656,9 +640,9 @@ module Musa
       end
     end
 
-    private_constant :FibonacciSerie
+    private_constant :Fibonacci
 
-    class HarmonicNotesSerie
+    class HarmonicNotes
       include Serie
 
       attr_reader :error, :extended
@@ -711,12 +695,8 @@ module Musa
       def infinite?
         true
       end
-
-      def deterministic?
-        true
-      end
     end
 
-    private_constant :HarmonicNotesSerie
+    private_constant :HarmonicNotes
   end
 end

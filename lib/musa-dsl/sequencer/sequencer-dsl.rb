@@ -7,7 +7,7 @@ class Musa::Sequencer
   def_delegators :@sequencer, :on_fast_forward, :ticks_per_bar, :round, :position=, :size, :event_handler, :empty?
 
   def_delegators :@context, :position, :log
-  def_delegators :@context, :with, :now, :at, :wait, :theme, :play, :every, :move
+  def_delegators :@context, :with, :now, :at, :wait, :play, :every, :move
   def_delegators :@context, :everying, :playing, :moving
   def_delegators :@context, :launch, :on
 
@@ -55,10 +55,6 @@ class Musa::Sequencer
       end
     end
 
-    def theme(*value_parameters, **key_parameters)
-      @sequencer.theme *value_parameters, context: self, **key_parameters
-    end
-
     def play(*value_parameters, **key_parameters, &block)
       @sequencer.play *value_parameters, **key_parameters do |*value_args, **key_args|
         _as_context_run block, value_args, key_args
@@ -79,30 +75,4 @@ class Musa::Sequencer
   end
 
   private_constant :DSLContext
-end
-
-module Musa::Theme
-  def initialize(context)
-    @context = context
-  end
-
-  def at_position(p, **_parameters)
-    p
-  end
-
-  def run; end
-
-  private
-
-  def method_missing(method_name, *args, **key_args, &block)
-    if @context.respond_to? method_name
-      @context.send_nice method_name, *args, **key_args, &block
-    else
-      super
-    end
-  end
-
-  def respond_to_missing?(method_name, include_private)
-    @context.respond_to?(method_name, include_private) || super
-  end
 end

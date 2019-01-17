@@ -115,51 +115,6 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _theme(theme, control, at:, debug: nil, **parameters)
-    theme_constructor_parameters = {}
-
-    run_method = theme.instance_method(:run)
-    at_position_method = theme.instance_method(:at_position)
-    at_position_method_parameter_binder = KeyParametersProcedureBinder.new at_position_method, on_rescue: proc { |e| _rescue_block_error(e) }
-
-    run_parameters = run_method.parameters.collect { |p| [p[1], nil] }.compact.to_h
-    run_parameters.delete :next_position
-
-    parameters.each do |k, v|
-      if run_parameters.include? k
-        run_parameters[k] = v
-      else
-        theme_constructor_parameters[k] = v
-      end
-    end
-
-    run_parameters[:at] = at.duplicate if run_parameters.include? :at
-
-    theme_instance = theme.new **theme_constructor_parameters
-
-    with_serie_at = H(run_parameters)
-    with_serie_run = with_serie_at.slave
-
-    _serie_at at.eval(with: with_serie_at) { |p, **parameters|
-                if !parameters.empty?
-                  effective_parameters = at_position_method_parameter_binder.apply parameters
-                  theme_instance.at_position p, **effective_parameters
-                else
-                  _log "Warning: parameters serie for theme #{theme} is finished. Theme finished before at: serie is finished." if @do_log
-                  nil
-                end
-              },
-              control,
-              with: with_serie_run,
-              debug: debug do |**parameters|
-      # TODO: optimizar inicialización KeyParamtersProcedureBinder
-      effective_parameters = KeyParametersProcedureBinder.new(run_method).apply parameters
-      theme_instance.run **effective_parameters
-    end
-
-    nil
-  end
-
   def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, __play_eval: nil, **mode_args, &block)
     __play_eval ||= PlayEval.create mode, KeyParametersProcedureBinder.new(block, on_rescue: proc { |e| _rescue_block_error(e) }), decoder, nl_context
 

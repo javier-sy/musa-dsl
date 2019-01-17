@@ -845,44 +845,5 @@ RSpec.describe Musa::Sequencer do
       expect(f).to eq(1)
       expect(g).to eq(0)
     end
-
-    it 'Basic theme sequencing' do
-      Test.c = 0
-
-      class Theme1
-        include Musa::BaseTheme
-
-        def initialize(parameter1:, parameter2:)
-          @parameter1 = parameter1
-          @parameter2 = parameter2
-        end
-
-        def run(parameter3:)
-          Test.c = @parameter1 + @parameter2 + parameter3
-        end
-      end
-
-      s = Musa::BaseSequencer.new 4, 4
-
-      s.theme Theme1, at: S(1, 2, 3), parameter1: 1000, parameter2: 200, parameter3: S(10, 20, 30)
-
-      expect(Test.c).to eq(0)
-
-      s.tick
-
-      expect(Test.c).to eq(1210)
-
-      16.times { s.tick }
-
-      expect(Test.c).to eq(1220)
-
-      15.times { s.tick }
-
-      expect(Test.c).to eq(1220)
-
-      s.tick
-
-      expect(Test.c).to eq(1230)
-    end
   end
 end

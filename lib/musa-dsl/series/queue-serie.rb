@@ -52,10 +52,6 @@ module Musa
         !!@targets.find(&:infinite?)
       end
 
-      def deterministic?
-        !@targets.find() { |t| !t.deterministic? }
-      end
-
       private
 
       def forward

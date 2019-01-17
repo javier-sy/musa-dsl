@@ -80,7 +80,7 @@ module Musa
         if raw
           _options(&condition)
         else
-          _options(&condition).collect { |o| o.collect { |e| e.content }.send(content) }
+          _options(&condition).collect { |o| o.collect(&:content).send(content) }
         end
       end
 
@@ -107,7 +107,11 @@ module Musa
                                           comparison_value = nil)
 
         if attribute && after_collect_operation && comparison_method && comparison_value
-          proc { |o| (o.collect { |_| _.attributes[attribute] }.send(after_collect_operation)).send(comparison_method, comparison_value) }
+          proc do |o|
+            o.collect { |_| _.attributes[attribute] }
+              .send(after_collect_operation)
+              .send(comparison_method, comparison_value)
+          end
         end
       end
     end
@@ -144,10 +148,9 @@ module Musa
           [[@element]]
         end
       end
-
     end
 
-    #private_constant :FinalNode
+    private_constant :FinalNode
 
     class BlockNode < Node
       def initialize(attributes, &block)

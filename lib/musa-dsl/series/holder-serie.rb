@@ -1,10 +1,10 @@
 module Musa
   module Series
     def HOLDER(serie = nil)
-      HolderSerie.new(serie)
+      Holder.new(serie)
     end
 
-    class HolderSerie
+    class Holder
       include Serie
 
       attr_accessor :hold
@@ -51,10 +51,6 @@ module Musa
         @hold.infinite? if @hold
       end
 
-      def deterministic?
-        @hold.deterministic? if @hold
-      end
-
       private
 
       def method_missing(method_name, *args, **key_args, &block)
@@ -74,7 +70,7 @@ module Musa
   module SerieOperations
     # TODO add test case
     def hold
-      Series::HolderSerie.new self
+      Series::Holder.new self
      end
   end
 end

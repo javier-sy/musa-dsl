@@ -179,12 +179,10 @@ RSpec.describe Musa::Serie do
       s = QUEUE(S(1, 2, 3), S(4, 5, 6))
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq true
 
       s.clear
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq true
 
       s.clear
 
@@ -192,7 +190,6 @@ RSpec.describe Musa::Serie do
       s << S(10, 11, 12)
 
       expect(s.infinite?).to eq false
-      expect(s.deterministic?).to eq false
 
       s.clear
 
@@ -200,7 +197,6 @@ RSpec.describe Musa::Serie do
       s << S(10, 11, 12)
 
       expect(s.infinite?).to eq true
-      expect(s.deterministic?).to eq false
     end
   end
 end

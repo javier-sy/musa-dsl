@@ -5,12 +5,12 @@ module Musa
     def split(buffered: nil, master: nil)
       buffered ||= false
 
-      return HashSerieSplitter.new HashSerieSplitter::HashSerieKeyProxy.new(self) if master.nil? && !buffered
-      return HashSerieSplitter.new HashSerieSplitter::HashSerieMasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
-      return HashSerieSplitter.new HashSerieSplitter::HashSerieBufferedKeyProxy.new(self) if buffered
+      return HashSplitter.new HashSplitter::KeyProxy.new(self) if master.nil? && !buffered
+      return HashSplitter.new HashSplitter::MasterSlaveKeyProxy.new(self, master) if !master.nil? && !buffered
+      return HashSplitter.new HashSplitter::BufferedKeyProxy.new(self) if buffered
     end
 
-    class HashSerieSplitter
+    class HashSplitter
       def initialize(proxy)
         @proxy = proxy
         @series = {}
@@ -20,11 +20,11 @@ module Musa
         serie = if @series.key? key
                   @series[key]
                 else
-                  @series[key] = HashSplittedSerie.new(@proxy, key: key)
+                  @series[key] = Splitted.new(@proxy, key: key)
                 end
       end
 
-      class HashSerieKeyProxy
+      class KeyProxy
         def initialize(hash_serie)
           @serie = hash_serie
           @values = {}
@@ -66,7 +66,7 @@ module Musa
         end
       end
 
-      class HashSerieBufferedKeyProxy
+      class BufferedKeyProxy
         def initialize(hash_serie)
           @serie = hash_serie
           @values = {}
@@ -110,7 +110,7 @@ module Musa
         end
       end
 
-      class HashSerieMasterSlaveKeyProxy
+      class MasterSlaveKeyProxy
         def initialize(hash_serie, master)
           @serie = hash_serie
           @master = master
@@ -160,7 +160,7 @@ module Musa
         end
       end
 
-      class HashSplittedSerie
+      class Splitted
         include Serie
 
         def initialize(proxy, key:)
@@ -182,6 +182,6 @@ module Musa
       end
     end
 
-    private_constant :HashSerieSplitter
+    private_constant :HashSplitter
   end
 end

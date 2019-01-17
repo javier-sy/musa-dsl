@@ -34,10 +34,6 @@ module Musa
         @target.infinite? if @target
       end
 
-      def deterministic?
-        @target.deterministic? if @target
-      end
-
       private
 
       def method_missing(method_name, *args, **key_args, &block)
