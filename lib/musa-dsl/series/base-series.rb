@@ -17,15 +17,38 @@ module Musa
       !!@is_prototype
     end
 
+    def prototype(new: nil)
+      new ||= false
+
+      if @is_prototype
+        self
+      else
+        serie = if new
+                  duplicate
+                else
+                  serie = self
+                end
+
+        serie.mark_as_prototype!
+      end
+    end
+
+    alias_method :p, :prototype
+
     def mark_as_prototype!
       unless @is_prototype
         restart
+        _mark_sources_as_prototype!
         @is_prototype = true
       end
       self
     end
 
-    alias_method :p, :mark_as_prototype!
+    def _mark_sources_as_prototype!
+      nil
+    end
+
+    protected :_mark_sources_as_prototype!
 
     def instance
       if @is_prototype
@@ -39,11 +62,21 @@ module Musa
     alias_method :i, :instance
 
     def mark_as_instance!
-      @is_prototype = false
-      restart
+      if @is_prototype
+        _mark_sources_as_instance!
+        @is_prototype = false
+        restart
+      end
+      self
     end
 
     protected :mark_as_instance!
+
+    def _mark_sources_as_instance!
+      nil
+    end
+
+    protected :_mark_sources_as_instance!
 
     def pn
       mark_as_prototype!.to_node
@@ -143,7 +176,14 @@ module Musa
 
       array = []
 
+      puts
+      pp self
+
       serie = instance
+
+      puts
+      pp serie
+
       serie = serie.duplicate if duplicate
       serie = serie.restart if restart
 

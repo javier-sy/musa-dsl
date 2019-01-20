@@ -90,7 +90,7 @@ module Musa
         serie = _options(&condition).collect { |o| o.collect(&:content) }.to_serie(of_series: true).flatten(serie_of_series: true)
         serie = serie.flatten if flatten
 
-        serie
+        serie.prototype
       end
 
       alias_method :s, :to_serie

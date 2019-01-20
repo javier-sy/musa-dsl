@@ -473,6 +473,32 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it '.flatten(serie_of_series: true): S(S(1, 2, 3).p, S(4, 5, 6).p, S(7, 8, 9).p).prototype' do
+      ss = S(S(1, 2, 3).p, S(4, 5, 6).p, S(7, 8, 9).p).prototype
+
+      expect { ss.flatten.next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
+      expect { ss.flatten(serie_of_series: true).next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
+
+      s = ss.instance.flatten(series_of_series: true)
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
     it '.flatten: S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9))' do
       s = S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9)).flatten
 
@@ -566,6 +592,33 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil
+    end
+
+    it '.flatten: S(S(1, 2, 3).p, 33, S(4, 5, 6).p, S(7, 8, 9).p).prototype' do
+      s = S(S(1, 2, 3).p, 33, S(4, 5, 6).p, S(7, 8, 9).p).prototype
+
+      expect { s.flatten.next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
+      expect { s.flatten(serie_of_series: true).next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
+
+      ss = s.instance.flatten
+
+      expect(ss.current_value).to eq nil
+
+      expect(ss.next_value).to eq 1
+      expect(ss.current_value).to eq 1
+      expect(ss.next_value).to eq 2
+      expect(ss.next_value).to eq 3
+      expect(ss.next_value).to eq 33
+      expect(ss.next_value).to eq 4
+      expect(ss.next_value).to eq 5
+      expect(ss.next_value).to eq 6
+      expect(ss.next_value).to eq 7
+      expect(ss.next_value).to eq 8
+      expect(ss.next_value).to eq 9
+
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
     end
 
     it 'Complex .flatten(serie_of_series: true) extraction I' do

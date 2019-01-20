@@ -126,13 +126,21 @@ module Musa
       attr_reader :sources
 
       def initialize(series)
-        @sources = series.collect(&:instance)
+        @sources = series
         _restart false
       end
 
       def sources=(series)
         @sources = series
         _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @sources.each(&:mark_as_prototype!)
+      end
+
+      def _mark_sources_as_instance!
+        @sources.each(&:mark_as_instance!)
       end
 
       def _restart(restart_sources = true)
@@ -171,13 +179,25 @@ module Musa
       attr_accessor :selector, :sources
 
       def initialize(selector, indexed_series, hash_series)
-        @selector = selector.instance
+        @selector = selector
 
         if indexed_series && !indexed_series.empty?
-          @sources = indexed_series.collect(&:instance)
+          @sources = indexed_series
         elsif hash_series && !hash_series.empty?
-          @sources = hash_series.transform_values(&:instance)
+          @sources = hash_series
         end
+      end
+
+      def _mark_sources_as_prototype!
+        @selector.each(&:mark_as_prototype!)
+        @sources.each(&:mark_as_prototype!) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.mark_as_prototype!} if @sources.is_a? Hash
+      end
+
+      def _mark_sources_as_instance!
+        @selector.each(&:mark_as_instance!)
+        @sources.each(&:mark_as_instance!) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.mark_as_instance!} if @sources.is_a? Hash
       end
 
       def _restart
@@ -209,15 +229,27 @@ module Musa
       attr_accessor :selector, :sources
 
       def initialize(selector, indexed_series, hash_series)
-        @selector = selector.instance
+        @selector = selector
 
         if indexed_series && !indexed_series.empty?
-          @sources = indexed_series.collect(&:instance)
+          @sources = indexed_series
         elsif hash_series && !hash_series.empty?
-          @sources = hash_series.transform_values(&:instance)
+          @sources = hash_series
         end
 
         _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @selector.each(&:mark_as_prototype!)
+        @sources.each(&:mark_as_prototype!) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.mark_as_prototype!} if @sources.is_a? Hash
+      end
+
+      def _mark_sources_as_instance!
+        @selector.each(&:mark_as_instance!)
+        @sources.each(&:mark_as_instance!) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.mark_as_instance!} if @sources.is_a? Hash
       end
 
       def _restart(restart_sources = true)
@@ -257,13 +289,25 @@ module Musa
       attr_accessor :selector, :sources
 
       def initialize(selector, indexed_series, hash_series)
-        @selector = selector.instance
+        @selector = selector
 
         if indexed_series && !indexed_series.empty?
-          @sources = indexed_series.collect(&:instance)
+          @sources = indexed_series
         elsif hash_series && !hash_series.empty?
-          @sources = hash_series.transform_values(&:instance)
+          @sources = hash_series
         end
+      end
+
+      def _mark_sources_as_prototype!
+        @selector.each(&:mark_as_prototype!)
+        @sources.each(&:mark_as_prototype!) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.mark_as_prototype!} if @sources.is_a? Hash
+      end
+
+      def _mark_sources_as_instance!
+        @selector.each(&:mark_as_instance!)
+        @sources.each(&:mark_as_instance!) if @sources.is_a? Array
+        @sources.each { |_key, serie| serie.mark_as_instance!} if @sources.is_a? Hash
       end
 
       def _restart(restart_sources = true)
@@ -298,7 +342,15 @@ module Musa
       attr_accessor :source
 
       def initialize(serie)
-        @source = serie.instance
+        @source = serie
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart
@@ -329,7 +381,7 @@ module Musa
       attr_reader :source, :times, :condition
 
       def initialize(serie, times = nil, &condition_block)
-        @source = serie.instance
+        @source = serie
 
         @times = times
         @condition = condition_block
@@ -339,19 +391,33 @@ module Musa
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
         _restart false
       end
 
       def times=(times)
+        raise PrototypeSerieError if @is_prototype
+
         @times = times
         update_condition
       end
 
       def condition=(condition)
+        raise PrototypeSerieError if @is_prototype
+
         @condition = condition
         @times = nil if @condition
         update_condition
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -391,19 +457,34 @@ module Musa
     class LengthLimiter
       include Serie
 
-      attr_reader :source
-      attr_accessor :length
+      attr_reader :source, :length
 
       def initialize(serie, length)
-        @source = serie.instance
+        @source = serie
         @length = length
 
         _restart false
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
         _restart false
+      end
+
+      def length=(length)
+        raise PrototypeSerieError if @is_prototype
+
+        @length = length
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -428,13 +509,34 @@ module Musa
     class Skipper
       include Serie
 
-      attr_accessor :source, :length
+      attr_reader :source, :length
 
       def initialize(serie, length)
-        @source = serie.instance
+        @source = serie
         @length = length
 
         _restart false
+      end
+
+      def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
+        @source = serie
+        _restart false
+      end
+
+      def length=(length)
+        raise PrototypeSerieError if @is_prototype
+
+        @length = length
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -456,12 +558,27 @@ module Musa
     class Flattener
       include Serie
 
-      attr_accessor :source, :length
+      attr_reader :source
 
       def initialize(serie)
-        @source = serie.instance
+        @source = serie
 
         _restart false
+      end
+
+      def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
+        @source = serie
+        _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -504,11 +621,26 @@ module Musa
     class FlattenFromSerieOfSeries
       include Serie
 
-      attr_accessor :source
+      attr_reader :source
 
       def initialize(serie)
-        @source = serie.instance
+        @source = serie
         _restart false
+      end
+
+      def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
+        @source = serie
+        _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -526,6 +658,7 @@ module Musa
 
         if @current_serie.nil?
           @current_serie = @source.next_value
+          @current_serie = @current_serie.instance if @current_serie
 
           if @restart_each_serie
             @current_serie.restart if @current_serie
@@ -560,7 +693,7 @@ module Musa
       attr_reader :source
 
       def initialize(serie, parameters, &processor)
-        @source = serie.instance
+        @source = serie
         @parameters = parameters
         @processor = KeyParametersProcedureBinder.new(processor)
 
@@ -568,8 +701,18 @@ module Musa
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
         _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_source = true)
@@ -613,14 +756,33 @@ module Musa
     class BasicSerieAutorestart
       include Serie
 
-      attr_accessor :source
-      attr_accessor :skip_nil
+      attr_reader :source, :skip_nil
 
       def initialize(serie, skip_nil)
-        @source = serie.instance
+        @source = serie
         @skip_nil = skip_nil
 
         @restart_on_next = false
+      end
+
+      def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
+        @source = serie
+      end
+
+      def skip_nil=(boolean)
+        raise PrototypeSerieError if @is_prototype
+
+        @skip_nil = boolean
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart
@@ -654,8 +816,16 @@ module Musa
       include Serie
 
       def initialize(serie, length)
-        @source = serie.instance
+        @source = serie
         @length = length
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart
@@ -674,11 +844,19 @@ module Musa
         include Serie
 
         def initialize(serie, length)
-          @source = serie.instance
+          @source = serie
           @length = length
 
           @values = []
           _restart
+        end
+
+        def _mark_sources_as_prototype!
+          @source.mark_as_prototype!
+        end
+
+        def _mark_sources_as_instance!
+          @source.mark_as_instance!
         end
 
         def _restart
@@ -708,13 +886,23 @@ module Musa
       attr_reader :source
 
       def initialize(serie)
-        @source = serie.instance
+        @source = serie
         _restart false
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
         _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -750,7 +938,7 @@ module Musa
       attr_reader :source
 
       def initialize(serie)
-        @source = serie.instance
+        @source = serie
         @values = []
         @first_round = true
 
@@ -758,11 +946,21 @@ module Musa
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
         @values = []
         @first_round = true
 
         _restart
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart
@@ -796,15 +994,24 @@ module Musa
       attr_reader :source
 
       def initialize(serie)
-        @source = serie.instance
+        @source = serie
         _restart false
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
         raise ArgumentError, "cannot reverse an infinite serie #{serie}" if serie.infinite?
 
         @source = serie
         _restart false
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -837,20 +1044,31 @@ module Musa
       attr_reader :source, :random
 
       def initialize(serie, random)
-        @source = serie.instance
+        @source = serie
         @random = random
 
         _restart false
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
         raise ArgumentError, "cannot randomize an infinite serie #{serie}" if serie.infinite?
 
         @source = serie
       end
 
       def random=(random)
+        raise PrototypeSerieError if @is_prototype
+
         @random = random
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -885,18 +1103,30 @@ module Musa
         raise ArgumentError, "cannot shift to right an infinite serie #{serie}" if shift > 0 && serie.infinite?
         raise ArgumentError, 'cannot shift to right: function not yet implemented' if shift > 0
 
-        @source = serie.instance
+        @source = serie
         @shift = shift
 
         _restart false
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
       end
 
       def shift=(shift)
+        raise PrototypeSerieError if @is_prototype
+
         @shift = shift
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -922,18 +1152,30 @@ module Musa
       attr_reader :source, :remove
 
       def initialize(serie, remove)
-        @source = serie.instance
+        @source = serie
         @remove = remove
 
         _restart false
       end
 
       def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
         @source = serie
       end
 
       def remove=(remove)
+        raise PrototypeSerieError if @is_prototype
+
         @remove = remove
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
@@ -951,17 +1193,50 @@ module Musa
     class FromEvalBlockOnSerie
       include Serie
 
-      attr_accessor :source, :with
-      attr_accessor :on_restart, :block
+      attr_reader :source, :with, :on_restart, :block
 
       def initialize(serie, with: nil, on_restart: nil, &block)
-        @source = serie.instance
-        @with = with.instance if with
+        @source = serie
+        @with = with if with
 
         @block = block
         @on_restart = on_restart
 
         _restart false
+      end
+
+      def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
+        @source = serie
+      end
+
+      def with=(with)
+        raise PrototypeSerieError if @is_prototype
+
+        @with = with
+      end
+
+      def on_restart=(on_restart)
+        raise PrototypeSerieError if @is_prototype
+
+        @on_restart = on_restart
+      end
+
+      def block=(block)
+        raise PrototypeSerieError if @is_prototype
+
+        @block = block
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+        @with.mark_as_prototype! if @with
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
+        @with.mark_as_instance! if @with
       end
 
       def _restart(restart_sources = true)
@@ -994,13 +1269,32 @@ module Musa
     class HashFromSeriesArray
       include Serie
 
-      attr_accessor :source
-      attr_accessor :keys
+      attr_reader :source, :keys
 
       def initialize(serie, keys)
-        @source = serie.instance
+        @source = serie
         @keys = keys
         _restart false
+      end
+
+      def source=(serie)
+        raise PrototypeSerieError if @is_prototype
+
+        @source = serie
+      end
+
+      def keys=(keys)
+        raise PrototypeSerieError if @is_prototype
+
+        @keys = keys
+      end
+
+      def _mark_sources_as_prototype!
+        @source.mark_as_prototype!
+      end
+
+      def _mark_sources_as_instance!
+        @source.mark_as_instance!
       end
 
       def _restart(restart_sources = true)
