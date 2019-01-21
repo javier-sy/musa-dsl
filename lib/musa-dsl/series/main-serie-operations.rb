@@ -881,7 +881,7 @@ module Musa
 
       def initialize(serie)
         @source = serie
-        _restart false
+        _restart false, false
 
         mark_regarding! @source
       end
@@ -892,11 +892,12 @@ module Musa
 
       def _instance
         @source = @source.instance
+        _restart false, true
       end
 
-      def _restart(restart_sources = true)
+      def _restart(restart_sources = true, get_reversed = true)
         @source.restart if restart_sources
-        @reversed = FromArray.new(next_values_array_of(@source).reverse).instance
+        @reversed = FromArray.new(next_values_array_of(@source).reverse).instance if get_reversed
       end
 
       def _next_value
