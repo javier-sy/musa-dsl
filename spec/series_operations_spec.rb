@@ -9,7 +9,7 @@ RSpec.describe Musa::Serie do
   context 'Series operations' do
 
     it 'Length: FOR(from: 1, to: 100).max_size(3)' do
-      s = FOR(from: 1, to: 100).max_size(3)
+      s = FOR(from: 1, to: 100).max_size(3).i
 
       expect(s.next_value).to eq 1
       expect(s.next_value).to eq 2
@@ -29,7 +29,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Length: FOR(from: 1, to: 100).max_size(0)' do
-      s = FOR(from: 1, to: 100).max_size(0)
+      s = FOR(from: 1, to: 100).max_size(0).i
 
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil
@@ -43,7 +43,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Length: FOR(from: 1, to: 3).max_size(5)' do
-      s = FOR(from: 1, to: 3).max_size(5)
+      s = FOR(from: 1, to: 3).max_size(5).i
 
       expect(s.next_value).to eq 1
       expect(s.next_value).to eq 2
@@ -68,8 +68,56 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it 'FIBO().max_size(10)' do
+      s = FIBO().max_size(10).i
+
+      expect(s.infinite?).to eq false
+
+      expect(s.current_value).to eq nil
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 13
+      expect(s.next_value).to eq 21
+      expect(s.next_value).to eq 34
+      expect(s.next_value).to eq 55
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 13
+      expect(s.next_value).to eq 21
+      expect(s.next_value).to eq 34
+      expect(s.next_value).to eq 55
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+    it 'HARMO(error: 0.1).max_size(10)' do
+      s = HARMO(error: 0.1).max_size(10).i
+
+      expect(s.infinite?).to eq false
+
+      expect(s.to_a).to eq [0, 12, 19, 24, 31, 36, 38, 43, 48, 49]
+    end
+
     it 'Skip: FOR(from: 1, to: 100).skip(3).max_size(3)' do
-      s = FOR(from: 1, to: 100).skip(3).max_size(3)
+      s = FOR(from: 1, to: 100).skip(3).max_size(3).i
 
       expect(s.next_value).to eq 4
       expect(s.next_value).to eq 5
@@ -89,7 +137,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Duplicate: S(1, 2, 3, 4, 5, 6).duplicate' do
-      s1 = S(1, 2, 3, 4, 5, 6)
+      s1 = S(1, 2, 3, 4, 5, 6).i
 
       s2 = s1.duplicate
 
@@ -118,110 +166,8 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
-    it 'Autorestart: S(1, 2, 3).autorestart' do
-      s1 = S(1, 2, 3).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq 1
-      expect(s1.current_value).to eq 1
-
-      expect(s1.next_value).to eq 2
-      expect(s1.current_value).to eq 2
-
-      expect(s1.next_value).to eq 3
-
-      expect(s1.next_value).to eq nil
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq 1
-
-      s1.restart
-
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq 1
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.peek_next_value).to eq 3
-      expect(s1.peek_next_value).to eq 3
-      expect(s1.next_value).to eq 3
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-    end
-
-    it 'Autorestart: S(1, 2, 3).autorestart(skip_nil: true)' do
-      s1 = S(1, 2, 3).autorestart(skip_nil: true)
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq 1
-      expect(s1.current_value).to eq 1
-
-      expect(s1.next_value).to eq 2
-      expect(s1.current_value).to eq 2
-
-      expect(s1.next_value).to eq 3
-
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-
-      s1.restart
-
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq 1
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.peek_next_value).to eq 3
-      expect(s1.peek_next_value).to eq 3
-      expect(s1.next_value).to eq 3
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-    end
-
     it 'Repeat: S(1, 2, 3).repeat 3' do
-      s1 = S(1, 2, 3)
+      s1 = S(1, 2, 3).i
 
       s2 = s1.repeat 3
 
@@ -241,7 +187,7 @@ RSpec.describe Musa::Serie do
       s1 = S(1, 2, 3)
       s2 = S(4, 5, 6)
 
-      s3 = (s1 + s2).repeat 3
+      s3 = (s1 + s2).repeat(3).i
 
       r = []
 
@@ -259,9 +205,9 @@ RSpec.describe Musa::Serie do
       s1 = S(1, 2, 3)
       s2 = S(4, 5, 6)
 
-      s3 = (s1 + s2).repeat 3
+      s3 = (s1 + s2).repeat(3)
 
-      s4 = s3 + S(10, 11, 12)
+      s4 = (s3 + S(10, 11, 12)).i
 
       r = []
 
@@ -279,7 +225,7 @@ RSpec.describe Musa::Serie do
       s1 = S(1, 2, 3, 4)
       s2 = S(5, 6, 7, 8)
 
-      s3 = s1.after(s2)
+      s3 = s1.after(s2).i
 
       r = []
 
@@ -297,7 +243,7 @@ RSpec.describe Musa::Serie do
       s1 = S(1, 2, 3, 4)
       s2 = S(5, 6, 7, 8)
 
-      s3 = s1 + s2
+      s3 = (s1 + s2).i
 
       r = []
 
@@ -314,7 +260,7 @@ RSpec.describe Musa::Serie do
     it 'Cut: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3' do
       s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-      ss = s.cut 3
+      ss = s.cut(3).i
 
       sss1 = ss.next_value
 
@@ -336,9 +282,10 @@ RSpec.describe Musa::Serie do
     it 'Cut and Merge: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.cut 3; sss = ss.merge' do
       s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-      ss = s.cut 3
+      ss = s.cut(3)
 
-      sss = ss.merge
+
+      sss = ss.merge.i
 
       expect(sss.to_a).to eq [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     end
@@ -346,7 +293,7 @@ RSpec.describe Musa::Serie do
     it 'Remove: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.remove 3' do
       s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-      ss = s.remove 3
+      ss = s.remove(3).i
 
       r = []
 
@@ -361,7 +308,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Multiplex' do
-      s = S(0, 1, 2).multiplex(S(100, 200, 300, 400, 500), S(1000, 2000, 3000, 4000, 5000), S(10000, 20000, 30000, 40000, 50000))
+      s = S(0, 1, 2).multiplex(S(100, 200, 300, 400, 500), S(1000, 2000, 3000, 4000, 5000), S(10000, 20000, 30000, 40000, 50000)).i
 
       expect(s.next_value).to eq 100
       expect(s.next_value).to eq 2000
@@ -383,8 +330,8 @@ RSpec.describe Musa::Serie do
     end
 
 
-    it '.flatten(serie_of_series: true): S(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9))' do
-      s = S(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9)).flatten(serie_of_series: true)
+    it '.merge: S(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9))' do
+      s = S(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9)).merge.i
 
       expect(s.current_value).to eq nil
 
@@ -473,13 +420,13 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
-    it '.flatten(serie_of_series: true): S(S(1, 2, 3).p, S(4, 5, 6).p, S(7, 8, 9).p).prototype' do
-      ss = S(S(1, 2, 3).p, S(4, 5, 6).p, S(7, 8, 9).p).prototype
+    it '.merge: S(S(1, 2, 3).i, S(4, 5, 6).i, S(7, 8, 9).i)' do
+      ss = S(S(1, 2, 3).i, S(4, 5, 6).i, S(7, 8, 9).i)
 
-      expect { ss.flatten.next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
-      expect { ss.flatten(serie_of_series: true).next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
+      expect { ss.flatten.next_value }.to raise_error(Musa::Serie::PrototypingSerieError)
+      expect { ss.merge.next_value }.to raise_error(Musa::Serie::PrototypingSerieError)
 
-      s = ss.instance.flatten(series_of_series: true)
+      s = ss.instance.merge
 
       expect(s.current_value).to eq nil
 
@@ -500,7 +447,7 @@ RSpec.describe Musa::Serie do
     end
 
     it '.flatten: S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9))' do
-      s = S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9)).flatten
+      s = S(S(1, 2, 3), 33, S(4, 5, 6), S(7, 8, 9)).flatten.i
 
       expect(s.current_value).to eq nil
 
@@ -597,8 +544,8 @@ RSpec.describe Musa::Serie do
     it '.flatten: S(S(1, 2, 3).p, 33, S(4, 5, 6).p, S(7, 8, 9).p).prototype' do
       s = S(S(1, 2, 3).p, 33, S(4, 5, 6).p, S(7, 8, 9).p).prototype
 
-      expect { s.flatten.next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
-      expect { s.flatten(serie_of_series: true).next_value }.to raise_error(Musa::Serie::PrototypeSerieError)
+      expect { s.flatten.next_value }.to raise_error(Musa::Serie::PrototypingSerieError)
+      expect { s.merge.next_value }.to raise_error(Musa::Serie::PrototypingSerieError)
 
       ss = s.instance.flatten
 
@@ -621,14 +568,16 @@ RSpec.describe Musa::Serie do
       expect(ss.next_value).to eq nil
     end
 
-    it 'Complex .flatten(serie_of_series: true) extraction I' do
+    it 'Complex .merge extraction I' do
       perm = [1, 2, 3].permutation.to_a
 
-      values = S(*perm)
+      values = S(*perm).i
 
-      values_serie = E() { S(*values.next_value) }
+      values_serie = E() {
+        S(*values.next_value)
+      }
 
-      s = values_serie.flatten(serie_of_series: true)
+      s = values_serie.merge.i
 
       expect(s.next_value).to eq perm[0][0]
       expect(s.next_value).to eq perm[0][1]
@@ -643,14 +592,14 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq perm[0][2]
     end
 
-    it 'Complex .flatten(serie_of_series: true) extraction II' do
+    it 'Complex .merge extraction II' do
       perm = [1, 2, 3].permutation.to_a
 
-      values = S(*perm)
+      values = S(*perm).i
 
       values_serie = E() { S(*values.next_value) }
 
-      s = values_serie.flatten(serie_of_series: true)
+      s = values_serie.merge
 
       expect(s.max_size(3).to_a).to eq perm[0]
       expect(s.max_size(3).to_a).to eq perm[1]
@@ -666,7 +615,7 @@ RSpec.describe Musa::Serie do
         else
           i
         end
-      end
+      end.i
 
       expect(ss.next_value).to eq 1
       expect(ss.next_value).to eq 102
@@ -710,8 +659,8 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Serie to generative grammar node' do
-      a = S(1, 2).mark_as_prototype!.to_node
-      b = S(3, 4).mark_as_prototype!.to_node
+      a = S(1, 2).to_node
+      b = S(3, 4).to_node
 
       s = (a + b | b).options.to_serie(of_series: true)
 
@@ -721,8 +670,8 @@ RSpec.describe Musa::Serie do
     include Musa::GenerativeGrammar
 
     it 'Generative grammar nodes of series to serie' do
-      a = S(1, 2).pn
-      b = S(3, 4).pn
+      a = S(1, 2).n
+      b = S(3, 4).n
 
       s = (a + b | b)
 
@@ -732,12 +681,13 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Generative grammar nodes and series interoperability' do
-      a = '1'.neu.pn
-      b = '2'.neu.pn
+      a = '1'.neu.n
+      b = '2'.neu.n
 
       s = a + b
 
       expect(s.s.a).to eq [{ kind: :neuma, neuma: ['1'] }, { kind: :neuma, neuma: ['2'] }]
     end
+
   end
 end

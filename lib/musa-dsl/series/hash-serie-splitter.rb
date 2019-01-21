@@ -1,4 +1,5 @@
 module Musa
+  # TODO: adapt to series prototyping
   # TODO: full test cases
 
   module SerieOperations
@@ -26,7 +27,7 @@ module Musa
 
       class KeyProxy
         def initialize(hash_serie)
-          @serie = hash_serie
+          @serie = hash_serie.instance
           @values = {}
         end
 
@@ -68,7 +69,7 @@ module Musa
 
       class BufferedKeyProxy
         def initialize(hash_serie)
-          @serie = hash_serie
+          @serie = hash_serie.instance
           @values = {}
         end
 
@@ -112,7 +113,7 @@ module Musa
 
       class MasterSlaveKeyProxy
         def initialize(hash_serie, master)
-          @serie = hash_serie
+          @serie = hash_serie.instance
           @master = master
           @values = {}
           @values_counter = {}
@@ -166,6 +167,12 @@ module Musa
         def initialize(proxy, key:)
           @proxy = proxy
           @key = key
+
+          mark_as_instance!
+        end
+
+        def _prototype
+          raise PrototypingSerieError, 'Cannot get prototype of a splitted serie'
         end
 
         def _restart

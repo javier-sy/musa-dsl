@@ -77,7 +77,7 @@ RSpec.describe Musa::Serie do
 
     it 'Basic HOLDER series queuing with restart and skip nil' do
       h = HOLDER()
-      s = h.autorestart(skip_nil: true)
+      s = h.repeat
 
       expect(s.next_value).to eq nil
 
@@ -276,7 +276,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'HOLDER(HC(x: S(1,2), y: S(:a, :b, :c)).autorestart(skip_nil: true))' do
-      s1 = HOLDER(HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart(skip_nil: true))
+      s1 = HOLDER(HC(x: S(1, 2), y: S(:a, :b, :c)).repeat)
 
       expect(s1.current_value).to eq nil
 

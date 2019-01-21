@@ -136,5 +136,17 @@ RSpec.describe Musa::Serie do
       expect(ss[:a].next_value).to eq nil
       expect(ss[:b].next_value).to eq nil
     end
+
+    it 'S([1, 10, 100], [2, 20, 200], [3, 30, 300]).hashify.split and then prototype error' do
+      s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
+      h = s.hashify :a, :b, :c
+      ss = h.split master: :c
+
+      expect { p = ss[:a].prototype }.to raise_error(RuntimeError)
+
+      i = ss[:a].instance
+
+      expect(i.next_value).to eq 1
+    end
   end
 end

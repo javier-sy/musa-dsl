@@ -87,7 +87,7 @@ module Musa
       def to_serie(flatten: nil, &condition)
         flatten ||= true
 
-        serie = _options(&condition).collect { |o| o.collect(&:content) }.to_serie(of_series: true).flatten(serie_of_series: true)
+        serie = _options(&condition).collect { |o| o.collect(&:content) }.to_serie(of_series: true).merge
         serie = serie.flatten if flatten
 
         serie.prototype

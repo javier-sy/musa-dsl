@@ -12,7 +12,7 @@ RSpec.describe Musa::Neumalang do
 
     it 'Simple file neuma parsing' do
       debug = false
-      # debug = true
+      #debug = true
 
       gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, base_duration: 1
       serie = Musa::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3a_spec.neu')
@@ -21,7 +21,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.to_a(true)
+        pp serie.to_a(recursive: true)
         puts
       end
 

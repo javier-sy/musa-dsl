@@ -49,16 +49,6 @@ module Musa::Neumalang
 
     serie = match.value
 
-    puts
-    pp serie
-
-    serie = serie.prototype
-
-    puts
-    pp serie
-
-
-
     if decode_with
       serie.eval do |e|
         if e[:kind] == :neuma

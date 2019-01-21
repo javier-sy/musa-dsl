@@ -154,7 +154,7 @@ class Musa::BaseSequencer
 
     def eval_serie(serie)
       context = subcontext
-      serie.eval(on_restart: proc { context = subcontext }) { |e| context.eval_element e }
+      serie.instance.eval(on_restart: proc { context = subcontext }) { |e| context.eval_element e }
     end
 
     def eval_parallel(series)

@@ -1,5 +1,7 @@
 module Musa
   module Series
+    # TODO: adapt to series prototyping
+
     def PROXY(serie = nil)
       ProxySerie.new(serie)
     end
@@ -7,15 +9,23 @@ module Musa
     class ProxySerie
       include Serie
 
-      attr_accessor :target
+      attr_reader :target
 
       def initialize(serie)
-        @target = serie
+        @target = serie.instance if serie
+        mark_as_instance!
+      end
+
+      def target=(target)
+        @target = target.instance
+      end
+
+      def _prototype
+        raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
       end
 
       def restart
         @target.restart if @target
-        self
       end
 
       def current_value

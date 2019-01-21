@@ -7,7 +7,7 @@ include Musa::Series
 RSpec.describe Musa::Serie do
   context 'Series constructors' do
     it 'S(1, 2, 3)' do
-      s1 = S(1, 2, 3)
+      s1 = S(1, 2, 3).i
 
       expect(s1.current_value).to eq nil
 
@@ -48,7 +48,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'E(start: 100) { |v| v + 1 unless v == 103 }' do
-      s1 = E(start: 100) { |v| v + 1 unless v == 103 }
+      s1 = E(start: 100) { |v| v + 1 unless v == 103 }.i
 
       expect(s1.next_value).to eq 100
       expect(s1.next_value).to eq 101
@@ -85,7 +85,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'E(start: nil) { |v| v ? v + 1 : 1 }' do
-      s1 = E(start: nil) { |v| v ? v + 1 : 1 }
+      s1 = E(start: nil) { |v| v ? v + 1 : 1 }.i
 
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
@@ -108,7 +108,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'E() { |i| i + 1 unless i == 3 }' do
-      s1 = E() { |i| i + 1 unless i == 3 }
+      s1 = E() { |i| i + 1 unless i == 3 }.i
 
       expect(s1.next_value).to eq 1
       expect(s1.next_value).to eq 2
@@ -142,7 +142,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'FOR(from: 10, to: 13, step: 1)' do
-      s1 = FOR(from: 10, to: 13, step: 1)
+      s1 = FOR(from: 10, to: 13, step: 1).i
 
       expect(s1.next_value).to eq 10
       expect(s1.next_value).to eq 11
@@ -178,7 +178,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'FOR(from: 10, to: 11.25, step: Rational(1, 4))' do
-      s1 = FOR(from: 10, to: 11.25, step: Rational(1, 4))
+      s1 = FOR(from: 10, to: 11.25, step: Rational(1, 4)).i
 
       expect(s1.next_value).to eq 10
       expect(s1.next_value).to eq 10.25
@@ -204,7 +204,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'FOR(from: 10, to: 11.25, step: -Rational(1, 4))' do
-      s1 = FOR(from: 10, to: 11.25, step: -Rational(1, 4))
+      s1 = FOR(from: 10, to: 11.25, step: -Rational(1, 4)).i
 
       expect(s1.next_value).to eq 10
       expect(s1.next_value).to eq 10.25
@@ -230,7 +230,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'FOR(from: 10, to: 8.75, step: -Rational(1, 4))' do
-      s1 = FOR(from: 10, to: 8.75, step: -Rational(1, 4))
+      s1 = FOR(from: 10, to: 8.75, step: -Rational(1, 4)).i
 
       expect(s1.next_value).to eq 10
       expect(s1.next_value).to eq 9.75
@@ -256,7 +256,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'FOR(from: 10, to: 8.75, step: Rational(1, 4))' do
-      s1 = FOR(from: 10, to: 8.75, step: Rational(1, 4))
+      s1 = FOR(from: 10, to: 8.75, step: Rational(1, 4)).i
 
       expect(s1.infinite?).to eq false
 
@@ -284,7 +284,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'FOR(from: 10, step: Rational(1, 4))' do
-      s1 = FOR(from: 10, step: -Rational(1, 4))
+      s1 = FOR(from: 10, step: -Rational(1, 4)).i
 
       expect(s1.infinite?).to eq true
 
@@ -310,7 +310,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'RND(8.75, 9, 9.25, 9.50, 9.75, 10)' do
-      s1 = RND(8.75, 9, 9.25, 9.50, 9.75, 10)
+      s1 = RND(8.75, 9, 9.25, 9.50, 9.75, 10).i
 
       r = []
       while v = s1.next_value
@@ -340,7 +340,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'RND(from: 10, to: 8.75, step: -Rational(1, 4))' do
-      s1 = RND(from: 10, to: 8.75, step: -Rational(1, 4))
+      s1 = RND(from: 10, to: 8.75, step: -Rational(1, 4)).i
 
       r = []
       while v = s1.next_value
@@ -370,7 +370,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'RND(from: 10, to: 8.75, step: Rational(1, 4))' do
-      s1 = RND(from: 10, to: 8.75, step: Rational(1, 4))
+      s1 = RND(from: 10, to: 8.75, step: Rational(1, 4)).i
 
       r = []
       while v = s1.next_value
@@ -400,7 +400,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'RND1(8.75, 9, 9.25, 9.50, 9.75, 10)' do
-      s1 = RND1(8.75, 9, 9.25, 9.50, 9.75, 10)
+      s1 = RND1(8.75, 9, 9.25, 9.50, 9.75, 10).i
 
       r = []
       while v = s1.next_value
@@ -428,7 +428,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'RND1(from: 10, to: 8.75, step: -Rational(1, 4))' do
-      s1 = RND1(from: 10, to: 8.75, step: -Rational(1, 4))
+      s1 = RND1(from: 10, to: 8.75, step: -Rational(1, 4)).i
 
       r = []
       while v = s1.next_value
@@ -456,7 +456,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'RND1(from: 10, to: 8.75, step: Rational(1, 4))' do
-      s1 = RND1(from: 10, to: 8.75, step: Rational(1, 4))
+      s1 = RND1(from: 10, to: 8.75, step: Rational(1, 4)).i
 
       r = []
       while v = s1.next_value
@@ -484,7 +484,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'H(x: S(1,2,3), y: S(:a, :b, :c, :d))' do
-      s1 = H(x: S(1, 2, 3), y: S(:a, :b, :c, :d))
+      s1 = H(x: S(1, 2, 3), y: S(:a, :b, :c, :d)).i
 
       expect(s1.current_value).to eq nil
 
@@ -508,100 +508,11 @@ RSpec.describe Musa::Serie do
       expect(s1.peek_next_value).to eq nil
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'H(x: S(1,2,3), y: S(:a, :b, :c, :d)).autorestart' do
-      s1 = H(x: S(1, 2, 3), y: S(:a, :b, :c, :d)).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'H(x: S(1,2), y: S(:a, :b, :c)).autorestart(skip_nil: true)' do
-      s1 = H(x: S(1, 2), y: S(:a, :b, :c)).autorestart(skip_nil: true)
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-    end
-
-    it 'H(x: S(1,2,3).autorestart, y: S(:a, :b, :c, :d).autorestart)' do
-      s1 = H(x: S(1, 2, 3).autorestart, y: S(:a, :b, :c, :d).autorestart)
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'H(x: S(1,2,3).autorestart, y: S(:a, :b, :c, :d).autorestart).autorestart' do
-      s1 = H(x: S(1, 2, 3).autorestart, y: S(:a, :b, :c, :d).autorestart).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq(x: 3, y: :c)
-      expect(s1.next_value).to eq(x: 3, y: :c)
-      expect(s1.peek_next_value).to eq nil
       expect(s1.next_value).to eq nil
     end
 
     it 'HC(x: S(1,2), y: S(:a, :b, :c))' do
-      s1 = HC(x: S(1, 2), y: S(:a, :b, :c))
+      s1 = HC(x: S(1, 2), y: S(:a, :b, :c)).i
 
       expect(s1.current_value).to eq nil
 
@@ -631,7 +542,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4))' do
-      s1 = HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4))
+      s1 = HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)).i
 
       expect(s1.current_value).to eq nil
 
@@ -670,59 +581,10 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
-    end
-
-    it 'HC(x: S(1,2), y: S(:a, :b, :c)).autorestart' do
-      s1 = HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :c)
-      expect(s1.next_value).to eq(x: 2, y: :a)
-      expect(s1.next_value).to eq(x: 1, y: :b)
-      expect(s1.next_value).to eq(x: 2, y: :c)
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :c)
-      expect(s1.next_value).to eq(x: 2, y: :a)
-      expect(s1.next_value).to eq(x: 1, y: :b)
-      expect(s1.next_value).to eq(x: 2, y: :c)
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq(x: 1, y: :a)
-    end
-
-    it 'HC(x: S(1,2), y: S(:a, :b, :c)).autorestart(skip_nil: true)' do
-      s1 = HC(x: S(1, 2), y: S(:a, :b, :c)).autorestart(skip_nil: true)
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :c)
-      expect(s1.next_value).to eq(x: 2, y: :a)
-      expect(s1.next_value).to eq(x: 1, y: :b)
-      expect(s1.next_value).to eq(x: 2, y: :c)
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
-      expect(s1.next_value).to eq(x: 2, y: :b)
-      expect(s1.next_value).to eq(x: 1, y: :c)
-      expect(s1.next_value).to eq(x: 2, y: :a)
-      expect(s1.next_value).to eq(x: 1, y: :b)
-      expect(s1.next_value).to eq(x: 2, y: :c)
-
-      expect(s1.next_value).to eq(x: 1, y: :a)
     end
 
     it 'A(S(1,2,3), S(:a, :b, :c, :d))' do
-      s1 = A(S(1, 2, 3), S(:a, :b, :c, :d))
+      s1 = A(S(1, 2, 3), S(:a, :b, :c, :d)).i
 
       expect(s1.current_value).to eq nil
 
@@ -765,126 +627,11 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq([2, :d])
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'A(S(1,2,3), S(:a, :b, :c, :d)).autorestart' do
-      s1 = A(S(1, 2, 3), S(:a, :b, :c, :d)).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'A(S(1,2,3).autorestart, S(:a, :b, :c, :d).autorestart)' do
-      s1 = A(S(1, 2, 3).autorestart, S(:a, :b, :c, :d).autorestart)
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'A(S(1,2,3).autorestart, S(:a, :b, :c, :d).autorestart).autorestart' do
-      s1 = A(S(1, 2, 3).autorestart, S(:a, :b, :c, :d).autorestart).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
       expect(s1.next_value).to eq nil
     end
 
     it 'AC(S(1,2),S(:a, :b, :c))' do
-      s1 = AC(S(1, 2), S(:a, :b, :c))
+      s1 = AC(S(1, 2), S(:a, :b, :c)).i
 
       expect(s1.current_value).to eq nil
 
@@ -911,63 +658,14 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
-    end
-
-    it 'AC(S(1,2), S(:a, :b, :c)).autorestart' do
-      s1 = AC(S(1, 2), S(:a, :b, :c)).autorestart
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([1, :b])
-      expect(s1.next_value).to eq([2, :c])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([1, :b])
-      expect(s1.next_value).to eq([2, :c])
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq([1, :a])
-    end
-
-    it 'AC(S(1,2), S(:a, :b, :c)).autorestart(skip_nil: true)' do
-      s1 = AC(S(1, 2), S(:a, :b, :c)).autorestart(skip_nil: true)
-
-      expect(s1.current_value).to eq nil
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([1, :b])
-      expect(s1.next_value).to eq([2, :c])
-
-      expect(s1.next_value).to eq([1, :a])
-      expect(s1.next_value).to eq([2, :b])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([1, :b])
-      expect(s1.next_value).to eq([2, :c])
-
-      expect(s1.next_value).to eq([1, :a])
     end
 
     it 'Complex E extraction' do
       perm = [1, 2, 3].permutation.to_a
 
-      values = S(*perm)
+      values = S(*perm).i
 
-      values_serie = E() { S(*values.next_value) }
+      values_serie = E() { S(*values.next_value) }.i
 
       expect(values_serie.next_value.to_a).to eq perm[0]
       expect(values_serie.next_value.to_a).to eq perm[1]
@@ -975,7 +673,7 @@ RSpec.describe Musa::Serie do
     end
 
     it 'SIN(start_value: 1, steps: 27, amplitude: 10, center: 0)' do
-      s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0)
+      s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).i
 
       c = 0
       while v = s1.next_value
@@ -987,40 +685,10 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
 
       expect(c).to eq 27
-    end
-
-    it 'SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart' do
-      s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart
-
-      c = 0
-      while v = s1.next_value
-        expect(v).to eq 1.0 if c == 0
-        c += 1
-      end
-      expect(c).to eq 27
-
-      c = 0
-      while v = s1.next_value
-        expect(v).to eq 1.0 if c == 0
-        c += 1
-      end
-      expect(c).to eq 27
-    end
-
-    it 'SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart(skip_nil: true)' do
-      s1 = SIN(start_value: 1, steps: 27, amplitude: 10, center: 0).autorestart(skip_nil: true)
-
-      c = 0
-      while (v = s1.next_value) && c < 100
-        expect(v).to eq 1.0 if c == 0
-        expect(v).to eq 1.0 if c == 27
-        c += 1
-      end
-      expect(c).to eq 100
     end
 
     it 'FIBO()' do
-      s = FIBO()
+      s = FIBO().i
 
       expect(s.infinite?).to eq true
 
@@ -1032,62 +700,26 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq 5
       expect(s.next_value).to eq 8
       expect(s.next_value).to eq 13
-    end
-
-    it 'FIBO().max_size(10)' do
-      s = FIBO().max_size(10)
-
-      expect(s.infinite?).to eq false
-
-      expect(s.current_value).to eq nil
-      expect(s.next_value).to eq 1
-      expect(s.next_value).to eq 1
-      expect(s.next_value).to eq 2
-      expect(s.next_value).to eq 3
-      expect(s.next_value).to eq 5
-      expect(s.next_value).to eq 8
-      expect(s.next_value).to eq 13
       expect(s.next_value).to eq 21
       expect(s.next_value).to eq 34
       expect(s.next_value).to eq 55
-
-      expect(s.next_value).to eq nil
-      expect(s.next_value).to eq nil
-      expect(s.next_value).to eq nil
-
-      s.restart
-
-      expect(s.current_value).to eq nil
-      expect(s.next_value).to eq 1
-      expect(s.next_value).to eq 1
-      expect(s.next_value).to eq 2
-      expect(s.next_value).to eq 3
-      expect(s.next_value).to eq 5
-      expect(s.next_value).to eq 8
-      expect(s.next_value).to eq 13
-      expect(s.next_value).to eq 21
-      expect(s.next_value).to eq 34
-      expect(s.next_value).to eq 55
-
-      expect(s.next_value).to eq nil
-      expect(s.next_value).to eq nil
-      expect(s.next_value).to eq nil
-    end
-
-    it 'HARMO(error: 0.1).max_size(10)' do
-      s = HARMO(error: 0.1).max_size(10)
-
-      expect(s.infinite?).to eq false
-
-      expect(s.to_a).to eq [0, 12, 19, 24, 31, 36, 38, 43, 48, 49]
     end
 
     it 'HARMO().max_size(10)' do
-      s = HARMO().max_size(10)
+      s = HARMO().i
 
-      expect(s.infinite?).to eq false
+      expect(s.infinite?).to eq true
 
-      expect(s.to_a).to eq [0, 12, 19, 24, 28, 31, 34, 36, 38, 40]
+      expect(s.next_value).to eq 0
+      expect(s.next_value).to eq 12
+      expect(s.next_value).to eq 19
+      expect(s.next_value).to eq 24
+      expect(s.next_value).to eq 28
+      expect(s.next_value).to eq 31
+      expect(s.next_value).to eq 34
+      expect(s.next_value).to eq 36
+      expect(s.next_value).to eq 38
+      expect(s.next_value).to eq 40
     end
   end
 end

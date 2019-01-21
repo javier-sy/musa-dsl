@@ -107,11 +107,13 @@ module Musa
     class FromArray
       include Serie
 
-      attr_accessor :values
+      attr_reader :values
 
       def initialize(values = nil)
-        @values = values
+        @values = values.clone.freeze
         @index = 0
+
+        mark_as_prototype!
       end
 
       def _restart
@@ -135,7 +137,7 @@ module Musa
     class FromAutoEvalBlockOnSeed
       include Serie
 
-      attr_accessor :start, :block
+      attr_reader :start, :block
 
       def initialize(start, &block)
         @start = start
@@ -143,6 +145,8 @@ module Musa
 
         @current = nil
         @first = true
+
+        mark_as_prototype!
       end
 
       def _restart
@@ -169,11 +173,13 @@ module Musa
     class FromEvalBlock
       include Serie
 
-      attr_accessor :block
+      attr_reader :block
 
       def initialize(&block)
         @block = block
         _restart
+
+        mark_as_prototype!
       end
 
       def _restart
@@ -207,21 +213,8 @@ module Musa
         sign_adjust_step
 
         _restart
-      end
 
-      def from=(from)
-        @from = from
-        sign_adjust_step
-      end
-
-      def to=(to)
-        @to = to
-        sign_adjust_step
-      end
-
-      def step=(step)
-        @step = step
-        sign_adjust_step
+        mark_as_prototype!
       end
 
       def _restart
@@ -255,13 +248,15 @@ module Musa
     class RandomValueFromArray
       include Serie
 
-      attr_accessor :values, :random
+      attr_reader :values, :random
 
       def initialize(values, random)
-        @values = values
+        @values = values.clone.freeze
         @random = random
 
         _restart
+
+        mark_as_prototype!
       end
 
       def _restart
@@ -282,8 +277,7 @@ module Musa
     class RandomNumberFromRange
       include Serie
 
-      attr_reader :from, :to, :step
-      attr_accessor :random
+      attr_reader :from, :to, :step, :random
 
       def initialize(from, to, step, random)
         @from = from
@@ -295,21 +289,8 @@ module Musa
         @random = random
 
         _restart
-      end
 
-      def from=(from)
-        @from = from
-        adjust_step
-      end
-
-      def to=(to)
-        @to = to
-        adjust_step
-      end
-
-      def step=(step)
-        @step = step
-        adjust_step
+        mark_as_prototype!
       end
 
       def _restart
@@ -337,17 +318,19 @@ module Musa
     class RandomValuesFromArray
       include Serie
 
-      attr_accessor :values, :random
+      attr_reader :values, :random
 
       def initialize(values, random)
-        @values = values
+        @values = values.clone.freeze
         @random = random
 
         _restart
+
+        mark_as_prototype!
       end
 
       def _restart
-        @available_values = @values.clone
+        @available_values = @values.dup
       end
 
       def _next_value
@@ -366,8 +349,7 @@ module Musa
     class RandomNumbersFromRange
       include Serie
 
-      attr_reader :from, :to, :step
-      attr_accessor :random
+      attr_reader :from, :to, :step, :random
 
       def initialize(from, to, step, random)
         @from = from
@@ -379,21 +361,8 @@ module Musa
         @random = random
 
         _restart
-      end
 
-      def from=(from)
-        @from = from
-        adjust_step
-      end
-
-      def to=(to)
-        @to = to
-        adjust_step
-      end
-
-      def step=(step)
-        @step = step
-        adjust_step
+        mark_as_prototype!
       end
 
       def _restart
@@ -423,13 +392,23 @@ module Musa
     class FromHash
       include Serie
 
-      attr_accessor :sources, :cycle
+      attr_reader :sources, :cycle
 
       def initialize(series_hash, cycle_all_series)
-        @sources = series_hash
+        @sources = series_hash.clone.transform_values(&:prototype).freeze
         @cycle = cycle_all_series
 
         _restart false
+
+        mark_as_prototype!
+      end
+
+      def _prototype
+        @sources = @sources.clone.transform_values(&:prototype).freeze
+      end
+
+      def _instance
+        @sources = @sources.clone.transform_values(&:instance)
       end
 
       def _restart(restart_sources = true)
@@ -484,13 +463,23 @@ module Musa
     class FromArrayOfSeries
       include Serie
 
-      attr_accessor :sources, :cycle
+      attr_reader :sources, :cycle
 
       def initialize(series_array, cycle_all_series)
-        @sources = series_array
+        @sources = series_array.collect(&:prototype).freeze
         @cycle = cycle_all_series
 
         _restart false
+
+        mark_as_prototype!
+      end
+
+      def _prototype
+        @sources = @sources.collect(&:prototype).freeze
+      end
+
+      def _instance
+        @sources = @sources.collect(&:instance)
       end
 
       def _restart(restart_sources = true)
@@ -554,44 +543,24 @@ module Musa
         @amplitude = amplitude.to_f
         @center = center.to_f
 
-        @require_update = true
+        update
 
         _restart
+
+        mark_as_prototype!
       end
 
-      def start=(start)
-        @start = start.to_f
-        @require_update = true
-      end
-
-      def steps=(steps)
-        @steps = steps
-        @require_update = true
-      end
-
-      def amplitude=(amplitude)
-        @amplitude = amplitude.to_f
-        @require_update = true
-      end
-
-      def center=(center)
-        @center = center.to_f
-        @require_update = true
+      def _restart
+        @position = 0
       end
 
       def _next_value
-        update if @require_update
-
         value = nil
         unless @position >= @steps
           value = Math.sin(@offset + @step_size * @position) * @amplitude + @center
           @position += 1
         end
         value
-      end
-
-      def _restart
-        @position = 0
       end
 
       def to_s
@@ -601,8 +570,6 @@ module Musa
       private
 
       def update
-        @require_update = false
-
         y = (@start - @center) / @amplitude
         warn "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
         y = 1.0 if y > 1.0 # por los errores de precisión infinitesimal en el cálculo de y cuando es muy próximo a 1.0
@@ -620,6 +587,8 @@ module Musa
 
       def initialize
         _restart
+
+        mark_as_prototype!
       end
 
       def _restart
@@ -650,27 +619,17 @@ module Musa
       def initialize(error, extended)
         @error = error
         @extended = extended
+
         _restart
-      end
 
-      def error=(error)
-        @error = error
-        @needs_restart = true
-      end
-
-      def extended=(extended)
-        @extended = extended
-        @needs_restart = true
+        mark_as_prototype!
       end
 
       def _restart
         @harmonic = 0
-        @needs_restart = false
       end
 
       def _next_value
-        restart if @needs_restart
-
         begin
           @harmonic += 1
 

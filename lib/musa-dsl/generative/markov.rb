@@ -2,13 +2,15 @@ require 'musa-dsl/series'
 
 module Musa
 
+  # TODO: adapt to series prototyping
+
   class Markov
     include Serie
 
-    attr_accessor :start, :end, :random, :transitions
+    attr_accessor :start, :finish, :random, :transitions
 
     def initialize(transitions:, start:, finish: nil, random: nil)
-      @transitions = transitions
+      @transitions = transitions.clone.freeze
 
       @start = start
       @finish = finish
@@ -18,7 +20,7 @@ module Musa
 
       @procedure_binders = {}
 
-      restart
+      _restart
     end
 
     def _restart

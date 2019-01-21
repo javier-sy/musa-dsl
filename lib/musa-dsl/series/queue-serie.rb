@@ -1,5 +1,7 @@
 module Musa
   module Series
+    # TODO: adapt to series prototyping
+
     def QUEUE(*series)
       QueueSerie.new(series)
     end
@@ -10,14 +12,16 @@ module Musa
       attr_reader :targets, :target
 
       def initialize(series)
-        @targets = series.clone
+        @targets = series.collect(&:instance)
         @targets ||= []
+
+        mark_as_instance!
 
         _restart
       end
 
       def <<(serie)
-        @targets << serie
+        @targets << serie.instance
         check_current
         self
       end
@@ -26,6 +30,10 @@ module Musa
         @targets.clear
         restart
         self
+      end
+
+      def _prototype
+        raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
       end
 
       def _restart
