@@ -324,7 +324,7 @@ RSpec.describe Musa::Neumalang do
 
       scale = Musa::Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1 (+2.//)+3 0 +1'
+      neumas = '[0.1.mf +1 (+2.//)+3 0 +1]'
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new,

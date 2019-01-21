@@ -459,6 +459,8 @@ module Musa::Datasets
       end
 
       def parse(expression)
+        expression = expression.clone
+
         appogiatura_neuma = expression.find { |_| _.is_a?(Hash) && _[:appogiatura] }
         expression.delete appogiatura_neuma if appogiatura_neuma
 

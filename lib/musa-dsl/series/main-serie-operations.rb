@@ -118,11 +118,11 @@ module Musa
       attr_reader :sources
 
       def initialize(series)
-        if series[0].prototype?
-          @sources = series.collect(&:prototype).freeze
-        else
-          @sources = series.collect(&:instance)
-        end
+        @sources = if series[0].prototype?
+                     series.collect(&:prototype).freeze
+                   else
+                     series.collect(&:instance)
+                   end
 
         _restart false
 
@@ -803,6 +803,10 @@ module Musa
           _restart
 
           mark_as_instance!
+        end
+
+        def _prototype
+          raise PrototypingSerieError, 'Cannot get prototype of a cut serie'
         end
 
         def _restart
