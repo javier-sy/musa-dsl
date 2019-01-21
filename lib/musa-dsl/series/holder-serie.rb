@@ -1,5 +1,7 @@
 module Musa
   module Series
+    # TODO: adapt to series prototyping
+
     def HOLDER(serie = nil)
       Holder.new(serie)
     end
@@ -7,22 +9,31 @@ module Musa
     class Holder
       include Serie
 
-      attr_accessor :hold
-      attr_reader :next
+      attr_reader :hold, :next
 
       def initialize(serie)
-        @hold = serie
+        @hold = serie.instance if serie
         @next = []
+
+        mark_as_instance!
+      end
+
+      def hold=(serie)
+        @hold = serie.instance
       end
 
       def <<(serie)
         if @hold.nil?
-          @hold = serie
+          @hold = serie.instance
         else
-          @next << serie
+          @next << serie.instance
         end
 
         self
+      end
+
+      def _prototype
+        raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
       end
 
       def restart
@@ -71,6 +82,6 @@ module Musa
     # TODO add test case
     def hold
       Series::Holder.new self
-     end
+    end
   end
 end

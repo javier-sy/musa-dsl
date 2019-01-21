@@ -4,59 +4,81 @@ require 'musa-dsl/generative/generative-grammar'
 module Musa
   module SerieOperations end
 
-  module Serie
-    include SerieOperations
-
-    alias_method :d, :duplicate
-
-    def dr
-      duplicate.restart
-    end
-
+  module SeriePrototyping
     def prototype?
-      !!@is_prototype
+      @is_instance ? false : true
     end
 
-    def mark_as_prototype!
-      unless @is_prototype
-        restart
-        @is_prototype = true
-      end
-      self
+    def instance?
+      @is_instance ? true : false
     end
 
-    alias_method :p, :mark_as_prototype!
-
-    def instance
-      if @is_prototype
-        new = duplicate
-        new.mark_as_instance!
+    def prototype
+      if @is_instance
+        @instance_of || (@instance_of = clone.tap(&:_prototype).mark_as_prototype!)
       else
         self
       end
     end
 
-    alias_method :i, :instance
-
-    def mark_as_instance!
-      @is_prototype = false
-      restart
+    def _prototype
+      nil
     end
 
-    protected :mark_as_instance!
-
-    def pn
-      mark_as_prototype!.to_node
+    alias_method :p, :prototype
+    def mark_as_prototype!
+      @is_instance = nil
+      freeze
     end
 
-    class PrototypeSerieError < RuntimeError
-      def initialize
-        super
+    protected :_prototype, :mark_as_prototype!
+
+    def mark_regarding!(source)
+      if source.prototype?
+        mark_as_prototype!
+      else
+        mark_as_instance!
       end
     end
 
+    protected :mark_regarding!
+
+    def instance
+      if @is_instance
+        self
+      else
+        clone(freeze: false).tap(&:_instance).mark_as_instance!(self)
+      end
+    end
+
+    alias_method :i, :instance
+
+    def _instance
+      nil
+    end
+
+    def mark_as_instance!(prototype = nil)
+      @instance_of = prototype
+      @is_instance = true
+      self
+    end
+
+    protected :_instance, :mark_as_instance!
+
+    class PrototypingSerieError < RuntimeError
+      def initialize(message = nil)
+        message ||= 'This serie is a prototype serie: cannot be consumed. To consume the serie use an instance serie via .instance method'
+        super message
+      end
+    end
+  end
+
+  module Serie
+    include SeriePrototyping
+    include SerieOperations
+
     def restart
-      raise PrototypeSerieError if @is_prototype
+      raise PrototypingSerieError unless @is_instance
 
       @_have_peeked_next_value = false
       @_peeked_next_value = nil
@@ -69,7 +91,7 @@ module Musa
     end
 
     def next_value
-      raise PrototypeSerieError if @is_prototype
+      raise PrototypingSerieError unless @is_instance
 
       unless @_have_current_value && @_current_value.nil?
         if @_have_peeked_next_value
@@ -86,7 +108,7 @@ module Musa
     end
 
     def peek_next_value
-      raise PrototypeSerieError if @is_prototype
+      raise PrototypingSerieError unless @is_instance
 
       unless @_have_peeked_next_value
         @_have_peeked_next_value = true
@@ -97,7 +119,7 @@ module Musa
     end
 
     def current_value
-      raise PrototypeSerieError if @is_prototype
+      raise PrototypingSerieError unless @is_instance
 
       @_current_value
     end
@@ -134,7 +156,7 @@ module Musa
 
       recursive ||= false
 
-      dr ||= !prototype?
+      dr ||= instance?
 
       duplicate = dr if duplicate.nil?
       restart = dr if restart.nil?
@@ -144,6 +166,7 @@ module Musa
       array = []
 
       serie = instance
+
       serie = serie.duplicate if duplicate
       serie = serie.restart if restart
 

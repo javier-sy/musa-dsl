@@ -135,7 +135,10 @@ class Musa::BaseSequencer
       _numeric_at position + bars_delay.rationalize, control, with: with, debug: debug, &block
     else
       bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
+      bars_delay = bars_delay.instance if bars_delay
+
       with = Series::S(*with).repeat if with.is_a? Array
+      with = with.instance if with
 
       _serie_at bars_delay.eval { |delay| position + delay }, control, with: with, debug: debug, &block
     end
@@ -172,7 +175,10 @@ class Musa::BaseSequencer
       _numeric_at bar_position, control, with: with, debug: debug, &block
     else
       bar_position = Series::S(*bar_position) if bar_position.is_a? Array
+      bar_position = bar_position.instance if bar_position
+
       with = Series::S(*with).repeat if with.is_a? Array
+      with = with.instance if with
 
       _serie_at bar_position, control, with: with, debug: debug, &block
     end
@@ -188,7 +194,7 @@ class Musa::BaseSequencer
     control = PlayControl.new @event_handlers.last, after: after, capture_stdout: true
     @event_handlers.push control
 
-    _play serie, control, context, mode: mode, parameter: parameter, **mode_args, &block
+    _play serie.instance, control, context, mode: mode, parameter: parameter, **mode_args, &block
 
     @event_handlers.pop
 
