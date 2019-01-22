@@ -14,6 +14,8 @@ module Musa
       @block = block
     end
 
+    attr_accessor :block, :ticks
+
     def run
       @run = true
 
