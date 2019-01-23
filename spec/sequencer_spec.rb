@@ -17,6 +17,7 @@ end
 
 RSpec.describe Musa::Sequencer do
   context 'Basic sequencing' do
+
     it 'Basic at sequencing' do
       s = Musa::BaseSequencer.new 4, 4
 
@@ -845,5 +846,6 @@ RSpec.describe Musa::Sequencer do
       expect(f).to eq(1)
       expect(g).to eq(0)
     end
+
   end
 end

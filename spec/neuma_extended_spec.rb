@@ -209,12 +209,12 @@ RSpec.describe Musa::Neumalang do
     it 'Neuma parsing with mute extended notation' do
       scale = Musa::Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1 5.mute +2'
+      neumas = '0.1.mf +1 5.base +2'
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::MuteDecorator.new,
+        Musa::Datasets::GDV::BaseDecorator.new,
         base_duration: 1/4r,
         tick_duration: 1/96r
 
@@ -224,6 +224,7 @@ RSpec.describe Musa::Neumalang do
 
       expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(duration: 0)
       expect(result_gdv[c += 1]).to eq(grade: 7, octave: 0, duration: 1/4r, velocity: 1)
 
     end
@@ -318,10 +319,10 @@ RSpec.describe Musa::Neumalang do
 
       scale = Musa::Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1.*2 5.mute +2'
+      neumas = '0.1.mf +1.*2 5.b +2'
 
       decorators = Musa::Neuma::Dataset::Decorators.new \
-        Musa::Datasets::GDV::MuteDecorator.new,
+        Musa::Datasets::GDV::BaseDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/8r),
         base_duration: 1/4r,
@@ -381,6 +382,8 @@ RSpec.describe Musa::Neumalang do
                                { grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
                                { position: 1+1/4r },
                                { grade: 1, octave: 0, duration: 2/4r, velocity: 1 },
+                               { position: 1+3/4r },
+                               { duration: 0 },
                                { position: 1+3/4r },
                                { grade: 7, octave: 0, duration: 2/4r, velocity: 1 }])
       end

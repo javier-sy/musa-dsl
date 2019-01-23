@@ -208,11 +208,13 @@ module Musa::Datasets::GDV
     end
   end
 
-  # Process: .mute
-  class MuteDecorator < Decorator
+  # Process: .base .b
+  class BaseDecorator < Decorator
     def process(gdv, base_duration:, tick_duration:)
-      mute = gdv.delete :mute
-      mute ? { duration: 0 }.extend(Musa::Datasets::GDV) : gdv
+      base = gdv.delete :base
+      base ||= gdv.delete :b
+
+      base ? { duration: 0 }.extend(Musa::Datasets::GDV) : gdv
     end
   end
 

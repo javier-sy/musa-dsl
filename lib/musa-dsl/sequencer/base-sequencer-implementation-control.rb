@@ -21,12 +21,13 @@ class Musa::BaseSequencer
       end
     end
 
-    def on(event, only_once: nil, &block)
+    def on(event, name: nil, only_once: nil, &block)
       only_once ||= false
 
-      @handlers[event] ||= []
+      @handlers[event] ||= {}
+
       # TODO: add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
-      @handlers[event] << { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
+      @handlers[event][name] = { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
     end
 
     def launch(event, *value_parameters, **key_parameters)
@@ -37,12 +38,9 @@ class Musa::BaseSequencer
       processed = false
 
       if @handlers.key? event
-        @handlers[event].each_index do |i|
-          handler = @handlers[event][i]
-          next unless handler
-
+        @handlers[event].each do |name, handler|
           handler[:block]._call value_parameters, key_parameters
-          @handlers[event][i] = nil if handler[:only_once]
+          @handlers[event].delete name if handler[:only_once]
           processed = true
         end
       end
