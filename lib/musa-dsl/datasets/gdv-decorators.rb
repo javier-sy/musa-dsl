@@ -19,7 +19,7 @@ module Musa::Datasets::GDV
     end
   end
 
-  # Process: .mord
+  # Process: .mor
   class MordentDecorator < Decorator
     def initialize(duration_factor: nil)
       @duration_factor = duration_factor || 1/4r
@@ -207,4 +207,13 @@ module Musa::Datasets::GDV
       gdv
     end
   end
+
+  # Process: .mute
+  class MuteDecorator < Decorator
+    def process(gdv, base_duration:, tick_duration:)
+      mute = gdv.delete :mute
+      []
+    end
+  end
+
 end
