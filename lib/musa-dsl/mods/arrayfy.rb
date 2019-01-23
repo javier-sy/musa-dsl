@@ -1,6 +1,10 @@
 class Object
   def arrayfy
-    [self]
+    if nil?
+      []
+    else
+      [self]
+    end
   end
 end
 

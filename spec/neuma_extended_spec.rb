@@ -206,6 +206,28 @@ RSpec.describe Musa::Neumalang do
       expect(result_gdv[c += 1]).to eq(grade: 4, octave: 0, duration: 10/24r, velocity: 1)
     end
 
+    it 'Neuma parsing with mute extended notation' do
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas = '0.1.mf +1 5.mute +2'
+
+      decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
+
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::MuteDecorator.new,
+        base_duration: 1/4r,
+        tick_duration: 1/96r
+
+      result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
+
+      c = -1
+
+      expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 1, octave: 0, duration: 1/4r, velocity: 1)
+      expect(result_gdv[c += 1]).to eq(grade: 7, octave: 0, duration: 1/4r, velocity: 1)
+
+    end
+
     it 'Modifiers extended neuma parsing with sequencer play' do
       debug = false
       #debug = true
@@ -287,6 +309,80 @@ RSpec.describe Musa::Neumalang do
          { grade: 4, octave: 0, duration: 14/32r, velocity: 1 },
          { position: 2 },
          { grade: 2, octave: 0, duration: 1/2r, velocity: 1 }])
+      end
+    end
+
+    it 'Modifier .mute extended neuma parsing with sequencer play' do
+      debug = false
+      #debug = true
+
+      scale = Musa::Scales.et12[440.0].major[60]
+
+      neumas = '0.1.mf +1.*2 5.mute +2'
+
+      decorators = Musa::Neuma::Dataset::Decorators.new \
+        Musa::Datasets::GDV::MuteDecorator.new,
+        Musa::Datasets::GDV::TrillDecorator.new,
+        Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/8r),
+        base_duration: 1/4r,
+        tick_duration: 1/96r
+
+      gdv_decoder = Musa::Datasets::GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
+
+      serie = Musa::Neumalang.parse(neumas)
+
+      if debug
+        puts
+        puts 'SERIE'
+        puts '-----'
+        pp serie.to_a(recursive: true)
+        puts
+      end
+
+      played = {} if debug
+      played = [] unless debug
+
+      sequencer = Musa::Sequencer.new 4, 24 do
+        at 1 do
+          handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
+            if debug
+              played[position] ||= []
+              played[position] << gdv
+            else
+              played << { position: position }
+              played << gdv
+            end
+          end
+
+          handler.on :event do
+            if debug
+              played[position] ||= []
+              played[position] << [:event]
+            else
+              played << { position: position }
+              played << [:event]
+            end
+          end
+        end
+      end
+
+      sequencer.tick until sequencer.empty?
+
+      if debug
+        puts
+        puts 'PLAYED'
+        puts '------'
+        pp played
+      end
+
+      unless debug
+        expect(played).to eq(
+                              [{ position: 1 },
+                               { grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
+                               { position: 1+1/4r },
+                               { grade: 1, octave: 0, duration: 2/4r, velocity: 1 },
+                               { position: 1+3/4r },
+                               { grade: 7, octave: 0, duration: 2/4r, velocity: 1 }])
       end
     end
 

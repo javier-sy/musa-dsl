@@ -212,7 +212,7 @@ module Musa::Datasets::GDV
   class MuteDecorator < Decorator
     def process(gdv, base_duration:, tick_duration:)
       mute = gdv.delete :mute
-      []
+      mute ? { duration: 0 }.extend(Musa::Datasets::GDV) : gdv
     end
   end
 

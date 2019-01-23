@@ -87,14 +87,16 @@ module Musa
     def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, duration_offset: nil, effective_duration: nil, velocity_off: nil)
       pitch ||= pitchvalue
 
-      velocity ||= 63
+      if pitch
+        velocity ||= 63
 
-      duration_offset ||= -@tick_duration
-      effective_duration ||= [0, duration + duration_offset].max
+        duration_offset ||= -@tick_duration
+        effective_duration ||= [0, duration + duration_offset].max
 
-      velocity_off ||= 63
+        velocity_off ||= 63
 
-      NoteControl.new self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off
+        NoteControl.new self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off
+      end
     end
 
     def note_off(pitchvalue = nil, pitch: nil, velocity_off: nil, force: nil)
@@ -184,6 +186,7 @@ module Musa
         @voice = voice
 
         @pitch = pitch.arrayfy.explode_ranges
+
         @velocity = velocity.arrayfy.explode_ranges
         @velocity_off = velocity_off.arrayfy.explode_ranges
 
