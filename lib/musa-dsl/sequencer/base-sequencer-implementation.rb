@@ -43,50 +43,57 @@ class Musa::BaseSequencer
     if position != position.round
       original_position = position
       position = position.round.rationalize
-      _log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) to tick precision: #{position / @ticks_per_bar} (#{position})" if @do_log
+
+      if @do_log
+        _log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) "\
+          "to tick precision: #{position / @ticks_per_bar} (#{position})"
+      end
     end
 
     value_parameters = []
     value_parameters << with if !with.nil? && !with.is_a?(Hash)
 
-    block_key_parameters_binder = KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
+    if block_given?
+      block_key_parameters_binder =
+        KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
 
-    key_parameters = {}
-    key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
+      key_parameters = {}
+      key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
 
-    key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
+      key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
-    if position == @position
-      @debug_at.call if debug && @debug_at
+      if position == @position
+        @debug_at.call if debug && @debug_at
 
-      begin
-        locked = @@tick_mutex.try_lock
+        begin
+          locked = @@tick_mutex.try_lock
 
-        if locked
-          original_stdout = $stdout
-          original_stderr = $stderr
+          if locked
+            original_stdout = $stdout
+            original_stderr = $stderr
 
-          $stdout = control.stdout
-          $stderr = control.stderr
+            $stdout = control.stdout
+            $stderr = control.stderr
+          end
+
+          block_key_parameters_binder._call value_parameters, key_parameters
+        ensure
+          if locked
+            $stdout = original_stdout
+            $stderr = original_stderr
+          end
+
+          @@tick_mutex.unlock if locked
         end
 
-        block_key_parameters_binder._call value_parameters, key_parameters
-      ensure
-        if locked
-          $stdout = original_stdout
-          $stderr = original_stderr
-        end
+      elsif position > @position
+        @score[position] = [] unless @score[position]
 
-        @@tick_mutex.unlock if locked
+        @score[position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
+        @score[position] << { parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
+      else
+        _log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
       end
-
-    elsif position > @position
-      @score[position] = [] unless @score[position]
-
-      @score[position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
-      @score[position] << { parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
-    else
-      _log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
     end
 
     nil
@@ -116,7 +123,15 @@ class Musa::BaseSequencer
   end
 
   def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, __play_eval: nil, **mode_args, &block)
-    __play_eval ||= PlayEval.create mode, KeyParametersProcedureBinder.new(block, on_rescue: proc { |e| _rescue_block_error(e) }), decoder, nl_context
+
+    block ||= proc {}
+
+    __play_eval ||= PlayEval.create \
+      mode,
+      KeyParametersProcedureBinder.new(block,
+                                       on_rescue: proc { |e| _rescue_block_error(e) }),
+      decoder,
+      nl_context
 
     element = serie.next_value
 
@@ -133,7 +148,9 @@ class Musa::BaseSequencer
 
       when :event
 
-        control._launch operation[:current_event], operation[:current_value_parameters], operation[:current_key_parameters]
+        control._launch operation[:current_event],
+                        operation[:current_value_parameters],
+                        operation[:current_key_parameters]
 
       when :play
 
@@ -141,7 +158,10 @@ class Musa::BaseSequencer
         control3 = PlayControl.new control2
         control3.after { control3.launch :sync }
 
-        _play operation[:current_parameter].instance, control3, __play_eval: __play_eval.subcontext, **mode_args
+        _play operation[:current_parameter].instance,
+              control3,
+              __play_eval: __play_eval.subcontext,
+              **mode_args
 
         control2.on :sync do
           _play serie, control, __play_eval: __play_eval, **mode_args
@@ -153,7 +173,10 @@ class Musa::BaseSequencer
         control3 = PlayControl.new control2
         control3.after { control3.launch :sync }
 
-        _play operation[:current_parameter].instance, control3, __play_eval: WaitModePlayEval.new(__play_eval.block_procedure_binder), **mode_args
+        _play operation[:current_parameter].instance,
+              control3,
+              __play_eval: WaitModePlayEval.new(__play_eval.block_procedure_binder),
+              **mode_args
 
         control2.on :sync do
           _play serie, control, __play_eval: __play_eval, **mode_args
@@ -167,7 +190,10 @@ class Musa::BaseSequencer
           control3 = PlayControl.new control2
           control3.after { control3.launch :sync }
 
-          _play current_parameter.instance, control3, __play_eval: __play_eval.subcontext, **mode_args
+          _play current_parameter.instance,
+                control3,
+                __play_eval: __play_eval.subcontext,
+                **mode_args
         end
 
         counter = operation[:current_parameter].size
@@ -211,6 +237,9 @@ class Musa::BaseSequencer
   end
 
   def _every(binterval, control, block_procedure_binder: nil, &block)
+
+    block ||= proc {}
+
     block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
 
     _numeric_at position, control do
@@ -247,6 +276,8 @@ class Musa::BaseSequencer
     # from, to, step, (duration | till)
     # from, to, every, (duration | till)
     # from, step, every, (duration | till)
+
+    block ||= proc {}
 
     step = -step if step && to && ((step > 0 && to < from) || (step < 0 && from < to))
 
