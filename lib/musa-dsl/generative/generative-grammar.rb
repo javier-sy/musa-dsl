@@ -84,6 +84,16 @@ module Musa
         end
       end
 
+      def size
+        options.size
+      end
+
+      alias_method :length, :size
+
+      def [](index)
+        options[index].to_serie.to_node
+      end
+
       def to_serie(flatten: nil, &condition)
         flatten ||= true
 
