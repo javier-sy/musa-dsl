@@ -17,6 +17,7 @@ module Musa
     attr_accessor :block, :ticks
 
     def run
+      @on_start.each(&:call)
       @run = true
 
       while @run && eval_condition
@@ -24,6 +25,8 @@ module Musa
 
         Thread.pass
       end
+
+      @on_stop.each(&:call)
     end
 
     def terminate
