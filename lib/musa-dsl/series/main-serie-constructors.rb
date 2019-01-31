@@ -557,7 +557,7 @@ module Musa
       def _next_value
         value = nil
         unless @position >= @steps
-          value = Math.sin(@offset + @step_size * @position) * @amplitude + @center
+          value = Math.sin(@offset + @step_size * @position) * (@amplitude / 2.0) + @center
           @position += 1
         end
         value
