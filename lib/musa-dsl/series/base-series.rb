@@ -107,6 +107,8 @@ module Musa
       @_current_value
     end
 
+    alias_method :v, :next_value
+
     def peek_next_value
       raise PrototypingSerieError unless @is_instance
 
