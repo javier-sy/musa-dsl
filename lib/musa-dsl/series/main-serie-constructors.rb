@@ -75,9 +75,9 @@ module Musa
     end
 
     def SIN(start_value: nil, steps: nil, amplitude: nil, center: nil)
-      start_value ||= 0.0
       amplitude ||= 1.0
       center ||= 0.0
+      start_value ||= center
       SinFunction.new start_value, steps, amplitude, center
     end
 
@@ -570,7 +570,7 @@ module Musa
       private
 
       def update
-        y = (@start - @center) / @amplitude
+        y = 2 * (@start - @center) / @amplitude
         warn "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
         y = 1.0 if y > 1.0 # por los errores de precisión infinitesimal en el cálculo de y cuando es muy próximo a 1.0
         y = -1.0 if y < -1.0
