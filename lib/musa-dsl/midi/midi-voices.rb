@@ -1,3 +1,4 @@
+require 'set'
 require 'midi-message'
 
 require 'musa-dsl/mods/array-apply-get'
@@ -19,16 +20,10 @@ module Musa
     end
 
     def reset
-      @voices = @channels.collect { |channel| MIDIVoice.new sequencer: @sequencer, output: @output, channel: channel, log: @do_log }
+      @voices = @channels.collect { |channel| MIDIVoice.new sequencer: @sequencer, output: @output, channel: channel, log: @do_log }.freeze
     end
 
-    def [](index)
-      @voices[index]
-    end
-
-    def size
-      @voices.size
-    end
+    attr_reader :voices
 
     def fast_forward=(enabled)
       @voices.apply :fast_forward=, enabled
@@ -47,7 +42,7 @@ module Musa
 
   class MIDIVoice
     attr_accessor :name, :do_log
-    attr_reader :sequencer, :output, :channel, :used_pitches, :tick_duration
+    attr_reader :sequencer, :output, :channel, :active_pitches, :tick_duration
 
     def initialize(sequencer:, output:, channel:, name: nil, log: nil)
       log ||= false
@@ -62,8 +57,8 @@ module Musa
 
       @controllers_control = ControllersControl.new(@output, @channel)
 
-      @used_pitches = []
-      fill_used_pitches @used_pitches
+      @active_pitches = []
+      fill_active_pitches @active_pitches
 
       log 'Warning: voice without output' unless @output
 
@@ -73,7 +68,7 @@ module Musa
     def fast_forward=(enabled)
       if @fast_forward && !enabled
         (0..127).each do |pitch|
-          @output.puts MIDIMessage::NoteOn.new(@channel, pitch, @used_pitches[pitch][:velocity]) if @used_pitches[pitch][:counter] > 0
+          @output.puts MIDIMessage::NoteOn.new(@channel, pitch, @active_pitches[pitch][:velocity]) unless @active_pitches[pitch][:note_controls].empty?
         end
       end
 
@@ -95,16 +90,8 @@ module Musa
 
         velocity_off ||= 63
 
-        NoteControl.new self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off
+        NoteControl.new(self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off).note_on
       end
-    end
-
-    def note_off(pitchvalue = nil, pitch: nil, velocity_off: nil, force: nil)
-      pitch ||= pitchvalue
-      velocity_off ||= 63
-
-      NoteControl.new(self, pitch: pitch, velocity_off: velocity_off, play: false).note_off force: force
-      nil
     end
 
     def controller
@@ -120,8 +107,8 @@ module Musa
     end
 
     def all_notes_off
-      @used_pitches.clear
-      fill_used_pitches @used_pitches
+      @active_pitches.clear
+      fill_active_pitches @active_pitches
 
       @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x7b, 0)
     end
@@ -136,9 +123,9 @@ module Musa
 
     private
 
-    def fill_used_pitches(pitches)
+    def fill_active_pitches(pitches)
       (0..127).each do |pitch|
-        pitches[pitch] = { counter: 0, velocity: 0 }
+        pitches[pitch] = { note_controls: Set[], velocity: 0 }
       end
     end
 
@@ -178,9 +165,9 @@ module Musa
     private_constant :ControllersControl
 
     class NoteControl
-      def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil, play: nil)
-        play ||= true
+      attr_reader :start_position, :end_position
 
+      def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil)
         raise ArgumentError, "MIDIVoice: note duration should be nil or Numeric: #{duration} (#{duration.class})" unless duration.nil? || duration.is_a?(Numeric)
 
         @voice = voice
@@ -190,41 +177,46 @@ module Musa
         @velocity = velocity.arrayfy.explode_ranges
         @velocity_off = velocity_off.arrayfy.explode_ranges
 
+        @duration = duration
+
         @do_on_stop = []
         @do_after = []
 
-        if play
-          @pitch.each_index do |i|
-            pitch = @pitch[i]
-            velocity = @velocity[i % @velocity.size]
-            velocity_off = @velocity_off[i % @velocity_off.size]
+        @start_position = @end_position = nil
+      end
 
-            if !silence?(pitch)
-              @voice.used_pitches[pitch][:counter] += 1
-              @voice.used_pitches[pitch][:velocity] = velocity
+      def note_on
+        @start_position = @voice.sequencer.position
+        @end_position = nil
 
-              msg = MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity)
-              @voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{duration}"
-              @voice.output.puts msg if @voice.output && !@voice.fast_forward?
-            else
-              @voice.log "silence duration: #{duration}"
-            end
+        @pitch.each_index do |i|
+          pitch = @pitch[i]
+          velocity = @velocity[i % @velocity.size]
+
+          if !silence?(pitch)
+            @voice.active_pitches[pitch][:note_controls] << self
+            @voice.active_pitches[pitch][:velocity] = velocity
+
+            msg = MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity)
+            @voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{@duration}"
+            @voice.output.puts msg if @voice.output && !@voice.fast_forward?
+          else
+            @voice.log "silence duration: #{duration}"
           end
+        end
 
-          if duration
-            this = self
-            @voice.sequencer.wait duration do
-              this.note_off velocity: velocity_off
-            end
-          end
+        return self unless @duration
+
+        this = self
+        @voice.sequencer.wait @duration do
+          this.note_off velocity: @velocity_off
         end
 
         self
       end
 
-      def note_off(velocity: nil, force: nil)
+      def note_off(velocity: nil)
         velocity ||= @velocity_off
-        force ||= false
 
         velocity = velocity.arrayfy.explode_ranges
 
@@ -234,17 +226,16 @@ module Musa
 
           next if silence?(pitch)
 
-          @voice.used_pitches[pitch][:counter] = 1 if force
+          @voice.active_pitches[pitch][:note_controls].delete self
 
-          @voice.used_pitches[pitch][:counter] -= 1
-          @voice.used_pitches[pitch][:counter] = 0 if @voice.used_pitches[pitch][:counter] < 0
+          next unless @voice.active_pitches[pitch][:note_controls].empty?
 
-          next unless @voice.used_pitches[pitch][:counter] == 0
-
-          msg = MIDIMessage::NoteOff.new(@voice.channel, pitch, velocity)
+          msg = MIDIMessage::NoteOff.new(@voice.channel, pitch, velocity_off)
           @voice.log msg.verbose_name.to_s
           @voice.output.puts msg if @voice.output && !@voice.fast_forward?
         end
+
+        @end_position = @voice.sequencer.position
 
         @do_on_stop.each do |do_on_stop|
           @voice.sequencer.wait 0, &do_on_stop
@@ -257,8 +248,8 @@ module Musa
         nil
       end
 
-      def silence?(pitch)
-        pitch.nil? || pitch == :silence
+      def active?
+        @start_position && !@end_position
       end
 
       def on_stop(&block)
@@ -269,6 +260,12 @@ module Musa
       def after(bars = 0, &block)
         @do_after << { bars: bars.rationalize, block: block }
         nil
+      end
+
+      private
+
+      def silence?(pitch)
+        pitch.nil? || pitch == :silence
       end
     end
 
