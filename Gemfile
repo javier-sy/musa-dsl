@@ -10,6 +10,7 @@ group :transport do
 end
 
 group :test do
+  gem 'osc-ruby', '~> 1.1'
   gem 'rspec', '~> 3.0'
 end
 
