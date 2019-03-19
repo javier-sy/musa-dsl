@@ -1,4 +1,4 @@
-require 'musa-dsl/mods'
+require 'musa-dsl/core-ext'
 
 require 'musa-dsl/series'
 require 'musa-dsl/neuma'
