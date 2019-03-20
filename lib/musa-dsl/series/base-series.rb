@@ -1,4 +1,4 @@
-require 'musa-dsl/mods/duplicate'
+require 'musa-dsl/core-ext/duplicate'
 require 'musa-dsl/generative/generative-grammar'
 
 module Musa

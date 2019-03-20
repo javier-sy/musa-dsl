@@ -1,4 +1,4 @@
-require 'musa-dsl/mods/as-context-run'
+require 'musa-dsl/core-ext/as-context-run'
 
 module Musa
   class Darwin

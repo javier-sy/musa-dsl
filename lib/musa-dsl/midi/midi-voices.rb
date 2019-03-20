@@ -1,8 +1,8 @@
 require 'set'
 require 'midi-message'
 
-require 'musa-dsl/mods/array-apply-get'
-require 'musa-dsl/mods/arrayfy'
+require 'musa-dsl/core-ext/array-apply-get'
+require 'musa-dsl/core-ext/arrayfy'
 
 module Musa
   class MIDIVoices
