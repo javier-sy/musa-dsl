@@ -201,7 +201,7 @@ module Musa
             @voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{@duration}"
             @voice.output.puts msg if @voice.output && !@voice.fast_forward?
           else
-            @voice.log "silence duration: #{duration}"
+            @voice.log "silence duration: #{@duration}"
           end
         end
 
