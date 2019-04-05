@@ -562,7 +562,7 @@ module Musa
     end
 
     def inspect
-      "<NoteInScale: grade = #{@grade} octave = #{@octave} pitch = #{@pitch} scale = #{@scale}>"
+      "<NoteInScale: grade = #{@grade} octave = #{@octave} pitch = #{@pitch} scale = (#{@scale.kind.class.name} on #{scale.root_pitch})>"
     end
 
     alias to_s inspect
