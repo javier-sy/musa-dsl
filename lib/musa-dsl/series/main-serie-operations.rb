@@ -112,61 +112,6 @@ module Musa
     ### Implementation
     ###
 
-    class Sequence
-      include Serie
-
-      attr_reader :sources
-
-      def initialize(series)
-        @sources = if series[0].prototype?
-                     series.collect(&:prototype).freeze
-                   else
-                     series.collect(&:instance)
-                   end
-
-        _restart false
-
-        mark_regarding! series[0]
-      end
-
-      def _prototype
-        @sources = @sources.collect(&:prototype).freeze
-      end
-
-      def _instance
-        @sources = @sources.collect(&:instance)
-      end
-
-      def _restart(restart_sources = true)
-        @index = 0
-        @sources[@index].restart if restart_sources
-      end
-
-      def _next_value
-        value = nil
-
-        if @index < @sources.size
-          value = @sources[@index].next_value
-
-          if value.nil?
-            @index += 1
-            if @index < @sources.size
-              @sources[@index].restart
-              value = next_value
-            end
-          end
-        end
-
-        value
-      end
-
-      def infinite?
-        !!@sources.find(&:infinite?)
-      end
-    end
-
-    private_constant :Sequence
-
     class Selector
       include Serie
 

@@ -5,7 +5,7 @@ grammar Neumalang
 	end
 
 	rule sentences
-		(spaces (sentence spaces)*) <Musa::Neumalang::Sentences>
+		(spaces (sentence spaces)*) <Musa::Neumalang::Parser::Sentences>
 	end
 
 	rule sentence
@@ -21,27 +21,27 @@ grammar Neumalang
 	end
 
 	rule reference_expression
-		(ampersand spaces expression) { { kind: :reference, reference: capture(:expression).value } }
+		(ampersand spaces expression) <Musa::Neumalang::Parser::ReferenceExpression>
 	end
 
 	rule variable_assign
-		((use_variable spaces equal spaces)+ expression) { { kind: :assign_to, assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, assign_value: capture(:expression).value } }
+		((use_variable spaces equal spaces)+ expression) <Musa::Neumalang::Parser::VariableAssign>
 	end
 
 	rule event
-		(double_colon name parameters?) { { kind: :event, event: capture(:name).value.to_sym }.merge(capture(:parameters) ? capture(:parameters).value : {}) }
+		(double_colon name parameters?) <Musa::Neumalang::Parser::Event>
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace parameters?) { { kind: :command, command: eval("proc { #{capture(:complex_command).value.strip} }") }.merge(capture(:parameters) ? capture(:parameters).value : {}) }
+		(lbrace spaces complex_command spaces rbrace parameters?) <Musa::Neumalang::Parser::BracedCommand>
 	end
 
 	rule call_methods_expression
-		(object_expression (dot method_call)+) { { kind: :call_methods, call_methods: captures(:method_call).collect { |c| c.value }, on: capture(:object_expression).value } }
+		(object_expression (dot method_call)+) <Musa::Neumalang::Parser::CallMethodsExpression>
 	end
 
 	rule bracketed_expression
-		bracketed_2bar_sentences | bracketed_sentences
+		bracketed_bar_sentences | bracketed_sentences
 	end
 
 	rule method_call
@@ -49,7 +49,7 @@ grammar Neumalang
 	end
 
 	rule neuma
-        (appogiatura_neuma | simple_neuma)
+        appogiatura_neuma | simple_neuma
 	end
 
 	rule appogiatura_neuma
@@ -64,16 +64,16 @@ grammar Neumalang
 		number | symbol | string
 	end
 
-	rule bracketed_2bar_sentences
-		(lbracket spaces aa:sentences (double_bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Bracketed_2bar_sentences>
+	rule bracketed_bar_sentences
+		(lbracket spaces aa:sentences (bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Parser::BracketedBarSentences>
 	end
 
 	rule bracketed_sentences
-		(lbracket spaces sentences rbracket) <Musa::Neumalang::Bracketed_sentences>
+		(lbracket spaces sentences rbracket) <Musa::Neumalang::Parser::BracketedSentences>
 	end
 
 	rule use_variable
-		(at name) { { kind: :use_variable, use_variable: "@#{capture(:name).value}".to_sym } }
+		(at name) <Musa::Neumalang::Parser::UseVariable>
 	end
 
 	rule parameters
@@ -114,20 +114,20 @@ grammar Neumalang
 	end
 
 	rule complex_command
-		(everything_except_braces? lbrace spaces complex_command spaces rbrace)* everything_except_braces?
+	    (everything_except_braces? lbrace spaces complex_command spaces rbrace)* everything_except_braces?
 	end
 
 
 	rule neuma_as_dotted_attributes_beginning_with_simple_attribute
-		 (a:simple_attribute (dot b:attribute)*) { { kind: :neuma, neuma: (capture(:a) ? [ capture(:a).value ] : []) + captures(:b).collect { |c| c.value } } }
+	    (a:simple_attribute (dot b:attribute)*) <Musa::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithSimpleAttribute>
 	end
 
 	rule neuma_as_dotted_attributes_beginning_with_dot
-		((dot attribute)+ | dot) { { kind: :neuma, neuma: (capture(:attribute) ? [ nil ] : []) + captures(:attribute).collect { |c| c.value } } }
+	    ((dot attribute)+ | dot) <Musa::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithDot>
 	end
 
 	rule neuma_between_angles_attributes
-		(langle spaces simple_attribute? spaces (attribute spaces)* rangle) { { kind: :neuma, neuma: (capture(:simple_attribute) ? [capture(:simple_attribute).value] : []) + captures(:attribute).collect { |c| c.value } } }
+		(langle spaces simple_attribute? spaces (attribute spaces)* rangle) <Musa::Neumalang::Parser::NeumaBetweenAnglesAttributes>
 	end
 
     rule attribute
@@ -177,7 +177,7 @@ grammar Neumalang
   	end
 
   	rule symbol
-  		(colon name) { { kind: :value, value: capture(:name).value.to_sym } }
+  		(colon name) <Musa::Neumalang::Parser::Symbol>
   	end
 
   	rule raw_symbol
@@ -185,7 +185,7 @@ grammar Neumalang
   	end
 
   	rule string
-  		(double_quote everything_except_double_quote double_quote) { { kind: :value, value: capture(:everything_except_double_quote).value } }
+  		(double_quote everything_except_double_quote double_quote) <Musa::Neumalang::Parser::String>
   	end
 
   	rule raw_string
@@ -193,7 +193,7 @@ grammar Neumalang
   	end
 
   	rule float
-    	(single_quote str:(digits dot digits) spaces) { { kind: :value, value: capture(:str).value.to_f } }
+    	(single_quote str:(digits dot digits) spaces) <Musa::Neumalang::Parser::Float>
   	end
 
   	rule raw_float
@@ -201,7 +201,7 @@ grammar Neumalang
   	end
 
   	rule integer
-    	(single_quote digits spaces) { { kind: :value, value: capture(:digits).value.to_i } }
+    	(single_quote digits spaces) <Musa::Neumalang::Parser::Integer>
   	end
 
   	rule raw_integer
@@ -209,7 +209,7 @@ grammar Neumalang
   	end
 
   	rule rational
-    	(single_quote str:(digits slash digits) spaces) { { kind: :value, value: capture(:str).value.to_r } }
+    	(single_quote str:(digits slash digits) spaces) <Musa::Neumalang::Parser::Rational>
   	end
 
   	rule raw_rational
@@ -270,7 +270,7 @@ grammar Neumalang
 	rule comma ',' end
 	rule colon ':' end
 	rule double_colon '::' end
-	rule double_bar '||' end
+	rule bar '|' end
 	rule slash '/' end
 	rule lpar '(' end
 	rule rpar ')' end

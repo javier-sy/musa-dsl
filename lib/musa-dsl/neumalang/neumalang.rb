@@ -2,27 +2,134 @@ require 'musa-dsl/series'
 require 'citrus'
 
 module Musa::Neumalang
-  module Sentences
-    include Musa::Series
+  module Parser
+    module Sentences
+      include Musa::Series
 
-    def value
-      S(*captures(:sentence).collect(&:value))
+      def value
+        _SE(captures(:sentence).collect(&:value), extends: Neumas)
+      end
     end
-  end
 
-  module Bracketed_2bar_sentences
-    include Musa::Series
+    module BracketedBarSentences
+      include Musa::Series
 
-    def value
-      { kind: :parallel, parallel: [{ kind: :serie, serie: S(*capture(:aa).value) }] + captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } } }
+      def value
+        { kind: :parallel,
+          parallel: [{ kind: :serie, serie: S(*capture(:aa).value) }] + captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } }
+        }.extend(Neuma::Parallel)
+      end
     end
-  end
 
-  module Bracketed_sentences
-    include Musa::Series
+    module BracketedSentences
+      include Musa::Series
 
-    def value
-      { kind: :serie, serie: S(*capture(:sentences).value) }
+      def value
+        { kind: :serie,
+          serie: S(*capture(:sentences).value) }.extend Neuma
+      end
+    end
+
+    module ReferenceExpression
+      def value
+        { kind: :reference,
+          reference: capture(:expression).value }.extend Neuma
+      end
+    end
+
+    module VariableAssign
+      def value
+        { kind: :assign_to,
+          assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, assign_value: capture(:expression).value
+        }.extend Neuma
+      end
+    end
+
+    module Event
+      def value
+        { kind: :event,
+          event: capture(:name).value.to_sym
+        }.merge(capture(:parameters) ? capture(:parameters).value : {}).extend Neuma
+      end
+    end
+
+    module BracedCommand
+      def value
+        { kind: :command,
+          command: eval("proc { #{capture(:complex_command).value.strip} }")
+        }.merge(capture(:parameters) ? capture(:parameters).value : {}).extend Neuma
+      end
+    end
+
+    module CallMethodsExpression
+      def value
+        { kind: :call_methods,
+          call_methods: captures(:method_call).collect(&:value),
+          on: capture(:object_expression).value }.extend Neuma
+      end
+    end
+
+    module UseVariable
+      def value
+        { kind: :use_variable,
+          use_variable: "@#{capture(:name).value}".to_sym }.extend Neuma
+      end
+    end
+
+    module NeumaAsDottedAttributesBeginningWithSimpleAttribute
+      def value
+        { kind: :neuma,
+          neuma: (capture(:a) ? [capture(:a).value] : []) + captures(:b).collect(&:value) }.extend Neuma
+      end
+    end
+
+    module NeumaAsDottedAttributesBeginningWithDot
+      def value
+        { kind: :neuma,
+          neuma: (capture(:attribute) ? [ nil ] : []) + captures(:attribute).collect(&:value) }.extend Neuma
+      end
+    end
+
+    module NeumaBetweenAnglesAttributes
+      def value
+        { kind: :neuma,
+          neuma: (capture(:simple_attribute) ? [capture(:simple_attribute).value] : []) + captures(:attribute).collect(&:value) }.extend Neuma
+      end
+    end
+
+    module Symbol
+      def value
+        { kind: :value,
+          value: capture(:name).value.to_sym }.extend Neuma
+      end
+    end
+
+    module String
+      def value
+        { kind: :value,
+          value: capture(:everything_except_double_quote).value }.extend Neuma
+      end
+    end
+
+    module Float
+      def value
+        { kind: :value,
+          value: capture(:str).value.to_f }.extend Neuma
+      end
+    end
+
+    module Integer
+      def value
+        { kind: :value,
+          value: capture(:digits).value.to_i }.extend Neuma
+      end
+    end
+
+    module Rational
+      def value
+        { kind: :value,
+          value: capture(:str).value.to_r }.extend Neuma
+      end
     end
   end
 

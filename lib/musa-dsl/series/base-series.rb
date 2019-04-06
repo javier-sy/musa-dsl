@@ -189,7 +189,7 @@ module Musa
       Nodificator.to_node(self, **attributes)
     end
 
-    alias_method :n, :to_node
+    alias_method :node, :to_node
 
     class Nodificator
       extend Musa::GenerativeGrammar

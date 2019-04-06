@@ -9,7 +9,7 @@ X
 
 { { :grade_x=>6, :octave_x=>0, :duration=>100, :velocity_x=>3 }.extend(Musa::Datasets::GDV) }
 
-[ I  III V ||
+[ I  III V |
   II IV  VI [I I I]]
 
 V VI VII
@@ -27,7 +27,7 @@ I I I
 
 [I II III].reverse.duplicate
 
-[I III V || II IV VI].reverse
+[I III V | II IV VI].reverse
 
 @a.reverse
 

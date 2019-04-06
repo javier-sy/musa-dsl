@@ -2,7 +2,7 @@ require 'musa-dsl/neuma'
 
 module Musa::Datasets
   module GDVd
-    include Musa::Neuma::Dataset
+    include Musa::Neumalang::Dataset
 
     NaturalKeys = [:abs_grade, :abs_sharps, :abs_octave,
                    :delta_grade, :delta_sharps, :delta_interval_sign, :delta_interval, :delta_octave,
@@ -315,7 +315,7 @@ module Musa::Datasets
       end
     end
 
-    class NeumaDifferentialDecoder < Musa::Neuma::DifferentialDecoder # to get a GDVd
+    class NeumaDifferentialDecoder < Musa::Neumalang::DifferentialDecoder # to get a GDVd
       def initialize(base_duration: nil)
         @base_duration = base_duration || Rational(1,4)
       end
@@ -327,7 +327,7 @@ module Musa::Datasets
   end
 
   module GDV
-    include Musa::Neuma::Dataset
+    include Musa::Neumalang::Dataset
 
     NaturalKeys = [:grade, :sharps, :octave, :duration, :velocity, :silence].freeze
 
@@ -447,7 +447,7 @@ module Musa::Datasets
       r
     end
 
-    class NeumaDecoder < Musa::Neuma::Decoder # to get a GDV
+    class NeumaDecoder < Musa::Neumalang::Decoder # to get a GDV
       def initialize(scale, base_duration: nil, processor: nil, **base)
         @base_duration = base_duration || Rational(1,4)
 

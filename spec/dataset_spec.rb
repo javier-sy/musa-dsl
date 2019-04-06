@@ -2,11 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-RSpec.describe Musa::Neuma do
+RSpec.describe Musa::Neumalang do
   context 'Dataset transformations' do
     GDV = Musa::Datasets::GDV
     GDVd = Musa::Datasets::GDVd
-=begin
+
     it 'GDV to PDV' do
       scale = Musa::Scales.default_system.default_tuning.major[60]
 
@@ -29,7 +29,7 @@ RSpec.describe Musa::Neuma do
       h = { duration: 0 }.extend GDV
       expect(h.to_pdv(scale)).to eq(duration: 0)
     end
-=end
+
     it 'GDV neuma to PDV and back to neuma via GDV::NeumaDecoder' do
       gdv_abs_neumas_1 = '0.o+0.1.p 0.o+1.2.p 3#.o+1.2.p 0.o-1.3.p 2_.o+0.3.fff 1.o+0.2.fff 5.o+1.1/2.ppp silence.1/2.ppp'
       gdv_abs_neumas_2 = '0.o+0.1.p 0.o+1.2.p 3#.o+1.2.p 0.o-1.3.p 1#.o+0.3.fff 1.o+0.2.fff 5.o+1.1/2.ppp silence.1/2.ppp'
@@ -50,7 +50,7 @@ RSpec.describe Musa::Neuma do
 
       expect(result).to eq(gdv_abs_neumas_2)
     end
-=begin
+
     it 'GDV neuma to GDVd neuma via GDV::NeumaDecoder' do
       gdv_abs_neumas = '0.1.p 0.2.p 0.3.p 0#.3.p 1.3.p 2_ 2.3.fff 1.2.fff 5.1/2.ppp silence.1'
       gdv_diff_neumas = '0.1.p .+1 .+1 +# +1_ +1_ +#.+fffff -1.-1 +4.-3/2.-fffffff silence.+1/2'
@@ -126,6 +126,5 @@ RSpec.describe Musa::Neuma do
       expect(result_gdv[c += 1]).to eq(grade: 3, sharps: 1, octave: 0, duration: 1/4r, velocity: 1)
       expect(result_gdv[c += 1]).to eq(grade: 3, octave: 0, duration: 1/4r, velocity: 1)
     end
-=end
   end
 end

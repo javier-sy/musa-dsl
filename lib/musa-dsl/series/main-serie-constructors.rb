@@ -12,6 +12,10 @@ module Musa
       FromArray.new values.explode_ranges
     end
 
+    def _SE(values, extends:)
+      FromArray.new values.explode_ranges, extends
+    end
+
     def H(**series_hash)
       FromHash.new series_hash, false
     end
@@ -57,6 +61,10 @@ module Musa
       else
         raise ArgumentError, 'cannot use values and from:/to:/step: together'
       end
+    end
+
+    def MERGE(*values)
+      Sequence.new(values)
     end
 
     def RND1(*values, from: nil, to: nil, step: nil, random: nil)
@@ -109,9 +117,11 @@ module Musa
 
       attr_reader :values
 
-      def initialize(values = nil)
+      def initialize(values = nil, extends = nil)
         @values = values.clone.freeze
         @index = 0
+
+        extends.arrayfy.each { |e| extend(e) }
 
         mark_as_prototype!
       end
@@ -133,6 +143,61 @@ module Musa
     end
 
     private_constant :FromArray
+
+    class Sequence
+      include Serie
+
+      attr_reader :sources
+
+      def initialize(series)
+        @sources = if series[0].prototype?
+                     series.collect(&:prototype).freeze
+                   else
+                     series.collect(&:instance)
+                   end
+
+        _restart false
+
+        mark_regarding! series[0]
+      end
+
+      def _prototype
+        @sources = @sources.collect(&:prototype).freeze
+      end
+
+      def _instance
+        @sources = @sources.collect(&:instance)
+      end
+
+      def _restart(restart_sources = true)
+        @index = 0
+        @sources[@index].restart if restart_sources
+      end
+
+      def _next_value
+        value = nil
+
+        if @index < @sources.size
+          value = @sources[@index].next_value
+
+          if value.nil?
+            @index += 1
+            if @index < @sources.size
+              @sources[@index].restart
+              value = next_value
+            end
+          end
+        end
+
+        value
+      end
+
+      def infinite?
+        !!@sources.find(&:infinite?)
+      end
+    end
+
+    private_constant :Sequence
 
     class FromAutoEvalBlockOnSeed
       include Serie

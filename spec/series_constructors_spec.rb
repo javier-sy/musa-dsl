@@ -255,6 +255,96 @@ RSpec.describe Musa::Serie do
       expect(s1.next_value).to eq nil
     end
 
+    it 'MERGE S(1, 2, 3), S(4, 5, 6), S(7, 8, 9)' do
+      s = MERGE(S(1, 2, 3), S(4, 5, 6), S(7, 8, 9)).i
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.current_value).to eq nil
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.current_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
     it 'FOR(from: 10, to: 8.75, step: Rational(1, 4))' do
       s1 = FOR(from: 10, to: 8.75, step: Rational(1, 4)).i
 

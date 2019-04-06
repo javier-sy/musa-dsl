@@ -168,5 +168,58 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 1, duration: 1/4r, velocity: 0)
     end
 
+    it 'Array of strings to neuma conversion' do
+      neumas = ['1.2.3 a.b.c', '2.3.4 x.y.z'].n.to_a
+
+      c = -1
+
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["1", "2", "3"])
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["a", { modifier: :b }, { modifier: :c }])
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["2", "3", "4"])
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["x", { modifier: :y }, { modifier: :z }])
+    end
+
+    it 'Array of neumas to neumas serie conversion' do
+      neumas = ['1.2.3 a.b.c'.n, '2.3.4 x.y.z'.n].n.to_a
+
+      c = -1
+
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["1", "2", "3"])
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["a", { modifier: :b }, { modifier: :c }])
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["2", "3", "4"])
+      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: ["x", { modifier: :y }, { modifier: :z }])
+    end
+
+    it 'Neumas strings parallelized via Ruby |' do
+      neumas = '1.2.3 a.b.c' | '2.3.4 x.y.z' | '3.4.5 a.b.c'
+
+      expect(neumas).to be_a(Musa::Neumalang::Neuma)
+      expect(neumas).to be_a(Musa::Neumalang::Neuma::Parallel)
+
+      expect(neumas[:parallel].length).to eq 3
+    end
+
+    it '2 neumas strings parallelized via internal neumalang parallelization are equal to Ruby parallelization' do
+      neumas_a = ['1.2.3 a.b.c' | '2.3.4 x.y.z'].n
+      neumas_b = '[1.2.3 a.b.c | 2.3.4 x.y.z]'.n
+
+      expect(neumas_a.to_a(recursive: true)).to eq(neumas_b.to_a(recursive: true))
+    end
+
+    it '3 neumas strings parallelized via internal neumalang parallelization are equal to Ruby parallelization' do
+      neumas_a = ['1.2.3 a.b.c' | '2.3.4 x.y.z' | '3.4.5 a.b.c'].n
+      neumas_b = '[ 1.2.3 a.b.c | 2.3.4 x.y.z | 3.4.5 a.b.c ]'.n
+
+      expect(neumas_a.to_a(recursive: true)).to eq(neumas_b.to_a(recursive: true))
+    end
+
+    it 'neumas rendering' do
+      r = ['1.2.3 a.b.c' | '2.3.4 x.y.z' | '3.4.5 a.b.c'].n.render
+
+      # TODO !!!!
+      #
+      expect(r).to eq(nil)
+    end
+
   end
 end

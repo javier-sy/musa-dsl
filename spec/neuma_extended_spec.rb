@@ -137,7 +137,7 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new(min_duration_factor: 1/6r)
 
       result_gdv = Musa::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
@@ -159,7 +159,7 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new(duration_factor: 1/6r),
         base_duration: 1/4r,
@@ -185,7 +185,7 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/6r),
@@ -213,7 +213,7 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::BaseDecorator.new,
         base_duration: 1/4r,
         tick_duration: 1/96r
@@ -237,7 +237,7 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1.mor +3.+1.mor(low) -2'
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/8r),
@@ -321,7 +321,7 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1.*2 5.b +2'
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::BaseDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new(duration_factor: 1/8r),
@@ -398,7 +398,7 @@ RSpec.describe Musa::Neumalang do
 
       decoder = Musa::Datasets::GDV::NeumaDecoder.new scale
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new,
@@ -425,7 +425,7 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '[0.1.mf +1 (+2.//)+3 0 +1]'
 
-      decorators = Musa::Neuma::Dataset::Decorators.new \
+      decorators = Musa::Neumalang::Dataset::Decorators.new \
         Musa::Datasets::GDV::StaccatoDecorator.new,
         Musa::Datasets::GDV::TrillDecorator.new,
         Musa::Datasets::GDV::MordentDecorator.new,
