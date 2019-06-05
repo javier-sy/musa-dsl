@@ -458,6 +458,8 @@ module Musa::Datasets
         super base, processor: processor
       end
 
+      attr_accessor :scale, :base_duration
+
       def parse(expression)
         expression = expression.clone
 

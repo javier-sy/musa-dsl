@@ -150,6 +150,7 @@ module Musa::Neumalang
       @processor = processor
     end
 
+    attr_accessor :processor
     attr_reader :base
 
     def base=(base)
