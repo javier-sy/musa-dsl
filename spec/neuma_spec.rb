@@ -213,13 +213,5 @@ RSpec.describe Musa::Neumalang do
       expect(neumas_a.to_a(recursive: true)).to eq(neumas_b.to_a(recursive: true))
     end
 
-    it 'neumas rendering' do
-      r = ['1.2.3 a.b.c' | '2.3.4 x.y.z' | '3.4.5 a.b.c'].n.render
-
-      # TODO !!!!
-      #
-      expect(r).to eq(nil)
-    end
-
   end
 end
