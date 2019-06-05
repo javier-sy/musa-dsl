@@ -2,7 +2,7 @@ require 'musa-dsl/transport/input-midi-clock'
 require 'musa-dsl/transport/dummy-clock'
 require 'musa-dsl/sequencer'
 
-require 'musa-dsl/mods/key-parameters-procedure-binder'
+require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 
 module Musa
   class Transport

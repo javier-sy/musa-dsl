@@ -2,7 +2,7 @@ require 'musa-dsl/neuma'
 
 module Musa::Datasets
   module PDV
-    include Musa::Neuma::Dataset
+    include Musa::Neumalang::Dataset
 
     NaturalKeys = [:pitch, :duration, :velocity].freeze
 

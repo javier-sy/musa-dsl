@@ -1,23 +1,23 @@
 @b = @a = [I.1.ff . .*1/2 . 2]
 
 @c = 	[ ::event1([100], @b)
-		  || ::event2 100.200.300
-		  || ::event3(·100, <I 2 ff>, ·300)
-		  || ::event4(:simbolo) ]
+		  | ::event2 100.200.300
+		  | ::event3(·100, <I 2 ff>, ·300)
+		  | ::event4(:simbolo) ]
 
 
-@a 
+@a
 
 [ @a silence.2 @a ]
 
-[ @a1 @a2 @a3 || @b1 @b2 || @c ]
+[ @a1 @a2 @a3 | @b1 @b2 | @c ]
 
-[@a||@b]
+[@a|@b]
 
-[ a || b || c ]
+[ a | b | c ]
 
 
-[ @b = [ 1.2.p 2 1 2 ] @b || silence.4 @b.reverse(·199).other_operation(@xxx).another_more("esto es un texto string") @b.inverse ]
+[ @b = [ 1.2.p 2 1 2 ] @b | silence.4 @b.reverse(·199).other_operation(@xxx).another_more("esto es un texto string") @b.inverse ]
 
 ::event_with_key_parameters(a: ·100.25, b: ·200, c: [1.2.f <3 2 p>])
 
@@ -27,6 +27,6 @@
 
 # @var = x			asignación, sin usar, var es una serie
 # @var.operation	operación sobre la serie
-# || 				sincroniza con el bloque anterior (temporalmente en paralelo)
+# | 				sincroniza con el bloque anterior (temporalmente en paralelo)
 # [ ... ]			bloque (anidable)
 

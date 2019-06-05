@@ -123,7 +123,7 @@ class Musa::BaseSequencer
     end
 
     def eval_element(element)
-      if element.is_a? Musa::Neuma::Dataset
+      if element.is_a? Musa::Neumalang::Dataset
         element
       else
         case element[:kind]
@@ -234,7 +234,7 @@ class Musa::BaseSequencer
         { current_operation: :none,
           continue_operation: :now }
 
-      when Musa::Neuma::Dataset
+      when Musa::Neumalang::Dataset
 
         { current_operation: :block,
           current_parameter: element,

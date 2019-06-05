@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-require 'musa-dsl/mods/duplicate.rb'
+require 'musa-dsl/core-ext/duplicate.rb'
 
 describe Duplicate do
 

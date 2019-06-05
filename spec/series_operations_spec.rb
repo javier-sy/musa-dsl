@@ -328,7 +328,10 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Multiplex' do
-      s = S(0, 1, 2).multiplex(S(100, 200, 300, 400, 500), S(1000, 2000, 3000, 4000, 5000), S(10000, 20000, 30000, 40000, 50000)).i
+      s = S(0, 1, 2).multiplex(
+            S(100, 200, 300, 400, 500),
+            S(1000, 2000, 3000, 4000, 5000),
+            S(10000, 20000, 30000, 40000, 50000)).i
 
       expect(s.next_value).to eq 100
       expect(s.next_value).to eq 2000
@@ -690,8 +693,8 @@ RSpec.describe Musa::Serie do
     include Musa::GenerativeGrammar
 
     it 'Generative grammar nodes of series to serie' do
-      a = S(1, 2).n
-      b = S(3, 4).n
+      a = S(1, 2).node
+      b = S(3, 4).node
 
       s = (a + b | b)
 
@@ -701,8 +704,8 @@ RSpec.describe Musa::Serie do
     end
 
     it 'Generative grammar nodes and series interoperability' do
-      a = '1'.neu.n
-      b = '2'.neu.n
+      a = '1'.neumas.node
+      b = '2'.nn
 
       s = a + b
 

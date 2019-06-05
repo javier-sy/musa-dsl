@@ -1,5 +1,5 @@
-require 'musa-dsl/mods/arrayfy'
-require 'musa-dsl/mods/key-parameters-procedure-binder'
+require 'musa-dsl/core-ext/arrayfy'
+require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 
 require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'

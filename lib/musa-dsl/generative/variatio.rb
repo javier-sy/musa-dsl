@@ -1,5 +1,5 @@
-require 'musa-dsl/mods/key-parameters-procedure-binder'
-require 'musa-dsl/mods/arrayfy'
+require 'musa-dsl/core-ext/key-parameters-procedure-binder'
+require 'musa-dsl/core-ext/arrayfy'
 
 # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 

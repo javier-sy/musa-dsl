@@ -1,5 +1,5 @@
-require 'musa-dsl/mods/as-context-run'
-require 'musa-dsl/mods/key-parameters-procedure-binder'
+require 'musa-dsl/core-ext/as-context-run'
+require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 
 module Musa
   class Rules
