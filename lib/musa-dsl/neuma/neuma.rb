@@ -1,10 +1,6 @@
 module Musa::Neumalang
   module Neumas # Neumas serie
     # TODO implementar | ???? neumas | neumas = parallel neumas, no?
-
-    def render
-
-    end
   end
 
   module Neuma
