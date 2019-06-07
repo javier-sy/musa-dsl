@@ -68,6 +68,8 @@ module Musa
       FromEvalBlockOnSerie.new self, with: with, on_restart: on_restart, &block
     end
 
+    alias_method :map, :eval
+
     def select(block = nil, &yield_block)
       block ||= yield_block
       SelectOnSerie.new self, &block
