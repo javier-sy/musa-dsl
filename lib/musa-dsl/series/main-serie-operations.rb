@@ -68,9 +68,14 @@ module Musa
       FromEvalBlockOnSerie.new self, with: with, on_restart: on_restart, &block
     end
 
+    def select(block = nil, &yield_block)
+      block ||= yield_block
+      SelectOnSerie.new self, &block
+    end
+
     # TODO: test case
-    def select(*indexed_series, **hash_series)
-      Selector.new self, indexed_series, hash_series
+    def switch(*indexed_series, **hash_series)
+      Switcher.new self, indexed_series, hash_series
     end
 
     def multiplex(*indexed_series, **hash_series)
@@ -78,8 +83,8 @@ module Musa
     end
 
     # TODO: test case
-    def select_serie(*indexed_series, **hash_series)
-      SelectorFullSerie.new self, indexed_series, hash_series
+    def switch_serie(*indexed_series, **hash_series)
+      SwitchFullSerie.new self, indexed_series, hash_series
     end
 
     def after(*series)
@@ -112,7 +117,7 @@ module Musa
     ### Implementation
     ###
 
-    class Selector
+    class Switcher
       include Serie
 
       attr_accessor :selector, :sources
@@ -168,7 +173,7 @@ module Musa
       end
     end
 
-    private_constant :Selector
+    private_constant :Switcher
 
     class MultiplexSelector
       include Serie
@@ -237,7 +242,7 @@ module Musa
 
     private_constant :MultiplexSelector
 
-    class SelectorFullSerie
+    class SwitchFullSerie
       include Serie
 
       attr_accessor :selector, :sources
@@ -295,7 +300,7 @@ module Musa
       end
     end
 
-    private_constant :SelectorFullSerie
+    private_constant :SwitchFullSerie
 
     class InfiniteRepeater
       include Serie
@@ -990,7 +995,44 @@ module Musa
       end
     end
 
-    private_constant :Shifter
+    private_constant :Remover
+
+    class SelectOnSerie
+      include Serie
+
+      attr_reader :source, :remove
+
+      def initialize(serie, &block)
+        @source = serie
+        @block = block
+
+        _restart false
+
+        mark_regarding! @source
+      end
+
+      def _prototype
+        @source = @source.prototype
+      end
+
+      def _instance
+        @source = @source.instance
+      end
+
+      def _restart(restart_sources = true)
+        @source.restart if restart_sources
+      end
+
+      def _next_value
+        value = @source.next_value
+        until value.nil? || @block.call(value)
+          value = @source.next_value
+        end
+        value
+      end
+    end
+
+    private_constant :SelectOnSerie
 
     class FromEvalBlockOnSerie
       include Serie

@@ -671,6 +671,31 @@ RSpec.describe Musa::Serie do
       expect(ss.next_value).to eq nil
     end
 
+    it 'Serie select' do
+      s = S(1, 2, 3, 4, 5, 6)
+
+      ss = s.select { |i| i % 2 == 0 }.i
+
+      expect(ss.next_value).to eq 2
+      expect(ss.next_value).to eq 4
+      expect(ss.next_value).to eq 6
+
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+
+      ss.restart
+
+      expect(ss.next_value).to eq 2
+      expect(ss.next_value).to eq 4
+      expect(ss.next_value).to eq 6
+
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+      expect(ss.next_value).to eq nil
+    end
+
+
     it 'Generative grammar nodes of series to serie' do
       a = N(1)
       b = N(2)
