@@ -42,11 +42,6 @@ module Musa
     end
 
     # TODO: test case
-    def remove(positions)
-      Remover.new self, positions
-    end
-
-    # TODO: test case
     def lock
       Locker.new self
     end
@@ -70,9 +65,16 @@ module Musa
 
     alias_method :map, :eval
 
-    def select(block = nil, &yield_block)
+    def remove(block = nil, &yield_block)
+      # TODO make history an optional block parameter (via keyparametersprocedurebinder)
       block ||= yield_block
-      SelectOnSerie.new self, &block
+      Remover.new self, &block
+    end
+
+    def select(block = nil, &yield_block)
+      # TODO add optional history (via keyparametersprocedurebinder)
+      block ||= yield_block
+      Selector.new self, &block
     end
 
     # TODO: test case
@@ -967,9 +969,10 @@ module Musa
 
       attr_reader :source, :remove
 
-      def initialize(serie, remove)
+      def initialize(serie, &block)
         @source = serie
-        @remove = remove
+        @block = block
+        @history = []
 
         _restart false
 
@@ -986,20 +989,24 @@ module Musa
 
       def _restart(restart_sources = true)
         @source.restart if restart_sources
-        @first = true
+        @history.clear
       end
 
       def _next_value
-        @remove.times { @source.next_value } if @first
-        @first = nil
-
-        @source.next_value
+        if value = @source.next_value
+          while @block.call(value, @history)
+            @history << value
+            value = @source.next_value
+          end
+          @history << value
+        end
+        value
       end
     end
 
     private_constant :Remover
 
-    class SelectOnSerie
+    class Selector
       include Serie
 
       attr_reader :source, :remove
@@ -1034,7 +1041,7 @@ module Musa
       end
     end
 
-    private_constant :SelectOnSerie
+    private_constant :Selector
 
     class FromEvalBlockOnSerie
       include Serie

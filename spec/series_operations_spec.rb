@@ -156,6 +156,41 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it 'Remove: remove repeated elements' do
+      s = S(1, 2, 3, 3, 3, 4, 5, 5, 5, 5, 6, 7, 8, 9, 10).remove { |v, history| v == history.last }.i
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+      expect(s.next_value).to eq 10
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to eq 4
+      expect(s.next_value).to eq 5
+      expect(s.next_value).to eq 6
+      expect(s.next_value).to eq 7
+      expect(s.next_value).to eq 8
+      expect(s.next_value).to eq 9
+      expect(s.next_value).to eq 10
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+    end
+
+
     it 'Duplicate: S(1, 2, 3, 4, 5, 6).duplicate' do
       s1 = S(1, 2, 3, 4, 5, 6).i
 
@@ -308,23 +343,6 @@ RSpec.describe Musa::Serie do
       sss = ss.merge.i
 
       expect(sss.to_a).to eq [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    end
-
-    it 'Remove: s = S(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12); ss = s.remove 3' do
-      s = S 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-
-      ss = s.remove(3).i
-
-      r = []
-
-      while value = ss.next_value
-        r << value
-      end
-
-      expect(r).to eq [4, 5, 6, 7, 8, 9, 10, 11, 12]
-      expect(ss.next_value).to eq nil
-      expect(ss.next_value).to eq nil
-      expect(ss.next_value).to eq nil
     end
 
     it 'Multiplex' do
