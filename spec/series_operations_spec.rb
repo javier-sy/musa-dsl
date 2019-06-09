@@ -461,6 +461,78 @@ RSpec.describe Musa::Serie do
       expect(s.next_value).to eq nil
     end
 
+    it '.with (I)' do
+      s = S(1, 2, 3).with(
+        b: S(100, 200, 300, 400),
+        c: S(1000, 2000, 3000, 4000, 5000)) { |a, b:, c: | { a: a, b: b, c: c } }.i
+
+      expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
+      expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
+      expect(s.next_value).to eq({ a: 3, b: 300, c: 3000 })
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
+      expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
+      expect(s.next_value).to eq({ a: 3, b: 300, c: 3000 })
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      expect(s.infinite?).to eq false
+    end
+
+    it '.with (II)' do
+      s = S(1, 2, 3, 4, 5, 6).with(
+          b: S(100, 200, 300),
+          c: S(1000, 2000, 3000, 4000, 5000)) { |a, b:, c: | { a: a, b: b, c: c } }.i
+
+      expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
+      expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
+      expect(s.next_value).to eq({ a: 3, b: 300, c: 3000 })
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
+      expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
+      expect(s.next_value).to eq({ a: 3, b: 300, c: 3000 })
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      expect(s.infinite?).to eq false
+    end
+
+    it '.with (III)' do
+      s = S(1, 2, 3, 4, 5, 6).with(
+          b: S(100, 200, 300),
+          c: S(1000, 2000, 3000, 4000, 5000)).i
+
+      expect(s.next_value).to eq([1, { b: 100, c: 1000 }])
+      expect(s.next_value).to eq([2, { b: 200, c: 2000 }])
+      expect(s.next_value).to eq([3, { b: 300, c: 3000 }])
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq([1, { b: 100, c: 1000 }])
+      expect(s.next_value).to eq([2, { b: 200, c: 2000 }])
+      expect(s.next_value).to eq([3, { b: 300, c: 3000 }])
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      expect(s.infinite?).to eq false
+    end
+
     it '.merge: S(S(1, 2, 3).i, S(4, 5, 6).i, S(7, 8, 9).i)' do
       ss = S(S(1, 2, 3).i, S(4, 5, 6).i, S(7, 8, 9).i)
 

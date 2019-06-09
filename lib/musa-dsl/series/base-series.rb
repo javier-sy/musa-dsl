@@ -26,6 +26,7 @@ module Musa
     end
 
     alias_method :p, :prototype
+
     def mark_as_prototype!
       @is_instance = nil
       freeze

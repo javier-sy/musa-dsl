@@ -107,6 +107,10 @@ module Musa
       MergeSerieOfSeries.new self
     end
 
+    def with(**series, &yield_block)
+      ProcessWith.new self, series, &yield_block
+    end
+
     # TODO: test case
     def slave
       slave_serie = Slave.new self
@@ -120,6 +124,64 @@ module Musa
     ###
     ### Implementation
     ###
+
+    class ProcessWith
+      include Serie
+
+      attr_reader :source, :with_sources
+
+      def initialize(serie, with_series, &block)
+        @source = serie
+        @with_sources = with_series
+        @block = KeyParametersProcedureBinder.new(block) if block_given?
+
+        if @source.prototype?
+          @with_sources = @with_sources.transform_values { |s| s.prototype }
+        else
+          @with_sources = @with_sources.transform_values { |s| s.instance }
+        end
+
+        mark_regarding! @source
+      end
+
+      def _prototype
+        @source = @source.prototype
+        @with_sources = @with_sources.transform_values { |s| s.prototype }
+      end
+
+      def _instance
+        @source = @source.instance
+        @with_sources = @with_sources.transform_values { |s| s.instance }
+      end
+
+      def _restart
+        @source.restart
+        @with_sources.values.each { |s| s.restart }
+      end
+
+      def _next_value
+        main = @source.next_value
+        others = @with_sources.transform_values { |v| v.next_value }
+
+        value = nil
+
+        if main && !others.values.include?(nil)
+          if @block
+            value = @block._call([main], others)
+          else
+            value = [main, others]
+          end
+        end
+
+        value
+      end
+
+      def infinite?
+        @source.infinite? && !@with_sources.values.find { |s| !s.infinite? }
+      end
+    end
+
+    private_constant :ProcessWith
 
     class Switcher
       include Serie
