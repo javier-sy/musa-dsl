@@ -57,14 +57,6 @@ module Musa
       Randomizer.new self, random
     end
 
-    # TODO: test case
-    def eval(block = nil, with: nil, on_restart: nil, &yield_block)
-      block ||= yield_block
-      FromEvalBlockOnSerie.new self, with: with, on_restart: on_restart, &block
-    end
-
-    alias_method :map, :eval
-
     def remove(block = nil, &yield_block)
       # TODO make history an optional block parameter (via keyparametersprocedurebinder)
       block ||= yield_block
@@ -107,8 +99,15 @@ module Musa
       MergeSerieOfSeries.new self
     end
 
-    def with(**with_series, &yield_block)
-      ProcessWith.new self, with_series, &yield_block
+    def with(block = nil, on_restart: nil, **with_series, &yield_block)
+      block ||= yield_block
+      ProcessWith.new self, with_series, on_restart, &block
+    end
+
+    alias_method :eval, :with
+
+    def map(&yield_block)
+      ProcessWith.new self, &yield_block
     end
 
     # TODO: test case
@@ -128,11 +127,12 @@ module Musa
     class ProcessWith
       include Serie
 
-      attr_reader :source, :with_sources
+      attr_reader :source, :with_sources, :on_restart, :block
 
-      def initialize(serie, with_series, &block)
+      def initialize(serie, with_series = nil, on_restart = nil, &block)
         @source = serie
-        @with_sources = with_series
+        @with_sources = with_series || {}
+        @on_restart = on_restart
         @block = KeyParametersProcedureBinder.new(block) if block_given?
 
         if @source.prototype?
@@ -157,6 +157,7 @@ module Musa
       def _restart
         @source.restart
         @with_sources.values.each { |s| s.restart }
+        @on_restart.call if @on_restart
       end
 
       def _next_value
@@ -1029,7 +1030,7 @@ module Musa
     class Remover
       include Serie
 
-      attr_reader :source, :remove
+      attr_reader :source
 
       def initialize(serie, &block)
         @source = serie
@@ -1071,7 +1072,7 @@ module Musa
     class Selector
       include Serie
 
-      attr_reader :source, :remove
+      attr_reader :source
 
       def initialize(serie, &block)
         @source = serie
@@ -1104,60 +1105,6 @@ module Musa
     end
 
     private_constant :Selector
-
-    class FromEvalBlockOnSerie
-      include Serie
-
-      attr_reader :source, :with, :on_restart, :block
-
-      def initialize(serie, with: nil, on_restart: nil, &block)
-        @source = serie
-        @with = with if with
-
-        @block = block
-        @on_restart = on_restart
-
-        _restart false
-
-        mark_regarding! @source
-      end
-
-      def _prototype
-        @source = @source.prototype
-        @with = @with.prototype if @with
-      end
-
-      def _instance
-        @source = @source.instance
-        @with = @with.instance if @with
-      end
-
-      def _restart(restart_sources = true)
-        if restart_sources
-          @source.restart
-          @with.restart if @with
-          @on_restart.call if @on_restart
-        end
-      end
-
-      def _next_value
-        next_value = @source.next_value
-
-        if @block && !next_value.nil?
-          next_with = @with.next_value if @with
-
-          if next_with
-            @block.call next_value, next_with
-          else
-            @block.call next_value
-          end
-        else
-          next_value
-        end
-      end
-    end
-
-    private_constant :FromEvalBlockOnSerie
 
     class HashFromSeriesArray
       include Serie
