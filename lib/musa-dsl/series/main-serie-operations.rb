@@ -107,8 +107,8 @@ module Musa
       MergeSerieOfSeries.new self
     end
 
-    def with(**series, &yield_block)
-      ProcessWith.new self, series, &yield_block
+    def with(**with_series, &yield_block)
+      ProcessWith.new self, with_series, &yield_block
     end
 
     # TODO: test case
