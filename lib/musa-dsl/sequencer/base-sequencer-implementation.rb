@@ -206,17 +206,20 @@ class Musa::BaseSequencer
 
       case operation[:continue_operation]
       when :now
-        now do
+        #now do
+        _numeric_at position, control do
           _play serie, control, __play_eval: __play_eval, **mode_args
         end
 
       when :at
-        at operation[:continue_parameter] do
+        #at operation[:continue_parameter] do
+        _numeric_at operation[:continue_parameter], control do
           _play serie, control, __play_eval: __play_eval, **mode_args
         end
 
       when :wait
-        wait operation[:continue_parameter] do
+        #wait operation[:continue_parameter] do
+        _numeric_at position + operation[:continue_parameter].rationalize, control do
           _play serie, control, __play_eval: __play_eval, **mode_args
         end
 

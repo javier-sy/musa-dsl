@@ -846,6 +846,5 @@ RSpec.describe Musa::Sequencer do
       expect(f).to eq(1)
       expect(g).to eq(0)
     end
-
   end
 end

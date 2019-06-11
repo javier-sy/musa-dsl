@@ -635,5 +635,27 @@ RSpec.describe Musa::Sequencer do
       expect(d).to eq(100)
       expect(e).to eq(100)
     end
+
+    it 'Play sequencing with handlers: consecutive at calls should be on the same handler; not create subhandlers' do
+      s = Musa::Sequencer.new 4, 4
+
+      ss = FOR(from: 1, to: 100).map { |i| { pitch: i, duration: 1/4r } }
+
+      ids = []
+      h = nil
+      hid = nil
+
+      s.with do
+        h = play ss do |pd|
+          ids << sequencer.event_handler.id
+        end
+        hid = h.id
+      end
+
+      s.tick while !s.empty?
+
+      expect(hid).to eq(ids.last)
+      expect(ids.size).to eq(100)
+    end
   end
 end

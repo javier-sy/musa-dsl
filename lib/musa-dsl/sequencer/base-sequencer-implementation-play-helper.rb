@@ -95,6 +95,8 @@ class Musa::BaseSequencer
         current_parameter: element,
         continue_operation: :now
       }
+
+      value
     end
   end
 
@@ -235,14 +237,12 @@ class Musa::BaseSequencer
           continue_operation: :now }
 
       when Musa::Neumalang::Dataset
-
         { current_operation: :block,
           current_parameter: element,
           continue_operation: :wait,
           continue_parameter: element[:duration] }
 
       when Musa::Serie
-
         { current_operation: :play,
           current_parameter: element.restart }
 

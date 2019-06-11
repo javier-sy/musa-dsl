@@ -85,6 +85,10 @@ class Musa::BaseSequencer
     Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
   end
 
+  def event_handlers #TODO remove, only for test on 11/6/19
+    @event_handlers
+  end
+
   def event_handler
     @event_handlers.last
   end

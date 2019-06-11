@@ -64,9 +64,9 @@ class Musa::BaseSequencer
 
     def id
       if @parent
-        "#{@parent.id}.#{@id}"
+        "#{@parent.id}.#{self.class.name.split('::').last}-#{@id}"
       else
-        @id.to_s
+        "#{self.class.name.split('::').last}-#{@id.to_s}"
       end
     end
 
