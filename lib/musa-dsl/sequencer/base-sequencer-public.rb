@@ -45,6 +45,7 @@ class Musa::BaseSequencer
 
     if @score[position_to_run]
       @score[position_to_run].each do |command|
+
         if command.key?(:parent_control) && !command[:parent_control].stopped?
           @event_handlers.push command[:parent_control]
 
@@ -83,10 +84,6 @@ class Musa::BaseSequencer
 
   def round(bar)
     Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
-  end
-
-  def event_handlers #TODO remove, only for test on 11/6/19
-    @event_handlers
   end
 
   def event_handler

@@ -133,9 +133,13 @@ class Musa::BaseSequencer
       decoder,
       nl_context
 
-    element = serie.next_value
+    element = nil
 
-    if element && !control.stopped?
+    if !control.stopped?
+      element = serie.next_value
+    end
+
+    if element
       operation = __play_eval.run_operation element
 
       case operation[:current_operation]
