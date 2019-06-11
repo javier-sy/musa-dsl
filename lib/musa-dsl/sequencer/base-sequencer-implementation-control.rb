@@ -12,6 +12,8 @@ class Musa::BaseSequencer
       @parent = parent
       @handlers = {}
 
+      @stop = false
+
       if capture_stdout || !parent
         @stdout = $stdout
         @stderr = $stderr
@@ -19,6 +21,14 @@ class Musa::BaseSequencer
         @stdout = @parent.stdout
         @stderr = @parent.stderr
       end
+    end
+
+    def stop
+      @stop = true
+    end
+
+    def stopped?
+      @stop
     end
 
     def on(event, name: nil, only_once: nil, &block)
@@ -74,16 +84,6 @@ class Musa::BaseSequencer
       @do_after = []
 
       self.after &after if after
-
-      @stop = false
-    end
-
-    def stop
-      @stop = true
-    end
-
-    def stopped?
-      @stop
     end
 
     def after(_bars = nil, &block)
@@ -111,16 +111,6 @@ class Musa::BaseSequencer
       @do_on_stop << on_stop if on_stop
 
       self.after after_bars, &after if after
-
-      @stop = false
-    end
-
-    def stop
-      @stop = true
-    end
-
-    def stopped?
-      @stop
     end
 
     def duration(value)

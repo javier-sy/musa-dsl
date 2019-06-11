@@ -45,7 +45,7 @@ class Musa::BaseSequencer
 
     if @score[position_to_run]
       @score[position_to_run].each do |command|
-        if command.key?(:parent_control)
+        if command.key?(:parent_control) && !command[:parent_control].stopped?
           @event_handlers.push command[:parent_control]
 
           @@tick_mutex.synchronize do
