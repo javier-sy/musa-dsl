@@ -11,6 +11,7 @@ end
 
 group :test do
   gem 'rspec', '~> 3.0'
+  gem 'descriptive-statistics'
 end
 
 group :documentation do
