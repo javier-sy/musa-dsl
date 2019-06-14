@@ -82,6 +82,15 @@ module Musa
 
     private
 
+    def process_start
+      warn 'InputMidiClock: processing Start...' if @do_log
+
+      @on_start.each(&:call)
+      @started = true
+
+      warn 'InputMidiClock: processing Start... done' if @do_log
+    end
+
     def process_message(m)
       case m.name
       when 'Start'
@@ -110,15 +119,6 @@ module Musa
         @on_song_position_pointer.each { |block| block.call midi_beat_position }
         warn "InputMidiClock: processing Song Position Pointer midi_beat_position #{midi_beat_position}... done" if @do_log
       end
-    end
-
-    def process_start
-      warn 'InputMidiClock: processing Start...' if @do_log
-
-      @on_start.each(&:call)
-      @started = true
-
-      warn 'InputMidiClock: processing Start... done' if @do_log
     end
   end
 end

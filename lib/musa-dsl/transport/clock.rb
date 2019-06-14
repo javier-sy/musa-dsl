@@ -3,9 +3,14 @@ require 'nibbler'
 module Musa
   class Clock
     def initialize
+      @run = nil
       @on_start = []
       @on_stop = []
       @on_song_position_pointer = []
+    end
+
+    def running?
+      @run
     end
 
     def on_start(&block)

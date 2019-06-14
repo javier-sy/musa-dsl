@@ -17,14 +17,13 @@ end
 RSpec.describe Musa::Timer do
   context 'Timer with high precision' do
     it 'Timer runs correctly' do
-      t = Musa::Timer.new(-0.000005) # - 0.000005
-
       tt = []
 
       time = 0.001
       times = 10000
       start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      t.every time do
+
+      t = Musa::Timer.new(time, correction: -0.000005) do
         x = 100.0
         (rand * 10000).to_i.times do |i|
           x *= (x + i)
@@ -32,6 +31,7 @@ RSpec.describe Musa::Timer do
         tt << Process.clock_gettime(Process::CLOCK_MONOTONIC)
         break if tt.size == times
       end
+
       total_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
 
       offsets = (1..(tt.size - 1)).collect { |i| tt[i] - tt[i-1] }
