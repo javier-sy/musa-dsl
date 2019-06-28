@@ -208,6 +208,16 @@ class Musa::BaseSequencer
     control
   end
 
+  def continuation_play(parameters)
+    _play parameters[:serie],
+          parameters[:control],
+          parameters[:nl_context],
+          mode: parameters[:mode],
+          decoder: parameters[:decoder],
+          __play_eval: parameters[:play_eval],
+          **parameters[:mode_args]
+  end
+
   def every(binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
     binterval = binterval.rationalize
 

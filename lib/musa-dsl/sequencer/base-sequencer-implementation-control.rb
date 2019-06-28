@@ -1,6 +1,7 @@
 class Musa::BaseSequencer
   class EventHandler
     attr_reader :stdout, :stderr
+    attr_accessor :continue_parameters
 
     @@counter = 0
 
@@ -29,6 +30,18 @@ class Musa::BaseSequencer
 
     def stopped?
       @stop
+    end
+
+    def pause
+      raise NotImplementedError
+    end
+
+    def continue
+      @paused = false
+    end
+
+    def paused?
+      @paused
     end
 
     def on(event, name: nil, only_once: nil, &block)
@@ -84,6 +97,28 @@ class Musa::BaseSequencer
       @do_after = []
 
       self.after &after if after
+    end
+
+    def pause
+      @paused = true
+    end
+
+    def store_continuation(sequencer:, serie:, nl_context:, mode:, decoder:, play_eval:, mode_args:)
+      @continuation_sequencer = sequencer
+      @continuation_parameters = {
+          serie: serie,
+          control: self,
+          nl_context: nl_context,
+          mode: mode,
+          decoder: decoder,
+          play_eval: play_eval,
+          mode_args: mode_args
+      }
+    end
+
+    def continue
+      super
+      @continuation_sequencer.continuation_play(@continuation_parameters) if @continuation_sequencer
     end
 
     def after(_bars = nil, &block)

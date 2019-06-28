@@ -135,7 +135,17 @@ class Musa::BaseSequencer
 
     element = nil
 
-    if !control.stopped?
+    if control.stopped?
+      # nothing to do
+    elsif control.paused?
+      control.store_continuation  sequencer: self,
+                                  serie: serie,
+                                  nl_context: nl_context,
+                                  mode: mode,
+                                  decoder: decoder,
+                                  play_eval: __play_eval,
+                                  mode_args: mode_args
+    else
       element = serie.next_value
     end
 
