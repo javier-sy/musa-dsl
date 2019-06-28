@@ -29,7 +29,9 @@ module Musa
       @run = true
 
       while @run
-        @timer = Timer.new(@period, correction: @correction, stop: true) do
+        @timer = Timer.new(@period, correction: @correction, stop: true)
+
+        @timer.run do
           yield if block_given?
         end
       end

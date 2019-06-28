@@ -1,25 +1,26 @@
 module Musa
   class Timer
-    def initialize(seconds, correction: nil, stop: nil, &block)
-      seconds = seconds.rationalize unless seconds.is_a?(Rational)
+    def initialize(seconds, correction: nil, stop: nil)
+      @seconds = seconds.rationalize
+      @correction = (correction || 0r).rationalize
+      @stop ||= false
+    end
 
-      correction = correction || 0r
-      correction = correction.rationalize unless correction.is_a?(Rational)
-
+    def run
       @thread = Thread.current
 
-      stop if stop
       @next_moment = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       loop do
         unless @stop
           yield
 
-          @next_moment += seconds
-          to_sleep = (@next_moment  + correction) - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          @next_moment += @seconds
+          to_sleep = (@next_moment  + @correction) - Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
           sleep to_sleep if to_sleep > 0.0
         end
+
         sleep if @stop
       end
     end

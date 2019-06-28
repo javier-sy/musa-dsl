@@ -23,7 +23,9 @@ RSpec.describe Musa::Timer do
       times = 10000
       start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      t = Musa::Timer.new(time, correction: -0.000005) do
+      t = Musa::Timer.new(time, correction: -0.000005)
+
+      t.run do
         x = 100.0
         (rand * 10000).to_i.times do |i|
           x *= (x + i)
