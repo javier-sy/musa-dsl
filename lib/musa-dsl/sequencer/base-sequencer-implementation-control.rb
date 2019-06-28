@@ -87,6 +87,7 @@ class Musa::BaseSequencer
     end
 
     def after(_bars = nil, &block)
+      # TODO implementar parámetro _bars (?)
       @do_after << block
     end
   end
