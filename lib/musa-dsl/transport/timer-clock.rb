@@ -8,11 +8,14 @@ module Musa
 
       super()
 
+      @correction = correction
+
       self.period = period if period
       self.ticks_per_beat = ticks_per_beat if ticks_per_beat
       self.bpm = bpm if bpm
 
-      @correction = correction
+      self.bpm ||= 120
+      self.ticks_per_beat ||= 24
 
       @started = false
       @paused = false
