@@ -11,8 +11,8 @@ class Musa::Sequencer
   def_delegators :@context, :everying, :playing, :moving
   def_delegators :@context, :launch, :on
 
-  def initialize(quarter_notes_by_bar, quarter_note_divisions, sequencer: nil, do_log: nil, &block)
-    @sequencer ||= Musa::BaseSequencer.new quarter_notes_by_bar, quarter_note_divisions, do_log: do_log
+  def initialize(beats_per_bar, ticks_per_beat, sequencer: nil, do_log: nil, &block)
+    @sequencer ||= Musa::BaseSequencer.new beats_per_bar, ticks_per_beat, do_log: do_log
     @context = DSLContext.new @sequencer
 
     with &block if block

@@ -3,18 +3,41 @@ require 'nibbler'
 
 module Musa
   class TimerClock < Clock
-    def initialize(period, correction: nil, do_log: nil)
+    def initialize(period = nil, ticks_per_beat: nil, bpm: nil, correction: nil, do_log: nil)
       do_log ||= false
 
       super()
 
-      @period = period
+      self.period = period if period
+      self.ticks_per_beat = ticks_per_beat if ticks_per_beat
+      self.bpm = bpm if bpm
+
       @correction = correction
 
       @started = false
       @paused = false
 
       @do_log = do_log
+    end
+
+    attr_reader :period, :ticks_per_beat, :bpm
+
+    def period=(period_in_seconds)
+      @period = period_in_seconds.rationalize
+      @bpm = 60r / (@period * @ticks_per_beat) if @period && @ticks_per_beat
+      @timer.period = @period if @timer
+    end
+
+    def ticks_per_beat=(ticks)
+      @ticks_per_beat = ticks.rationalize
+      @period = 60r / (@bpm * @ticks_per_beat) if @bpm && @ticks_per_beat
+      @timer.period = @period if @timer && @period
+    end
+
+    def bpm=(bpm)
+      @bpm =  bpm.rationalize
+      @period = 60r / (@bpm * @ticks_per_beat) if @bpm && @ticks_per_beat
+      @timer.period = @period if @timer && @period
     end
 
     def started?

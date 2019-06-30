@@ -9,14 +9,14 @@ class Musa::BaseSequencer
 
   @@tick_mutex = Mutex.new
 
-  def initialize(quarter_notes_by_bar, quarter_note_divisions, do_log: nil)
+  def initialize(beats_per_bar, ticks_per_beat, do_log: nil)
     do_log ||= false
 
     @on_debug_at = []
     @on_fast_forward = []
     @on_block_error = []
 
-    @ticks_per_bar = Rational(quarter_notes_by_bar * quarter_note_divisions)
+    @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
 
     @score = {}
 

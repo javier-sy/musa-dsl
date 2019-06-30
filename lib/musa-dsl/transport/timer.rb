@@ -1,7 +1,9 @@
 module Musa
   class Timer
-    def initialize(seconds, correction: nil, stop: nil)
-      @seconds = seconds.rationalize
+    attr_accessor :period
+
+    def initialize(period_in_seconds, correction: nil, stop: nil)
+      @period = period_in_seconds.rationalize
       @correction = (correction || 0r).rationalize
       @stop ||= false
     end
@@ -15,7 +17,7 @@ module Musa
         unless @stop
           yield
 
-          @next_moment += @seconds
+          @next_moment += @period
           to_sleep = (@next_moment  + @correction) - Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
           sleep to_sleep if to_sleep > 0.0

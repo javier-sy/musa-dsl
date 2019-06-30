@@ -7,8 +7,8 @@ module Musa
     attr_reader :sequencer
 
     def initialize(clock,
-                   quarter_notes_by_bar = nil,
-                   quarter_note_divisions = nil,
+                   beats_per_bar = nil,
+                   ticks_per_beat = nil,
                    before_begin: nil,
                    on_start: nil,
                    after_stop: nil,
@@ -16,8 +16,8 @@ module Musa
                    on_position_change: nil,
                    do_log: nil)
 
-      quarter_notes_by_bar ||= 4
-      quarter_note_divisions ||= 24
+      beats_per_bar ||= 4
+      ticks_per_beat ||= 24
       do_log ||= false
 
       @clock = clock
@@ -39,7 +39,7 @@ module Musa
 
       @do_log = do_log
 
-      @sequencer = Sequencer.new quarter_notes_by_bar, quarter_note_divisions, do_log: @do_log
+      @sequencer = Sequencer.new beats_per_bar, ticks_per_beat, do_log: @do_log
 
       @clock.on_start do
         do_on_start
@@ -50,8 +50,8 @@ module Musa
       end
 
       @clock.on_song_position_pointer do |midi_beat_position|
-        position = Rational(midi_beat_position, 4 * quarter_notes_by_bar) + 1
-        tick_before_position = position - Rational(1, quarter_notes_by_bar * quarter_note_divisions)
+        position = Rational(midi_beat_position, 4 * beats_per_bar) + 1
+        tick_before_position = position - Rational(1, beats_per_bar * ticks_per_beat)
 
         warn "Transport: received message position change to #{position}" if @do_log
 
