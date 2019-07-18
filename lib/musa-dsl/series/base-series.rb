@@ -131,32 +131,7 @@ module Musa
       false
     end
 
-    # TODO: test case
     def to_a(recursive: nil, duplicate: nil, restart: nil, dr: nil)
-
-      def copy_included_modules(source, target)
-        target.tap do
-          source.singleton_class.included_modules.each do |m|
-            target.extend m unless target.is_a? m
-          end
-        end
-      end
-
-      def process(value)
-        case value
-        when Serie
-          value.to_a(recursive: true, restart: false, duplicate: false)
-        when Array
-          a = value.clone
-          a.collect! { |v| v.is_a?(Serie) ? v.to_a(recursive: true, restart: false, duplicate: false) : process(v) }
-        when Hash
-          h = value.clone
-          h.transform_values! { |v| v.is_a?(Serie) ? v.to_a(recursive: true, restart: false, duplicate: false) : process(v) }
-        else
-          value
-        end
-      end
-
       recursive ||= false
 
       dr ||= instance?
@@ -164,7 +139,7 @@ module Musa
       duplicate = dr if duplicate.nil?
       restart = dr if restart.nil?
 
-      throw 'Cannot convert to array an infinite serie' if infinite?
+      raise 'Cannot convert to array an infinite serie' if infinite?
 
       array = []
 
@@ -175,7 +150,7 @@ module Musa
 
       while value = serie.next_value
         array << if recursive
-                   process(value)
+                   process_for_to_a(value)
                  else
                    value
                  end
@@ -207,6 +182,24 @@ module Musa
     def propagate_value(value)
       @_slaves.each { |s| s.push_next_value value } if @_slaves
     end
+
+    private
+
+    def process_for_to_a(value)
+      case value
+      when Serie
+        value.to_a(recursive: true, restart: false, duplicate: false)
+      when Array
+        a = value.clone
+        a.collect! { |v| v.is_a?(Serie) ? v.to_a(recursive: true, restart: false, duplicate: false) : process_for_to_a(v) }
+      when Hash
+        h = value.clone
+        h.transform_values! { |v| v.is_a?(Serie) ? v.to_a(recursive: true, restart: false, duplicate: false) : process_for_to_a(v) }
+      else
+        value
+      end
+    end
+
   end
 
   class Slave

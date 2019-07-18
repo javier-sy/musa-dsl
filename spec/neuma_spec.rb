@@ -212,6 +212,5 @@ RSpec.describe Musa::Neumalang do
 
       expect(neumas_a.to_a(recursive: true)).to eq(neumas_b.to_a(recursive: true))
     end
-
   end
 end
