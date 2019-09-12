@@ -1,3 +1,5 @@
+require 'forwardable'
+
 class Musa::BaseSequencer
   class EventHandler
     attr_reader :stdout, :stderr
