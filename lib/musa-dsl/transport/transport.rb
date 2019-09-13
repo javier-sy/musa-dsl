@@ -94,7 +94,8 @@ module Musa
     end
 
     def start
-      do_before_begin
+      do_before_begin unless @before_begin_already_done
+      @before_begin_already_done = false
 
       @clock.run do
         @before_each_tick.each { |block| block.call @sequencer }
@@ -130,6 +131,7 @@ module Musa
       warn 'Transport: resetting sequencer... done' if @do_log
 
       do_before_begin
+      @before_begin_already_done = true
     end
   end
 end
