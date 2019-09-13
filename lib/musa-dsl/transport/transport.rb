@@ -95,9 +95,9 @@ module Musa
 
     def start
       do_before_begin unless @before_begin_already_done
-      @before_begin_already_done = false
 
       @clock.run do
+        @before_begin_already_done = false
         @before_each_tick.each { |block| block.call @sequencer }
         @sequencer.tick
       end
