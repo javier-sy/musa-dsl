@@ -71,7 +71,7 @@ module Musa
 
         do_on_start if start_again_later
       end
-     end
+    end
 
     def before_begin(&block)
       @before_begin << KeyParametersProcedureBinder.new(block)
