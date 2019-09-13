@@ -104,7 +104,6 @@ module Musa
 
     def stop
       @clock.terminate
-      do_stop
     end
 
     private
