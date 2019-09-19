@@ -305,15 +305,15 @@ class Musa::BaseSequencer
 
       if to && step && !every
         steps = (to - from) / step
-        every = Rational(effective_duration, steps)
+        every = Rational(effective_duration, steps + 1) # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
 
       elsif to && !step && !every
-        step = (to <=> from).to_r
-        every = Rational(effective_duration, (to - from).abs)
+        step = (to - from) / (effective_duration * @ticks_per_bar - 1) # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
+        every = @tick_duration
 
       elsif to && !step && every
-        steps = (to - from) / every
-        step = (to - from) / steps
+        steps = effective_duration / every
+        step = (to - from) / (steps - 1) # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
 
       elsif !to && step && every
         # ok

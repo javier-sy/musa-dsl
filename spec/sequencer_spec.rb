@@ -517,6 +517,155 @@ RSpec.describe Musa::Sequencer do
       expect(s.moving.size).to eq 0
     end
 
+    it 'Basic move sequencing (from, to, duration)' do
+      s = Musa::BaseSequencer.new 4, 4, do_log: true
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move from: 1, to: 2, duration: 4 do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      tests_passed = 0
+
+      72.times do
+        s.tick
+
+        case s.position
+        when 1
+          expect(c).to eq(1)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+        when 5 - 1/16r
+          expect(c).to eq(2)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+
+        when 5
+          expect(c).to eq(2)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+        when 5 + 1/16r
+          expect(c).to eq(2)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+
+        end
+      end
+
+      expect(tests_passed).to eq 4
+    end
+
+    it 'Basic move sequencing (from, to, step, duration)' do
+      s = Musa::BaseSequencer.new 4, 4, do_log: true
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move from: 1, to: 2, step: 1/4r, duration: 4 do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      tests_passed = 0
+
+      72.times do
+        s.tick
+
+        case s.position
+        when 1
+          expect(c).to eq(1)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+
+        when 5 - 1/16r
+          expect(c).to eq(2)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+
+        when 5
+          expect(c).to eq(2)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+        when 5 + 1/16r
+          expect(c).to eq(2)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+
+        end
+      end
+
+      expect(tests_passed).to eq 4
+    end
+
+    it 'Basic move sequencing (from, to, every, duration)' do
+      s = Musa::BaseSequencer.new 4, 4, do_log: true
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move from: 1, to: 2, every: 1/4r, duration: 4 do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      tests_passed = 0
+
+      72.times do
+        s.tick
+
+        case s.position
+        when 1
+          expect(c).to eq(1)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+
+        when 5 - 1/16r
+          expect(c).to eq(2)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+
+        when 5
+          expect(c).to eq(2)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+        when 5 + 1/16r
+          expect(c).to eq(2)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+
+        end
+      end
+
+      expect(tests_passed).to eq 4
+    end
+
     it 'Basic play sequencing' do
       s = Musa::BaseSequencer.new 4, 4
 
