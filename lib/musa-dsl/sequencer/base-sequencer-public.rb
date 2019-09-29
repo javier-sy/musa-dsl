@@ -238,8 +238,8 @@ class Musa::BaseSequencer
     control
   end
 
-  def move(every: nil, from: nil, to: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-    control = _move every: every, from: from, to: to, step: step, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after, &block
+  def move(every: nil, from: nil, to: nil, step: nil, duration: nil, till: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+    control = _move every: every, from: from, to: to, step: step, duration: duration, till: till, right_open: right_open, on_stop: on_stop, after_bars: after_bars, after: after, &block
 
     @moving << control
 

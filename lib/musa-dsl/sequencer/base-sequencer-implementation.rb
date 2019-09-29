@@ -285,7 +285,7 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+  def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 
     raise ArgumentError, "Cannot use duration: #{duration} and till: #{till} parameters at the same time. Use only one of them." if till && duration
 
@@ -297,23 +297,25 @@ class Musa::BaseSequencer
     block ||= proc {}
 
     step = -step if step && to && ((step > 0 && to < from) || (step < 0 && from < to))
+    right_open ||= false
 
     start_position = position
 
     if duration || till
       effective_duration = duration || till - start_position
+      right_open_offset = right_open ? 0 : 1 # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
 
       if to && step && !every
         steps = (to - from) / step
-        every = Rational(effective_duration, steps + 1) # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
+        every = Rational(effective_duration, steps + right_open_offset)
 
       elsif to && !step && !every
-        step = (to - from) / (effective_duration * @ticks_per_bar - 1) # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
+        step = (to - from) / (effective_duration * @ticks_per_bar - right_open_offset)
         every = @tick_duration
 
       elsif to && !step && every
         steps = effective_duration / every
-        step = (to - from) / (steps - 1) # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
+        step = (to - from) / (steps - right_open_offset)
 
       elsif !to && step && every
         # ok

@@ -517,7 +517,7 @@ RSpec.describe Musa::Sequencer do
       expect(s.moving.size).to eq 0
     end
 
-    it 'Basic move sequencing (from, to, duration)' do
+    it 'Basic move sequencing (from, to, duration) [right_closed interval values]' do
       s = Musa::BaseSequencer.new 4, 4, do_log: true
 
       c = 0
@@ -556,6 +556,55 @@ RSpec.describe Musa::Sequencer do
           tests_passed += 1
         when 5 + 1/16r
           expect(c).to eq(2)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+
+        end
+      end
+
+      expect(tests_passed).to eq 4
+    end
+
+    it 'Basic move sequencing (from, to, duration) [right open interval values]' do
+      s = Musa::BaseSequencer.new 4, 4, do_log: true
+
+      c = 0
+      move_control = nil
+
+      s.at 1 do
+        move_control = s.move from: 1, to: 2, duration: 4, right_open: true do |value|
+          c = value
+        end
+      end
+
+      expect(c).to eq(0)
+      expect(s.moving.size).to eq 0
+
+      tests_passed = 0
+
+      72.times do
+        s.tick
+
+        case s.position
+        when 1
+          expect(c).to eq(1)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+        when 5 - 1/16r
+          expect(c).to eq(1 + 63/64r)
+          expect(s.moving).to include move_control
+
+          tests_passed += 1
+
+        when 5
+          expect(c).to eq(1 + 63/64r)
+          expect(s.moving.size).to eq 0
+
+          tests_passed += 1
+        when 5 + 1/16r
+          expect(c).to eq(1 + 63/64r)
           expect(s.moving.size).to eq 0
 
           tests_passed += 1
