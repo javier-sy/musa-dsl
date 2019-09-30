@@ -7,6 +7,54 @@ require_relative 'base-sequencer-implementation-play-helper'
 class Musa::BaseSequencer
   private
 
+  def _tick
+    position_to_run = (@position += 1)
+
+    @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
+
+    if @score[position_to_run]
+      @score[position_to_run].each do |command|
+
+        if command.key?(:parent_control) && !command[:parent_control].stopped?
+          @event_handlers.push command[:parent_control]
+
+          @@tick_mutex.synchronize do
+            original_stdout = $stdout
+            original_stderr = $stderr
+
+            $stdout = command[:parent_control].stdout
+            $stderr = command[:parent_control].stderr
+
+            command[:block]._call command[:value_parameters], command[:key_parameters] if command[:block]
+
+            $stdout = original_stdout
+            $stderr = original_stderr
+          end
+
+          @event_handlers.pop
+        else
+          @@tick_mutex.synchronize do
+            command[:block]._call command[:value_parameters], command[:key_parameters] if command[:block]
+          end
+        end
+      end
+
+      @score.delete position_to_run
+    end
+
+    Thread.pass
+  end
+
+  def _hold_public_ticks
+    @hold_public_ticks = true
+  end
+
+  def _release_public_ticks
+    @hold_ticks.times { _tick }
+    @hold_ticks = 0
+    @hold_public_ticks = false
+  end
+
   def _raw_numeric_at(bar_position, force_first: nil, &block)
     force_first ||= false
 

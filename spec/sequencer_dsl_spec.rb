@@ -54,6 +54,53 @@ RSpec.describe Musa::Sequencer do
       expect(p).to eq(1 + 2/16r)
     end
 
+    it 'Multithread position change while holding external ticks' do
+      c = 0
+      p = 0
+
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          every 1 do
+            c += 1
+          end
+        end
+      end
+
+      s.before_tick do |new_position|
+        p = new_position
+      end
+
+      expect(s.beats_per_bar).to eq(4)
+      expect(s.ticks_per_beat).to eq(4)
+      expect(s.ticks_per_bar).to eq(16)
+
+      expect(p).to eq(0)
+
+      s.tick
+
+      expect(s.position).to eq(1)
+
+      p1 = p2 = nil
+
+      t1 = Thread.new do
+        s.position = 200
+        p1 = s.position
+      end
+
+      sleep(0.001) while s.position < 50
+
+      t2 = Thread.new do
+        100.times { s.tick; Thread.pass }
+        p2 = s.position
+      end
+
+      sleep(0.1) while !p1 || !p2
+
+      expect(p1).to eq(200r + Rational(100, 16))
+      expect(p2).to be > 1r + Rational(100, 16)
+
+    end
+
     it 'Basic at sequencing' do
       c = 0
 

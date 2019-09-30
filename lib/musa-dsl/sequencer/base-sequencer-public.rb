@@ -24,6 +24,9 @@ class Musa::BaseSequencer
     @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
     @tick_duration = Rational(1, @ticks_per_bar)
 
+    @hold_public_ticks = false
+    @hold_ticks = 0
+
     @score = {}
 
     @everying = []
@@ -47,38 +50,10 @@ class Musa::BaseSequencer
   end
 
   def tick
-    position_to_run = (@position += 1)
-
-    @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
-
-    if @score[position_to_run]
-      @score[position_to_run].each do |command|
-
-        if command.key?(:parent_control) && !command[:parent_control].stopped?
-          @event_handlers.push command[:parent_control]
-
-          @@tick_mutex.synchronize do
-            original_stdout = $stdout
-            original_stderr = $stderr
-
-            $stdout = command[:parent_control].stdout
-            $stderr = command[:parent_control].stderr
-
-            command[:block]._call command[:value_parameters], command[:key_parameters] if command[:block]
-
-            $stdout = original_stdout
-            $stderr = original_stderr
-          end
-
-          @event_handlers.pop
-        else
-          @@tick_mutex.synchronize do
-            command[:block]._call command[:value_parameters], command[:key_parameters] if command[:block]
-          end
-        end
-      end
-
-      @score.delete position_to_run
+    if @hold_public_ticks
+      @hold_ticks += 1
+    else
+      _tick
     end
   end
 
@@ -123,11 +98,13 @@ class Musa::BaseSequencer
 
     raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
 
+    _hold_public_ticks
     @on_fast_forward.each { |block| block.call(true) }
 
-    tick while @position < position
+    _tick while @position < position
 
     @on_fast_forward.each { |block| block.call(false) }
+    _release_public_ticks
   end
 
   def on(event, &block)
