@@ -86,7 +86,7 @@ module Musa
 
     def change_position_to(bars: nil, beats: nil, midi_beats: nil)
       position = bars.rationalize || 1r
-      position += Rational(midi_beats, 4 * beats_per_bar)
+      position += Rational(midi_beats, 4 * @sequencer.beats_per_bar)
       position += Rational(beats, beats_per_bar)
 
       raise ArgumentError, "undefined new position" unless position

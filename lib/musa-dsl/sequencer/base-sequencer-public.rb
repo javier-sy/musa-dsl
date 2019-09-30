@@ -4,7 +4,7 @@ require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 require 'musa-dsl/series'
 
 class Musa::BaseSequencer
-  attr_reader :ticks_per_bar, :tick_duration, :running_position
+  attr_reader :beats_per_bar, :ticks_per_bar, :tick_duration, :running_position
   attr_reader :everying, :playing, :moving
 
   @@tick_mutex = Mutex.new
@@ -16,6 +16,7 @@ class Musa::BaseSequencer
     @on_fast_forward = []
     @on_block_error = []
 
+    @beats_per_bar = Rational(beats_per_bar)
     @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
     @tick_duration = Rational(1, @ticks_per_bar)
 
