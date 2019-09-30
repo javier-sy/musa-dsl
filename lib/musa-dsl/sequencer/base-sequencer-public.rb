@@ -13,8 +13,10 @@ class Musa::BaseSequencer
     do_log ||= false
 
     @on_debug_at = []
-    @on_fast_forward = []
     @on_block_error = []
+
+    @before_tick = []
+    @on_fast_forward = []
 
     @beats_per_bar = Rational(beats_per_bar)
     @ticks_per_beat = Rational(ticks_per_beat)
@@ -46,6 +48,8 @@ class Musa::BaseSequencer
 
   def tick
     position_to_run = (@position += 1)
+
+    @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
 
     if @score[position_to_run]
       @score[position_to_run].each do |command|
@@ -95,15 +99,19 @@ class Musa::BaseSequencer
   end
 
   def on_debug_at(&block)
-    @on_debug_at << block
+    @on_debug_at << KeyParametersProcedureBinder.new(block)
   end
 
   def on_block_error(&block)
-    @on_block_error << block
+    @on_block_error << KeyParametersProcedureBinder.new(block)
   end
 
   def on_fast_forward(&block)
-    @on_fast_forward << block
+    @on_fast_forward << KeyParametersProcedureBinder.new(block)
+  end
+
+  def before_tick(&block)
+    @before_tick << KeyParametersProcedureBinder.new(block)
   end
 
   def position

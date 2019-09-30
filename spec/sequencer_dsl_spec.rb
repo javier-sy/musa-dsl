@@ -21,6 +21,7 @@ RSpec.describe Musa::Sequencer do
 
     it 'Basic configuration and querying' do
       c = 0
+      p = 0
 
       s = Musa::Sequencer.new 4, 4 do
         at 1 do
@@ -30,9 +31,27 @@ RSpec.describe Musa::Sequencer do
         end
       end
 
+      s.before_tick do |new_position|
+        p = new_position
+      end
+
       expect(s.beats_per_bar).to eq(4)
       expect(s.ticks_per_beat).to eq(4)
       expect(s.ticks_per_bar).to eq(16)
+
+      expect(p).to eq(0)
+
+      s.tick
+
+      expect(p).to eq(1r)
+
+      s.tick
+
+      expect(p).to eq(1 + 1/16r)
+
+      s.tick
+
+      expect(p).to eq(1 + 2/16r)
     end
 
     it 'Basic at sequencing' do

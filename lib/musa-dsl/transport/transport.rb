@@ -12,7 +12,6 @@ module Musa
                    before_begin: nil,
                    on_start: nil,
                    after_stop: nil,
-                   before_tick: nil,
                    on_position_change: nil,
                    do_log: nil)
 
@@ -27,9 +26,6 @@ module Musa
 
       @on_start = []
       @on_start << KeyParametersProcedureBinder.new(on_start) if on_start
-
-      @before_tick = []
-      @before_tick << KeyParametersProcedureBinder.new(before_tick) if before_tick
 
       @on_change_position = []
       @on_change_position << KeyParametersProcedureBinder.new(on_position_change) if on_position_change
@@ -62,10 +58,6 @@ module Musa
       @on_start << KeyParametersProcedureBinder.new(block)
     end
 
-    def before_tick(&block)
-      @before_tick << KeyParametersProcedureBinder.new(block)
-    end
-
     def after_stop(&block)
       @after_stop << KeyParametersProcedureBinder.new(block)
     end
@@ -79,7 +71,6 @@ module Musa
 
       @clock.run do
         @before_begin_already_done = false
-        @before_tick.each { |block| block.call @sequencer }
         @sequencer.tick
       end
     end
