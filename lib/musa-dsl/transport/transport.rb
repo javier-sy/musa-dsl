@@ -82,23 +82,22 @@ module Musa
 
       raise ArgumentError, "undefined new position" unless position
 
-      tick_before_position = position - @sequencer.tick_duration
-
       warn "Transport: received message position change to #{position}" if @do_log
 
       start_again_later = false
 
-      if @sequencer.position > tick_before_position
+      if @sequencer.position > position
         do_stop
         start_again_later = true
       end
 
-      warn "Transport: setting sequencer position #{tick_before_position}" if @do_log
-      @sequencer.position = tick_before_position
+      warn "Transport: setting sequencer position #{position}" if @do_log
 
       @sequencer.raw_at position, force_first: true do
         @on_change_position.each { |block| block.call @sequencer }
       end
+
+      @sequencer.position = position
 
       do_on_start if start_again_later
     end
