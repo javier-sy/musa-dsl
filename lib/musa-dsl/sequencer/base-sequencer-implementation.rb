@@ -8,7 +8,7 @@ class Musa::BaseSequencer
   private
 
   def _tick
-    position_to_run = (@position += 1)
+    position_to_run = @position_mutex.synchronize { @position += 1 }
 
     @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
 

@@ -24,6 +24,7 @@ class Musa::BaseSequencer
     @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
     @tick_duration = Rational(1, @ticks_per_bar)
 
+    @position_mutex = Mutex.new
     @hold_public_ticks = false
     @hold_ticks = 0
 
@@ -46,7 +47,7 @@ class Musa::BaseSequencer
 
     @event_handlers = [EventHandler.new]
 
-    @position = @ticks_per_bar - 1
+    @position = @position_mutex.synchronize { @ticks_per_bar - 1 }
   end
 
   def tick
