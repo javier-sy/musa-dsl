@@ -12,7 +12,7 @@ module Musa
                    before_begin: nil,
                    on_start: nil,
                    after_stop: nil,
-                   before_each_tick: nil,
+                   before_tick: nil,
                    on_position_change: nil,
                    do_log: nil)
 
@@ -28,11 +28,11 @@ module Musa
       @on_start = []
       @on_start << KeyParametersProcedureBinder.new(on_start) if on_start
 
-      @before_each_tick = []
-      @before_each_tick << KeyParametersProcedureBinder.new(before_each_tick) if before_each_tick
+      @before_tick = []
+      @before_tick << KeyParametersProcedureBinder.new(before_tick) if before_tick
 
-      @on_position_change = []
-      @on_position_change << KeyParametersProcedureBinder.new(on_position_change) if on_position_change
+      @on_change_position = []
+      @on_change_position << KeyParametersProcedureBinder.new(on_position_change) if on_position_change
 
       @after_stop = []
       @after_stop << KeyParametersProcedureBinder.new(after_stop) if after_stop
@@ -49,27 +49,8 @@ module Musa
         do_stop
       end
 
-      @clock.on_song_position_pointer do |midi_beat_position|
-        position = Rational(midi_beat_position, 4 * beats_per_bar) + 1
-        tick_before_position = position - Rational(1, beats_per_bar * ticks_per_beat)
-
-        warn "Transport: received message position change to #{position}" if @do_log
-
-        start_again_later = false
-
-        if @sequencer.position > tick_before_position
-          do_stop
-          start_again_later = true
-        end
-
-        warn "Transport: setting sequencer position #{tick_before_position}" if @do_log
-        @sequencer.position = tick_before_position
-
-        @sequencer.raw_at position, force_first: true do
-          @on_position_change.each { |block| block.call @sequencer }
-        end
-
-        do_on_start if start_again_later
+      @clock.on_change_position do |bars: nil, beats: nil, midi_beats: nil|
+        change_position_to bars: bars, beats: beats, midi_beats: midi_beats
       end
     end
 
@@ -81,16 +62,16 @@ module Musa
       @on_start << KeyParametersProcedureBinder.new(block)
     end
 
-    def before_each_tick(&block)
-      @before_each_tick << KeyParametersProcedureBinder.new(block)
+    def before_tick(&block)
+      @before_tick << KeyParametersProcedureBinder.new(block)
     end
 
     def after_stop(&block)
       @after_stop << KeyParametersProcedureBinder.new(block)
     end
 
-    def on_position_change(&block)
-      @on_position_change << KeyParametersProcedureBinder.new(block)
+    def on_change_position(&block)
+      @on_change_position << KeyParametersProcedureBinder.new(block)
     end
 
     def start
@@ -98,9 +79,37 @@ module Musa
 
       @clock.run do
         @before_begin_already_done = false
-        @before_each_tick.each { |block| block.call @sequencer }
+        @before_tick.each { |block| block.call @sequencer }
         @sequencer.tick
       end
+    end
+
+    def change_position_to(bars: nil, beats: nil, midi_beats: nil)
+      position = bars.rationalize || 1r
+      position += Rational(midi_beats, 4 * beats_per_bar)
+      position += Rational(beats, beats_per_bar)
+
+      raise ArgumentError, "undefined new position" unless position
+
+      tick_before_position = position - @sequencer.tick_duration
+
+      warn "Transport: received message position change to #{position}" if @do_log
+
+      start_again_later = false
+
+      if @sequencer.position > tick_before_position
+        do_stop
+        start_again_later = true
+      end
+
+      warn "Transport: setting sequencer position #{tick_before_position}" if @do_log
+      @sequencer.position = tick_before_position
+
+      @sequencer.raw_at position, force_first: true do
+        @on_change_position.each { |block| block.call @sequencer }
+      end
+
+      do_on_start if start_again_later
     end
 
     def stop

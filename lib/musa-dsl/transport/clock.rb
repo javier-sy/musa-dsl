@@ -6,7 +6,7 @@ module Musa
       @run = nil
       @on_start = []
       @on_stop = []
-      @on_song_position_pointer = []
+      @on_change_position = []
     end
 
     def running?
@@ -21,8 +21,8 @@ module Musa
       @on_stop << block
     end
 
-    def on_song_position_pointer(&block)
-      @on_song_position_pointer << block
+    def on_change_position(&block)
+      @on_change_position << block
     end
 
     def run
