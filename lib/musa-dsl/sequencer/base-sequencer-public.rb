@@ -18,6 +18,7 @@ class Musa::BaseSequencer
 
     @beats_per_bar = Rational(beats_per_bar)
     @ticks_per_beat = Rational(ticks_per_beat)
+
     @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
     @tick_duration = Rational(1, @ticks_per_bar)
 

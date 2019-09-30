@@ -19,6 +19,22 @@ end
 RSpec.describe Musa::Sequencer do
   context 'DSL Sequencing' do
 
+    it 'Basic configuration and querying' do
+      c = 0
+
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          every 1 do
+            c += 1
+          end
+        end
+      end
+
+      expect(s.beats_per_bar).to eq(4)
+      expect(s.ticks_per_beat).to eq(4)
+      expect(s.ticks_per_bar).to eq(16)
+    end
+
     it 'Basic at sequencing' do
       c = 0
 
