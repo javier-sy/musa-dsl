@@ -19,16 +19,17 @@ module Musa
       end
 
       @client_threads = []
+      @run = true
 
       @main_thread = Thread.new do
         @server = TCPServer.new(port)
         begin
-          while connection = @server.accept
+          while connection = @server.accept && @run
             @client_threads << Thread.new do
               buffer = nil
 
               begin
-                while line = connection.gets
+                while line = connection.gets && @run
                   line.chomp!
                   case line
                   when '#begin'
@@ -75,7 +76,8 @@ module Musa
     end
 
     def stop
-      # TODO
+      @run = false
+      @main_thread.terminate
     end
 
     private
