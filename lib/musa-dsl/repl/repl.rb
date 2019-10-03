@@ -24,12 +24,12 @@ module Musa
       @main_thread = Thread.new do
         @server = TCPServer.new(port)
         begin
-          while connection = @server.accept && @run
+          while (connection = @server.accept) && @run
             @client_threads << Thread.new do
               buffer = nil
 
               begin
-                while line = connection.gets && @run
+                while (line = connection.gets) && @run
                   line.chomp!
                   case line
                   when '#begin'
@@ -77,7 +77,12 @@ module Musa
 
     def stop
       @run = false
+
       @main_thread.terminate
+      @client_threads.each { |t| t.terminate }
+
+      @main_thread = nil
+      @client_threads.clear
     end
 
     private
