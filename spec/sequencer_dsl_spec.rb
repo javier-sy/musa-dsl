@@ -422,6 +422,58 @@ RSpec.describe Musa::Sequencer do
       expect(s.moving.size).to eq 0
     end
 
+    it 'Basic move sequencing with function and right open interval' do
+      c = []
+      move_control = nil
+
+      function = proc { |factor| factor * factor }
+
+      s = Musa::Sequencer.new 4, 4 do
+        at 1 do
+          move_control = move from: 1, to: 2, duration: 2, function: function, right_open: true do |value|
+            c << value
+          end
+        end
+      end
+
+      until s.empty?
+        s.tick
+      end
+
+      expect(c).to eq [1r,
+                      1025/1024r,
+                      257/256r,
+                      1033/1024r,
+                      65/64r,
+                      1049/1024r,
+                      265/256r,
+                      1073/1024r,
+                      17/16r,
+                      1105/1024r,
+                      281/256r,
+                      1145/1024r,
+                      73/64r,
+                      1193/1024r,
+                      305/256r,
+                      1249/1024r,
+                      5/4r,
+                      1313/1024r,
+                      337/256r,
+                      1385/1024r,
+                      89/64r,
+                      1465/1024r,
+                      377/256r,
+                      1553/1024r,
+                      25/16r,
+                      1649/1024r,
+                      425/256r,
+                      1753/1024r,
+                      113/64r,
+                      1865/1024r,
+                      481/256r,
+                      1985/1024r]
+    end
+
     it 'Basic play sequencing' do
       serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 

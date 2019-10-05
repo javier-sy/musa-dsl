@@ -333,9 +333,11 @@ class Musa::BaseSequencer
     nil
   end
 
-  def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+  def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, function: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 
     raise ArgumentError, "Cannot use duration: #{duration} and till: #{till} parameters at the same time. Use only one of them." if till && duration
+    raise ArgumentError, "Invalid use: 'function:' parameter is incompatible with 'step:' parameter" if function && step
+    raise ArgumentError, "Invalid use: 'function:' parameter needs 'to:' parameter not nil" if function && !to
 
     # from, to, step, every
     # from, to, step, (duration | till)
@@ -346,6 +348,10 @@ class Musa::BaseSequencer
 
     step = -step if step && to && ((step > 0 && to < from) || (step < 0 && from < to))
     right_open ||= false
+
+    function ||= proc { |ratio| ratio }
+    function_range = 1r
+    function_offset = 0r
 
     start_position = position
 
@@ -358,12 +364,24 @@ class Musa::BaseSequencer
         every = Rational(effective_duration, steps + right_open_offset)
 
       elsif to && !step && !every
-        step = (to - from) / (effective_duration * @ticks_per_bar - right_open_offset)
+        function_range = to - from
+        function_offset = from
+
+        from = 0r
+        to = 1r
+
+        step = 1r / (effective_duration * @ticks_per_bar - right_open_offset)
         every = @tick_duration
 
       elsif to && !step && every
+        function_range = to - from
+        function_offset = from
+
+        from = 0r
+        to = 1r
+
         steps = effective_duration / every
-        step = (to - from) / (steps - right_open_offset)
+        step = 1r / (steps - right_open_offset)
 
       elsif !to && step && every
         # ok
@@ -383,7 +401,6 @@ class Musa::BaseSequencer
       end
     end
 
-
     binder = KeyParametersProcedureBinder.new(block)
 
     every_control = EveryControl.new(@event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
@@ -399,7 +416,7 @@ class Musa::BaseSequencer
 
         parameters = binder.apply(control: control)
 
-        yield value, **parameters
+        yield function.call(value) * function_range + function_offset, **parameters
 
         if to && (value >= to && step.positive? || value <= to && step.negative?)
           control.stop
