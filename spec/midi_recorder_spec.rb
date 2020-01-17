@@ -8,8 +8,8 @@ include Musa::MIDIRecorder
 RSpec.describe Musa::MIDIRecorder do
   context 'Midi Recorder' do
     it 'Basic midi recorder processing (raw midi)' do
-      s = Musa::BaseSequencer.new 4, 4
-      recorder = Musa::MIDIRecorder.new s
+      s = BaseSequencer.new 4, 4
+      recorder = MIDIRecorder.new s
 
       s.tick
       s.tick
@@ -90,8 +90,8 @@ RSpec.describe Musa::MIDIRecorder do
     end
 
     it 'Basic midi recorder processing (transcription to PDV)' do
-      s = Musa::BaseSequencer.new 4, 4
-      recorder = Musa::MIDIRecorder.new s
+      s = BaseSequencer.new 4, 4
+      recorder = MIDIRecorder.new s
 
       s.tick
       s.tick

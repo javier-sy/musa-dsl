@@ -1,4 +1,4 @@
-grammar Neumalang
+grammar NeumalangGrammar
 
 	rule content
 		sentences

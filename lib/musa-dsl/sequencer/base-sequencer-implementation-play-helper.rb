@@ -244,7 +244,7 @@ module Musa
               continue_operation: :wait,
               continue_parameter: element[:duration] }
 
-          when Musa::Serie
+          when Musa::Series::Serie
             { current_operation: :play,
               current_parameter: element.restart }
 
