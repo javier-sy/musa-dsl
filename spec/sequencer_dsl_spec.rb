@@ -4,6 +4,7 @@ require 'musa-dsl'
 require 'pp'
 
 include Musa::Series
+include Musa::Sequencer
 
 module Test
   @c = nil
@@ -23,7 +24,7 @@ RSpec.describe Musa::Sequencer do
       c = 0
       p = 0
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           every 1 do
             c += 1
@@ -58,7 +59,7 @@ RSpec.describe Musa::Sequencer do
       c = 0
       p = 0
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           every 1 do
             c += 1
@@ -104,7 +105,7 @@ RSpec.describe Musa::Sequencer do
     it 'Basic at sequencing' do
       c = 0
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           every 1 do
             c += 1
@@ -146,7 +147,7 @@ RSpec.describe Musa::Sequencer do
     it 'Basic wait sequencing with a serie' do
       c = 0
       w = S(1, 1, 1)
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           wait w do
             c += 1
@@ -214,7 +215,7 @@ RSpec.describe Musa::Sequencer do
       c = 0
       pp = nil
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           wait w, with: p do |with|
             c += 1
@@ -293,7 +294,7 @@ RSpec.describe Musa::Sequencer do
 
       every_control = nil
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           every_control = every 1 do |control:|
             c += 1
@@ -367,7 +368,7 @@ RSpec.describe Musa::Sequencer do
       c = 0
       move_control = nil
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           move_control = move every: 1/16r, from: 1, to: 5, duration: 4 + Rational(1, 16) do |value|
             c = value
@@ -428,7 +429,7 @@ RSpec.describe Musa::Sequencer do
 
       function = proc { |factor| factor * factor }
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         at 1 do
           move_control = move from: 1, to: 2, duration: 2, function: function, right_open: true do |value|
             c << value
@@ -482,7 +483,7 @@ RSpec.describe Musa::Sequencer do
 
       play_control = nil
 
-      s = Musa::Sequencer.new 4, 4
+      s = Sequencer.new 4, 4
 
       expect(s.playing.size).to eq 0
 
@@ -531,7 +532,7 @@ RSpec.describe Musa::Sequencer do
       inner_control = nil
       cat = cplay = nil
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         cat = at 1 do
           play serie do |element, control:|
             inner_control = control
@@ -602,7 +603,7 @@ RSpec.describe Musa::Sequencer do
       inner_control = nil
       cat = cplay = nil
 
-      s = Musa::Sequencer.new 4, 4 do
+      s = Sequencer.new 4, 4 do
         cat = at 1 do
           cplay = play serie do |element, control:|
             c = element[:value] if element[:value]
@@ -663,7 +664,7 @@ RSpec.describe Musa::Sequencer do
 
   context 'Advanced sequencing' do
     it 'Event passing on at' do
-      s = Musa::Sequencer.new 4, 4
+      s = Sequencer.new 4, 4
 
       c = 0
       d = 0
@@ -693,7 +694,7 @@ RSpec.describe Musa::Sequencer do
       c = 0
       d = 0
 
-      s = Musa::Sequencer.new 4, 4
+      s = Sequencer.new 4, 4
 
       s.with do
         at 1 do
@@ -721,7 +722,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Event passing on at with inner at' do
-      s = Musa::Sequencer.new 4, 4
+      s = Sequencer.new 4, 4
 
       c = 0
       d = 0
@@ -771,7 +772,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with handlers: consecutive at calls should be on the same handler; not create subhandlers' do
-      s = Musa::Sequencer.new 4, 4
+      s = Sequencer.new 4, 4
 
       ss = FOR(from: 1, to: 100).map { |i| { pitch: i, duration: 1/4r } }
 

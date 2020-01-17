@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-RSpec.describe Musa::Serie do
+RSpec.describe Musa::Series do
   context 'Series prototype and instance:' do
     it 'basic prototype and instance definition' do
       p = S(1, 2, 3)
@@ -32,10 +32,10 @@ RSpec.describe Musa::Serie do
     it 'basic prototype and instance validation' do
       pp = S(1, 2, 3)
 
-      expect { pp.restart }.to raise_error(Musa::Serie::PrototypingSerieError)
-      expect { pp.next_value }.to raise_error(Musa::Serie::PrototypingSerieError)
-      expect { pp.peek_next_value }.to raise_error(Musa::Serie::PrototypingSerieError)
-      expect { pp.current_value }.to raise_error(Musa::Serie::PrototypingSerieError)
+      expect { pp.restart }.to raise_error(Serie::PrototypingSerieError)
+      expect { pp.next_value }.to raise_error(Serie::PrototypingSerieError)
+      expect { pp.peek_next_value }.to raise_error(Serie::PrototypingSerieError)
+      expect { pp.current_value }.to raise_error(Serie::PrototypingSerieError)
 
       expect { pp.infinite? }.to_not raise_error
 

@@ -1,5 +1,6 @@
 module Musa
   module GenerativeGrammar
+    extend self
 
     def N(content = nil, **attributes, &block)
       if block_given? && content.nil?

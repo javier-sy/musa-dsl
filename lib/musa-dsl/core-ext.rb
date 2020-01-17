@@ -1,4 +1,3 @@
-require 'musa-dsl/core-ext/array-apply-get'
 require 'musa-dsl/core-ext/array-explode-ranges'
 require 'musa-dsl/core-ext/array-to-serie'
 require 'musa-dsl/core-ext/string-to-neumas'

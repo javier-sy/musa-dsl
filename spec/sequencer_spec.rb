@@ -3,6 +3,7 @@ require 'spec_helper'
 require 'musa-dsl'
 
 include Musa::Series
+include Musa::Sequencer
 
 module Test
   @c = nil
@@ -19,7 +20,7 @@ RSpec.describe Musa::Sequencer do
   context 'Basic sequencing' do
 
     it 'Basic at sequencing' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
 
@@ -57,7 +58,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'At sequencing with events' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -88,7 +89,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'At sequencing with events (indented 1)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -128,7 +129,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'At sequencing with events (indented 2)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -176,7 +177,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic every sequencing' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
 
@@ -218,7 +219,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic every sequencing with control' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -282,7 +283,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (every, from, to, duration)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -341,7 +342,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -400,7 +401,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, every)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -459,7 +460,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, step, every, duration)' do
-      s = Musa::BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4, do_log: true
 
       c = 0
       move_control = nil
@@ -518,7 +519,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right_closed interval values]' do
-      s = Musa::BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4, do_log: true
 
       c = 0
       move_control = nil
@@ -567,7 +568,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right open interval values]' do
-      s = Musa::BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4, do_log: true
 
       c = 0
       move_control = nil
@@ -616,7 +617,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = Musa::BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4, do_log: true
 
       c = 0
       move_control = nil
@@ -666,7 +667,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration)' do
-      s = Musa::BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4, do_log: true
 
       c = 0
       move_control = nil
@@ -716,7 +717,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic play sequencing' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
@@ -750,7 +751,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic play sequencing (II)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
@@ -780,7 +781,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with events handled on at control' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       t = FOR(from: 0, to: 3)
 
@@ -864,7 +865,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with events handled on sequencer' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       t = FOR(from: 0, to: 3)
 
@@ -948,7 +949,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with events (II)' do
-      s = Musa::BaseSequencer.new 4, 4
+      s = BaseSequencer.new 4, 4
 
       t = FOR(from: 0, to: 3)
 

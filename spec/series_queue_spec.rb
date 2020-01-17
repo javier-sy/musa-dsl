@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-RSpec.describe Musa::Serie do
+RSpec.describe Musa::Series do
   context 'Series queue' do
     it 'Basic QUEUE series: initialized from constructor' do
       s = QUEUE(S(1, 2, 3), S(4, 5, 6))

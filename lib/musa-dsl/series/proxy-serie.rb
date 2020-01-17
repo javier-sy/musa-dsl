@@ -58,12 +58,12 @@ module Musa
         @target && @target.respond_to?(method_name, include_private) # || super
       end
     end
-  end
 
-  module SerieOperations
-    # TODO add test case
-    def proxied
-      Series::ProxySerie.new self
+    module SerieOperations
+      # TODO add test case
+      def proxied
+        Series::ProxySerie.new self
+      end
     end
   end
 end

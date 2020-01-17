@@ -2,6 +2,9 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
+include Musa::Sequencer
+include Musa::MIDIRecorder
+
 RSpec.describe Musa::MIDIRecorder do
   context 'Midi Recorder' do
     it 'Basic midi recorder processing (raw midi)' do

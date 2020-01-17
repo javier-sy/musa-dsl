@@ -4,7 +4,9 @@ require 'musa-dsl'
 
 require 'descriptive-statistics'
 
-RSpec.describe Musa::Timer do
+include Musa::Clock
+
+RSpec.describe Musa::Clock::Timer do
   context 'Timer with high precision' do
     it 'Timer runs correctly', slow: true do
       tt = []
@@ -12,7 +14,7 @@ RSpec.describe Musa::Timer do
       time = 0.001
       times = 1000
 
-      t = Musa::Timer.new(time)
+      t = Timer.new(time)
 
       t.run do
         x = 100.0

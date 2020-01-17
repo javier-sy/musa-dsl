@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-RSpec.describe Musa::Serie do
+RSpec.describe Musa::Series do
   context 'Series holders' do
     it 'Basic HOLDER series substitution' do
       s = HOLDER()

@@ -4,6 +4,8 @@ require 'musa-dsl/core-ext/arrayfy'
 
 module Musa
   module Series
+    extend self
+
     def NIL
       NilSerie.new
     end

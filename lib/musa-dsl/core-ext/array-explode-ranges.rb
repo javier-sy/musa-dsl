@@ -1,8 +1,4 @@
 class Array
-  def arrayfy
-    self
-  end
-
   def repeat_to_size(new_size)
     pos = -1
     new_size -= 1

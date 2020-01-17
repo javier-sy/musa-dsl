@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-RSpec.describe Musa::Serie do
+RSpec.describe Musa::Series do
   context 'Series proxy' do
     it 'Basic PROXY series substitution' do
       s = PROXY(S(1, 2, 3))

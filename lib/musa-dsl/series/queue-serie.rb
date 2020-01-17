@@ -84,11 +84,11 @@ module Musa
         @target && @target.respond_to?(method_name, include_private) # || super
       end
     end
-  end
 
-  module SerieOperations
-    def queued
-      Series::QueueSerie.new [self]
+    module SerieOperations
+      def queued
+        Series::QueueSerie.new [self]
+      end
     end
   end
 end

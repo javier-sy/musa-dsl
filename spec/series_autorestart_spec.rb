@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-RSpec.describe Musa::Serie do
+RSpec.describe Musa::Series do
   context 'Series autorestart' do
     it 'Autorestart: S(1, 2, 3).autorestart' do
       s1 = S(1, 2, 3).autorestart.i

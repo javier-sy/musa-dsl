@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-RSpec.describe Musa::Serie do
+RSpec.describe Musa::Series do
   context 'Hash series splitter' do
     it 'S([1, 10, 100], [2, 20, 200], [3, 30, 300]).hashify.split (only next_value)' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
