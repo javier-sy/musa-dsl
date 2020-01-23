@@ -39,7 +39,7 @@ module Musa
         combinations = []
 
         parameters_set.each do |parameters_with_depth|
-          instance = @constructor.call constructor_binder.apply(parameters_with_depth)
+          instance = @constructor.call **constructor_binder.apply(parameters_with_depth)
 
           tree_B.run parameters_with_depth, @instance_name => instance
 
@@ -47,7 +47,7 @@ module Musa
             finalize_parameters = finalize_binder.apply parameters_with_depth
             finalize_parameters[@instance_name] = instance
 
-            @finalize.call finalize_parameters
+            @finalize.call **finalize_parameters
           end
 
           combinations << instance
@@ -217,7 +217,7 @@ module Musa
             parameters[@parameter_name] = option
 
             @procedures.each do |procedure_binder|
-              procedure_binder.call parameters
+              procedure_binder.call **parameters
             end
 
             if @parameter_name == :_maincontext
