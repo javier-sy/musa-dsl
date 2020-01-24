@@ -1,5 +1,4 @@
 require 'musa-dsl/sequencer'
-
 require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 
 module Musa

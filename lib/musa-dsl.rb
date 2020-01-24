@@ -15,3 +15,7 @@ require 'musa-dsl/midi'
 require 'musa-dsl/music'
 
 require 'musa-dsl/generative'
+
+module Musa
+  VERSION = '0.15.2'
+end

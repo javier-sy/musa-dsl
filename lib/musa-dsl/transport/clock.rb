@@ -1,5 +1,3 @@
-require 'nibbler'
-
 module Musa
   module Clock
     class Clock
