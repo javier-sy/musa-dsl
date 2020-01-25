@@ -35,7 +35,7 @@ module Musa
 
         @do_log = do_log
 
-        @sequencer = Sequencer.new beats_per_bar, ticks_per_beat, do_log: @do_log
+        @sequencer = Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, do_log: @do_log
 
         @clock.on_start do
           do_on_start

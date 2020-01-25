@@ -18,4 +18,27 @@ require 'musa-dsl/generative'
 
 module Musa
   VERSION = '0.15.2'
+
+  module All
+    include Musa::Clock
+    include Musa::Transport
+    include Musa::Sequencer
+
+    include Musa::Scales
+    include Musa::Chords
+    include Musa::Neumalang
+    include Musa::Datasets
+
+    include Musa::Series
+
+    include Musa::Darwin
+    include Musa::Markov
+    include Musa::Rules
+    include Musa::Variatio
+
+    include Musa::MIDIRecorder
+    include Musa::MIDIVoices
+
+    include Musa::REPL
+  end
 end

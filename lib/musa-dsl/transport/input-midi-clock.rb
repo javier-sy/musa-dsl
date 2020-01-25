@@ -94,8 +94,8 @@ module Musa
 
       def process_message(m)
 
-        puts "input-midi-clock.process_message: m = #{m}"
-        
+        puts "input-midi-clock.process_message: m = #{m.name} #{m.class.name} #{}"
+
         case m.name
         when 'Start'
           process_start
