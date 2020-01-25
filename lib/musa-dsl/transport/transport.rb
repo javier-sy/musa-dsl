@@ -76,7 +76,9 @@ module Musa
       end
 
       def change_position_to(bars: nil, beats: nil, midi_beats: nil)
-        position = bars.rationalize || 1r
+        warn "Transport: asked to change position to #{"#{bars} bars " if bars}#{"#{beats} beats " if beats}#{"#{midi_beats} midi beats " if midi_beats}" if @do_log
+
+        position = bars&.rationalize || 1r
         position += Rational(midi_beats, 4 * @sequencer.beats_per_bar) if midi_beats
         position += Rational(beats, @sequencer.beats_per_bar) if beats
 
