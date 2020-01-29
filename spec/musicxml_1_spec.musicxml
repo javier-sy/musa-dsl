@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.0">
+	<work>
+		<work-number>100</work-number>
+		<work-number>Work Title</work-number>
+	</work>
+	<movement-number>1</movement-number>
+	<movement-title>Movement Title</movement-title>
+	<identification>
+		<creator type="composer">Javier</creator>
+		<creator type="lyrics">Javier S. lyrics</creator>
+		<rights type="lyrics">Javier S.</rights>
+		<encoding>
+			<encoding-date>2020-01-29</encoding-date>
+			<software>MusaDSL: MusicXML output formatter</software>
+		</encoding>
+	</identification>
+	<part-list>
+	</part-list>
+</score-partwise>

@@ -11,6 +11,7 @@ require 'musa-dsl/sequencer'
 require 'musa-dsl/repl'
 
 require 'musa-dsl/midi'
+require 'musa-dsl/musicxml'
 
 require 'musa-dsl/music'
 
@@ -38,6 +39,8 @@ module Musa
 
     include Musa::MIDIRecorder
     include Musa::MIDIVoices
+
+    include Musa::MusicXML
 
     include Musa::REPL
   end

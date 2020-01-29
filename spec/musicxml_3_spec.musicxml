@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.0">
+	<identification>
+		<creator type="composer">Javier Sánchez</creator>
+		<encoding>
+			<encoding-date>2020-01-29</encoding-date>
+			<software>MusaDSL: MusicXML output formatter</software>
+		</encoding>
+	</identification>
+	<part-list>
+		<part-group number="1" type="start">
+			<group-name>Grupo A</group-name>
+		</part-group>
+		<score-part id="p1">
+			<part-name>Piano</part-name>
+			<part-abbreviation>p.</part-abbreviation>
+		</score-part>
+		<score-part id="p2">
+			<part-name>Violin</part-name>
+			<part-abbreviation>vln</part-abbreviation>
+		</score-part>
+		<part-group number="1" type="stop">
+		</part-group>
+		<part-group number="2" type="start">
+			<group-name>Grupo B</group-name>
+		</part-group>
+		<score-part id="p3">
+			<part-name>Viola</part-name>
+			<part-abbreviation>vla</part-abbreviation>
+		</score-part>
+		<score-part id="p4">
+			<part-name>Cello</part-name>
+			<part-abbreviation>vlc</part-abbreviation>
+		</score-part>
+		<part-group number="2" type="stop">
+		</part-group>
+	</part-list>
+	<part id="p1">
+		<measure number="1">
+			<attributes>
+				<divisions>2</divisions>
+				<key number="1">
+					<fifths>2</fifths>
+					<mode></mode>
+				</key>
+				<key number="2">
+					<fifths>2</fifths>
+					<mode></mode>
+				</key>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<time number="2">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<staves>2</staves>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+				<clef number="2">
+					<sign>F</sign>
+					<line>4</line>
+				</clef>
+			</attributes>
+			<direction>
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="stop"/>
+				</notations>
+			</note>
+			<backup><duration>8</duration></backup>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>8</duration>
+				<type>whole</type>
+				<staff>2</staff>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+		</measure>
+	</part>
+	<part id="p2">
+		<measure number="1">
+			<attributes>
+				<divisions>2</divisions>
+				<key number="1">
+					<fifths>2</fifths>
+					<mode></mode>
+				</key>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<type>quarter</type>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="stop"/>
+				</notations>
+			</note>
+			<backup><duration>8</duration></backup>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>8</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+	</part>
+	<part id="p3">
+		<measure number="1">
+			<attributes>
+				<divisions>2</divisions>
+				<key number="1">
+					<fifths>2</fifths>
+					<mode></mode>
+				</key>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+	</part>
+	<part id="p4">
+		<measure number="1">
+			<attributes>
+				<divisions>2</divisions>
+				<key number="1">
+					<fifths>2</fifths>
+					<mode></mode>
+				</key>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<type>half</type>
+				<notations>
+					<slur type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+	</part>
+</score-partwise>
