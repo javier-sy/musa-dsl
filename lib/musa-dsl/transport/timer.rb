@@ -6,7 +6,7 @@ module Musa
       def initialize(period_in_seconds, correction: nil, stop: nil)
         @period = period_in_seconds.rationalize
         @correction = (correction || 0r).rationalize
-        @stop ||= false
+        @stop = stop || false
       end
 
       def run
