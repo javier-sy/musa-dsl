@@ -4,6 +4,9 @@ require_relative 'helper'
 module Musa
   module MusicXML
     class Note
+      extend AttributeBuilder
+      include AsContextRun
+
       include Helper
       include ToXML
 
@@ -98,7 +101,8 @@ module Musa
                      toe: nil, # true
                      triple_tongue: nil, # true
                      up_bow: nil, # true
-                     **_krest)
+                     **_krest,
+                     &block)
 
         @pizzicato = pizzicato
 
@@ -188,90 +192,98 @@ module Musa
         @toe = toe
         @triple_tongue = triple_tongue
         @up_bow = up_bow
+
+        as_context_run block if block_given?
       end
 
-      attr_accessor :pizzicato
-      attr_accessor :grace, :cue, :chord
-      attr_accessor :duration
-      attr_accessor :tie_start, :tie_stop
-      attr_accessor :type, :dots
-      attr_accessor :accidental
-      attr_accessor :time_modification
-      attr_accessor :stem
-      attr_accessor :notehead
-      attr_accessor :voice, :staff
+      attr_simple_builder :pizzicato
+      attr_simple_builder :grace
+      attr_simple_builder :cue
+      attr_simple_builder :chord
+
+      attr_simple_builder :duration
+      attr_simple_builder :tie_start
+      attr_simple_builder :tie_stop
+      attr_simple_builder :type
+      attr_simple_builder :dots
+      attr_simple_builder :accidental
+      attr_simple_builder :time_modification
+      attr_simple_builder :stem
+      attr_simple_builder :notehead
+      attr_simple_builder :voice
+      attr_simple_builder :staff
 
       # notations
-      attr_accessor :accidental_mark
-      attr_accessor :arpeggiate
-      attr_accessor :tied
-      attr_accessor :tuplet
-      attr_accessor :dynamics
-      attr_accessor :fermata
-      attr_accessor :glissando
-      attr_accessor :non_arpeggiate
-      attr_accessor :slide
-      attr_accessor :slur
+      attr_simple_builder :accidental_mark
+      attr_simple_builder :arpeggiate
+      attr_simple_builder :tied
+      attr_simple_builder :tuplet
+      attr_simple_builder :dynamics
+      attr_simple_builder :fermata
+      attr_simple_builder :glissando
+      attr_simple_builder :non_arpeggiate
+      attr_simple_builder :slide
+      attr_simple_builder :slur
 
       ## articulations
-      attr_accessor :accent
-      attr_accessor :breath_mark
-      attr_accessor :caesura
-      attr_accessor :detached_legato
-      attr_accessor :doit
-      attr_accessor :falloff
-      attr_accessor :other_articulation
-      attr_accessor :plop
-      attr_accessor :scoop
-      attr_accessor :spiccato
-      attr_accessor :staccatissimo
-      attr_accessor :staccato
-      attr_accessor :stress
-      attr_accessor :strong_accent
-      attr_accessor :tenuto
-      attr_accessor :unstress
+      attr_simple_builder :accent
+      attr_simple_builder :breath_mark
+      attr_simple_builder :caesura
+      attr_simple_builder :detached_legato
+      attr_simple_builder :doit
+      attr_simple_builder :falloff
+      attr_simple_builder :other_articulation
+      attr_simple_builder :plop
+      attr_simple_builder :scoop
+      attr_simple_builder :spiccato
+      attr_simple_builder :staccatissimo
+      attr_simple_builder :staccato
+      attr_simple_builder :stress
+      attr_simple_builder :strong_accent
+      attr_simple_builder :tenuto
+      attr_simple_builder :unstress
 
       ## ornaments
-      attr_accessor :delayed_inverted_turn
-      attr_accessor :delayed_turn
-      attr_accessor :inverted_mordent
-      attr_accessor :inverted_turn
-      attr_accessor :mordent
-      attr_accessor :schleifer
-      attr_accessor :shake
-      attr_accessor :tremolo
-      attr_accessor :trill_mark
-      attr_accessor :turn
-      attr_accessor :vertical_turn
-      attr_accessor :wavy_line
-      attr_accessor :other_ornament
-      attr_accessor :ornament_accidental_mark
+      attr_simple_builder :delayed_inverted_turn
+      attr_simple_builder :delayed_turn
+      attr_simple_builder :inverted_mordent
+      attr_simple_builder :inverted_turn
+      attr_simple_builder :mordent
+      attr_simple_builder :schleifer
+      attr_simple_builder :shake
+      attr_simple_builder :tremolo
+      attr_simple_builder :trill_mark
+      attr_simple_builder :turn
+      attr_simple_builder :vertical_turn
+      attr_simple_builder :wavy_line
+      attr_simple_builder :other_ornament
+      attr_simple_builder :ornament_accidental_mark
 
       ## technical
-      attr_accessor :arrow
-      attr_accessor :bend
-      attr_accessor :double_tongue
-      attr_accessor :down_bow
-      attr_accessor :fingering
-      attr_accessor :fingernails
-      attr_accessor :fret
-      attr_accessor :hammer_on
-      attr_accessor :handbell
-      attr_accessor :harmonic
-      attr_accessor :heel
-      attr_accessor :hole
-      attr_accessor :open_string
-      attr_accessor :other_technical
-      attr_accessor :pluck
-      attr_accessor :pull_off
-      attr_accessor :snap_pizzicato
-      attr_accessor :stopped
-      attr_accessor :string
-      attr_accessor :tap_
-      attr_accessor :thumb_position
-      attr_accessor :toe
-      attr_accessor :triple_tongue
-      attr_accessor :up_bow
+      attr_simple_builder :arrow
+      attr_simple_builder :bend
+      attr_simple_builder :double_tongue
+      attr_simple_builder :down_bow
+      attr_simple_builder :fingering
+      attr_simple_builder :fingernails
+      attr_simple_builder :fret
+      attr_simple_builder :hammer_on
+      attr_simple_builder :handbell
+      attr_simple_builder :harmonic
+      attr_simple_builder :heel
+      attr_simple_builder :hole
+      attr_simple_builder :open_string
+      attr_simple_builder :other_technical
+      attr_simple_builder :pluck
+      attr_simple_builder :pull_off
+      attr_simple_builder :snap_pizzicato
+      attr_simple_builder :stopped
+      attr_simple_builder :string
+      attr_simple_builder :tap_
+      attr_simple_builder :thumb_position
+      attr_simple_builder :toe
+      attr_simple_builder :triple_tongue
+      attr_simple_builder :up_bow
 
       def _to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<note#{" pizzicato=\"yes\"" if @pizzicato}>"

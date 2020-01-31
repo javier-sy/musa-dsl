@@ -93,14 +93,14 @@ module Musa
                      toe: nil, # true
                      triple_tongue: nil, # true
                      up_bow: nil,  # true
-                     **_rest)
-
-        super
+                     &block)
 
         @measure = measure
+
+        super
       end
 
-      attr_accessor :measure
+      attr_simple_builder :measure
 
       private
 

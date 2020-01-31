@@ -241,7 +241,7 @@ RSpec.describe Musa::MusicXML do
             pitch step: 'C', octave: 5, duration: 1, type: 'eighth', voice: 2
             pitch step: 'C', octave: 5, duration: 1, type: 'eighth', voice: 2
 
-            direction wedge: 'stop', dynamics: 'ff' # ???
+            direction wedge: 'stop', dynamics: 'ff'
           end
         end
       end

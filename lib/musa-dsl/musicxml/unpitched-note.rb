@@ -92,7 +92,7 @@ module Musa
                       toe: nil, # true
                       triple_tongue: nil, # true
                       up_bow: nil,  # true
-                      **_rest)
+                      &block)
 
         super
       end

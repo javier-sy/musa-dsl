@@ -126,7 +126,7 @@ module AttributeBuilder
   def attr_simple_builder(name, klass = nil, variable: nil)
     variable ||= ('@' + name.to_s).to_sym
 
-    define_method name do |parameter, &block|
+    define_method name do |parameter = nil, &block|
       if parameter.nil?
         instance_variable_get variable
       else
@@ -143,10 +143,10 @@ module AttributeBuilder
   # thing -> Thing(id, value)
 
   def attr_tuple_builder(name, klass, variable: nil)
+    variable ||= ('@' + name.to_s).to_sym
+
     define_method name do |**parameters, &block|
       raise ArgumentError, "Method #{name} can only create instances with one id: value arguments pattern" unless parameters.size == 1
-
-      variable ||= ('@' + name.to_s).to_sym
 
       if parameters.empty?
         instance_variable_get variable
@@ -167,11 +167,11 @@ module AttributeBuilder
   def attr_complex_builder(name, klass, variable: nil)
     variable ||= ('@' + name.to_s).to_sym
 
-    define_method name do |**parameters, &block|
-      if parameters.empty?
+    define_method name do |*parameters, **key_parameters, &block|
+      if parameters.empty? && key_parameters.empty? && block.nil?
         instance_variable_get variable
       else
-        klass.new(**parameters, &block).tap do |object|
+        klass.new(*parameters, **parameters, &block).tap do |object|
           instance_variable_set variable, object
         end
       end

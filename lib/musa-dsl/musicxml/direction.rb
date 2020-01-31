@@ -57,7 +57,14 @@ module Musa
     end
 
     class DirectionType
+      extend AttributeBuilder
+      include AsContextRun
+
       include Helper::ToXML
+
+      def initialize(*_rest, **_krest, &block)
+        as_context_run block if block_given?
+      end
 
       def _to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<direction-type>"
@@ -69,9 +76,6 @@ module Musa
     private_constant :DirectionType
 
     class Metronome < DirectionType
-      extend AttributeBuilder
-      include AsContextRun
-
       include Helper
 
       # TODO complete Metronome complexity!
@@ -85,7 +89,7 @@ module Musa
         @beat_unit_dots = beat_unit_dots
         @per_minute = per_minute
 
-        as_context_run block if block_given?
+        super
       end
 
       attr_simple_builder :beat_unit
@@ -109,12 +113,16 @@ module Musa
       include Helper
 
       def initialize(type, #  crescendo / diminuendo / stop / continue
-                     niente: nil) # true
+                     niente: nil, # true
+                     &block)
         @type = type
         @niente = niente
+
+        super
       end
 
-      attr_accessor :type, :niente
+      attr_simple_builder :type
+      attr_simple_builder :niente
 
       def _direction_type_to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<wedge type=\"#{@type}\" #{decode_bool_or_string_attribute(@niente, 'niente', 'yes', 'no')} />"
@@ -122,11 +130,13 @@ module Musa
     end
 
     class Dynamics < DirectionType
-      def initialize(value) # pp / ppp / ... or array of
+      def initialize(value, # pp / ppp / ... or array of
+                     &block)
         @dynamics = value.arrayfy
+        super
       end
 
-      attr_accessor :dynamics
+      attr_simple_builder :dynamics
 
       def _direction_type_to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<dynamics>"
@@ -143,13 +153,17 @@ module Musa
       include Helper
 
       def initialize(type, # start / stop / change / continue
-                     line: nil) # true
+                     line: nil, # true
+                     &block)
 
         @type = type
         @line = line
+
+        super
       end
 
-      attr_accessor :type, :line
+      attr_simple_builder :type
+      attr_simple_builder :line
 
       def _direction_type_to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<pedal type=\"#{@type}\" #{decode_bool_or_string_attribute(@line, 'line', 'yes', 'no')} />"
@@ -161,14 +175,19 @@ module Musa
 
       def initialize(type, # start / stop / continue
                      line_end:, # up / down / both / arrow / none
-                     line_type: nil) # solid / dashed / dotted / wavy
+                     line_type: nil, # solid / dashed / dotted / wavy
+                     &block)
 
         @type = type
         @line_end = line_end
         @line_type = line_type
+
+        super
       end
 
-      attr_accessor :type, :line_type, :line_end
+      attr_simple_builder :type
+      attr_simple_builder :line_type
+      attr_simple_builder :line_end
 
       def _direction_type_to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<bracket type=\"#{@type}\" line_end=\"#{@line_end}\" #{decode_bool_or_string_attribute(@line_type, 'line_type')} />"
@@ -176,11 +195,15 @@ module Musa
     end
 
     class Dashes < DirectionType
-      def initialize(type) # start / stop / continue
+      def initialize(type, # start / stop / continue
+                     &block)
+
         @type = type
+
+        super
       end
 
-      attr_accessor :type
+      attr_simple_builder :type
 
       def _direction_type_to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<dashes type=\"#{@type}\" />"
@@ -188,11 +211,15 @@ module Musa
     end
 
     class Words < DirectionType
-      def initialize(value) # string | Array of string
+      def initialize(value, # string | Array of string
+                     &block)
+
         @words = value.arrayfy
+
+        super
       end
 
-      attr_accessor :words
+      attr_simple_builder :words
 
       def _direction_type_to_xml(io, indent:, tabs:)
         @words.each do |words|
@@ -205,12 +232,17 @@ module Musa
       include Helper
 
       def initialize(type, # up / down / stop / continue
-                     size: nil) # number
+                     size: nil, # number
+                     &block)
+
         @type = type
         @size = size
+
+        super
       end
 
-      attr_accessor :type, :size
+      attr_simple_builder :type
+      attr_simple_builder :size
 
       def _direction_type_to_xml(io, indent:, tabs:)
         io.puts "#{tabs}<octave-shift type=\"#{@type}\" #{decode_bool_or_string_attribute(@size, 'size')} />"

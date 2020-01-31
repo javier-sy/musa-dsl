@@ -93,15 +93,18 @@ module Musa
                      toe: nil, # true
                      triple_tongue: nil, # true
                      up_bow: nil,  # true
-                     **_rest)
-        super
+                     &block)
 
         @step = step || _step
         @alter = alter
         @octave = octave
+
+        super
       end
 
-      attr_accessor :step, :alter, :octave
+      attr_simple_builder :step
+      attr_simple_builder :alter
+      attr_simple_builder :octave
 
       private
 
