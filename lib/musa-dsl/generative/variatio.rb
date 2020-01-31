@@ -242,6 +242,8 @@ module Musa
       end
 
       class FieldsetContext
+        include AsContextRun
+
         attr_reader :_fieldset
 
         def initialize(name, options = nil, block)

@@ -119,7 +119,8 @@ module Musa
           @block_procedure_binder = block_procedure_binder
           @decoder = decoder
           @nl_context = nl_context
-          @nl_context ||= Object.new
+
+          @nl_context ||= Object.new.tap { |o| o.extend AsContextRun }
         end
 
         def subcontext

@@ -62,6 +62,8 @@ module Musa
       end
 
       class MainContext
+        include AsContextRun
+
         attr_reader :_measures, :_weights
 
         def initialize(block)

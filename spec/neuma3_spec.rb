@@ -251,7 +251,7 @@ RSpec.describe Musa::Neumalang do
       played = {} if debug
       played = [] unless debug
 
-      context = Object.new
+      context = Object.new.tap { |o| o.extend AsContextRun }
       context.instance_variable_set :@debug, debug
 
       sequencer = Sequencer.new 4, 4 do

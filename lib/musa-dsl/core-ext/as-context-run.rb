@@ -1,6 +1,4 @@
-# TODO: hacer que *_nice permitar recibir atributos para indicar cómo se quieren procesar los parámetros (haciendo *, **, o sin hacer nada)
-
-class Object
+module AsContextRun
   def as_context_run(procedure, *list_or_key_args, **key_args)
     _as_context_run procedure, list_or_key_args, key_args
   end
@@ -40,5 +38,13 @@ class Object
         end
       end
     end
+  end
+
+  def with(*list_args, **key_args, &block)
+    _as_context_run(block, list_args, key_args)
+  end
+
+  def _with(list_args = nil, key_args = nil, &block)
+    _as_context_run(block, list_args, key_args)
   end
 end

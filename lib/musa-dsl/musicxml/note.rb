@@ -7,7 +7,8 @@ module Musa
       include Helper
       include ToXML
 
-      def initialize(pizzicato: nil,  # true
+      def initialize(*_rest,
+                     pizzicato: nil,  # true
                      # main content
                      grace: nil, # true
                      cue: nil, # true
@@ -97,7 +98,7 @@ module Musa
                      toe: nil, # true
                      triple_tongue: nil, # true
                      up_bow: nil, # true
-                     **_rest)
+                     **_krest)
 
         @pizzicato = pizzicato
 

@@ -146,15 +146,15 @@
 		<measure number="1">
 			<attributes>
 				<divisions>2</divisions>
-				<key number="1">
+				<key>
 					<fifths>2</fifths>
 					<mode></mode>
 				</key>
-				<time number="1">
+				<time>
 					<beats>4</beats>
 					<beat-type>4</beat-type>
 				</time>
-				<clef number="1">
+				<clef>
 					<sign>G</sign>
 					<line>2</line>
 				</clef>
@@ -230,15 +230,15 @@
 		<measure number="1">
 			<attributes>
 				<divisions>2</divisions>
-				<key number="1">
+				<key>
 					<fifths>2</fifths>
 					<mode></mode>
 				</key>
-				<time number="1">
+				<time>
 					<beats>4</beats>
 					<beat-type>4</beat-type>
 				</time>
-				<clef number="1">
+				<clef>
 					<sign>G</sign>
 					<line>2</line>
 				</clef>
@@ -278,15 +278,15 @@
 		<measure number="1">
 			<attributes>
 				<divisions>2</divisions>
-				<key number="1">
+				<key>
 					<fifths>2</fifths>
 					<mode></mode>
 				</key>
-				<time number="1">
+				<time>
 					<beats>4</beats>
 					<beat-type>4</beat-type>
 				</time>
-				<clef number="1">
+				<clef>
 					<sign>G</sign>
 					<line>2</line>
 				</clef>

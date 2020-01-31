@@ -26,6 +26,7 @@ module Musa
 
       class DSLContext
         extend Forwardable
+        include AsContextRun
 
         attr_reader :sequencer
 

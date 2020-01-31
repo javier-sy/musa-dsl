@@ -3,7 +3,7 @@ require_relative 'note'
 module Musa
   module MusicXML
     class PitchedNote < Note
-      def initialize(step:, alter: nil, octave:,
+      def initialize(_step = nil, step: nil, alter: nil, octave:,
                      pizzicato: nil, # true
                      grace: nil, # true
                      cue: nil, # true
@@ -96,7 +96,7 @@ module Musa
                      **_rest)
         super
 
-        @step = step
+        @step = step || _step
         @alter = alter
         @octave = octave
       end

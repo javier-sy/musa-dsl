@@ -5,7 +5,7 @@ module Musa
     include Helper::ToXML
 
     class Backup
-      def initialize(duration:)
+      def initialize(duration)
         @duration = duration
       end
 
@@ -19,7 +19,7 @@ module Musa
     class Forward
       include Helper::ToXML
 
-      def initialize(duration:, voice: nil, staff: nil)
+      def initialize(duration, voice: nil, staff: nil)
         @duration = duration
         @voice = voice
         @staff = staff

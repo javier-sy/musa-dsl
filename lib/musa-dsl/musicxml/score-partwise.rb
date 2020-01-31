@@ -1,4 +1,7 @@
 require 'date'
+
+require 'musa-dsl/core-ext/attribute-builder'
+
 require_relative 'part-group'
 require_relative 'part'
 
@@ -6,63 +9,93 @@ require_relative 'helper'
 
 module Musa
   module MusicXML
-    class ScorePartwise
+
+    class TypedText
       include Helper::ToXML
+
+      def initialize(type = nil, text)
+        @type = type
+        @text = text
+      end
+
+      attr_accessor :type, :text
+      attr_reader :tag
+
+      def _to_xml(io, indent:, tabs:)
+        io.puts "#{tabs}<#{tag}#{" type=\"#{@type}\"" if @type}>#{@text}</#{tag}>"
+      end
+    end
+
+    private_constant :TypedText
+
+    class Creator < TypedText
+      def initialize(type, name)
+        @tag = 'creator'
+        super type, name
+      end
+    end
+
+    class Rights < TypedText
+      def initialize(type, name)
+        @tag = 'rights'
+        super type, name
+      end
+    end
+
+    class ScorePartwise
+      include AsContextRun
+      include Helper::ToXML
+
+      extend AttributeBuilder
 
       def initialize(work_number: nil, work_title: nil,
                      movement_number: nil, movement_title: nil,
+                     encoding_date: nil,
                      creators: nil,
-                     rights: nil)
+                     rights: nil,
+                     &block)
 
         @work_number = work_number
         @work_title = work_title
         @movement_number = movement_number
         @movement_title = movement_title
 
+        @encoding_date = encoding_date || DateTime.now
+
         @creators = []
         @rights = []
 
-        creators.arrayfy.each do |creator|
-          creator.each_pair do |type, name|
-            add_creator type, name: name
-          end
-        end
-
-        rights.arrayfy.each do |rights|
-          rights.each_pair do |type, name|
-            add_rights type, name: name
-          end
-        end
+        self.creators **creators if creators
+        self.rights **rights if rights
 
         @groups_and_parts = []
         @parts = {}
+
+        self.as_context_run block if block_given?
       end
 
-      attr_accessor :work_number, :work_title
-      attr_accessor :movement_number, :movement_title
-      attr_reader :creators
-      attr_reader :rights
-      attr_reader :parts
+      attr_simple_builder :work_title
+      attr_simple_builder :work_number
 
-      def add_rights(type, name:)
-        Rights.new(type, name: name).tap { |rights| @rights << rights }
-      end
+      attr_simple_builder :movement_title
+      attr_simple_builder :movement_number
 
-      def add_creator(type, name:)
-        Creator.new(type, name: name).tap { |creator| @creators << creator }
-      end
+      attr_simple_builder :encoding_date
 
-      def add_part(id, name:, abbreviation: nil)
+      attr_tuple_adder_to_array :rights, Rights, plural: :rights
+      attr_tuple_adder_to_array :creator, Creator
+
+      attr_complex_adder_to_custom :part, variable: :@parts do |id, name:, abbreviation: nil|
         Part.new(id, name: name, abbreviation: abbreviation).tap do |part|
           @parts[id] = part
           @groups_and_parts << part
         end
       end
 
-      def add_group(number = nil, type:, name: nil, abbreviation: nil, symbol: nil, group_barline: nil, group_time: nil)
-        PartGroup.new(number, type: type,
-                      name: name, abbreviation: abbreviation, symbol: symbol,
-                      group_barline: group_barline, group_time: group_time).tap { |group| @groups_and_parts << group }
+      attr_complex_adder_to_custom :group do |*parameters, **key_parameters|
+        PartGroup.new(*parameters, **key_parameters).tap do |group|
+          @groups_and_parts << group
+        end
       end
 
       def _to_xml(io, indent:, tabs:)
@@ -91,7 +124,7 @@ module Musa
         end
 
         io.puts "#{tabs}\t\t<encoding>"
-        io.puts"#{tabs}\t\t\t<encoding-date>#{DateTime.now.strftime("%Y-%m-%d")}</encoding-date>"
+        io.puts"#{tabs}\t\t\t<encoding-date>#{@encoding_date.strftime("%Y-%m-%d")}</encoding-date>"
         io.puts"#{tabs}\t\t\t<software>MusaDSL: MusicXML output formatter</software>"
         io.puts "#{tabs}\t\t</encoding>"
 
@@ -111,37 +144,6 @@ module Musa
       end
     end
 
-    class TypedText
-      include Helper::ToXML
-
-      def initialize(type = nil, text:)
-        @type = type
-        @text = text
-      end
-
-      attr_accessor :type, :text
-      attr_reader :tag
-
-      def _to_xml(io, indent:, tabs:)
-        io.puts "#{tabs}<#{tag}#{" type=\"#{@type}\"" if @type}>#{@text}</#{tag}>"
-      end
-    end
-
-    private_constant :TypedText
-
-    class Creator < TypedText
-      def initialize(type, name:)
-        @tag = 'creator'
-        super type, text: name
-      end
-    end
-
-    class Rights < TypedText
-      def initialize(type, name:)
-        @tag = 'rights'
-        super type, text: name
-      end
-    end
   end
 end
 

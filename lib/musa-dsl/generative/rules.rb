@@ -4,6 +4,8 @@ require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 module Musa
   module Rules
     class Rules
+      include AsContextRun
+
       def initialize(&block)
         @context = RulesEvalContext.new.tap { |_| _._as_context_run block }
       end
@@ -65,6 +67,8 @@ module Musa
       end
 
       class RulesEvalContext
+        include AsContextRun
+
         attr_reader :_rules, :_ended_when, :_rejections
 
         def rule(name, &block)
@@ -89,6 +93,8 @@ module Musa
         end
 
         class Rule
+          include AsContextRun
+
           attr_reader :name
 
           def initialize(name, context, block)
