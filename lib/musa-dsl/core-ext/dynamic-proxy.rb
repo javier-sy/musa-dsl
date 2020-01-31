@@ -1,9 +1,7 @@
-require_relative 'send-nice'
-
 module DynamicProxyModule
   def method_missing(method_name, *args, **key_args, &block)
     if @receiver.respond_to? method_name
-      @receiver._send_nice method_name, args, key_args, &block
+      @receiver.send method_name, *args, **key_args, &block
     else
       super
     end

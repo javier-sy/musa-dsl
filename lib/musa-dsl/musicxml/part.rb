@@ -6,7 +6,6 @@ module Musa
   module MusicXML
     class Part
       extend AttributeBuilder
-      include AsContextRun
 
       include Helper::HeaderToXML
       include Helper::ToXML
@@ -22,7 +21,7 @@ module Musa
           add_measure **first_measure_attributes
         end
 
-        as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       attr_simple_builder :id

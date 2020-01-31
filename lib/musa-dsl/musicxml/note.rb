@@ -5,7 +5,6 @@ module Musa
   module MusicXML
     class Note
       extend AttributeBuilder
-      include AsContextRun
 
       include Helper
       include ToXML
@@ -193,7 +192,7 @@ module Musa
         @triple_tongue = triple_tongue
         @up_bow = up_bow
 
-        as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       attr_simple_builder :pizzicato

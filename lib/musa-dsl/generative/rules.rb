@@ -1,13 +1,10 @@
-require 'musa-dsl/core-ext/as-context-run'
 require 'musa-dsl/core-ext/key-parameters-procedure-binder'
 
 module Musa
   module Rules
     class Rules
-      include AsContextRun
-
       def initialize(&block)
-        @context = RulesEvalContext.new.tap { |_| _._as_context_run block }
+        @context = RulesEvalContext.new.tap { |_| _.instance_eval &block }
       end
 
       def generate_possibilities(object, confirmed_node = nil, node = nil, rules = nil)
@@ -67,8 +64,6 @@ module Musa
       end
 
       class RulesEvalContext
-        include AsContextRun
-
         attr_reader :_rules, :_ended_when, :_rejections
 
         def rule(name, &block)
@@ -89,12 +84,10 @@ module Musa
         end
 
         def _ended?(object)
-          as_context_run @_ended_when, object
+          instance_exec object, &@_ended_when
         end
 
         class Rule
-          include AsContextRun
-
           attr_reader :name
 
           def initialize(name, context, block)
@@ -106,7 +99,7 @@ module Musa
           def generate_possibilities(object, history)
             # TODO: optimize context using only one instance for all genereate_possibilities calls
             context = RuleEvalContext.new @context
-            context.as_context_run @block, object, history
+            context.instance_exec object, history, &@block
 
             context._possibilities
           end
@@ -128,7 +121,7 @@ module Musa
 
             def method_missing(method_name, *args, **key_args, &block)
               if @_parent_context.respond_to? method_name
-                @_parent_context.send_nice method_name, *args, **key_args, &block
+                @_parent_context.send method_name, *args, **key_args, &block
               else
                 super
               end
@@ -156,7 +149,7 @@ module Musa
           def rejects?(object, history)
             # TODO: optimize context using only one instance for all rejects? checks
             context = RejectionEvalContext.new @context
-            context.as_context_run @block, object, history
+            context.instance_exec object, history, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
 
@@ -180,7 +173,7 @@ module Musa
 
             def method_missing(method_name, *args, **key_args, &block)
               if @_parent_context.respond_to? method_name
-                @_parent_context.send_nice method_name, *args, **key_args, &block
+                @_parent_context.send method_name, *args, **key_args, &block
               else
                 super
               end

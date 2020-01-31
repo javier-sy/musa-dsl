@@ -1,5 +1,3 @@
-require 'musa-dsl/core-ext/as-context-run'
-
 module Musa
   module Darwin
     class Darwin
@@ -62,13 +60,11 @@ module Musa
       end
 
       class MainContext
-        include AsContextRun
-
         attr_reader :_measures, :_weights
 
         def initialize(block)
           @_weights = {}
-          _as_context_run block
+          instance_eval &block
         end
 
         def measures(&block)

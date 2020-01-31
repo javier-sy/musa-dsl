@@ -242,14 +242,12 @@ module Musa
       end
 
       class FieldsetContext
-        include AsContextRun
-
         attr_reader :_fieldset
 
         def initialize(name, options = nil, block)
           @_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
 
-          _as_context_run block
+          instance_eval &block
         end
 
         def field(name, options = nil)

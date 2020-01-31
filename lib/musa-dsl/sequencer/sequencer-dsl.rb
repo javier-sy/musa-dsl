@@ -26,7 +26,6 @@ module Musa
 
       class DSLContext
         extend Forwardable
-        include AsContextRun
 
         attr_reader :sequencer
 
@@ -41,14 +40,14 @@ module Musa
         def with(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
-          _as_context_run block, value_parameters, key_parameters
+          instance_exec *value_parameters, **key_parameters, &block
         end
 
         def now(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
           @sequencer.now *value_parameters, **key_parameters do |*value_args, **key_args|
-            _as_context_run block, value_args, key_args
+            instance_exec *value_args, **key_args, &block
           end
         end
 
@@ -56,7 +55,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.at *value_parameters, **key_parameters do |*value_args, **key_args|
-            _as_context_run block, value_args, key_args
+            instance_exec *value_args, **key_args, &block
           end
         end
 
@@ -64,7 +63,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.wait *value_parameters, **key_parameters do | *values, **key_values |
-            _as_context_run block, values, key_values
+            instance_exec *values, **key_values, &block
           end
         end
 
@@ -72,7 +71,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.play *value_parameters, **key_parameters do |*value_args, **key_args|
-            _as_context_run block, value_args, key_args
+            instance_exec *value_args, **key_args, &block
           end
         end
 
@@ -80,7 +79,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.every *value_parameters, **key_parameters do |*value_args, **key_args|
-            _as_context_run block, value_args, KeyParametersProcedureBinder.new(block).apply(key_args)
+            instance_exec *value_args, **KeyParametersProcedureBinder.new(block).apply(key_args), &block
           end
         end
 
@@ -88,7 +87,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.move *value_parameters, **key_parameters do |*value_args, **key_args|
-            _as_context_run block, value_args, key_args
+            instance_exec *value_args, **key_args, &block
           end
         end
       end

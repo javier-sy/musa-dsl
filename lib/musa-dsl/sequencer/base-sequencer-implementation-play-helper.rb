@@ -120,7 +120,7 @@ module Musa
           @decoder = decoder
           @nl_context = nl_context
 
-          @nl_context ||= Object.new.tap { |o| o.extend AsContextRun }
+          @nl_context ||= Object.new
         end
 
         def subcontext
@@ -186,10 +186,10 @@ module Musa
         end
 
         def eval_command(block, value_parameters, key_parameters)
-          _value_parameters = value_parameters.collect { |e| subcontext.eval_element(e) } if value_parameters
-          _key_parameters = key_parameters.collect { |k, e| [k, subcontext.eval_element(e)] }.to_h if key_parameters
+          _value_parameters = value_parameters ? value_parameters.collect { |e| subcontext.eval_element(e) } : []
+          _key_parameters = key_parameters ? key_parameters.collect { |k, e| [k, subcontext.eval_element(e)] }.to_h : {}
 
-          @nl_context._as_context_run block, _value_parameters, _key_parameters
+          @nl_context.instance_exec *_value_parameters, **_key_parameters, &block
         end
 
         def eval_call_methods(on, call_methods)
@@ -200,20 +200,20 @@ module Musa
           if value.is_a? Parallel
             value.collect do |_value|
               call_methods.each do |methd|
-                value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } if methd[:value_parameters]
-                key_parameters = methd[:key_parameters].collect { |k, e| [k, play_eval.subcontext.eval_element(e)] }.to_h if methd[:key_parameters]
+                value_parameters = methd[:value_parameters] ? methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } : []
+                key_parameters = methd[:key_parameters] ? methd[:key_parameters].collect { |k, e| [k, play_eval.subcontext.eval_element(e)] }.to_h : {}
 
-                _value = _value._send_nice methd[:method], value_parameters, key_parameters
+                _value = _value.send methd[:method], *value_parameters, **key_parameters
               end
 
               _value
             end.extend Parallel
           else
             call_methods.each do |methd|
-              value_parameters = methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } if methd[:value_parameters]
-              key_parameters = methd[:key_parameters].collect { |k, e| [k, play_eval.subcontext.eval_element(e)] }.to_h if methd[:key_parameters]
+              value_parameters = methd[:value_parameters] ? methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } : []
+              key_parameters = methd[:key_parameters] ? methd[:key_parameters].collect { |k, e| [k, play_eval.subcontext.eval_element(e)] }.to_h : {}
 
-              value = value._send_nice methd[:method], value_parameters, key_parameters
+              value = value.send methd[:method], *value_parameters, **key_parameters
             end
 
             value
@@ -287,32 +287,25 @@ module Musa
               end
 
             when :serie
-
               { current_operation: :play,
                 current_parameter: eval_serie(element[:serie]) }
 
             when :parallel
-
               { current_operation: :parallel_play,
                 current_parameter: eval_parallel(element[:parallel]) }
 
             when :assign_to
-
               eval_assign_to element[:assign_to], element[:assign_value]
 
               { current_operation: :none,
                 continue_operation: :now }
 
             when :use_variable
-
               run_operation eval_use_variable(element[:use_variable])
 
             when :event
-
-              value_parameters = key_parameters = nil
-
-              value_parameters = element[:value_parameters].collect { |e| subcontext.eval_element(e) } if element[:value_parameters]
-              key_parameters = element[:key_parameters].collect { |k, e| [k, subcontext.eval_element(e)] }.to_h if element[:key_parameters]
+              value_parameters = element[:value_parameters] ? element[:value_parameters].collect { |e| subcontext.eval_element(e) } : []
+              key_parameters = element[:key_parameters] ? element[:key_parameters].collect { |k, e| [k, subcontext.eval_element(e)] }.to_h : {}
 
               { current_operation: :event,
                 current_event: element[:event],
@@ -321,15 +314,12 @@ module Musa
                 continue_operation: :now }
 
             when :command
-
               run_operation eval_command(element[:command], element[:value_parameters], element[:key_parameters])
 
             when :call_methods
-
               run_operation eval_call_methods(element[:on], element[:call_methods])
 
             when :reference
-
               run_operation eval_reference(element[:reference])
 
             else

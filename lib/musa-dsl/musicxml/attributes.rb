@@ -94,7 +94,6 @@ module Musa
 
     class Attributes
       extend AttributeBuilder
-      include AsContextRun
 
       include Helper::ToXML
 
@@ -114,7 +113,7 @@ module Musa
         add_time senza_misura: time_senza_misura, beats: time_beats, beat_type: time_beat_type if time_senza_misura || (time_beats && time_beat_type)
         add_clef sign: clef_sign, line: clef_line, octave_change: clef_octave_change if clef_sign
 
-        as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       attr_simple_builder :divisions

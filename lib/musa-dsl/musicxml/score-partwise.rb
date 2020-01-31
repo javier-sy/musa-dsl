@@ -43,10 +43,9 @@ module Musa
     end
 
     class ScorePartwise
-      include AsContextRun
-      include Helper::ToXML
-
       extend AttributeBuilder
+
+      include Helper::ToXML
 
       def initialize(work_number: nil, work_title: nil,
                      movement_number: nil, movement_title: nil,
@@ -71,7 +70,7 @@ module Musa
         @groups_and_parts = []
         @parts = {}
 
-        self.as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       attr_simple_builder :work_title

@@ -381,7 +381,7 @@ module Musa::Datasets
         end
       end
 
-      attributes[c += 1] = 'o' +  positive_sign_of(self[:octave]) + self[:octave].to_s if self[:octave]
+      attributes[c += 1] = 'o' + positive_sign_of(self[:octave]) + self[:octave].to_s if self[:octave]
       attributes[c += 1] = (self[:duration] / @base_duration).to_s if self[:duration]
       attributes[c += 1] = velocity_of(self[:velocity]) if self[:velocity]
 

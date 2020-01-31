@@ -11,7 +11,6 @@ module Musa
   module MusicXML
     class Measure
       extend AttributeBuilder
-      include AsContextRun
 
       include Helper::ToXML
 
@@ -37,7 +36,7 @@ module Musa
                          clef_sign: clef_sign, clef_line: clef_line, clef_octave_change: clef_octave_change
         end
 
-        as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       attr_accessor :number

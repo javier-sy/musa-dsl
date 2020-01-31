@@ -66,7 +66,7 @@ module Musa
 
       def method_missing(method_name, *args, **key_args, &block)
         if @hold && @hold.respond_to?(method_name)
-          @hold.send_nice method_name, *args, **key_args, &block
+          @hold.send method_name, *args, **key_args, &block
         else
           super
         end

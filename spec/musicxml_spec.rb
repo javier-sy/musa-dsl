@@ -47,9 +47,9 @@ RSpec.describe Musa::MusicXML do
         encoding_date DateTime.new(2020, 1, 29)
       end
 
-      score.with do
-        creators composer: "Javier", lyrics: "Javier S. lyrics"
-        rights lyrics: "Javier S."
+      score.with do |s|
+        s.creators composer: "Javier", lyrics: "Javier S. lyrics"
+        s.rights lyrics: "Javier S."
       end
 
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_1_spec.musicxml")).strip

@@ -97,7 +97,7 @@ module AttributeBuilder
 
     define_method adder_method do |*parameters, **key_parameters, &block|
       instance_exec(*parameters, **key_parameters, &constructor_and_adder).tap do |object|
-        object.as_context_run block if block && object.is_a?(AsContextRun)
+        object.instance_exec &block if block
       end
     end
 

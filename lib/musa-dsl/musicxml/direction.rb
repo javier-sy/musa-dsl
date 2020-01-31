@@ -4,7 +4,6 @@ module Musa
   module MusicXML
     class Direction
       extend AttributeBuilder
-      include AsContextRun
 
       include Helper
       include ToXML
@@ -22,7 +21,7 @@ module Musa
           send direction, value
         end
 
-        as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       attr_simple_builder :voice
@@ -58,12 +57,11 @@ module Musa
 
     class DirectionType
       extend AttributeBuilder
-      include AsContextRun
 
       include Helper::ToXML
 
       def initialize(*_rest, **_krest, &block)
-        as_context_run block if block_given?
+        instance_eval &block if block_given?
       end
 
       def _to_xml(io, indent:, tabs:)
