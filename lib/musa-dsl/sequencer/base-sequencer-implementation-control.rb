@@ -62,11 +62,13 @@ module Musa
         end
 
         def _launch(event, value_parameters = nil, key_parameters = nil)
+          value_parameters ||= []
+          key_parameters ||= {}
           processed = false
 
           if @handlers.key? event
             @handlers[event].each do |name, handler|
-              handler[:block]._call value_parameters, key_parameters
+              handler[:block].call *value_parameters, **key_parameters
               @handlers[event].delete name if handler[:only_once]
               processed = true
             end

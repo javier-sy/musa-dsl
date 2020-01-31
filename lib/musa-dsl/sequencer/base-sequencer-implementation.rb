@@ -27,7 +27,7 @@ module Musa
                 $stdout = command[:parent_control].stdout
                 $stderr = command[:parent_control].stderr
 
-                command[:block]._call command[:value_parameters], command[:key_parameters] if command[:block]
+                command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
 
                 $stdout = original_stdout
                 $stderr = original_stderr
@@ -36,7 +36,7 @@ module Musa
               @event_handlers.pop
             else
               @@tick_mutex.synchronize do
-                command[:block]._call command[:value_parameters], command[:key_parameters] if command[:block]
+                command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
               end
             end
           end
