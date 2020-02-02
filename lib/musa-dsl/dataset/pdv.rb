@@ -1,15 +1,20 @@
-require 'musa-dsl/neuma'
+require_relative 'dataset'
+require_relative 'gdv'
 
-module Musa::Datasets
+require_relative 'helper'
+
+module Musa::Dataset
   module PDV
-    include Musa::Neumalang::Dataset
+    include Dataset
+
+    include Helper
 
     NaturalKeys = [:pitch, :duration, :velocity].freeze
 
     attr_accessor :base_duration
 
     def to_gdv(scale)
-      r = {}.extend Musa::Datasets::GDV
+      r = {}.extend GDV
       r.base_duration = @base_duration
 
       if self[:pitch]

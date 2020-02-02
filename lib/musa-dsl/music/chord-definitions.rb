@@ -1,3 +1,5 @@
+require_relative 'chord-definition'
+
 include Musa::Chords
 
 ChordDefinition.register :maj, quality: :major, size: :triad, offsets: { root: 0, third: 4, fifth: 7 }

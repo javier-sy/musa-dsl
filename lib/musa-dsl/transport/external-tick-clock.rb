@@ -1,4 +1,4 @@
-require 'musa-dsl/transport/clock'
+require_relative 'clock'
 
 module Musa
   module Clock

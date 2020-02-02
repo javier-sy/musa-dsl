@@ -1,4 +1,4 @@
-require 'musa-dsl/core-ext/arrayfy'
+require_relative '../core-ext/arrayfy'
 
 # TODO: añadir en for: steps: (nº de pasos en los que repartir el incremento)
 

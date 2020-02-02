@@ -1,3 +1,3 @@
-require 'musa-dsl/neumalang/neumalang'
+require_relative 'neumalang/neumalang'
 
 

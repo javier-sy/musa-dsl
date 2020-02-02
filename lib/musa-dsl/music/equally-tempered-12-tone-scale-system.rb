@@ -1,3 +1,5 @@
+require_relative 'scales'
+
 module Musa
   module Scales
     class TwelveSemitonesScaleSystem < ScaleSystem

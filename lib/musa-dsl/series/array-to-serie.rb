@@ -1,4 +1,4 @@
-require 'musa-dsl/series'
+require_relative '../series'
 
 class Array
   def to_serie(of_series: nil, recursive: nil)

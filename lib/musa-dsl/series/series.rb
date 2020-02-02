@@ -6,3 +6,5 @@ require_relative 'hash-serie-splitter'
 require_relative 'holder-serie'
 require_relative 'proxy-serie'
 require_relative 'queue-serie'
+
+require_relative 'array-to-serie'

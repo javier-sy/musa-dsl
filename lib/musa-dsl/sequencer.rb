@@ -1,1 +1,1 @@
-require 'musa-dsl/sequencer/sequencer'
+require_relative 'sequencer/sequencer'

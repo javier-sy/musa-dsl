@@ -1,1 +1,1 @@
-require 'musa-dsl/musicxml/score-partwise'
+require_relative 'musicxml/score-partwise'

@@ -5,7 +5,7 @@ grammar NeumalangGrammar
 	end
 
 	rule sentences
-		(spaces (sentence spaces)*) <Musa::Neumalang::Parser::Sentences>
+		(spaces (sentence spaces)*) <Musa::Neumalang::Neumalang::Parser::Sentences>
 	end
 
 	rule sentence
@@ -21,23 +21,23 @@ grammar NeumalangGrammar
 	end
 
 	rule reference_expression
-		(ampersand spaces expression) <Musa::Neumalang::Parser::ReferenceExpression>
+		(ampersand spaces expression) <Musa::Neumalang::Neumalang::Parser::ReferenceExpression>
 	end
 
 	rule variable_assign
-		((use_variable spaces equal spaces)+ expression) <Musa::Neumalang::Parser::VariableAssign>
+		((use_variable spaces equal spaces)+ expression) <Musa::Neumalang::Neumalang::Parser::VariableAssign>
 	end
 
 	rule event
-		(double_colon name parameters?) <Musa::Neumalang::Parser::Event>
+		(double_colon name parameters?) <Musa::Neumalang::Neumalang::Parser::Event>
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace parameters?) <Musa::Neumalang::Parser::BracedCommand>
+		(lbrace spaces complex_command spaces rbrace parameters?) <Musa::Neumalang::Neumalang::Parser::BracedCommand>
 	end
 
 	rule call_methods_expression
-		(object_expression (dot method_call)+) <Musa::Neumalang::Parser::CallMethodsExpression>
+		(object_expression (dot method_call)+) <Musa::Neumalang::Neumalang::Parser::CallMethodsExpression>
 	end
 
 	rule bracketed_expression
@@ -65,15 +65,15 @@ grammar NeumalangGrammar
 	end
 
 	rule bracketed_bar_sentences
-		(lbracket spaces aa:sentences (bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Parser::BracketedBarSentences>
+		(lbracket spaces aa:sentences (bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Neumalang::Parser::BracketedBarSentences>
 	end
 
 	rule bracketed_sentences
-		(lbracket spaces sentences rbracket) <Musa::Neumalang::Parser::BracketedSentences>
+		(lbracket spaces sentences rbracket) <Musa::Neumalang::Neumalang::Parser::BracketedSentences>
 	end
 
 	rule use_variable
-		(at name) <Musa::Neumalang::Parser::UseVariable>
+		(at name) <Musa::Neumalang::Neumalang::Parser::UseVariable>
 	end
 
 	rule parameters
@@ -119,15 +119,15 @@ grammar NeumalangGrammar
 
 
 	rule neuma_as_dotted_attributes_beginning_with_simple_attribute
-	    (a:simple_attribute (dot b:attribute)*) <Musa::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithSimpleAttribute>
+	    (a:simple_attribute (dot b:attribute)*) <Musa::Neumalang::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithSimpleAttribute>
 	end
 
 	rule neuma_as_dotted_attributes_beginning_with_dot
-	    ((dot attribute)+ | dot) <Musa::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithDot>
+	    ((dot attribute)+ | dot) <Musa::Neumalang::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithDot>
 	end
 
 	rule neuma_between_angles_attributes
-		(langle spaces simple_attribute? spaces (attribute spaces)* rangle) <Musa::Neumalang::Parser::NeumaBetweenAnglesAttributes>
+		(langle spaces simple_attribute? spaces (attribute spaces)* rangle) <Musa::Neumalang::Neumalang::Parser::NeumaBetweenAnglesAttributes>
 	end
 
     rule attribute
@@ -177,7 +177,7 @@ grammar NeumalangGrammar
   	end
 
   	rule symbol
-  		(colon name) <Musa::Neumalang::Parser::Symbol>
+  		(colon name) <Musa::Neumalang::Neumalang::Parser::Symbol>
   	end
 
   	rule raw_symbol
@@ -185,7 +185,7 @@ grammar NeumalangGrammar
   	end
 
   	rule string
-  		(double_quote everything_except_double_quote double_quote) <Musa::Neumalang::Parser::String>
+  		(double_quote everything_except_double_quote double_quote) <Musa::Neumalang::Neumalang::Parser::String>
   	end
 
   	rule raw_string
@@ -193,7 +193,7 @@ grammar NeumalangGrammar
   	end
 
   	rule float
-    	(single_quote str:(digits dot digits) spaces) <Musa::Neumalang::Parser::Float>
+    	(single_quote str:(digits dot digits) spaces) <Musa::Neumalang::Neumalang::Parser::Float>
   	end
 
   	rule raw_float
@@ -201,7 +201,7 @@ grammar NeumalangGrammar
   	end
 
   	rule integer
-    	(single_quote digits spaces) <Musa::Neumalang::Parser::Integer>
+    	(single_quote digits spaces) <Musa::Neumalang::Neumalang::Parser::Integer>
   	end
 
   	rule raw_integer
@@ -209,7 +209,7 @@ grammar NeumalangGrammar
   	end
 
   	rule rational
-    	(single_quote str:(digits slash digits) spaces) <Musa::Neumalang::Parser::Rational>
+    	(single_quote str:(digits slash digits) spaces) <Musa::Neumalang::Neumalang::Parser::Rational>
   	end
 
   	rule raw_rational

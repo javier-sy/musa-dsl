@@ -1,6 +1,6 @@
-require 'musa-dsl/music/scales'
-require 'musa-dsl/music/equally-tempered-12-tone-scale-system'
+require_relative 'music/scales'
+require_relative 'music/equally-tempered-12-tone-scale-system'
 
-require 'musa-dsl/music/chord-definition'
-require 'musa-dsl/music/chords'
-require 'musa-dsl/music/chord-definitions'
+require_relative 'music/chord-definition'
+require_relative 'music/chords'
+require_relative 'music/chord-definitions'

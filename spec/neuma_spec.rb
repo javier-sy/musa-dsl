@@ -5,62 +5,62 @@ require 'musa-dsl'
 include Musa::Neumalang
 include Musa::Series
 include Musa::Scales
-include Musa::Datasets
+include Musa::Dataset
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma simple parsing' do
 
-    it 'Basic neuma inline parsing (only a comment)' do
+    it 'Basic neumas inline parsing (only a comment)' do
       expect(Musa::Neumalang::Neumalang.parse('/* comentario 1 */').to_a(recursive: true)).to eq([])
     end
 
-    it 'Basic neuma inline parsing (two comments)' do
+    it 'Basic neumas inline parsing (two comments)' do
       expect(Neumalang.parse('/* comentario 1 */ /* bla bla */').to_a(recursive: true)).to eq([])
     end
 
-    it 'Basic neuma inline parsing (two comments with subcomments)' do
+    it 'Basic neumas inline parsing (two comments with subcomments)' do
       expect(Neumalang.parse('/* comentario  /* otro comentario */ 1 */ /* bla bla */').to_a(recursive: true)).to eq([])
     end
 
-    it 'Basic neuma inline parsing (1)' do
+    it 'Basic neumas inline parsing (1)' do
       expect(Neumalang.parse('2.3.4 5.6.7 /* comentario 1 */ ::evento').to_a(recursive: true)).to eq(
         [{ kind: :neuma, neuma: %w[2 3 4] }, { kind: :neuma, neuma: %w[5 6 7] }, { kind: :event, event: :evento }]
       )
     end
 
-    it 'Basic neuma inline parsing (2)' do
+    it 'Basic neumas inline parsing (2)' do
       expect(Neumalang.parse('2.3.4 5.6.7 ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
         [{ kind: :neuma, neuma: %w[2 3 4] }, { kind: :neuma, neuma: %w[5 6 7] }, { kind: :event, event: :evento }]
       )
     end
 
-    it 'Basic neuma inline parsing with octaves' do
+    it 'Basic neumas inline parsing with octaves' do
       expect(Neumalang.parse('2.o-1.3.4 5.o+2.6.7 ::evento').to_a(recursive: true)).to eq(
         [{ kind: :neuma, neuma: ['2', 'o-1', '3', '4'] }, { kind: :neuma, neuma: %w[5 o+2 6 7] }, { kind: :event, event: :evento }]
       )
     end
 
-    it 'Basic neuma inline parsing with comment' do
+    it 'Basic neumas inline parsing with comment' do
       expect(Neumalang.parse("/* comentario (con parentesis) \n*/ 2.3.4").to_a(recursive: true)).to eq([{ kind: :neuma, neuma: %w[2 3 4] }])
     end
 
-    it 'Basic neuma inline parsing only duration' do
+    it 'Basic neumas inline parsing only duration' do
       result = Neumalang.parse('0 .1/2').to_a(recursive: true)
 
       expect(result[0]).to eq(kind: :neuma, neuma: ['0'])
       expect(result[1]).to eq(kind: :neuma, neuma: [nil, '1/2'])
     end
 
-    it 'Basic neuma inline parsing silence' do
+    it 'Basic neumas inline parsing silence' do
       result = '0 silence.1/2'.to_neumas.to_a(recursive: true)
 
       expect(result[0]).to eq(kind: :neuma, neuma: ['0'])
       expect(result[1]).to eq(kind: :neuma, neuma: ['silence', '1/2'])
     end
 
-    it 'Basic neuma inline parsing with differential decoder' do
+    it 'Basic neumas inline parsing with differential decoder' do
 
-      differential_decoder = GDVd::NeumaDifferentialDecoder.new(base_duration: 1)
+      differential_decoder = Decoder::NeumaDifferentialDecoder.new(base_duration: 1)
 
       result = Neumalang.parse('0 . +1 2.p silence silence.1/3 2.1/2.p /*comentario 1*/', decode_with: differential_decoder).to_a(recursive: true)
 
@@ -75,8 +75,8 @@ RSpec.describe Musa::Neumalang do
       expect(result[6]).to eq(abs_grade: 2, abs_duration: Rational(1, 2), abs_velocity: -1)
     end
 
-    it 'Basic neuma file parsing with GDV differential decoder' do
-      differential_decoder = GDVd::NeumaDifferentialDecoder.new
+    it 'Basic neumas file parsing with GDV differential decoder' do
+      differential_decoder = Decoder::NeumaDifferentialDecoder.new
 
       result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: differential_decoder).to_a(recursive: true)
 
@@ -100,7 +100,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(abs_grade: 2, abs_velocity: -1)
       expect(result[c += 1]).to eq(abs_grade: 2, abs_duration: Rational(1, 8), abs_velocity: 3)
 
-      # expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
+      # expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neumas simple
 
       expect(result[c += 1]).to eq(abs_grade: :silence)
       expect(result[c += 1]).to eq(abs_grade: 0)
@@ -111,7 +111,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(abs_velocity: -1)
       expect(result[c += 1]).to eq(delta_velocity: 1)
 
-      # expect(result[c+=1]).to eq({ event: :evento }) # no se puede procesar como neuma simple
+      # expect(result[c+=1]).to eq({ event: :evento }) # no se puede procesar como neumas simple
 
       expect(result[c += 1]).to eq(abs_grade: :silence, factor_duration: Rational(1, 2))
 
@@ -121,10 +121,10 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(abs_grade: :II)
     end
 
-    it 'Basic neuma file parsing with GDV decoder' do
+    it 'Basic neumas file parsing with GDV decoder' do
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = GDV::NeumaDecoder.new scale, base_duration: 1, grade: 0, duration: 1, velocity: 1
+      decoder = Decoder::NeumaDecoder.new scale, base_duration: 1, grade: 0, duration: 1, velocity: 1
 
       result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: decoder).to_a(recursive: true)
 
@@ -148,7 +148,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 2, duration: 1/2r, velocity: -1)
       expect(result[c += 1]).to eq(grade: 2, duration: 1/2r, velocity: 3)
 
-      # expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neuma simple
+      # expect(result[c+=1][:command].call).to eq(11110) # no se puede procesar como neumas simple
 
       expect(result[c += 1]).to eq(grade: 2, duration: 1/2r, velocity: 3, silence: true)
 
@@ -160,7 +160,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: -1)
       expect(result[c += 1]).to eq(grade: 1, duration: 1/2r, velocity: 0)
 
-      # expect(result[c+=1]).to eq({ duration: 0, event: :evento }) # no se puede procesar como neuma simple
+      # expect(result[c+=1]).to eq({ duration: 0, event: :evento }) # no se puede procesar como neumas simple
 
       expect(result[c += 1]).to eq(grade: 1, duration: 1/4r, velocity: 0, silence: true)
 
@@ -171,7 +171,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[c += 1]).to eq(grade: 1, duration: 1/4r, velocity: 0)
     end
 
-    it 'Array of strings to neuma conversion' do
+    it 'Array of strings to neumas conversion' do
       neumas = ['1.2.3 a.b.c', '2.3.4 x.y.z'].n.to_a
 
       c = -1

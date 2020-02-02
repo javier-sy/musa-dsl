@@ -1,4 +1,4 @@
-require 'musa-dsl/core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/key-parameters-procedure-binder'
 
 module Musa
   module Rules

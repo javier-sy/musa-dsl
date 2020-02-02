@@ -1,4 +1,4 @@
-require 'musa-dsl/transport/clock'
+require_relative 'clock'
 require 'nibbler'
 
 module Musa

@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 include Musa::Neumalang
-include Musa::Datasets
+include Musa::Dataset
 include Musa::Sequencer
 include Musa::Scales
 
@@ -56,7 +56,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats with differential decoder' do
-      differential_decoder = GDVd::NeumaDifferentialDecoder.new
+      differential_decoder = Decoder::NeumaDifferentialDecoder.new
 
       result = Neumalang.parse('0.1 . 1./ 1#./ 2_./', decode_with: differential_decoder).to_a(recursive: true)
 
@@ -72,7 +72,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation and differential decoder' do
-      differential_decoder = GDVd::NeumaDifferentialDecoder.new
+      differential_decoder = Decoder::NeumaDifferentialDecoder.new
 
       result = Neumalang.parse('0 . +1.1· 2.+/·.p silence silence./· 2./.p', decode_with: differential_decoder).to_a(recursive: true)
 
@@ -92,7 +92,7 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0   1.2.ppp   2.tr   3.tr(100)  4.tr(100/1, 400/2)   5.tr("hola").st(1,2,3).xy(1,2,3)   6.tr(up) +1 +1.+o1.+2.+ff'
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
       result = Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
 
@@ -116,7 +116,7 @@ RSpec.describe Musa::Neumalang do
 
       neumas_ok = '0.1.mf +1.+1.-ffff +1.tr +1.tr(100) +1.tr(100, 200) +1.tr("hola").st(1, 2, 3).xy(1, 2, 3) +1.tr(up) +1 +8.+2.+ff'
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
       result_gdv = Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
 
@@ -139,9 +139,9 @@ RSpec.describe Musa::Neumalang do
 
       neumas    = '0.1.mf +1.st .st(1) .st(2) .st(3) .st(4)'
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
-      decorators = Dataset::Decorators.new GDV::StaccatoDecorator.new(min_duration_factor: 1/6r)
+      decorators = DatasetDecorators::Decorators.new DatasetDecorators::GDV::StaccatoDecorator.new(min_duration_factor: 1/6r)
 
       result_gdv = Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.process(gdv) }.to_a(recursive: true)
 
@@ -160,9 +160,10 @@ RSpec.describe Musa::Neumalang do
 
       neumas    = '0.1.mf +1.tr'
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
-      decorators = Dataset::Decorators.new GDV::StaccatoDecorator.new, GDV::TrillDecorator.new(duration_factor: 1/6r),
+      decorators = DatasetDecorators::Decorators.new DatasetDecorators::GDV::StaccatoDecorator.new,
+                                                     DatasetDecorators::GDV::TrillDecorator.new(duration_factor: 1/6r),
           base_duration: 1/4r,
           tick_duration: 1/96r
 
@@ -184,10 +185,13 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1.mor +3.+1.mor(low)'
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
-      decorators = Dataset::Decorators.new \
-        GDV::StaccatoDecorator.new, GDV::TrillDecorator.new, GDV::MordentDecorator.new(duration_factor: 1/6r),
+      decorators = DatasetDecorators::Decorators.new \
+        DatasetDecorators::GDV::StaccatoDecorator.new,
+        DatasetDecorators::GDV::TrillDecorator.new,
+        DatasetDecorators::GDV::MordentDecorator.new(duration_factor: 1/6r),
+
           base_duration: 1/4r,
           tick_duration: 1/96r
 
@@ -210,9 +214,9 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1 5.base +2'
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
-      decorators = Dataset::Decorators.new GDV::BaseDecorator.new,
+      decorators = DatasetDecorators::Decorators.new DatasetDecorators::GDV::BaseDecorator.new,
           base_duration: 1/4r,
           tick_duration: 1/96r
 
@@ -227,7 +231,7 @@ RSpec.describe Musa::Neumalang do
 
     end
 
-    it 'Modifiers extended neuma parsing with sequencer play' do
+    it 'Modifiers extended neumas parsing with sequencer play' do
       debug = false
       #debug = true
 
@@ -235,11 +239,13 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1.mor +3.+1.mor(low) -2'
 
-      decorators = Dataset::Decorators.new GDV::StaccatoDecorator.new, GDV::TrillDecorator.new, GDV::MordentDecorator.new(duration_factor: 1/8r),
+      decorators = DatasetDecorators::Decorators.new DatasetDecorators::GDV::StaccatoDecorator.new,
+                                                     DatasetDecorators::GDV::TrillDecorator.new,
+                                                     DatasetDecorators::GDV::MordentDecorator.new(duration_factor: 1/8r),
           base_duration: 1/4r,
           tick_duration: 1/96r
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
+      gdv_decoder = Decoder::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
 
       serie = Neumalang.parse(neumas)
 
@@ -308,7 +314,7 @@ RSpec.describe Musa::Neumalang do
       end
     end
 
-    it 'Modifier .mute extended neuma parsing with sequencer play' do
+    it 'Modifier .mute extended neumas parsing with sequencer play' do
       debug = false
       #debug = true
 
@@ -316,11 +322,14 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '0.1.mf +1.*2 5.b +2'
 
-      decorators = Dataset::Decorators.new GDV::BaseDecorator.new, GDV::TrillDecorator.new, GDV::MordentDecorator.new(duration_factor: 1/8r),
-          base_duration: 1/4r,
-          tick_duration: 1/96r
+      decorators = DatasetDecorators::Decorators.new \
+        DatasetDecorators::GDV::BaseDecorator.new,
+                     DatasetDecorators::GDV::TrillDecorator.new,
+                     DatasetDecorators::GDV::MordentDecorator.new(duration_factor: 1/8r),
+        base_duration: 1/4r,
+        tick_duration: 1/96r
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
+      gdv_decoder = Decoder::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
 
       serie = Neumalang.parse(neumas)
 
@@ -388,10 +397,13 @@ RSpec.describe Musa::Neumalang do
 
       result = Neumalang.parse(neumas).to_a(recursive: true)
 
-      decoder = GDV::NeumaDecoder.new scale
+      decoder = Decoder::NeumaDecoder.new scale
 
-      decorators = Dataset::Decorators.new GDV::StaccatoDecorator.new, GDV::TrillDecorator.new, GDV::MordentDecorator.new,
-        appogiatura_decorator: GDV::AppogiaturaDecorator.new,
+      decorators = DatasetDecorators::Decorators.new \
+DatasetDecorators::GDV::StaccatoDecorator.new,
+        DatasetDecorators::GDV::TrillDecorator.new,
+        DatasetDecorators::GDV::MordentDecorator.new,
+        appogiatura_decorator: DatasetDecorators::GDV::AppogiaturaDecorator.new,
         base_duration: 1/4r,
         tick_duration: 1/96r
 
@@ -406,7 +418,7 @@ RSpec.describe Musa::Neumalang do
       expect(result_gdv[c += 1]).to eq(grade: 0, octave: 0, duration: 1/4r, velocity: 1)
     end
 
-    it 'Appogiatura extended neuma parsing with sequencer play' do
+    it 'Appogiatura extended neumas parsing with sequencer play' do
       debug = false
       #debug = true
 
@@ -414,12 +426,15 @@ RSpec.describe Musa::Neumalang do
 
       neumas = '[0.1.mf +1 (+2.//)+3 0 +1]'
 
-      decorators = Dataset::Decorators.new GDV::StaccatoDecorator.new, GDV::TrillDecorator.new, GDV::MordentDecorator.new,
-        appogiatura_decorator: GDV::AppogiaturaDecorator.new,
+      decorators = DatasetDecorators::Decorators.new \
+        DatasetDecorators::GDV::StaccatoDecorator.new,
+        DatasetDecorators::GDV::TrillDecorator.new,
+        DatasetDecorators::GDV::MordentDecorator.new,
+        appogiatura_decorator: DatasetDecorators::GDV::AppogiaturaDecorator.new,
         base_duration: 1/4r,
         tick_duration: 1/96r
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
+      gdv_decoder = Decoder::NeumaDecoder.new scale, processor: decorators, base_duration: 1/4r
 
       serie = Neumalang.parse(neumas)
 

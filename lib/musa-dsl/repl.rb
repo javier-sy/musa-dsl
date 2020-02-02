@@ -1,1 +1,1 @@
-require 'musa-dsl/repl/repl'
+require_relative 'repl/repl'

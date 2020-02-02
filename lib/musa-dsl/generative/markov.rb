@@ -1,4 +1,4 @@
-require 'musa-dsl/series'
+require_relative '../series'
 
 module Musa
 

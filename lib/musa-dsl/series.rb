@@ -1,1 +1,1 @@
-require 'musa-dsl/series/series'
+require_relative 'series/series'

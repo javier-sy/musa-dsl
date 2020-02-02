@@ -6,19 +6,20 @@ require 'musa-dsl'
 
 include Musa::Series
 include Musa::Scales
-include Musa::Datasets
+include Musa::Dataset
 include Musa::Neumalang
+include Musa::Neumas
 include Musa::Sequencer
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma with neumalang advanced parsing' do
     scale = Scales.default_system.default_tuning.major[60]
 
-    it 'Simple file neuma parsing' do
+    it 'Simple file neumas parsing' do
       debug = false
       #debug = true
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3a_spec.neu')
 
       if debug
@@ -83,11 +84,11 @@ RSpec.describe Musa::Neumalang do
       end
     end
 
-    it 'Simple file neuma parsing with parallel series and call methods' do
+    it 'Simple file neumas parsing with parallel series and call methods' do
       debug = false
       # debug = true
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3b_spec.neu')
 
       if debug
@@ -148,11 +149,11 @@ RSpec.describe Musa::Neumalang do
       end
     end
 
-    it 'Simple file neuma parsing with call_methods on simple serie' do
+    it 'Simple file neumas parsing with call_methods on simple serie' do
       debug = false
       # debug = true
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3c_spec.neu')
 
       if debug
@@ -237,7 +238,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = GDV::NeumaDecoder.new scale
+      gdv_decoder = Decoder::NeumaDecoder.new scale
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3d_spec.neu')
 
       if debug
@@ -332,11 +333,11 @@ RSpec.describe Musa::Neumalang do
       end
     end
 
-    it 'Complex file neuma parsing' do
+    it 'Complex file neumas parsing' do
       debug = false
       #debug = true
 
-      gdv_decoder = GDV::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3z_spec.neu')
 
       if debug

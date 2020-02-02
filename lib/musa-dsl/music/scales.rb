@@ -1,138 +1,136 @@
+require_relative '../neumas/neuma-gdvd-parser'
+
 module Musa
   module Scales
     module Scales
-      class << self
-        def register(scale_system, default: nil)
-          @scale_systems ||= {}
-          @scale_systems[scale_system.id] = scale_system
+      def self.register(scale_system, default: nil)
+        @scale_systems ||= {}
+        @scale_systems[scale_system.id] = scale_system
 
-          @default_scale_system = scale_system if default
-          self
+        @default_scale_system = scale_system if default
+        self
+      end
+
+      def self.[](id)
+        raise KeyError, "Scale system :#{id} not found" unless @scale_systems.key?(id)
+
+        @scale_systems[id]
+      end
+
+      def self.default_system
+        @default_scale_system
+      end
+
+      private
+
+      def self.method_missing(method_name, *args, **key_args, &block)
+        if @scale_systems.key?(method_name) && args.empty? && key_args.empty? && !block
+          self[method_name]
+        else
+          super
         end
+      end
 
-        def [](id)
-          raise KeyError, "Scale system :#{id} not found" unless @scale_systems.key?(id)
-
-          @scale_systems[id]
-        end
-
-        def default_system
-          @default_scale_system
-        end
-
-        private
-
-        def method_missing(method_name, *args, **key_args, &block)
-          if @scale_systems.key?(method_name) && args.empty? && key_args.empty? && !block
-            self[method_name]
-          else
-            super
-          end
-        end
-
-        def respond_to_missing?(method_name, include_private)
-          @scale_systems.key?(method_name) || super
-        end
+      def self.respond_to_missing?(method_name, include_private)
+        @scale_systems.key?(method_name) || super
       end
     end
 
     class ScaleSystem
-      class << self
-        # @abstract Subclass is expected to implement names
-        # @!method id
-        # @return [Symbol] the id of the ScaleSystem as a symbol
-        #
-        def id
-          raise 'Method not implemented. Should be implemented in subclass.'
+      # @abstract Subclass is expected to implement names
+      # @!method id
+      # @return [Symbol] the id of the ScaleSystem as a symbol
+      #
+      def self.id
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
+      # @abstract Subclass is expected to implement notes_in_octave
+      # @!method notes_in_octave
+      # @return [Integer] the number of notes in one octave in the ScaleSystem
+      #
+      def self.notes_in_octave
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
+      # @abstract Subclass is expected to implement part_of_tone_size
+      # @!method part_of_tone_size
+      # @return [Integer] the size inside the ScaleSystem of the smaller part of a tone; used for calculate sharp and flat notes
+      #
+      def self.part_of_tone_size
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
+      # @abstract Subclass is expected to implement intervals
+      # @!method intervals
+      # @return [Hash] the intervals of the ScaleSystem as { name: semitones#, ... }
+      #
+      def self.intervals
+        # TODO: implementar intérvalos sinónimos (p.ej, m3 = A2)
+        # TODO: implementar identificación de intérvalos, teniendo en cuenta no sólo los semitonos sino los grados de separación
+        # TODO: implementar inversión de intérvalos
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
+      # @abstract Subclass is expected to implement frequency_of_pitch
+      # @!method frequency_of_pitch
+      # @param pitch [Number] The pitch (MIDI note numbers based) of the note to get the fundamental frequency
+      # @param root_pitch [Number] The pitch (MIDI note numbers based) of the root note of the scale (needed for not equally tempered scales)
+      # @param a_frequency [Number] The reference frequency of the mid A note
+      # @return [Number] the frequency of the fundamental tone of the pitch
+      #
+      def self.frequency_of_pitch(pitch, root_pitch, a_frequency)
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
+
+      # @abstract Subclass can implement default_a_frequency. If subclass doesn't implement default_a_frequency 440.0 Hz is assumed.
+      # @!method default_a_frequency
+      # @return [Number] the frequency A by default
+      #
+      def self.default_a_frequency
+        440.0
+      end
+
+      def self.[](a_frequency)
+        a_frequency = a_frequency.to_f
+
+        @a_tunings ||= {}
+        @a_tunings[a_frequency] = ScaleSystemTuning.new self, a_frequency unless @a_tunings.key?(a_frequency)
+
+        @a_tunings[a_frequency]
+      end
+
+      def self.offset_of_interval(name)
+        intervals[name]
+      end
+
+      def self.default_tuning
+        self[default_a_frequency]
+      end
+
+      def self.register(scale_kind_class)
+        @scale_kind_classes ||= {}
+        @scale_kind_classes[scale_kind_class.id] = scale_kind_class
+        if scale_kind_class.chromatic?
+          @chromatic_scale_kind_class = scale_kind_class
         end
+        self
+      end
 
-        # @abstract Subclass is expected to implement notes_in_octave
-        # @!method notes_in_octave
-        # @return [Integer] the number of notes in one octave in the ScaleSystem
-        #
-        def notes_in_octave
-          raise 'Method not implemented. Should be implemented in subclass.'
-        end
+      def self.scale_kind_class(id)
+        raise KeyError, "Scale kind class [#{id}] not found in scale system [#{self.id}]" unless @scale_kind_classes.key? id
 
-        # @abstract Subclass is expected to implement part_of_tone_size
-        # @!method part_of_tone_size
-        # @return [Integer] the size inside the ScaleSystem of the smaller part of a tone; used for calculate sharp and flat notes
-        #
-        def part_of_tone_size
-          raise 'Method not implemented. Should be implemented in subclass.'
-        end
+        @scale_kind_classes[id]
+      end
 
-        # @abstract Subclass is expected to implement intervals
-        # @!method intervals
-        # @return [Hash] the intervals of the ScaleSystem as { name: semitones#, ... }
-        #
-        def intervals
-          # TODO: implementar intérvalos sinónimos (p.ej, m3 = A2)
-          # TODO: implementar identificación de intérvalos, teniendo en cuenta no sólo los semitonos sino los grados de separación
-          # TODO: implementar inversión de intérvalos
-          raise 'Method not implemented. Should be implemented in subclass.'
-        end
+      def self.scale_kind_class?(id)
+        @scale_kind_classes.key? id
+      end
 
-        # @abstract Subclass is expected to implement frequency_of_pitch
-        # @!method frequency_of_pitch
-        # @param pitch [Number] The pitch (MIDI note numbers based) of the note to get the fundamental frequency
-        # @param root_pitch [Number] The pitch (MIDI note numbers based) of the root note of the scale (needed for not equally tempered scales)
-        # @param a_frequency [Number] The reference frequency of the mid A note
-        # @return [Number] the frequency of the fundamental tone of the pitch
-        #
-        def frequency_of_pitch(pitch, root_pitch, a_frequency)
-          raise 'Method not implemented. Should be implemented in subclass.'
-        end
+      def self.chromatic_class
+        raise "Chromatic scale kind class for [#{self.id}] scale system undefined" if @chromatic_scale_kind_class.nil?
 
-        # @abstract Subclass can implement default_a_frequency. If subclass doesn't implement default_a_frequency 440.0 Hz is assumed.
-        # @!method default_a_frequency
-        # @return [Number] the frequency A by default
-        #
-        def default_a_frequency
-          440.0
-        end
-
-        def [](a_frequency)
-          a_frequency = a_frequency.to_f
-
-          @a_tunings ||= {}
-          @a_tunings[a_frequency] = ScaleSystemTuning.new self, a_frequency unless @a_tunings.key?(a_frequency)
-
-          @a_tunings[a_frequency]
-        end
-
-        def offset_of_interval(name)
-          intervals[name]
-        end
-
-        def default_tuning
-          self[default_a_frequency]
-        end
-
-        def register(scale_kind_class)
-          @scale_kind_classes ||= {}
-          @scale_kind_classes[scale_kind_class.id] = scale_kind_class
-          if scale_kind_class.chromatic?
-            @chromatic_scale_kind_class = scale_kind_class
-          end
-          self
-        end
-
-        def scale_kind_class(id)
-          raise KeyError, "Scale kind class [#{id}] not found in scale system [#{self.id}]" unless @scale_kind_classes.key? id
-
-          @scale_kind_classes[id]
-        end
-
-        def scale_kind_class?(id)
-          @scale_kind_classes.key? id
-        end
-
-        def chromatic_class
-          raise "Chromatic scale kind class for [#{self.id}] scale system undefined" if @chromatic_scale_kind_class.nil?
-
-          @chromatic_scale_kind_class
-        end
+        @chromatic_scale_kind_class
       end
 
       def ==(other)
@@ -333,7 +331,7 @@ module Musa
       end
 
       def grade_of(grade_or_string_or_symbol)
-        sign, name, wide_grade, accidentals = Musa::Datasets::GDVd::Parser.parse_grade(grade_or_string_or_symbol)
+        sign, name, wide_grade, accidentals = Neumas::Decoder::Parser.parse_grade(grade_or_string_or_symbol)
 
         raise ArgumentError, "Cannot parse sign on #{grade_or_string_or_symbol}" if sign
 

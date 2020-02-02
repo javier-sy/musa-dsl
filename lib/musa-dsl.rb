@@ -1,21 +1,21 @@
-require 'musa-dsl/core-ext'
+require_relative 'musa-dsl/core-ext'
 
-require 'musa-dsl/series'
-require 'musa-dsl/neuma'
-require 'musa-dsl/datasets'
+require_relative 'musa-dsl/series'
+require_relative 'musa-dsl/dataset'
 
-require 'musa-dsl/neumalang'
+require_relative 'musa-dsl/neumalang'
+require_relative 'musa-dsl/neumas'
 
-require 'musa-dsl/transport'
-require 'musa-dsl/sequencer'
-require 'musa-dsl/repl'
+require_relative 'musa-dsl/transport'
+require_relative 'musa-dsl/sequencer'
+require_relative 'musa-dsl/repl'
 
-require 'musa-dsl/midi'
-require 'musa-dsl/musicxml'
+require_relative 'musa-dsl/midi'
+require_relative 'musa-dsl/musicxml'
 
-require 'musa-dsl/music'
+require_relative 'musa-dsl/music'
 
-require 'musa-dsl/generative'
+require_relative 'musa-dsl/generative'
 
 module Musa
   VERSION = '0.15.2'
@@ -27,8 +27,10 @@ module Musa
 
     include Musa::Scales
     include Musa::Chords
+    include Musa::Dataset
+
     include Musa::Neumalang
-    include Musa::Datasets
+    include Musa::Neumas
 
     include Musa::Series
 

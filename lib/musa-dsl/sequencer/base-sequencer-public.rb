@@ -1,7 +1,7 @@
-require 'musa-dsl/core-ext/arrayfy'
-require 'musa-dsl/core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/arrayfy'
+require_relative '../core-ext/key-parameters-procedure-binder'
 
-require 'musa-dsl/series'
+require_relative '../series'
 
 module Musa
   module Sequencer

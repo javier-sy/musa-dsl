@@ -1,5 +1,5 @@
-require 'musa-dsl/neumalang'
-require 'musa-dsl/generative/generative-grammar'
+require_relative '../neumalang'
+require_relative '../generative/generative-grammar'
 
 class String
   def to_neumas(language: nil, decode_with: nil, debug: nil)
@@ -15,7 +15,7 @@ class String
     when String
       { kind: :parallel,
         parallel: [{ kind: :serie, serie: self.to_neumas },
-                   { kind: :serie, serie: other.to_neumas }] }.extend(Musa::Neumalang::Neuma::Parallel)
+                   { kind: :serie, serie: other.to_neumas }] }.extend(Musa::Neumas::Neuma::Parallel)
     else
       raise ArgumentError, "Don't know how to parallelize #{other}"
     end

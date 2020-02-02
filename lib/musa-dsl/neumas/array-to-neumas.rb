@@ -1,5 +1,5 @@
-require 'musa-dsl/series'
-require 'musa-dsl/neumalang'
+require_relative '../series'
+require_relative '../neumalang'
 
 class Array
   def to_neumas
@@ -17,8 +17,8 @@ class Array
 
   def convert_to_neumas(e)
     case e
-    when Musa::Neumalang::Neumas then e
-    when Musa::Neumalang::Neuma::Parallel then _SE([e], extends: Musa::Neumalang::Neumas)
+    when Musa::Neumas::Neumas then e
+    when Musa::Neumas::Neuma::Parallel then _SE([e], extends: Musa::Neumas::Neumas)
     when String then e.to_neumas
     else
       raise ArgumentError, "Don't know how to convert to neumas #{e}"

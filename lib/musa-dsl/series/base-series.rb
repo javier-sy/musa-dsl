@@ -1,5 +1,5 @@
-require 'musa-dsl/core-ext/duplicate'
-require 'musa-dsl/generative/generative-grammar'
+require_relative '../core-ext/duplicate'
+require_relative '../generative/generative-grammar'
 
 module Musa
   module Series
@@ -169,7 +169,7 @@ module Musa
       alias_method :node, :to_node
 
       class Nodificator
-        extend Musa::GenerativeGrammar
+        include Musa::GenerativeGrammar
 
         def self.to_node(serie, **attributes)
           N(serie, **attributes)

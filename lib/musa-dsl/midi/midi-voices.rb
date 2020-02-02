@@ -1,7 +1,7 @@
 require 'set'
 require 'midi-message'
 
-require 'musa-dsl/core-ext/arrayfy'
+require_relative '../core-ext/arrayfy'
 
 module Musa
   module MIDIVoices

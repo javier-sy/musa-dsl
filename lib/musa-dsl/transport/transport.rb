@@ -1,5 +1,5 @@
-require 'musa-dsl/sequencer'
-require 'musa-dsl/core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/key-parameters-procedure-binder'
+require_relative '../sequencer'
 
 module Musa
   module Transport
