@@ -6,6 +6,7 @@ include Musa::Neumalang
 include Musa::Series
 include Musa::Scales
 include Musa::Dataset
+include Musa::Neumas
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma simple parsing' do
