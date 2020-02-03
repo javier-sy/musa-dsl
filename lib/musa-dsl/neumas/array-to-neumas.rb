@@ -17,8 +17,8 @@ class Array
 
   def convert_to_neumas(e)
     case e
-    when Musa::Neumas::Neumas then e
-    when Musa::Neumas::Neuma::Parallel then _SE([e], extends: Musa::Neumas::Neumas)
+    when Musa::Neumas::Neuma::Serie then e
+    when Musa::Neumas::Neuma::Parallel then _SE([e], extends: Musa::Neumas::Neuma::Serie)
     when String then e.to_neumas
     else
       raise ArgumentError, "Don't know how to convert to neumas #{e}"

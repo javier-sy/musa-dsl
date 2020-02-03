@@ -1,11 +1,11 @@
 module Musa
   module Neumas
-    module Neumas # Neumas serie
-      # TODO implementar | ???? neumas | neumas = parallel neumas, no?
-    end
-
     module Neuma
       module Parallel
+        include Neuma
+      end
+
+      module Serie
         include Neuma
       end
 

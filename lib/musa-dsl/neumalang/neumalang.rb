@@ -9,9 +9,10 @@ module Musa
       module Parser
         module Sentences
           include Musa::Series
+          include Musa::Neumas
 
           def value
-            _SE(captures(:sentence).collect(&:value), extends: Neumas)
+            _SE(captures(:sentence).collect(&:value), extends: Neuma::Serie)
           end
         end
 
