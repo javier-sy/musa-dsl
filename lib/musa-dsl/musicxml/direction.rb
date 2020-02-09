@@ -1,9 +1,12 @@
+require_relative '../core-ext/with'
+
 require_relative 'helper'
 
 module Musa
   module MusicXML
     class Direction
       extend AttributeBuilder
+      include With
 
       include Helper
       include ToXML
@@ -21,7 +24,7 @@ module Musa
           send direction, value
         end
 
-        instance_eval &block if block_given?
+        with &block if block_given?
       end
 
       attr_simple_builder :voice
@@ -57,11 +60,12 @@ module Musa
 
     class DirectionType
       extend AttributeBuilder
+      include With
 
       include Helper::ToXML
 
       def initialize(*_rest, **_krest, &block)
-        instance_eval &block if block_given?
+        with &block if block_given?
       end
 
       def _to_xml(io, indent:, tabs:)

@@ -3,7 +3,7 @@ require_relative 'gdv'
 
 require_relative 'helper'
 
-module Musa::Dataset
+module Musa::Datasets
   module GDVd
     include Dataset
 

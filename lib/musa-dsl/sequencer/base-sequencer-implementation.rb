@@ -14,8 +14,13 @@ module Musa
 
         @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
 
-        if @score[position_to_run]
-          @score[position_to_run].each do |command|
+        queue = @timeslots[position_to_run]
+
+        if queue
+          until queue.empty?
+
+            command = queue.shift
+            @timeslots.delete position_to_run if queue.empty?
 
             if command.key?(:parent_control) && !command[:parent_control].stopped?
               @event_handlers.push command[:parent_control]
@@ -40,8 +45,6 @@ module Musa
               end
             end
           end
-
-          @score.delete position_to_run
         end
 
         Thread.pass
@@ -70,13 +73,13 @@ module Musa
           end
 
         elsif position > @position
-          @score[position] = [] unless @score[position]
+          @timeslots[position] ||= []
 
           value = { block: block, value_parameters: [], key_parameters: {} }
           if force_first
-            @score[position].insert 0, value
+            @timeslots[position].insert 0, value
           else
-            @score[position] << value
+            @timeslots[position] << value
           end
         else
           _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
@@ -137,10 +140,10 @@ module Musa
             end
 
           elsif position > @position
-            @score[position] = [] unless @score[position]
+            @timeslots[position] = [] unless @timeslots[position]
 
-            @score[position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
-            @score[position] << { parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
+            @timeslots[position] << {parent_control: control, block: @on_debug_at } if debug && @on_debug_at
+            @timeslots[position] << {parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
           else
             _log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
           end

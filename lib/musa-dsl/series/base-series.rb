@@ -169,7 +169,7 @@ module Musa
       alias_method :node, :to_node
 
       class Nodificator
-        include Musa::GenerativeGrammar
+        extend Musa::GenerativeGrammar
 
         def self.to_node(serie, **attributes)
           N(serie, **attributes)

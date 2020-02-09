@@ -1,5 +1,5 @@
 module Musa::Neumas
-  module Decoder
+  module Decoders
     module Parser
       extend self
 
@@ -8,7 +8,7 @@ module Musa::Neumas
 
         neuma = expression.clone
 
-        command = {}.extend Musa::Dataset::GDVd
+        command = {}.extend Musa::Datasets::GDVd
         command.base_duration = base_duration
 
         grade = neuma.shift

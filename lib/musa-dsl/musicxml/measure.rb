@@ -1,3 +1,5 @@
+require_relative '../core-ext/with'
+
 require_relative 'attributes'
 require_relative 'pitched-note'
 require_relative 'rest'
@@ -11,6 +13,7 @@ module Musa
   module MusicXML
     class Measure
       extend AttributeBuilder
+      include With
 
       include Helper::ToXML
 
@@ -36,7 +39,7 @@ module Musa
                          clef_sign: clef_sign, clef_line: clef_line, clef_octave_change: clef_octave_change
         end
 
-        instance_eval &block if block_given?
+        with &block if block_given?
       end
 
       attr_accessor :number

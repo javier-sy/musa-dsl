@@ -30,7 +30,7 @@ module Musa
         @hold_public_ticks = false
         @hold_ticks = 0
 
-        @score = {}
+        @timeslots = {}
 
         @everying = []
         @playing = []
@@ -42,7 +42,7 @@ module Musa
       end
 
       def reset
-        @score.clear
+        @timeslots.clear
         @everying.clear
         @playing.clear
         @moving.clear
@@ -61,11 +61,11 @@ module Musa
       end
 
       def size
-        @score.size
+        @timeslots.sum(&:size)
       end
 
       def empty?
-        @score.empty?
+        @timeslots.empty?
       end
 
       def round(bar)

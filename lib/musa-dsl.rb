@@ -1,10 +1,12 @@
 require_relative 'musa-dsl/core-ext'
 
 require_relative 'musa-dsl/series'
-require_relative 'musa-dsl/dataset'
+require_relative 'musa-dsl/datasets'
 
 require_relative 'musa-dsl/neumalang'
 require_relative 'musa-dsl/neumas'
+
+require_relative 'musa-dsl/score'
 
 require_relative 'musa-dsl/transport'
 require_relative 'musa-dsl/sequencer'
@@ -18,7 +20,7 @@ require_relative 'musa-dsl/music'
 require_relative 'musa-dsl/generative'
 
 module Musa
-  VERSION = '0.17.0'
+  VERSION = '0.17.1'
 
   module All
     include Musa::Clock
@@ -27,7 +29,7 @@ module Musa
 
     include Musa::Scales
     include Musa::Chords
-    include Musa::Dataset
+    include Musa::Datasets
 
     include Musa::Neumalang
     include Musa::Neumas
@@ -42,6 +44,7 @@ module Musa
     include Musa::MIDIRecorder
     include Musa::MIDIVoices
 
+    include Musa::Score
     include Musa::MusicXML
 
     include Musa::REPL

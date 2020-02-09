@@ -1,3 +1,5 @@
+require_relative '../core-ext/with'
+
 require_relative 'measure'
 
 require_relative 'helper'
@@ -6,6 +8,7 @@ module Musa
   module MusicXML
     class Part
       extend AttributeBuilder
+      include With
 
       include Helper::HeaderToXML
       include Helper::ToXML
@@ -21,7 +24,7 @@ module Musa
           add_measure **first_measure_attributes
         end
 
-        instance_eval &block if block_given?
+        with &block if block_given?
       end
 
       attr_simple_builder :id

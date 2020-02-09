@@ -1,6 +1,6 @@
 require_relative 'decorators'
 
-module Musa::Dataset
+module Musa::Datasets
   module DatasetDecorators
     module GDV
       # Process: appogiatura (neumas)neumas
@@ -217,7 +217,7 @@ module Musa::Dataset
           base = gdv.delete :base
           base ||= gdv.delete :b
 
-          base ? { duration: 0 }.extend(Musa::Dataset::GDV) : gdv
+          base ? { duration: 0 }.extend(Musa::Datasets::GDV) : gdv
         end
       end
     end

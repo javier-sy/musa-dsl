@@ -1,4 +1,4 @@
-module Musa::Dataset
+module Musa::Datasets
   module Helper
     protected
 

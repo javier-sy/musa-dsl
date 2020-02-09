@@ -1,7 +1,7 @@
 require_relative 'neuma-decoder'
 
 module Musa::Neumas
-  module Decoder
+  module Decoders
     class NeumaDecoder < Decoder # to get a GDV
       def initialize(scale, base_duration: nil, processor: nil, **base)
         @base_duration = base_duration || Rational(1,4)

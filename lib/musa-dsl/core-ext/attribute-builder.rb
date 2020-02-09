@@ -91,13 +91,12 @@ module AttributeBuilder
   def attr_complex_adder_to_custom(name, plural: nil, variable: nil, &constructor_and_adder)
 
     plural ||= name.to_s + 's'
-    getter ||= true
 
     adder_method = "add_#{name}".to_sym
 
     define_method adder_method do |*parameters, **key_parameters, &block|
       instance_exec(*parameters, **key_parameters, &constructor_and_adder).tap do |object|
-        object.instance_exec &block if block
+        object.with &block if block
       end
     end
 

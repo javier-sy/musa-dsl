@@ -30,7 +30,7 @@ module Musa
         attr_reader :sequencer
 
         def_delegators :@sequencer, :launch, :on,
-                       :position, :everying, :playing, :moving,
+                       :position, :size, :everying, :playing, :moving,
                        :ticks_per_bar, :round, :log, :inspect
 
         def initialize(sequencer)

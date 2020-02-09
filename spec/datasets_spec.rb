@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Neumalang
 include Musa::Neumas
-include Musa::Dataset
+include Musa::Datasets
 include Musa::Scales
 
 RSpec.describe Musa::Neumalang do
@@ -39,7 +39,7 @@ RSpec.describe Musa::Neumalang do
 
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoder::NeumaDecoder.new scale
+      decoder = Decoders::NeumaDecoder.new scale
 
       result_gdv = Neumalang.parse(gdv_abs_neumas_1, decode_with: decoder).to_a(recursive: true)
 
@@ -60,7 +60,7 @@ RSpec.describe Musa::Neumalang do
 
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoder::NeumaDecoder.new scale
+      decoder = Decoders::NeumaDecoder.new scale
 
       result_gdv = Neumalang.parse(gdv_abs_neumas, decode_with: decoder).to_a(recursive: true)
 
@@ -77,7 +77,7 @@ RSpec.describe Musa::Neumalang do
       gdv_diff_neumas_1 = '0 . +1 2.p +# 2.1/2.p -# -_ silence.+2'
       gdv_diff_neumas_2 = '0 . +1 2.p +# 2.1/2.p _ +# silence.+2'
 
-      decoder = Decoder::NeumaDifferentialDecoder.new
+      decoder = Decoders::NeumaDifferentialDecoder.new
 
       result_gdvd = Neumalang.parse(gdv_diff_neumas_1, decode_with: decoder).to_a(recursive: true)
 
@@ -94,7 +94,7 @@ RSpec.describe Musa::Neumalang do
 
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoder::NeumaDecoder.new scale
+      decoder = Decoders::NeumaDecoder.new scale
 
       result_gdv = Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(recursive: true)
 
@@ -110,7 +110,7 @@ RSpec.describe Musa::Neumalang do
 
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoder::NeumaDecoder.new scale
+      decoder = Decoders::NeumaDecoder.new scale
 
       result_gdv = Neumalang.parse(gdv_diff_neumas, decode_with: decoder).to_a(recursive: true)
 

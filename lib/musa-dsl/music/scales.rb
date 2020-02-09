@@ -331,7 +331,7 @@ module Musa
       end
 
       def grade_of(grade_or_string_or_symbol)
-        sign, name, wide_grade, accidentals = Neumas::Decoder::Parser.parse_grade(grade_or_string_or_symbol)
+        sign, name, wide_grade, accidentals = Neumas::Decoders::Parser.parse_grade(grade_or_string_or_symbol)
 
         raise ArgumentError, "Cannot parse sign on #{grade_or_string_or_symbol}" if sign
 

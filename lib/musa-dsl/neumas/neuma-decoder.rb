@@ -1,7 +1,7 @@
 require_relative 'neumas'
 
 module Musa::Neumas
-  module Decoder
+  module Decoders
     class ProtoDecoder
       def subcontext
         self

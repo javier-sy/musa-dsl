@@ -1,6 +1,7 @@
 require 'date'
 
-require 'musa-dsl/core-ext/attribute-builder'
+require_relative '../core-ext/attribute-builder'
+require_relative '../core-ext/with'
 
 require_relative 'part-group'
 require_relative 'part'
@@ -44,6 +45,7 @@ module Musa
 
     class ScorePartwise
       extend AttributeBuilder
+      include With
 
       include Helper::ToXML
 
@@ -70,7 +72,7 @@ module Musa
         @groups_and_parts = []
         @parts = {}
 
-        instance_eval &block if block_given?
+        with &block if block_given?
       end
 
       attr_simple_builder :work_title
@@ -84,8 +86,8 @@ module Musa
       attr_tuple_adder_to_array :rights, Rights, plural: :rights
       attr_tuple_adder_to_array :creator, Creator
 
-      attr_complex_adder_to_custom :part, variable: :@parts do |id, name:, abbreviation: nil|
-        Part.new(id, name: name, abbreviation: abbreviation).tap do |part|
+      attr_complex_adder_to_custom :part, variable: :@parts do |id, name:, abbreviation: nil, &block|
+        Part.new(id, name: name, abbreviation: abbreviation, &block).tap do |part|
           @parts[id] = part
           @groups_and_parts << part
         end

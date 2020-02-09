@@ -1,4 +1,4 @@
-module Musa::Dataset
+module Musa::Datasets
   module DatasetDecorators
     class Decorators
       attr_reader :decorators

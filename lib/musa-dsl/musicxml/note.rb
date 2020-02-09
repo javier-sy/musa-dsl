@@ -1,3 +1,5 @@
+require_relative '../core-ext/with'
+
 require_relative 'note-complexities'
 require_relative 'helper'
 
@@ -5,6 +7,7 @@ module Musa
   module MusicXML
     class Note
       extend AttributeBuilder
+      include With
 
       include Helper
       include ToXML
@@ -192,7 +195,7 @@ module Musa
         @triple_tongue = triple_tongue
         @up_bow = up_bow
 
-        instance_eval &block if block_given?
+        with &block if block_given?
       end
 
       attr_simple_builder :pizzicato

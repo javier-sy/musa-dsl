@@ -128,7 +128,7 @@ module Musa
         end
 
         def eval_element(element)
-          if element.is_a? Musa::Dataset::Dataset
+          if element.is_a? Musa::Datasets::Dataset
             element
           else
             case element[:kind]
@@ -239,7 +239,7 @@ module Musa
             { current_operation: :none,
               continue_operation: :now }
 
-          when Musa::Dataset::Dataset
+          when Musa::Datasets::Dataset
             { current_operation: :block,
               current_parameter: element,
               continue_operation: :wait,

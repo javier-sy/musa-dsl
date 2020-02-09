@@ -5,7 +5,7 @@ require 'musa-dsl'
 include Musa::Neumalang
 include Musa::Series
 include Musa::Scales
-include Musa::Dataset
+include Musa::Datasets
 include Musa::Neumas
 
 RSpec.describe Musa::Neumalang do
@@ -61,7 +61,7 @@ RSpec.describe Musa::Neumalang do
 
     it 'Basic neumas inline parsing with differential decoder' do
 
-      differential_decoder = Decoder::NeumaDifferentialDecoder.new(base_duration: 1)
+      differential_decoder = Decoders::NeumaDifferentialDecoder.new(base_duration: 1)
 
       result = Neumalang.parse('0 . +1 2.p silence silence.1/3 2.1/2.p /*comentario 1*/', decode_with: differential_decoder).to_a(recursive: true)
 
@@ -77,7 +77,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neumas file parsing with GDV differential decoder' do
-      differential_decoder = Decoder::NeumaDifferentialDecoder.new
+      differential_decoder = Decoders::NeumaDifferentialDecoder.new
 
       result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: differential_decoder).to_a(recursive: true)
 
@@ -125,7 +125,7 @@ RSpec.describe Musa::Neumalang do
     it 'Basic neumas file parsing with GDV decoder' do
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoder::NeumaDecoder.new scale, base_duration: 1, grade: 0, duration: 1, velocity: 1
+      decoder = Decoders::NeumaDecoder.new scale, base_duration: 1, grade: 0, duration: 1, velocity: 1
 
       result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: decoder).to_a(recursive: true)
 

@@ -1,16 +1,16 @@
-require_relative 'dataset'
+require_relative 'd'
 require_relative 'gdvd'
 require_relative 'pdv'
 
 require_relative 'helper'
 
-module Musa::Dataset
+module Musa::Datasets
   module GDV
-    include Dataset
+    include D
 
     include Helper
 
-    NaturalKeys = [:grade, :sharps, :octave, :duration, :velocity, :silence].freeze
+    NaturalKeys = (NaturalKeys + [:grade, :sharps, :octave, :velocity, :silence]).freeze
 
     attr_accessor :base_duration
 

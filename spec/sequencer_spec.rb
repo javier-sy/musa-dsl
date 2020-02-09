@@ -5,17 +5,6 @@ require 'musa-dsl'
 include Musa::Series
 include Musa::Sequencer
 
-module Test
-  @c = nil
-  def self.c=(value)
-    @c = value
-  end
-
-  def self.c
-    @c
-  end
-end
-
 RSpec.describe Musa::Sequencer do
   context 'Basic sequencing' do
 

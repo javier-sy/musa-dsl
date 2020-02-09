@@ -7,7 +7,7 @@ II
 IX
 X
 
-{ { :grade_x=>6, :octave_x=>0, :duration=>100, :velocity_x=>3 }.extend(Musa::Dataset::GDV) }
+{ { :grade_x=>6, :octave_x=>0, :duration=>100, :velocity_x=>3 }.extend(Musa::Datasets::GDV) }
 
 [ I  III V |
   II IV  VI [I I I]]

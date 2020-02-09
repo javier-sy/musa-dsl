@@ -1,3 +1,3 @@
-module Musa::Dataset
+module Musa::Datasets
   module Dataset; end
 end

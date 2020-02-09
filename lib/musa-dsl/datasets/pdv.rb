@@ -1,15 +1,15 @@
-require_relative 'dataset'
+require_relative 'd'
 require_relative 'gdv'
 
 require_relative 'helper'
 
-module Musa::Dataset
+module Musa::Datasets
   module PDV
-    include Dataset
+    include D
 
     include Helper
 
-    NaturalKeys = [:pitch, :duration, :velocity].freeze
+    NaturalKeys = (NaturalKeys + [:pitch, :velocity]).freeze
 
     attr_accessor :base_duration
 

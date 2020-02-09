@@ -6,7 +6,7 @@ require 'musa-dsl'
 
 include Musa::Series
 include Musa::Scales
-include Musa::Dataset
+include Musa::Datasets
 include Musa::Neumalang
 include Musa::Neumas
 include Musa::Sequencer
@@ -19,7 +19,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       #debug = true
 
-      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3a_spec.neu')
 
       if debug
@@ -88,7 +88,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3b_spec.neu')
 
       if debug
@@ -153,7 +153,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3c_spec.neu')
 
       if debug
@@ -238,7 +238,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Decoder::NeumaDecoder.new scale
+      gdv_decoder = Decoders::NeumaDecoder.new scale
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3d_spec.neu')
 
       if debug
@@ -337,7 +337,7 @@ RSpec.describe Musa::Neumalang do
       debug = false
       #debug = true
 
-      gdv_decoder = Decoder::NeumaDecoder.new scale, base_duration: 1
+      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
       serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3z_spec.neu')
 
       if debug
