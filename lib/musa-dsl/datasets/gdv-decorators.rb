@@ -217,7 +217,7 @@ module Musa::Datasets
           base = gdv.delete :base
           base ||= gdv.delete :b
 
-          base ? { duration: 0 }.extend(Musa::Datasets::GDV) : gdv
+          base ? { duration: 0 }.extend(Musa::Datasets::D) : gdv
         end
       end
     end
