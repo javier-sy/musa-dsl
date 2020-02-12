@@ -15,6 +15,8 @@ require_relative 'musa-dsl/repl'
 require_relative 'musa-dsl/midi'
 require_relative 'musa-dsl/musicxml'
 
+require_relative 'musa-dsl/transcription'
+
 require_relative 'musa-dsl/music'
 
 require_relative 'musa-dsl/generative'
@@ -46,6 +48,9 @@ module Musa
 
     include Musa::Score
     include Musa::MusicXML
+
+    include Musa::Transcription
+    include Musa::Transcriptors
 
     include Musa::REPL
   end

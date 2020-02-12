@@ -1,17 +1,28 @@
-require_relative 'decorators'
+require_relative 'from-gdv'
 
-module Musa::Datasets
-  module DatasetDecorators
-    module GDV
-      # Process: appogiatura (neumas)neumas
-      class AppogiaturaDecorator < TwoNeumasDecorator
-        def process(gdv, base_duration:, tick_duration:)
+include Musa::Transcription
+
+module Musa::Transcriptors
+  module FromGDV
+    module ToMIDI
+      def self.transcription_set(duration_factor: nil)
+        [ Appogiatura.new,
+          Mordent.new(duration_factor: duration_factor),
+          Turn.new,
+          Trill.new,
+          Staccato.new,
+          Base.new ]
+      end
+
+      # Process: appogiatura (neuma)neuma
+      class Appogiatura < FeatureTranscriptor
+        def transcript(gdv, base_duration:, tick_duration:)
           if gdv_appogiatura = gdv[:appogiatura]
             gdv.delete :appogiatura
 
             # TODO process with Decorators the gdv_appogiatura
-            # TODO implement also posterior appogiatura neumas(neumas)
-            # TODO implement also multiple appogiatura with several notes (neumas neumas)neumas or neumas(neumas neumas)
+            # TODO implement also posterior appogiatura neuma(neuma)
+            # TODO implement also multiple appogiatura with several notes (neuma ... neuma)neuma or neuma(neuma ... neuma)
 
             gdv[:duration] = gdv[:duration] - gdv_appogiatura[:duration]
 
@@ -23,12 +34,12 @@ module Musa::Datasets
       end
 
       # Process: .mor
-      class MordentDecorator < Decorator
+      class Mordent < FeatureTranscriptor
         def initialize(duration_factor: nil)
           @duration_factor = duration_factor || 1/4r
         end
 
-        def process(gdv, base_duration:, tick_duration:)
+        def transcript(gdv, base_duration:, tick_duration:)
           mor = gdv.delete :mor
 
           if mor
@@ -66,8 +77,8 @@ module Musa::Datasets
       end
 
       # Process: .turn
-      class TurnDecorator < Decorator
-        def process(gdv, base_duration:, tick_duration:)
+      class Turn < FeatureTranscriptor
+        def transcript(gdv, base_duration:, tick_duration:)
           turn = gdv.delete :turn
 
           if turn
@@ -107,12 +118,12 @@ module Musa::Datasets
       end
 
       # Process: .tr
-      class TrillDecorator < Decorator
+      class Trill < FeatureTranscriptor
         def initialize(duration_factor: nil)
           @duration_factor = duration_factor || 1/4r
         end
 
-        def process(gdv, base_duration:, tick_duration:)
+        def transcript(gdv, base_duration:, tick_duration:)
           if gdv[:tr]
             tr = gdv.delete :tr
 
@@ -184,12 +195,12 @@ module Musa::Datasets
       end
 
       # Process: .st .st(1) .st(2) .st(3): staccato level 1 2 3
-      class StaccatoDecorator < Decorator
+      class Staccato < FeatureTranscriptor
         def initialize(min_duration_factor: nil)
           @min_duration_factor = min_duration_factor || 1/8r
         end
 
-        def process(gdv, base_duration:, tick_duration:)
+        def transcript(gdv, base_duration:, tick_duration:)
           st = gdv.delete :st
 
           if st
@@ -211,15 +222,6 @@ module Musa::Datasets
         end
       end
 
-      # Process: .base .b
-      class BaseDecorator < Decorator
-        def process(gdv, base_duration:, tick_duration:)
-          base = gdv.delete :base
-          base ||= gdv.delete :b
-
-          base ? { duration: 0 }.extend(Musa::Datasets::D) : gdv
-        end
-      end
     end
   end
 end

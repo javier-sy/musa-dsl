@@ -48,7 +48,7 @@ module Musa::Neumas
         @last = result.clone
 
         if @processor
-          @processor.process(result)
+          @processor.transcript(result)
         else
           result
         end
