@@ -3,14 +3,16 @@ require_relative 'neuma-decoder'
 module Musa::Neumas
   module Decoders
     class NeumaDecoder < Decoder # to get a GDV
-      def initialize(scale, base_duration: nil, processor: nil, **base)
-        @base_duration = base_duration || Rational(1,4)
+      def initialize(scale, base_duration: nil, transcriptor: nil, base: nil)
+        @base_duration = base_duration
+        @base_duration ||= base[:duration] if base
+        @base_duration ||= Rational(1,4)
 
-        base = { grade: 0, octave: 0, duration: @base_duration, velocity: 1 } if base.empty?
+        base ||= { grade: 0, octave: 0, duration: @base_duration, velocity: 1 }
 
         @scale = scale
 
-        super base, processor: processor
+        super base, transcriptor: transcriptor
       end
 
       attr_accessor :scale, :base_duration
@@ -32,7 +34,7 @@ module Musa::Neumas
       end
 
       def subcontext
-        NeumaDecoder.new @scale, base_duration: @base_duration, processor: @processor, **@last
+        NeumaDecoder.new @scale, base_duration: @base_duration, transcriptor: @transcriptor, base: @last
       end
 
       def apply(action, on:)

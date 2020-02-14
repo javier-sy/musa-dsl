@@ -160,18 +160,27 @@ module AttributeBuilder
     attr_writer name
   end
 
-  # thing key1: value1, key2: value2 -> crea Thing(key1: value1, key2: value2)
-  # thing -> Thing(value1, value2)
+  # thing value1, value2, key1: value3, key2: value4 -> crea Thing(value1, value2, key1: value3, key2: value3)
+  # thing -> Thing(value1, value2, key1: value3, key2: value4)
+  # y también...
+  # thing value1, value2, key1: value3, key2: value4 -> crea Thing(first_parameter, value1, value2, key1: value3, key2: value3)
+  # thing -> Thing(first_parameter, value1, value2, key1: value3, key2: value4)
 
-  def attr_complex_builder(name, klass, variable: nil)
+  def attr_complex_builder(name, klass, variable: nil, first_parameter: nil)
     variable ||= ('@' + name.to_s).to_sym
 
     define_method name do |*parameters, **key_parameters, &block|
       if parameters.empty? && key_parameters.empty? && block.nil?
         instance_variable_get variable
       else
-        klass.new(*parameters, **parameters, &block).tap do |object|
-          instance_variable_set variable, object
+        if first_parameter
+          klass.new(first_parameter, *parameters, **parameters, &block).tap do |object|
+            instance_variable_set variable, object
+          end
+        else
+          klass.new(*parameters, **parameters, &block).tap do |object|
+            instance_variable_set variable, object
+          end
         end
       end
     end

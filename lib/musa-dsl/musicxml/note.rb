@@ -5,6 +5,62 @@ require_relative 'helper'
 
 module Musa
   module MusicXML
+
+    class Notation
+      include Helper::ToXML
+
+      def self.create(tag, value_or_attributes, true_value = nil, false_value = nil)
+        case value_or_attributes
+        when Hash
+          value_or_attributes = value_or_attributes.clone
+
+          type = value_or_attributes.delete :type
+          content = value_or_attributes.delete :content
+
+          Notation.new(tag, type, content, true_value, false_value, **value_or_attributes)
+
+        when NilClass
+          nil
+
+        else
+          Notation.new(tag, value_or_attributes)
+        end
+      end
+
+      def initialize(tag, type, content = nil, true_value = nil, false_value = nil, **attributes)
+        @tag = tag
+
+        if type == true && true_value
+          @type = true_value
+        elsif type == false && false_value
+          @type = false_value
+        else
+          @type = type
+        end
+
+        @content = content
+        @attributes = attributes
+      end
+
+      def _to_xml(io, indent:, tabs:)
+        io.print "#{tabs}\t<#{ @tag } "
+
+        io.print "type=\"#{@type}\""
+
+        @attributes.each_pair do |name, value|
+          io.print " #{name}=\"#{value}\""
+        end
+
+        if @content
+          io.puts ">#{@content}</#{ @tag }>"
+        else
+          io.puts "/>"
+        end
+      end
+    end
+
+    private_constant :Notation
+
     class Note
       extend AttributeBuilder
       include With
@@ -42,7 +98,7 @@ module Musa
                      non_arpeggiate: nil, # top / bottom
 
                      slide: nil, # start / stop
-                     slur: nil, # start / stop / continue
+                     slur: nil, # start / stop / continue | { type: start/stop/continue, [**other_attributes: other_values] }
 
                      ## articulations
                      accent: nil, # true
@@ -103,7 +159,7 @@ module Musa
                      toe: nil, # true
                      triple_tongue: nil, # true
                      up_bow: nil, # true
-                     **_krest,
+                     **_keyrest,
                      &block)
 
         @pizzicato = pizzicato
@@ -133,7 +189,7 @@ module Musa
         @glissando = glissando
         @non_arpeggiate = non_arpeggiate
         @slide = slide
-        @slur = slur
+        @slur = Notation.create('slur', slur)
 
         ## articulations
         @accent = accent
@@ -225,7 +281,7 @@ module Musa
       attr_simple_builder :glissando
       attr_simple_builder :non_arpeggiate
       attr_simple_builder :slide
-      attr_simple_builder :slur
+      attr_complex_builder :slur, Notation, first_parameter: 'slur'
 
       ## articulations
       attr_simple_builder :accent
@@ -338,7 +394,7 @@ module Musa
           io.puts "#{tabs}\t\t<glissando type=\"#{@glissando}\"/>" if @glissando
           io.puts "#{tabs}\t\t<non-arpeggiate type=\"#{@non_arpeggiate}\"/>" if @non_arpeggiate
           io.puts "#{tabs}\t\t<slide type=\"#{@slide}\"/>" if @slide
-          io.puts "#{tabs}\t\t<slur type=\"#{@slur}\"/>" if @slur
+          @slur&.to_xml(io, indent: indent + 1)
 
           if _articulations
             io.puts "#{tabs}\t\t<articulations>"

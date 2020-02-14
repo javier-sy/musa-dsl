@@ -9,7 +9,7 @@ module Musa::Transcriptors
         [ Appogiatura.new,
           Mordent.new(duration_factor: duration_factor),
           Turn.new,
-          Trill.new,
+          Trill.new(duration_factor: duration_factor),
           Staccato.new,
           Base.new ]
       end

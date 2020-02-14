@@ -125,7 +125,7 @@ RSpec.describe Musa::Neumalang do
     it 'Basic neumas file parsing with GDV decoder' do
       scale = Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoders::NeumaDecoder.new scale, base_duration: 1, grade: 0, duration: 1, velocity: 1
+      decoder = Decoders::NeumaDecoder.new scale, base: { grade: 0, duration: 1, velocity: 1 }
 
       result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: decoder).to_a(recursive: true)
 

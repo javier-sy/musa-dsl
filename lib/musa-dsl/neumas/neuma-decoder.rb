@@ -23,14 +23,14 @@ module Musa::Neumas
     end
 
     class Decoder < DifferentialDecoder
-      def initialize(base, processor: nil)
+      def initialize(base, transcriptor: nil)
         @base = base
         @last = base.clone
 
-        @processor = processor
+        @transcriptor = transcriptor
       end
 
-      attr_accessor :processor
+      attr_accessor :transcriptor
       attr_reader :base
 
       def base=(base)
@@ -47,8 +47,8 @@ module Musa::Neumas
 
         @last = result.clone
 
-        if @processor
-          @processor.transcript(result)
+        if @transcriptor
+          @transcriptor.transcript(result)
         else
           result
         end

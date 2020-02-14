@@ -1,14 +1,13 @@
 module Musa
   module Transcription
     class Transcriptor
-      attr_reader :simple_transcriptors
-      attr_accessor :appogiatura_decorator
+      attr_reader :transcriptors
 
-      def initialize(*transcriptors, base_duration: nil, tick_duration: nil)
-        @base_duration = 1/4r
+      def initialize(transcriptors = nil, base_duration: nil, tick_duration: nil)
+        @transcriptors = transcriptors || []
+
+        @base_duration = base_duration || 1/4r
         @tick_duration = tick_duration || 1/96r
-
-        @transcriptors = transcriptors
       end
 
       def transcript(element)
