@@ -1,45 +1,47 @@
 module Musa
   module Chords
     class ChordDefinition
-      class << self
-        def [](name)
-          @definitions[name]
-        end
+      def self.[](name)
+        @definitions[name]
+      end
 
-        def register(name, offsets:, **features)
-          definition = ChordDefinition.new(name, offsets: offsets, **features).freeze
+      def self.register(name, offsets:, **features)
+        definition = ChordDefinition.new(name, offsets: offsets, **features).freeze
 
-          @definitions ||= {}
-          @definitions[definition.name] = definition
+        @definitions ||= {}
+        @definitions[definition.name] = definition
 
-          @features_by_value ||= {}
-          definition.features.each { |k, v| @features_by_value[v] = k }
+        @features_by_value ||= {}
+        definition.features.each { |k, v| @features_by_value[v] = k }
 
-          self
-        end
+        self
+      end
 
-        def find_by_pitches(pitches)
-          @definitions.values.find { |d| d.matches(pitches) }
-        end
+      def self.find_by_pitches(pitches)
+        @definitions.values.find { |d| d.matches(pitches) }
+      end
 
-        def features_from(values = nil, hash = nil)
-          values ||= []
-          hash ||= {}
+      def self.features_from(values = nil, hash = nil)
+        values ||= []
+        hash ||= {}
 
-          features = hash.dup
-          values.each { |v| features[@features_by_value[v]] = v }
+        features = hash.dup
+        values.each { |v| features[@features_by_value[v]] = v }
 
-          features
-        end
+        features
+      end
 
-        def find_by_features(*values, **hash)
-          features = features_from(values, hash)
-          @definitions.values.select { |d| features <= d.features }
-        end
+      def self.find_by_features(*values, **hash)
+        features = features_from(values, hash)
+        @definitions.values.select { |d| features <= d.features }
+      end
 
-        def feature_key_of(feature_value)
-          @features_by_value[feature_value]
-        end
+      def self.feature_key_of(feature_value)
+        @features_by_value[feature_value]
+      end
+
+      def self.feature_values
+        @features_by_value.keys
       end
 
       def initialize(name, offsets:, **features)

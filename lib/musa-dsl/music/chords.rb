@@ -153,6 +153,12 @@ module Musa
         @notes.freeze
 
         @chord_definition = ChordDefinition.find_by_pitches(@notes.values.flatten(1).collect(&:pitch))
+
+        ChordDefinition.feature_values.each do |name|
+          define_singleton_method name do
+            featuring(name)
+          end
+        end
       end
 
       attr_reader :notes, :chord_definition
@@ -310,18 +316,6 @@ module Musa
           pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
           raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
         end
-      end
-
-      def method_missing(method_name, *args, **key_args, &block)
-        if ChordDefinition.feature_key_of(method_name) && args.empty? && key_args.empty? && !block
-          featuring(method_name)
-        else
-          super
-        end
-      end
-
-      def respond_to_missing?(method_name, include_private)
-        ChordDefinition.feature_key_of(method_name) || super
       end
     end
   end

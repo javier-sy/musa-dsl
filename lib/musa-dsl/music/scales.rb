@@ -8,6 +8,11 @@ module Musa
         @scale_systems[scale_system.id] = scale_system
 
         @default_scale_system = scale_system if default
+
+        self.class.define_method scale_system.id do
+          scale_system
+        end
+
         self
       end
 
@@ -19,20 +24,6 @@ module Musa
 
       def self.default_system
         @default_scale_system
-      end
-
-      private
-
-      def self.method_missing(method_name, *args, **key_args, &block)
-        if @scale_systems.key?(method_name) && args.empty? && key_args.empty? && !block
-          self[method_name]
-        else
-          super
-        end
-      end
-
-      def self.respond_to_missing?(method_name, include_private)
-        @scale_systems.key?(method_name) || super
       end
     end
 
@@ -127,6 +118,10 @@ module Musa
         @scale_kind_classes.key? id
       end
 
+      def self.scale_kind_classes
+        @scale_kind_classes
+      end
+
       def self.chromatic_class
         raise "Chromatic scale kind class for [#{self.id}] scale system undefined" if @chromatic_scale_kind_class.nil?
 
@@ -147,6 +142,12 @@ module Musa
         @scale_kinds = {}
 
         @chromatic_scale_kind = self[@scale_system.chromatic_class.id]
+
+        @scale_system.scale_kind_classes.each_key do |name|
+          define_singleton_method name do
+            self[name]
+          end
+        end
       end
 
       # TODO: allow scales not based in octaves but in other intervals (like fifths or other ratios). Possibly based on intervals definition of ScaleSystem plus a "generator interval" attribute
@@ -178,20 +179,6 @@ module Musa
       end
 
       alias to_s inspect
-
-      private
-
-      def method_missing(method_name, *args, **key_args, &block)
-        if @scale_system.scale_kind_class?(method_name) && args.empty? && key_args.empty? && !block
-          self[method_name]
-        else
-          super
-        end
-      end
-
-      def respond_to_missing?(method_name, include_private)
-        @scale_system.scale_kind_class?(method_name) || super
-      end
     end
 
     class ScaleKind
@@ -223,52 +210,55 @@ module Musa
 
       alias to_s inspect
 
-      class << self
-        # @abstract Subclass is expected to implement id
-        # @!method id
-        # @return [Symbol] the id of the ScaleKind as a symbol
-        def id
-          raise 'Method not implemented. Should be implemented in subclass.'
-        end
+      # @abstract Subclass is expected to implement id
+      # @!method id
+      # @return [Symbol] the id of the ScaleKind as a symbol
+      def self.id
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
 
-        # @abstract Subclass is expected to implement pitches
-        # @!method pitches
-        # @return [Array] the pitches array of the ScaleKind as [ { functions: [ <symbol>, ...], pitch: <Number> }, ... ]
-        def pitches
-          raise 'Method not implemented. Should be implemented in subclass.'
-        end
+      # @abstract Subclass is expected to implement pitches
+      # @!method pitches
+      # @return [Array] the pitches array of the ScaleKind as [ { functions: [ <symbol>, ...], pitch: <Number> }, ... ]
+      def self.pitches
+        raise 'Method not implemented. Should be implemented in subclass.'
+      end
 
-        # @abstract Subclass is expected to implement chromatic?. Only one of the subclasses should return true.
-        # @!method chromatic?
-        # @return [Boolean] wether the scales is a full scale (with all the notes in the ScaleSystem), sorted and to be considered canonical. I.e. a chromatic 12 semitones uprising serie in a 12 tone tempered ScaleSystem.
-        def chromatic?
-          false
-        end
+      # @abstract Subclass is expected to implement chromatic?. Only one of the subclasses should return true.
+      # @!method chromatic?
+      # @return [Boolean] wether the scales is a full scale (with all the notes in the ScaleSystem), sorted and to be considered canonical. I.e. a chromatic 12 semitones uprising serie in a 12 tone tempered ScaleSystem.
+      def self.chromatic?
+        false
+      end
 
-        # @abstract Subclass is expected to implement grades when the ScaleKind is defining more pitches than notes by octave has the scale. This can happen when there are pitches defined on upper octaves (i.e., to define XII grade, as a octave + fifth)
-        # @!method grades
-        # @return [Integer] Number of grades inside of a octave of the scale
-        def grades
-          pitches.length
-        end
+      # @abstract Subclass is expected to implement grades when the ScaleKind is defining more pitches than notes by octave has the scale. This can happen when there are pitches defined on upper octaves (i.e., to define XII grade, as a octave + fifth)
+      # @!method grades
+      # @return [Integer] Number of grades inside of a octave of the scale
+      def self.grades
+        pitches.length
+      end
 
-        def find_index(symbol)
-          init unless @index
-          @index[symbol]
-        end
+      def self.grade_of_function(symbol)
+        create_grade_functions_index unless @grade_names_index
+        @grade_names_index[symbol]
+      end
 
+      def self.grades_functions
+        create_grade_functions_index unless @grade_names_index
+        @grade_names_index.keys
+      end
 
-        private
+      private
 
-        def init
-          @index = {}
-          pitches.each_index do |i|
-            pitches[i][:functions].each do |function|
-              @index[function] = i
-            end
+      def self.create_grade_functions_index
+        @grade_names_index = {}
+        pitches.each_index do |i|
+          pitches[i][:functions].each do |function|
+            @grade_names_index[function] = i
           end
-          self
         end
+
+        self
       end
     end
 
@@ -282,6 +272,13 @@ module Musa
         @kind = kind
 
         @root_pitch = root_pitch
+
+        @kind.class.grades_functions.each do |name|
+          define_singleton_method name do
+            self[name]
+          end
+        end
+
       end
 
       def_delegators :@kind, :a_tuning
@@ -335,7 +332,7 @@ module Musa
 
         raise ArgumentError, "Cannot parse sign on #{grade_or_string_or_symbol}" if sign
 
-        grade = @kind.class.find_index name if name
+        grade = @kind.class.grade_of_function name if name
 
         octave = wide_grade / @kind.class.grades if wide_grade
         grade = wide_grade % @kind.class.grades if wide_grade
@@ -400,20 +397,6 @@ module Musa
       end
 
       alias to_s inspect
-
-      private
-
-      def method_missing(method_name, *args, **key_args, &block)
-        if @kind.class.find_index(method_name) && args.empty? && key_args.empty? && !block
-          self[method_name]
-        else
-          super
-        end
-      end
-
-      def respond_to_missing?(method_name, include_private)
-        @kind.class.find_index(method_name) || super
-      end
     end
 
     class NoteInScale
@@ -433,6 +416,12 @@ module Musa
         @background_grade = background_grade
         @background_octave = background_octave
         @background_sharps = background_sharps
+
+        @scale.kind.tuning.scale_system.scale_kind_classes.each_key do |name|
+          define_singleton_method name do
+            scale(name)
+          end
+        end
       end
 
       attr_reader :grade, :pitch
@@ -565,20 +554,6 @@ module Musa
       end
 
       alias to_s inspect
-
-      private
-
-      def method_missing(method_name, *args, **key_args, &block)
-        if @scale.kind.tuning[method_name] && args.empty? && key_args.empty? && !block
-          scale(method_name)
-        else
-          super
-        end
-      end
-
-      def respond_to_missing?(method_name, include_private)
-        @scale.kind.tuning[method_name] || super
-      end
     end
   end
 end
