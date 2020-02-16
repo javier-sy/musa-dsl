@@ -1,5 +1,6 @@
 require_relative '../core-ext/key-parameters-procedure-binder'
 require_relative '../core-ext/arrayfy'
+require_relative '../core-ext/with'
 
 # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
@@ -12,7 +13,7 @@ module Musa
 
         @instance_name = instance_name
 
-        main_context = MainContext.new block
+        main_context = MainContext.new &block
 
         @constructor = main_context._constructor
         @fieldset = main_context._fieldset
@@ -242,12 +243,14 @@ module Musa
       end
 
       class FieldsetContext
+        include With
+
         attr_reader :_fieldset
 
-        def initialize(name, options = nil, block)
+        def initialize(name, options = nil, &block)
           @_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
 
-          instance_eval &block
+          with &block
         end
 
         def field(name, options = nil)
@@ -255,7 +258,7 @@ module Musa
         end
 
         def fieldset(name, options = nil, &block)
-          fieldset_context = FieldsetContext.new name, options, block
+          fieldset_context = FieldsetContext.new name, options, &block
           @_fieldset.components << fieldset_context._fieldset
         end
 
@@ -269,11 +272,11 @@ module Musa
       class MainContext < FieldsetContext
         attr_reader :_constructor, :_finalize
 
-        def initialize(block)
+        def initialize(&block)
           @_constructor = nil
           @_finalize = nil
 
-          super :_maincontext, [nil], block
+          super :_maincontext, [nil], &block
         end
 
         def constructor(&block)

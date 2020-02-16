@@ -12,9 +12,9 @@ module Musa
         @block_source = nil
 
         if binder.receiver.respond_to?(:sequencer) &&
-            binder.receiver.sequencer.respond_to?(:on_block_error)
+            binder.receiver.sequencer.respond_to?(:on_error)
 
-          binder.receiver.sequencer.on_block_error do |e|
+          binder.receiver.sequencer.on_error do |e|
             send_exception e
           end
         end

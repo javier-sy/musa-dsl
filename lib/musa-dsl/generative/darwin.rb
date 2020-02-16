@@ -1,10 +1,12 @@
+require_relative '../core-ext/with'
+
 module Musa
   module Darwin
     class Darwin
       def initialize(&block)
         raise ArgumentError, 'block is needed' unless block
 
-        main_context = MainContext.new block
+        main_context = MainContext.new &block
 
         @measures = main_context._measures
         @weights = main_context._weights
@@ -16,7 +18,7 @@ module Musa
         population.each do |object|
           context = MeasuresEvalContext.new
 
-          context.instance_exec object, &@measures
+          context.with object, **{}, &@measures
           measure = context._measure
 
           measured_objects << { object: object, measure: context._measure } unless measure.died?
@@ -60,11 +62,13 @@ module Musa
       end
 
       class MainContext
+        include With
+
         attr_reader :_measures, :_weights
 
-        def initialize(block)
+        def initialize(&block)
           @_weights = {}
-          instance_eval &block
+          with &block
         end
 
         def measures(&block)
@@ -79,6 +83,8 @@ module Musa
       end
 
       class MeasuresEvalContext
+        include With
+
         def initialize
           @_features = {}
           @_dimensions = {}

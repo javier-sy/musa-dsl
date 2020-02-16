@@ -92,6 +92,49 @@ RSpec.describe Musa::Variatio do
       expect(variations[0]).to eq(a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 } }, finalized: true)
     end
 
+    it 'With 2 fields + fieldset (2 inner fields), test with only 1 option each, constructor and finalize (with with as yield)' do
+      @b_options = [0]
+      @c_options = [2]
+
+      @e_options = [4]
+      @f_options = [6]
+
+      v = Variatio.new :object do |_|
+        _.field :a
+        _.field :b, @b_options
+        _.field :c, @c_options
+
+        _.constructor do |a:, b:|
+          { a: a, b: b, d: {} }
+        end
+
+        _.finalize do |object:|
+          object[:finalized] = true
+        end
+
+        _.with_attributes do |object:, c:|
+          object[:c] = c
+        end
+
+        _.fieldset :d, [100] do |_|
+          _.field :e, @e_options
+          _.field :f, @f_options
+
+          _.with_attributes do |object:, d:, e:, f:|
+            object[:d][d] = {}
+            object[:d][d][:e] = e
+            object[:d][d][:f] = f
+          end
+        end
+      end
+
+      variations = v.on a: 1000
+
+      expect(variations.size).to eq 1
+
+      expect(variations[0]).to eq(a: 1000, b: 0, c: 2, d: { 100 => { e: 4, f: 6 } }, finalized: true)
+    end
+
     it 'With 2 fields + fieldset (2 inner fields), test with only 1 option each and external parameters for field and fieldset options constructor and finalize' do
       v = Variatio.new :object do
         field :a

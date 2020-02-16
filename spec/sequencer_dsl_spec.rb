@@ -91,6 +91,67 @@ RSpec.describe Musa::Sequencer do
 
     end
 
+    it 'With works as yield (all inner _ passed)' do
+      c = 0
+      @d = 0
+
+      s = Sequencer.new 4, 4 do |_|
+        _.at 1 do |_|
+          _.every 1 do |_|
+            c += 1
+            @d += 1
+          end
+        end
+      end
+
+      16.times do
+        s.tick
+      end
+
+      expect(c).to eq 1
+      expect(@d).to eq 1
+
+      s.tick
+
+      expect(c).to eq 2
+      expect(@d).to eq 2
+    end
+
+    it 'With works as instance_eval' do
+      c = 0
+      @d = 0
+      error = false
+
+      s = Sequencer.new 4, 4, do_error_log: false do
+        at 1 do
+          every 1 do
+            c += 1
+            @d += 1
+          end
+        end
+      end
+
+      s.on_error do
+        error = true
+      end
+
+      s.tick
+
+      expect(error).to be true
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq 1
+      expect(@d).to eq 0
+
+      s.tick
+
+      expect(c).to eq 2
+      expect(@d).to eq 0
+    end
+
     it 'Basic at sequencing' do
       c = 0
 

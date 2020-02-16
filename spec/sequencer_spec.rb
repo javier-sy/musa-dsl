@@ -271,6 +271,41 @@ RSpec.describe Musa::Sequencer do
       expect(d).to eq(1)
     end
 
+    it 'Basic every sequencing with control condition' do
+      s = BaseSequencer.new 4, 4
+
+      c = 0
+      d = 0
+
+      s.at 1 do
+        control = s.every 1 do
+          c += 1
+        end
+
+        control.condition do
+          c < 3
+        end
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      16.times { s.tick }
+
+      expect(c).to eq(2)
+
+      16.times { s.tick }
+
+      expect(c).to eq(3)
+
+      16.times { s.tick }
+
+      expect(c).to eq(3)
+    end
+
     it 'Basic move sequencing (every, from, to, duration)' do
       s = BaseSequencer.new 4, 4
 

@@ -1,3 +1,4 @@
+
 module Musa
   module Sequencer
     class BaseSequencer
@@ -189,6 +190,9 @@ module Musa
           _value_parameters = value_parameters ? value_parameters.collect { |e| subcontext.eval_element(e) } : []
           _key_parameters = key_parameters ? key_parameters.collect { |k, e| [k, subcontext.eval_element(e)] }.to_h : {}
 
+          # used instance_exec because the code on block comes from a neumalang source, so the correct execution context is the neumalang context
+          # (no other context has any sense)
+          #
           @nl_context.instance_exec *_value_parameters, **_key_parameters, &block
         end
 

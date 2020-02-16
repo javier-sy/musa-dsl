@@ -11,11 +11,9 @@ module Musa
 
       @@tick_mutex = Mutex.new
 
-      def initialize(beats_per_bar, ticks_per_beat, do_log: nil)
-        do_log ||= false
-
+      def initialize(beats_per_bar, ticks_per_beat, do_log: nil, do_error_log: nil)
         @on_debug_at = []
-        @on_block_error = []
+        @on_error = []
 
         @before_tick = []
         @on_fast_forward = []
@@ -36,7 +34,8 @@ module Musa
         @playing = []
         @moving = []
 
-        @do_log = do_log
+        @do_log ||= do_log
+        @do_error_log = do_error_log.nil? ? true : do_error_log
 
         reset
       end
@@ -80,8 +79,8 @@ module Musa
         @on_debug_at << KeyParametersProcedureBinder.new(block)
       end
 
-      def on_block_error(&block)
-        @on_block_error << KeyParametersProcedureBinder.new(block)
+      def on_error(&block)
+        @on_error << KeyParametersProcedureBinder.new(block)
       end
 
       def on_fast_forward(&block)

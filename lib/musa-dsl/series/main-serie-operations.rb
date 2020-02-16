@@ -415,24 +415,26 @@ module Musa
 
         attr_reader :source, :times, :condition
 
-        def initialize(serie, times = nil, &condition_block)
+        def initialize(serie, times = nil, &condition)
           @source = serie
 
           @times = times
-          @condition = condition_block
+          @external_condition = condition
 
-          update_condition
           _restart false
+          @condition = calculate_condition
 
           mark_regarding! @source
         end
 
         def _prototype
           @source = @source.prototype
+          @condition = calculate_condition
         end
 
         def _instance
           @source = @source.instance
+          @condition = calculate_condition
         end
 
         def _restart(restart_sources = true)
@@ -446,7 +448,7 @@ module Musa
           if value.nil?
             @count += 1
 
-            if instance_eval &@condition
+            if @condition.call
               @source.restart
               value = @source.next_value
             end
@@ -461,9 +463,14 @@ module Musa
 
         private
 
-        def update_condition
-          @condition = proc { @count < @times } if @times && !@condition
-          @condition ||= proc { false }
+        def calculate_condition
+          if @external_condition
+            @external_condition
+          elsif @times
+            proc { @count < @times }
+          else
+            proc { false }
+          end
         end
       end
 

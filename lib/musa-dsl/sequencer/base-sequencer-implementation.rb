@@ -69,7 +69,7 @@ module Musa
           begin
             yield
           rescue StandardError, ScriptError => e
-            _rescue_block_error e
+            _rescue_error e
           end
 
         elsif position > @position
@@ -108,7 +108,7 @@ module Musa
 
         if block_given?
           block_key_parameters_binder =
-              KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
+              KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
           key_parameters = {}
           key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
@@ -180,9 +180,9 @@ module Musa
         block ||= proc {}
 
         __play_eval ||= PlayEval.create \
-      mode,
-      KeyParametersProcedureBinder.new(block,
-                                       on_rescue: proc { |e| _rescue_block_error(e) }),
+          mode,
+          KeyParametersProcedureBinder.new(block,
+                                       on_rescue: proc { |e| _rescue_error(e) }),
       decoder,
       nl_context
 
@@ -307,22 +307,20 @@ module Musa
       end
 
       def _every(binterval, control, block_procedure_binder: nil, &block)
-
         block ||= proc {}
 
-        block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_block_error(e) }
+        block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
         _numeric_at position, control do
           control._start ||= position
 
           duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
           till_exceeded = control.till_value - binterval <= position if control.till_value
-          condition_failed = !instance_eval(&control.condition) if control.condition
+          condition_failed = !control.condition_block.call if control.condition_block
 
-          block_procedure_binder.call(control: control) unless control.stopped?
+          block_procedure_binder.call(control: control) unless control.stopped? || condition_failed || till_exceeded
 
-          if !control.stopped? && !duration_exceeded && !till_exceeded && !condition_failed
-
+          unless control.stopped? || duration_exceeded || till_exceeded || condition_failed
             _numeric_at position + binterval, control do
               _every binterval, control, block_procedure_binder: block_procedure_binder
             end
@@ -436,11 +434,13 @@ module Musa
         control
       end
 
-      def _rescue_block_error(e)
-        _log e
-        _log e.full_message(order: :top)
+      def _rescue_error(e)
+        if @do_error_log
+          _log e
+          _log e.full_message(order: :top)
+        end
 
-        @on_block_error.each do |block|
+        @on_error.each do |block|
           block.call e
         end
       end
