@@ -1,4 +1,5 @@
 require_relative '../core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/with'
 
 module Musa
   module Rules
