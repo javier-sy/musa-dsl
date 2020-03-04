@@ -2,10 +2,10 @@ require_relative '../core-ext/key-parameters-procedure-binder'
 require_relative '../core-ext/with'
 
 
-# incluir With
+# incluir With -> hecho
 # eliminar method_missing
-# crear rama tb debe recibir la serie de la history
-# crear rama puede repetirse (hasta terminar según ended_when)
+# crear rama tb debe recibir la serie de la history -> ya lo hace
+# crear rama puede repetirse (hasta terminar según ended_when) -> no
 #
 # hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
 # esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
@@ -16,7 +16,7 @@ module Musa
       include With
 
       def initialize(&block)
-        @context = RulesEvalContext.new &block
+        @context = RulesEvalContext.new(&block)
       end
 
       def generate_possibilities(object, confirmed_node = nil, node = nil, grow_rules = nil)
@@ -139,20 +139,6 @@ module Musa
               @_branches << object
               self
             end
-
-            private
-
-            def method_missing(method_name, *args, **key_args, &block)
-              if @_parent_context.respond_to? method_name
-                @_parent_context.send method_name, *args, **key_args, &block
-              else
-                super
-              end
-            end
-
-            def respond_to_missing?(method_name, include_private)
-              @_parent_context.respond_to?(method_name, include_private) || super
-            end
           end
 
           private_constant :GrowRuleEvalContext
@@ -172,7 +158,7 @@ module Musa
           def rejects?(object, history)
             # TODO: optimize context using only one instance for all rejects? checks
             context = CutRuleEvalContext.new @context
-            context.instance_exec object, history, &@block
+            context.with object, history, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
 
@@ -180,6 +166,8 @@ module Musa
           end
 
           class CutRuleEvalContext
+            include With
+
             attr_reader :_secondary_reasons
 
             def initialize(parent_context)
@@ -190,20 +178,6 @@ module Musa
             def prune(secondary_reason = nil)
               @_secondary_reasons << secondary_reason
               self
-            end
-
-            private
-
-            def method_missing(method_name, *args, **key_args, &block)
-              if @_parent_context.respond_to? method_name
-                @_parent_context.send method_name, *args, **key_args, &block
-              else
-                super
-              end
-            end
-
-            def respond_to_missing?(method_name, include_private)
-              @_parent_context.respond_to?(method_name, include_private) || super
             end
           end
 
