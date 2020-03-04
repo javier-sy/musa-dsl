@@ -131,7 +131,6 @@ module Musa
             attr_reader :_branches
 
             def initialize(parent_context)
-              @_parent_context = parent_context
               @_branches = []
             end
 
@@ -171,7 +170,6 @@ module Musa
             attr_reader :_secondary_reasons
 
             def initialize(parent_context)
-              @_parent_context = parent_context
               @_secondary_reasons = []
             end
 
