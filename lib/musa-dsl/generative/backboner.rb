@@ -120,12 +120,14 @@ module Musa
           def generate_possibilities(object, history)
             # TODO: optimize context using only one instance for all genereate_possibilities calls
             context = GrowRuleEvalContext.new @context
-            context.instance_exec object, history, &@block
+            context.with object, history, &@block
 
             context._branches
           end
 
           class GrowRuleEvalContext
+            include With
+
             attr_reader :_branches
 
             def initialize(parent_context)
