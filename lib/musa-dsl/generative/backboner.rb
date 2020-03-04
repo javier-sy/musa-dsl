@@ -84,11 +84,9 @@ module Musa
           with &block
         end
 
-        def grow(name, repeat: nil, &block)
-          repeat ||= nil
-
+        def grow(name, &block)
           @_grow_rules ||= []
-          @_grow_rules << GrowRule.new(name, self, repeat, block)
+          @_grow_rules << GrowRule.new(name, &block)
           self
         end
 
@@ -99,7 +97,7 @@ module Musa
 
         def cut(reason, &block)
           @_cut_rules ||= []
-          @_cut_rules << CutRule.new(reason, self, block)
+          @_cut_rules << CutRule.new(reason, &block)
           self
         end
 
@@ -110,16 +108,14 @@ module Musa
         class GrowRule
           attr_reader :name
 
-          def initialize(name, context, repeat, block)
+          def initialize(name, &block)
             @name = name
-            @repeat = repeat
-            @context = context
             @block = block
           end
 
           def generate_possibilities(object, history)
             # TODO: optimize context using only one instance for all genereate_possibilities calls
-            context = GrowRuleEvalContext.new @context
+            context = GrowRuleEvalContext.new
             context.with object, history, &@block
 
             context._branches
@@ -130,7 +126,7 @@ module Musa
 
             attr_reader :_branches
 
-            def initialize(parent_context)
+            def initialize
               @_branches = []
             end
 
@@ -148,15 +144,14 @@ module Musa
         class CutRule
           attr_reader :reason
 
-          def initialize(reason, context = nil, block = nil)
+          def initialize(reason, &block)
             @reason = reason
-            @context = context
             @block = block
           end
 
           def rejects?(object, history)
             # TODO: optimize context using only one instance for all rejects? checks
-            context = CutRuleEvalContext.new @context
+            context = CutRuleEvalContext.new
             context.with object, history, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
@@ -169,7 +164,7 @@ module Musa
 
             attr_reader :_secondary_reasons
 
-            def initialize(parent_context)
+            def initialize
               @_secondary_reasons = []
             end
 
@@ -211,8 +206,9 @@ module Musa
         def mark_as_ended!
           @children.each(&:update_rejection_by_children!)
 
+          puts "mark_as_ended!"
           if !@children.empty? && !@children.find { |n| !n.rejected }
-            reject! CutRule::AllChildrenRejected
+            reject! "Node rejected because all children are rejected"
           end
 
           @ended = true

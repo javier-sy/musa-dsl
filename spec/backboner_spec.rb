@@ -22,7 +22,7 @@ RSpec.describe Backboner do
       grow '+1 possibility' do |thing|
         puts "rule thing[0] % 2 == 0 #{thing}"
         thing.size.times do |i|
-          branch thing.clone.tap { |_| _[i] += 1; _ << 123 }
+          branch thing.clone.tap { |_| _[i] += 1; _ << 1111 }
         end
       end
 
