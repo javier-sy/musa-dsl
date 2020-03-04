@@ -1,29 +1,40 @@
 require_relative '../core-ext/key-parameters-procedure-binder'
 require_relative '../core-ext/with'
 
+
+# incluir With
+# eliminar method_missing
+# crear rama tb debe recibir la serie de la history
+# crear rama puede repetirse (hasta terminar según ended_when)
+#
+# hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
+# esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
+
 module Musa
-  module Rules
-    class Rules
+  module Backboner
+    class Backboner
+      include With
+
       def initialize(&block)
-        @context = RulesEvalContext.new.tap { |_| _.instance_eval &block }
+        @context = RulesEvalContext.new &block
       end
 
-      def generate_possibilities(object, confirmed_node = nil, node = nil, rules = nil)
+      def generate_possibilities(object, confirmed_node = nil, node = nil, grow_rules = nil)
         node ||= Node.new
-        rules ||= @context._rules
+        grow_rules ||= @context._grow_rules
 
         history = confirmed_node.history if confirmed_node
         history ||= []
 
-        rules = rules.clone
-        rule = rules.shift
+        grow_rules = grow_rules.clone
+        grow_rule = grow_rules.shift
 
-        if rule
-          rule.generate_possibilities(object, history).each do |new_object|
+        if grow_rule
+          grow_rule.generate_possibilities(object, history).each do |new_object|
             new_node = Node.new new_object, node
             new_node.mark_as_ended! if @context._ended? new_object
 
-            rejection = @context._rejections.find { |rejection| rejection.rejects?(new_object, history) }
+            rejection = @context._cut_rules.find { |cut_rule| cut_rule.rejects?(new_object, history) }
             # TODO: include rejection secondary reasons in rejection message
 
             new_node.reject! rejection if rejection
@@ -32,9 +43,9 @@ module Musa
           end
         end
 
-        unless rules.empty?
+        unless grow_rules.empty?
           node.children.each do |node|
-            generate_possibilities node.object, confirmed_node, node, rules unless node.rejected || node.ended?
+            generate_possibilities node.object, confirmed_node, node, grow_rules unless node.rejected || node.ended?
           end
         end
 
@@ -65,11 +76,19 @@ module Musa
       end
 
       class RulesEvalContext
-        attr_reader :_rules, :_ended_when, :_rejections
+        include With
 
-        def rule(name, &block)
-          @_rules ||= []
-          @_rules << Rule.new(name, self, block)
+        attr_reader :_grow_rules, :_ended_when, :_cut_rules
+
+        def initialize(&block)
+          with &block
+        end
+
+        def grow(name, repeat: nil, &block)
+          repeat ||= nil
+
+          @_grow_rules ||= []
+          @_grow_rules << GrowRule.new(name, self, repeat, block)
           self
         end
 
@@ -78,9 +97,9 @@ module Musa
           self
         end
 
-        def rejection(reason, &block)
-          @_rejections ||= []
-          @_rejections << Rejection.new(reason, self, block)
+        def cut(reason, &block)
+          @_cut_rules ||= []
+          @_cut_rules << CutRule.new(reason, self, block)
           self
         end
 
@@ -88,33 +107,34 @@ module Musa
           instance_exec object, &@_ended_when
         end
 
-        class Rule
+        class GrowRule
           attr_reader :name
 
-          def initialize(name, context, block)
+          def initialize(name, context, repeat, block)
             @name = name
+            @repeat = repeat
             @context = context
             @block = block
           end
 
           def generate_possibilities(object, history)
             # TODO: optimize context using only one instance for all genereate_possibilities calls
-            context = RuleEvalContext.new @context
+            context = GrowRuleEvalContext.new @context
             context.instance_exec object, history, &@block
 
-            context._possibilities
+            context._branches
           end
 
-          class RuleEvalContext
-            attr_reader :_possibilities
+          class GrowRuleEvalContext
+            attr_reader :_branches
 
             def initialize(parent_context)
               @_parent_context = parent_context
-              @_possibilities = []
+              @_branches = []
             end
 
-            def possibility(object)
-              @_possibilities << object
+            def branch(object)
+              @_branches << object
               self
             end
 
@@ -133,12 +153,12 @@ module Musa
             end
           end
 
-          private_constant :RuleEvalContext
+          private_constant :GrowRuleEvalContext
         end
 
-        private_constant :Rule
+        private_constant :GrowRule
 
-        class Rejection
+        class CutRule
           attr_reader :reason
 
           def initialize(reason, context = nil, block = nil)
@@ -149,7 +169,7 @@ module Musa
 
           def rejects?(object, history)
             # TODO: optimize context using only one instance for all rejects? checks
-            context = RejectionEvalContext.new @context
+            context = CutRuleEvalContext.new @context
             context.instance_exec object, history, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
@@ -157,7 +177,7 @@ module Musa
             reasons.empty? ? nil : reasons
           end
 
-          class RejectionEvalContext
+          class CutRuleEvalContext
             attr_reader :_secondary_reasons
 
             def initialize(parent_context)
@@ -165,7 +185,7 @@ module Musa
               @_secondary_reasons = []
             end
 
-            def reject(secondary_reason = nil)
+            def prune(secondary_reason = nil)
               @_secondary_reasons << secondary_reason
               self
             end
@@ -185,10 +205,10 @@ module Musa
             end
           end
 
-          private_constant :RejectionEvalContext
+          private_constant :CutRuleEvalContext
         end
 
-        private_constant :Rejection
+        private_constant :CutRule
       end
 
       private_constant :RulesEvalContext
@@ -218,7 +238,7 @@ module Musa
           @children.each(&:update_rejection_by_children!)
 
           if !@children.empty? && !@children.find { |n| !n.rejected }
-            reject! Rejection::AllChildrenRejected
+            reject! CutRule::AllChildrenRejected
           end
 
           @ended = true

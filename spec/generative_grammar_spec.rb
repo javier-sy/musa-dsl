@@ -82,7 +82,7 @@ RSpec.describe Musa do
       b = N('b', size: 1)
       c = N('c', size: 1)
 
-      d = (c + (dp = ProxyNode.new) | (a | b)).repeat.limit(:size, :sum, :==, 3)
+      d = (c + (dp = PN()) | (a | b)).repeat.limit(:size, :sum, :==, 3)
       dp.node = d
 
       dd = d.options(:size, :sum, :<=, 4, content: :join)

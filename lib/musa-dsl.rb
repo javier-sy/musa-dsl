@@ -40,7 +40,7 @@ module Musa
 
     include Musa::Darwin
     include Musa::Markov
-    include Musa::Rules
+    include Musa::Backboner
     include Musa::Variatio
 
     include Musa::MIDIRecorder
