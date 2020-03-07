@@ -26,16 +26,7 @@ module Musa
               @event_handlers.push command[:parent_control]
 
               @@tick_mutex.synchronize do
-                original_stdout = $stdout
-                original_stderr = $stderr
-
-                $stdout = command[:parent_control].stdout
-                $stderr = command[:parent_control].stderr
-
                 command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
-
-                $stdout = original_stdout
-                $stderr = original_stderr
               end
 
               @event_handlers.pop
@@ -120,22 +111,8 @@ module Musa
 
             begin
               locked = @@tick_mutex.try_lock
-
-              if locked
-                original_stdout = $stdout
-                original_stderr = $stderr
-
-                $stdout = control.stdout
-                $stderr = control.stderr
-              end
-
               block_key_parameters_binder._call value_parameters, key_parameters
             ensure
-              if locked
-                $stdout = original_stdout
-                $stderr = original_stderr
-              end
-
               @@tick_mutex.unlock if locked
             end
 
@@ -406,7 +383,7 @@ module Musa
 
         binder = KeyParametersProcedureBinder.new(block)
 
-        every_control = EveryControl.new(@event_handlers.last, capture_stdout: true, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
+        every_control = EveryControl.new(@event_handlers.last, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
 
         control = MoveControl.new(every_control)
 

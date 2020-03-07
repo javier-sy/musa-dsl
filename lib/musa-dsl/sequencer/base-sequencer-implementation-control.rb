@@ -4,28 +4,17 @@ module Musa
   module Sequencer
     class BaseSequencer
       class EventHandler
-        attr_reader :stdout, :stderr
         attr_accessor :continue_parameters
 
         @@counter = 0
 
-        def initialize(parent = nil, capture_stdout: nil)
-          capture_stdout ||= false
-
+        def initialize(parent = nil)
           @id = (@@counter += 1)
 
           @parent = parent
           @handlers = {}
 
           @stop = false
-
-          if capture_stdout || !parent
-            @stdout = $stdout
-            @stderr = $stderr
-          else
-            @stdout = @parent.stdout
-            @stderr = @parent.stderr
-          end
         end
 
         def stop
@@ -97,8 +86,8 @@ module Musa
       class PlayControl < EventHandler
         attr_reader :do_after
 
-        def initialize(parent, capture_stdout: nil, after: nil)
-          super parent, capture_stdout: capture_stdout
+        def initialize(parent, after: nil)
+          super parent
 
           @do_after = []
 
@@ -140,8 +129,8 @@ module Musa
 
         attr_accessor :_start
 
-        def initialize(parent, capture_stdout: nil, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil)
-          super parent, capture_stdout: capture_stdout
+        def initialize(parent, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil)
+          super parent
 
           @duration_value = duration
           @till_value = till
@@ -186,7 +175,7 @@ module Musa
           @every_control = every_control
         end
 
-        def_delegators :@every_control, :stdout, :stderr, :on_stop, :after, :on, :launch, :stop
+        def_delegators :@every_control, :on_stop, :after, :on, :launch, :stop
       end
 
       private_constant :MoveControl

@@ -120,7 +120,7 @@ module Musa
       def wait(bars_delay, with: nil, debug: nil, &block)
         debug ||= false
 
-        control = EventHandler.new @event_handlers.last, capture_stdout: true
+        control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
         if bars_delay.is_a? Numeric
@@ -141,7 +141,7 @@ module Musa
       end
 
       def now(with: nil, &block)
-        control = EventHandler.new @event_handlers.last, capture_stdout: true
+        control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
         _numeric_at position, control, with: with, &block
@@ -160,7 +160,7 @@ module Musa
       def at(bar_position, with: nil, debug: nil, &block)
         debug ||= false
 
-        control = EventHandler.new @event_handlers.last, capture_stdout: true
+        control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
         if bar_position.is_a? Numeric
@@ -183,7 +183,7 @@ module Musa
       def play(serie, mode: nil, parameter: nil, after: nil, context: nil, **mode_args, &block)
         mode ||= :wait
 
-        control = PlayControl.new @event_handlers.last, after: after, capture_stdout: true
+        control = PlayControl.new @event_handlers.last, after: after
         @event_handlers.push control
 
         _play serie.instance, control, context, mode: mode, parameter: parameter, **mode_args, &block
@@ -212,7 +212,7 @@ module Musa
       def every(binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
         binterval = binterval.rationalize
 
-        control = EveryControl.new @event_handlers.last, capture_stdout: true, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
+        control = EveryControl.new @event_handlers.last, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
         @event_handlers.push control
 
         _every binterval, control, &block
