@@ -206,7 +206,6 @@ module Musa
         def mark_as_ended!
           @children.each(&:update_rejection_by_children!)
 
-          puts "mark_as_ended!"
           if !@children.empty? && !@children.find { |n| !n.rejected }
             reject! "Node rejected because all children are rejected"
           end
