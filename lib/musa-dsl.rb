@@ -22,7 +22,7 @@ require_relative 'musa-dsl/music'
 require_relative 'musa-dsl/generative'
 
 module Musa
-  VERSION = '0.17.3'
+  VERSION = '0.17.4'
 
   module All
     include Musa::Clock
