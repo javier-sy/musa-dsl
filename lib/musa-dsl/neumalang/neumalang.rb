@@ -113,7 +113,7 @@ module Musa
           end
         end
 
-        module NeumaBetweenAnglesAttributes
+        module NeumaBetweenParenthesisAttributes
           include Musa::Neumas
 
           def value

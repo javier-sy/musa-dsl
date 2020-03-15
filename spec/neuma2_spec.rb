@@ -17,7 +17,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline parsing with simple braced command" do
-      parsed = Neumalang.parse('<2 3 4> [9.8.7 6.5.4] <7 8 9> { 100 + 10 } # comentario 2').to_a(recursive: true)
+      parsed = Neumalang.parse('(2 3 4) [9.8.7 6.5.4] (7 8 9) { 100 + 10 } # comentario 2').to_a(recursive: true)
       expect(parsed[0]).to eq({ kind: :neuma, neuma: ["2", "3", "4"] })
       expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: ["9", "8", "7"] }, { kind: :neuma, neuma: [ "6", "5", "4" ] } ] })
       expect(parsed[2]).to eq({ kind: :neuma, neuma: ["7", "8", "9"] })
@@ -25,7 +25,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline parsing with complex braced command" do
-      parsed = Neumalang.parse('<2 3 4> [9.8.7 6.5.4] <7 8 9> { 100 + 10 + { a: 1000, b: 2000 }[:b] } # comentario 2').to_a(recursive: true)
+      parsed = Neumalang.parse('(2 3 4) [9.8.7 6.5.4] (7 8 9) { 100 + 10 + { a: 1000, b: 2000 }[:b] } # comentario 2').to_a(recursive: true)
       expect(parsed[0]).to eq({ kind: :neuma, neuma: ["2", "3", "4"] })
       expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: ["9", "8", "7"] }, { kind: :neuma, neuma: [ "6", "5", "4" ] } ] })
       expect(parsed[2]).to eq({ kind: :neuma, neuma: ["7", "8", "9"] })
@@ -33,7 +33,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline parsing with complex braced command" do
-      parsed = Neumalang.parse('<2 3 4> [9.8.7 6.5.4] <7 8 9> { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } # comentario 2').to_a(recursive: true)
+      parsed = Neumalang.parse('(2 3 4) [9.8.7 6.5.4] (7 8 9) { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } # comentario 2').to_a(recursive: true)
       expect(parsed[0]).to eq({ kind: :neuma, neuma: ["2", "3", "4"] })
       expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: ["9", "8", "7"] }, { kind: :neuma, neuma: [ "6", "5", "4" ] } ] })
       expect(parsed[2]).to eq({ kind: :neuma, neuma: ["7", "8", "9"] })
@@ -59,7 +59,7 @@ RSpec.describe Musa::Neumalang do
         [{kind: :assign_to, :assign_to=>[:@b, :@a],
           :assign_value=>
            {kind: :serie, :serie=>
-             [{kind: :neuma, :neuma=>["I", "1", "ff"]},
+             [{kind: :neuma, :neuma=>["I", "1", {modifier: :ff}]},
               {kind: :neuma, :neuma=>[]},
               {kind: :neuma, :neuma=>[nil, "*1/2"]},
               {kind: :neuma, :neuma=>[]},
@@ -73,7 +73,7 @@ RSpec.describe Musa::Neumalang do
               {kind: :serie, serie: [{kind: :event, :event=>:event2}, {kind: :neuma, :neuma=>["100", "200", "300"]}]},
               {kind: :serie, serie: [{kind: :event, :event=>:event3,
                 :value_parameters=>
-                 [{kind: :value, :value=>100}, {kind: :neuma, :neuma=>["I", "2", "ff"]}, {kind: :value, :value=>300}]}]},
+                 [{kind: :value, :value=>100}, {kind: :neuma, :neuma=>["I", "2", {modifier: :ff}]}, {kind: :value, :value=>300}]}]},
               {kind: :serie, serie: [{kind: :event, :event=>:event4, :value_parameters=>[{kind: :value, :value=>:simbolo}]}] } ]}},
          {kind: :use_variable, :use_variable=>:@a},
          {kind: :serie, :serie=>
@@ -89,7 +89,7 @@ RSpec.describe Musa::Neumalang do
            [{ kind: :serie, serie: [{kind: :assign_to, :assign_to=>[:@b],
               :assign_value=>
                {kind: :serie, :serie=>
-                 [{kind: :neuma, :neuma=>["1", "2", "p"]},
+                 [{kind: :neuma, :neuma=>["1", "2", {modifier: :p}]},
                   {kind: :neuma, :neuma=>["2"]},
                   {kind: :neuma, :neuma=>["1"]},
                   {kind: :neuma, :neuma=>["2"]}]}},
@@ -108,14 +108,14 @@ RSpec.describe Musa::Neumalang do
           :key_parameters=>
            {:a=>{kind: :value, :value=>100.25},
             :b=>{kind: :value, :value=>200},
-            :c=>{kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", "f"]}, {kind: :neuma, :neuma=>["3", "2", "p"]}]}}},
+            :c=>{kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", {modifier: :f}]}, {kind: :neuma, :neuma=>["3", "2", {modifier: :p}]}]}}},
          {kind: :event, :event=>:event_with_value_and_key_parameters,
           :value_parameters=>
            [{kind: :value, :value=>1100}, {kind: :value, :value=>250}, {kind: :value, :value=>"texto"}, {kind: :value, :value=>:simbolo}],
           :key_parameters=>
            {:a=>{kind: :value, :value=>100},
             :b=>{kind: :value, :value=>200},
-            :c=>{kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", "f"]}, {kind: :neuma, :neuma=>["3", "2", "p"]}]}}},
+            :c=>{kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", {modifier: :f}]}, {kind: :neuma, :neuma=>["3", "2", {modifier: :p}]}]}}},
          {kind: :call_methods, :call_methods=>
            [{:method=>:haz_algo,
              :value_parameters=>
@@ -124,7 +124,7 @@ RSpec.describe Musa::Neumalang do
               {:a=>{kind: :value, :value=>100},
                :b=>{kind: :value, :value=>200},
                :c=>
-                {kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", "f"]}, {kind: :neuma, :neuma=>["3", "2", "p"]}]}}}], on: { kind: :use_variable, :use_variable=>:@b } }]) unless true
+                {kind: :serie, :serie=>[{kind: :neuma, :neuma=>["1", "2", {modifier: :f}]}, {kind: :neuma, :neuma=>["3", "2", {modifier: :p}]}]}}}], on: { kind: :use_variable, :use_variable=>:@b } }])
     end
   end
 end
