@@ -328,9 +328,7 @@ module Musa
       end
 
       def grade_of(grade_or_string_or_symbol)
-        sign, name, wide_grade, accidentals = Neumas::Decoders::Parser.parse_grade(grade_or_string_or_symbol)
-
-        raise ArgumentError, "Cannot parse sign on #{grade_or_string_or_symbol}" if sign
+        name, wide_grade, accidentals = parse_grade(grade_or_string_or_symbol)
 
         grade = @kind.class.grade_of_function name if name
 
@@ -340,6 +338,34 @@ module Musa
         octave ||= 0
 
         return octave * @kind.class.grades + grade, accidentals
+      end
+
+      def parse_grade(neuma_grade)
+        name = wide_grade = nil
+        accidentals = 0
+
+        case neuma_grade
+        when Symbol, String
+          match = /\A(?<name>[^[#|_]]*)(?<accidental_sharps>#*)(?<accidental_flats>_*)\Z/.match neuma_grade.to_s
+
+          if match
+            if match[:name] == match[:name].to_i.to_s
+              wide_grade = match[:name].to_i
+            else
+              name = match[:name].to_sym unless match[:name].empty?
+            end
+            accidentals = match[:accidental_sharps].length - match[:accidental_flats].length
+          else
+            name = neuma_grade.to_sym unless (neuma_grade.nil? || neuma_grade.empty?)
+          end
+        when Numeric
+          wide_grade = neuma_grade.to_i
+
+        else
+          raise ArgumentError, "Cannot eval #{neuma_grade} as name or grade position."
+        end
+
+        return name, wide_grade, accidentals
       end
 
       def note_of_pitch(pitch, allow_chromatic: nil, allow_nearest: nil)

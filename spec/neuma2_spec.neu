@@ -1,7 +1,7 @@
 @b = @a = [I.1.ff . .*1/2 . 2]
 
 @c = 	[ ::event1([100], @b)
-		  | ::event2 100.200.300
+		  | ::event2 100.200.fff
 		  | ::event3('100, (I 2 ff), '300)
 		  | ::event4(:simbolo) ]
 
@@ -25,8 +25,8 @@
 
 @b.haz_algo('1100, '250, "texto", :simbolo, a: '100, b: '200, c: [1.2.f 3.2.p])
 
-# @var = x			asignación, sin usar, var es una serie
-# @var.operation	operación sobre la serie
-# | 				sincroniza con el bloque anterior (temporalmente en paralelo)
-# [ ... ]			bloque (anidable)
+/* @var = x			asignación, sin usar, var es una serie */
+/* @var.operation	operación sobre la serie */
+/* | 				sincroniza con el bloque anterior (temporalmente en paralelo) */
+/* [ ... ]			bloque (anidable) */
 

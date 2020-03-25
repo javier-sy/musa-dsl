@@ -4,6 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 include Musa::Neumalang
+include Musa::Neumas
 include Musa::Datasets
 include Musa::Sequencer
 include Musa::Scales
@@ -12,6 +13,7 @@ include Musa::Transcriptors
 
 RSpec.describe Musa::Transcriptors do
   context 'GDV transcriptors' do
+
     it 'Neuma parsing with staccato extended notation' do
       scale = Scales.et12[440.0].major[60]
 
@@ -272,7 +274,7 @@ RSpec.describe Musa::Transcriptors do
     it 'Neuma parsing with apoggiatura extended notation' do
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1 (+2.//)+3 0'
+      neumas = '0.1.mf +1 <+2.//>+3 0'
 
       result = Neumalang.parse(neumas).to_a(recursive: true)
 
@@ -303,7 +305,7 @@ RSpec.describe Musa::Transcriptors do
 
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '[0.1.mf +1 (+2.//)+3 0 +1]'
+      neumas = '[0.1.mf +1 <+2.//>+3 0 +1]'
 
       transcriptor = Transcriptor.new FromGDV::ToMIDI.transcription_set,
         base_duration: 1/4r,
@@ -373,6 +375,5 @@ RSpec.describe Musa::Transcriptors do
                                { grade: 1, octave: 0, duration: 1/4r, velocity: 1 }])
       end
     end
-
   end
 end

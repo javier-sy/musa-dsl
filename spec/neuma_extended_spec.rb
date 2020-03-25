@@ -4,6 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 include Musa::Neumalang
+include Musa::Neumas
 include Musa::Datasets
 include Musa::Sequencer
 include Musa::Scales
@@ -13,33 +14,33 @@ RSpec.describe Musa::Neumalang do
 
     it 'Neuma parsing with extended notation' do
       result = Neumalang.parse(
-          '[ 0 	.	+1.+·.tr 	+1./
+          '[ 0   . +1.+1·.tr 	+1./
                          1.// 	-2 		-1.2
-                         0.1.o-1 	.+1 		-1.//
+                         0.o-1.1 	.+1 		-1.//
                          1./// -1 -1.*2 +1./2 -1 -1./// 	-1.2 ]').to_a(recursive: true)
 
       c = -1
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['0'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: [])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['+1', '+·', { modifier: :tr }])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['+1', '/'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 0 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: {})
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: 1, delta_duration: 3/2r, modifiers: { tr: true } })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: 1, abs_duration: 1/2r })
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1', '//'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-2'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1', '2'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 1/4r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -2 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 2 })
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['0', '1', 'o-1'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: [nil, '+1'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1', '//'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 0, abs_duration: 1, abs_octave: -1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_duration: 1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 1/4r })
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1', '///'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1', '*2'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['+1', '/2'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1', '///'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['-1', '2'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 1/8r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, factor_duration: 2 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: 1, factor_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 1/8r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 2 })
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats' do
@@ -48,11 +49,11 @@ RSpec.describe Musa::Neumalang do
 
       c = -1
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['0', '1'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: [])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1', '/'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['1#', '/'])
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: ['2_', '/'])
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 0, abs_duration: 1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: {})
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_sharps: 1, abs_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 2, abs_sharps: -1, abs_duration: 1/2r })
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats with differential decoder' do
@@ -133,5 +134,6 @@ RSpec.describe Musa::Neumalang do
       expect(neumas2.join ' ').to eq neumas_ok
 
     end
+
   end
 end

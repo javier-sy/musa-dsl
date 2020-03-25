@@ -12,7 +12,8 @@ module Musa::Datasets
     NaturalKeys = [:abs_grade, :abs_sharps, :abs_octave,
                    :delta_grade, :delta_sharps, :delta_interval_sign, :delta_interval, :delta_octave,
                    :abs_duration, :delta_duration, :factor_duration,
-                   :abs_velocity, :delta_velocity].freeze
+                   :abs_velocity, :delta_velocity,
+                   :modifiers].freeze
 
     attr_accessor :base_duration
 
@@ -21,7 +22,7 @@ module Musa::Datasets
 
       r.base_duration = @base_duration
 
-      if include? :abs_grade
+      if include?(:abs_grade)
         if self[:abs_grade] == :silence
           r[:silence] = true
         else
@@ -85,6 +86,12 @@ module Musa::Datasets
         r[:velocity] += self[:delta_velocity]
       end
 
+      if include?(:modifiers)
+        self[:modifiers].each_pair do |k, v|
+          r[k] = v
+        end
+      end
+
       (keys - NaturalKeys).each { |k| r[k] = self[k] }
 
       r
@@ -132,7 +139,7 @@ module Musa::Datasets
       end
 
       if include?(:abs_octave)
-        attributes[c += 1] = 'o' + positive_sign_of(self[:abs_octave]) + self[:abs_octave].to_s
+        attributes[c += 1] = 'o' + self[:abs_octave].to_s
       elsif include?(:delta_octave)
         attributes[c += 1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s if  self[:delta_octave] != 0
       end

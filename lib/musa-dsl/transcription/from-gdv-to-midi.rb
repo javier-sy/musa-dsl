@@ -17,18 +17,18 @@ module Musa::Transcriptors
       # Process: appogiatura (neuma)neuma
       class Appogiatura < FeatureTranscriptor
         def transcript(gdv, base_duration:, tick_duration:)
-          if gdv_appogiatura = gdv[:appogiatura]
-            gdv.delete :appogiatura
+          gdv_appogiatura = gdv.delete :appogiatura
 
+          if gdv_appogiatura
             # TODO process with Decorators the gdv_appogiatura
             # TODO implement also posterior appogiatura neuma(neuma)
             # TODO implement also multiple appogiatura with several notes (neuma ... neuma)neuma or neuma(neuma ... neuma)
 
             gdv[:duration] = gdv[:duration] - gdv_appogiatura[:duration]
 
-            [ gdv_appogiatura, gdv ]
+            super [ gdv_appogiatura, gdv ], base_duration: base_duration, tick_duration: tick_duration
           else
-            gdv
+            super
           end
         end
       end
@@ -69,9 +69,9 @@ module Musa::Transcriptors
 
             gdvs << gdv.clone.tap { |gdv| gdv[:duration] -= 2 * short_duration }
 
-            gdvs
+            super gdvs, base_duration: base_duration, tick_duration: tick_duration
           else
-            gdv
+            super
           end
         end
       end
@@ -110,9 +110,9 @@ module Musa::Transcriptors
               gdvs << gdv.clone.tap { |gdv| gdv[:grade] += 0; gdv[:duration] = duration }
             end
 
-            gdvs
+            super gdvs, base_duration: base_duration, tick_duration: tick_duration
           else
-            gdv
+            super
           end
         end
       end
@@ -124,9 +124,9 @@ module Musa::Transcriptors
         end
 
         def transcript(gdv, base_duration:, tick_duration:)
-          if gdv[:tr]
-            tr = gdv.delete :tr
+          tr = gdv.delete :tr
 
+          if tr
             note_duration = base_duration * @duration_factor
 
             check(tr) do |tr|
@@ -187,9 +187,9 @@ module Musa::Transcriptors
               gdvs[-2][:duration] += duration_diff / 2
             end
 
-            gdvs
+            super gdvs, base_duration: base_duration, tick_duration: tick_duration
           else
-            gdv
+            super
           end
         end
       end
@@ -218,7 +218,7 @@ module Musa::Transcriptors
             gdv[:effective_duration] = [calculated, base_duration * @min_duration_factor].max
           end
 
-          gdv
+          super
         end
       end
 

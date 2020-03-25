@@ -1,31 +1,23 @@
 grammar NeumalangGrammar
 
-	rule content
-		sentences
-	end
-
 	rule sentences
-		(spaces (sentence spaces)*) <Musa::Neumalang::Neumalang::Parser::Sentences>
-	end
-
-	rule sentence
-		expression
+		(optional_separation (expression optional_separation)*) <Musa::Neumalang::Neumalang::Parser::Sentences>
 	end
 
 	rule expression
-		variable_assign | call_methods_expression | object_expression | event
+		(variable_assign | call_methods_expression | object_expression | dotted_appogiatura_neuma | dotted_neuma | event)
 	end
 
 	rule object_expression
-		braced_command | reference_expression | bracketed_expression | use_variable | constant | neuma
+		(braced_command | reference_expression | bracketed_expression | use_variable | constant | neuma_between_parenthesis | appogiatura_neuma_between_parenthesis)
 	end
 
 	rule reference_expression
-		(ampersand spaces expression) <Musa::Neumalang::Neumalang::Parser::ReferenceExpression>
+		(ampersand optional_separation expression) <Musa::Neumalang::Neumalang::Parser::ReferenceExpression>
 	end
 
 	rule variable_assign
-		((use_variable spaces equal spaces)+ expression) <Musa::Neumalang::Neumalang::Parser::VariableAssign>
+		((use_variable optional_separation equal optional_separation)+ expression) <Musa::Neumalang::Neumalang::Parser::VariableAssign>
 	end
 
 	rule event
@@ -33,7 +25,7 @@ grammar NeumalangGrammar
 	end
 
 	rule braced_command
-		(lbrace spaces complex_command spaces rbrace parameters?) <Musa::Neumalang::Neumalang::Parser::BracedCommand>
+		(lbrace optional_separation complex_command optional_separation rbrace parameters?) <Musa::Neumalang::Neumalang::Parser::BracedCommand>
 	end
 
 	rule call_methods_expression
@@ -49,15 +41,25 @@ grammar NeumalangGrammar
 	end
 
 	rule neuma
-        appogiatura_neuma | simple_neuma
+        simple_neuma | appogiatura_neuma_between_parenthesis | dotted_appogiatura_neuma
 	end
 
-	rule appogiatura_neuma
-	    (lpar spaces a:simple_neuma spaces rpar spaces b:simple_neuma) { capture(:b).value.tap { |_| _[:neuma] << { appogiatura: capture(:a).value[:neuma] } } }
+	rule dotted_appogiatura_neuma
+	    (lacute optional_separation appogiatura:simple_neuma optional_separation racute base:dotted_neuma) <Musa::Neumalang::Neumalang::Parser::AppogiaturaNeuma>
+	end
+
+	rule appogiatura_neuma_between_parenthesis
+	    (lacute optional_separation appogiatura:simple_neuma optional_separation racute base:neuma_between_parenthesis) <Musa::Neumalang::Neumalang::Parser::AppogiaturaNeuma>
 	end
 
 	rule simple_neuma
-		neuma_as_dotted_attributes_beginning_with_dot | neuma_as_dotted_attributes_beginning_with_simple_attribute | neuma_between_parenthesis_attributes
+        dotted_neuma | neuma_between_parenthesis
+	end
+
+	rule dotted_neuma
+		(neuma:(neuma_as_dotted_attributes_beginning_with_grade |
+		        neuma_as_dotted_attributes_beginning_with_dot |
+		        neuma_as_dotted_attributes_only_dot) !dot) { capture(:neuma).value }
 	end
 
 	rule constant
@@ -65,11 +67,11 @@ grammar NeumalangGrammar
 	end
 
 	rule bracketed_bar_sentences
-		(lbracket spaces aa:sentences (bar spaces bb:sentences)+ rbracket) <Musa::Neumalang::Neumalang::Parser::BracketedBarSentences>
+		(lbracket aa:sentences (bar bb:sentences)+ rbracket) <Musa::Neumalang::Neumalang::Parser::BracketedBarSentences>
 	end
 
 	rule bracketed_sentences
-		(lbracket spaces sentences rbracket) <Musa::Neumalang::Neumalang::Parser::BracketedSentences>
+		(lbracket sentences rbracket) <Musa::Neumalang::Neumalang::Parser::BracketedSentences>
 	end
 
 	rule use_variable
@@ -77,85 +79,167 @@ grammar NeumalangGrammar
 	end
 
 	rule parameters
-		parameters_a | parameters_b | parameters_c
+	    (lpar parameter (comma parameter)* optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::Parameters>
 	end
 
-	rule parameters_a
-		(lpar positional_parameters comma key_parameters rpar) { { value_parameters: capture(:positional_parameters).value, key_parameters: capture(:key_parameters).value } }
-	end
-
-	rule parameters_b
-		(lpar key_parameters rpar) { { key_parameters: capture(:key_parameters).value } }
-	end
-
-	rule parameters_c
-		(lpar positional_parameters rpar) { { value_parameters: capture(:positional_parameters).value } }
-	end
-
-	rule positional_parameters
-		(spaces a:sentence (spaces comma spaces b:sentence spaces)* spaces) {
-			[ capture(:a).value ] + captures(:b).collect { |c| c.value }
-		}
-	end
-
-	rule key_parameters
-		(spaces a:key_value_parameter (spaces comma spaces b:key_value_parameter spaces)* spaces) {
-
-			result = capture(:a).value.clone
-
-			captures(:b).each { |c| result.merge! c.value }
-
-			result
-		}
-	end
+    rule parameter
+        (optional_separation (key_value_parameter | expression)) <Musa::Neumalang::Neumalang::Parser::Parameter>
+    end
 
 	rule key_value_parameter
-		(key:name colon spaces value:sentence) { { capture(:key).value.to_sym => capture(:value).value } }
+		(name colon optional_separation expression) { { capture(:name).value.to_sym => capture(:expression).value } }
 	end
 
 	rule complex_command
-	    (everything_except_braces? lbrace spaces complex_command spaces rbrace)* everything_except_braces?
+	    (everything_except_braces? lbrace optional_separation complex_command optional_separation rbrace)* everything_except_braces?
 	end
 
-
-	rule neuma_as_dotted_attributes_beginning_with_simple_attribute
-	    (a:simple_attribute (dot b:attribute)*) <Musa::Neumalang::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithSimpleAttribute>
+	rule neuma_as_dotted_attributes_beginning_with_grade
+	    (grade:grade_attribute (dot octave:octave_attribute)?
+	                           (dot duration:duration_attribute)?
+	                           (dot velocity:velocity_attribute)?
+	                           (dot modifiers:modifier_attribute)*)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
 	end
 
-	rule neuma_as_dotted_attributes_beginning_with_dot
-	    ((dot attribute)+ | dot) <Musa::Neumalang::Neumalang::Parser::NeumaAsDottedAttributesBeginningWithDot>
-	end
-
-	rule neuma_between_parenthesis_attributes
-		(lpar spaces simple_attribute? spaces (attribute spaces)* rpar) <Musa::Neumalang::Neumalang::Parser::NeumaBetweenParenthesisAttributes>
-	end
-
-    rule attribute
-        (modifier_attribute | simple_attribute)
+    rule neuma_as_dotted_attributes_beginning_with_dot
+        neuma_as_dotted_attributes_beginning_with_dot_octave |
+        neuma_as_dotted_attributes_beginning_with_dot_velocity |
+        neuma_as_dotted_attributes_beginning_with_dot_duration |
+        neuma_as_dotted_attributes_beginning_with_dot_modifiers
     end
 
-	rule simple_attribute
-		everything_that_can_be_an_attribute !colon
+	rule neuma_as_dotted_attributes_beginning_with_dot_octave
+	    (dot octave:octave_attribute
+            (dot duration:duration_attribute)?
+            (dot velocity:velocity_attribute)?
+            (dot modifiers:modifier_attribute)*)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
 	end
 
+	rule neuma_as_dotted_attributes_beginning_with_dot_duration
+	    (dot duration:duration_attribute
+            (dot velocity:velocity_attribute)?
+            (dot modifiers:modifier_attribute)*)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_as_dotted_attributes_beginning_with_dot_velocity
+	    (dot velocity:velocity_attribute
+            (dot modifiers:modifier_attribute)*)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_as_dotted_attributes_beginning_with_dot_modifiers
+        ((dot modifiers:modifier_attribute)+)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_as_dotted_attributes_only_dot
+        (dot)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+    rule neuma_between_parenthesis
+        neuma_between_parenthesis_beginning_with_grade_or_dot |
+        neuma_between_parenthesis_beginning_with_duration |
+        neuma_between_parenthesis_empty
+    end
+
+	rule neuma_between_parenthesis_beginning_with_grade_or_dot
+        (lpar optional_separation
+            (grade:grade_attribute | grade_dot:dot)
+                (optional_separation octave:octave_attribute)?
+                (optional_separation duration:duration_attribute)?
+                (optional_separation velocity:velocity_attribute)?
+                (optional_separation modifiers:modifier_attribute)*
+        optional_separation rpar)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_between_parenthesis_beginning_with_duration
+        (lpar optional_separation
+            (duration:duration_attribute)
+                (optional_separation velocity:velocity_attribute)?
+                (optional_separation modifiers:modifier_attribute)*
+        optional_separation rpar)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_between_parenthesis_empty
+        (lpar optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+    rule grade_attribute
+        delta_grade_attribute | abs_grade_attribute | delta_accidentals_attribute
+    end
+
+    rule abs_grade_attribute
+        ((grade:raw_unsigned_integer | interval:name) accidentals?) <Musa::Neumalang::Neumalang::Parser::AbsGradeAttribute>
+    end
+
+    rule delta_grade_attribute
+        (sign (grade:raw_unsigned_integer | interval:name) accidentals?) <Musa::Neumalang::Neumalang::Parser::DeltaGradeAttribute>
+    end
+
+    rule delta_accidentals_attribute
+        (sign? accidentals) <Musa::Neumalang::Neumalang::Parser::DeltaGradeAttribute>
+    end
+
+    rule octave_attribute
+        delta_octave_attribute | abs_octave_attribute
+    end
+
+    rule delta_octave_attribute
+        (sign 'o' number:raw_unsigned_integer) { { delta_octave: capture(:sign).value * capture(:number).value } }
+    end
+
+    rule abs_octave_attribute
+        ('o' number:raw_integer) { { abs_octave: capture(:number).value } }
+    end
+
+    rule duration_attribute
+        factor_duration_attribute | delta_duration_attribute | abs_duration_attribute
+    end
+
+    rule factor_duration_attribute
+        (factor number:raw_unsigned_number) <Musa::Neumalang::Neumalang::Parser::FactorDurationAttribute>
+    end
+
+    rule abs_duration_attribute
+        ((number:raw_unsigned_number | slashes) mid_dots?) <Musa::Neumalang::Neumalang::Parser::AbsDurationAttribute>
+    end
+
+    rule delta_duration_attribute
+        (sign ((number:raw_unsigned_number | slashes) mid_dots?)) <Musa::Neumalang::Neumalang::Parser::DeltaDurationAttribute>
+    end
+
+    rule velocity_attribute
+        (abs_velocity_attribute | delta_velocity_attribute)
+    end
+
+    rule abs_velocity_attribute
+        (dynamics) <Musa::Neumalang::Neumalang::Parser::AbsVelocityAttribute>
+    end
+
+    rule delta_velocity_attribute
+        (sign delta:delta_dynamics) <Musa::Neumalang::Neumalang::Parser::DeltaVelocityAttribute>
+    end
+
 	rule modifier_attribute
-	    modifier_call_without_parameters | modifier_call_with_parameters
+	    (modifier_call_with_parameters | modifier_call_without_parameters)
 	end
 
 	rule modifier_call_without_parameters
-		(name &attribute_change) { { modifier: capture(:name).value.to_sym } }
+		(name &attribute_change) { { capture(:name).value.to_sym => true } }
 	end
 
 	rule modifier_call_with_parameters
-		(name modifier_parameters) { { modifier: capture(:name).value.to_sym }.merge(capture(:modifier_parameters) ? capture(:modifier_parameters).value : {}) }
+		(name lpar modifier_positional_parameters rpar) { { capture(:name).value.to_sym => capture(:modifier_positional_parameters).value } }
 	end
 
-    rule modifier_parameters
-        (lpar modifier_positional_parameters rpar) { { parameters: capture(:modifier_positional_parameters).value } }
-    end
-
 	rule modifier_positional_parameters
-		(spaces a:modifier_parameter_constant (spaces comma spaces b:modifier_parameter_constant spaces)* spaces) {
+		(optional_separation a:modifier_parameter_constant (optional_separation comma optional_separation b:modifier_parameter_constant optional_separation)* optional_separation) {
 		    if capture(:b)
 			    [ capture(:a).value ] + captures(:b).collect { |c| c.value }
             else
@@ -166,6 +250,42 @@ grammar NeumalangGrammar
 
     rule modifier_parameter_constant
         raw_number | raw_symbol | raw_string
+    end
+
+    rule accidentals
+        (hashes | underscores)
+    end
+
+    rule hashes
+        (hsh+) { captures(:hsh).size }
+    end
+
+    rule underscores
+        (underscore+) { -captures(:underscore).size }
+    end
+
+    rule sign
+        (plus | minus) { capture(:plus) ? 1 : -1 }
+    end
+
+    rule factor
+        (asterisk | slash)
+    end
+
+    rule mid_dots
+        (mid_dot+) { captures(:mid_dot).size }
+    end
+
+    rule slashes
+        (slash+) { captures(:slash).size }
+    end
+
+    rule dynamics
+        (p:/p+/ | mp:'mp' | mf:'mf' | f:/f+/)
+    end
+
+    rule delta_dynamics
+        (/p+/ | /f+/)
     end
 
 	rule number
@@ -181,7 +301,7 @@ grammar NeumalangGrammar
   	end
 
   	rule raw_symbol
-  		(name &spaces) { capture(:name).value.to_sym }
+  		(name) { to_str.to_sym }
   	end
 
   	rule string
@@ -193,35 +313,51 @@ grammar NeumalangGrammar
   	end
 
   	rule float
-    	(single_quote str:(digits dot digits) spaces) <Musa::Neumalang::Neumalang::Parser::Float>
+    	(single_quote raw_float) <Musa::Neumalang::Neumalang::Parser::Float>
   	end
 
   	rule raw_float
-    	(str:(digits dot digits) spaces) { capture(:str).value.to_f }
+    	(minus? a:digits dot b:digits) <Musa::Neumalang::Neumalang::Parser::RawFloat>
   	end
 
   	rule integer
-    	(single_quote digits spaces) <Musa::Neumalang::Neumalang::Parser::Integer>
+    	(single_quote raw_integer) <Musa::Neumalang::Neumalang::Parser::Integer>
   	end
 
   	rule raw_integer
-    	(digits spaces) { capture(:digits).value.to_i }
+    	(raw_minus_integer | raw_unsigned_integer)
+  	end
+
+  	rule raw_minus_integer
+    	(minus digits) { -1 * capture(:digits).value }
+  	end
+
+  	rule raw_unsigned_integer
+    	(digits)
   	end
 
   	rule rational
-    	(single_quote str:(digits slash digits) spaces) <Musa::Neumalang::Neumalang::Parser::Rational>
+    	(single_quote raw_rational) <Musa::Neumalang::Neumalang::Parser::Rational>
   	end
 
   	rule raw_rational
-    	(str: (digits slash digits) spaces) { capture(:str).value.to_r }
+  	    (raw_minus_rational | raw_unsigned_rational)
   	end
 
-	rule comment
-		(lcomment complex_comment rcomment) | hash_comment
-	end
+  	rule raw_minus_rational
+    	(minus a:digits slash b:digits) { Rational(capture(:a).value, capture(:b).value) }
+  	end
 
-	rule hash_comment
-	    (hsh_at_start_of_line | space+) everything_until_eol
+  	rule raw_unsigned_rational
+    	(a:digits slash b:digits) { Rational(capture(:a).value, capture(:b).value) }
+  	end
+
+    rule raw_unsigned_number
+        raw_unsigned_rational | raw_unsigned_integer
+    end
+
+	rule comment
+		(lcomment complex_comment rcomment)
 	end
 
 	rule complex_comment
@@ -229,24 +365,16 @@ grammar NeumalangGrammar
 	end
 
   	rule digits
-    	[0-9]+ ('_' [0-9]+)*
+    	([0-9]+ ('_' [0-9]+)*) { to_str.to_i }
   	end
 
 	rule name
 		/[[:alpha:]]\w*/
 	end
 
-	rule everything_that_can_be_an_attribute
-		/[^({|}|\[|\]|\(|\)|\<|\>|.|,|:|=| |\t|\n|\r|\"|@|&|\|)]+/m
-	end
-
     rule attribute_change
-        space | dot | rbracket | rpar | rbrace | eol
+        space | dot | rbracket | rpar | rbrace | eol | eos
     end
-
-	rule everything_until_eol
-		~/$/
-	end
 
 	rule everything_except_comment
 		~/((\*\/)|(\/\*))/m
@@ -260,17 +388,15 @@ grammar NeumalangGrammar
 		~/(\")/m
 	end
 
-	rule hsh_at_start_of_line
-	    /\A#/
-	end
-
 	rule double_quote '"' end
 	rule single_quote '\'' end
 	rule dot '.' end
+	rule mid_dot '·' end
 	rule comma ',' end
 	rule colon ':' end
 	rule double_colon '::' end
 	rule bar '|' end
+	rule asterisk '*' end
 	rule slash '/' end
 	rule lpar '(' end
 	rule rpar ')' end
@@ -278,15 +404,24 @@ grammar NeumalangGrammar
 	rule rbrace '}' end
 	rule lbracket '[' end
 	rule rbracket ']' end
+	rule lacute '<' end
+	rule racute '>' end
 	rule at '@' end
 	rule ampersand '&' end
 	rule equal '=' end
 	rule lcomment '/*' end
 	rule rcomment '*/' end
 	rule hsh '#' end
+	rule underscore '_' end
+	rule minus '-' end
+	rule plus '+' end
+
 	rule eol /$/ end
+	rule eos /\Z/ end
 
-	rule space /[ \t\n\r]/m end
-	rule spaces (space | comment)* end
+    rule space /[[:space:]]/ end
+	rule spaces /[[:space:]]/+ end
 
+	rule optional_separation (spaces | comment)* end
+	rule separation (spaces | comment)+ end
 end

@@ -34,8 +34,8 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'GDV neumas to PDV and back to neumas via GDV::NeumaDecoder' do
-      gdv_abs_neumas_1 = '0.o+0.1.p 0.o+1.2.p 3#.o+1.2.p 0.o-1.3.p 2_.o+0.3.fff 1.o+0.2.fff 5.o+1.1/2.ppp silence.1/2.ppp'
-      gdv_abs_neumas_2 = '0.o+0.1.p 0.o+1.2.p 3#.o+1.2.p 0.o-1.3.p 1#.o+0.3.fff 1.o+0.2.fff 5.o+1.1/2.ppp silence.1/2.ppp'
+      gdv_abs_neumas_1 = '0.o0.1.p 0.o1.2.p 3#.o1.2.p 0.o-1.3.p 2_.o0.3.fff 1.o0.2.fff 5.o1.1/2.ppp silence.1/2.ppp'
+      gdv_abs_neumas_2 = '0.o0.1.p 0.o1.2.p 3#.o1.2.p 0.o-1.3.p 1#.o0.3.fff 1.o0.2.fff 5.o1.1/2.ppp silence.1/2.ppp'
 
       scale = Scales.default_system.default_tuning.major[60]
 
@@ -73,24 +73,9 @@ RSpec.describe Musa::Neumalang do
       expect(result).to eq(gdv_diff_neumas)
     end
 
-    it 'GDV neumas to GDVd and back to neumas via GDV::NeumaDifferentialDecoder' do
-      gdv_diff_neumas_1 = '0 . +1 2.p +# 2.1/2.p -# -_ silence.+2'
-      gdv_diff_neumas_2 = '0 . +1 2.p +# 2.1/2.p _ +# silence.+2'
-
-      decoder = Decoders::NeumaDifferentialDecoder.new
-
-      result_gdvd = Neumalang.parse(gdv_diff_neumas_1, decode_with: decoder).to_a(recursive: true)
-
-      result_neuma = result_gdvd.collect(&:to_neuma)
-
-      result = result_neuma.join ' '
-
-      expect(result).to eq(gdv_diff_neumas_2)
-    end
-
     it 'GDV diff neumas to GDV abs neumas via GDV::NeumaDecoder' do
-      gdv_diff_neumas = '0.o+1.1.mf . +1.+o1 2.p +# 2.-o3.1/2.p silence.+1'
-      gdv_abs_neumas =  '0.o+1.1.mf 0.o+1.1.mf 1.o+2.1.mf 2.o+2.1.p 3.o+2.1.p 2.o-1.1/2.p silence.o-1.3/2.p'
+      gdv_diff_neumas = '0.o1.1.mf . +1.+o1 2.p +# 2.-o3.1/2.p silence.+1'
+      gdv_abs_neumas =  '0.o1.1.mf 0.o1.1.mf 1.o2.1.mf 2.o2.1.p 3.o2.1.p 2.o-1.1/2.p silence.o-1.3/2.p'
 
       scale = Scales.default_system.default_tuning.major[60]
 
