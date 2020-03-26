@@ -1070,5 +1070,9 @@ RSpec.describe Musa::Sequencer do
       expect(g).to eq(0)
     end
 
+    it 'correct timing on d with forward_duration being different to duration' do
+      raise NotImplementedError
+    end
+
   end
 end

@@ -146,7 +146,6 @@ module Musa
             when :value         then eval_value element[:value]
             when :gdvd          then eval_gdvd element[:gdvd]
             when :call_methods  then eval_call_methods element[:on], element[:call_methods]
-            when :indirection   then eval_indirection element[:indirection]
             when :reference     then eval_reference element[:reference]
             when :event         then element
             else
@@ -227,10 +226,6 @@ module Musa
 
             value
           end
-        end
-
-        def eval_indirection(element)
-          raise RuntimeError, 'eval_indirection not implemented'
         end
 
         def eval_reference(element)
