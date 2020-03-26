@@ -79,18 +79,18 @@ module Musa
         @fast_forward
       end
 
-      def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, duration_offset: nil, effective_duration: nil, velocity_off: nil)
+      def note(pitchvalue = nil, pitch: nil, velocity: nil, duration: nil, duration_offset: nil, note_duration: nil, velocity_off: nil)
         pitch ||= pitchvalue
 
         if pitch
           velocity ||= 63
 
           duration_offset ||= -@tick_duration
-          effective_duration ||= [0, duration + duration_offset].max
+          note_duration ||= [0, duration + duration_offset].max
 
           velocity_off ||= 63
 
-          NoteControl.new(self, pitch: pitch, velocity: velocity, duration: effective_duration, velocity_off: velocity_off).note_on
+          NoteControl.new(self, pitch: pitch, velocity: velocity, duration: note_duration, velocity_off: velocity_off).note_on
         end
       end
 

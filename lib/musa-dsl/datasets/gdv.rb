@@ -10,7 +10,7 @@ module Musa::Datasets
 
     include Helper
 
-    NaturalKeys = (NaturalKeys + [:grade, :sharps, :octave, :velocity, :silence, :effective_duration]).freeze
+    NaturalKeys = (NaturalKeys + [:grade, :sharps, :octave, :velocity, :silence]).freeze
 
     attr_accessor :base_duration
 
@@ -28,6 +28,14 @@ module Musa::Datasets
 
       if self[:duration]
         r[:duration] = self[:duration]
+      end
+
+      if self[:note_duration]
+        r[:note_duration] = self[:note_duration]
+      end
+
+      if self[:forward_duration]
+        r[:forward_duration] = self[:forward_duration]
       end
 
       if self[:velocity]

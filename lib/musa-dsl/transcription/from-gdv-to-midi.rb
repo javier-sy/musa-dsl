@@ -215,7 +215,7 @@ module Musa::Transcriptors
               end
             end
 
-            gdv[:effective_duration] = [calculated, base_duration * @min_duration_factor].max
+            gdv[:note_duration] = [calculated, base_duration * @min_duration_factor].max
           end
 
           super

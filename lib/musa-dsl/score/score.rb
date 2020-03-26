@@ -57,7 +57,7 @@ module Musa::Score
     end
 
     def at(time, add:)
-      raise ArgumentError, "#{add} is not a Dataset" unless add&.is_a?(Musa::Datasets::Dataset)
+      raise ArgumentError, "#{add} is not a D dataset" unless add&.is_a?(Musa::Datasets::D)
 
       time = time.rationalize
 
@@ -65,7 +65,7 @@ module Musa::Score
 
       slot << add
 
-      @indexer << { start: time, finish: time + (add[:duration] || @resolution).rationalize - @resolution, dataset: add }
+      @indexer << { start: time, finish: time + (add.duration || @resolution).rationalize - @resolution, dataset: add }
 
       nil
     end
