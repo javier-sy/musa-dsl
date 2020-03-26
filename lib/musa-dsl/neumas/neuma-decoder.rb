@@ -13,11 +13,11 @@ module Musa::Neumas
     end
 
     class DifferentialDecoder < ProtoDecoder
-      def decode(attributes)
-        parse attributes
+      def decode(gdvd)
+        process gdvd
       end
 
-      def parse(_attributes)
+      def process(_gdvd)
         raise NotImplementedError
       end
     end
@@ -43,7 +43,7 @@ module Musa::Neumas
       end
 
       def decode(attributes)
-        result = apply parse(attributes), on: @last
+        result = apply process(attributes), on: @last
 
         @last = result.clone
 

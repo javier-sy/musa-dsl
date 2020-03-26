@@ -21,12 +21,21 @@ module Musa
           end
         end
 
+
+
         element
       end
     end
 
     class FeatureTranscriptor
       def transcript(element, base_duration:, tick_duration:)
+        case element
+        when Hash
+          element.delete :modifiers if element[:modifiers]&.empty?
+        when Array
+          element.each { |_| _.delete :modifiers if _[:modifiers]&.empty? }
+        end
+
         element
       end
 

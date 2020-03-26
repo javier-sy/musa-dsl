@@ -15,16 +15,18 @@ I.p 	/* piano */
 
 silence
 
-# { 10 + 100 + { a: 1000, b: 2000}[:a] + {a: 10000}.first[1] } # no se puede procesar como neuma simple
+/*
+{ 10 + 100 + { a: 1000, b: 2000}[:a] + {a: 10000}.first[1] } # no se puede procesar como neuma simple
+*/
 
-# modo diferencial
+/* # modo diferencial */
 /* otra línea */
 
 0		/* suena la tónica de la escala con los demás parámetros como el anterior */
 .		/* como el anterior */
-+1		# elemento +1 en la escala respecto al anterior
++1		/* elemento +1 en la escala respecto al anterior */
 .+1/2	/* como el anterior pero con duración incrementada en 1/2 */
-.*1/2	# como el anterior, con duración la del anterior * 1/2 */
+.*1/2	/* como el anterior, con duración la del anterior * 1/2 */
 .p 		/* como el anterior, con velocidad substituida por p */
 .-p 	/* como el anterior, con velocidad menos piano, es decir, un punto +forte */
 
@@ -32,7 +34,7 @@ silence.*1/2
 
 +2
 
-/* ::evento */ -1 II # no se puede procesar como neuma simple
+/* ::evento */ -1 II /* no se puede procesar como neuma simple */
 
 
 /* Sintaxis: Serie separada con .  */

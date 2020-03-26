@@ -824,7 +824,7 @@ RSpec.describe Musa::Series do
 
       s = a + b
 
-      expect(s.s.a).to eq [{ kind: :neuma, neuma: ['1'] }, { kind: :neuma, neuma: ['2'] }]
+      expect(s.s.a).to eq [{ kind: :gdvd, gdvd: { abs_grade: 1} }, { kind: :gdvd, gdvd: { abs_grade: 2 } }]
     end
 
   end

@@ -17,20 +17,19 @@ module Musa::Neumas
 
       attr_accessor :scale, :base_duration
 
-      def parse(expression)
-        expression = expression.clone
+      def process(gdvd)
+        gdvd = gdvd.clone
 
-        appogiatura_neuma = expression.find { |_| _.is_a?(Hash) && _[:appogiatura] }
-        expression.delete appogiatura_neuma if appogiatura_neuma
+        appogiatura_gdvd = gdvd[:modifiers]&.delete :appogiatura
+        gdvd.base_duration = @base_duration
 
-        parsed = Parser.parse(expression, base_duration: @base_duration)
-
-        if appogiatura_neuma
-          appogiatura = Parser.parse(appogiatura_neuma[:appogiatura], base_duration: @base_duration)
-          parsed[:appogiatura] = appogiatura
+        if appogiatura_gdvd
+          appogiatura_gdvd = appogiatura_gdvd.clone
+          appogiatura_gdvd.base_duration = @base_duration
+          gdvd[:modifiers][:appogiatura] = appogiatura_gdvd
         end
 
-        parsed
+        gdvd
       end
 
       def subcontext
@@ -40,7 +39,7 @@ module Musa::Neumas
       def apply(action, on:)
         gdv = action.to_gdv @scale, previous: on
 
-        appogiatura_action = action[:appogiatura]
+        appogiatura_action = action.dig(:modifiers, :appogiatura)
         gdv[:appogiatura] = appogiatura_action.to_gdv @scale, previous: on if appogiatura_action
 
         gdv
@@ -54,4 +53,3 @@ module Musa::Neumas
     end
   end
 end
-
