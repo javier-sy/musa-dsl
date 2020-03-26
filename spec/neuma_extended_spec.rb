@@ -21,26 +21,26 @@ RSpec.describe Musa::Neumalang do
 
       c = -1
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 0 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: {})
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: 1, delta_duration: 3/2r, modifiers: { tr: true } })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: 1, abs_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 0 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: {})
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: 1, delta_duration: 3/2r, modifiers: { tr: true } })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: 1, abs_duration: 1/2r })
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 1/4r })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -2 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 2 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 1, abs_duration: 1/4r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -2 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1, abs_duration: 2 })
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 0, abs_duration: 1, abs_octave: -1 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_duration: 1 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 1/4r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 0, abs_duration: 1, abs_octave: -1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_duration: 1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1, abs_duration: 1/4r })
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 1/8r })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, factor_duration: 2 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: 1, factor_duration: 1/2r })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 1/8r })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { delta_grade: -1, abs_duration: 2 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 1, abs_duration: 1/8r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1, factor_duration: 2 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: 1, factor_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1, abs_duration: 1/8r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { delta_grade: -1, abs_duration: 2 })
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats' do
@@ -49,11 +49,11 @@ RSpec.describe Musa::Neumalang do
 
       c = -1
 
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 0, abs_duration: 1 })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: {})
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 1/2r })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_sharps: 1, abs_duration: 1/2r })
-      expect(result[0][:serie][c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 2, abs_sharps: -1, abs_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 0, abs_duration: 1 })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: {})
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 1, abs_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 1, abs_sharps: 1, abs_duration: 1/2r })
+      expect(result[0][:serie][c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 2, abs_sharps: -1, abs_duration: 1/2r })
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats with differential decoder' do

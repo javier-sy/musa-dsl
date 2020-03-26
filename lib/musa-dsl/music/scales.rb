@@ -1,5 +1,3 @@
-require_relative '../neumas/neuma-gdvd-parser'
-
 module Musa
   module Scales
     module Scales

@@ -10,50 +10,50 @@ RSpec.describe Musa::Neumalang do
 
     it "Basic bracketed neumas inline parsing" do
       expect(Neumalang.parse('2.3 5.6 [ 9.8 6.5 ] ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
-        [   { kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } },
-          { kind: :neuma, neuma: { abs_grade: 5, abs_duration: 6 } },
-          { kind: :serie, serie: [ { kind: :neuma, neuma: { abs_grade: 9, abs_duration: 8 } },
-                                   { kind: :neuma, neuma: { abs_grade: 6, abs_duration: 5 } } ] },
+        [   { kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
+          { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
+          { kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
+                                   { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] },
           { kind: :event, event: :evento } ] )
     end
 
     it "Basic bracketed neumas inline parsing with simple braced command" do
       parsed = Neumalang.parse('(2 3) [9.8 6.5] (7 8) { 100 + 10 } /* comentario 2 */').to_a(recursive: true)
-      expect(parsed[0]).to eq({ kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } })
-      expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: { abs_grade: 9, abs_duration: 8 } },
-                                                       { kind: :neuma, neuma: { abs_grade: 6, abs_duration: 5 } } ] })
-      expect(parsed[2]).to eq({ kind: :neuma, neuma: { abs_grade: 7, abs_duration: 8 } })
+      expect(parsed[0]).to eq({ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } })
+      expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
+                                                       { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] })
+      expect(parsed[2]).to eq({ kind: :gdvd, gdvd: { abs_grade: 7, abs_duration: 8 } })
       expect(parsed[3][:command].call).to eq(110)
     end
 
     it "Basic bracketed neumas inline parsing with complex braced command" do
       parsed = Neumalang.parse('(2 3) [9.8 6.5] (7 8) { 100 + 10 + { a: 1000, b: 2000 }[:b] } /* comentario 2 */').to_a(recursive: true)
-      expect(parsed[0]).to eq({ kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } })
-      expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: { abs_grade: 9, abs_duration: 8 } },
-                                                       { kind: :neuma, neuma: { abs_grade: 6, abs_duration: 5 } } ] })
-      expect(parsed[2]).to eq({ kind: :neuma, neuma: { abs_grade: 7, abs_duration: 8 } })
+      expect(parsed[0]).to eq({ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } })
+      expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
+                                                       { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] })
+      expect(parsed[2]).to eq({ kind: :gdvd, gdvd: { abs_grade: 7, abs_duration: 8 } })
       expect(parsed[3][:command].call).to eq(2110)
     end
 
     it "Basic bracketed neumas inline parsing with complex braced command" do
       parsed = Neumalang.parse('(2 3) [9.8 6.5] (7 8) { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } /* comentario 2 */').to_a(recursive: true)
-      expect(parsed[0]).to eq({ kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } })
-      expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :neuma, neuma: { abs_grade: 9, abs_duration: 8 } },
-                                                       { kind: :neuma, neuma: { abs_grade: 6, abs_duration: 5 } } ] })
-      expect(parsed[2]).to eq({ kind: :neuma, neuma: { abs_grade: 7, abs_duration: 8 } })
+      expect(parsed[0]).to eq({ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } })
+      expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
+                                                       { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] })
+      expect(parsed[2]).to eq({ kind: :gdvd, gdvd: { abs_grade: 7, abs_duration: 8 } })
       expect(parsed[3][:command].call).to eq(12110)
     end
 
     it "Basic bracketed neumas inline recursive parsing" do
       expect(Neumalang.parse('2.3 5.6 [ 9.8 [5.4 6.5] 6.5 [ 5.4]] ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
-        [   { kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } },
-          { kind: :neuma, neuma: { abs_grade: 5, abs_duration: 6 } },
+        [   { kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
+          { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
           { kind: :serie, serie: [
-            { kind: :neuma, neuma: { abs_grade: 9, abs_duration: 8 } },
-            { kind: :serie, serie: [ { kind: :neuma, neuma: { abs_grade: 5, abs_duration: 4 } },
-                                     { kind: :neuma, neuma: { abs_grade: 6, abs_duration: 5 } } ] },
-            { kind: :neuma, neuma: { abs_grade: 6, abs_duration: 5 } },
-            { kind: :serie, serie: [ { kind: :neuma, neuma: { abs_grade: 5, abs_duration: 4 } } ] } ] },
+            { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
+            { kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 4 } },
+                                     { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] },
+            { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } },
+            { kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 4 } } ] } ] },
           { kind: :event, event: :evento } ] )
     end
 
@@ -65,12 +65,12 @@ RSpec.describe Musa::Neumalang do
           :assign_value=>
               {:kind=>:serie,
                :serie=>
-                   [{:kind=>:neuma,
-                     :neuma=>{:abs_grade=>:I, :abs_duration=>1, :abs_velocity=>3}},
-                    {:kind=>:neuma, :neuma=>{}},
-                    {:kind=>:neuma, :neuma=>{:factor_duration=>1/2r}},
-                    {:kind=>:neuma, :neuma=>{}},
-                    {:kind=>:neuma, :neuma=>{:abs_grade=>2}}]}},
+                   [{:kind=>:gdvd,
+                     :gdvd=>{:abs_grade=>:I, :abs_duration=>1, :abs_velocity=>3}},
+                    {:kind=>:gdvd, :gdvd=>{}},
+                    {:kind=>:gdvd, :gdvd=>{:factor_duration=>1/2r}},
+                    {:kind=>:gdvd, :gdvd=>{}},
+                    {:kind=>:gdvd, :gdvd=>{:abs_grade=>2}}]}},
          {:kind=>:assign_to,
           :assign_to=>[:@c],
           :assign_value=>
@@ -82,21 +82,21 @@ RSpec.describe Musa::Neumalang do
                            :event=>:event1,
                            :value_parameters=>
                                [{:kind=>:serie,
-                                 :serie=>[{:kind=>:neuma, :neuma=>{:abs_grade=>100}}]},
+                                 :serie=>[{:kind=>:gdvd, :gdvd=>{:abs_grade=>100}}]},
                                 {:kind=>:use_variable, :use_variable=>:@b}]}]},
                     {:kind=>:serie,
                      :serie=>
                          [{:kind=>:event, :event=>:event2},
-                          {:kind=>:neuma,
-                           :neuma=>{:abs_grade=>100, :abs_duration=>200, :abs_velocity=>4}}]},
+                          {:kind=>:gdvd,
+                           :gdvd=>{:abs_grade=>100, :abs_duration=>200, :abs_velocity=>4}}]},
                     {:kind=>:serie,
                      :serie=>
                          [{:kind=>:event,
                            :event=>:event3,
                            :value_parameters=>
                                [{:kind=>:value, :value=>100},
-                                {:kind=>:neuma,
-                                 :neuma=>{:abs_grade=>:I, :abs_duration=>2, :abs_velocity=>3}},
+                                {:kind=>:gdvd,
+                                 :gdvd=>{:abs_grade=>:I, :abs_duration=>2, :abs_velocity=>3}},
                                 {:kind=>:value, :value=>300}]}]},
                     {:kind=>:serie,
                      :serie=>
@@ -107,7 +107,7 @@ RSpec.describe Musa::Neumalang do
          {:kind=>:serie,
           :serie=>
               [{:kind=>:use_variable, :use_variable=>:@a},
-               {:kind=>:neuma, :neuma=>{:abs_grade=>:silence, :abs_duration=>2}},
+               {:kind=>:gdvd, :gdvd=>{:abs_grade=>:silence, :abs_duration=>2}},
                {:kind=>:use_variable, :use_variable=>:@a}]},
          {:kind=>:parallel,
           :parallel=>
@@ -127,9 +127,9 @@ RSpec.describe Musa::Neumalang do
                {:kind=>:serie, :serie=>[{:kind=>:use_variable, :use_variable=>:@b}]}]},
          {:kind=>:parallel,
           :parallel=>
-              [{:kind=>:serie, :serie=>[{:kind=>:neuma, :neuma=>{:abs_grade=>:a}}]},
-               {:kind=>:serie, :serie=>[{:kind=>:neuma, :neuma=>{:abs_grade=>:b}}]},
-               {:kind=>:serie, :serie=>[{:kind=>:neuma, :neuma=>{:abs_grade=>:c}}]}]},
+              [{:kind=>:serie, :serie=>[{:kind=>:gdvd, :gdvd=>{:abs_grade=>:a}}]},
+               {:kind=>:serie, :serie=>[{:kind=>:gdvd, :gdvd=>{:abs_grade=>:b}}]},
+               {:kind=>:serie, :serie=>[{:kind=>:gdvd, :gdvd=>{:abs_grade=>:c}}]}]},
          {:kind=>:parallel,
           :parallel=>
               [{:kind=>:serie,
@@ -139,15 +139,15 @@ RSpec.describe Musa::Neumalang do
                       :assign_value=>
                           {:kind=>:serie,
                            :serie=>
-                               [{:kind=>:neuma,
-                                 :neuma=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>-1}},
-                                {:kind=>:neuma, :neuma=>{:abs_grade=>2}},
-                                {:kind=>:neuma, :neuma=>{:abs_grade=>1}},
-                                {:kind=>:neuma, :neuma=>{:abs_grade=>2}}]}},
+                               [{:kind=>:gdvd,
+                                 :gdvd=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>-1}},
+                                {:kind=>:gdvd, :gdvd=>{:abs_grade=>2}},
+                                {:kind=>:gdvd, :gdvd=>{:abs_grade=>1}},
+                                {:kind=>:gdvd, :gdvd=>{:abs_grade=>2}}]}},
                      {:kind=>:use_variable, :use_variable=>:@b}]},
                {:kind=>:serie,
                 :serie=>
-                    [{:kind=>:neuma, :neuma=>{:abs_grade=>:silence, :abs_duration=>4}},
+                    [{:kind=>:gdvd, :gdvd=>{:abs_grade=>:silence, :abs_duration=>4}},
                      {:kind=>:call_methods,
                       :call_methods=>
                           [{:method=>:reverse,
@@ -169,10 +169,10 @@ RSpec.describe Musa::Neumalang do
                :c=>
                    {:kind=>:serie,
                     :serie=>
-                        [{:kind=>:neuma,
-                          :neuma=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>2}},
-                         {:kind=>:neuma,
-                          :neuma=>{:abs_grade=>3, :abs_duration=>2, :abs_velocity=>-1}}]}}},
+                        [{:kind=>:gdvd,
+                          :gdvd=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>2}},
+                         {:kind=>:gdvd,
+                          :gdvd=>{:abs_grade=>3, :abs_duration=>2, :abs_velocity=>-1}}]}}},
          {:kind=>:event,
           :event=>:event_with_value_and_key_parameters,
           :value_parameters=>
@@ -186,10 +186,10 @@ RSpec.describe Musa::Neumalang do
                :c=>
                    {:kind=>:serie,
                     :serie=>
-                        [{:kind=>:neuma,
-                          :neuma=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>2}},
-                         {:kind=>:neuma,
-                          :neuma=>{:abs_grade=>3, :abs_duration=>2, :abs_velocity=>-1}}]}}},
+                        [{:kind=>:gdvd,
+                          :gdvd=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>2}},
+                         {:kind=>:gdvd,
+                          :gdvd=>{:abs_grade=>3, :abs_duration=>2, :abs_velocity=>-1}}]}}},
          {:kind=>:call_methods,
           :call_methods=>
               [{:method=>:haz_algo,
@@ -204,10 +204,10 @@ RSpec.describe Musa::Neumalang do
                      :c=>
                          {:kind=>:serie,
                           :serie=>
-                              [{:kind=>:neuma,
-                                :neuma=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>2}},
-                               {:kind=>:neuma,
-                                :neuma=>{:abs_grade=>3, :abs_duration=>2, :abs_velocity=>-1}}]}}}],
+                              [{:kind=>:gdvd,
+                                :gdvd=>{:abs_grade=>1, :abs_duration=>2, :abs_velocity=>2}},
+                               {:kind=>:gdvd,
+                                :gdvd=>{:abs_grade=>3, :abs_duration=>2, :abs_velocity=>-1}}]}}}],
           :on=>{:kind=>:use_variable, :use_variable=>:@b}}])
 
     end

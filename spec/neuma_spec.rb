@@ -32,37 +32,37 @@ RSpec.describe Musa::Neumalang do
 
     it 'Basic neumas inline parsing (1)' do
       expect(Neumalang.parse('2.3 5.6 /* comentario 1 */ ::evento').to_a(recursive: true)).to eq(
-        [{ kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } },
-         { kind: :neuma, neuma: { abs_grade: 5, abs_duration: 6 } },
+        [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
+         { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
          { kind: :event, event: :evento }]
       )
     end
 
     it 'Basic neumas inline parsing (2)' do
       expect(Neumalang.parse('2.3 5.6 ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
-        [{ kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } },
-         { kind: :neuma, neuma: { abs_grade: 5, abs_duration: 6 } },
+        [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
+         { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
          { kind: :event, event: :evento }]
       )
     end
 
     it 'Basic neumas inline parsing with comment' do
       expect(Neumalang.parse("/* comentario (con parentesis) \n*/ 2.3").to_a(recursive: true)).to eq(
-        [{ kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3 } }])
+        [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } }])
     end
 
     it 'Basic neumas inline parsing only duration' do
       result = Neumalang.parse('0 .1/2').to_a(recursive: true)
 
-      expect(result[0]).to eq(kind: :neuma, neuma: { abs_grade: 0 })
-      expect(result[1]).to eq(kind: :neuma, neuma: { abs_duration: 1/2r } )
+      expect(result[0]).to eq(kind: :gdvd, gdvd: { abs_grade: 0 })
+      expect(result[1]).to eq(kind: :gdvd, gdvd: { abs_duration: 1/2r } )
     end
 
     it 'Basic neumas inline parsing silence' do
       result = '0 silence.1/2'.to_neumas.to_a(recursive: true)
 
-      expect(result[0]).to eq(kind: :neuma, neuma: { abs_grade: 0 })
-      expect(result[1]).to eq(kind: :neuma, neuma: { abs_grade: :silence, abs_duration: 1/2r })
+      expect(result[0]).to eq(kind: :gdvd, gdvd: { abs_grade: 0 })
+      expect(result[1]).to eq(kind: :gdvd, gdvd: { abs_grade: :silence, abs_duration: 1/2r })
     end
 
     it 'Basic neumas inline event with parameters' do
@@ -70,8 +70,8 @@ RSpec.describe Musa::Neumalang do
       expect(result).to eq([{kind: :event,
                              event: :evento,
                              value_parameters:
-                                 [{kind: :serie, serie: [{kind: :neuma, neuma: {abs_grade: 100}}]},
-                                  {kind: :neuma, neuma: {abs_grade: 100}}]}])
+                                 [{kind: :serie, serie: [{kind: :gdvd, gdvd: {abs_grade: 100}}]},
+                                  {kind: :gdvd, gdvd: {abs_grade: 100}}]}])
     end
 
     it 'Basic neumas inline event with complex parameters' do
@@ -80,15 +80,15 @@ RSpec.describe Musa::Neumalang do
       expect(result).to eq([{kind: :event,
                              event: :event_with_value_and_key_parameters,
                              value_parameters:
-                                 [{ kind: :neuma, neuma: {abs_grade: 1}},
+                                 [{ kind: :gdvd, gdvd: {abs_grade: 1}},
                                   { kind: :serie,
                                     serie:
-                                       [{ kind: :neuma, neuma: {abs_grade: 2}},
-                                        { kind: :neuma, neuma: {abs_grade: 3}},
-                                        { kind: :neuma, neuma: {abs_grade: 4}}]}],
+                                       [{ kind: :gdvd, gdvd: {abs_grade: 2}},
+                                        { kind: :gdvd, gdvd: {abs_grade: 3}},
+                                        { kind: :gdvd, gdvd: {abs_grade: 4}}]}],
                              key_parameters:
-                                 { a: { kind: :neuma, neuma: {abs_grade: 5}},
-                                   b: { kind: :neuma, neuma: {abs_grade: 6}}}}])
+                                 { a: { kind: :gdvd, gdvd: {abs_grade: 5}},
+                                   b: { kind: :gdvd, gdvd: {abs_grade: 6}}}}])
     end
 
     it 'Basic neumas inline parsing with differential decoder' do
@@ -209,10 +209,10 @@ RSpec.describe Musa::Neumalang do
 
       c = -1
 
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 2, abs_velocity: 2 } )
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: :a, abs_duration: 2, abs_velocity: 2 } )
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3, modifiers: { z: true } } )
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: :x, abs_duration: 4, modifiers: { z: true, y: true } } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 1, abs_duration: 2, abs_velocity: 2 } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: :a, abs_duration: 2, abs_velocity: 2 } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3, modifiers: { z: true } } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: :x, abs_duration: 4, modifiers: { z: true, y: true } } )
     end
 
     it 'Array of neumas to neumas serie conversion' do
@@ -220,10 +220,10 @@ RSpec.describe Musa::Neumalang do
 
       c = -1
 
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 1, abs_duration: 2, abs_velocity: 2 } )
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: :a, abs_duration: 2, abs_velocity: 2 } )
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: 2, abs_duration: 3, modifiers: { z: true } } )
-      expect(neumas[c += 1]).to eq(kind: :neuma, neuma: { abs_grade: :x, abs_duration: 4, modifiers: { z: true, y: true } } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 1, abs_duration: 2, abs_velocity: 2 } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: :a, abs_duration: 2, abs_velocity: 2 } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3, modifiers: { z: true } } )
+      expect(neumas[c += 1]).to eq(kind: :gdvd, gdvd: { abs_grade: :x, abs_duration: 4, modifiers: { z: true, y: true } } )
     end
 
     it 'Neumas strings parallelized via Ruby |' do

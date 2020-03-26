@@ -128,9 +128,10 @@ module Musa
 
         module NeumaAsAttributes
           include Musa::Neumas
+          include Musa::Datasets
 
           def value
-            h = Hash.new
+            h = {}.extend GDVd
 
             capture(:grade)&.value&.tap { |_| h.merge! _ if _ }
             capture(:octave)&.value&.tap { |_| h.merge! _ if _ }
@@ -140,7 +141,7 @@ module Musa
             h[:modifiers] = {} unless captures(:modifiers).empty?
             captures(:modifiers).collect(&:value).each { |_| h[:modifiers].merge! _ if _ }
 
-            { kind: :neuma, neuma: h }.extend Neuma
+            { kind: :gdvd, gdvd: h }.extend Neuma
           end
         end
 
@@ -171,6 +172,18 @@ module Musa
             value[:abs_sharps] = capture(:accidentals).value if capture(:accidentals)
 
             value
+          end
+        end
+
+        module DeltaOctaveAttribute
+          def value
+            { delta_octave: capture(:sign).value * capture(:number).value }
+          end
+        end
+
+        module AbsOctaveAttribute
+          def value
+            { abs_octave: capture(:number).value }
           end
         end
 
@@ -248,8 +261,8 @@ module Musa
         module AppogiaturaNeuma
           def value
             capture(:base).value.tap do |_|
-              _[:neuma][:modifiers] ||= {}
-              _[:neuma][:modifiers][:appogiatura] = capture(:appogiatura).value[:neuma]
+              _[:gdvd][:modifiers] ||= {}
+              _[:gdvd][:modifiers][:appogiatura] = capture(:appogiatura).value[:gdvd]
             end
           end
         end
@@ -315,8 +328,6 @@ module Musa
       def parse(string_or_file, language: nil, decode_with: nil, debug: nil)
         language ||= ::NeumalangGrammar
 
-        match = nil
-
         if string_or_file.is_a? String
           match = language.parse string_or_file
 
@@ -333,8 +344,8 @@ module Musa
 
         if decode_with
           serie.eval do |e|
-            if e[:kind] == :neuma
-              decode_with.decode(e[:neuma])
+            if e[:kind] == :gdvd
+              decode_with.decode(e[:gdvd])
             else
               raise ArgumentError, "Don't know how to convert #{e} to neumas"
             end

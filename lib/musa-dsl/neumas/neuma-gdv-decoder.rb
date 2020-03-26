@@ -17,19 +17,19 @@ module Musa::Neumas
 
       attr_accessor :scale, :base_duration
 
-      def parse(expression)
-        expression = expression.clone
+      def process(gdvd)
+        gdvd = gdvd.clone
 
-        appogiatura_neuma = expression[:modifiers]&.delete :appogiatura
+        appogiatura_gdvd = gdvd[:modifiers]&.delete :appogiatura
+        gdvd.base_duration = @base_duration
 
-        parsed = Parser.parse(expression, base_duration: @base_duration)
-
-        if appogiatura_neuma
-          appogiatura = Parser.parse(appogiatura_neuma, base_duration: @base_duration)
-          parsed[:modifiers][:appogiatura] = appogiatura
+        if appogiatura_gdvd
+          appogiatura_gdvd = appogiatura_gdvd.clone
+          appogiatura_gdvd.base_duration = @base_duration
+          gdvd[:modifiers][:appogiatura] = appogiatura_gdvd
         end
 
-        parsed
+        gdvd
       end
 
       def subcontext

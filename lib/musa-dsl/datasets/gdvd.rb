@@ -15,7 +15,15 @@ module Musa::Datasets
                    :abs_velocity, :delta_velocity,
                    :modifiers].freeze
 
-    attr_accessor :base_duration
+    attr_reader :base_duration
+
+    def base_duration=(value)
+      factor = value / (@base_duration || 1)
+      @base_duration = value
+
+      self[:abs_duration] *= factor if has_key?(:abs_duration)
+      self[:delta_duration] *= factor if has_key?(:delta_duration)
+    end
 
     def to_gdv(scale, previous:)
       r = previous.clone.delete_if {|k,_| !GDV::NaturalKeys.include?(k)}.extend GDV

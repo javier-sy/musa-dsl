@@ -139,7 +139,7 @@ module Musa
             when :use_variable  then eval_use_variable element[:use_variable]
             when :command       then eval_command element[:command], element[:value_parameters], element[:key_parameters]
             when :value         then eval_value element[:value]
-            when :neuma         then eval_neuma element[:neuma]
+            when :gdvd          then eval_gdvd element[:gdvd]
             when :call_methods  then eval_call_methods element[:on], element[:call_methods]
             when :indirection   then eval_indirection element[:indirection]
             when :reference     then eval_reference element[:reference]
@@ -154,8 +154,8 @@ module Musa
           value
         end
 
-        def eval_neuma(neuma)
-          @decoder.decode neuma
+        def eval_gdvd(gdvd)
+          @decoder.decode gdvd
         end
 
         def eval_serie(serie)
@@ -277,8 +277,8 @@ module Musa
                   continue_operation: :now }
               end
 
-            when :neuma
-              _value = eval_neuma element[:neuma]
+            when :gdvd
+              _value = eval_gdvd element[:gdvd]
 
               if _value.is_a?(Array)
                 { current_operation: :no_eval_play,

@@ -191,11 +191,11 @@ grammar NeumalangGrammar
     end
 
     rule delta_octave_attribute
-        (sign 'o' number:raw_unsigned_integer) { { delta_octave: capture(:sign).value * capture(:number).value } }
+        (sign 'o' number:raw_unsigned_integer) <Musa::Neumalang::Neumalang::Parser::DeltaOctaveAttribute>
     end
 
     rule abs_octave_attribute
-        ('o' number:raw_integer) { { abs_octave: capture(:number).value } }
+        ('o' number:raw_integer) <Musa::Neumalang::Neumalang::Parser::AbsOctaveAttribute>
     end
 
     rule duration_attribute
