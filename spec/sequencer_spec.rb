@@ -1071,8 +1071,40 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'correct timing on d with forward_duration being different to duration' do
-      raise NotImplementedError
-    end
+      serie = S({ value_a: 1, duration: 1 }, { value_b: 1, duration: 1 },
+          { value_a: 1, duration: 1, forward_duration: 0 },
+          { value_b: 1, duration: 1, forward_duration: 0 },
+          { value_c: 1, duration: 1 },
+          { value_d: 1, duration: 1 })
 
+      s = BaseSequencer.new 4, 1
+
+      a = b = c = d = 0
+
+      s.at 1 do
+        s.play serie do |thing|
+          a += thing[:value_a] if thing[:value_a]
+          b += thing[:value_b] if thing[:value_b]
+          c += thing[:value_c] if thing[:value_c]
+          d += thing[:value_d] if thing[:value_d]
+        end
+      end
+
+      expect([a, b, c, d]).to eq [0, 0, 0, 0]
+
+      s.tick
+      expect([a, b, c, d]).to eq [1, 0, 0, 0]
+      3.times { s.tick }
+      expect([a, b, c, d]).to eq [1, 0, 0, 0]
+      s.tick
+      expect([a, b, c, d]).to eq [1, 1, 0, 0]
+
+      3.times { s.tick }
+      expect([a, b, c, d]).to eq [1, 1, 0, 0]
+      s.tick
+      expect([a, b, c, d]).to eq [2, 2, 1, 0]
+      4.times { s.tick }
+      expect([a, b, c, d]).to eq [2, 2, 1, 1]
+    end
   end
 end
