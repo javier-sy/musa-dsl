@@ -250,6 +250,11 @@ RSpec.describe Musa::Neumalang do
       expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { tr: true } } }]
     end
 
+    it "Neuma: '(tr())" do
+      a = Neumalang.parse('(tr())').to_a(recursive: true)
+      expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { tr: true } } }]
+    end
+
     it "Neuma: '(. gl(100))" do
       a = Neumalang.parse('(. gl(100))').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { gl: 100 } } }]
@@ -257,6 +262,11 @@ RSpec.describe Musa::Neumalang do
 
     it "Neuma: '(. gl(100, \"cosa\"))" do
       a = Neumalang.parse('(. gl(100, "cosa"))').to_a(recursive: true)
+      expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { gl: [100, "cosa"] } } }]
+    end
+
+    it "Neuma: '(gl(100, \"cosa\"))" do
+      a = Neumalang.parse('(gl(100, "cosa"))').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { gl: [100, "cosa"] } } }]
     end
 
