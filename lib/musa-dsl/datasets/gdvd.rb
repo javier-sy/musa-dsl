@@ -1,19 +1,20 @@
-require_relative 'dataset'
+require_relative 'delta-d'
 require_relative 'gdv'
 
 require_relative 'helper'
 
 module Musa::Datasets
   module GDVd
-    include Dataset
+    include DeltaD
+    include DeltaI
 
     include Helper
 
-    NaturalKeys = [:abs_grade, :abs_sharps, :abs_octave,
-                   :delta_grade, :delta_sharps, :delta_interval_sign, :delta_interval, :delta_octave,
-                   :abs_duration, :delta_duration, :factor_duration,
-                   :abs_velocity, :delta_velocity,
-                   :modifiers].freeze
+    NaturalKeys = (NaturalKeys +
+                    [:abs_grade, :abs_sharps, :abs_octave,
+                     :delta_grade, :delta_sharps, :delta_interval_sign, :delta_interval, :delta_octave,
+                     :abs_velocity, :delta_velocity,
+                     :modifiers]).freeze
 
     attr_reader :base_duration
 

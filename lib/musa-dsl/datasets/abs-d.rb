@@ -1,8 +1,8 @@
-require_relative 'dataset'
+require_relative 'e'
 
 module Musa::Datasets
-  module D
-    include Dataset
+  module AbsD
+    include E
 
     NaturalKeys = [:duration, # duration of the process (note reproduction, dynamics evolution, etc)
                    :note_duration, # duration of the note (a staccato note is effectvely shorter than elapsed duration until next note)
@@ -22,14 +22,14 @@ module Musa::Datasets
     end
 
     def self.is_compatible?(thing)
-      thing.is_a?(D) || thing.is_a?(Hash) && thing.has_key?(:duration)
+      thing.is_a?(AbsD) || thing.is_a?(Hash) && thing.has_key?(:duration)
     end
 
-    def self.to_D(thing)
-      if thing.is_a?(D)
+    def self.to_AbsD(thing)
+      if thing.is_a?(AbsD)
         thing
       elsif thing.is_a?(Hash) && thing.has_key?(:duration)
-        thing.clone.extend(D)
+        thing.clone.extend(AbsD)
       else
         raise ArgumentError, 'Cannot convert #{thing} to D dataset'
       end

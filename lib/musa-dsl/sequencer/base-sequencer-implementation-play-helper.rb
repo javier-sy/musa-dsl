@@ -72,8 +72,8 @@ module Musa
           value = nil
 
           if element.is_a? Hash
-            if D.is_compatible?(element)
-              element = D.to_D(element)
+            if AbsD.is_compatible?(element)
+              element = AbsD.to_AbsD(element)
 
               value = {
                   current_operation: :block,
@@ -134,8 +134,8 @@ module Musa
         end
 
         def eval_element(element)
-          if D.is_compatible?(element)
-            D.to_D(element)
+          if AbsD.is_compatible?(element)
+            AbsD.to_AbsD(element)
           else
             case element[:kind]
             when :serie         then eval_serie element[:serie]
@@ -247,7 +247,7 @@ module Musa
             { current_operation: :none,
               continue_operation: :now }
 
-          when Musa::Datasets::D
+          when Musa::Datasets::AbsD
             { current_operation: :block,
               current_parameter: element,
               continue_operation: :wait,
@@ -269,8 +269,8 @@ module Musa
             when :value
               _value = eval_value element[:value]
 
-              if D.is_compatible?(_value)
-                _value = D.to_D(_value)
+              if AbsD.is_compatible?(_value)
+                _value = AbsD.to_AbsD(_value)
 
                 { current_operation: :block,
                   current_parameter: _value,

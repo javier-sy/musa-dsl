@@ -57,7 +57,7 @@ module Musa::Score
     end
 
     def at(time, add:)
-      raise ArgumentError, "#{add} is not a D dataset" unless add&.is_a?(Musa::Datasets::D)
+      raise ArgumentError, "#{add} is not a D dataset" unless add&.is_a?(Musa::Datasets::AbsD)
 
       time = time.rationalize
 

@@ -1,5 +1,4 @@
 grammar NeumalangGrammar
-
 	rule sentences
 		(optional_separation (expression optional_separation)*) <Musa::Neumalang::Neumalang::Parser::Sentences>
 	end

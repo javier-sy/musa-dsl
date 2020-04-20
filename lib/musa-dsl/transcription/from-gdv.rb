@@ -10,7 +10,7 @@ module Musa::Transcriptors
         base = gdv.delete :base
         base ||= gdv.delete :b
 
-        super base ? { duration: 0 }.extend(Musa::Datasets::D) : gdv, base_duration: base_duration, tick_duration: tick_duration
+        super base ? { duration: 0 }.extend(Musa::Datasets::AbsD) : gdv, base_duration: base_duration, tick_duration: tick_duration
       end
     end
   end

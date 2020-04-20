@@ -1,4 +1,4 @@
-require_relative 'd'
+require_relative 'abs-d'
 require_relative 'gdvd'
 require_relative 'pdv'
 
@@ -6,7 +6,8 @@ require_relative 'helper'
 
 module Musa::Datasets
   module GDV
-    include D
+    include AbsD
+    include AbsI
 
     include Helper
 

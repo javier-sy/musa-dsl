@@ -7,8 +7,8 @@ include Musa::Neumas
 include Musa::Datasets
 include Musa::Scales
 
-RSpec.describe Musa::Neumalang do
-  context 'Dataset transformations' do
+RSpec.describe Musa::Datasets do
+  context 'Dataset GDV-GDVd-PDV transformations' do
 
     it 'GDV to PDV' do
       scale = Scales.default_system.default_tuning.major[60]
