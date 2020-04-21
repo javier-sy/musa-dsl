@@ -31,7 +31,7 @@ module Musa::Datasets
       elsif thing.is_a?(Hash) && thing.has_key?(:duration)
         thing.clone.extend(AbsD)
       else
-        raise ArgumentError, 'Cannot convert #{thing} to D dataset'
+        raise ArgumentError, "Cannot convert #{thing} to AbsD dataset"
       end
     end
   end

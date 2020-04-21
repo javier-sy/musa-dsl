@@ -310,7 +310,7 @@ RSpec.describe Musa::Neumalang do
       expect(a).to eq [{ kind: :v, v: [2, 3, 4] }]
     end
 
-    it "Neuma: '(+2 -o3 +·)'" do
+    it "Neuma with undefined previous duration and incremental duration: '(+2 -o3 +·)'" do
       expect {
         Neumalang.parse('(+2 -o3 +·)')
       }.to raise_error(Citrus::ParseError)
