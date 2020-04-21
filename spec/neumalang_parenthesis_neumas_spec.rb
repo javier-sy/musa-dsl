@@ -300,10 +300,14 @@ RSpec.describe Musa::Neumalang do
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: -1 } }]
     end
 
-    it "Bad formatted neumas: '(2 3 4)'" do
-      expect {
-        Neumalang.parse('(2 3 4)')
-      }.to raise_error(Citrus::ParseError)
+    it "Unambiguous parenthesis neuma because has 2 elements: '(2 3)'" do
+      a = Neumalang.parse('(2 3)').to_a(recursive: true)
+      expect(a).to eq [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } }]
+    end
+
+    it "Unambiguous vector neuma because has 3 elements: '(2 3 4)'" do
+      a = Neumalang.parse('(2 3 4)').to_a(recursive: true)
+      expect(a).to eq [{ kind: :v, v: [2, 3, 4] }]
     end
 
     it "Neuma: '(+2 -o3 +·)'" do
