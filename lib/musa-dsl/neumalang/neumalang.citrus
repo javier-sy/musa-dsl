@@ -8,7 +8,15 @@ grammar NeumalangGrammar
 	end
 
 	rule object_expression
-		(braced_command | reference_expression | bracketed_expression | use_variable | constant | neuma_between_parenthesis | appogiatura_neuma_between_parenthesis)
+		(braced_command |
+		 reference_expression |
+		 bracketed_expression |
+		 use_variable |
+		 constant |
+		 neuma_between_parenthesis |
+		 appogiatura_neuma_between_parenthesis |
+		 packed_vector |
+		 vector)
 	end
 
 	rule reference_expression
@@ -174,6 +182,18 @@ grammar NeumalangGrammar
 	rule neuma_between_parenthesis_empty
         (lpar optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
 	end
+
+	rule packed_vector
+	    (lpar (optional_separation key_value)+ optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::PackedVector>
+	end
+
+	rule vector
+	    (lpar (optional_separation raw_number)+ optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::Vector>
+	end
+
+    rule key_value
+        (raw_symbol colon optional_separation raw_number) { [ capture(:raw_symbol).value, capture(:raw_number).value ] }
+    end
 
     rule grade_attribute
         delta_grade_attribute | abs_grade_attribute | delta_accidentals_attribute

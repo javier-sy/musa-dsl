@@ -2,6 +2,7 @@ require 'citrus'
 
 require_relative '../series'
 require_relative '../neumas'
+require_relative '../datasets'
 
 module Musa
   module Neumalang
@@ -142,6 +143,24 @@ module Musa
             captures(:modifiers).collect(&:value).each { |_| h[:modifiers].merge! _ if _ }
 
             { kind: :gdvd, gdvd: h }.extend Neuma
+          end
+        end
+
+        module PackedVector
+          include Musa::Neumas
+          include Musa::Datasets
+
+          def value
+            { kind: :packed_v, packed_v: captures(:key_value).collect(&:value).to_h.extend(PackedV) }.extend(Neuma)
+          end
+        end
+
+        module Vector
+          include Musa::Neumas
+          include Musa::Datasets
+
+          def value
+            { kind: :v, v: captures(:raw_number).collect(&:value).extend(V) }.extend(Neuma)
           end
         end
 
