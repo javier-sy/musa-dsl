@@ -1,33 +1,33 @@
-I.1.ff
-II
+(I 1 ff)
+(II)
 
-[III IV]
-[V [VI VII] [VII [I] VII] VIII [I II III]]
+[(III) (IV)]
+[(V) [(VI) (VII)] [(VII) [(I)] (VII)] (VIII) [(I) (II) (III)]]
 
-IX
-X
+(IX)
+(X)
 
 { { :grade_x=>6, :octave_x=>0, :duration=>100, :velocity_x=>3 }.extend(Musa::Datasets::GDV) }
 
-[ I  III V |
-  II IV  VI [I I I]]
+[ (I)  (III) (V) ||
+  (II) (IV)  (VI) [(I) (I) (I)]]
 
-V VI VII
+(V) (VI) (VII)
 
-@a = [II.2.p III IV V.*4 VI VII]
+@a = [(II 2 p) (III) (IV) (V *4) (VI) (VII)]
 
 @a
 
-@b = '100
+@b = 100
 
-::evento(@a, @a.reverse,        '123, 	@b, 	kpar1: [V VI VII], kpar2: { 10 * 1000 }, kpar3: &{ | a, b| a*b  } )
-::evento(@a, @b = [I II III],   '3, 	'4, 	kpar1: @b, kpar2: '10000, kpar3: & { | a, b| 123456 } )
+::evento(@a, @a.reverse,        123, 	@b, 	kpar1: [(V) (VI) (VII)], kpar2: { 10 * 1000 }, kpar3: &{ | a, b| a*b  } )
+::evento(@a, @b = [(I) (II) (III)],   3, 	4, 	kpar1: @b, kpar2: 10000, kpar3: & { | a, b| 123456 } )
 
-I I I
+(I) (I) (I)
 
-[I II III].reverse.duplicate
+[(I) (II) (III)].reverse.duplicate
 
-[I III V | II IV VI].reverse
+[(I) (III) (V) || (II) (IV) (VI)].reverse
 
 @a.reverse
 

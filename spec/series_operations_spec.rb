@@ -819,8 +819,8 @@ RSpec.describe Musa::Series do
     end
 
     it 'Generative grammar nodes and series interoperability' do
-      a = '1'.neumas.node
-      b = '2'.nn
+      a = '(1)'.neumas.node
+      b = '(2)'.nn
 
       s = a + b
 

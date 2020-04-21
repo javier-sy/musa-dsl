@@ -49,9 +49,7 @@ module Musa::Datasets
       r
     end
 
-    def to_neuma(mode = nil)
-      mode ||= :dotted # :parenthesis
-
+    def to_neuma
       @base_duration ||= Rational(1,4)
 
       attributes = []
@@ -71,6 +69,8 @@ module Musa::Datasets
         end
       end
 
+      attributes[c] = '.' if attributes[c].nil? || attributes[c].empty?
+
       attributes[c += 1] = 'o' + self[:octave].to_s if self[:octave]
       attributes[c += 1] = (self[:duration] / @base_duration).to_s if self[:duration]
       attributes[c += 1] = velocity_of(self[:velocity]) if self[:velocity]
@@ -79,14 +79,7 @@ module Musa::Datasets
         attributes[c += 1] = modificator_string(k, self[k])
       end
 
-      if mode == :dotted
-        attributes.join '.'
-
-      elsif mode == :parenthesis
-        '(' + attributes.join(', ') + ')'
-      else
-        attributes
-      end
+      '(' + attributes.join(' ') + ')'
     end
 
     def velocity_of(x)

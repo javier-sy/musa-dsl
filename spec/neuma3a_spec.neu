@@ -1,15 +1,15 @@
-I.1
-II
-III
+(I 1)
+(II)
+(III)
 
-@a = [IV V.*4 VI./2]
+@a = [(IV) (V *4) (VI /2)]
 
 @a
 
 @a.reverse
 
-VII
-VIII
-IX
+(VII)
+(VIII)
+(IX)
 
 

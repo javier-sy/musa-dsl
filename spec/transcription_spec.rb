@@ -17,7 +17,7 @@ RSpec.describe Musa::Transcriptors do
     it 'Neuma parsing with staccato extended notation' do
       scale = Scales.et12[440.0].major[60]
 
-      neumas    = '0.1.mf +1.st .st(1) .st(2) .st(3) .st(4)'
+      neumas    = '(0 1 mf) (+1 st) (. st(1)) (. st(2)) (. st(3)) (. st(4))'
 
       decoder = Decoders::NeumaDecoder.new scale
 
@@ -38,7 +38,7 @@ RSpec.describe Musa::Transcriptors do
     it 'Neuma parsing with basic trill extended notation' do
       scale = Scales.et12[440.0].major[60]
 
-      neumas    = '0.1.mf +1.tr'
+      neumas    = '(0 1 mf) (+1 tr)'
 
       decoder = Decoders::NeumaDecoder.new scale
 
@@ -64,7 +64,7 @@ RSpec.describe Musa::Transcriptors do
     it 'Neuma parsing with mordent extended notation' do
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1.mor +3.+1.mor(low)'
+      neumas = '(0 1 mf) (+1 mor) (+3 +1 mor(low))'
 
       decoder = Decoders::NeumaDecoder.new scale
 
@@ -92,7 +92,7 @@ RSpec.describe Musa::Transcriptors do
     it 'Neuma parsing with mute extended notation' do
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1 5.base +2'
+      neumas = '(0 1 mf) (+1) (5 base) (+2)'
 
       decoder = Decoders::NeumaDecoder.new scale
 
@@ -117,7 +117,7 @@ RSpec.describe Musa::Transcriptors do
 
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1.mor +3.+1.mor(low) -2'
+      neumas = '(0 1 mf) (+1 mor) (+3 +1 mor(low)) (-2)'
 
       transcriptor = Transcriptor.new \
         [ FromGDV::ToMIDI::Staccato.new,
@@ -201,7 +201,7 @@ RSpec.describe Musa::Transcriptors do
 
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1.*2 5.b +2'
+      neumas = '(0 1 mf) (+1 *2) (5 b) (+2)'
 
       transcriptor = Transcriptor.new \
         [ FromGDV::Base.new,
@@ -274,7 +274,7 @@ RSpec.describe Musa::Transcriptors do
     it 'Neuma parsing with apoggiatura extended notation' do
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '0.1.mf +1 <+2.//>+3 0'
+      neumas = '(0 1 mf) (+1) <(+2 //)>(+3) (0)'
 
       result = Neumalang.parse(neumas).to_a(recursive: true)
 
@@ -305,7 +305,7 @@ RSpec.describe Musa::Transcriptors do
 
       scale = Scales.et12[440.0].major[60]
 
-      neumas = '[0.1.mf +1 <+2.//>+3 0 +1]'
+      neumas = '[(0 1 mf) (+1) <(+2 //)>(+3) (0) (+1)]'
 
       transcriptor = Transcriptor.new FromGDV::ToMIDI.transcription_set,
         base_duration: 1/4r,

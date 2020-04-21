@@ -286,17 +286,17 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Neuma: '(-#)'" do
-      a = Neumalang.parse('-#').to_a(recursive: true)
+      a = Neumalang.parse('(-#)').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: -1 } }]
     end
 
     it "Neuma: '(#)'" do
-      a = Neumalang.parse('#').to_a(recursive: true)
+      a = Neumalang.parse('(#)').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: 1 } }]
     end
 
     it "Neuma: '(_)'" do
-      a = Neumalang.parse('_').to_a(recursive: true)
+      a = Neumalang.parse('(_)').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: -1 } }]
     end
 

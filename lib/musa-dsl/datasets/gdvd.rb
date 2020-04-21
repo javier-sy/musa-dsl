@@ -117,9 +117,7 @@ module Musa::Datasets
       end
     end
 
-    def to_neuma(mode = nil)
-      mode ||= :dots # :parenthesis
-
+    def to_neuma
       @base_duration ||= Rational(1,4)
 
       attributes = []
@@ -147,6 +145,8 @@ module Musa::Datasets
         attributes[c] += sign + char * self[:delta_sharps].abs
       end
 
+      attributes[c] = '.' if attributes[c].nil? || attributes[c].empty?
+
       if include?(:abs_octave)
         attributes[c += 1] = 'o' + self[:abs_octave].to_s
       elsif include?(:delta_octave)
@@ -171,18 +171,7 @@ module Musa::Datasets
         attributes[c += 1] = modificator_string(k, self[k])
       end
 
-      if mode == :dots
-        if !attributes.empty?
-          attributes.join '.'
-        else
-          '.'
-        end
-
-      elsif mode == :parenthesis
-        '<' + attributes.join(', ') + '>'
-      else
-        attributes
-      end
+      '(' + attributes.join(' ') + ')'
     end
   end
 end

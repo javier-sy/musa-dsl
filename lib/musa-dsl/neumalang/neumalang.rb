@@ -304,36 +304,12 @@ module Musa
           end
         end
 
-        module Float
+        module Number
           include Musa::Neumas
 
           def value
             { kind: :value,
-              value: capture(:raw_float).value }.extend Neuma
-          end
-        end
-
-        module RawFloat
-          def value
-            "#{capture(:minus)&.value}#{capture(:a).value}.#{capture(:b).value}".to_f
-          end
-        end
-
-        module Integer
-          include Musa::Neumas
-
-          def value
-            { kind: :value,
-              value: capture(:raw_integer).value }.extend Neuma
-          end
-        end
-
-        module Rational
-          include Musa::Neumas
-
-          def value
-            { kind: :value,
-              value: capture(:raw_rational).value }.extend Neuma
+              value: capture(:raw_number).value }.extend Neuma
           end
         end
       end
