@@ -1,0 +1,15 @@
+grammar Musa::Neumalang::Neumalang::Parser::Grammar::Process
+    include Musa::Neumalang::Neumalang::Parser::Grammar::Vectors
+
+    rule process
+        process_of_vectors | process_of_packed_vectors
+    end
+
+    rule process_of_vectors
+        vector (optional_separation bar optional_separation raw_number optional_separation bar optional_separation vector)+
+    end
+
+    rule process_of_packed_vectors
+        packed_vector (optional_separation bar optional_separation raw_number optional_separation bar optional_separation packed_vector)+
+    end
+end

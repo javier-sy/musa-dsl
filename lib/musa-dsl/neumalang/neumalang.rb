@@ -8,6 +8,8 @@ module Musa
   module Neumalang
     module Neumalang
       module Parser
+        module Grammar; end
+
         module Sentences
           include Musa::Series
           include Musa::Neumas
@@ -148,19 +150,33 @@ module Musa
 
         module PackedVector
           include Musa::Neumas
+
+          def value
+            { kind: :packed_v, packed_v: capture(:raw_packed_vector).value }.extend(Neuma)
+          end
+        end
+
+        module RawPackedVector
           include Musa::Datasets
 
           def value
-            { kind: :packed_v, packed_v: captures(:key_value).collect(&:value).to_h.extend(PackedV) }.extend(Neuma)
+            captures(:key_value).collect(&:value).to_h.extend(PackedV)
           end
         end
 
         module Vector
           include Musa::Neumas
+
+          def value
+            { kind: :v, v: capture(:raw_vector).value }.extend(Neuma)
+          end
+        end
+
+        module RawVector
           include Musa::Datasets
 
           def value
-            { kind: :v, v: captures(:raw_number).collect(&:value).extend(V) }.extend(Neuma)
+            captures(:raw_number).collect(&:value).extend(V)
           end
         end
 
@@ -316,18 +332,12 @@ module Musa
 
       extend self
 
-      def register(grammar_path)
-        Citrus.load grammar_path
-      end
-
-      def parse(string_or_file, language: nil, decode_with: nil, debug: nil)
-        language ||= ::NeumalangGrammar
-
+      def parse(string_or_file, decode_with: nil, debug: nil)
         if string_or_file.is_a? String
-          match = language.parse string_or_file
+          match = Parser::Grammar::Grammar.parse string_or_file
 
         elsif string_or_file.is_a? File
-          match = language.parse string_or_file.read
+          match = Parser::Grammar::Grammar.parse string_or_file.read
 
         else
           raise ArgumentError, 'Only String or File allowed to be parsed'
@@ -356,7 +366,12 @@ module Musa
         end
       end
 
-      register File.join(File.dirname(__FILE__), 'neumalang')
+      Citrus.load File.join(File.dirname(__FILE__), 'terminals.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'datatypes.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'neuma.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'vectors.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'process.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'neumalang.citrus')
     end
   end
 end

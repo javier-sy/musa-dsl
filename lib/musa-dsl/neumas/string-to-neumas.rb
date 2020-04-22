@@ -2,12 +2,12 @@ require_relative '../neumalang'
 require_relative '../generative/generative-grammar'
 
 class String
-  def to_neumas(language: nil, decode_with: nil, debug: nil)
-    Musa::Neumalang::Neumalang.parse(self, language: language, decode_with: decode_with, debug: debug)
+  def to_neumas(decode_with: nil, debug: nil)
+    Musa::Neumalang::Neumalang.parse(self, decode_with: decode_with, debug: debug)
   end
 
-  def to_neumas_to_node(language: nil, decode_with: nil, debug: nil)
-    to_neumas(language: language, decode_with: decode_with, debug: debug).to_node
+  def to_neumas_to_node(decode_with: nil, debug: nil)
+    to_neumas(decode_with: decode_with, debug: debug).to_node
   end
 
   def |(other)

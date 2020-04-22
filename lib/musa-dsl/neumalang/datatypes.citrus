@@ -1,0 +1,75 @@
+grammar Musa::Neumalang::Neumalang::Parser::Grammar::Datatypes
+    include Musa::Neumalang::Neumalang::Parser::Grammar::Terminals
+
+	rule constant
+		number | symbol | string
+	end
+
+  	rule symbol
+  		(colon name) <Musa::Neumalang::Neumalang::Parser::Symbol>
+  	end
+
+  	rule raw_symbol
+  		(name) { to_str.to_sym }
+  	end
+
+    rule name
+        /[[:alpha:]]\w*/
+    end
+
+  	rule string
+  		(double_quote everything_except_double_quote double_quote) <Musa::Neumalang::Neumalang::Parser::String>
+  	end
+
+  	rule raw_string
+  		(double_quote everything_except_double_quote double_quote) { capture(:everything_except_double_quote).value }
+  	end
+
+	rule number
+    	(optional_separation raw_number) <Musa::Neumalang::Neumalang::Parser::Number>
+  	end
+
+	rule raw_number
+    	raw_float | raw_rational | raw_integer
+  	end
+
+    rule raw_unsigned_number
+        raw_unsigned_float | raw_unsigned_rational | raw_unsigned_integer
+    end
+
+    rule raw_float
+        raw_unsigned_float | raw_minus_float
+    end
+
+  	rule raw_minus_float
+    	(minus raw_unsigned_float) { -capture(:raw_unsigned_float).value }
+  	end
+
+  	rule raw_unsigned_float
+        (a:raw_unsigned_integer dot b:raw_unsigned_integer) { "#{capture(:a).value}.#{capture(:b).value}".to_f  }
+    end
+
+  	rule raw_rational
+  	    raw_unsigned_rational | raw_minus_rational
+  	end
+
+  	rule raw_minus_rational
+    	(minus raw_unsigned_rational) { -capture(:raw_unsigned_rational).value }
+  	end
+
+  	rule raw_unsigned_rational
+    	(a:raw_unsigned_integer slash b:raw_unsigned_integer) { Rational(capture(:a).value, capture(:b).value) }
+  	end
+
+  	rule raw_integer
+    	raw_unsigned_integer | raw_minus_integer
+  	end
+
+  	rule raw_minus_integer
+    	(minus raw_unsigned_integer) { -capture(:raw_unsigned_integer).value }
+  	end
+
+  	rule raw_unsigned_integer
+    	([0-9]+ ('_' [0-9]+)*) { to_str.to_i }
+  	end
+end

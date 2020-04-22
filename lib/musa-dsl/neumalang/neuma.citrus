@@ -1,0 +1,165 @@
+grammar Musa::Neumalang::Neumalang::Parser::Grammar::Neuma
+    include Musa::Neumalang::Neumalang::Parser::Grammar::Datatypes
+
+	rule neuma
+        neuma_between_parenthesis | appogiatura_neuma_between_parenthesis
+	end
+
+	rule appogiatura_neuma_between_parenthesis
+	    (lacute optional_separation appogiatura:neuma_between_parenthesis optional_separation racute base:neuma_between_parenthesis) <Musa::Neumalang::Neumalang::Parser::AppogiaturaNeuma>
+	end
+
+    rule neuma_between_parenthesis
+        neuma_between_parenthesis_beginning_with_grade_or_dot |
+        neuma_between_parenthesis_beginning_with_duration |
+        neuma_between_parenthesis_beginning_with_modifiers |
+        neuma_between_parenthesis_empty
+    end
+
+	rule neuma_between_parenthesis_beginning_with_grade_or_dot
+        (lpar optional_separation
+            (grade:grade_attribute | grade_dot:dot)
+                (optional_separation octave:octave_attribute)?
+                (optional_separation duration:duration_attribute)?
+                (optional_separation velocity:velocity_attribute)?
+                (optional_separation modifiers:modifier_attribute)*
+        optional_separation rpar)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_between_parenthesis_beginning_with_duration
+        (lpar optional_separation
+            (duration:duration_attribute)
+                (optional_separation velocity:velocity_attribute)?
+                (optional_separation modifiers:modifier_attribute)*
+        optional_separation rpar)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_between_parenthesis_beginning_with_modifiers
+        (lpar (optional_separation modifiers:modifier_attribute)* optional_separation rpar)
+        <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+	rule neuma_between_parenthesis_empty
+        (lpar optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::NeumaAsAttributes>
+	end
+
+    rule grade_attribute
+        delta_grade_attribute | abs_grade_attribute | delta_accidentals_attribute
+    end
+
+    rule abs_grade_attribute
+        ((grade:raw_unsigned_integer | (interval:name !lpar)) accidentals?) <Musa::Neumalang::Neumalang::Parser::AbsGradeAttribute>
+    end
+
+    rule delta_grade_attribute
+        (sign (grade:raw_unsigned_integer | interval:name) accidentals?) <Musa::Neumalang::Neumalang::Parser::DeltaGradeAttribute>
+    end
+
+    rule delta_accidentals_attribute
+        (sign? accidentals) <Musa::Neumalang::Neumalang::Parser::DeltaGradeAttribute>
+    end
+
+    rule octave_attribute
+        delta_octave_attribute | abs_octave_attribute
+    end
+
+    rule delta_octave_attribute
+        (sign 'o' number:raw_unsigned_integer) <Musa::Neumalang::Neumalang::Parser::DeltaOctaveAttribute>
+    end
+
+    rule abs_octave_attribute
+        ('o' number:raw_integer) <Musa::Neumalang::Neumalang::Parser::AbsOctaveAttribute>
+    end
+
+    rule duration_attribute
+        factor_duration_attribute | delta_duration_attribute | abs_duration_attribute
+    end
+
+    rule factor_duration_attribute
+        (factor number:raw_unsigned_number) <Musa::Neumalang::Neumalang::Parser::FactorDurationAttribute>
+    end
+
+    rule abs_duration_attribute
+        ((number:raw_unsigned_number | slashes) mid_dots?) <Musa::Neumalang::Neumalang::Parser::AbsDurationAttribute>
+    end
+
+    rule delta_duration_attribute
+        (sign ((number:raw_unsigned_number | slashes) mid_dots?)) <Musa::Neumalang::Neumalang::Parser::DeltaDurationAttribute>
+    end
+
+    rule velocity_attribute
+        (abs_velocity_attribute | delta_velocity_attribute)
+    end
+
+    rule abs_velocity_attribute
+        (dynamics) <Musa::Neumalang::Neumalang::Parser::AbsVelocityAttribute>
+    end
+
+    rule delta_velocity_attribute
+        (sign delta:delta_dynamics) <Musa::Neumalang::Neumalang::Parser::DeltaVelocityAttribute>
+    end
+
+	rule modifier_attribute
+	    (modifier_call_with_parameters | modifier_call_without_parameters)
+	end
+
+	rule modifier_call_without_parameters
+		((name &attribute_change) | (name lpar optional_separation rpar)) { { capture(:name).value.to_sym => true } }
+	end
+
+	rule modifier_call_with_parameters
+		(name lpar modifier_positional_parameters rpar) { { capture(:name).value.to_sym => capture(:modifier_positional_parameters).value } }
+	end
+
+	rule modifier_positional_parameters
+		(optional_separation a:modifier_parameter_constant (optional_separation comma optional_separation b:modifier_parameter_constant optional_separation)* optional_separation) {
+		    if capture(:b)
+			    [ capture(:a).value ] + captures(:b).collect { |c| c.value }
+            else
+                capture(:a).value
+            end
+        }
+	end
+
+    rule modifier_parameter_constant
+        raw_number | raw_symbol | raw_string
+    end
+
+    rule accidentals
+        hashes | underscores
+    end
+
+    rule hashes
+        (hsh+) { captures(:hsh).size }
+    end
+
+    rule underscores
+        (underscore+) { -captures(:underscore).size }
+    end
+
+    rule sign
+        (plus | minus) { capture(:plus) ? 1 : -1 }
+    end
+
+    rule factor
+        (asterisk | slash)
+    end
+
+    rule mid_dots
+        (mid_dot+) { captures(:mid_dot).size }
+    end
+
+    rule slashes
+        (slash+) { captures(:slash).size }
+    end
+
+    rule dynamics
+        (p:/p+/ | mp:'mp' | mf:'mf' | f:/f+/)
+    end
+
+    rule delta_dynamics
+        (/p+/ | /f+/)
+    end
+end

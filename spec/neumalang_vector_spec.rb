@@ -30,7 +30,7 @@ RSpec.describe Musa::Neumalang do
       expect(result[1]).to eq({kind: :packed_v, packed_v: { a: 10, b: 20, c: 30 }})
     end
   end
-
+=begin
   context 'Neuma unpacked vectors parsing' do
     it 'Basic unpacked vector' do
 
@@ -54,4 +54,5 @@ RSpec.describe Musa::Neumalang do
       expect(result[1]).to eq({kind: :v, v: [10, 20, 30]})
     end
   end
+=end
 end

@@ -17,21 +17,9 @@ RSpec.describe Musa::Neumalang do
     it '' do
       s = <<~string
 
-        (a: 1 b: 2 c: 3) !4!
-        (a: 1 b: 2 c: 3) !4.5! .do_something()
-        (a: 1 b: 2 c: 3) !9/2! .do_something()
+        (a: 1 b: 2 c: 3) |4| (a: 1 b: 2 c: 3) .do_something() 
+        (a: 1 b: 2 c: 3) |4! .do_something() 
 
-        (a: 1 b: 2 c: 3) !4 (a: 1 b: 2 c: 3)
-        (a: 1 b: 2 c: 3) !4 (a: 1 b: 2 c: 3) .do_something() 
-
-        (a: 1 b: 2 c: 3) !4 (a: 1 b: 2 c: 3) !2
-        (a: 1 b: 2 c: 3) !4 (a: 1 b: 2 c: 3)
-
-        (a: 1 b: 2 c: 3) !4 (a: 1 b: 2 c: 3).do_something() 
-
-        [(a: 1 b: 2 c: 3) |4| (a: 1 b: 2 c: 3)].do_something() 
-        [(a: 1 b: 2 c: 3) || (a: 1 b: 2 c: 3)].do_something() 
-        [(a: 1 b: 2 c: 3) || (a: 1 b: 2 c: 3)].do_something() 
 
         ????
 
