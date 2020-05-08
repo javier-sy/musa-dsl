@@ -4,6 +4,8 @@ require_relative 'pdv'
 
 require_relative 'helper'
 
+using Musa::Extension::InspectNice
+
 module Musa::Datasets
   module GDV
     include AbsD

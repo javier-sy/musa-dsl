@@ -3,6 +3,8 @@ require_relative 'gdv'
 
 require_relative 'helper'
 
+using Musa::Extension::InspectNice
+
 module Musa::Datasets
   module GDVd
     include DeltaD

@@ -1,6 +1,7 @@
 require_relative '../core-ext/key-parameters-procedure-binder'
 require_relative '../core-ext/with'
 
+using Musa::Extension::Arrayfy
 
 # incluir With -> hecho
 # eliminar method_missing

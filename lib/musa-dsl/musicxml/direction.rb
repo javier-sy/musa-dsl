@@ -1,6 +1,7 @@
 require_relative '../core-ext/with'
-
 require_relative 'helper'
+
+using Musa::Extension::Arrayfy
 
 module Musa
   module MusicXML

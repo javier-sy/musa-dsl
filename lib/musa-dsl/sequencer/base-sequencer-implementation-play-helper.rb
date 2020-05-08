@@ -1,3 +1,5 @@
+using Musa::Extension::Duplicate
+
 module Musa
   module Sequencer
     class BaseSequencer

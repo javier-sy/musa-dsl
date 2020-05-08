@@ -1,6 +1,8 @@
 require_relative 'scales'
 require_relative 'chord-definition'
 
+using Musa::Extension::Arrayfy
+
 module Musa
   module Chords
     class Chord

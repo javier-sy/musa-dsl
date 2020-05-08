@@ -2,6 +2,9 @@ require_relative '../core-ext/key-parameters-procedure-binder'
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/with'
 
+using Musa::Extension::Arrayfy
+using Musa::Extension::ExplodeRanges
+
 # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa

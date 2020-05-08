@@ -2,6 +2,8 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
+using Musa::Extension::Arrayfy
+
 RSpec.describe Array do
   context 'Array' do
     it 'Single object' do

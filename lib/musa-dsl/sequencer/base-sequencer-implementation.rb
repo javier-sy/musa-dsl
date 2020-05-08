@@ -4,6 +4,8 @@ require_relative '../core-ext/key-parameters-procedure-binder'
 require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'
 
+using Musa::Extension::Arrayfy
+
 module Musa
   module Sequencer
     class BaseSequencer

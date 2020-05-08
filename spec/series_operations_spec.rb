@@ -2,8 +2,9 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-
 include Musa::Series
+
+using Musa::Extension::Duplicate
 
 RSpec.describe Musa::Series do
   context 'Series operations' do

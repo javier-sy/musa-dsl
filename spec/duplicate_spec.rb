@@ -2,7 +2,9 @@ require 'spec_helper'
 
 require 'musa-dsl/core-ext/duplicate.rb'
 
-describe Duplicate do
+using Musa::Extension::Duplicate
+
+describe Musa::Extension::Duplicate::Duplicate do
 
   describe '.duplicate' do
 
