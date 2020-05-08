@@ -125,6 +125,7 @@ module Musa
       ###
 
       class ProcessWith
+        include Musa::Extension::SmartProcBinder
         include Serie
 
         attr_reader :source, :with_sources, :on_restart, :block
@@ -133,7 +134,7 @@ module Musa
           @source = serie
           @with_sources = with_series || {}
           @on_restart = on_restart
-          @block = KeyParametersProcedureBinder.new(block) if block_given?
+          @block = SmartProcBinder.new(block) if block_given?
 
           if @source.prototype?
             @with_sources = @with_sources.transform_values { |s| s.prototype }
@@ -683,6 +684,7 @@ module Musa
       private_constant :MergeSerieOfSeries
 
       class Processor
+        include Musa::Extension::SmartProcBinder
         include Serie
 
         attr_reader :source
@@ -690,7 +692,7 @@ module Musa
         def initialize(serie, parameters, &processor)
           @source = serie
           @parameters = parameters
-          @processor = KeyParametersProcedureBinder.new(processor)
+          @processor = SmartProcBinder.new(processor)
 
           _restart false
 

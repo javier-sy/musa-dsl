@@ -6,8 +6,8 @@ using Musa::Extension::Arrayfy
 module Musa
   module MusicXML
     class Direction
-      extend AttributeBuilder
-      include With
+      extend Musa::Extension::AttributeBuilder
+      include Musa::Extension::With
 
       include Helper
       include ToXML
@@ -60,8 +60,8 @@ module Musa
     end
 
     class DirectionType
-      extend AttributeBuilder
-      include With
+      extend Musa::Extension::AttributeBuilder
+      include Musa::Extension::With
 
       include Helper::ToXML
 

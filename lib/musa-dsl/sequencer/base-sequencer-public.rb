@@ -1,5 +1,5 @@
 require_relative '../core-ext/arrayfy'
-require_relative '../core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/smart-proc-binder'
 
 require_relative '../series'
 
@@ -76,19 +76,19 @@ module Musa
       end
 
       def on_debug_at(&block)
-        @on_debug_at << KeyParametersProcedureBinder.new(block)
+        @on_debug_at << SmartProcBinder.new(block)
       end
 
       def on_error(&block)
-        @on_error << KeyParametersProcedureBinder.new(block)
+        @on_error << SmartProcBinder.new(block)
       end
 
       def on_fast_forward(&block)
-        @on_fast_forward << KeyParametersProcedureBinder.new(block)
+        @on_fast_forward << SmartProcBinder.new(block)
       end
 
       def before_tick(&block)
-        @before_tick << KeyParametersProcedureBinder.new(block)
+        @before_tick << SmartProcBinder.new(block)
       end
 
       def position

@@ -1,5 +1,5 @@
 require_relative '../core-ext/arrayfy'
-require_relative '../core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/smart-proc-binder'
 
 require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'
@@ -9,6 +9,8 @@ using Musa::Extension::Arrayfy
 module Musa
   module Sequencer
     class BaseSequencer
+      include Musa::Extension::SmartProcBinder
+
       private
 
       def _tick
@@ -101,7 +103,7 @@ module Musa
 
         if block_given?
           block_key_parameters_binder =
-              KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
+              SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
           key_parameters = {}
           key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
@@ -160,8 +162,8 @@ module Musa
 
         __play_eval ||= PlayEval.create \
           mode,
-          KeyParametersProcedureBinder.new(block,
-                                       on_rescue: proc { |e| _rescue_error(e) }),
+          SmartProcBinder.new(block,
+                              on_rescue: proc { |e| _rescue_error(e) }),
           decoder,
           nl_context
 
@@ -285,7 +287,7 @@ module Musa
       def _every(binterval, control, block_procedure_binder: nil, &block)
         block ||= proc {}
 
-        block_procedure_binder ||= KeyParametersProcedureBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
+        block_procedure_binder ||= SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
         _numeric_at position, control do
           control._start ||= position
@@ -400,7 +402,7 @@ module Musa
           end
         end
 
-        binder = KeyParametersProcedureBinder.new(block)
+        binder = SmartProcBinder.new(block)
 
         every_groups = {}
 

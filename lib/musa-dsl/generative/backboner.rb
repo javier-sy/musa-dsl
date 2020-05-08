@@ -1,4 +1,4 @@
-require_relative '../core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/with'
 
 using Musa::Extension::Arrayfy
@@ -14,7 +14,7 @@ using Musa::Extension::Arrayfy
 module Musa
   module Backboner
     class Backboner
-      include With
+      include Musa::Extension::With
 
       def initialize(&block)
         @context = RulesEvalContext.new(&block)
@@ -77,7 +77,7 @@ module Musa
       end
 
       class RulesEvalContext
-        include With
+        include Musa::Extension::With
 
         attr_reader :_grow_rules, :_ended_when, :_cut_rules
 
@@ -123,7 +123,7 @@ module Musa
           end
 
           class GrowRuleEvalContext
-            include With
+            include Musa::Extension::With
 
             attr_reader :_branches
 
@@ -161,7 +161,7 @@ module Musa
           end
 
           class CutRuleEvalContext
-            include With
+            include Musa::Extension::With
 
             attr_reader :_secondary_reasons
 

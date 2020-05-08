@@ -4,6 +4,8 @@ module Musa
   module Sequencer
     class BaseSequencer
       class EventHandler
+        include Musa::Extension::SmartProcBinder
+
         attr_accessor :continue_parameters
 
         @@counter = 0
@@ -43,7 +45,7 @@ module Musa
           @handlers[event] ||= {}
 
           # TODO: add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
-          @handlers[event][name] = { block: KeyParametersProcedureBinder.new(block), only_once: only_once }
+          @handlers[event][name] = {block: SmartProcBinder.new(block), only_once: only_once }
         end
 
         def launch(event, *value_parameters, **key_parameters)
