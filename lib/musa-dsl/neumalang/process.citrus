@@ -6,10 +6,16 @@ grammar Musa::Neumalang::Neumalang::Parser::Grammar::Process
     end
 
     rule process_of_vectors
-        vector (optional_separation bar optional_separation raw_number optional_separation bar optional_separation vector)+
+        (first:raw_vector
+            (optional_separation
+                bar optional_separation durations:raw_number optional_separation bar optional_separation
+                rest:raw_vector)+) <Musa::Neumalang::Neumalang::Parser::ProcessOfVectors>
     end
 
     rule process_of_packed_vectors
-        packed_vector (optional_separation bar optional_separation raw_number optional_separation bar optional_separation packed_vector)+
+        (first:raw_packed_vector
+            (optional_separation
+                bar optional_separation durations:raw_number optional_separation bar optional_separation
+                rest:raw_packed_vector)+) <Musa::Neumalang::Neumalang::Parser::ProcessOfVectors>
     end
 end

@@ -180,6 +180,26 @@ module Musa
           end
         end
 
+        module ProcessOfVectors
+          include Musa::Datasets
+          include Musa::Neumas
+
+          def value
+            durations_rest = []
+            i = 0
+
+            rests = captures(:rest).collect(&:value)
+            captures(:durations).collect(&:value).each do |duration|
+              durations_rest[i * 2] = duration
+              durations_rest[i * 2 + 1] = rests[i]
+              i += 1
+            end
+
+            p = ([ capture(:first).value ] + durations_rest).extend(P)
+            { kind: :p, p: p }.extend(Neuma)
+          end
+        end
+
         module DeltaGradeAttribute
           def value
 

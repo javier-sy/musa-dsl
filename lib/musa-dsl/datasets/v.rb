@@ -3,7 +3,7 @@ require_relative 'packed-v'
 
 module Musa::Datasets
   module V
-    include Dataset
+    include AbsI
 
     def to_packed_V(mapper)
       case mapper

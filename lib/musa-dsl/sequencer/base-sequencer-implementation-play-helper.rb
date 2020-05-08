@@ -145,6 +145,7 @@ module Musa
             when :command       then eval_command element[:command], element[:value_parameters], element[:key_parameters]
             when :value         then eval_value element[:value]
             when :gdvd          then eval_gdvd element[:gdvd]
+            when :p             then eval_p element[:p]
             when :call_methods  then eval_call_methods element[:on], element[:call_methods]
             when :reference     then eval_reference element[:reference]
             when :event         then element
@@ -159,7 +160,11 @@ module Musa
         end
 
         def eval_gdvd(gdvd)
-          @decoder.decode gdvd
+          @decoder.decode(gdvd)
+        end
+
+        def eval_p(p)
+          p.to_ps_serie(@decoder.base_duration).instance
         end
 
         def eval_serie(serie)
@@ -183,7 +188,7 @@ module Musa
         end
 
         def eval_use_variable(variable_name)
-          if @nl_context.instance_variable_defined? variable_name
+          if @nl_context.instance_variable_defined?(variable_name)
             @nl_context.instance_variable_get(variable_name)
           else
             raise NameError, "Variable #{variable_name} is not defined in context #{@nl_context}"
@@ -294,6 +299,10 @@ module Musa
                   continue_operation: :wait,
                   continue_parameter: _value.forward_duration }
               end
+
+            when :p
+              { current_operation: :play,
+                current_parameter: eval_p(element[:p]) }
 
             when :serie
               { current_operation: :play,

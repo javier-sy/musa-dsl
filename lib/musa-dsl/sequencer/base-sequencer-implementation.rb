@@ -160,8 +160,8 @@ module Musa
           mode,
           KeyParametersProcedureBinder.new(block,
                                        on_rescue: proc { |e| _rescue_error(e) }),
-      decoder,
-      nl_context
+          decoder,
+          nl_context
 
         element = nil
 
@@ -250,19 +250,16 @@ module Musa
 
           case operation[:continue_operation]
           when :now
-            #now do
             _numeric_at position, control do
               _play serie, control, __play_eval: __play_eval, **mode_args
             end
 
           when :at
-            #at operation[:continue_parameter] do
             _numeric_at operation[:continue_parameter], control do
               _play serie, control, __play_eval: __play_eval, **mode_args
             end
 
           when :wait
-            #wait operation[:continue_parameter] do
             _numeric_at position + operation[:continue_parameter].rationalize, control do
               _play serie, control, __play_eval: __play_eval, **mode_args
             end
@@ -319,6 +316,15 @@ module Musa
         raise ArgumentError, "Invalid use: 'function:' parameter is incompatible with 'step:' parameter" if function && step
         raise ArgumentError, "Invalid use: 'function:' parameter needs 'to:' parameter not nil" if function && !to
 
+        array_mode = from.is_a?(Array)
+
+        from = from.arrayfy
+        size = from.size
+
+        every = every.arrayfy(size: size)
+        to = to.arrayfy(size: size)
+        step = step.arrayfy(size: size)
+
         # from, to, step, every
         # from, to, step, (duration | till)
         # from, to, every, (duration | till)
@@ -326,12 +332,17 @@ module Musa
 
         block ||= proc {}
 
-        step = -step if step && to && ((step > 0 && to < from) || (step < 0 && from < to))
+        step.map!.with_index do |step, i|
+          (step && to[i] && ((step > 0 && to[i] < from[i]) || (step < 0 && from[i] < to[i]))) ? -step : step
+        end
+
         right_open ||= false
 
         function ||= proc { |ratio| ratio }
-        function_range = 1r
-        function_offset = 0r
+        function = function.arrayfy(size: size)
+
+        function_range = 1r.arrayfy(size: size)
+        function_offset = 0r.arrayfy(size: size)
 
         start_position = position
 
@@ -339,70 +350,113 @@ module Musa
           effective_duration = duration || till - start_position
           right_open_offset = right_open ? 0 : 1 # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
 
-          if to && step && !every
-            steps = (to - from) / step
-            every = Rational(effective_duration, steps + right_open_offset)
+          size.times do |i|
+            if to[i] && step[i] && !every[i]
+              steps = (to[i] - from[i]) / step[i]
+              every[i] = Rational(effective_duration, steps + right_open_offset)
 
-          elsif to && !step && !every
-            function_range = to - from
-            function_offset = from
+            elsif to[i] && !step[i] && !every[i]
+              function_range[i] = to[i] - from[i]
+              function_offset[i] = from[i]
 
-            from = 0r
-            to = 1r
+              from[i] = 0r
+              to[i] = 1r
 
-            step = 1r / (effective_duration * @ticks_per_bar - right_open_offset)
-            every = @tick_duration
+              step[i] = 1r / (effective_duration * @ticks_per_bar - right_open_offset)
+              every[i] = @tick_duration
 
-          elsif to && !step && every
-            function_range = to - from
-            function_offset = from
+            elsif to[i] && !step[i] && every[i]
+              function_range[i] = to[i] - from[i]
+              function_offset[i] = from[i]
 
-            from = 0r
-            to = 1r
+              from[i] = 0r
+              to[i] = 1r
 
-            steps = effective_duration / every
-            step = 1r / (steps - right_open_offset)
+              steps = effective_duration / every[i]
+              step[i] = 1r / (steps - right_open_offset)
 
-          elsif !to && step && every
-            # ok
-          elsif !to && !step && every
-            step = 1r
+            elsif !to[i] && step[i] && every[i]
+              # ok
+            elsif !to[i] && !step[i] && every[i]
+              step[i] = 1r
 
-          else
-            raise ArgumentError, 'Cannot use this parameters combination'
+            else
+              raise ArgumentError, 'Cannot use this parameters combination'
+            end
           end
         else
-          if to && step && every
-            # ok
-          elsif to && !step && every
-            step = (to <=> from).to_r
-          else
-            raise ArgumentError, 'Cannot use this parameters combination'
+          size.times do |i|
+            if to[i] && step[i] && every[i]
+              # ok
+            elsif to[i] && !step[i] && every[i]
+              size.times do |i|
+                step[i] = (to[i] <=> from[i]).to_r
+              end
+            else
+              raise ArgumentError, 'Cannot use this parameters combination'
+            end
           end
         end
 
         binder = KeyParametersProcedureBinder.new(block)
 
-        every_control = EveryControl.new(@event_handlers.last, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
+        every_groups = {}
 
-        control = MoveControl.new(every_control)
+        size.times.each do |i|
+          every_groups[every[i]] ||= []
+          every_groups[every[i]] << i
+        end
+
+        control = MoveControl.new(@event_handlers.last, every_groups.size, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
+
+        control.on_stop do
+          control.do_after.each do |do_after|
+            _numeric_at position + do_after[:bars], control, &do_after[:block]
+          end
+        end
 
         @event_handlers.push control
 
         _numeric_at start_position, control do
-          value = from
+          values = from.clone
+          parameters = binder.apply(control: control)
 
-          _every every, every_control do
+          ii = 0
+          last_position = nil
 
-            parameters = binder.apply(control: control)
+          every_groups.each_pair do |every_group, affected_indexes|
+            iii = ii # to make a local scope with ii external scope value
+            first = true
 
-            yield function.call(value) * function_range + function_offset, **parameters
+            _every every_group, control.every_controls[ii] do
+              if first
+                first = false
+              else
+                affected_indexes.each do |i|
+                  if to[i] && (values[i] >= to[i] && step[i].positive? || values[i] <= to[i] && step[i].negative?)
+                    control.every_controls[iii].stop
+                  else
+                    values[i] += step[i]
+                  end
+                end
+              end
 
-            if to && (value >= to && step.positive? || value <= to && step.negative?)
-              control.stop
-            else
-              value += step
+              if position != last_position
+                effective_values = size.times.collect do |i|
+                  function[i].call(values[i]) * function_range[i] + function_offset[i]
+                end
+
+                if array_mode
+                  yield effective_values, **parameters
+                else
+                  yield effective_values.first, **parameters
+                end
+
+                last_position = position
+              end
+
             end
+            ii += 1
           end
         end
 

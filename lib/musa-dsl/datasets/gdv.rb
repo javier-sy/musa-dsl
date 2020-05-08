@@ -16,11 +16,11 @@ module Musa::Datasets
     attr_accessor :base_duration
 
     def to_pdv(scale)
-      r = {}.extend PDV
-      r.base_duration = @base_duration
+      pdv = {}.extend PDV
+      pdv.base_duration = @base_duration
 
       if self[:grade]
-        r[:pitch] = if self[:silence]
+        pdv[:pitch] = if self[:silence]
                       :silence
                     else
                       scale[self[:grade]].sharp(self[:sharps] || 0).octave(self[:octave] || 0).pitch
@@ -28,25 +28,25 @@ module Musa::Datasets
       end
 
       if self[:duration]
-        r[:duration] = self[:duration]
+        pdv[:duration] = self[:duration]
       end
 
       if self[:note_duration]
-        r[:note_duration] = self[:note_duration]
+        pdv[:note_duration] = self[:note_duration]
       end
 
       if self[:forward_duration]
-        r[:forward_duration] = self[:forward_duration]
+        pdv[:forward_duration] = self[:forward_duration]
       end
 
       if self[:velocity]
         # ppp = 16 ... fff = 127
-        r[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
+        pdv[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
       end
 
-      (keys - NaturalKeys).each { |k| r[k] = self[k] }
+      (keys - NaturalKeys).each { |k| pdv[k] = self[k] }
 
-      r
+      pdv
     end
 
     def to_neuma
@@ -89,45 +89,45 @@ module Musa::Datasets
     private :velocity_of
 
     def to_gdvd(scale, previous: nil)
-      r = {}.extend GDVd
-      r.base_duration = @base_duration
+      gdvd = {}.extend GDVd
+      gdvd.base_duration = @base_duration
 
       if previous
 
         if include?(:silence)
-          r[:abs_grade] = :silence
+          gdvd[:abs_grade] = :silence
 
         elsif include?(:grade) && !previous.include?(:grade)
-          r[:abs_grade] = self[:grade]
-          r[:abs_sharps] = self[:sharps]
+          gdvd[:abs_grade] = self[:grade]
+          gdvd[:abs_sharps] = self[:sharps]
 
         elsif include?(:grade) && previous.include?(:grade)
           if self[:grade] != previous[:grade] ||
             (self[:sharps] || 0) != (previous[:sharps] || 0)
 
-            r[:delta_grade] = scale[self[:grade]].octave(self[:octave]).wide_grade - scale[previous[:grade]].octave(previous[:octave]).wide_grade
-            r[:delta_sharps] = (self[:sharps] || 0) - (previous[:sharps] || 0)
+            gdvd[:delta_grade] = scale[self[:grade]].octave(self[:octave]).wide_grade - scale[previous[:grade]].octave(previous[:octave]).wide_grade
+            gdvd[:delta_sharps] = (self[:sharps] || 0) - (previous[:sharps] || 0)
           end
         elsif include?(:sharps)
-          r[:delta_sharps] = self[:sharps] - (previous[:sharps] || 0)
+          gdvd[:delta_sharps] = self[:sharps] - (previous[:sharps] || 0)
         end
 
         if self[:duration] && previous[:duration] && (self[:duration] != previous[:duration])
-          r[:delta_duration] = (self[:duration] - previous[:duration])
+          gdvd[:delta_duration] = (self[:duration] - previous[:duration])
         end
 
         if self[:velocity] && previous[:velocity] && (self[:velocity] != previous[:velocity])
-          r[:delta_velocity] = self[:velocity] - previous[:velocity]
+          gdvd[:delta_velocity] = self[:velocity] - previous[:velocity]
         end
       else
-        r[:abs_grade] = self[:grade] if self[:grade]
-        r[:abs_duration] = self[:duration] if self[:duration]
-        r[:abs_velocity] = self[:velocity] if self[:velocity]
+        gdvd[:abs_grade] = self[:grade] if self[:grade]
+        gdvd[:abs_duration] = self[:duration] if self[:duration]
+        gdvd[:abs_velocity] = self[:velocity] if self[:velocity]
       end
 
-      (keys - NaturalKeys).each { |k| r[k] = self[k] }
+      (keys - NaturalKeys).each { |k| gdvd[k] = self[k] }
 
-      r
+      gdvd
     end
   end
 end

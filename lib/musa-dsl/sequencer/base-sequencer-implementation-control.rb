@@ -168,14 +168,45 @@ module Musa
 
       private_constant :EveryControl
 
-      class MoveControl
-        extend Forwardable
+      class MoveControl < EventHandler
+        attr_reader :every_controls, :do_on_stop, :do_after
 
-        def initialize(every_control)
-          @every_control = every_control
+        def initialize(parent, size, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil)
+          super parent
+
+          @every_controls = size.times.collect { EveryControl.new(self, duration: duration, till: till) }
+
+          @running = @every_controls.size
+          @do_on_stop = []
+          @do_after = []
+
+          @do_on_stop << on_stop if on_stop
+          self.after after_bars, &after if after
+
+          @every_controls.each do |control|
+            control.on_stop do
+              @running -= 1
+
+              if @running == 0
+                @stop = true
+                @do_on_stop.each(&:call)
+              end
+            end
+          end
         end
 
-        def_delegators :@every_control, :on_stop, :after, :on, :launch, :stop
+        def on_stop(&block)
+          @do_on_stop << block
+        end
+
+        def after(bars = nil, &block)
+          bars ||= 0
+          @do_after << { bars: bars.rationalize, block: block }
+        end
+
+        def stop
+          @every_controls.each(&:stop)
+        end
       end
 
       private_constant :MoveControl

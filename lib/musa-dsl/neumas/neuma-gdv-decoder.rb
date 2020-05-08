@@ -20,12 +20,14 @@ module Musa::Neumas
       def process(gdvd)
         gdvd = gdvd.clone
 
-        appogiatura_gdvd = gdvd[:modifiers]&.delete :appogiatura
         gdvd.base_duration = @base_duration
+
+        appogiatura_gdvd = gdvd[:modifiers]&.delete :appogiatura
 
         if appogiatura_gdvd
           appogiatura_gdvd = appogiatura_gdvd.clone
           appogiatura_gdvd.base_duration = @base_duration
+
           gdvd[:modifiers][:appogiatura] = appogiatura_gdvd
         end
 
@@ -36,10 +38,10 @@ module Musa::Neumas
         NeumaDecoder.new @scale, base_duration: @base_duration, transcriptor: @transcriptor, base: @last
       end
 
-      def apply(action, on:)
-        gdv = action.to_gdv @scale, previous: on
+      def apply(gdvd, on:)
+        gdv = gdvd.to_gdv @scale, previous: on
 
-        appogiatura_action = action.dig(:modifiers, :appogiatura)
+        appogiatura_action = gdvd.dig(:modifiers, :appogiatura)
         gdv[:appogiatura] = appogiatura_action.to_gdv @scale, previous: on if appogiatura_action
 
         gdv

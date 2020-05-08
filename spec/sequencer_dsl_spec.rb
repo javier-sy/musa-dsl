@@ -460,12 +460,17 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(Rational(3))
       expect(s.moving).to include move_control
 
-      (16 * 2).times do
+      (16 * 2 - 1).times do
         s.tick
       end
 
-      expect(c).to eq(Rational(5))
+      expect(c).to eq(5r - 1/16r)
       expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
 
       s.tick
 
