@@ -6,6 +6,8 @@ include Musa::Neumalang
 include Musa::Datasets
 include Musa::Neumas
 
+using Musa::Extension::Neumas
+
 RSpec.describe Musa::Neumalang do
   context 'Neuma packed vectors parsing' do
     it 'Basic packed vector' do

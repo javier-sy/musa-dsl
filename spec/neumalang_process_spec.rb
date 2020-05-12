@@ -8,6 +8,8 @@ include Musa::Neumas
 include Musa::Scales
 include Musa::Sequencer
 
+using Musa::Extension::Neumas
+
 RSpec.describe Musa::Neumalang do
   context 'Neuma process parsing' do
 

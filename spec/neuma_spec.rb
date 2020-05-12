@@ -8,6 +8,8 @@ include Musa::Scales
 include Musa::Datasets
 include Musa::Neumas
 
+using Musa::Extension::Neumas
+
 RSpec.describe Musa::Neumalang do
   context 'Neuma simple parsing' do
 

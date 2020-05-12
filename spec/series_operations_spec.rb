@@ -5,6 +5,7 @@ require 'musa-dsl'
 include Musa::Series
 
 using Musa::Extension::Duplicate
+using Musa::Extension::Neumas
 
 RSpec.describe Musa::Series do
   context 'Series operations' do
