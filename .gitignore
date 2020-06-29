@@ -3,6 +3,8 @@
 .bundle
 .rspec
 .idea
+.ruby-gemset
+.ruby-version
 Gemfile.lock
 bin
 *.mindnode
