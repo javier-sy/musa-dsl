@@ -78,7 +78,8 @@ module Musa
           block ||= proc {}
 
           @sequencer.every *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **SmartProcBinder.new(block).apply(key_args), &block
+            args = SmartProcBinder.new(block)._apply(value_args, key_args)
+            with *args.first, **args.last, &block
           end
         end
 

@@ -45,12 +45,12 @@ module Musa
         combinations = []
 
         parameters_set.each do |parameters_with_depth|
-          instance = @constructor.call **constructor_binder.apply(parameters_with_depth)
+          instance = @constructor.call **(constructor_binder._apply(nil, parameters_with_depth).last)
 
           tree_B.run parameters_with_depth, @instance_name => instance
 
           if @finalize
-            finalize_parameters = finalize_binder.apply parameters_with_depth
+            finalize_parameters = finalize_binder._apply(nil, parameters_with_depth).last
             finalize_parameters[@instance_name] = instance
 
             @finalize.call **finalize_parameters

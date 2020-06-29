@@ -8,15 +8,18 @@ module Musa
           @procedure = procedure
           @on_rescue = on_rescue
 
-          @parameters = {}
-          @has_rest = false
+          @key_parameters = {}
+          @has_key_rest = false
+
           @value_parameters_count = 0
+          @has_value_rest = false
 
           procedure.parameters.each do |parameter|
-            @parameters[parameter[1]] = nil if parameter[0] == :key || parameter[0] == :keyreq
-            @has_rest = true if parameter[0] == :keyrest
+            @key_parameters[parameter[1]] = nil if parameter[0] == :key || parameter[0] == :keyreq
+            @has_key_rest = true if parameter[0] == :keyrest
 
             @value_parameters_count += 1 if parameter[0] == :req || parameter[0] == :opt
+            @has_value_rest = true if parameter[0] == :rest
           end
         end
 
@@ -37,19 +40,19 @@ module Musa
         end
 
         def __call(value_parameters, key_parameters)
-          effective_key_parameters = apply(key_parameters)
+          effective_value_parameters, effective_key_parameters = apply(*value_parameters, **key_parameters)
 
           if effective_key_parameters.empty?
-            if value_parameters.nil? || value_parameters.empty? || @value_parameters_count == 0
+            if effective_value_parameters.empty?
               @procedure.call
             else
-              @procedure.call *value_parameters.first(@value_parameters_count)
+              @procedure.call *effective_value_parameters
             end
           else
-            if value_parameters.nil? || value_parameters.empty?
+            if effective_value_parameters.empty?
               @procedure.call **effective_key_parameters
             else
-              @procedure.call *value_parameters, **effective_key_parameters
+              @procedure.call *effective_value_parameters, **effective_key_parameters
             end
           end
         end
@@ -57,31 +60,39 @@ module Musa
         private :__call
 
         def key?(key)
-          @has_rest || @parameters.include?(key)
+          @has_key_rest || @key_parameters.include?(key)
         end
 
         alias_method :has_key?, :key?
 
-        def apply(hsh)
-          hsh ||= {}
+        def apply(*value_parameters, **key_parameters)
+          _apply(value_parameters, key_parameters)
+        end
 
-          result = @parameters.clone
+        def _apply(value_parameters, key_parameters)
+          value_parameters ||= []
+          key_parameters ||= {}
 
-          @parameters.each_key do |parameter_name|
-            result[parameter_name] = hsh[parameter_name]
+          values_result = value_parameters.first(@value_parameters_count)
+          values_result += Array.new(@value_parameters_count - values_result.size)
+
+          hash_result = @key_parameters.clone
+
+          @key_parameters.each_key do |parameter_name|
+            hash_result[parameter_name] = key_parameters[parameter_name]
           end
 
-          if @has_rest
-            hsh.each do |key, value|
-              result[key] = value unless result.key?(key)
+          if @has_key_rest
+            key_parameters.each do |key, value|
+              hash_result[key] = value unless hash_result.key?(key)
             end
           end
 
-          result
+          return values_result, hash_result
         end
 
         def inspect
-          "KeyParametersProcedureBinder: parameters = #{@parameters} has_rest = #{@has_rest}"
+          "KeyParametersProcedureBinder: parameters = #{@key_parameters} has_rest = #{@has_key_rest}"
         end
 
         alias to_s inspect

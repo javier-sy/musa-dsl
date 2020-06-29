@@ -106,7 +106,7 @@ module Musa
               SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
           key_parameters = {}
-          key_parameters.merge! block_key_parameters_binder.apply with if with.is_a? Hash
+          key_parameters.merge! block_key_parameters_binder._apply(nil, with).last if with.is_a?(Hash)
 
           key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
@@ -411,7 +411,9 @@ module Musa
           every_groups[every[i]] << i
         end
 
-        control = MoveControl.new(@event_handlers.last, every_groups.size, duration: duration, till: till, on_stop: on_stop, after_bars: after_bars, after: after)
+        control = MoveControl.new(@event_handlers.last, every_groups.size,
+                                  duration: duration, till: till,
+                                  on_stop: on_stop, after_bars: after_bars, after: after)
 
         control.on_stop do
           control.do_after.each do |do_after|
@@ -423,7 +425,7 @@ module Musa
 
         _numeric_at start_position, control do
           values = from.clone
-          parameters = binder.apply(control: control)
+          next_values = Array.new(size)
 
           ii = 0
           last_position = nil
@@ -436,12 +438,21 @@ module Musa
               if first
                 first = false
               else
-                affected_indexes.each do |i|
-                  if to[i] && (values[i] >= to[i] && step[i].positive? || values[i] <= to[i] && step[i].negative?)
-                    control.every_controls[iii].stop
-                  else
+                i = affected_indexes.first
+
+                if to[i] && (values[i] >= to[i] && step[i].positive? || values[i] <= to[i] && step[i].negative?)
+                  control.every_controls[iii].stop
+                else
+                  affected_indexes.each do |i|
                     values[i] += step[i]
                   end
+                end
+              end
+
+              affected_indexes.each do |i|
+                next_values[i] = values[i] + step[i]
+                if to[i] && (next_values[i] > to[i] && step[i].positive? || next_values[i] < to[i] && step[i].negative?)
+                  next_values[i] = nil
                 end
               end
 
@@ -450,11 +461,18 @@ module Musa
                   function[i].call(values[i]) * function_range[i] + function_offset[i]
                 end
 
-                if array_mode
-                  yield effective_values, **parameters
-                else
-                  yield effective_values.first, **parameters
+                effective_next_values = size.times.collect do |i|
+                  function[i].call(next_values[i]) * function_range[i] + function_offset[i] unless next_values[i].nil?
                 end
+
+                value_parameters, key_parameters =
+                  if array_mode
+                    binder.apply(effective_values, effective_next_values, control: control, duration: every_group, right_open: right_open)
+                  else
+                    binder.apply(effective_values.first, effective_next_values.first, control: control, duration: every_group, right_open: right_open)
+                  end
+
+                yield *value_parameters, **key_parameters
 
                 last_position = position
               end
