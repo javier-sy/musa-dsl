@@ -20,6 +20,7 @@ end
 
 RSpec.describe Musa::Extension::With do
   context 'With used' do
+
     it 'with no parameters it accesses object context' do
       x = nil
       Test.new(100) do
@@ -47,11 +48,11 @@ RSpec.describe Musa::Extension::With do
       y = nil
 
       Test.new(100) do |t|
-        x = t.value
+        x = t
         y = @value
       end
 
-      expect(x).to eq 100
+      expect(x).to eq nil
       expect(y).to eq 100
     end
 
