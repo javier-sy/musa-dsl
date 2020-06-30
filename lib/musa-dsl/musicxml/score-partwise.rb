@@ -44,8 +44,8 @@ module Musa
     end
 
     class ScorePartwise
-      extend AttributeBuilder
-      include With
+      extend Musa::Extension::AttributeBuilder
+      include Musa::Extension::With
 
       include Helper::ToXML
 

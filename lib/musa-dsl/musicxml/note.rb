@@ -62,8 +62,8 @@ module Musa
     private_constant :Notation
 
     class Note
-      extend AttributeBuilder
-      include With
+      extend Musa::Extension::AttributeBuilder
+      include Musa::Extension::With
 
       include Helper
       include ToXML

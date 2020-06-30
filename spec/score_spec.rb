@@ -15,11 +15,11 @@ RSpec.describe Musa::Score do
     it 'manages event agrupation correctly' do
       s = Score.new(0.125)
 
-      s.at(1, add: { something: 1 }.extend(Dataset))
-      s.at(2, add: { something: -1 }.extend(Dataset))
-      s.at(1.25, add: { something: 4 }.extend(Dataset))
-      s.at(1.125, add: { something: 5 }.extend(Dataset))
-      s.at(1.25, add: { something: 100 }.extend(Dataset))
+      s.at(1, add: { something: 1 }.extend(AbsD))
+      s.at(2, add: { something: -1 }.extend(AbsD))
+      s.at(1.25, add: { something: 4 }.extend(AbsD))
+      s.at(1.125, add: { something: 5 }.extend(AbsD))
+      s.at(1.25, add: { something: 100 }.extend(AbsD))
 
       expect(s.times).to eq [1r, 1.125r, 1.25r, 2r]
 
@@ -43,11 +43,11 @@ RSpec.describe Musa::Score do
     it 'manages group_by' do
       s = Score.new(0.125)
 
-      s.at(1, add: { something: 1, criteria: :a }.extend(Dataset))
-      s.at(1, add: { something: -1, criteria: :b }.extend(Dataset))
-      s.at(1, add: { something: 4, criteria: nil }.extend(Dataset))
-      s.at(1, add: { something: 5 }.extend(Dataset))
-      s.at(1, add: { something: 100, criteria: :a }.extend(Dataset))
+      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(1, add: { something: 4, criteria: nil }.extend(AbsD))
+      s.at(1, add: { something: 5 }.extend(AbsD))
+      s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
 
       h = s[1].group_by_attribute(:criteria)
 
@@ -61,11 +61,11 @@ RSpec.describe Musa::Score do
     it 'manages select_attribute' do
       s = Score.new(0.125)
 
-      s.at(1, add: { something: 1, criteria: :a }.extend(Dataset))
-      s.at(1, add: { something: -1, criteria: :b }.extend(Dataset))
-      s.at(1, add: { something: 4, criteria: nil }.extend(Dataset))
-      s.at(1, add: { something: 5 }.extend(Dataset))
-      s.at(1, add: { something: 100, criteria: :a }.extend(Dataset))
+      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(1, add: { something: 4, criteria: nil }.extend(AbsD))
+      s.at(1, add: { something: 5 }.extend(AbsD))
+      s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
 
       l = s[1].select_attribute(:criteria)
       l2 = s[1].select_attribute(:criteria, :a)
@@ -77,11 +77,11 @@ RSpec.describe Musa::Score do
     it 'manages sort_by_attribute' do
       s = Score.new(0.125)
 
-      s.at(1, add: { something: 100, criteria: :a }.extend(Dataset))
-      s.at(1, add: { something: 1, criteria: :a }.extend(Dataset))
-      s.at(1, add: { something: -1, criteria: :b }.extend(Dataset))
-      s.at(1, add: { something: nil, criteria: nil }.extend(Dataset))
-      s.at(1, add: { something: 5 }.extend(Dataset))
+      s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(1, add: { something: nil, criteria: nil }.extend(AbsD))
+      s.at(1, add: { something: 5 }.extend(AbsD))
 
       l = s[1].sort_by_attribute(:something)
 
@@ -91,13 +91,13 @@ RSpec.describe Musa::Score do
     it 'manages between' do
       s = Score.new(0.125)
 
-      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(D))
-      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(D))
-      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(D))
-      s.at(3, add: { something: -1, criteria: :b }.extend(Dataset))
-      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(D))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(D))
-      s.at(5, add: { something: 5, duration: 3 }.extend(D))
+      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
+      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
+      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
+      s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
+      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
+      s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
 
       l = s.between(2, 4)
 
@@ -111,14 +111,14 @@ RSpec.describe Musa::Score do
     it 'manages finish' do
       s = Score.new(0.125)
 
-      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(D))
-      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(D))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(D))
-      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(D))
-      s.at(3, add: { something: -1, criteria: :b }.extend(Dataset))
-      s.at(5, add: { something: 5, duration: 3 }.extend(D))
-      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(D))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(D))
+      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
+      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
+      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
+      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
+      s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
+      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
+      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
 
       expect(s.finish).to eq 7.875r
     end

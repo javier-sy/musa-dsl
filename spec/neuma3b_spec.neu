@@ -1,1 +1,1 @@
-[I.1 III.1 V.1 || II.1 IV.1 VI.1].reverse
+[(I 1) (III 1) (V 1) || (II 1) (IV 1) (VI 1)].reverse

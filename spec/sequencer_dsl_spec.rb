@@ -265,12 +265,14 @@ RSpec.describe Musa::Sequencer do
       c = 0
       pp = nil
 
+      peta_ahora = nil
+
       s = Sequencer.new 4, 4 do
         at 1 do
           wait w, with: p do |with|
             c += 1
             pp = with
-          end
+         end
         end
       end
 
@@ -460,12 +462,17 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(Rational(3))
       expect(s.moving).to include move_control
 
-      (16 * 2).times do
+      (16 * 2 - 1).times do
         s.tick
       end
 
-      expect(c).to eq(Rational(5))
+      expect(c).to eq(5r - 1/16r)
       expect(s.moving).to include move_control
+
+      s.tick
+
+      expect(c).to eq(Rational(5))
+      expect(s.moving.size).to eq 0
 
       s.tick
 

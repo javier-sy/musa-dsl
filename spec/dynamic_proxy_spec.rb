@@ -2,6 +2,8 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
+include Musa::Extension::DynamicProxy
+
 RSpec.describe DynamicProxy do
   context 'Dynamic Proxy forwarding' do
     proxy1_1000 = DynamicProxy.new(1000)

@@ -2,11 +2,14 @@ require 'citrus'
 
 require_relative '../series'
 require_relative '../neumas'
+require_relative '../datasets'
 
 module Musa
   module Neumalang
     module Neumalang
       module Parser
+        module Grammar; end
+
         module Sentences
           include Musa::Series
           include Musa::Neumas
@@ -142,6 +145,58 @@ module Musa
             captures(:modifiers).collect(&:value).each { |_| h[:modifiers].merge! _ if _ }
 
             { kind: :gdvd, gdvd: h }.extend Neuma
+          end
+        end
+
+        module PackedVector
+          include Musa::Neumas
+
+          def value
+            { kind: :packed_v, packed_v: capture(:raw_packed_vector).value }.extend(Neuma)
+          end
+        end
+
+        module RawPackedVector
+          include Musa::Datasets
+
+          def value
+            captures(:key_value).collect(&:value).to_h.extend(PackedV)
+          end
+        end
+
+        module Vector
+          include Musa::Neumas
+
+          def value
+            { kind: :v, v: capture(:raw_vector).value }.extend(Neuma)
+          end
+        end
+
+        module RawVector
+          include Musa::Datasets
+
+          def value
+            captures(:raw_number).collect(&:value).extend(V)
+          end
+        end
+
+        module ProcessOfVectors
+          include Musa::Datasets
+          include Musa::Neumas
+
+          def value
+            durations_rest = []
+            i = 0
+
+            rests = captures(:rest).collect(&:value)
+            captures(:durations).collect(&:value).each do |duration|
+              durations_rest[i * 2] = duration
+              durations_rest[i * 2 + 1] = rests[i]
+              i += 1
+            end
+
+            p = ([ capture(:first).value ] + durations_rest).extend(P)
+            { kind: :p, p: p }.extend(Neuma)
           end
         end
 
@@ -285,54 +340,24 @@ module Musa
           end
         end
 
-        module Float
+        module Number
           include Musa::Neumas
 
           def value
             { kind: :value,
-              value: capture(:raw_float).value }.extend Neuma
-          end
-        end
-
-        module RawFloat
-          def value
-            "#{capture(:minus)&.value}#{capture(:a).value}.#{capture(:b).value}".to_f
-          end
-        end
-
-        module Integer
-          include Musa::Neumas
-
-          def value
-            { kind: :value,
-              value: capture(:raw_integer).value }.extend Neuma
-          end
-        end
-
-        module Rational
-          include Musa::Neumas
-
-          def value
-            { kind: :value,
-              value: capture(:raw_rational).value }.extend Neuma
+              value: capture(:raw_number).value }.extend Neuma
           end
         end
       end
 
       extend self
 
-      def register(grammar_path)
-        Citrus.load grammar_path
-      end
-
-      def parse(string_or_file, language: nil, decode_with: nil, debug: nil)
-        language ||= ::NeumalangGrammar
-
+      def parse(string_or_file, decode_with: nil, debug: nil)
         if string_or_file.is_a? String
-          match = language.parse string_or_file
+          match = Parser::Grammar::Grammar.parse string_or_file
 
         elsif string_or_file.is_a? File
-          match = language.parse string_or_file.read
+          match = Parser::Grammar::Grammar.parse string_or_file.read
 
         else
           raise ArgumentError, 'Only String or File allowed to be parsed'
@@ -361,7 +386,12 @@ module Musa
         end
       end
 
-      register File.join(File.dirname(__FILE__), 'neumalang')
+      Citrus.load File.join(File.dirname(__FILE__), 'terminals.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'datatypes.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'neuma.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'vectors.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'process.citrus')
+      Citrus.load File.join(File.dirname(__FILE__), 'neumalang.citrus')
     end
   end
 end

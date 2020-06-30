@@ -1,9 +1,11 @@
-require_relative '../core-ext/key-parameters-procedure-binder'
+require_relative '../core-ext/smart-proc-binder'
 require_relative '../sequencer'
 
 module Musa
   module Transport
     class Transport
+      include Musa::Extension::SmartProcBinder
+
       attr_reader :sequencer
 
       def initialize(clock,
@@ -22,16 +24,16 @@ module Musa
         @clock = clock
 
         @before_begin = []
-        @before_begin << KeyParametersProcedureBinder.new(before_begin) if before_begin
+        @before_begin << SmartProcBinder.new(before_begin) if before_begin
 
         @on_start = []
-        @on_start << KeyParametersProcedureBinder.new(on_start) if on_start
+        @on_start << SmartProcBinder.new(on_start) if on_start
 
         @on_change_position = []
-        @on_change_position << KeyParametersProcedureBinder.new(on_position_change) if on_position_change
+        @on_change_position << SmartProcBinder.new(on_position_change) if on_position_change
 
         @after_stop = []
-        @after_stop << KeyParametersProcedureBinder.new(after_stop) if after_stop
+        @after_stop << SmartProcBinder.new(after_stop) if after_stop
 
         @do_log = do_log
 
@@ -51,19 +53,19 @@ module Musa
       end
 
       def before_begin(&block)
-        @before_begin << KeyParametersProcedureBinder.new(block)
+        @before_begin << SmartProcBinder.new(block)
       end
 
       def on_start(&block)
-        @on_start << KeyParametersProcedureBinder.new(block)
+        @on_start << SmartProcBinder.new(block)
       end
 
       def after_stop(&block)
-        @after_stop << KeyParametersProcedureBinder.new(block)
+        @after_stop << SmartProcBinder.new(block)
       end
 
       def on_change_position(&block)
-        @on_change_position << KeyParametersProcedureBinder.new(block)
+        @on_change_position << SmartProcBinder.new(block)
       end
 
       def start

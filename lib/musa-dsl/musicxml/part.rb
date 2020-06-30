@@ -7,8 +7,8 @@ require_relative 'helper'
 module Musa
   module MusicXML
     class Part
-      extend AttributeBuilder
-      include With
+      extend Musa::Extension::AttributeBuilder
+      include Musa::Extension::With
 
       include Helper::HeaderToXML
       include Helper::ToXML

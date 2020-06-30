@@ -62,7 +62,7 @@ module Musa
       end
 
       class MainContext
-        include With
+        include Musa::Extension::With
 
         attr_reader :_measures, :_weights
 
@@ -83,7 +83,7 @@ module Musa
       end
 
       class MeasuresEvalContext
-        include With
+        include Musa::Extension::With
 
         def initialize
           @_features = {}

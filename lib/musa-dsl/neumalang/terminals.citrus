@@ -1,0 +1,63 @@
+grammar Musa::Neumalang::Neumalang::Parser::Grammar::Terminals
+	rule everything_except_comment
+		~/((\*\/)|(\/\*))/m
+	end
+
+	rule everything_except_braces
+		~/({|})/m
+	end
+
+	rule everything_except_double_quote
+		~/(\")/m
+	end
+
+    rule comment
+        (lcomment complex_comment rcomment)
+    end
+
+    rule complex_comment
+        everything_except_comment? (lcomment complex_comment rcomment)* everything_except_comment?
+    end
+
+    rule attribute_change
+        space | dot | rbracket | rpar | rbrace | eol | eos
+    end
+
+    rule optional_separation (spaces | comment)* end
+    rule separation (spaces | comment)+ end
+
+	rule double_quote '"' end
+	rule single_quote '\'' end
+	rule dot '.' end
+	rule mid_dot '·' end
+	rule comma ',' end
+	rule colon ':' end
+	rule double_colon '::' end
+	rule bar '|' end
+	rule double_bar '||' end
+	rule asterisk '*' end
+	rule slash '/' end
+	rule lpar '(' end
+	rule rpar ')' end
+	rule lbrace '{' end
+	rule rbrace '}' end
+	rule lbracket '[' end
+	rule rbracket ']' end
+	rule lacute '<' end
+	rule racute '>' end
+	rule at '@' end
+	rule ampersand '&' end
+	rule equal '=' end
+	rule lcomment '/*' end
+	rule rcomment '*/' end
+	rule hsh '#' end
+	rule underscore '_' end
+	rule minus '-' end
+	rule plus '+' end
+
+	rule eol /$/ end
+	rule eos /\Z/ end
+
+    rule space /[[:space:]]/ end
+	rule spaces /[[:space:]]/+ end
+end

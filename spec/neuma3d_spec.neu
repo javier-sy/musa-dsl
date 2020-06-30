@@ -1,7 +1,7 @@
-@s = [ I.1 II III ]
-@p = [ III.1 V VII | IV.1 VI VIII ]
-@n = IV
-@v = '1010
+@s = [ (I 1) (II) (III) ]
+@p = [ (III 1) (V) (VII) || (IV 1) (VI) (VIII) ]
+@n = (IV)
+@v = 1010
 @c = { 10000 }
 @cc = &{ 10000 }
 
@@ -13,7 +13,7 @@
 { puts "@cc = #{@cc.inspect}" if @debug  }
 
 { puts if @debug }
-{ |i| puts "inline = #{i.inspect}" if @debug }([I.1 II III])
+{ |i| puts "inline = #{i.inspect}" if @debug }([(I 1) (II) (III)])
 { |s| puts "Con paso de parámetros: @s = #{s.inspect}" if @debug }(@s)
 { |p| puts "Con paso de parámetros: @p = #{p.collect { |pp| pp.inspect }}" if @debug}(@p)
 { |n| puts "Con paso de parámetros: @n = #{n}" if @debug}(@n)
@@ -23,6 +23,6 @@
 
 { puts if @debug }
 
-[I II III].eval( &{ |e| e[:duration] = 2 * e.base_duration; e } )
+[(I) (II) (III)].eval( &{ |e| e[:duration] = 2 * e.base_duration; e } )
 
 @s.eval( &{ |e| e[:duration] = 3; e } )

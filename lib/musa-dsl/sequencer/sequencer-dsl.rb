@@ -29,7 +29,8 @@ module Musa
 
       class DSLContext
         extend Forwardable
-        include With
+        include Musa::Extension::SmartProcBinder
+        include Musa::Extension::With
 
         attr_reader :sequencer
 
@@ -59,7 +60,6 @@ module Musa
 
         def wait(*value_parameters, **key_parameters, &block)
           block ||= proc {}
-
           @sequencer.wait *value_parameters, **key_parameters do | *values, **key_values |
             with *values, **key_values, &block
           end
@@ -77,7 +77,8 @@ module Musa
           block ||= proc {}
 
           @sequencer.every *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **KeyParametersProcedureBinder.new(block).apply(key_args), &block
+            args = SmartProcBinder.new(block)._apply(value_args, key_args)
+            with *args.first, **args.last, &block
           end
         end
 

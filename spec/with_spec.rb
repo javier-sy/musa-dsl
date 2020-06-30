@@ -3,7 +3,7 @@ require 'spec_helper'
 require 'musa-dsl'
 
 class Test
-  include With
+  include Musa::Extension::With
 
   def initialize(value, &block)
     @value = value
@@ -18,8 +18,9 @@ class Test
   attr_reader :value
 end
 
-RSpec.describe With do
+RSpec.describe Musa::Extension::With do
   context 'With used' do
+
     it 'with no parameters it accesses object context' do
       x = nil
       Test.new(100) do
@@ -47,11 +48,11 @@ RSpec.describe With do
       y = nil
 
       Test.new(100) do |t|
-        x = t.value
+        x = t
         y = @value
       end
 
-      expect(x).to eq 100
+      expect(x).to eq nil
       expect(y).to eq 100
     end
 

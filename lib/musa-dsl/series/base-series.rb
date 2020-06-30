@@ -1,6 +1,8 @@
 require_relative '../core-ext/duplicate'
 require_relative '../generative/generative-grammar'
 
+using Musa::Extension::Duplicate
+
 module Musa
   module Series
     module SerieOperations end

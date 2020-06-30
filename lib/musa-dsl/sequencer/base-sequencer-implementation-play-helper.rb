@@ -1,3 +1,4 @@
+using Musa::Extension::Duplicate
 
 module Musa
   module Sequencer
@@ -63,6 +64,8 @@ module Musa
       private_constant :AtModePlayEval
 
       class WaitModePlayEval < PlayEval
+        include Musa::Datasets
+
         def initialize(block_procedure_binder)
           @block_procedure_binder = block_procedure_binder
         end
@@ -71,13 +74,15 @@ module Musa
           value = nil
 
           if element.is_a? Hash
-            if element.key? :duration
+            if AbsD.is_compatible?(element)
+              element = AbsD.to_AbsD(element)
+
               value = {
                   current_operation: :block,
                   current_block: @block_procedure_binder,
                   current_parameter: element,
                   continue_operation: :wait,
-                  continue_parameter: element[:duration]
+                  continue_parameter: element.forward_duration
               }
             end
 
@@ -106,6 +111,8 @@ module Musa
       private_constant :WaitModePlayEval
 
       class NeumalangModePlayEval < PlayEval
+        include Musa::Datasets
+
         module Parallel end
 
         @@id = 0
@@ -129,8 +136,8 @@ module Musa
         end
 
         def eval_element(element)
-          if element.is_a? Musa::Datasets::Dataset
-            element
+          if AbsD.is_compatible?(element)
+            AbsD.to_AbsD(element)
           else
             case element[:kind]
             when :serie         then eval_serie element[:serie]
@@ -140,8 +147,8 @@ module Musa
             when :command       then eval_command element[:command], element[:value_parameters], element[:key_parameters]
             when :value         then eval_value element[:value]
             when :gdvd          then eval_gdvd element[:gdvd]
+            when :p             then eval_p element[:p]
             when :call_methods  then eval_call_methods element[:on], element[:call_methods]
-            when :indirection   then eval_indirection element[:indirection]
             when :reference     then eval_reference element[:reference]
             when :event         then element
             else
@@ -155,7 +162,11 @@ module Musa
         end
 
         def eval_gdvd(gdvd)
-          @decoder.decode gdvd
+          @decoder.decode(gdvd)
+        end
+
+        def eval_p(p)
+          p.to_ps_serie(@decoder.base_duration).instance
         end
 
         def eval_serie(serie)
@@ -179,7 +190,7 @@ module Musa
         end
 
         def eval_use_variable(variable_name)
-          if @nl_context.instance_variable_defined? variable_name
+          if @nl_context.instance_variable_defined?(variable_name)
             @nl_context.instance_variable_get(variable_name)
           else
             raise NameError, "Variable #{variable_name} is not defined in context #{@nl_context}"
@@ -243,11 +254,11 @@ module Musa
             { current_operation: :none,
               continue_operation: :now }
 
-          when Musa::Datasets::Dataset
+          when Musa::Datasets::AbsD
             { current_operation: :block,
               current_parameter: element,
               continue_operation: :wait,
-              continue_parameter: element[:duration] }
+              continue_parameter: element.forward_duration }
 
           when Musa::Series::Serie
             { current_operation: :play,
@@ -263,14 +274,15 @@ module Musa
           else
             case element[:kind]
             when :value
-
               _value = eval_value element[:value]
 
-              if _value.is_a?(Hash) && _value.key?(:duration)
+              if AbsD.is_compatible?(_value)
+                _value = AbsD.to_AbsD(_value)
+
                 { current_operation: :block,
                   current_parameter: _value,
                   continue_operation: :wait,
-                  continue_parameter: _value[:duration] }
+                  continue_parameter: _value.forward_duration }
               else
                 { current_operation: :block,
                   current_parameter: _value,
@@ -287,8 +299,12 @@ module Musa
                 { current_operation: :block,
                   current_parameter: _value,
                   continue_operation: :wait,
-                  continue_parameter: _value[:duration] }
+                  continue_parameter: _value.forward_duration }
               end
+
+            when :p
+              { current_operation: :play,
+                current_parameter: eval_p(element[:p]) }
 
             when :serie
               { current_operation: :play,

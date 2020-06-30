@@ -95,8 +95,8 @@ module Musa
     end
 
     class Attributes
-      extend AttributeBuilder
-      include With
+      extend Musa::Extension::AttributeBuilder
+      include Musa::Extension::With
 
       include Helper::ToXML
 

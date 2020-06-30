@@ -2,8 +2,10 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-
 include Musa::Series
+
+using Musa::Extension::Duplicate
+using Musa::Extension::Neumas
 
 RSpec.describe Musa::Series do
   context 'Series operations' do
@@ -819,8 +821,8 @@ RSpec.describe Musa::Series do
     end
 
     it 'Generative grammar nodes and series interoperability' do
-      a = '1'.neumas.node
-      b = '2'.nn
+      a = '(1)'.neumas.node
+      b = '(2)'.nn
 
       s = a + b
 

@@ -1,3 +1,7 @@
+require_relative 'string-to-neumas'
+
+using Musa::Extension::Neumas
+
 module Musa
   module Neumas
     module Neuma

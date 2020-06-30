@@ -1,0 +1,23 @@
+grammar Musa::Neumalang::Neumalang::Parser::Grammar::Vectors
+    include Musa::Neumalang::Neumalang::Parser::Grammar::Datatypes
+
+	rule vector
+	    (optional_separation raw_vector) <Musa::Neumalang::Neumalang::Parser::Vector>
+	end
+
+	rule raw_vector
+	    (lpar (optional_separation raw_number)+ optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::RawVector>
+	end
+
+	rule packed_vector
+	    (optional_separation raw_packed_vector) <Musa::Neumalang::Neumalang::Parser::PackedVector>
+	end
+
+	rule raw_packed_vector
+	    (lpar (optional_separation key_value)+ optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::RawPackedVector>
+	end
+
+    rule key_value
+        (raw_symbol colon optional_separation raw_number) { [ capture(:raw_symbol).value, capture(:raw_number).value ] }
+    end
+end

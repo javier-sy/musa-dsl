@@ -1,5 +1,8 @@
 require_relative '../core-ext/arrayfy'
 
+using Musa::Extension::Arrayfy
+using Musa::Extension::ExplodeRanges
+
 # TODO: añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
 module Musa

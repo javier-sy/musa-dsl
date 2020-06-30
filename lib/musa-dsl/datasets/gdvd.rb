@@ -1,19 +1,22 @@
-require_relative 'dataset'
+require_relative 'delta-d'
 require_relative 'gdv'
 
 require_relative 'helper'
 
+using Musa::Extension::InspectNice
+
 module Musa::Datasets
   module GDVd
-    include Dataset
+    include DeltaD
+    include DeltaI
 
     include Helper
 
-    NaturalKeys = [:abs_grade, :abs_sharps, :abs_octave,
-                   :delta_grade, :delta_sharps, :delta_interval_sign, :delta_interval, :delta_octave,
-                   :abs_duration, :delta_duration, :factor_duration,
-                   :abs_velocity, :delta_velocity,
-                   :modifiers].freeze
+    NaturalKeys = (NaturalKeys +
+                    [:abs_grade, :abs_sharps, :abs_octave,
+                     :delta_grade, :delta_sharps, :delta_interval_sign, :delta_interval, :delta_octave,
+                     :abs_velocity, :delta_velocity,
+                     :modifiers]).freeze
 
     attr_reader :base_duration
 
@@ -116,9 +119,7 @@ module Musa::Datasets
       end
     end
 
-    def to_neuma(mode = nil)
-      mode ||= :dots # :parenthesis
-
+    def to_neuma
       @base_duration ||= Rational(1,4)
 
       attributes = []
@@ -146,6 +147,8 @@ module Musa::Datasets
         attributes[c] += sign + char * self[:delta_sharps].abs
       end
 
+      attributes[c] = '.' if attributes[c].nil? || attributes[c].empty?
+
       if include?(:abs_octave)
         attributes[c += 1] = 'o' + self[:abs_octave].to_s
       elsif include?(:delta_octave)
@@ -170,18 +173,7 @@ module Musa::Datasets
         attributes[c += 1] = modificator_string(k, self[k])
       end
 
-      if mode == :dots
-        if !attributes.empty?
-          attributes.join '.'
-        else
-          '.'
-        end
-
-      elsif mode == :parenthesis
-        '<' + attributes.join(', ') + '>'
-      else
-        attributes
-      end
+      '(' + attributes.join(' ') + ')'
     end
   end
 end

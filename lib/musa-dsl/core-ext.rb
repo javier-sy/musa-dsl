@@ -1,7 +1,7 @@
 require_relative 'core-ext/array-explode-ranges'
 require_relative 'core-ext/arrayfy'
 require_relative 'core-ext/duplicate'
-require_relative 'core-ext/key-parameters-procedure-binder'
+require_relative 'core-ext/smart-proc-binder'
 require_relative 'core-ext/inspect-nice'
 require_relative 'core-ext/dynamic-proxy'
 require_relative 'core-ext/with'

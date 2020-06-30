@@ -250,6 +250,11 @@ RSpec.describe Musa::Neumalang do
       expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { tr: true } } }]
     end
 
+    it "Neuma: '(tr())" do
+      a = Neumalang.parse('(tr())').to_a(recursive: true)
+      expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { tr: true } } }]
+    end
+
     it "Neuma: '(. gl(100))" do
       a = Neumalang.parse('(. gl(100))').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { gl: 100 } } }]
@@ -257,6 +262,11 @@ RSpec.describe Musa::Neumalang do
 
     it "Neuma: '(. gl(100, \"cosa\"))" do
       a = Neumalang.parse('(. gl(100, "cosa"))').to_a(recursive: true)
+      expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { gl: [100, "cosa"] } } }]
+    end
+
+    it "Neuma: '(gl(100, \"cosa\"))" do
+      a = Neumalang.parse('(gl(100, "cosa"))').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { modifiers: { gl: [100, "cosa"] } } }]
     end
 
@@ -276,27 +286,31 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Neuma: '(-#)'" do
-      a = Neumalang.parse('-#').to_a(recursive: true)
+      a = Neumalang.parse('(-#)').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: -1 } }]
     end
 
     it "Neuma: '(#)'" do
-      a = Neumalang.parse('#').to_a(recursive: true)
+      a = Neumalang.parse('(#)').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: 1 } }]
     end
 
     it "Neuma: '(_)'" do
-      a = Neumalang.parse('_').to_a(recursive: true)
+      a = Neumalang.parse('(_)').to_a(recursive: true)
       expect(a).to eq [{ kind: :gdvd, gdvd: { delta_sharps: -1 } }]
     end
 
-    it "Bad formatted neumas: '(2 3 4)'" do
-      expect {
-        Neumalang.parse('(2 3 4)')
-      }.to raise_error(Citrus::ParseError)
+    it "Unambiguous parenthesis neuma because has 2 elements: '(2 3)'" do
+      a = Neumalang.parse('(2 3)').to_a(recursive: true)
+      expect(a).to eq [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } }]
     end
 
-    it "Neuma: '(+2 -o3 +·)'" do
+    it "Unambiguous vector neuma because has 3 elements: '(2 3 4)'" do
+      a = Neumalang.parse('(2 3 4)').to_a(recursive: true)
+      expect(a).to eq [{ kind: :v, v: [2, 3, 4] }]
+    end
+
+    it "Neuma with undefined previous duration and incremental duration: '(+2 -o3 +·)'" do
       expect {
         Neumalang.parse('(+2 -o3 +·)')
       }.to raise_error(Citrus::ParseError)

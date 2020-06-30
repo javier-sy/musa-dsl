@@ -1,134 +1,141 @@
 # Based on https://github.com/adamluzsi/duplicate.rb/blob/master/lib/duplicate.rb
 # Modifications by JSY
 
-module Duplicate
-  extend self
+module Musa
+  module Extension
+    module Duplicate
+      module Duplicate
+        extend self
 
-  def duplicate(object)
-    register = {}
+        def duplicate(object)
+          register = {}
 
-    _dup(register, object)
-  end
+          _dup(register, object)
+        end
 
-  protected
+        protected
 
-  def registered(object, register)
-    register[object.__id__]
-  end
+        def registered(object, register)
+          register[object.__id__]
+        end
 
-  def register_duplication(register, object, duplicate)
-    register[object.__id__] = duplicate
-    duplicate
-  end
+        def register_duplication(register, object, duplicate)
+          register[object.__id__] = duplicate
+          duplicate
+        end
 
-  def _dup(register, object)
-    return registered(object, register) if registered(object, register)
-    return register_duplication(register, object, object) unless identifiable?(object)
+        def _dup(register, object)
+          return registered(object, register) if registered(object, register)
+          return register_duplication(register, object, object) unless identifiable?(object)
 
-    case object
+          case object
 
-    when Array
-      dup_array(register, object)
+          when Array
+            dup_array(register, object)
 
-    when Hash
-      dup_hash(register, object)
+          when Hash
+            dup_hash(register, object)
 
-    when Range
-      dup_range(register, object)
+          when Range
+            dup_range(register, object)
 
-    when Struct
-      dup_struct(register, object)
+          when Struct
+            dup_struct(register, object)
 
-    when NilClass, Symbol, Numeric, TrueClass, FalseClass, Method
-      register_duplication(register, object, object)
+          when NilClass, Symbol, Numeric, TrueClass, FalseClass, Method
+            register_duplication(register, object, object)
 
-    else
-      dup_object(register, object)
+          else
+            dup_object(register, object)
 
-    end
-  end
+          end
+        end
 
-  def identifiable?(object)
-    object.class && object.respond_to?(:is_a?)
-  rescue NoMethodError
-    false
-  end
+        def identifiable?(object)
+          object.class && object.respond_to?(:is_a?)
+        rescue NoMethodError
+          false
+        end
 
-  def dup_array(register, object)
-    duplication = dup_object(register, object)
-    duplication.map! { |e| _dup(register, e) }
-  end
+        def dup_array(register, object)
+          duplication = dup_object(register, object)
+          duplication.map! { |e| _dup(register, e) }
+        end
 
-  def dup_hash(register, object)
-    duplication = dup_object(register, object)
-    object.reduce(duplication) { |hash, (k, v)| hash.merge!(_dup(register, k) => _dup(register, v)) }
-  end
+        def dup_hash(register, object)
+          duplication = dup_object(register, object)
+          object.reduce(duplication) { |hash, (k, v)| hash.merge!(_dup(register, k) => _dup(register, v)) }
+        end
 
-  def dup_range(register, range)
-    register_duplication(register, range, range.class.new(_dup(register, range.first), _dup(register, range.last)))
-  rescue StandardError
-    register_duplication(register, range, range.dup)
-  end
+        def dup_range(register, range)
+          register_duplication(register, range, range.class.new(_dup(register, range.first), _dup(register, range.last)))
+        rescue StandardError
+          register_duplication(register, range, range.dup)
+        end
 
-  def dup_struct(register, struct)
-    duplication = register_duplication(register, struct, struct.dup)
+        def dup_struct(register, struct)
+          duplication = register_duplication(register, struct, struct.dup)
 
-    struct.each_pair do |attr, value|
-      duplication.__send__("#{attr}=", _dup(register, value))
-    end
+          struct.each_pair do |attr, value|
+            duplication.__send__("#{attr}=", _dup(register, value))
+          end
 
-    duplication
-  end
+          duplication
+        end
 
-  def dup_object(register, object)
-    dup_instance_variables(register, object, register_duplication(register, object, try_dup(object)))
-  end
+        def dup_object(register, object)
+          dup_instance_variables(register, object, register_duplication(register, object, try_dup(object)))
+        end
 
-  def dup_instance_variables(register, object, duplication)
-    return duplication unless respond_to_instance_variables?(object)
+        def dup_instance_variables(register, object, duplication)
+          return duplication unless respond_to_instance_variables?(object)
 
-    object.instance_variables.each do |instance_variable|
-      value = get_instance_variable(object, instance_variable)
+          object.instance_variables.each do |instance_variable|
+            value = get_instance_variable(object, instance_variable)
 
-      set_instance_variable(duplication, instance_variable, _dup(register, value))
-    end
+            set_instance_variable(duplication, instance_variable, _dup(register, value))
+          end
 
-    duplication
-  end
+          duplication
+        end
 
-  def get_instance_variable(object, instance_variable_name)
-    object.instance_variable_get(instance_variable_name)
-  rescue NoMethodError
-    object.instance_eval(instance_variable_name.to_s)
-  end
+        def get_instance_variable(object, instance_variable_name)
+          object.instance_variable_get(instance_variable_name)
+        rescue NoMethodError
+          object.instance_eval(instance_variable_name.to_s)
+        end
 
-  def set_instance_variable(duplicate, instance_variable_name, value_to_set)
-    duplicate.instance_variable_set(instance_variable_name, value_to_set)
-  rescue NoMethodError
-    duplicate.instance_eval("#{instance_variable_name} = Marshal.load(#{Marshal.dump(value_to_set).inspect})")
-  end
+        def set_instance_variable(duplicate, instance_variable_name, value_to_set)
+          duplicate.instance_variable_set(instance_variable_name, value_to_set)
+        rescue NoMethodError
+          duplicate.instance_eval("#{instance_variable_name} = Marshal.load(#{Marshal.dump(value_to_set).inspect})")
+        end
 
-  def try_dup(object)
-    o = object.dup
+        def try_dup(object)
+          o = object.dup
 
-    o.tap do
-      object.singleton_class.included_modules.each do |m|
-        o.extend m unless o.is_a? m
+          o.tap do
+            object.singleton_class.included_modules.each do |m|
+              o.extend m unless o.is_a? m
+            end
+          end
+        rescue NoMethodError, TypeError
+          object
+        end
+
+        def respond_to_instance_variables?(object)
+          object.respond_to?(:instance_variables) && object.instance_variables.is_a?(Array)
+        rescue NoMethodError
+          false
+        end
+      end
+
+      refine Object do
+        def duplicate
+          Musa::Extension::Duplicate::Duplicate.duplicate(self)
+        end
       end
     end
-  rescue NoMethodError, TypeError
-    object
-  end
-
-  def respond_to_instance_variables?(object)
-    object.respond_to?(:instance_variables) && object.instance_variables.is_a?(Array)
-  rescue NoMethodError
-    false
   end
 end
 
-class Object
-  def duplicate
-    Duplicate.duplicate(self)
-  end
-end
