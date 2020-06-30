@@ -14,6 +14,7 @@ module Musa
       private
 
       def _tick
+
         position_to_run = @position_mutex.synchronize { @position += 1 }
 
         @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
@@ -115,7 +116,7 @@ module Musa
 
             begin
               locked = @@tick_mutex.try_lock
-              block_key_parameters_binder._call value_parameters, key_parameters
+              block_key_parameters_binder._call(value_parameters, key_parameters)
             ensure
               @@tick_mutex.unlock if locked
             end

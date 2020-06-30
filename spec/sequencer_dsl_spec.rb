@@ -265,12 +265,14 @@ RSpec.describe Musa::Sequencer do
       c = 0
       pp = nil
 
+      peta_ahora = nil
+
       s = Sequencer.new 4, 4 do
         at 1 do
           wait w, with: p do |with|
             c += 1
             pp = with
-          end
+         end
         end
       end
 

@@ -2,8 +2,6 @@ module Musa
   module Extension
     module SmartProcBinder
       class SmartProcBinder
-        attr_reader :procedure
-
         def initialize(procedure, on_rescue: nil)
           @procedure = procedure
           @on_rescue = on_rescue
@@ -21,6 +19,10 @@ module Musa
             @value_parameters_count += 1 if parameter[0] == :req || parameter[0] == :opt
             @has_value_rest = true if parameter[0] == :rest
           end
+        end
+
+        def parameters
+          @procedure.parameters
         end
 
         def call(*value_parameters, **key_parameters)
@@ -73,8 +75,12 @@ module Musa
           value_parameters ||= []
           key_parameters ||= {}
 
-          values_result = value_parameters.first(@value_parameters_count)
-          values_result += Array.new(@value_parameters_count - values_result.size)
+          if @has_value_rest
+            values_result = value_parameters.clone
+          else
+            values_result = value_parameters.first(@value_parameters_count)
+            values_result += Array.new(@value_parameters_count - values_result.size)
+          end
 
           hash_result = @key_parameters.clone
 

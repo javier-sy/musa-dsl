@@ -60,7 +60,6 @@ module Musa
 
         def wait(*value_parameters, **key_parameters, &block)
           block ||= proc {}
-
           @sequencer.wait *value_parameters, **key_parameters do | *values, **key_values |
             with *values, **key_values, &block
           end

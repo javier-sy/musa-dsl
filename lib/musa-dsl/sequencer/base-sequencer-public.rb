@@ -126,10 +126,10 @@ module Musa
         if bars_delay.is_a? Numeric
           _numeric_at position + bars_delay.rationalize, control, with: with, debug: debug, &block
         else
-          bars_delay = Series::S(*bars_delay) if bars_delay.is_a? Array
+          bars_delay = Series::S(*bars_delay) if bars_delay.is_a?(Array)
           bars_delay = bars_delay.instance if bars_delay
 
-          with = Series::S(*with).repeat if with.is_a? Array
+          with = Series::S(*with).repeat if with.is_a?(Array)
           with = with.instance if with
 
           _serie_at bars_delay.eval { |delay| position + delay }, control, with: with, debug: debug, &block

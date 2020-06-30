@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.email       = 'javier.sy@gmail.com'
   s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples)/}) }
   s.homepage    = 'https://github.com/javier-sy/musa-dsl'
-  s.license     = 'CC-BY-NC-ND-4.0'
+  s.license     = 'LGPL-3.0'
 
   s.add_runtime_dependency 'citrus', '~> 3.0.0', '>= 3.0.0'
 
