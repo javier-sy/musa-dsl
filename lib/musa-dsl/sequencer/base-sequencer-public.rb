@@ -67,6 +67,10 @@ module Musa
         @timeslots.empty?
       end
 
+      def run
+        tick until empty?
+      end
+
       def round(bar)
         Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
       end

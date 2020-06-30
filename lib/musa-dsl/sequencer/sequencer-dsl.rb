@@ -7,13 +7,20 @@ module Musa
     class Sequencer
       extend Forwardable
 
-      def_delegators :@sequencer, :raw_at, :tick, :on_debug_at, :on_error, :on_fast_forward, :before_tick
-      def_delegators :@sequencer, :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration, :round, :position=, :size, :event_handler, :empty?
+      def_delegators :@sequencer,
+                     :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration, :round,
+                     :size, :empty?,
+                     :on_debug_at, :on_error, :on_fast_forward, :before_tick,
+                     :raw_at,
+                     :tick,
+                     :position=,
+                     :event_handler
 
       def_delegators :@context, :position, :log
       def_delegators :@context, :with, :now, :at, :wait, :play, :every, :move
       def_delegators :@context, :everying, :playing, :moving
       def_delegators :@context, :launch, :on
+      def_delegators :@context, :run
 
       def initialize(beats_per_bar, ticks_per_beat, sequencer: nil, do_log: nil, do_error_log: nil, &block)
         @sequencer = sequencer
@@ -34,9 +41,11 @@ module Musa
 
         attr_reader :sequencer
 
-        def_delegators :@sequencer, :launch, :on,
+        def_delegators :@sequencer,
+                       :launch, :on,
                        :position, :size, :everying, :playing, :moving,
-                       :ticks_per_bar, :round, :log, :inspect
+                       :ticks_per_bar, :round, :log, :inspect,
+                       :run
 
         def initialize(sequencer)
           @sequencer = sequencer
