@@ -598,5 +598,22 @@ RSpec.describe Musa::Sequencer do
       expect(tests_passed).to eq 6
     end
 
+    it 'Bugfix: move dont modify from and to parameters' do
+      s = BaseSequencer.new 4, 4
+
+      f = [1, 2, 3]
+      t = [2, 3, 4]
+
+      s.at 1 do
+        s.move from: f, to: t, duration: 4 do |value|
+          # ignore
+        end
+      end
+
+      s.run
+
+      expect(f).to eq([1, 2, 3])
+      expect(t).to eq([2, 3, 4])
+    end
   end
 end

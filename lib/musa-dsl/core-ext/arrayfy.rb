@@ -20,7 +20,7 @@ module Musa
           if size
             (self * (size / self.size + ((size % self.size).zero? ? 0 : 1) )).take(size)
           else
-            self
+            self.clone
           end
         end
       end
