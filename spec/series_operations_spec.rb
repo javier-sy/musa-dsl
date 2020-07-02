@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 include Musa::Series
 
-using Musa::Extension::Duplicate
+using Musa::Extension::DeepCopy
 using Musa::Extension::Neumas
 
 RSpec.describe Musa::Series do
@@ -193,10 +193,10 @@ RSpec.describe Musa::Series do
     end
 
 
-    it 'Duplicate: S(1, 2, 3, 4, 5, 6).duplicate' do
+    it 'Duplicate: S(1, 2, 3, 4, 5, 6).dup' do
       s1 = S(1, 2, 3, 4, 5, 6).i
 
-      s2 = s1.duplicate
+      s2 = s1.dup
 
       expect(s1.next_value).to eq 1
       expect(s1.next_value).to eq 2

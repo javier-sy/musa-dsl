@@ -348,6 +348,16 @@ module Musa
               value: capture(:raw_number).value }.extend Neuma
           end
         end
+
+        module Special
+          include Musa::Neumas
+
+          def value
+            v = captures(0)
+            { kind: :value,
+              value: v == 'nil' ? nil : (v == 'true' ? true : false) }.extend Neuma
+          end
+        end
       end
 
       extend self

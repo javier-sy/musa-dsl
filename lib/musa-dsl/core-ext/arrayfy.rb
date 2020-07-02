@@ -1,3 +1,5 @@
+require_relative 'deep-copy'
+
 module Musa
   module Extension
     module Arrayfy
@@ -18,7 +20,9 @@ module Musa
       refine Array do
         def arrayfy(size: nil)
           if size
-            (self * (size / self.size + ((size % self.size).zero? ? 0 : 1) )).take(size)
+            DeepCopy::DeepCopy.copy_singleton_class_modules(
+                self,
+                (self * (size / self.size + ((size % self.size).zero? ? 0 : 1) )).take(size))
           else
             self.clone
           end

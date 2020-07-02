@@ -425,7 +425,7 @@ module Musa
         @event_handlers.push control
 
         _numeric_at start_position, control do
-          values = from.clone
+          values = from.clone(freeze: false)
           next_values = Array.new(size)
 
           ii = 0

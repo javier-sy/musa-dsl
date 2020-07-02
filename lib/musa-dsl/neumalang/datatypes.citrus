@@ -2,8 +2,12 @@ grammar Musa::Neumalang::Neumalang::Parser::Grammar::Datatypes
     include Musa::Neumalang::Neumalang::Parser::Grammar::Terminals
 
 	rule constant
-		number | symbol | string
+		number | symbol | string | special
 	end
+
+    rule special
+        (true | false | nil) <Musa::Neumalang::Neumalang::Parser::Special>
+    end
 
   	rule symbol
   		(colon name) <Musa::Neumalang::Neumalang::Parser::Symbol>
