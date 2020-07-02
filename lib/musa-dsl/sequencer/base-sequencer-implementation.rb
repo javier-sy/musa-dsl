@@ -5,11 +5,13 @@ require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'
 
 using Musa::Extension::Arrayfy
+using Musa::Extension::DeepCopy
 
 module Musa
   module Sequencer
     class BaseSequencer
       include Musa::Extension::SmartProcBinder
+      include Musa::Extension::DeepCopy
 
       private
 
@@ -425,7 +427,7 @@ module Musa
         @event_handlers.push control
 
         _numeric_at start_position, control do
-          values = from.clone(freeze: false)
+          values = from.dup
           next_values = Array.new(size)
 
           ii = 0
@@ -458,11 +460,11 @@ module Musa
               end
 
               if position != last_position
-                effective_values = size.times.collect do |i|
+                effective_values = from.clone(freeze: false).map!.with_index do |_, i|
                   function[i].call(values[i]) * function_range[i] + function_offset[i]
                 end
 
-                effective_next_values = size.times.collect do |i|
+                effective_next_values = from.clone(freeze: false).map!.with_index do |_, i|
                   function[i].call(next_values[i]) * function_range[i] + function_offset[i] unless next_values[i].nil?
                 end
 
