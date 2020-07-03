@@ -2,9 +2,9 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::MusicXML
+include Musa::MusicXML::Builder
 
-RSpec.describe Musa::MusicXML do
+RSpec.describe Musa::MusicXML::Builder do
   context 'MusicXML generation' do
     it 'ScorePartwise header structure is equal between constructor, add_ methods and builder' do
       score1 = ScorePartwise.new
