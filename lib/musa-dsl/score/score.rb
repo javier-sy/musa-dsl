@@ -57,7 +57,7 @@ module Musa::Score
     end
 
     def at(time, add:)
-      raise ArgumentError, "#{add} is not a D dataset" unless add&.is_a?(Musa::Datasets::AbsD)
+      raise ArgumentError, "#{add} is not a AbsD dataset" unless add&.is_a?(Musa::Datasets::AbsD)
 
       time = time.rationalize
 
@@ -90,6 +90,17 @@ module Musa::Score
                         i[:start] >= closed_interval_start && i[:finish] < open_interval_finish }
           .sort_by { |i| i[:start] }
           .collect { |i| { start: i[:start], finish: i[:finish], dataset: i[:dataset] } }.extend(QueryableByDataset)
+    end
+
+    def events_between(closed_interval_start, open_interval_finish)
+      ( @indexer
+          .select { |i| i[:start] >= closed_interval_start && i[:start] < open_interval_finish }
+          .collect { |i| i.clone.merge({ event: :start, time: i[:start] }) } +
+        @indexer
+          .select { |i| i[:finish] >= closed_interval_start && i[:finish] < open_interval_finish }
+          .collect { |i| i.clone.merge({ event: :finish, time: i[:finish] }) } )
+        .sort_by { |i| i[:time] }
+        .collect { |i| { event: i[:event], time: i[:time], start: i[:start], finish: i[:finish], dataset: i[:dataset] } }.extend(QueryableByDataset)
     end
 
     def finish

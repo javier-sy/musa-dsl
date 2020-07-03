@@ -105,7 +105,22 @@ RSpec.describe Musa::Score do
                         { dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r },
                         { dataset: { something: -1, criteria: :b }, start: 3, finish: 3r },
                         { dataset: { something: 99, criteria: :b, duration: 0.5 }, start: 3.5r, finish: 3.875r } ]
+    end
 
+    it 'manages events_between' do
+      s = Score.new(0.125)
+
+      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
+      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
+      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
+      s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
+      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
+      s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
+
+      l = s.events_between(2, 3)
+
+      expect(l).to eq [ { event: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r } ]
     end
 
     it 'manages finish' do
