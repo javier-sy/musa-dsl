@@ -2,10 +2,9 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Score
 include Musa::Datasets
 
-RSpec.describe Musa::Score do
+RSpec.describe Musa::Datasets::Score do
   context 'Score' do
     it 'refuses things that are not a Dataset' do
       s = Score.new(0.125)

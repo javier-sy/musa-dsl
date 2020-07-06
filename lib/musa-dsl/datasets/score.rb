@@ -1,7 +1,6 @@
-require_relative '../datasets'
+require_relative 'e'
 
-module Musa::Score
-
+module Musa::Datasets
   module Queryable
     def group_by_attribute(attribute)
       group_by { |e| e[attribute] }
@@ -57,7 +56,7 @@ module Musa::Score
     end
 
     def at(time, add:)
-      raise ArgumentError, "#{add} is not a AbsD dataset" unless add&.is_a?(Musa::Datasets::AbsD)
+      raise ArgumentError, "#{add} is not a Abs dataset" unless add&.is_a?(Musa::Datasets::Abs)
 
       time = time.rationalize
 
