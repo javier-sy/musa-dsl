@@ -100,7 +100,7 @@ module Musa::Datasets
           .collect { |i| { start: i[:start], finish: i[:finish], dataset: i[:dataset] } }.extend(QueryableByDataset)
     end
 
-    def events_between(closed_interval_start, open_interval_finish)
+    def changes_between(closed_interval_start, open_interval_finish)
       ( @indexer
           .select { |i| i[:start] >= closed_interval_start && i[:start] < open_interval_finish }
           .collect { |i| i.clone.merge({ event: :start, time: i[:start] }) } +

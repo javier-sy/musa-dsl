@@ -134,7 +134,7 @@ RSpec.describe Musa::Datasets::Score do
       s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
       s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
 
-      l = s.events_between(2, 3)
+      l = s.changes_between(2, 3)
 
       expect(l).to eq [ { event: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r } ]
     end
