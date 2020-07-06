@@ -20,11 +20,11 @@ module Musa::Datasets
   end
 
   module QueryableByDataset
-    def group_by_dataset_attribute(attribute)
+    def group_by_attribute(attribute)
       group_by { |e| e[:dataset][attribute] }
     end
 
-    def select_dataset_attribute(attribute, value = nil)
+    def select_attribute(attribute, value = nil)
       if value.nil?
         select { |e| !e[:dataset][attribute].nil? }
       else
@@ -32,8 +32,8 @@ module Musa::Datasets
       end
     end
 
-    def sort_by_dataset_attribute(attribute)
-      select_dataset_attribute(attribute).sort_by { |e| e[:dataset][attribute] }
+    def sort_by_attribute(attribute)
+      select_attribute(attribute).sort_by { |e| e[:dataset][attribute] }
     end
   end
 
@@ -100,6 +100,14 @@ module Musa::Datasets
           .collect { |i| i.clone.merge({ event: :finish, time: i[:finish] }) } )
         .sort_by { |i| i[:time] }
         .collect { |i| { event: i[:event], time: i[:time], start: i[:start], finish: i[:finish], dataset: i[:dataset] } }.extend(QueryableByDataset)
+    end
+
+    def values_of(attribute)
+      values = Set[]
+      @score.each_value do |slot|
+        slot.each { |dataset| values << dataset[attribute] }
+      end
+      values
     end
 
     def finish
