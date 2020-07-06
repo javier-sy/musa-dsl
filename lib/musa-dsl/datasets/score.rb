@@ -1,12 +1,12 @@
 require_relative 'e'
 
 module Musa::Datasets
-  module Queryable
+  module QueryableByTimeSlot
     def group_by_attribute(attribute)
       group_by { |e| e[attribute] }
     end
 
-    def select_attribute(attribute, value = nil)
+    def select_by_attribute(attribute, value = nil)
       if value.nil?
         select { |e| !e[attribute].nil? }
       else
@@ -15,7 +15,7 @@ module Musa::Datasets
     end
 
     def sort_by_attribute(attribute)
-      select_attribute(attribute).sort_by { |e| e[attribute] }
+      select_by_attribute(attribute).sort_by { |e| e[attribute] }
     end
   end
 
@@ -24,7 +24,7 @@ module Musa::Datasets
       group_by { |e| e[:dataset][attribute] }
     end
 
-    def select_attribute(attribute, value = nil)
+    def select_by_attribute(attribute, value = nil)
       if value.nil?
         select { |e| !e[:dataset][attribute].nil? }
       else
@@ -32,12 +32,17 @@ module Musa::Datasets
       end
     end
 
+    def select
+      raise ArgumentError, "select needs a block with the inclusion condition on the dataset" unless block_given?
+      super { |e| yield e[:dataset] }
+    end
+
     def sort_by_attribute(attribute)
-      select_attribute(attribute).sort_by { |e| e[:dataset][attribute] }
+      select_by_attribute(attribute).sort_by { |e| e[:dataset][attribute] }
     end
   end
 
-  private_constant :Queryable
+  private_constant :QueryableByTimeSlot
 
   class Score
     include Enumerable
@@ -60,7 +65,7 @@ module Musa::Datasets
 
       time = time.rationalize
 
-      slot = @score[time] ||= [].extend(Queryable)
+      slot = @score[time] ||= [].extend(QueryableByTimeSlot)
 
       slot << add
 
@@ -71,7 +76,11 @@ module Musa::Datasets
 
     def [](time)
       time = time.rationalize
-      @score[time.rationalize] ||= [].extend(Queryable)
+      @score[time.rationalize] ||= [].extend(QueryableByTimeSlot)
+    end
+
+    def size
+      @score.keys.size
     end
 
     def times
@@ -108,6 +117,20 @@ module Musa::Datasets
         slot.each { |dataset| values << dataset[attribute] }
       end
       values
+    end
+
+    def filter
+      raise ArgumentError, "filter needs a block with the inclusion condition on the dataset" unless block_given?
+
+      filtered_score = Score.new(@resolution)
+
+      @score.each_pair do |time, datasets|
+        datasets.each do |dataset|
+          filtered_score.at time, add: dataset if yield(dataset)
+        end
+      end
+
+      filtered_score
     end
 
     def finish

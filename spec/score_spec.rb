@@ -66,8 +66,8 @@ RSpec.describe Musa::Datasets::Score do
       s.at(1, add: { something: 5 }.extend(AbsD))
       s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
 
-      l = s[1].select_attribute(:criteria)
-      l2 = s[1].select_attribute(:criteria, :a)
+      l = s[1].select_by_attribute(:criteria)
+      l2 = s[1].select_by_attribute(:criteria, :a)
 
       expect(l).to eq [{ something: 1, criteria: :a }, { something: -1, criteria: :b }, { something: 100, criteria: :a }]
       expect(l2).to eq [{ something: 1, criteria: :a }, { something: 100, criteria: :a }]
@@ -85,6 +85,23 @@ RSpec.describe Musa::Datasets::Score do
       l = s[1].sort_by_attribute(:something)
 
       expect(l).to eq [{ something: -1, criteria: :b }, { something: 1, criteria: :a }, { something: 5 }, { something: 100, criteria: :a }]
+    end
+
+    it 'manages filter' do
+      s = Score.new(0.125)
+
+      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
+      s.at(2, add: { something: -1, criteria: :b }.extend(AbsD))
+      s.at(3, add: { something: 4, criteria: nil }.extend(AbsD))
+      s.at(4, add: { something: 5 }.extend(AbsD))
+      s.at(5, add: { something: 100, criteria: :a }.extend(AbsD))
+
+      s2 = s.filter { |dataset| dataset[:criteria] == :a }
+
+      expect(s2.size).to eq 2
+
+      expect(s2[1][0]).to eq({ something: 1, criteria: :a })
+      expect(s2[5][0]).to eq({ something: 100, criteria: :a })
     end
 
     it 'manages between' do
