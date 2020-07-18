@@ -66,7 +66,7 @@
 					<line>4</line>
 				</clef>
 			</attributes>
-			<direction>
+			<direction >
 				<direction-type>
 					<metronome>
 						<beat-unit>quarter</beat-unit>

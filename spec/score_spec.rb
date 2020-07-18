@@ -5,8 +5,10 @@ require 'musa-dsl'
 include Musa::Datasets
 
 RSpec.describe Musa::Datasets::Score do
+
   context 'Score' do
     it 'refuses things that are not a Dataset' do
+
       s = Score.new(0.125)
       expect { s.at(1, add: { something: 1 }) }.to raise_error(ArgumentError)
     end
@@ -20,7 +22,7 @@ RSpec.describe Musa::Datasets::Score do
       s.at(1.125, add: { something: 5 }.extend(AbsD))
       s.at(1.25, add: { something: 100 }.extend(AbsD))
 
-      expect(s.times).to eq [1r, 1.125r, 1.25r, 2r]
+      expect(s.positions).to eq [1r, 1.125r, 1.25r, 2r]
 
       t = []
       x = []
@@ -55,6 +57,10 @@ RSpec.describe Musa::Datasets::Score do
       expect(h[:a]).to eq [{ something: 1, criteria: :a }, { something: 100, criteria: :a }]
       expect(h[:b]).to eq [{ something: -1, criteria: :b }]
       expect(h[nil]).to eq [{ something: 4, criteria: nil }, { something: 5 }]
+
+      l2 = h[:a].select_by_attribute(:something, 1)
+
+      expect(l2).to eq [{ something: 1, criteria: :a }]
     end
 
     it 'manages select_attribute' do
@@ -71,6 +77,9 @@ RSpec.describe Musa::Datasets::Score do
 
       expect(l).to eq [{ something: 1, criteria: :a }, { something: -1, criteria: :b }, { something: 100, criteria: :a }]
       expect(l2).to eq [{ something: 1, criteria: :a }, { something: 100, criteria: :a }]
+
+      l3 = l.select_by_attribute(:something, 1)
+      expect(l3).to eq [{ something: 1, criteria: :a }]
     end
 
     it 'manages sort_by_attribute' do
@@ -84,10 +93,16 @@ RSpec.describe Musa::Datasets::Score do
 
       l = s[1].sort_by_attribute(:something)
 
-      expect(l).to eq [{ something: -1, criteria: :b }, { something: 1, criteria: :a }, { something: 5 }, { something: 100, criteria: :a }]
+      expect(l).to eq [{ something: -1, criteria: :b },
+                       { something: 1, criteria: :a },
+                       { something: 5 },
+                       { something: 100, criteria: :a }]
+
+      l3 = l.select_by_attribute(:something, 1)
+      expect(l3).to eq [{ something: 1, criteria: :a }]
     end
 
-    it 'manages filter' do
+    it 'manages subset' do
       s = Score.new(0.125)
 
       s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
@@ -96,11 +111,17 @@ RSpec.describe Musa::Datasets::Score do
       s.at(4, add: { something: 5 }.extend(AbsD))
       s.at(5, add: { something: 100, criteria: :a }.extend(AbsD))
 
-      s2 = s.filter { |dataset| dataset[:criteria] == :a }
+      s2 = s.subset { |dataset| dataset[:criteria] == :a }
 
       expect(s2.size).to eq 2
 
       expect(s2[1][0]).to eq({ something: 1, criteria: :a })
+      expect(s2[5][0]).to eq({ something: 100, criteria: :a })
+
+      s3 = s2.subset { |dataset| dataset[:something] == 100}
+
+      expect(s3.size).to eq 1
+
       expect(s2[5][0]).to eq({ something: 100, criteria: :a })
     end
 
@@ -136,7 +157,7 @@ RSpec.describe Musa::Datasets::Score do
 
       l = s.changes_between(2, 3)
 
-      expect(l).to eq [ { event: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r } ]
+      expect(l).to eq [ { change: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r } ]
     end
 
     it 'manages finish' do

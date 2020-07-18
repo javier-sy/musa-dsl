@@ -342,5 +342,175 @@ RSpec.describe Musa::MusicXML::Builder do
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_3_spec.musicxml")).strip
     end
 
+    it 'Score with some simple notes and tuplets' do
+      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+                                work_title: "Prueba de tuplets",
+                                encoding_date: DateTime.new(2020, 1, 29) do
+
+        part :p1, name: "Piano", abbreviation: "p." do
+          measure do
+            attributes do
+              divisions 16
+
+              key 1, fifths: 2
+              clef 1, sign: 'G', line: 2
+              time 1, beats: 4, beat_type: 4
+
+              key 2, fifths: 2
+              clef 2, sign: 'F', line: 4
+              time 2, beats: 4, beat_type: 4
+            end
+
+            metronome beat_unit: 'quarter', per_minute: 90
+
+            pitch 'D', octave: 4, duration: 16, type: 'quarter'
+            pitch 'E', octave: 4, duration: 16, type: 'quarter'
+            pitch 'F', octave: 4, duration: 16, type: 'quarter'
+            pitch 'G', octave: 4, duration: 16, type: 'quarter'
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, normal_number: 2
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+            pitch 'D', octave: 4, duration: 10, type: 'quarter' do
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+            pitch 'E', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'stop'
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+
+            pitch 'C', octave: 4, duration: 16, type: 'quarter'
+            pitch 'C', octave: 4, duration: 16, type: 'quarter'
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, actual_type: 'quarter', normal_number: 4, normal_type: 'quarter'
+              time_modification actual_notes: 3, normal_notes: 4
+            end
+
+            pitch 'D', octave: 4, duration: 10, type: 'quarter' do
+              time_modification actual_notes: 3, normal_notes: 4
+            end
+
+            pitch 'E', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'stop'
+              time_modification actual_notes: 3, normal_notes: 4
+            end
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 10, type: 'quarter' do
+              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 5, actual_type: 'quarter', normal_number: 3, normal_type: 'quarter'
+              time_modification actual_notes: 5, normal_notes: 3
+            end
+
+            pitch 'D', octave: 4, duration: 9, type: 'quarter' do
+              time_modification actual_notes: 5, normal_notes: 3
+            end
+
+            pitch 'D', octave: 4, duration: 10, type: 'quarter' do
+              time_modification actual_notes: 5, normal_notes: 3
+            end
+
+            pitch 'D', octave: 4, duration: 9, type: 'quarter' do
+              time_modification actual_notes: 5, normal_notes: 3
+            end
+
+            pitch 'E', octave: 4, duration: 10, type: 'quarter' do
+              tuplet type: 'stop'
+              time_modification actual_notes: 5, normal_notes: 3
+            end
+
+            pitch 'C', octave: 4, duration: 16, type: 'quarter'
+
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 10, type: 'quarter' do
+              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, actual_type: 'eighth', normal_number: 2, normal_type: 'eighth'
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+
+            pitch 'D', octave: 4, duration: 6, type: 'eighth' do
+              time_modification actual_notes: 3, normal_notes: 2
+              tuplet type: 'stop'
+            end
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, normal_number: 2
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+            pitch 'E', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'stop'
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+            pitch 'C', octave: 4, duration: 16, type: 'quarter'
+            pitch 'C', octave: 4, duration: 16, type: 'quarter'
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 11, type: 'quarter' do
+              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, normal_number: 2
+              time_modification actual_notes: 3, normal_notes: 2
+              tuplet type: 'stop'
+            end
+          end
+
+          measure do
+            pitch 'C', octave: 4, duration: 13, type: 'quarter' do
+              tuplet type: 'start', number: 1, bracket: true, show_number: 'both', show_type: 'both', actual_number: 5, normal_number: 4, actual_type: 'quarter', normal_type: 'quarter'
+              time_modification actual_notes: 5, normal_notes: 4, normal_type: 'quarter'
+            end
+
+            pitch 'C', octave: 4, duration: 16, type: 'quarter' do
+              tuplet type: 'start', number: 2, bracket: true, show_number: 'both', show_type: 'both', actual_number: 4, normal_number: 5, actual_type: 'eighth', normal_type: 'eighth'
+              time_modification actual_notes: 20, normal_notes: 20, normal_type: 'quarter'
+            end
+
+            pitch 'C', octave: 4, duration: 16, type: 'quarter' do
+              time_modification actual_notes: 20, normal_notes: 20, normal_type: 'quarter'
+              tuplet type: 'stop', number: 2
+            end
+
+            pitch 'C', octave: 4, duration: 19, type: 'quarter', dots: 1 do
+              time_modification actual_notes: 5, normal_notes: 4
+              tuplet type: 'stop', number: 1
+            end
+          end
+
+          measure do
+            pitch 'D', octave: 4, duration: 16, type: 'quarter'
+
+            pitch 'E', octave: 4, duration: 16, type: 'quarter'
+
+            pitch 'F', octave: 4, duration: 13, type: 'quarter' do
+              tuplet type: 'start', number: 1, bracket: true, show_number: 'both', show_type: 'both', actual_number: 5, normal_number: 4, actual_type: 'eighth', normal_type: 'eighth'
+              time_modification actual_notes: 5, normal_notes: 4, normal_type: 'quarter'
+            end
+
+            pitch 'E', octave: 4, duration: 19, type: 'quarter', dots: 1 do
+              time_modification actual_notes: 5, normal_notes: 4, normal_type: 'quarter'
+              tuplet type: 'stop', number: 1
+            end
+          end
+
+        end
+      end
+
+      puts score.to_xml.string
+
+
+      File.open(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
+
+      # expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml")).strip
+    end
+
+
   end
 end

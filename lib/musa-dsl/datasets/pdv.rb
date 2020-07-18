@@ -39,7 +39,8 @@ module Musa::Datasets
 
       if self[:velocity]
         # ppp = 16 ... fff = 127
-        gdv[:velocity] = [0..16, 17..32, 33..48, 49..64, 65..80, 81..96, 97..112, 113..127].index { |r| r.cover? self[:velocity] } - 3
+        # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
+        gdv[:velocity] = [1..1, 2..8, 9..16, 17..33, 34..49, 49..64, 65..80, 81..96, 97..112, 113..127].index { |r| r.cover? self[:velocity] } - 5
       end
 
       (keys - NaturalKeys).each { |k| gdv[k] = self[k] }

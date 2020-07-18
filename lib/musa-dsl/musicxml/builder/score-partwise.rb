@@ -76,7 +76,7 @@ module Musa
           if @work_number || @work_title
             io.puts"#{tabs}\t<work>"
             io.puts"#{tabs}\t\t<work-number>#{@work_number}</work-number>" if @work_number
-            io.puts"#{tabs}\t\t<work-number>#{@work_title}</work-number>" if @work_title
+            io.puts"#{tabs}\t\t<work-title>#{@work_title}</work-title>" if @work_title
             io.puts"#{tabs}\t</work>"
           end
 

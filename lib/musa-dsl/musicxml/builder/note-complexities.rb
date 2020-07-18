@@ -27,7 +27,7 @@ module Musa
             io.puts "#{tabs}\t<actual-notes>#{@actual_notes}</actual-notes>"
             io.puts "#{tabs}\t<normal-notes>#{@normal_notes}</normal-notes>"
             io.puts "#{tabs}\t<normal-type>#{@normal_type}</normal-type>" if @normal_type
-            @normal_dots.times do
+            @normal_dots&.times do
               io.puts "#{tabs}\t<normal-dot />"
             end
 
@@ -44,29 +44,29 @@ module Musa
                          bracket: nil, # true
                          show_number: nil, # actual / both / none
                          show_type: nil, # actual / both / none
-                         tuplet_actual_number: nil, # number
-                         tuplet_actual_type: nil, # quarter / eigth / ...
-                         tuplet_actual_dots: nil, # number,
-                         tuplet_normal_number: nil, # number
-                         tuplet_normal_type: nil, # quarter / eigth / ...
-                         tuplet_normal_dots: nil) # number
+                         actual_number: nil, # number
+                         actual_type: nil, # quarter / eigth / ...
+                         actual_dots: nil, # number,
+                         normal_number: nil, # number
+                         normal_type: nil, # quarter / eigth / ...
+                         normal_dots: nil) # number
 
             @type = type
             @number = number
             @bracket = bracket
             @show_number = show_number
             @show_type = show_type
-            @tuplet_actual_number = tuplet_actual_number
-            @tuplet_actual_type = tuplet_actual_type
-            @tuplet_actual_dots = tuplet_actual_dots
-            @tuplet_normal_number = tuplet_normal_number
-            @tuplet_normal_type = tuplet_normal_type
-            @tuplet_normal_dots = tuplet_normal_dots
+            @actual_number = actual_number
+            @actual_type = actual_type
+            @actual_dots = actual_dots
+            @normal_number = normal_number
+            @normal_type = normal_type
+            @normal_dots = normal_dots
           end
 
           attr_accessor :type, :number, :bracket, :show_number, :show_type
-          attr_accessor :tuplet_actual_number, :tuplet_actual_type, :tuplet_actual_dots
-          attr_accessor :tuplet_normal_number, :tuplet_normal_type, :tuplet_normal_dots
+          attr_accessor :actual_number, :actual_type, :actual_dots
+          attr_accessor :normal_number, :normal_type, :normal_dots
 
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<tuplet type=\"#{@type}\" " \
@@ -76,26 +76,26 @@ module Musa
           "#{decode_bool_or_string_attribute(@show_type, 'show-type')} " \
           ">"
 
-            if @tuplet_actual_number || @tuplet_actual_type || @tuplet_actual_dots
+            if @actual_number || @actual_type || @actual_dots
               io.puts "#{tabs}\t<tuplet-actual>"
 
-              io.puts "#{tabs}\t\t<tuplet-number>#{@tuplet_actual_number}</tuplet-number>" if @tuplet_actual_number
-              io.puts "#{tabs}\t\t<tuplet-type>#{@tuplet_actual_type}</tuplet-type>" if @tuplet_actual_type
+              io.puts "#{tabs}\t\t<tuplet-number>#{@actual_number}</tuplet-number>" if @actual_number
+              io.puts "#{tabs}\t\t<tuplet-type>#{@actual_type}</tuplet-type>" if @actual_type
 
-              @tuplet_actual_dots.times do
+              @actual_dots&.times do
                 io.puts "#{tabs}\t\t<tuplet-dot />"
               end
 
               io.puts "#{tabs}\t</tuplet-actual>"
             end
 
-            if @tuplet_normal_number || @tuplet_normal_type || @tuplet_normal_dots
+            if @normal_number || @normal_type || @normal_dots
               io.puts "#{tabs}\t<tuplet-normal>"
 
-              io.puts "#{tabs}\t\t<tuplet-number>#{@tuplet_normal_number}</tuplet-number>" if @tuplet_normal_number
-              io.puts "#{tabs}\t\t<tuplet-type>#{@tuplet_normal_type}</tuplet-type>" if @tuplet_normal_type
+              io.puts "#{tabs}\t\t<tuplet-number>#{@normal_number}</tuplet-number>" if @normal_number
+              io.puts "#{tabs}\t\t<tuplet-type>#{@normal_type}</tuplet-type>" if @normal_type
 
-              @tuplet_normal_dots.times do
+              @normal_dots&.times do
                 io.puts "#{tabs}\t\t<tuplet-dot />"
               end
 

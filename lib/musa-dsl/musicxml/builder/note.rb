@@ -163,6 +163,8 @@ module Musa
                          **_keyrest,
                          &block)
 
+            @tuplets = []
+
             @pizzicato = pizzicato
 
             @grace = grace
@@ -184,7 +186,7 @@ module Musa
             @accidental_mark = accidental_mark
             @arpeggiate = arpeggiate
             @tied = tied
-            @tuplet = make_instance_if_needed(Tuplet, tuplet)
+            @tuplets << make_instance_if_needed(Tuplet, tuplet) if tuplet
             @dynamics = dynamics
             @fermata = fermata
             @glissando = glissando
@@ -266,22 +268,27 @@ module Musa
           attr_simple_builder :type
           attr_simple_builder :dots
           attr_simple_builder :accidental
-          attr_simple_builder :time_modification
           attr_simple_builder :stem
           attr_simple_builder :notehead
           attr_simple_builder :voice
           attr_simple_builder :staff
 
+          attr_complex_builder :time_modification, TimeModification
+
           # notations
           attr_simple_builder :accidental_mark
           attr_simple_builder :arpeggiate
           attr_simple_builder :tied
-          attr_simple_builder :tuplet
           attr_simple_builder :dynamics
           attr_simple_builder :fermata
           attr_simple_builder :glissando
           attr_simple_builder :non_arpeggiate
           attr_simple_builder :slide
+
+          attr_complex_adder_to_custom :tuplet do | *parameters, **key_parameters |
+            Tuplet.new(*parameters, **key_parameters).tap { |tuplet| @tuplets << tuplet }
+          end
+
           attr_complex_builder :slur, Notation, first_parameter: 'slur'
 
           ## articulations
@@ -381,7 +388,9 @@ module Musa
               io.puts "#{tabs}\t\t<accidental-mark>#{@accidental_mark}</accidental-mark>" if @accidental_mark
               io.puts "#{tabs}\t\t<arpeggiate #{decode_bool_or_string_attribute(@arpeggiate, 'direction')}/>" if @arpeggiate
               io.puts "#{tabs}\t\t<tied type=\"#{@tied}\"/>" if @tied
-              @tuplet&.to_xml(io, indent: indent + 3)
+              @tuplets.each do |tuplet|
+                tuplet.to_xml(io, indent: indent + 3)
+              end
 
               if @dynamics
                 io.puts "#{tabs}\t\t<dynamics>"
@@ -485,7 +494,7 @@ module Musa
             @accidental_mark ||
                 @arpeggiate ||
                 @tied ||
-                @tuplet ||
+                !@tuplets.empty? ||
                 @dynamics ||
                 @fermata ||
                 @glissando ||

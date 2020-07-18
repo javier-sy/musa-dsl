@@ -44,7 +44,7 @@
 					<line>4</line>
 				</clef>
 			</attributes>
-			<direction>
+			<direction >
 				<direction-type>
 					<metronome>
 						<beat-unit>quarter</beat-unit>
@@ -313,7 +313,7 @@
 			</note>
 		</measure>
 		<measure number="4">
-			<direction>
+			<direction >
 				<direction-type>
 					<dynamics>
 						<pp />
@@ -395,7 +395,7 @@
 				<voice>2</voice>
 				<type>eighth</type>
 			</note>
-			<direction>
+			<direction >
 				<direction-type>
 					<wedge type="stop"  />
 				</direction-type>

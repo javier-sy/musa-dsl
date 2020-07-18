@@ -25,7 +25,9 @@ module Musa
 
           def value
             { kind: :parallel,
-              parallel: [{ kind: :serie, serie: S(*capture(:aa).value) }] + captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } }
+              parallel: [{ kind: :serie,
+                           serie: S(*capture(:aa).value) }] +
+                                  captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } }
             }.extend(Neuma::Parallel)
           end
         end
@@ -54,7 +56,8 @@ module Musa
 
           def value
             { kind: :assign_to,
-              assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] }, assign_value: capture(:expression).value
+              assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] },
+              assign_value: capture(:expression).value
             }.extend Neuma
           end
         end

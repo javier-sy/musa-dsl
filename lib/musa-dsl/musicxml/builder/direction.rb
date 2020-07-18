@@ -14,14 +14,19 @@ module Musa
           include Helper
           include ToXML
 
-          def initialize(voice: nil, # number
+          def initialize(placement: nil, # above / below
+                         voice: nil, # number
                          staff: nil,  # number
+                         offset: nil, # number
                          **directions,
                          &block)
+
+            @placement = placement
 
             @types = []
             @voice = voice
             @staff = staff
+            @offset = offset
 
             directions.each_pair do |direction, value|
               send direction, value
@@ -33,6 +38,7 @@ module Musa
           attr_simple_builder :voice
           attr_simple_builder :staff
           attr_simple_builder :offset
+          attr_simple_builder :placement
 
           attr_complex_adder_to_custom(:metronome) { |*p, **kp, &b| Metronome.new(*p, **kp, &b).tap { |t| @types << t } }
           attr_complex_adder_to_custom(:wedge) { |*p, **kp, &b| Wedge.new(*p, **kp, &b).tap { |t| @types << t } }
@@ -44,12 +50,13 @@ module Musa
           attr_complex_adder_to_custom(:octave_shift) { |*p, **kp, &b| OctaveShift.new(*p, **kp, &b).tap { |t| @types << t } }
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<direction>"
+            io.puts "#{tabs}<direction #{decode_bool_or_string_attribute(@placement, 'placement')}>"
 
             @types.each do |type|
               type.to_xml(io, indent: indent + 1)
             end
 
+            io.puts "#{tabs}<offset sound=\"no\">#{@offset.to_f.round(2)}</offset>" if @offset
             io.puts "#{tabs}<voice>#{@voice}</voice>" if @voice
             io.puts "#{tabs}<staff>#{@staff}</staff>" if @staff
 

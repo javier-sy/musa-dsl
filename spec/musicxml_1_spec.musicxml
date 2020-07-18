@@ -3,7 +3,7 @@
 <score-partwise version="3.0">
 	<work>
 		<work-number>100</work-number>
-		<work-number>Work Title</work-number>
+		<work-title>Work Title</work-title>
 	</work>
 	<movement-number>1</movement-number>
 	<movement-title>Movement Title</movement-title>

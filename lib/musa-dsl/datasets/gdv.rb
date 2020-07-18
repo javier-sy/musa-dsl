@@ -42,8 +42,9 @@ module Musa::Datasets
       end
 
       if self[:velocity]
-        # ppp = 16 ... fff = 127
-        pdv[:velocity] = [16, 32, 48, 64, 80, 96, 112, 127][self[:velocity] + 3]
+        # ppp = 16 ... fff = 127 (-5 ... 4) the standard used by Musescore 3 and others starts at ppp = 16
+        # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
+        pdv[:velocity] = [1, 8, 16, 33, 49, 64, 80, 96, 112, 127][self[:velocity] + 5]
       end
 
       (keys - NaturalKeys).each { |k| pdv[k] = self[k] }
@@ -107,7 +108,10 @@ module Musa::Datasets
           if self[:grade] != previous[:grade] ||
             (self[:sharps] || 0) != (previous[:sharps] || 0)
 
-            gdvd[:delta_grade] = scale[self[:grade]].octave(self[:octave]).wide_grade - scale[previous[:grade]].octave(previous[:octave]).wide_grade
+            gdvd[:delta_grade] =
+                scale[self[:grade]].octave(self[:octave]).wide_grade -
+                scale[previous[:grade]].octave(previous[:octave]).wide_grade
+
             gdvd[:delta_sharps] = (self[:sharps] || 0) - (previous[:sharps] || 0)
           end
         elsif include?(:sharps)

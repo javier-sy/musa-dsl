@@ -11,3 +11,7 @@ def decode_instrument(instrument)
     { instrument_1 => level_1, instrument_2 => level_2 }
   end
 end
+
+def instrument_number_to_symbol(number)
+  "v#{number.to_i.to_s}".to_sym
+end

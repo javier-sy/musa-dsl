@@ -152,7 +152,7 @@ module Musa::Datasets
       if include?(:abs_octave)
         attributes[c += 1] = 'o' + self[:abs_octave].to_s
       elsif include?(:delta_octave)
-        attributes[c += 1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s if  self[:delta_octave] != 0
+        attributes[c += 1] = sign_of(self[:delta_octave]) + 'o' + self[:delta_octave].abs.to_s if self[:delta_octave] != 0
       end
 
       if include?(:abs_duration)

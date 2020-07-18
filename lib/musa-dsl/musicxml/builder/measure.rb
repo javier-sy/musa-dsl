@@ -89,14 +89,37 @@ module Musa
             Direction.new(*parameters, **key_parameters, &block).tap { |direction| @elements << direction }
           end
 
-          attr_complex_adder_to_custom(:metronome) { |*p, **kp, &b| direction { metronome *p, **kp, &b } }
-          attr_complex_adder_to_custom(:wedge) { |*p, **kp, &b| direction { wedge *p, **kp, &b } }
-          attr_complex_adder_to_custom(:dynamics) { |*p, **kp, &b| direction { dynamics *p, **kp, &b } }
-          attr_complex_adder_to_custom(:pedal) { |*p, **kp, &b| direction { pedal *p, **kp, &b } }
-          attr_complex_adder_to_custom(:bracket) { |*p, **kp, &b| direction { bracket *p, **kp, &b } }
-          attr_complex_adder_to_custom(:dashes) { |*p, **kp, &b| direction { dashes *p, **kp, &b } }
-          attr_complex_adder_to_custom(:words) { |*p, **kp, &b| direction { words *p, **kp, &b } }
-          attr_complex_adder_to_custom(:octave_shift) { |*p, **kp, &b| direction { octave_shift *p, **kp, &b } }
+          attr_complex_adder_to_custom(:metronome) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { metronome *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:wedge) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { wedge *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:dynamics) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { dynamics *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:pedal) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { pedal *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:bracket) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { bracket *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:dashes) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { dashes *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:words) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { words *p, **kp, &b } }
+
+          attr_complex_adder_to_custom(:octave_shift) {
+            |*p, placement: nil, offset: nil, **kp, &b|
+            direction(placement: placement, offset: offset) { octave_shift *p, **kp, &b } }
 
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<measure number=\"#{@number}\">"
