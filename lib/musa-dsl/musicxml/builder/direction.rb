@@ -56,9 +56,9 @@ module Musa
               type.to_xml(io, indent: indent + 1)
             end
 
-            io.puts "#{tabs}<offset sound=\"no\">#{@offset.to_f.round(2)}</offset>" if @offset
-            io.puts "#{tabs}<voice>#{@voice}</voice>" if @voice
-            io.puts "#{tabs}<staff>#{@staff}</staff>" if @staff
+            io.puts "#{tabs}\t<offset sound=\"no\">#{@offset.to_f.round(2)}</offset>" if @offset
+            io.puts "#{tabs}\t<voice>#{@voice}</voice>" if @voice
+            io.puts "#{tabs}\t<staff>#{@staff}</staff>" if @staff
 
             io.puts "#{tabs}</direction>"
           end

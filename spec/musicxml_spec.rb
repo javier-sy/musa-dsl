@@ -34,6 +34,8 @@ RSpec.describe Musa::MusicXML::Builder do
                                  rights: { lyrics: "Javier S." },
                                  encoding_date: DateTime.new(2020, 1, 29)
 
+      # File.open(File.dirname(__FILE__), "musicxml_1_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
+
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_1_spec.musicxml")).strip
     end
 
@@ -48,6 +50,8 @@ RSpec.describe Musa::MusicXML::Builder do
         creators composer: "Javier", lyrics: "Javier S. lyrics"
         rights lyrics: "Javier S."
       end
+
+      # File.open(File.dirname(__FILE__), "musicxml_1_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
 
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_1_spec.musicxml")).strip
     end
@@ -143,7 +147,7 @@ RSpec.describe Musa::MusicXML::Builder do
       direction.add_wedge 'stop'
       direction.add_dynamics 'ff'
 
-      # File.open('test.musicxml', 'w') { |f| f.write(score.to_xml.string) }
+      # File.open(File.dirname(__FILE__), "musicxml_2_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
 
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_2_spec.musicxml")).strip
     end
@@ -243,7 +247,7 @@ RSpec.describe Musa::MusicXML::Builder do
         end
       end
 
-      # File.open('test.musicxml', 'w') { |f| f.write(score.to_xml.string) }
+      # File.open(File.dirname(__FILE__), "musicxml_2_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
 
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_2_spec.musicxml")).strip
     end
@@ -337,7 +341,7 @@ RSpec.describe Musa::MusicXML::Builder do
       measure3.add_rest type: 'whole', duration: 8
       measure4.add_rest type: 'whole', duration: 8
 
-      # File.open('test.musicxml', 'w') { |f| f.write(score.to_xml.string) }
+      # File.open(File.join(File.dirname(__FILE__), "musicxml_3_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
 
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_3_spec.musicxml")).strip
     end
@@ -387,22 +391,6 @@ RSpec.describe Musa::MusicXML::Builder do
           end
 
           measure do
-            pitch 'C', octave: 4, duration: 11, type: 'quarter' do
-              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, actual_type: 'quarter', normal_number: 4, normal_type: 'quarter'
-              time_modification actual_notes: 3, normal_notes: 4
-            end
-
-            pitch 'D', octave: 4, duration: 10, type: 'quarter' do
-              time_modification actual_notes: 3, normal_notes: 4
-            end
-
-            pitch 'E', octave: 4, duration: 11, type: 'quarter' do
-              tuplet type: 'stop'
-              time_modification actual_notes: 3, normal_notes: 4
-            end
-          end
-
-          measure do
             pitch 'C', octave: 4, duration: 10, type: 'quarter' do
               tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 5, actual_type: 'quarter', normal_number: 3, normal_type: 'quarter'
               time_modification actual_notes: 5, normal_notes: 3
@@ -426,24 +414,14 @@ RSpec.describe Musa::MusicXML::Builder do
             end
 
             pitch 'C', octave: 4, duration: 16, type: 'quarter'
-
-          end
-
-          measure do
-            pitch 'C', octave: 4, duration: 10, type: 'quarter' do
-              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, actual_type: 'eighth', normal_number: 2, normal_type: 'eighth'
-              time_modification actual_notes: 3, normal_notes: 2
-            end
-
-            pitch 'D', octave: 4, duration: 6, type: 'eighth' do
-              time_modification actual_notes: 3, normal_notes: 2
-              tuplet type: 'stop'
-            end
           end
 
           measure do
             pitch 'C', octave: 4, duration: 11, type: 'quarter' do
               tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, normal_number: 2
+              time_modification actual_notes: 3, normal_notes: 2
+            end
+            pitch 'D', octave: 4, duration: 10, type: 'quarter' do
               time_modification actual_notes: 3, normal_notes: 2
             end
             pitch 'E', octave: 4, duration: 11, type: 'quarter' do
@@ -452,14 +430,6 @@ RSpec.describe Musa::MusicXML::Builder do
             end
             pitch 'C', octave: 4, duration: 16, type: 'quarter'
             pitch 'C', octave: 4, duration: 16, type: 'quarter'
-          end
-
-          measure do
-            pitch 'C', octave: 4, duration: 11, type: 'quarter' do
-              tuplet type: 'start', bracket: true, show_number: 'both', show_type: 'both', actual_number: 3, normal_number: 2
-              time_modification actual_notes: 3, normal_notes: 2
-              tuplet type: 'stop'
-            end
           end
 
           measure do
@@ -503,12 +473,9 @@ RSpec.describe Musa::MusicXML::Builder do
         end
       end
 
-      puts score.to_xml.string
+        # File.open(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
 
-
-      File.open(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
-
-      # expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml")).strip
+        expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml")).strip
     end
 
 

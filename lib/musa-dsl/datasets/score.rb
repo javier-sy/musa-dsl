@@ -38,7 +38,7 @@ module Musa::Datasets
 
     def [](time)
       time = time.rationalize
-      @score[time.rationalize] ||= [].extend(QueryableByTimeSlot)
+      @score[time] ||= [].extend(QueryableByTimeSlot)
     end
 
     def size

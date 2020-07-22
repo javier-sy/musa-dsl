@@ -1,8 +1,8 @@
 require_relative '../../musicxml'
 
+require_relative 'process-time'
 require_relative 'process-pdv'
 require_relative 'process-ps'
-
 
 module Musa::Datasets::Score::ToMXML
 
@@ -65,11 +65,12 @@ module Musa::Datasets::Score::ToMXML
 
       instrument_score = subset { |dataset| dataset[:instrument] == instrument }
 
-      (instrument_score.changes_between(bar, bar + 1).select { |p| p[:dataset].is_a?(PS) } +
+      bar_elements = \
+        (instrument_score.changes_between(bar, bar + 1).select { |p| p[:dataset].is_a?(PS) } +
           instrument_score.between(bar, bar + 1).select { |p| p[:dataset].is_a?(PDV) })
-          .sort_by { |element| element[:time] || element[:start] }
-          .each do |element|
+        .sort_by { |element| element[:time] || element[:start] }
 
+      bar_elements.each do |element|
         case element[:dataset]
         when PDV
           process_pdv(measure, divisions_per_bar, bar, element, pointer)

@@ -162,60 +162,6 @@
 					<step>C</step>
 					<octave>4</octave>
 				</pitch>
-				<duration>11</duration>
-				<type>quarter</type>
-				<time-modification>
-					<actual-notes>3</actual-notes>
-					<normal-notes>4</normal-notes>
-				</time-modification>
-				<notations>
-						<tuplet type="start"  bracket="yes" show-number="both" show-type="both" >
-							<tuplet-actual>
-								<tuplet-number>3</tuplet-number>
-								<tuplet-type>quarter</tuplet-type>
-							</tuplet-actual>
-							<tuplet-normal>
-								<tuplet-number>4</tuplet-number>
-								<tuplet-type>quarter</tuplet-type>
-							</tuplet-normal>
-						</tuplet>
-				</notations>
-			</note>
-			<note>
-				<pitch>
-					<step>D</step>
-					<octave>4</octave>
-				</pitch>
-				<duration>10</duration>
-				<type>quarter</type>
-				<time-modification>
-					<actual-notes>3</actual-notes>
-					<normal-notes>4</normal-notes>
-				</time-modification>
-			</note>
-			<note>
-				<pitch>
-					<step>E</step>
-					<octave>4</octave>
-				</pitch>
-				<duration>11</duration>
-				<type>quarter</type>
-				<time-modification>
-					<actual-notes>3</actual-notes>
-					<normal-notes>4</normal-notes>
-				</time-modification>
-				<notations>
-						<tuplet type="stop"     >
-						</tuplet>
-				</notations>
-			</note>
-		</measure>
-		<measure number="4">
-			<note>
-				<pitch>
-					<step>C</step>
-					<octave>4</octave>
-				</pitch>
 				<duration>10</duration>
 				<type>quarter</type>
 				<time-modification>
@@ -296,49 +242,7 @@
 				<type>quarter</type>
 			</note>
 		</measure>
-		<measure number="5">
-			<note>
-				<pitch>
-					<step>C</step>
-					<octave>4</octave>
-				</pitch>
-				<duration>10</duration>
-				<type>quarter</type>
-				<time-modification>
-					<actual-notes>3</actual-notes>
-					<normal-notes>2</normal-notes>
-				</time-modification>
-				<notations>
-						<tuplet type="start"  bracket="yes" show-number="both" show-type="both" >
-							<tuplet-actual>
-								<tuplet-number>3</tuplet-number>
-								<tuplet-type>eighth</tuplet-type>
-							</tuplet-actual>
-							<tuplet-normal>
-								<tuplet-number>2</tuplet-number>
-								<tuplet-type>eighth</tuplet-type>
-							</tuplet-normal>
-						</tuplet>
-				</notations>
-			</note>
-			<note>
-				<pitch>
-					<step>D</step>
-					<octave>4</octave>
-				</pitch>
-				<duration>6</duration>
-				<type>eighth</type>
-				<time-modification>
-					<actual-notes>3</actual-notes>
-					<normal-notes>2</normal-notes>
-				</time-modification>
-				<notations>
-						<tuplet type="stop"     >
-						</tuplet>
-				</notations>
-			</note>
-		</measure>
-		<measure number="6">
+		<measure number="4">
 			<note>
 				<pitch>
 					<step>C</step>
@@ -360,6 +264,18 @@
 							</tuplet-normal>
 						</tuplet>
 				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>10</duration>
+				<type>quarter</type>
+				<time-modification>
+					<actual-notes>3</actual-notes>
+					<normal-notes>2</normal-notes>
+				</time-modification>
 			</note>
 			<note>
 				<pitch>
@@ -394,33 +310,7 @@
 				<type>quarter</type>
 			</note>
 		</measure>
-		<measure number="7">
-			<note>
-				<pitch>
-					<step>C</step>
-					<octave>4</octave>
-				</pitch>
-				<duration>11</duration>
-				<type>quarter</type>
-				<time-modification>
-					<actual-notes>3</actual-notes>
-					<normal-notes>2</normal-notes>
-				</time-modification>
-				<notations>
-						<tuplet type="start"  bracket="yes" show-number="both" show-type="both" >
-							<tuplet-actual>
-								<tuplet-number>3</tuplet-number>
-							</tuplet-actual>
-							<tuplet-normal>
-								<tuplet-number>2</tuplet-number>
-							</tuplet-normal>
-						</tuplet>
-						<tuplet type="stop"     >
-						</tuplet>
-				</notations>
-			</note>
-		</measure>
-		<measure number="8">
+		<measure number="5">
 			<note>
 				<pitch>
 					<step>C</step>
@@ -506,7 +396,7 @@
 				</notations>
 			</note>
 		</measure>
-		<measure number="9">
+		<measure number="6">
 			<note>
 				<pitch>
 					<step>D</step>
