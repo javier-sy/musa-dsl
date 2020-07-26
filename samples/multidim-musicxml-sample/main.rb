@@ -152,3 +152,4 @@ mxml = score.to_mxml(beats_per_bar, ticks_per_beat,
 
 File.open(File.join(File.dirname(__FILE__), "multidim_sample.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
 
+

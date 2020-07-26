@@ -18,4 +18,4 @@ end
 
 def quantize(duration, ticks_per_bar)
   ((duration.rationalize * ticks_per_bar).round / ticks_per_bar).to_r
-end
+end 
