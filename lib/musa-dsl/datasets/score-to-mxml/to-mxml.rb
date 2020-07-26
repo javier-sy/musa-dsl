@@ -7,6 +7,7 @@ require_relative 'process-ps'
 module Musa::Datasets::Score::ToMXML
 
   include Musa::MusicXML::Builder
+  include Musa::Datasets
 
   def to_mxml(beats_per_bar, ticks_per_beat,
               bpm: nil,
@@ -57,6 +58,9 @@ module Musa::Datasets::Score::ToMXML
   def fill_part(part, divisions_per_bar, instrument = nil)
     measure = nil
 
+    puts "fill_part: finish = #{finish.to_f.round(3)}"
+
+
     (1..finish || 0).each do |bar|
       measure = part.add_measure if measure
       measure ||= part.measures.last
@@ -67,19 +71,29 @@ module Musa::Datasets::Score::ToMXML
 
       bar_elements = \
         (instrument_score.changes_between(bar, bar + 1).select { |p| p[:dataset].is_a?(PS) } +
-          instrument_score.between(bar, bar + 1).select { |p| p[:dataset].is_a?(PDV) })
+          (pdvs = instrument_score.between(bar, bar + 1).select { |p| p[:dataset].is_a?(PDV) }))
         .sort_by { |element| element[:time] || element[:start] }
+
 
       bar_elements.each do |element|
         case element[:dataset]
         when PDV
-          process_pdv(measure, divisions_per_bar, bar, element, pointer)
+          pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer)
 
         when PS
           process_ps(measure, divisions_per_bar, element)
         else
           # ignored
         end
+      end
+
+      if pdvs.empty?
+        process_pdv(measure, bar, divisions_per_bar,
+                    { start: bar,
+                      finish: bar + 1,
+                      dataset: { pitch: :silence, duration: 1 }.extend(PDV) },
+                    pointer)
+
       end
     end
   end

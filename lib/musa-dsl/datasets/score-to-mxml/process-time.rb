@@ -145,7 +145,7 @@ module Musa::Datasets::Score::ToMXML
       unless duration_log2i >= -10 && duration_log2i <= 3
 
     ['1024th', '512th', '256th', '128th',
-     '64nd', '32nd', '16th', 'eighth',
+     '64th', '32nd', '16th', 'eighth',
      'quarter', 'half', 'whole', 'breve',
      'long', 'maxima'][duration_log2i + 10]
   end

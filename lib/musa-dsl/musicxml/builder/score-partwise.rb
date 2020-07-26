@@ -75,12 +75,12 @@ module Musa
 
           if @work_number || @work_title
             io.puts"#{tabs}\t<work>"
-            io.puts"#{tabs}\t\t<work-number>#{@work_number}</work-number>" if @work_number
+            io.puts"#{tabs}\t\t<work-number>#{@work_number.to_i}</work-number>" if @work_number
             io.puts"#{tabs}\t\t<work-title>#{@work_title}</work-title>" if @work_title
             io.puts"#{tabs}\t</work>"
           end
 
-          io.puts"#{tabs}\t<movement-number>#{@movement_number}</movement-number>" if @movement_number
+          io.puts"#{tabs}\t<movement-number>#{@movement_number.to_i}</movement-number>" if @movement_number
           io.puts"#{tabs}\t<movement-title>#{@movement_title}</movement-title>" if @movement_title
 
           io.puts "#{tabs}\t<identification>"

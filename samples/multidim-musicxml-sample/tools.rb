@@ -15,3 +15,7 @@ end
 def instrument_number_to_symbol(number)
   "v#{number.to_i.to_s}".to_sym
 end
+
+def quantize(duration, ticks_per_bar)
+  ((duration.rationalize * ticks_per_bar).round / ticks_per_bar).to_r
+end

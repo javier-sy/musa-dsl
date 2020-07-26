@@ -14,7 +14,7 @@ module Musa
           attr_accessor :duration
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<backup><duration>#{@duration}</duration></backup>"
+            io.puts "#{tabs}<backup><duration>#{@duration.to_i}</duration></backup>"
           end
         end
 
@@ -32,9 +32,9 @@ module Musa
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<forward>"
 
-            io.puts "#{tabs}\t<duration>#{@duration}</duration>"
-            io.puts "#{tabs}\t<voice>#{@voice}</voice>" if @voice
-            io.puts "#{tabs}\t<staff>#{@staff}</staff>" if @staff
+            io.puts "#{tabs}\t<duration>#{@duration.to_i}</duration>"
+            io.puts "#{tabs}\t<voice>#{@voice.to_i}</voice>" if @voice
+            io.puts "#{tabs}\t<staff>#{@staff.to_i}</staff>" if @staff
 
             io.puts "#{tabs}</forward>"
           end

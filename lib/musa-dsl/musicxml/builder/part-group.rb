@@ -27,7 +27,7 @@ module Musa
           attr_accessor :number, :type, :name, :abbreviation, :symbol, :group_barline, :group_time
 
           def _header_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<part-group #{decode_bool_or_string_attribute(@number, 'number')} type=\"#{@type}\">"
+            io.puts "#{tabs}<part-group #{decode_bool_or_string_attribute(@number&.to_i, 'number')} type=\"#{@type}\">"
 
             io.puts "#{tabs}\t<group-name>#{@name}</group-name>" if @name
             io.puts "#{tabs}\t<group-abbreviation>#{@abbreviation}</group-abbreviation>" if @abbreviation

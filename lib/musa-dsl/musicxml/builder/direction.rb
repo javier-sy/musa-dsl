@@ -57,8 +57,8 @@ module Musa
             end
 
             io.puts "#{tabs}\t<offset sound=\"no\">#{@offset.to_f.round(2)}</offset>" if @offset
-            io.puts "#{tabs}\t<voice>#{@voice}</voice>" if @voice
-            io.puts "#{tabs}\t<staff>#{@staff}</staff>" if @staff
+            io.puts "#{tabs}\t<voice>#{@voice.to_i}</voice>" if @voice
+            io.puts "#{tabs}\t<staff>#{@staff.to_i}</staff>" if @staff
 
             io.puts "#{tabs}</direction>"
           end
@@ -137,7 +137,7 @@ module Musa
           attr_simple_builder :niente
 
           def _direction_type_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<wedge type=\"#{@type}\" #{decode_bool_or_string_attribute(@niente, 'niente', 'yes', 'no')} />"
+            io.puts "#{tabs}<wedge type=\"#{@type}\" #{decode_bool_or_string_attribute(@niente, 'niente', 'yes')} />"
           end
         end
 
@@ -257,7 +257,7 @@ module Musa
           attr_simple_builder :size
 
           def _direction_type_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<octave-shift type=\"#{@type}\" #{decode_bool_or_string_attribute(@size, 'size')} />"
+            io.puts "#{tabs}<octave-shift type=\"#{@type}\" #{decode_bool_or_string_attribute(@size&.to_i, 'size')} />"
           end
         end
 

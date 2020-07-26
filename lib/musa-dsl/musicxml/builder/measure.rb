@@ -122,7 +122,7 @@ module Musa
             direction(placement: placement, offset: offset) { octave_shift *p, **kp, &b } }
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<measure number=\"#{@number}\">"
+            io.puts "#{tabs}<measure number=\"#{@number.to_i}\">"
 
             @elements.each do |element|
               element.to_xml(io, indent: indent + 1)

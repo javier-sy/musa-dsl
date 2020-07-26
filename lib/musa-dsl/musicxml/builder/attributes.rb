@@ -26,10 +26,10 @@ module Musa
 
             tabs = "\t" * indent
 
-            io.puts "#{tabs}<key#{" number=\"#{@number}\"" if @number}>"
+            io.puts "#{tabs}<key#{" number=\"#{@number.to_i}\"" if @number}>"
 
             io.puts "#{tabs}\t<cancel>#{@cancel}</cancel>" if @cancel
-            io.puts "#{tabs}\t<fifths>#{@fifths}</fifths>"
+            io.puts "#{tabs}\t<fifths>#{@fifths.to_i}</fifths>"
             io.puts "#{tabs}\t<mode>#{@mode}</mode>"
 
             io.puts "#{tabs}</key>"
@@ -59,12 +59,12 @@ module Musa
           end
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<time#{" number=\"#{@number}\"" if @number}>"
+            io.puts "#{tabs}<time#{" number=\"#{@number.to_i}\"" if @number}>"
 
             io.puts "#{tabs}\t<senza-misura>#{@senza_misura}</senza-misura>" if @senza_misura
             @beats.each do |beats|
-              io.puts "#{tabs}\t<beats>#{beats[:beats]}</beats>"
-              io.puts "#{tabs}\t<beat-type>#{beats[:beat_type]}</beat-type>"
+              io.puts "#{tabs}\t<beats>#{beats[:beats].to_i}</beats>"
+              io.puts "#{tabs}\t<beat-type>#{beats[:beat_type].to_i}</beat-type>"
             end
 
             io.puts "#{tabs}</time>"
@@ -85,11 +85,11 @@ module Musa
           attr_accessor :sign, :line, :octave_change
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<clef#{" number=\"#{@number}\"" if @number}>"
+            io.puts "#{tabs}<clef#{" number=\"#{@number.to_i}\"" if @number}>"
 
             io.puts "#{tabs}\t<sign>#{@sign}</sign>"
-            io.puts "#{tabs}\t<line>#{@line}</line>" if @line
-            io.puts "#{tabs}\t<clef-octave-change>#{@octave_change}</clef-octave-change>" if @octave_change
+            io.puts "#{tabs}\t<line>#{@line.to_i}</line>" if @line
+            io.puts "#{tabs}\t<clef-octave-change>#{@octave_change.to_i}</clef-octave-change>" if @octave_change
 
             io.puts "#{tabs}</clef>"
           end
@@ -129,7 +129,7 @@ module Musa
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<attributes>"
 
-            io.puts "#{tabs}\t<divisions>#{@divisions}</divisions>" if @divisions
+            io.puts "#{tabs}\t<divisions>#{@divisions.to_i}</divisions>" if @divisions
 
             @keys.each do |key|
               key.to_xml(io, indent: indent + 1)

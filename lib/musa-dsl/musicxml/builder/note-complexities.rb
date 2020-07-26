@@ -24,8 +24,8 @@ module Musa
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<time-modification>"
 
-            io.puts "#{tabs}\t<actual-notes>#{@actual_notes}</actual-notes>"
-            io.puts "#{tabs}\t<normal-notes>#{@normal_notes}</normal-notes>"
+            io.puts "#{tabs}\t<actual-notes>#{@actual_notes.to_i}</actual-notes>"
+            io.puts "#{tabs}\t<normal-notes>#{@normal_notes.to_i}</normal-notes>"
             io.puts "#{tabs}\t<normal-type>#{@normal_type}</normal-type>" if @normal_type
             @normal_dots&.times do
               io.puts "#{tabs}\t<normal-dot />"
@@ -70,7 +70,7 @@ module Musa
 
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<tuplet type=\"#{@type}\" " \
-          "#{decode_bool_or_string_attribute(@number, 'number')} " \
+          "#{decode_bool_or_string_attribute(@number&.to_i, 'number')} " \
           "#{decode_bool_or_string_attribute(@bracket, 'bracket', 'yes', 'no')} " \
           "#{decode_bool_or_string_attribute(@show_number, 'show-number')} " \
           "#{decode_bool_or_string_attribute(@show_type, 'show-type')} " \
@@ -79,7 +79,7 @@ module Musa
             if @actual_number || @actual_type || @actual_dots
               io.puts "#{tabs}\t<tuplet-actual>"
 
-              io.puts "#{tabs}\t\t<tuplet-number>#{@actual_number}</tuplet-number>" if @actual_number
+              io.puts "#{tabs}\t\t<tuplet-number>#{@actual_number.to_i}</tuplet-number>" if @actual_number
               io.puts "#{tabs}\t\t<tuplet-type>#{@actual_type}</tuplet-type>" if @actual_type
 
               @actual_dots&.times do
@@ -92,7 +92,7 @@ module Musa
             if @normal_number || @normal_type || @normal_dots
               io.puts "#{tabs}\t<tuplet-normal>"
 
-              io.puts "#{tabs}\t\t<tuplet-number>#{@normal_number}</tuplet-number>" if @normal_number
+              io.puts "#{tabs}\t\t<tuplet-number>#{@normal_number.to_i}</tuplet-number>" if @normal_number
               io.puts "#{tabs}\t\t<tuplet-type>#{@normal_type}</tuplet-type>" if @normal_type
 
               @normal_dots&.times do

@@ -3,7 +3,7 @@ require 'prime'
 module Musa::Datasets::Score::ToMXML
   private
 
-  def process_pdv(measure, divisions_per_bar, bar, element, pointer)
+  def process_pdv(measure, bar, divisions_per_bar, element, pointer)
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
     continue_from_previous_bar = element[:start] < bar
@@ -24,6 +24,13 @@ module Musa::Datasets::Score::ToMXML
 
       measure.add_backup(duration_to_go_back * divisions_per_bar)
       pointer -= duration_to_go_back
+
+    elsif pointer < effective_start
+      pointer = process_pdv(measure, bar, divisions_per_bar,
+                            { start: bar,
+                              finish: bar + effective_start,
+                              dataset: { pitch: :silence, duration: effective_start - pointer }.extend(PDV) },
+                            pointer)
     end
 
     # TODO generalize articulations and other musicxml elements
@@ -97,9 +104,11 @@ module Musa::Datasets::Score::ToMXML
                           voice: element[:dataset][:voice]
       end
 
-      pointer += duration unless element[:dataset][:grace]
       last_duration = duration
+      pointer += duration unless element[:dataset][:grace]
     end
+
+    pointer
   end
 
   def pitch_and_octave_and_sharps(pdv)
@@ -126,7 +135,7 @@ module Musa::Datasets::Score::ToMXML
     # ppp = 16 ... fff = 127
     # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
     dynamics_number = [0..0, 1..1, 2..8, 9..16, 17..33, 34..49, 49..64, 65..80, 81..96, 97..112, 113..127]
-                          .index { |r| r.cover? midi_velocity }
+                          .index { |r| r.cover? midi_velocity.round.to_i }
 
     ['pppppp', 'ppppp', 'pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][dynamics_number]
   end

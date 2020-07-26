@@ -51,8 +51,6 @@ RSpec.describe Musa::MusicXML::Builder do
         rights lyrics: "Javier S."
       end
 
-      # File.open(File.dirname(__FILE__), "musicxml_1_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
-
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_1_spec.musicxml")).strip
     end
 
@@ -246,8 +244,6 @@ RSpec.describe Musa::MusicXML::Builder do
           end
         end
       end
-
-      # File.open(File.dirname(__FILE__), "musicxml_2_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
 
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_2_spec.musicxml")).strip
     end
@@ -478,6 +474,96 @@ RSpec.describe Musa::MusicXML::Builder do
         expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_4_spec.musicxml")).strip
     end
 
+    it 'Score with some simple notes and crescendo from niente and from' do
+      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+                                work_title: "Crescendo with/without niente attribute",
+                                encoding_date: DateTime.new(2020, 7, 23) do
 
+        part :p1, name: "Piano", abbreviation: "p." do
+          measure do
+            attributes do
+              divisions 16
+
+              key 1, fifths: 0
+              clef 1, sign: 'G', line: 2
+              time 1, beats: 4, beat_type: 4
+
+              key 2, fifths: 0
+              clef 2, sign: 'F', line: 4
+              time 2, beats: 4, beat_type: 4
+            end
+
+            metronome beat_unit: 'quarter', per_minute: 90
+
+            direction do
+              dynamics 'pp'
+              wedge 'crescendo', niente: false
+            end
+
+            pitch 'D', octave: 4, duration: 16, type: 'quarter'
+            pitch 'E', octave: 4, duration: 16, type: 'quarter'
+            pitch 'F', octave: 4, duration: 16, type: 'quarter'
+            pitch 'G', octave: 4, duration: 16, type: 'quarter'
+
+            direction do
+              wedge 'stop', niente: false
+              dynamics 'ff'
+            end
+          end
+
+          measure do
+            rest type: 'whole', duration: 64
+          end
+
+          measure do
+            direction do
+              dynamics 'pp'
+              wedge 'crescendo', niente: true
+            end
+
+            pitch 'D', octave: 4, duration: 16, type: 'quarter'
+            pitch 'E', octave: 4, duration: 16, type: 'quarter'
+            pitch 'F', octave: 4, duration: 16, type: 'quarter'
+            pitch 'G', octave: 4, duration: 16, type: 'quarter'
+
+            direction do
+              wedge 'stop'
+              dynamics 'ff'
+            end
+
+          end
+
+          measure do
+            rest type: 'whole', duration: 64
+          end
+
+          measure do
+            direction do
+              dynamics 'pp'
+              wedge 'crescendo'
+            end
+
+            pitch 'D', octave: 4, duration: 16, type: 'quarter'
+            pitch 'E', octave: 4, duration: 16, type: 'quarter'
+            pitch 'F', octave: 4, duration: 16, type: 'quarter'
+            pitch 'G', octave: 4, duration: 16, type: 'quarter'
+
+            direction do
+              wedge 'stop'
+              dynamics 'ff'
+            end
+          end
+
+          measure do
+            rest type: 'whole', duration: 64
+          end
+
+        end
+      end
+
+      # File.open(File.join(File.dirname(__FILE__), "musicxml_5_spec.musicxml"), 'w') { |f| f.write(score.to_xml.string) }
+
+      expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_5_spec.musicxml")).strip
+    end
   end
 end

@@ -116,7 +116,7 @@ module Musa
             io.puts "#{tabs}<pitch>"
             io.puts "#{tabs}\t<step>#{@step}</step>"
             io.puts "#{tabs}\t<alter>#{@alter}</alter>" if @alter
-            io.puts "#{tabs}\t<octave>#{@octave}</octave>"
+            io.puts "#{tabs}\t<octave>#{@octave.to_i}</octave>"
             io.puts "#{tabs}</pitch>"
           end
         end

@@ -381,7 +381,7 @@ module Musa
 
             @notehead&.to_xml(io, indent: indent + 1)
 
-            io.puts "#{tabs}\t<staff>#{@staff}</staff>" if @staff
+            io.puts "#{tabs}\t<staff>#{@staff.to_i}</staff>" if @staff
 
             if _notations
               io.puts "#{tabs}\t<notations>"
