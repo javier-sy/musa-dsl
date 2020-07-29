@@ -321,12 +321,39 @@ module Musa
 
         raise ArgumentError, "Cannot use duration: #{duration} and till: #{till} parameters at the same time. Use only one of them." if till && duration
         raise ArgumentError, "Invalid use: 'function:' parameter is incompatible with 'step:' parameter" if function && step
-        raise ArgumentError, "Invalid use: 'function:' parameter needs 'to:' parameter not nil" if function && !to
+        raise ArgumentError, "Invalid use: 'function:' parameter needs 'to:' parameter to be not nil" if function && !to
 
         array_mode = from.is_a?(Array)
+        hash_mode = from.is_a?(Hash)
 
-        from = from.arrayfy
-        size = from.size
+        if array_mode
+          from = from.arrayfy
+          size = from.size
+
+        elsif hash_mode
+          hash_keys = from.keys
+          from = from.values
+          size = from.size
+
+          if every.is_a?(Hash)
+            every = hash_keys.collect { |k| every[k] }
+            raise ArgumentError, "Invalid use: 'every:' parameter should contain the same keys as 'from:' Hash" unless every.all? { |_| _ }
+          end
+
+          if to.is_a?(Hash)
+            to = hash_keys.collect { |k| to[k] }
+            raise ArgumentError, "Invalid use: 'to:' parameter should contain the same keys as 'from:' Hash" unless to.all? { |_| _ }
+          end
+
+          if step.is_a?(Hash)
+            step = hash_keys.collect { |k| step[k] }
+            raise ArgumentError, "Invalid use: 'step:' parameter should contain the same keys as 'from:' Hash" unless step.all? { |_| _ }
+          end
+
+        else
+          from = from.arrayfy
+          size = from.size
+        end
 
         every = every.arrayfy(size: size)
         to = to.arrayfy(size: size)
@@ -470,9 +497,16 @@ module Musa
 
                 value_parameters, key_parameters =
                   if array_mode
-                    binder.apply(effective_values, effective_next_values, control: control, duration: every_group, right_open: right_open)
+                    binder.apply(effective_values, effective_next_values,
+                                 control: control, duration: every_group, right_open: right_open)
+                  elsif hash_mode
+                    binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
+                                 _hash_from_keys_and_values(hash_keys, effective_next_values),
+                                 control: control, duration: every_group, right_open: right_open)
                   else
-                    binder.apply(effective_values.first, effective_next_values.first, control: control, duration: every_group, right_open: right_open)
+                    binder.apply(effective_values.first,
+                                 effective_next_values.first,
+                                 control: control, duration: every_group, right_open: right_open)
                   end
 
                 yield *value_parameters, **key_parameters
@@ -488,6 +522,10 @@ module Musa
         @event_handlers.pop
 
         control
+      end
+
+      def _hash_from_keys_and_values(keys, values)
+        {}.tap { |h| keys.each_index { |i| h[keys[i]] = values[i] } }
       end
 
       def _rescue_error(e)
