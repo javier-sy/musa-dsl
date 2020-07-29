@@ -61,6 +61,8 @@ module Musa::Datasets::Score::ToMXML
     puts "fill_part: finish = #{finish.to_f.round(3)}"
 
 
+    dynamics_context = nil
+
     (1..finish || 0).each do |bar|
       measure = part.add_measure if measure
       measure ||= part.measures.last
@@ -72,7 +74,7 @@ module Musa::Datasets::Score::ToMXML
       bar_elements = \
         (instrument_score.changes_between(bar, bar + 1).select { |p| p[:dataset].is_a?(PS) } +
           (pdvs = instrument_score.between(bar, bar + 1).select { |p| p[:dataset].is_a?(PDV) }))
-        .sort_by { |element| element[:time] || element[:start] }
+        .sort_by { |element| element[:time_in_interval] || element[:start_in_interval] }
 
 
       bar_elements.each do |element|
@@ -81,7 +83,7 @@ module Musa::Datasets::Score::ToMXML
           pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer)
 
         when PS
-          process_ps(measure, divisions_per_bar, element)
+          dynamics_context = process_ps(measure, element, dynamics_context)
         else
           # ignored
         end

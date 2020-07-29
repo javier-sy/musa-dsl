@@ -41,96 +41,68 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
     line.to_p(0).each do |p|
       _.play p.to_ps_serie do |_, thing|
 
-        puts "thing = #{thing}"
-
         from = Packed.new(*thing[:from])
         to = Packed.new(*thing[:to])
+
         duration = thing[:duration]
+        right_open = thing[:right_open]
 
-        instruments = nil
-        base_pitch = nil
-        intensity = next_intensity = nil
-        last_intensity = []
+        q_duration = quantize(duration, ticks_per_bar)
 
-        if from.instrument == to.instrument
-          if from.intensity != to.intensity
-            puts "a... _.position  = #{_.position.to_f.round(3)} duration = #{duration}"
-            score.at _.position,
-                     add: { instrument: instrument_number_to_symbol(from.instrument),
-                            type: to.intensity > from.intensity ? :crescendo : :diminuendo,
-                            from: from.intensity,
-                            to: to.intensity,
-                            duration: quantize(duration, ticks_per_bar) }.extend(PS)
+        intensity_changes = from.intensity != to.intensity
+        instrument_changes = from.instrument != to.instrument
+        pitch_changes = from.pitch != to.pitch
 
-          elsif from.intensity != last_intensity[from.intensity]
-            # cuidado: debería ser un AbsI más que un PS
-            puts "b... _.position  = #{_.position.to_f.round(3)} duration = #{duration}"
-            score.at _.position,
-                     add: { instrument: instrument_number_to_symbol(from.instrument),
-                            type: :crescendo,
-                            from: from.intensity,
-                            to: nil,
-                            duration: quantize(duration, ticks_per_bar) }.extend(PS)
-          end
-        end
+        puts "#{_.position.to_f.round(3)} intensity_changes = #{intensity_changes}"
+        puts "#{_.position.to_f.round(3)} instrument_changes = #{instrument_changes}"
+        puts "#{_.position.to_f.round(3)} pitch_changes = #{pitch_changes}"
 
-        _.move from: from.intensity, to: to.intensity, duration: duration do
-        |intensity_, next_intensity_, duration:|
 
-          intensity = intensity_
-          next_intensity = next_intensity_
-        end
+        if !instrument_changes
+          instrument_symbol = instrument_number_to_symbol(from.instrument)
 
-        _.move from: from.instrument, to: to.instrument, duration: duration do
-        |instrument, next_instrument|
+          render_dynamics from.intensity, to.intensity, q_duration, score: score, instrument: instrument_symbol, position: _.position
 
-          instruments = decode_instrument(instrument)
-          next_instruments = decode_instrument(next_instrument) if next_instrument
-          next_instruments ||= []
-
-          if instruments.size == 1 && next_instruments.size == 2
-            puts "#{_.position.to_f.round(3)} cambio de instrumentos: #{instruments} -> #{next_instruments} duration = #{duration}"
-            instrument = instrument_number_to_symbol((next_instruments.keys - instruments.keys).first)
-            score.at _.position,
-                     add: { instrument: instrument,
-                           type: :crescendo,
-                           from: intensity * (instruments[instrument] || 0),
-                           to: next_intensity * (next_instruments[instrument] || 0),
-                           duration: quantize(duration, ticks_per_bar) }.extend(PS)
-
-          elsif instruments.size == 2 && next_instruments.size == 1
-            puts "#{_.position.to_f.round(3)} cambio de instrumentos: #{instruments} -> #{next_instruments} duration = #{duration}"
-            instrument = instrument_number_to_symbol((next_instruments.keys - instruments.keys).first)
-            score.at _.position,
-                      add: { instrument: instrument,
-                             type: :diminuendo,
-                             from: intensity * (instruments[instrument] || 0),
-                             to: next_intensity * (next_instruments[instrument] || 0),
-                             duration: quantize(duration, ticks_per_bar) }.extend(PS)
+          if !pitch_changes
+            render_pitch from.pitch, q_duration, score: score, instrument: instrument_symbol, position: _.position
           else
-            # ignore intermediate steps
+            _.move from: from.pitch, to: to.pitch, duration: q_duration, step: 1r do |_, pitch_, duration:|
+              render_pitch pitch_, quantize(duration, ticks_per_bar), score: score, instrument: instrument_symbol, position: _.position
+            end
           end
+        else
+          if !pitch_changes && !intensity_changes
+            last_note = nil
 
-          # cuidado: los instrumentos en una transición NO comparten la misma intensity
-          instruments.each_key do |instrument|
-            last_intensity[instrument] = intensity
+            _.move from: from.instrument, to: to.instrument, duration: q_duration, step: 1, right_open: true do
+            |_, from_instrument, to_instrument, duration:|
+
+              if to_instrument
+                q_duration = quantize(duration, ticks_per_bar)
+                from_instrument_symbol = instrument_number_to_symbol(from_instrument)
+                to_instrument_symbol = instrument_number_to_symbol(to_instrument)
+
+                render_dynamics from.intensity, 0, q_duration,
+                                score: score, instrument: from_instrument_symbol, position: _.position
+
+                render_dynamics 0, from.intensity, q_duration,
+                                score: score, instrument: to_instrument_symbol, position: _.position
+
+                if last_note &&
+                    last_note[:instrument] == from_instrument_symbol &&
+                    last_note[:pitch] == from.pitch
+
+                  last_note[:duration] += q_duration
+                else
+                  render_pitch from.pitch, q_duration, score: score, instrument: from_instrument_symbol, position: _.position
+                end
+
+                last_note = render_pitch from.pitch, q_duration, score: score, instrument: to_instrument_symbol, position: _.position
+              end
+            end
           end
 
         end
-
-        _.move from: from.pitch, to: to.pitch, duration: duration, step: 1 do
-        |_, pitch, next_pitch, duration:|
-
-          base_pitch = pitch
-
-          instruments.each_key do |instrument|
-            puts "pitch... _.position  = #{_.position.to_f.round(3)} duration = #{duration}"
-            score.at _.position, add: { instrument: instrument_number_to_symbol(instrument),
-                                        pitch: pitch,
-                                        duration: quantize(duration, ticks_per_bar) }.extend(PDV)
-          end
-        end
-
       end
     end
   end
@@ -151,5 +123,6 @@ mxml = score.to_mxml(beats_per_bar, ticks_per_beat,
                      } )
 
 File.open(File.join(File.dirname(__FILE__), "multidim_sample.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
+
 
 

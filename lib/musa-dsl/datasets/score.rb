@@ -59,8 +59,19 @@ module Musa::Datasets
                         i[:start] < open_interval_finish && i[:finish] >= open_interval_finish ||
                         i[:start] >= closed_interval_start && i[:finish] < open_interval_finish }
           .sort_by { |i| i[:start] }
-          .collect { |i| { start: i[:start], finish: i[:finish], dataset: i[:dataset] } }.extend(QueryableByDataset)
+          .collect { |i| { start: i[:start],
+                           finish: i[:finish],
+                           start_in_interval: i[:start] > closed_interval_start ? i[:start] : closed_interval_start,
+                           finish_in_interval: i[:finish] < open_interval_finish ? i[:finish] : open_interval_finish,
+                           dataset: i[:dataset] } }.extend(QueryableByDataset)
     end
+
+
+
+
+    # hay que implementar un effective_start y effective_finish con el inicio/fin dentro del bar, no absoluto
+
+
 
     def changes_between(closed_interval_start, open_interval_finish)
       ( @indexer
@@ -70,9 +81,17 @@ module Musa::Datasets
           .select { |i| i[:finish] >= closed_interval_start && i[:finish] < open_interval_finish }
           .collect { |i| i.clone.merge({ change: :finish, time: i[:finish] }) } )
         .sort_by { |i| i[:time] }
-        .collect { |i| { change: i[:change], time: i[:time],
+        .collect { |i| { change: i[:change],
+                         time: i[:time],
                          start: i[:start],
                          finish: i[:finish],
+                         start_in_interval: i[:start] > closed_interval_start ? i[:start] : closed_interval_start,
+                         finish_in_interval: i[:finish] < open_interval_finish ? i[:finish] : open_interval_finish,
+                         time_in_interval: if i[:time] < closed_interval_start
+                                             closed_interval_start
+                                           else
+                                             i[:time] > open_interval_finish ? open_interval_finish : i[:time]
+                                           end,
                          dataset: i[:dataset] } }.extend(QueryableByDataset)
     end
 

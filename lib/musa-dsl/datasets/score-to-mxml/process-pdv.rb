@@ -16,8 +16,10 @@ module Musa::Datasets::Score::ToMXML
                              (element[:start] + element[:dataset][:duration] - (bar + effective_start))
 
     effective_duration_decomposition = \
-        integrate_as_dotteable_durations(
+      integrate_as_dotteable_durations(
         decompose_as_sum_of_simple_durations(effective_duration))
+
+    # puts "process_pdv: pitch = #{element[:dataset][:pitch]} decomposition = #{effective_duration_decomposition}"
 
     if pointer > effective_start
       duration_to_go_back = (pointer - effective_start)
@@ -52,6 +54,8 @@ module Musa::Datasets::Score::ToMXML
       duration = effective_duration_decomposition.shift
 
       type, dots, tuplet_ratio = type_and_dots_and_tuplet_ratio(duration)
+
+      # puts "process_pdv:   t = #{type} d = #{dots} tr = #{tuplet_ratio}"
 
       raise NotImplementedError,
             "Found irregular time (tuplet ratio #{tuplet_ratio}) on element #{element}. " \

@@ -1,37 +1,53 @@
 module Musa::Datasets::Score::ToMXML
   private
 
-  def process_ps(measure, divisions_per_bar, element)
-    puts "process_ps: element = #{element}"
+
+  DynamicsContext = Struct.new(:last_dynamics)
+  private_constant :DynamicsContext
+
+  def process_ps(measure, element, context = nil)
+    context ||= DynamicsContext.new
+
     case element[:dataset][:type]
     when :crescendo, :diminuendo
       if element[:change] == :start
-        measure.add_dynamics midi_velocity_to_dynamics(element[:dataset][:from]),
-                             placement: 'below' \
-                unless element[:dataset][:from].nil? || element[:dataset][:from] == 0
+        dynamics = midi_velocity_to_dynamics(element[:dataset][:from])
 
-        if element[:dataset][:from] && element[:dataset][:to] && element[:dataset][:from] != element[:dataset][:to]
+        if dynamics != context.last_dynamics
+          measure.add_dynamics dynamics, placement: 'below' unless element[:dataset][:from] == 0
+          context.last_dynamics = dynamics
+        end
+
+        if element[:dataset][:from] && element[:dataset][:to]
           measure.add_wedge element[:dataset][:type],
-                          niente: element[:dataset][:type] == :crescendo && element[:dataset][:from] == 0,
-                          offset: divisions_per_bar / 4,
-                          placement: 'below'
+                            niente: element[:dataset][:type] == :crescendo && element[:dataset][:from] == 0,
+                            placement: 'below'
         end
       else
-        if element[:dataset][:from] && element[:dataset][:to] && element[:dataset][:from] != element[:dataset][:to]
+        if element[:dataset][:from] && element[:dataset][:to]
           measure.add_wedge 'stop',
                             niente: element[:dataset][:type] == :diminuendo && element[:dataset][:to] == 0,
-                            offset: -divisions_per_bar / 4,
                             placement: 'below'
         end
 
-        measure.add_dynamics midi_velocity_to_dynamics(element[:dataset][:to]),
-                             placement: 'below' \
-                unless element[:dataset][:to].nil? || element[:dataset][:to] == 0
+        dynamics = midi_velocity_to_dynamics(element[:dataset][:to])
+
+        measure.add_dynamics dynamics, placement: 'below' unless element[:dataset][:to] == 0
+
+        context.last_dynamics = dynamics
       end
 
-      # TODO añadir dinámicas a nivel de nota
+    when :dynamics
+      if dynamics != context.last_dynamics
+        measure.add_dynamics midi_velocity_to_dynamics(element[:dataset][:from]), placement: 'below'
+        context.last_dynamics = dynamics
+      end
+
     else
       # ignored
     end
+
+    context
   end
+
 end
