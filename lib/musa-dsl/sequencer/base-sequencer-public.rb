@@ -213,13 +213,14 @@ module Musa
               **parameters[:mode_args]
       end
 
-      def every(binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-        binterval = binterval.rationalize
+      def every(interval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+        # nil interval means 'only once'
+        interval = interval.rationalize unless interval.nil?
 
         control = EveryControl.new @event_handlers.last, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
         @event_handlers.push control
 
-        _every binterval, control, &block
+        _every interval, control, &block
 
         @event_handlers.pop
 

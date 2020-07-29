@@ -7,7 +7,6 @@ include Musa::Sequencer
 
 RSpec.describe Musa::Sequencer do
   context 'Basic sequencing' do
-
     it 'Basic at sequencing' do
       s = BaseSequencer.new 4, 4
 
@@ -163,6 +162,48 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(1)
       expect(d).to eq(100)
       expect(e).to eq(0)
+    end
+
+    it 'Basic every sequencing with nil every (should be like an at)' do
+      s = BaseSequencer.new 4, 4
+
+      c = 0
+
+      s.at 1 do
+        s.every nil do
+          c += 1
+        end
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(1)
     end
 
     it 'Basic every sequencing' do

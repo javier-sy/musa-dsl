@@ -287,7 +287,7 @@ module Musa
         nil
       end
 
-      def _every(binterval, control, block_procedure_binder: nil, &block)
+      def _every(interval, control, block_procedure_binder: nil, &block)
         block ||= proc {}
 
         block_procedure_binder ||= SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
@@ -295,21 +295,22 @@ module Musa
         _numeric_at position, control do
           control._start ||= position
 
-          duration_exceeded = (control._start + control.duration_value - binterval) <= position if control.duration_value
-          till_exceeded = control.till_value - binterval <= position if control.till_value
+          duration_exceeded = (control._start + control.duration_value - interval) <= position if interval && control.duration_value
+          till_exceeded = control.till_value - interval <= position if interval && control.till_value
+
           condition_failed = !control.condition_block.call if control.condition_block
 
           block_procedure_binder.call(control: control) unless control.stopped? || condition_failed || till_exceeded
 
-          unless control.stopped? || duration_exceeded || till_exceeded || condition_failed
-            _numeric_at position + binterval, control do
-              _every binterval, control, block_procedure_binder: block_procedure_binder
+          unless control.stopped? || duration_exceeded || till_exceeded || condition_failed || interval.nil?
+            _numeric_at position + interval, control do
+              _every interval, control, block_procedure_binder: block_procedure_binder
             end
           else
             control.do_on_stop.each(&:call)
 
             control.do_after.each do |do_after|
-              _numeric_at position + binterval + do_after[:bars], control, &do_after[:block]
+              _numeric_at position + (interval || 0) + do_after[:bars], control, &do_after[:block]
             end
           end
         end
@@ -387,7 +388,13 @@ module Musa
           size.times do |i|
             if to[i] && step[i] && !every[i]
               steps = (to[i] - from[i]) / step[i]
-              every[i] = Rational(effective_duration, steps + right_open_offset)
+
+              # When to == from don't need to do any iteration with every
+              if steps + right_open_offset > 0
+                every[i] = Rational(effective_duration, steps + right_open_offset)
+              else
+                every[i] = nil
+              end
 
             elsif to[i] && !step[i] && !every[i]
               function_range[i] = to[i] - from[i]

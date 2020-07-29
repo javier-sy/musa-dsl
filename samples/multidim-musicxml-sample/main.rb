@@ -71,11 +71,18 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
             end
           end
         else
-          if !pitch_changes && !intensity_changes
+          if !intensity_changes
             last_note = nil
 
-            _.move from: from.instrument, to: to.instrument, duration: q_duration, step: 1, right_open: true do
-            |_, from_instrument, to_instrument, duration:|
+            _.move from: { instrument: from.instrument, pitch: from.pitch },
+                   to: { instrument: to.instrument, pitch: to.pitch },
+                   duration: q_duration, step: 1, right_open: true do
+            |_, value, next_value, duration:|
+
+              from_instrument = value[:instrument]
+              to_instrument = next_value[:instrument]
+
+              pitch = value[:pitch]
 
               if to_instrument
                 q_duration = quantize(duration, ticks_per_bar)
@@ -94,10 +101,10 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
 
                   last_note[:duration] += q_duration
                 else
-                  render_pitch from.pitch, q_duration, score: score, instrument: from_instrument_symbol, position: _.position
+                  render_pitch pitch, q_duration, score: score, instrument: from_instrument_symbol, position: _.position
                 end
 
-                last_note = render_pitch from.pitch, q_duration, score: score, instrument: to_instrument_symbol, position: _.position
+                last_note = render_pitch pitch, q_duration, score: score, instrument: to_instrument_symbol, position: _.position
               end
             end
           end
