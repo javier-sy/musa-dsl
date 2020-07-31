@@ -26,7 +26,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq({a: 1, b: 2, c: 3})
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -91,7 +90,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq({a: 1, b: 2, c: 3})
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -156,7 +154,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq([1, 2, 3])
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -203,7 +200,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, step, every, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -221,7 +218,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq([1, 2, 3])
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -268,7 +264,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -291,7 +287,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 1
 
           tests_passed += 1
 
@@ -325,7 +320,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0, 0]
       move_control = nil
@@ -348,7 +343,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3, 1])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 3
 
           tests_passed += 1
 

@@ -62,11 +62,11 @@ module Musa
 
           def decode_bool_or_string_attribute(value, attribute, true_value = nil, false_value = nil)
             if value.is_a?(String) || value.is_a?(Numeric)
-              "#{attribute}=\"#{value}\""
+              " #{attribute}=\"#{value}\""
             elsif value.is_a?(TrueClass) && true_value
-              "#{attribute}=\"#{true_value}\""
+              " #{attribute}=\"#{true_value}\""
             elsif value.is_a?(FalseClass) && false_value
-              "#{attribute}=\"#{false_value}\""
+              " #{attribute}=\"#{false_value}\""
             else
               ''
             end

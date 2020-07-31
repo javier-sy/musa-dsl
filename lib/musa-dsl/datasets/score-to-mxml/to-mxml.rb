@@ -13,6 +13,7 @@ module Musa::Datasets::Score::ToMXML
               bpm: nil,
               title: nil,
               creators: nil,
+              encoding_date: nil,
               parts:)
 
     bpm ||= 90
@@ -22,6 +23,7 @@ module Musa::Datasets::Score::ToMXML
     mxml = ScorePartwise.new do |_|
       _.work_title title
       _.creators creators
+      _.encoding_date encoding_date if encoding_date
 
       parts.each_pair do |id, part_info|
         _.part id,
@@ -57,10 +59,6 @@ module Musa::Datasets::Score::ToMXML
 
   def fill_part(part, divisions_per_bar, instrument = nil)
     measure = nil
-
-    puts "fill_part: finish = #{finish.to_f.round(3)}"
-
-
     dynamics_context = nil
 
     (1..finish || 0).each do |bar|

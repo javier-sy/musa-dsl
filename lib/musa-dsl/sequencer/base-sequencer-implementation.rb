@@ -16,8 +16,7 @@ module Musa
       private
 
       def _tick
-
-        position_to_run = @position_mutex.synchronize { @position += 1 }
+        position_to_run = @position_mutex.synchronize { @ticks_position += 1 }
 
         @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
 
@@ -58,46 +57,46 @@ module Musa
         @hold_public_ticks = false
       end
 
-      def _raw_numeric_at(bar_position, force_first: nil, &block)
+      def _raw_numeric_at(at_position, force_first: nil, &block)
         force_first ||= false
 
-        position = bar_position.rationalize * @ticks_per_bar
+        ticks_position = at_position.rationalize * @ticks_per_bar
 
-        if position == @position
+        if ticks_position == @ticks_position
           begin
             yield
           rescue StandardError, ScriptError => e
             _rescue_error e
           end
 
-        elsif position > @position
-          @timeslots[position] ||= []
+        elsif ticks_position > @ticks_position
+          @timeslots[ticks_position] ||= []
 
           value = { block: block, value_parameters: [], key_parameters: {} }
           if force_first
-            @timeslots[position].insert 0, value
+            @timeslots[ticks_position].insert 0, value
           else
-            @timeslots[position] << value
+            @timeslots[ticks_position] << value
           end
         else
-          _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
+          _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(ticks_position, @ticks_per_bar)}" if @do_log
         end
 
         nil
       end
 
-      def _numeric_at(bar_position, control, with: nil, debug: nil, &block)
+      def _numeric_at(at_position, control, with: nil, debug: nil, &block)
         raise ArgumentError, 'Block is mandatory' unless block
 
-        position = bar_position.rationalize * @ticks_per_bar
+        ticks_position = at_position.rationalize * @ticks_per_bar
 
-        if position != position.round
-          original_position = position
-          position = position.round.rationalize
+        if ticks_position != ticks_position.round
+          original_ticks_position = ticks_position
+          ticks_position = ticks_position.round.to_r
 
           if @do_log
-            _log "BaseSequencer._numeric_at: warning: rounding position #{bar_position} (#{original_position}) "\
-          "to tick precision: #{position / @ticks_per_bar} (#{position})"
+            _log "BaseSequencer._numeric_at: warning: rounding position #{at_position} (#{original_ticks_position.to_f.round(2)} ticks) "\
+                  "to tick precision: #{ticks_position / @ticks_per_bar} (#{ticks_position.to_i} ticks)"
           end
         end
 
@@ -113,7 +112,7 @@ module Musa
 
           key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
-          if position == @position
+          if ticks_position == @ticks_position
             @debug_at.call if debug && @debug_at
 
             begin
@@ -123,13 +122,13 @@ module Musa
               @@tick_mutex.unlock if locked
             end
 
-          elsif position > @position
-            @timeslots[position] = [] unless @timeslots[position]
+          elsif ticks_position > @ticks_position
+            @timeslots[ticks_position] ||= []
 
-            @timeslots[position] << {parent_control: control, block: @on_debug_at } if debug && @on_debug_at
-            @timeslots[position] << {parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
+            @timeslots[ticks_position] << {parent_control: control, block: @on_debug_at } if debug && @on_debug_at
+            @timeslots[ticks_position] << {parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
           else
-            _log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(position, @ticks_per_bar)}" if @do_log
+            _log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(ticks_position, @ticks_per_bar)}" if @do_log
           end
         end
 
@@ -293,19 +292,24 @@ module Musa
         block_procedure_binder ||= SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
         _numeric_at position, control do
-          control._start ||= position
+          control._start_position ||= position
+          control._execution_counter ||= 0
 
-          duration_exceeded = (control._start + control.duration_value - interval) <= position if interval && control.duration_value
+          duration_exceeded = (control._start_position + control.duration_value - interval) <= position if interval && control.duration_value
           till_exceeded = control.till_value - interval <= position if interval && control.till_value
 
           condition_failed = !control.condition_block.call if control.condition_block
 
-          block_procedure_binder.call(control: control) unless control.stopped? || condition_failed || till_exceeded
+          unless control.stopped? || condition_failed || till_exceeded
+            block_procedure_binder.call(control: control)
+            control._execution_counter += 1
+          end
 
           unless control.stopped? || duration_exceeded || till_exceeded || condition_failed || interval.nil?
-            _numeric_at position + interval, control do
+            _numeric_at control._start_position + control._execution_counter * interval, control do
               _every interval, control, block_procedure_binder: block_procedure_binder
             end
+
           else
             control.do_on_stop.each(&:call)
 
@@ -442,13 +446,15 @@ module Musa
         binder = SmartProcBinder.new(block)
 
         every_groups = {}
+        group_counter = {}
 
         size.times.each do |i|
           every_groups[every[i]] ||= []
           every_groups[every[i]] << i
+          group_counter[every[i]] = 0
         end
 
-        control = MoveControl.new(@event_handlers.last, every_groups.size,
+        control = MoveControl.new(@event_handlers.last,
                                   duration: duration, till: till,
                                   on_stop: on_stop, after_bars: after_bars, after: after)
 
@@ -463,66 +469,86 @@ module Musa
         _numeric_at start_position, control do
           values = from.dup
           next_values = Array.new(size)
+          last_position = Array.new(size)
 
-          ii = 0
-          last_position = nil
+          first = true
 
-          every_groups.each_pair do |every_group, affected_indexes|
-            iii = ii # to make a local scope with ii external scope value
-            first = true
+          _every _common_interval(every_groups.keys), control.every_control do
+            process_indexes = []
 
-            _every every_group, control.every_controls[ii] do
+            every_groups.each_pair do |group_interval, affected_indexes|
+              group_position = start_position + (group_interval * group_counter[group_interval])
+
+              # We consider a position to be on current tick position when it is inside the interval of one tick
+              # centered on the current tick (current tick +- 1/2 tick duration).
+              # This allow to round the irregularly timed positions due to every intervals not integer
+              # multiple of the tick_duration.
+
+              if group_position >= position - tick_duration && group_position < position + tick_duration
+                process_indexes << affected_indexes
+                group_counter[group_interval] += 1
+              end
+            end
+
+            process_indexes.flatten!
+
+            if process_indexes.any?
               if first
                 first = false
               else
-                i = affected_indexes.first
+                i = process_indexes.first
 
                 if to[i] && (values[i] >= to[i] && step[i].positive? || values[i] <= to[i] && step[i].negative?)
-                  control.every_controls[iii].stop
+                  control.stop
                 else
-                  affected_indexes.each do |i|
+                  process_indexes.each do |i|
                     values[i] += step[i]
                   end
                 end
               end
 
-              affected_indexes.each do |i|
+              process_indexes.each do |i|
                 next_values[i] = values[i] + step[i]
                 if to[i] && (next_values[i] > to[i] && step[i].positive? || next_values[i] < to[i] && step[i].negative?)
                   next_values[i] = nil
                 end
               end
 
-              if position != last_position
-                effective_values = from.clone(freeze: false).map!.with_index do |_, i|
-                  function[i].call(values[i]) * function_range[i] + function_offset[i]
-                end
+              effective_values = from.clone(freeze: false).map!.with_index do |_, i|
+                function[i].call(values[i]) * function_range[i] + function_offset[i]
+              end
 
-                effective_next_values = from.clone(freeze: false).map!.with_index do |_, i|
-                  function[i].call(next_values[i]) * function_range[i] + function_offset[i] unless next_values[i].nil?
-                end
+              effective_next_values = from.clone(freeze: false).map!.with_index do |_, i|
+                function[i].call(next_values[i]) * function_range[i] + function_offset[i] unless next_values[i].nil?
+              end
 
-                value_parameters, key_parameters =
+              value_parameters, key_parameters =
                   if array_mode
                     binder.apply(effective_values, effective_next_values,
-                                 control: control, duration: every_group, right_open: right_open)
+                                 control: control,
+                                 duration: _durations(every_groups),
+                                 start_before: _start_before(last_position, position, process_indexes),
+                                 right_open: right_open)
                   elsif hash_mode
                     binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
                                  _hash_from_keys_and_values(hash_keys, effective_next_values),
-                                 control: control, duration: every_group, right_open: right_open)
+                                 control: control,
+                                 duration: _hash_from_keys_and_values(hash_keys, _durations(every_groups)),
+                                 start_before: _hash_from_keys_and_values(hash_keys, _start_before(last_position, position, process_indexes)),
+                                 right_open: right_open)
                   else
                     binder.apply(effective_values.first,
                                  effective_next_values.first,
-                                 control: control, duration: every_group, right_open: right_open)
+                                 control: control,
+                                 duration: every_groups.keys.first,
+                                 start_before: nil,
+                                 right_open: right_open)
                   end
 
-                yield *value_parameters, **key_parameters
+              yield *value_parameters, **key_parameters
 
-                last_position = position
-              end
-
+              process_indexes.each { |i| last_position[i] = position }
             end
-            ii += 1
           end
         end
 
@@ -531,8 +557,38 @@ module Musa
         control
       end
 
+      def _start_before(last_positions, position, affected_indexes)
+        Array.new(last_positions.size).tap do |a|
+          last_positions.each_index do |i|
+            if last_positions[i] && !affected_indexes.include?(i)
+              a[i] = last_positions[i] - position
+            end
+          end
+        end
+      end
+
+      def _durations(every_groups)
+        [].tap do |a|
+          every_groups.each_pair do |every_group, affected_indexes|
+            affected_indexes.each do |i|
+              a[i] = every_group
+            end
+          end
+        end
+      end
+
       def _hash_from_keys_and_values(keys, values)
         {}.tap { |h| keys.each_index { |i| h[keys[i]] = values[i] } }
+      end
+
+      def _common_interval(intervals)
+        #lcm_denominators = intervals.collect(&:denominator).reduce(1, :lcm)
+        #numerators = intervals.collect { |i| i.numerator * lcm_denominators / i.denominator }
+        #gcd_numerators = numerators.reduce(numerators.first, :gcd)
+
+        #Rational(gcd_numerators, lcm_denominators)
+
+        intervals.reduce(1r, :*)
       end
 
       def _rescue_error(e)

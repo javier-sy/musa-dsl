@@ -69,11 +69,11 @@ module Musa
           attr_accessor :normal_number, :normal_type, :normal_dots
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<tuplet type=\"#{@type}\" " \
-          "#{decode_bool_or_string_attribute(@number&.to_i, 'number')} " \
-          "#{decode_bool_or_string_attribute(@bracket, 'bracket', 'yes', 'no')} " \
-          "#{decode_bool_or_string_attribute(@show_number, 'show-number')} " \
-          "#{decode_bool_or_string_attribute(@show_type, 'show-type')} " \
+            io.puts "#{tabs}<tuplet type=\"#{@type}\"" \
+          "#{decode_bool_or_string_attribute(@number&.to_i, 'number')}" \
+          "#{decode_bool_or_string_attribute(@bracket, 'bracket', 'yes', 'no')}" \
+          "#{decode_bool_or_string_attribute(@show_number, 'show-number')}" \
+          "#{decode_bool_or_string_attribute(@show_type, 'show-type')}" \
           ">"
 
             if @actual_number || @actual_type || @actual_dots

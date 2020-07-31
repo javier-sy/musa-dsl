@@ -48,7 +48,7 @@ module Musa
 
         @event_handlers = [EventHandler.new]
 
-        @position = @position_mutex.synchronize { @ticks_per_bar - 1 }
+        @ticks_position = @position_mutex.synchronize { @ticks_per_bar - 1 }
       end
 
       def tick
@@ -96,18 +96,18 @@ module Musa
       end
 
       def position
-        Rational(@position, @ticks_per_bar)
+        Rational(@ticks_position, @ticks_per_bar)
       end
 
-      def position=(bposition)
-        position = bposition * @ticks_per_bar
+      def position=(new_position)
+        new_ticks_position = new_position * @ticks_per_bar
 
-        raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
+        raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@ticks_position} new position: #{new_ticks_position}" if new_ticks_position < @ticks_position
 
         _hold_public_ticks
         @on_fast_forward.each { |block| block.call(true) }
 
-        _tick while @position < position
+        _tick while @ticks_position < new_ticks_position
 
         @on_fast_forward.each { |block| block.call(false) }
         _release_public_ticks

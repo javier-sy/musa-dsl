@@ -138,10 +138,10 @@ RSpec.describe Musa::Datasets::Score do
 
       l = s.between(2, 4)
 
-      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 }, start: 1r, finish: 3.875r },
-                        { dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r },
-                        { dataset: { something: -1, criteria: :b }, start: 3, finish: 3r },
-                        { dataset: { something: 99, criteria: :b, duration: 0.5 }, start: 3.5r, finish: 3.875r } ]
+      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 }, start: 1r, finish: 3.875r, start_in_interval: 2r, finish_in_interval: 3.875r },
+                        { dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r, start_in_interval: 2r, finish_in_interval: 4r  },
+                        { dataset: { something: -1, criteria: :b }, start: 3, finish: 3r, start_in_interval: 3r, finish_in_interval: 3r  },
+                        { dataset: { something: 99, criteria: :b, duration: 0.5 }, start: 3.5r, finish: 3.875r, start_in_interval: 3.5r, finish_in_interval: 3.875r  } ]
     end
 
     it 'manages events_between' do
@@ -157,7 +157,7 @@ RSpec.describe Musa::Datasets::Score do
 
       l = s.changes_between(2, 3)
 
-      expect(l).to eq [ { change: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r } ]
+      expect(l).to eq [ { change: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r, start_in_interval: 2r, finish_in_interval: 3r, time_in_interval: 2r } ]
     end
 
     it 'manages finish' do

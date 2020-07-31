@@ -396,7 +396,7 @@ RSpec.describe Musa::Sequencer do
 
         when 5 - 1/16r
           expect(c).to eq(2)
-          expect(s.moving.size).to eq 0
+          expect(s.moving).to include move_control
 
           tests_passed += 1
 

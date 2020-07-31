@@ -26,7 +26,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq([1, 2, 3])
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -91,7 +90,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq([1, 2, 3])
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -156,7 +154,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq([1, 2, 3])
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -203,7 +200,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, step, every, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -221,7 +218,6 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq([1, 2, 3])
       expect(s.moving).to include move_control
-      expect(move_control.every_controls.size).to eq 1
 
       s.tick
 
@@ -268,7 +264,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right_closed interval values]' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -291,7 +287,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 1
 
           tests_passed += 1
         when 5 - 1/16r
@@ -318,7 +313,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right open interval values]' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -341,7 +336,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 1
 
           tests_passed += 1
         when 5 - 1/16r
@@ -368,7 +362,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -391,7 +385,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 1
 
           tests_passed += 1
 
@@ -403,7 +396,7 @@ RSpec.describe Musa::Sequencer do
 
         when 5 - 1/16r
           expect(c).to eq([2, 3, 4])
-          expect(s.moving.size).to eq 0
+          expect(s.moving).to include move_control
 
           tests_passed += 1
 
@@ -425,7 +418,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -448,7 +441,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 1
 
           tests_passed += 1
 
@@ -476,7 +468,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -499,7 +491,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 1
 
           tests_passed += 1
 
@@ -533,7 +524,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = [0, 0, 0, 0]
       move_control = nil
@@ -556,7 +547,6 @@ RSpec.describe Musa::Sequencer do
         when 1
           expect(c).to eq([1, 2, 3, 1])
           expect(s.moving).to include move_control
-          expect(move_control.every_controls.size).to eq 3
 
           tests_passed += 1
 
@@ -614,6 +604,32 @@ RSpec.describe Musa::Sequencer do
 
       expect(f).to eq([1, 2, 3])
       expect(t).to eq([2, 3, 4])
+    end
+
+    it "Bugfix: parallel move didn't executed yield block with correct value parameters when several partially coincidentals every intervals were needed" do
+      c = {}
+
+      s = Sequencer.new(4, 32) do |_|
+        _.at 1 do
+          _.move from: [0, 60], to: [3, 67], duration: 4, step: 1 do |value, duration:, start_before:|
+            c[_.position] = [value, duration, start_before]
+          end
+        end
+      end
+
+      expect(c.size).to eq 0
+
+      s.run
+
+      expect(c).to eq({
+        1r => [ [0, 60], [1, 1/2r], [nil, nil] ],
+        1.5r => [ [0, 61], [1, 1/2r], [-1/2r, nil] ],
+        2r => [ [1, 62], [1, 1/2r], [nil, nil] ],
+        2.5r => [ [1, 63], [1, 1/2r], [-1/2r, nil] ],
+        3r => [ [2, 64], [1, 1/2r], [nil, nil] ],
+        3.5r => [ [2, 65], [1, 1/2r], [-1/2r, nil] ],
+        4r => [ [3, 66], [1, 1/2r], [nil, nil] ],
+        4.5r => [ [3, 67], [1, 1/2r], [-1/2r, nil] ] })
     end
   end
 end

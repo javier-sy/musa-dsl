@@ -47,7 +47,7 @@
 					<line>4</line>
 				</clef>
 			</attributes>
-			<direction >
+			<direction>
 				<direction-type>
 					<metronome>
 						<beat-unit>quarter</beat-unit>
@@ -55,14 +55,14 @@
 					</metronome>
 				</direction-type>
 			</direction>
-			<direction >
+			<direction>
 				<direction-type>
 					<dynamics>
 						<pp />
 					</dynamics>
 				</direction-type>
 				<direction-type>
-					<wedge type="crescendo" niente="no" />
+					<wedge type="crescendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -97,9 +97,9 @@
 				<duration>16</duration>
 				<type>quarter</type>
 			</note>
-			<direction >
+			<direction>
 				<direction-type>
-					<wedge type="stop" niente="no" />
+					<wedge type="stop"/>
 				</direction-type>
 				<direction-type>
 					<dynamics>
@@ -116,14 +116,14 @@
 			</note>
 		</measure>
 		<measure number="3">
-			<direction >
+			<direction>
 				<direction-type>
 					<dynamics>
 						<pp />
 					</dynamics>
 				</direction-type>
 				<direction-type>
-					<wedge type="crescendo" niente="yes" />
+					<wedge type="crescendo" niente="yes"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -158,9 +158,9 @@
 				<duration>16</duration>
 				<type>quarter</type>
 			</note>
-			<direction >
+			<direction>
 				<direction-type>
-					<wedge type="stop"  />
+					<wedge type="stop"/>
 				</direction-type>
 				<direction-type>
 					<dynamics>
@@ -177,14 +177,14 @@
 			</note>
 		</measure>
 		<measure number="5">
-			<direction >
+			<direction>
 				<direction-type>
 					<dynamics>
 						<pp />
 					</dynamics>
 				</direction-type>
 				<direction-type>
-					<wedge type="crescendo"  />
+					<wedge type="crescendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -219,9 +219,9 @@
 				<duration>16</duration>
 				<type>quarter</type>
 			</note>
-			<direction >
+			<direction>
 				<direction-type>
-					<wedge type="stop"  />
+					<wedge type="stop"/>
 				</direction-type>
 				<direction-type>
 					<dynamics>

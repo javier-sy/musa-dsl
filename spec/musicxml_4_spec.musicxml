@@ -47,7 +47,7 @@
 					<line>4</line>
 				</clef>
 			</attributes>
-			<direction >
+			<direction>
 				<direction-type>
 					<metronome>
 						<beat-unit>quarter</beat-unit>
@@ -101,7 +101,7 @@
 					<normal-notes>2</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="start"  bracket="yes" show-number="both" show-type="both" >
+						<tuplet type="start" bracket="yes" show-number="both" show-type="both">
 							<tuplet-actual>
 								<tuplet-number>3</tuplet-number>
 							</tuplet-actual>
@@ -135,7 +135,7 @@
 					<normal-notes>2</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="stop"     >
+						<tuplet type="stop">
 						</tuplet>
 				</notations>
 			</note>
@@ -169,7 +169,7 @@
 					<normal-notes>3</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="start"  bracket="yes" show-number="both" show-type="both" >
+						<tuplet type="start" bracket="yes" show-number="both" show-type="both">
 							<tuplet-actual>
 								<tuplet-number>5</tuplet-number>
 								<tuplet-type>quarter</tuplet-type>
@@ -229,7 +229,7 @@
 					<normal-notes>3</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="stop"     >
+						<tuplet type="stop">
 						</tuplet>
 				</notations>
 			</note>
@@ -255,7 +255,7 @@
 					<normal-notes>2</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="start"  bracket="yes" show-number="both" show-type="both" >
+						<tuplet type="start" bracket="yes" show-number="both" show-type="both">
 							<tuplet-actual>
 								<tuplet-number>3</tuplet-number>
 							</tuplet-actual>
@@ -289,7 +289,7 @@
 					<normal-notes>2</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="stop"     >
+						<tuplet type="stop">
 						</tuplet>
 				</notations>
 			</note>
@@ -324,7 +324,7 @@
 					<normal-type>quarter</normal-type>
 				</time-modification>
 				<notations>
-						<tuplet type="start" number="1" bracket="yes" show-number="both" show-type="both" >
+						<tuplet type="start" number="1" bracket="yes" show-number="both" show-type="both">
 							<tuplet-actual>
 								<tuplet-number>5</tuplet-number>
 								<tuplet-type>quarter</tuplet-type>
@@ -349,7 +349,7 @@
 					<normal-type>quarter</normal-type>
 				</time-modification>
 				<notations>
-						<tuplet type="start" number="2" bracket="yes" show-number="both" show-type="both" >
+						<tuplet type="start" number="2" bracket="yes" show-number="both" show-type="both">
 							<tuplet-actual>
 								<tuplet-number>4</tuplet-number>
 								<tuplet-type>eighth</tuplet-type>
@@ -374,7 +374,7 @@
 					<normal-type>quarter</normal-type>
 				</time-modification>
 				<notations>
-						<tuplet type="stop" number="2"    >
+						<tuplet type="stop" number="2">
 						</tuplet>
 				</notations>
 			</note>
@@ -391,7 +391,7 @@
 					<normal-notes>4</normal-notes>
 				</time-modification>
 				<notations>
-						<tuplet type="stop" number="1"    >
+						<tuplet type="stop" number="1">
 						</tuplet>
 				</notations>
 			</note>
@@ -426,7 +426,7 @@
 					<normal-type>quarter</normal-type>
 				</time-modification>
 				<notations>
-						<tuplet type="start" number="1" bracket="yes" show-number="both" show-type="both" >
+						<tuplet type="start" number="1" bracket="yes" show-number="both" show-type="both">
 							<tuplet-actual>
 								<tuplet-number>5</tuplet-number>
 								<tuplet-type>eighth</tuplet-type>
@@ -452,7 +452,7 @@
 					<normal-type>quarter</normal-type>
 				</time-modification>
 				<notations>
-						<tuplet type="stop" number="1"    >
+						<tuplet type="stop" number="1">
 						</tuplet>
 				</notations>
 			</note>

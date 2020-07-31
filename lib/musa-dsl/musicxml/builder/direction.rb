@@ -50,7 +50,7 @@ module Musa
           attr_complex_adder_to_custom(:octave_shift) { |*p, **kp, &b| OctaveShift.new(*p, **kp, &b).tap { |t| @types << t } }
 
           def _to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<direction #{decode_bool_or_string_attribute(@placement, 'placement')}>"
+            io.puts "#{tabs}<direction#{ decode_bool_or_string_attribute(@placement, 'placement') }>"
 
             @types.each do |type|
               type.to_xml(io, indent: indent + 1)
@@ -137,7 +137,7 @@ module Musa
           attr_simple_builder :niente
 
           def _direction_type_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<wedge type=\"#{@type}\" #{decode_bool_or_string_attribute(@niente, 'niente', 'yes')} />"
+            io.puts "#{tabs}<wedge type=\"#{@type}\"#{ decode_bool_or_string_attribute(@niente, 'niente', 'yes') }/>"
           end
         end
 
@@ -178,7 +178,7 @@ module Musa
           attr_simple_builder :line
 
           def _direction_type_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<pedal type=\"#{@type}\" #{decode_bool_or_string_attribute(@line, 'line', 'yes', 'no')} />"
+            io.puts "#{tabs}<pedal type=\"#{@type}\"#{ decode_bool_or_string_attribute(@line, 'line', 'yes', 'no') }/>"
           end
         end
 
@@ -202,7 +202,7 @@ module Musa
           attr_simple_builder :line_end
 
           def _direction_type_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<bracket type=\"#{@type}\" line_end=\"#{@line_end}\" #{decode_bool_or_string_attribute(@line_type, 'line_type')} />"
+            io.puts "#{tabs}<bracket type=\"#{@type}\" line_end=\"#{@line_end}\"#{ decode_bool_or_string_attribute(@line_type, 'line_type') }/>"
           end
         end
 
@@ -257,7 +257,7 @@ module Musa
           attr_simple_builder :size
 
           def _direction_type_to_xml(io, indent:, tabs:)
-            io.puts "#{tabs}<octave-shift type=\"#{@type}\" #{decode_bool_or_string_attribute(@size&.to_i, 'size')} />"
+            io.puts "#{tabs}<octave-shift type=\"#{@type}\"#{ decode_bool_or_string_attribute(@size&.to_i, 'size') }/>"
           end
         end
 

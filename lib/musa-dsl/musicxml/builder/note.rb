@@ -386,7 +386,7 @@ module Musa
             if _notations
               io.puts "#{tabs}\t<notations>"
               io.puts "#{tabs}\t\t<accidental-mark>#{@accidental_mark}</accidental-mark>" if @accidental_mark
-              io.puts "#{tabs}\t\t<arpeggiate #{decode_bool_or_string_attribute(@arpeggiate, 'direction')}/>" if @arpeggiate
+              io.puts "#{tabs}\t\t<arpeggiate#{ decode_bool_or_string_attribute(@arpeggiate, 'direction') }/>" if @arpeggiate
               io.puts "#{tabs}\t\t<tied type=\"#{@tied}\"/>" if @tied
               @tuplets.each do |tuplet|
                 tuplet.to_xml(io, indent: indent + 3)
@@ -400,7 +400,7 @@ module Musa
                 io.puts "#{tabs}\t\t</dynamics>"
               end
 
-              io.puts "#{tabs}\t\t<fermata #{decode_bool_or_string_attribute(@fermata, 'type')}/>" if @fermata
+              io.puts "#{tabs}\t\t<fermata#{ decode_bool_or_string_attribute(@fermata, 'type') }/>" if @fermata
               io.puts "#{tabs}\t\t<glissando type=\"#{@glissando}\"/>" if @glissando
               io.puts "#{tabs}\t\t<non-arpeggiate type=\"#{@non_arpeggiate}\"/>" if @non_arpeggiate
               io.puts "#{tabs}\t\t<slide type=\"#{@slide}\"/>" if @slide
@@ -422,7 +422,7 @@ module Musa
                 io.puts "#{tabs}\t\t\t<staccatissimo />" if @staccatissimo
                 io.puts "#{tabs}\t\t\t<staccato />" if @staccato
                 io.puts "#{tabs}\t\t\t<stress />" if @stress
-                io.puts "#{tabs}\t\t\t<strong-accent #{decode_bool_or_string_attribute(@strong_accent, 'type')}/>" if @strong_accent
+                io.puts "#{tabs}\t\t\t<strong-accent#{ decode_bool_or_string_attribute(@strong_accent, 'type') }/>" if @strong_accent
                 io.puts "#{tabs}\t\t\t<tenuto />" if @tenuto
                 io.puts "#{tabs}\t\t\t<unstress />" if @unstress
 
@@ -440,10 +440,10 @@ module Musa
                 io.puts "#{tabs}\t\t\t<other-ornament>#{decode_bool_or_string_value(@other_ornament)}</other-ornament>" if @other_ornament
                 io.puts "#{tabs}\t\t\t<schleifer />" if @schleifer
                 io.puts "#{tabs}\t\t\t<shake />" if @shake
-                io.puts "#{tabs}\t\t\t<tremolo #{decode_bool_or_string_attribute(@tremolo, 'type')}/>" if @tremolo
+                io.puts "#{tabs}\t\t\t<tremolo#{ decode_bool_or_string_attribute(@tremolo, 'type') }/>" if @tremolo
                 io.puts "#{tabs}\t\t\t<trill-mark />" if @trill_mark
                 io.puts "#{tabs}\t\t\t<turn />" if @turn
-                io.puts "#{tabs}\t\t\t<wavy-line #{decode_bool_or_string_attribute(@wavy_line, 'type')}/>" if @wavy_line
+                io.puts "#{tabs}\t\t\t<wavy-line#{ decode_bool_or_string_attribute(@wavy_line, 'type') }/>" if @wavy_line
                 io.puts "#{tabs}\t\t\t<accidental-mark>#{@ornament_accidental_mark}</accidental-mark>" if @ornament_accidental_mark
 
                 io.puts "#{tabs}\t\t</ornaments>"

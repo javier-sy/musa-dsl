@@ -7,7 +7,7 @@
 	<identification>
 		<creator type="composer">Javier Sánchez Yeste</creator>
 		<encoding>
-			<encoding-date>2020-07-22</encoding-date>
+			<encoding-date>2020-07-31</encoding-date>
 			<software>MusaDSL: MusicXML output formatter</software>
 		</encoding>
 	</identification>
@@ -56,9 +56,8 @@
 			</direction>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="crescendo" niente="no" />
+					<wedge type="crescendo"/>
 				</direction-type>
-				<offset sound="no">24.0</offset>
 			</direction>
 			<note>
 				<pitch>
@@ -109,9 +108,8 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop" niente="no" />
+					<wedge type="stop"/>
 				</direction-type>
-				<offset sound="no">-24.0</offset>
 			</direction>
 			<direction placement="below">
 				<direction-type>
@@ -124,9 +122,8 @@
 		<measure number="3">
 			<direction placement="below">
 				<direction-type>
-					<wedge type="diminuendo" niente="no" />
+					<wedge type="diminuendo"/>
 				</direction-type>
-				<offset sound="no">24.0</offset>
 			</direction>
 			<note>
 				<pitch>
@@ -150,9 +147,8 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop" niente="no" />
+					<wedge type="stop"/>
 				</direction-type>
-				<offset sound="no">-24.0</offset>
 			</direction>
 			<direction placement="below">
 				<direction-type>

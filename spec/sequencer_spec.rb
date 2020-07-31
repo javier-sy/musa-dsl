@@ -347,6 +347,22 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(3)
     end
 
+    it 'Bugfix: every sequencing with interval not on tick resolution' do
+      s = BaseSequencer.new 4, 4
+
+      p = []
+
+      s.at 1 do
+        s.every 4/5r, duration: 4 do
+          p << s.position
+        end
+      end
+
+      s.run
+
+      expect(p).to eq [1r, 29/16r, 21/8r, 27/8r, 67/16r, 5r]
+    end
+
     it 'Basic play sequencing' do
       s = BaseSequencer.new 4, 4
 

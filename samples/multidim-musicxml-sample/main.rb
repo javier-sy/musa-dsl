@@ -21,8 +21,8 @@ line = Matrix[ [0 * 4, 60, 50, 2],
 
 line = Matrix[
     [0 * 4, 60, 50, 0],
-    [4 * 4, 60, 50, 2] # ,
-    #[8 * 4, 67, 90, 0],
+    [4 * 4, 67, 50, 3],
+    [8 * 4, 67, 90, 3] #,
     #[12 * 4, 67, 90, 1]
     ]
 
@@ -41,6 +41,8 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
     line.to_p(0).each do |p|
       _.play p.to_ps_serie do |_, thing|
 
+        puts "thing = #{thing}"
+
         from = Packed.new(*thing[:from])
         to = Packed.new(*thing[:to])
 
@@ -53,10 +55,9 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
         instrument_changes = from.instrument != to.instrument
         pitch_changes = from.pitch != to.pitch
 
-        puts "#{_.position.to_f.round(3)} intensity_changes = #{intensity_changes}"
-        puts "#{_.position.to_f.round(3)} instrument_changes = #{instrument_changes}"
-        puts "#{_.position.to_f.round(3)} pitch_changes = #{pitch_changes}"
-
+        puts "intensity_changes = #{intensity_changes}"
+        puts "instrument_changes = #{instrument_changes}"
+        puts "pitch_changes = #{pitch_changes}"
 
         if !instrument_changes
           instrument_symbol = instrument_number_to_symbol(from.instrument)
@@ -76,39 +77,62 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
 
             _.move from: { instrument: from.instrument, pitch: from.pitch },
                    to: { instrument: to.instrument, pitch: to.pitch },
-                   duration: q_duration, step: 1, right_open: true do
-            |_, value, next_value, duration:|
+                   duration: q_duration, step: 1 do
+            |_, value, next_value, duration:, start_before:|
+
+              puts "%.3f value = #{value} next = #{next_value}" % _.position.to_f
 
               from_instrument = value[:instrument]
               to_instrument = next_value[:instrument]
 
               pitch = value[:pitch]
 
-              if to_instrument
-                q_duration = quantize(duration, ticks_per_bar)
-                from_instrument_symbol = instrument_number_to_symbol(from_instrument)
-                to_instrument_symbol = instrument_number_to_symbol(to_instrument)
+              puts "%.3f duration = #{duration} start_before = #{start_before}" % _.position.to_f
 
-                render_dynamics from.intensity, 0, q_duration,
-                                score: score, instrument: from_instrument_symbol, position: _.position
+              q_duration_instrument = quantize(duration[:instrument], ticks_per_bar)
+              q_duration_pitch = quantize(duration[:pitch], ticks_per_bar)
 
-                render_dynamics 0, from.intensity, q_duration,
-                                score: score, instrument: to_instrument_symbol, position: _.position
+              from_instrument_symbol = instrument_number_to_symbol(from_instrument)
+              to_instrument_symbol = instrument_number_to_symbol(to_instrument)
 
-                if last_note &&
-                    last_note[:instrument] == from_instrument_symbol &&
-                    last_note[:pitch] == from.pitch
-
-                  last_note[:duration] += q_duration
-                else
-                  render_pitch pitch, q_duration, score: score, instrument: from_instrument_symbol, position: _.position
+              if !start_before[:instrument]
+                if from_instrument && to_instrument
+                  render_dynamics from.intensity, 0, q_duration_instrument,
+                                  score: score, instrument: from_instrument_symbol, position: _.position
                 end
 
-                last_note = render_pitch pitch, q_duration, score: score, instrument: to_instrument_symbol, position: _.position
+                if to_instrument
+                  render_dynamics 0, from.intensity, q_duration_instrument,
+                                  score: score, instrument: to_instrument_symbol, position: _.position
+                end
+              end
+
+              if !start_before[:pitch]
+                if from_instrument
+                  if last_note &&
+                      last_note[:instrument] == from_instrument_symbol &&
+                      last_note[:pitch] == from.pitch
+
+                    last_note[:duration] += q_duration_pitch
+                  else
+                    last_note = render_pitch pitch,
+                                             q_duration_pitch,
+                                             score: score,
+                                             instrument: from_instrument_symbol,
+                                             position: _.position
+                  end
+                end
+
+                if to_instrument
+                  last_note = render_pitch pitch,
+                                           q_duration_pitch,
+                                           score: score,
+                                           instrument: to_instrument_symbol,
+                                           position: _.position
+                end
               end
             end
           end
-
         end
       end
     end

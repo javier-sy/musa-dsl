@@ -7,7 +7,7 @@ include Musa::Datasets
 RSpec.describe Musa::Datasets::Score::ToMXML do
   context 'Score with complexities to MXML generation' do
 
-    it 'converts a pdv + ps with dynamics dataset score to MusicXML (unfinished test case)' do
+    it 'converts a pdv + ps with dynamics dataset score to MusicXML' do
       score = Score.new(0.125)
 
       score.at 1, add: { pitch: 60, duration: 1/4r }.extend(PDV)
@@ -24,6 +24,7 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
                            bpm: 90,
                            title: 'work title',
                            creators: { composer: 'Javier Sánchez Yeste' },
+                           encoding_date: DateTime.new(2020, 7, 31),
                            parts: { piano: { name: 'Piano', abbreviation: 'pno', clefs: { g: 2, f: 4 } } } )
 
       # File.open(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
