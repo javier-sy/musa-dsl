@@ -305,6 +305,7 @@ module Musa
             control._execution_counter += 1
           end
 
+
           unless control.stopped? || duration_exceeded || till_exceeded || condition_failed || interval.nil?
             _numeric_at control._start_position + control._execution_counter * interval, control do
               _every interval, control, block_procedure_binder: block_procedure_binder
@@ -477,7 +478,7 @@ module Musa
             process_indexes = []
 
             every_groups.each_pair do |group_interval, affected_indexes|
-              group_position = start_position + (group_interval * group_counter[group_interval])
+              group_position = start_position + ((group_interval || 0) * group_counter[group_interval])
 
               # We consider a position to be on current tick position when it is inside the interval of one tick
               # centered on the current tick (current tick +- 1/2 tick duration).
@@ -492,7 +493,7 @@ module Musa
 
             process_indexes.flatten!
 
-            if process_indexes.any?
+            if first || process_indexes.any?
               if first
                 first = false
               else
@@ -526,22 +527,22 @@ module Musa
                   if array_mode
                     binder.apply(effective_values, effective_next_values,
                                  control: control,
-                                 duration: _durations(every_groups),
-                                 start_before: _start_before(last_position, position, process_indexes),
+                                 duration: _durations(every_groups, effective_duration),
+                                 starts_before: _starts_before(last_position, position, process_indexes),
                                  right_open: right_open)
                   elsif hash_mode
                     binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
                                  _hash_from_keys_and_values(hash_keys, effective_next_values),
                                  control: control,
-                                 duration: _hash_from_keys_and_values(hash_keys, _durations(every_groups)),
-                                 start_before: _hash_from_keys_and_values(hash_keys, _start_before(last_position, position, process_indexes)),
+                                 duration: _hash_from_keys_and_values(hash_keys, _durations(every_groups, effective_duration)),
+                                 starts_before: _hash_from_keys_and_values(hash_keys, _starts_before(last_position, position, process_indexes)),
                                  right_open: right_open)
                   else
                     binder.apply(effective_values.first,
                                  effective_next_values.first,
                                  control: control,
-                                 duration: every_groups.keys.first,
-                                 start_before: nil,
+                                 duration: _durations(every_groups, effective_duration).first,
+                                 starts_before: nil,
                                  right_open: right_open)
                   end
 
@@ -557,7 +558,7 @@ module Musa
         control
       end
 
-      def _start_before(last_positions, position, affected_indexes)
+      def _starts_before(last_positions, position, affected_indexes)
         Array.new(last_positions.size).tap do |a|
           last_positions.each_index do |i|
             if last_positions[i] && !affected_indexes.include?(i)
@@ -567,12 +568,16 @@ module Musa
         end
       end
 
-      def _durations(every_groups)
+      def _durations(every_groups, largest_duration)
         [].tap do |a|
-          every_groups.each_pair do |every_group, affected_indexes|
-            affected_indexes.each do |i|
-              a[i] = every_group
+          if every_groups.any?
+            every_groups.each_pair do |every_group, affected_indexes|
+              affected_indexes.each do |i|
+                a[i] = every_group || largest_duration
+              end
             end
+          else
+            a << largest_duration
           end
         end
       end
@@ -582,13 +587,16 @@ module Musa
       end
 
       def _common_interval(intervals)
-        #lcm_denominators = intervals.collect(&:denominator).reduce(1, :lcm)
-        #numerators = intervals.collect { |i| i.numerator * lcm_denominators / i.denominator }
-        #gcd_numerators = numerators.reduce(numerators.first, :gcd)
+        intervals = intervals.compact
+        return nil if intervals.empty?
 
-        #Rational(gcd_numerators, lcm_denominators)
+        lcm_denominators = intervals.collect(&:denominator).reduce(1, :lcm)
+        numerators = intervals.collect { |i| i.numerator * lcm_denominators / i.denominator }
+        gcd_numerators = numerators.reduce(numerators.first, :gcd)
 
-        intervals.reduce(1r, :*)
+        #intervals.reduce(1r, :*)
+
+        Rational(gcd_numerators, lcm_denominators)
       end
 
       def _rescue_error(e)

@@ -560,7 +560,7 @@ RSpec.describe Musa::Sequencer do
 
           tests_passed += 1
 
-        when 5 - 1/4r - 1/16r
+        when 5 - 1/4r - 2/16r
           expect(c).to eq([3 + 3/4r, 4, 4, 3 + 3/4r])
           expect(s.moving).to include move_control
 
@@ -611,8 +611,8 @@ RSpec.describe Musa::Sequencer do
 
       s = Sequencer.new(4, 32) do |_|
         _.at 1 do
-          _.move from: [0, 60], to: [3, 67], duration: 4, step: 1 do |value, duration:, start_before:|
-            c[_.position] = [value, duration, start_before]
+          _.move from: [0, 60], to: [3, 67], duration: 4, step: 1 do |value, duration:, starts_before:|
+            c[_.position] = [value, duration, starts_before]
           end
         end
       end
@@ -631,5 +631,50 @@ RSpec.describe Musa::Sequencer do
         4r => [ [3, 66], [1, 1/2r], [nil, nil] ],
         4.5r => [ [3, 67], [1, 1/2r], [-1/2r, nil] ] })
     end
+
+    it "Bugfix: bad calculation of common_interval" do
+      c = {}
+      s = Sequencer.new(4, 32) do |_|
+        _.at 1 do
+          _.move from: [ 0, 0 ],
+                 to: [ 0, 3 ],
+                 duration: 4, step: 1 do
+          |_, value, next_value, duration:, start_before:|
+
+            c[_.position] = value
+          end
+        end
+      end
+
+      s.run
+
+      expect(c).to eq({
+                          1r => [0, 0],
+                          2r => [0, 1],
+                          3r => [0, 2],
+                          4r => [0, 3]
+                      })
+    end
+
+    it 'Bugfix: right open interval with same from and to value and step parameter throws an exception because common interval has a nil duration' do
+      c = {}
+      s = Sequencer.new(4, 32) do |_|
+        _.at 1 do
+          _.move from: [0, 0], to: [0, 4], duration: 4, step: 1, right_open: true do |_, value, duration:, starts_before:|
+            c[_.position] = { value: value, duration: duration, starts_before: starts_before }
+          end
+        end
+      end
+
+      s.run
+
+      expect(c).to eq({
+                          1r => { value: [0, 0], duration: [4, 1], starts_before: [nil, nil] },
+                          2r => { value: [0, 1], duration: [4, 1], starts_before: [-1, nil] },
+                          3r => { value: [0, 2], duration: [4, 1], starts_before: [-2, nil] },
+                          4r => { value: [0, 3], duration: [4, 1], starts_before: [-3, nil] }
+                      })
+    end
+
   end
 end

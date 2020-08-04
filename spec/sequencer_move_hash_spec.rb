@@ -356,7 +356,7 @@ RSpec.describe Musa::Sequencer do
 
           tests_passed += 1
 
-        when 5 - 1/4r - 1/16r
+        when 5 - 1/4r - 2/16r
           expect(c).to eq([3 + 3/4r, 4, 4, 3 + 3/4r])
           expect(s.moving).to include move_control
 

@@ -15,9 +15,9 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
       score.at 1.50, add: { pitch: 61, duration: 1/4r }.extend(PDV)
       score.at 1.75, add: { pitch: 60, duration: 1/4r }.extend(PDV)
       score.at 2, add: { pitch: 62, duration: 1r }.extend(PDV)
-      score.at 1, add: { type: :crescendo, from: 30, to: 100, duration: 2 }.extend(PS)
+      score.at 1, add: { type: :crescendo, from: 4, to: 9, duration: 2 }.extend(PS)
       score.at 3, add: { pitch: 63, duration: 1r }.extend(PDV)
-      score.at 3, add: { type: :diminuendo, from: nil, to: 20, duration: 2 }.extend(PS)
+      score.at 3, add: { type: :diminuendo, from: nil, to: 4, duration: 2 }.extend(PS)
       score.at 4, add: { pitch: 64, duration: 1r }.extend(PDV)
 
       mxml = score.to_mxml(4, 24,

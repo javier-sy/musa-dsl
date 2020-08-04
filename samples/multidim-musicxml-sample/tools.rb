@@ -13,19 +13,20 @@ def decode_instrument(instrument)
 end
 
 def instrument_number_to_symbol(number)
-  "v#{number.to_i.to_s}".to_sym
+  return nil if number.nil?
+  "vln#{number.to_i.to_s}".to_sym
 end
 
 def quantize(duration, ticks_per_bar)
   ((duration.rationalize * ticks_per_bar).round / ticks_per_bar).to_r
 end
 
-def render_dynamics(intensity0, intensityF, duration, score:, instrument:, position:)
-  intensityF ||= intensity0
+def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, position:)
+  dynamicsF ||= dynamics0
 
   score.at position,
-           add: { instrument: instrument,
-                  type: case intensityF <=> intensity0
+           add: s = { instrument: instrument,
+                  type: case dynamicsF <=> dynamics0
                         when 1
                           :crescendo
                         when -1
@@ -33,8 +34,8 @@ def render_dynamics(intensity0, intensityF, duration, score:, instrument:, posit
                         when 0
                           :dynamics
                         end,
-                  from: intensity0,
-                  to: intensityF,
+                  from: dynamics0,
+                  to: dynamicsF,
                   duration: duration }.extend(PS)
 end
 

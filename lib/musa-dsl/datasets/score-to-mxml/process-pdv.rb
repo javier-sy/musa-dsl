@@ -19,8 +19,6 @@ module Musa::Datasets::Score::ToMXML
       integrate_as_dotteable_durations(
         decompose_as_sum_of_simple_durations(effective_duration))
 
-    # puts "process_pdv: pitch = #{element[:dataset][:pitch]} decomposition = #{effective_duration_decomposition}"
-
     if pointer > effective_start
       duration_to_go_back = (pointer - effective_start)
 
@@ -54,8 +52,6 @@ module Musa::Datasets::Score::ToMXML
       duration = effective_duration_decomposition.shift
 
       type, dots, tuplet_ratio = type_and_dots_and_tuplet_ratio(duration)
-
-      # puts "process_pdv:   t = #{type} d = #{dots} tr = #{tuplet_ratio}"
 
       raise NotImplementedError,
             "Found irregular time (tuplet ratio #{tuplet_ratio}) on element #{element}. " \
@@ -108,7 +104,6 @@ module Musa::Datasets::Score::ToMXML
                           voice: element[:dataset][:voice]
       end
 
-      last_duration = duration
       pointer += duration unless element[:dataset][:grace]
     end
 
@@ -133,14 +128,18 @@ module Musa::Datasets::Score::ToMXML
     end
   end
 
-  def midi_velocity_to_dynamics(midi_velocity)
+  def dynamics_index_of(midi_velocity)
     return nil unless midi_velocity
 
-    # ppp = 16 ... fff = 127
+    # ppp = midi 16 ... fff = midi 127
+    # mp = dynamics index 6; dynamics = 0..10
     # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
-    dynamics_number = [0..0, 1..1, 2..8, 9..16, 17..33, 34..49, 49..64, 65..80, 81..96, 97..112, 113..127]
-                          .index { |r| r.cover? midi_velocity.round.to_i }
+    [0..0, 1..1, 2..8, 9..16, 17..33, 34..49, 49..64, 65..80, 81..96, 97..112, 113..127]
+       .index { |r| r.cover? midi_velocity.round.to_i }
+  end
 
-    ['pppppp', 'ppppp', 'pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][dynamics_number]
+  def dynamics_to_string(dynamics_index)
+    return nil unless dynamics_index
+    ['pppppp', 'ppppp', 'pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][dynamics_index.round.to_i]
   end
 end
