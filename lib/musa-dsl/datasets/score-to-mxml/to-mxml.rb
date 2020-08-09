@@ -62,6 +62,10 @@ module Musa::Datasets::Score::ToMXML
     dynamics_context = nil
 
     (1..finish || 0).each do |bar|
+      puts
+      puts msg = "processing instrument #{instrument} bar #{bar}"
+      puts "-" * msg.size
+
       measure = part.add_measure if measure
       measure ||= part.measures.last
 
@@ -74,26 +78,36 @@ module Musa::Datasets::Score::ToMXML
           (pdvs = instrument_score.between(bar, bar + 1).select { |p| p[:dataset].is_a?(PDV) }))
         .sort_by { |element| element[:time_in_interval] || element[:start_in_interval] }
 
-
-      bar_elements.each do |element|
-        case element[:dataset]
-        when PDV
-          pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer)
-
-        when PS
-          dynamics_context = process_ps(measure, element, dynamics_context)
-        else
-          # ignored
-        end
-      end
-
       if pdvs.empty?
         process_pdv(measure, bar, divisions_per_bar,
                     { start: bar,
                       finish: bar + 1,
                       dataset: { pitch: :silence, duration: 1 }.extend(PDV) },
                     pointer)
+      else
+        first = bar_elements.first
 
+        puts "fill_part: bar #{bar} first = #{first}"
+
+        if (first[:time_in_interval] || first[:start_in_interval]) > bar
+          pointer = process_pdv(measure, bar, divisions_per_bar,
+                                { start: bar,
+                                  finish: first[:start_in_interval],
+                                  dataset: { pitch: :silence, duration: first[:start_in_interval] - bar }.extend(PDV) },
+                                pointer)
+        end
+
+        bar_elements.each do |element|
+          case element[:dataset]
+          when PDV
+            pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer)
+
+          when PS
+            dynamics_context = process_ps(measure, element, dynamics_context)
+          else
+            # ignored
+          end
+        end
       end
     end
   end

@@ -676,5 +676,8 @@ RSpec.describe Musa::Sequencer do
                       })
     end
 
+    it 'different right_open options (missing implementation)' do
+      expect(0).to eq 1
+    end
   end
 end

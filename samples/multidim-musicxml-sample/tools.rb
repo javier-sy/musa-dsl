@@ -39,8 +39,20 @@ def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, positio
                   duration: duration }.extend(PS)
 end
 
-def render_pitch(pitch, duration, score:, instrument:, position:)
+def render_pitch(pitch, duration, score:, instrument:, position:, data: nil)
   { instrument: instrument,
     pitch: pitch,
-    duration: duration }.extend(PDV).tap { |note| score.at position, add: note }
+    duration: duration,
+    data: data }.extend(PDV).tap { |note| score.at position, add: note }
 end
+
+class Rational
+  def inspect
+    "%.4f (#{self.numerator}/#{self.denominator})" % self.to_f
+  end
+
+  def to_s
+    inspect
+  end
+end
+

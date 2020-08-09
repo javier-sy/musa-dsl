@@ -68,6 +68,10 @@ module Musa::Datasets
 
 
 
+    def _score # TODO delete; only for debug
+      @score
+    end
+
 
     # hay que implementar un effective_start y effective_finish con el inicio/fin dentro del bar, no absoluto
 

@@ -325,9 +325,14 @@ module Musa
 
       def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, function: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
 
-        raise ArgumentError, "Cannot use duration: #{duration} and till: #{till} parameters at the same time. Use only one of them." if till && duration
-        raise ArgumentError, "Invalid use: 'function:' parameter is incompatible with 'step:' parameter" if function && step
-        raise ArgumentError, "Invalid use: 'function:' parameter needs 'to:' parameter to be not nil" if function && !to
+        raise ArgumentError,
+              "Cannot use duration: #{duration} and till: #{till} parameters at the same time. " \
+              "Use only one of them." if till && duration
+
+        raise ArgumentError,
+              "Invalid use: 'function:' parameter is incompatible with 'step:' parameter" if function && step
+        raise ArgumentError,
+              "Invalid use: 'function:' parameter needs 'to:' parameter to be not nil" if function && !to
 
         array_mode = from.is_a?(Array)
         hash_mode = from.is_a?(Hash)
@@ -343,17 +348,31 @@ module Musa
 
           if every.is_a?(Hash)
             every = hash_keys.collect { |k| every[k] }
-            raise ArgumentError, "Invalid use: 'every:' parameter should contain the same keys as 'from:' Hash" unless every.all? { |_| _ }
+            raise ArgumentError,
+                  "Invalid use: 'every:' parameter should contain the same keys as 'from:' Hash" \
+              unless every.all? { |_| _ }
           end
 
           if to.is_a?(Hash)
             to = hash_keys.collect { |k| to[k] }
-            raise ArgumentError, "Invalid use: 'to:' parameter should contain the same keys as 'from:' Hash" unless to.all? { |_| _ }
+            raise ArgumentError,
+                  "Invalid use: 'to:' parameter should contain the same keys as 'from:' Hash" unless to.all? { |_| _ }
           end
 
           if step.is_a?(Hash)
             step = hash_keys.collect { |k| step[k] }
-            raise ArgumentError, "Invalid use: 'step:' parameter should contain the same keys as 'from:' Hash" unless step.all? { |_| _ }
+            #raise ArgumentError,
+            #      "Invalid use: 'step:' parameter should contain the same keys as 'from:' Hash" \
+            #  unless step.all? { |_| _ }
+          end
+
+          # Don't need to validate right_open because missing keys should be interpreted as nil/false
+          #
+          if right_open.is_a?(Hash)
+            right_open = hash_keys.collect { |k| right_open[k] }
+            #raise ArgumentError,
+            #      "Invalid use: 'right_open:' parameter should contain the same keys as 'from:' Hash" \
+            #  unless right_open.all? { |_| !_.nil? }
           end
 
         else
@@ -364,6 +383,7 @@ module Musa
         every = every.arrayfy(size: size)
         to = to.arrayfy(size: size)
         step = step.arrayfy(size: size)
+        right_open = right_open.arrayfy(size: size)
 
         # from, to, step, every
         # from, to, step, (duration | till)
@@ -372,11 +392,11 @@ module Musa
 
         block ||= proc {}
 
-        step.map!.with_index do |step, i|
-          (step && to[i] && ((step > 0 && to[i] < from[i]) || (step < 0 && from[i] < to[i]))) ? -step : step
+        step.map!.with_index do |s, i|
+          (s && to[i] && ((s > 0 && to[i] < from[i]) || (s < 0 && from[i] < to[i]))) ? -s : s
         end
 
-        right_open ||= false
+        right_open.map! { |v| v || false }
 
         function ||= proc { |ratio| ratio }
         function = function.arrayfy(size: size)
@@ -388,15 +408,17 @@ module Musa
 
         if duration || till
           effective_duration = duration || till - start_position
-          right_open_offset = right_open ? 0 : 1 # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
+
+          # Add 1 tick to arrive to final value in duration time (no need to add an extra tick)
+          right_open_offset = right_open.collect { |ro| ro ? 0 : 1 }
 
           size.times do |i|
             if to[i] && step[i] && !every[i]
               steps = (to[i] - from[i]) / step[i]
 
               # When to == from don't need to do any iteration with every
-              if steps + right_open_offset > 0
-                every[i] = Rational(effective_duration, steps + right_open_offset)
+              if steps + right_open_offset[i] > 0
+                every[i] = Rational(effective_duration, steps + right_open_offset[i])
               else
                 every[i] = nil
               end
@@ -408,7 +430,7 @@ module Musa
               from[i] = 0r
               to[i] = 1r
 
-              step[i] = 1r / (effective_duration * @ticks_per_bar - right_open_offset)
+              step[i] = 1r / (effective_duration * @ticks_per_bar - right_open_offset[i])
               every[i] = @tick_duration
 
             elsif to[i] && !step[i] && every[i]
@@ -419,7 +441,7 @@ module Musa
               to[i] = 1r
 
               steps = effective_duration / every[i]
-              step[i] = 1r / (steps - right_open_offset)
+              step[i] = 1r / (steps - right_open_offset[i])
 
             elsif !to[i] && step[i] && every[i]
               # ok
@@ -510,7 +532,9 @@ module Musa
 
               process_indexes.each do |i|
                 next_values[i] = values[i] + step[i]
-                if to[i] && (next_values[i] > to[i] && step[i].positive? || next_values[i] < to[i] && step[i].negative?)
+                if to[i] && (next_values[i] > to[i] && step[i].positive? ||
+                    next_values[i] < to[i] && step[i].negative?)
+
                   next_values[i] = nil
                 end
               end
@@ -534,8 +558,12 @@ module Musa
                     binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
                                  _hash_from_keys_and_values(hash_keys, effective_next_values),
                                  control: control,
-                                 duration: _hash_from_keys_and_values(hash_keys, _durations(every_groups, effective_duration)),
-                                 starts_before: _hash_from_keys_and_values(hash_keys, _starts_before(last_position, position, process_indexes)),
+                                 duration: _hash_from_keys_and_values(hash_keys,
+                                                                      _durations(every_groups, effective_duration)),
+                                 starts_before: _hash_from_keys_and_values(hash_keys,
+                                                                           _starts_before(last_position,
+                                                                                          position,
+                                                                                          process_indexes)),
                                  right_open: right_open)
                   else
                     binder.apply(effective_values.first,
@@ -562,7 +590,7 @@ module Musa
         Array.new(last_positions.size).tap do |a|
           last_positions.each_index do |i|
             if last_positions[i] && !affected_indexes.include?(i)
-              a[i] = last_positions[i] - position
+              a[i] = position - last_positions[i]
             end
           end
         end

@@ -362,8 +362,8 @@ module Musa
 
             io.puts "#{tabs}\t<duration>#{@duration}</duration>"
 
-            io.puts "#{tabs}\t<tie type=\"stop\" />" if @tie_stop
-            io.puts "#{tabs}\t<tie type=\"start\" />" if @tie_start
+            io.puts "#{tabs}\t<tie type=\"stop\"/>" if @tie_stop
+            io.puts "#{tabs}\t<tie type=\"start\"/>" if @tie_start
 
             io.puts "#{tabs}\t<voice>#{@voice}</voice>" if @voice
 

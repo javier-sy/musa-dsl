@@ -4,6 +4,7 @@ module Musa::Datasets::Score::ToMXML
   private
 
   def process_pdv(measure, bar, divisions_per_bar, element, pointer)
+
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
     continue_from_previous_bar = element[:start] < bar
@@ -19,15 +20,29 @@ module Musa::Datasets::Score::ToMXML
       integrate_as_dotteable_durations(
         decompose_as_sum_of_simple_durations(effective_duration))
 
+    puts
+    puts "process_pdv: #{element}"
+    puts
+    puts "             pointer = #{pointer} continue_from_previous = #{continue_from_previous_bar} continue_to_next = #{continue_to_next_bar}"
+    puts "             effective_start = #{effective_start} effective_duration = #{effective_duration}"
+    puts "             decomp = #{effective_duration_decomposition}"
+
     if pointer > effective_start
       duration_to_go_back = (pointer - effective_start)
+
+      puts
+      puts "         ->  adding backup #{duration_to_go_back * divisions_per_bar}"
 
       measure.add_backup(duration_to_go_back * divisions_per_bar)
       pointer -= duration_to_go_back
 
+
     elsif pointer < effective_start
+      puts
+      puts "         ->  adding start rest start #{bar + pointer} finish #{bar + effective_start} duration = #{effective_start - pointer}"
+
       pointer = process_pdv(measure, bar, divisions_per_bar,
-                            { start: bar,
+                            { start: bar + pointer,
                               finish: bar + effective_start,
                               dataset: { pitch: :silence, duration: effective_start - pointer }.extend(PDV) },
                             pointer)
@@ -46,7 +61,7 @@ module Musa::Datasets::Score::ToMXML
     turn = [:up, true].include?(element[:dataset][:turn])
     inverted_turn = [:down, :low].include?(element[:dataset][:turn])
 
-    internal_tie = false
+    first = true
 
     until effective_duration_decomposition.empty?
       duration = effective_duration_decomposition.shift
@@ -58,16 +73,15 @@ module Musa::Datasets::Score::ToMXML
             "Don't know how to handle on this version. " \
         unless tuplet_ratio == 1
 
-      tied = if continue_from_previous_bar && continue_to_next_bar
+      tied = if continue_from_previous_bar && first && !effective_duration_decomposition.empty?
+               'continue'
+             elsif continue_to_next_bar && effective_duration_decomposition.empty?
+               'continue'
+             elsif !first && !effective_duration_decomposition.empty?
+               'continue'
+             elsif first && !effective_duration_decomposition.empty?
                'start'
-             elsif continue_to_next_bar
-               'start'
-             elsif continue_from_previous_bar
-               'stop'
-             elsif !effective_duration_decomposition.empty?
-               internal_tie = true
-               'start'
-             elsif internal_tie
+             elsif effective_duration_decomposition.empty?
                'stop'
              else
                nil
@@ -90,10 +104,10 @@ module Musa::Datasets::Score::ToMXML
                           dots: dots,
                           duration: (duration * divisions_per_bar).to_i,
                           grace: element[:dataset][:grace],
-                          tied: tied,
                           slur: slur,
-                          tie_start: continue_to_next_bar,
-                          tie_stop: continue_from_previous_bar,
+                          tied: tied,
+                          tie_stop: tied == 'stop' || tied == 'continue',
+                          tie_start: tied == 'start' || tied == 'continue',
                           staccato: staccato,
                           staccatissimo: staccatissimo,
                           trill_mark: trill,
@@ -104,6 +118,7 @@ module Musa::Datasets::Score::ToMXML
                           voice: element[:dataset][:voice]
       end
 
+      first = false
       pointer += duration unless element[:dataset][:grace]
     end
 
