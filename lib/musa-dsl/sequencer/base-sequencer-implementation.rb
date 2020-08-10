@@ -361,18 +361,10 @@ module Musa
 
           if step.is_a?(Hash)
             step = hash_keys.collect { |k| step[k] }
-            #raise ArgumentError,
-            #      "Invalid use: 'step:' parameter should contain the same keys as 'from:' Hash" \
-            #  unless step.all? { |_| _ }
           end
 
-          # Don't need to validate right_open because missing keys should be interpreted as nil/false
-          #
           if right_open.is_a?(Hash)
             right_open = hash_keys.collect { |k| right_open[k] }
-            #raise ArgumentError,
-            #      "Invalid use: 'right_open:' parameter should contain the same keys as 'from:' Hash" \
-            #  unless right_open.all? { |_| !_.nil? }
           end
 
         else
@@ -505,7 +497,7 @@ module Musa
               # We consider a position to be on current tick position when it is inside the interval of one tick
               # centered on the current tick (current tick +- 1/2 tick duration).
               # This allow to round the irregularly timed positions due to every intervals not integer
-              # multiple of the tick_duration.
+              # multiples of the tick_duration.
 
               if group_position >= position - tick_duration && group_position < position + tick_duration
                 process_indexes << affected_indexes

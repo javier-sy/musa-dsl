@@ -6,7 +6,7 @@ include Musa::Sequencer
 
 RSpec.describe Musa::Sequencer do
   context 'Basic move array sequencing' do
-
+=begin
     it 'Basic move sequencing (every, from, to, duration)' do
       s = BaseSequencer.new 4, 4
 
@@ -678,6 +678,21 @@ RSpec.describe Musa::Sequencer do
 
     it 'different right_open options (missing implementation)' do
       expect(0).to eq 1
+    end
+=end
+    it '' do
+      c = {}
+      s = Sequencer.new(4, 32) do |_|
+        _.at 1 do
+          _.move from: [0, 0], to: [3, 5], duration: 4, step: [1, nil], right_open: true do |_, value, duration:, starts_before:|
+            c[_.position] = { value: value, duration: duration, starts_before: starts_before }
+          end
+        end
+      end
+
+      s.run
+
+      pp c
     end
   end
 end
