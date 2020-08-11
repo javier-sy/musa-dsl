@@ -37,15 +37,20 @@ line = Matrix[
 ]
 
 line = Matrix[
-    [0 * 4, 60, 10, 0], # changes dynamics & pitch & instrument
+    [0 * 4, 66, 6, 0], # changes dynamics
+    [10 * 4, 57, 10, 5] # changes dynamics & pitch & instrument
+
+] if false
+
+line = Matrix[
+    [0 * 4, 60, 8, 0], # changes dynamics & pitch & instrument
     [2 * 4, 61, 8, 3]
 ] if false
 
 line = Matrix[
-    [0 * 4, 66, 6, 0], # changes dynamics
-    [10 * 4, 57, 10, 5] # changes dynamics & pitch & instrument
-
-]
+    [0 * 4, 60, 10, 0], # changes dynamics & pitch & instrument
+    [2 * 4, 61, 8, 3]
+] if false
 
 
 Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
@@ -53,12 +58,13 @@ Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
 beats_per_bar = 4r
 ticks_per_beat = 32r
 ticks_per_bar = beats_per_bar * ticks_per_beat
+resolution = 1 / ticks_per_bar
 
-score = Score.new(1 / ticks_per_bar)
+score = Score.new(resolution)
 
 debug = false
 
-sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
+sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |_|
   _.at 1 do |_|
     line.to_p(0).each do |p|
       _.play p.to_ps_serie do |_, segment|
@@ -67,7 +73,6 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
         segment_to = Packed.new(*segment[:to])
 
         duration = segment[:duration]
-        right_open = segment[:right_open]
 
         q_duration = quantize(duration, ticks_per_bar)
 
@@ -77,9 +82,9 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
 
         if debug
           puts
-          puts "%.3f dynamics_change = #{dynamics_change}" % _.position
-          puts "%.3f instrument_change = #{instrument_change}" % _.position
-          puts "%.3f pitch_change = #{pitch_change}" % _.position
+          _.log "dynamics_change = #{dynamics_change}"
+          _.log "instrument_change = #{instrument_change}"
+          _.log "pitch_change = #{pitch_change}"
         end
 
         if !instrument_change
@@ -116,16 +121,17 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
                        dynamics: segment_to.dynamics },
                  right_open: { instrument: true, dynamics: true },
                  duration: q_duration,
-                 step: 1 do |_, value, next_value, duration:, starts_before:|
+                 step: 1 do |_, value, next_value, position:, duration:, quantized_duration:, position_jitter:, duration_jitter:, starts_before:|
 
             puts
             puts
-            puts "%.3f\tvalue = #{value}\n\tnext = #{next_value}\n\tduration = #{duration}\n\tstarts_before = #{starts_before}" % _.position.to_f # if debug
+            _.log "\tvalue = #{value}\n\tnext = #{next_value}\n\tposition = #{position}\n\tduration = #{duration}\n\tquantized_duration = #{quantized_duration}\n\tposition_jitter = #{position_jitter}\n\tduration_jitter = #{duration_jitter}\n\tstarts_before = #{starts_before}"
 
             from_instrument = value[:instrument]
             to_instrument = next_value[:instrument]
 
             pitch = value[:pitch]
+
             to_pitch = next_value[:pitch]
             to_dynamics = next_value[:dynamics]
 
@@ -134,69 +140,75 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat) do |_|
               new_pitch_now = !!(!starts_before[:pitch] && to_pitch)
               new_dynamics_now = !!(!starts_before[:dynamics] && to_dynamics)
 
-              if new_instrument_now || new_dynamics_now
-                from_dynamics = value[:dynamics]
-                to_dynamics =  next_value[:dynamics]
-              else
-                from_dynamics = segment_from.dynamics
-                to_dynamics = segment_to.dynamics
-              end
-
-              q_duration_instrument = quantize(duration[:instrument], ticks_per_bar)
-              q_duration_pitch = quantize(duration[:pitch], ticks_per_bar)
-              q_duration_dynamics = quantize(duration[:dynamics], ticks_per_bar)
+              q_duration_instrument = quantized_duration[:instrument]
+              q_duration_pitch = quantized_duration[:pitch]
+              q_duration_dynamics = quantized_duration[:dynamics]
 
               from_instrument_symbol = instrument_number_to_symbol(from_instrument)
               to_instrument_symbol = instrument_number_to_symbol(to_instrument)
+
+              if new_instrument_now || new_dynamics_now
+
+                start_instrument_position = _.position - (starts_before[:instrument] || 0)
+                finish_instrument_position = start_instrument_position + quantized_duration[:instrument]
+
+                start_dynamics_position = _.position - (starts_before[:dynamics] || 0)
+                finish_dynamics_position = start_dynamics_position + quantized_duration[:dynamics]
+
+                q_effective_duration_dynamics = [finish_instrument_position, finish_dynamics_position].min - _.position
+                effective_finish_dynamics_position = _.position + q_effective_duration_dynamics
+
+
+                # relative start and finish position are ratios from 0 (beginning) to 1 (finish)
+                #
+                relative_start_position_over_instrument_timeline = Rational(_.position - start_instrument_position, finish_instrument_position - start_instrument_position)
+                relative_finish_position_over_instrument_timeline = Rational(effective_finish_dynamics_position - start_instrument_position, finish_instrument_position - start_instrument_position)
+
+                from_dynamics_from_instrument = (value[:dynamics] * (1r - relative_start_position_over_instrument_timeline)).round
+                to_dynamics_from_instrument = ((next_value[:dynamics] || value[:dynamics]) * (1r - relative_finish_position_over_instrument_timeline)).round
+
+                from_dynamics_to_instrument = (value[:dynamics] * relative_start_position_over_instrument_timeline).round
+                to_dynamics_to_instrument = ((next_value[:dynamics] || value[:dynamics]) * relative_finish_position_over_instrument_timeline).round
+
+                if from_instrument && to_instrument
+                  render_dynamics from_dynamics_from_instrument, to_dynamics_from_instrument,
+                                  q_effective_duration_dynamics,
+                                  score: score, instrument: from_instrument_symbol, position: _.position
+                end
+
+                if to_instrument
+                  render_dynamics from_dynamics_to_instrument, to_dynamics_to_instrument,
+                                  q_effective_duration_dynamics,
+                                  score: score, instrument: to_instrument_symbol, position: _.position
+                end
+              end
+
+              puts
+              _.log "new_dynamics_now = #{new_dynamics_now} new_instrument_now = #{new_instrument_now} new_pitch_now = #{new_pitch_now}"
+              _.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol}"
+
+              _.log "q_effective_duration_dynamics #{q_effective_duration_dynamics&.inspect(base: resolution) || 'nil'}"
+              _.log "relative_start_position_over_instrument_timeline = #{relative_start_position_over_instrument_timeline&.inspect(base: resolution) || 'nil'}"
+              _.log "relative_finish_position_over_instrument_timeline = #{relative_finish_position_over_instrument_timeline&.inspect(base: resolution) || 'nil'}"
+
+              _.log "value[:dynamics] = #{value[:dynamics]} next_value[:dynamics] = #{next_value[:dynamics]}"
+              _.log "#{from_instrument_symbol} from_dynamics #{from_dynamics_from_instrument} to_dynamics #{to_dynamics_from_instrument}"
+              _.log "#{to_instrument_symbol} from_dynamics #{from_dynamics_to_instrument} to_dynamics #{to_dynamics_to_instrument}"
+
+              _.log "pitch #{pitch}"
+              _.log "duration_instrument #{q_duration_instrument.inspect(base: resolution)}"
+              _.log "duration_dynamics #{q_duration_dynamics.inspect(base: resolution)}"
+              _.log "duration_pitch #{q_duration_pitch.inspect(base: resolution)}"
+              _.log "starts_before dynamics #{starts_before[:dynamics]&.inspect(base: resolution) || 'nil'}"
+              _.log "starts_before instrument #{starts_before[:instrument]&.inspect(base: resolution) || 'nil'}"
+              _.log "starts_before pitch #{starts_before[:pitch]&.inspect(base: resolution) || 'nil'}"
 
               q_effective_duration_pitch =
                   [ q_duration_instrument - (starts_before[:instrument] || 0),
                     q_duration_pitch - (starts_before[:pitch] || 0),
                     q_duration_dynamics - (starts_before[:dynamics] || 0)].min
 
-              q_effective_duration_dynamics =
-                  [ q_duration_instrument - (starts_before[:instrument] || 0),
-                    q_duration_dynamics - (starts_before[:dynamics] || 0)].min
-
-              if new_instrument_now
-                if from_instrument && to_instrument
-                  puts "%.3f new dynamics from #{from_dynamics} to #{to_dynamics} on instrument #{from_instrument_symbol} duration = #{q_duration_instrument}" % _.position.to_f if debug
-                  render_dynamics from_dynamics, to_dynamics * 1, q_effective_duration_dynamics,
-                                  score: score, instrument: from_instrument_symbol, position: _.position
-                end
-
-                if to_instrument
-                  puts "%.3f new dynamics from 0 to #{to_dynamics || from_dynamics} on instrument #{to_instrument_symbol} duration = #{q_duration_instrument}" % _.position.to_f if debug
-                  render_dynamics 0, (to_dynamics || from_dynamics) * 1, q_effective_duration_dynamics,
-                                  score: score, instrument: to_instrument_symbol, position: _.position
-                end
-              elsif new_dynamics_now
-                if from_instrument && to_instrument
-                  puts "%.3f new dynamics from #{from_dynamics} to 0 on instrument #{from_instrument_symbol} duration = #{q_duration_instrument}" % _.position.to_f if debug
-                  render_dynamics from_dynamics * 1, to_dynamics * 1, q_effective_duration_dynamics,
-                                  score: score, instrument: from_instrument_symbol, position: _.position
-                end
-
-                if to_instrument
-                  puts "%.3f new dynamics from 0 to #{to_dynamics || from_dynamics} on instrument #{to_instrument_symbol} duration = #{q_duration_instrument}" % _.position.to_f if debug
-                  render_dynamics from_dynamics * 1, to_dynamics * 1, q_effective_duration_dynamics,
-                                  score: score, instrument: to_instrument_symbol, position: _.position
-                end
-
-              end
-
-              puts
-              puts "%.3f new_dynamics_now = #{new_dynamics_now} new_instrument_now = #{new_instrument_now} new_pitch_now = #{new_pitch_now}" % _.position.to_f
-              puts "%.3f from_dynamics #{from_dynamics} to_instrument #{to_dynamics}" % _.position.to_f
-              puts "%.3f from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol}" % _.position.to_f
-              puts "%.3f pitch #{pitch}" % _.position.to_f
-              puts "%.3f duration_instrument #{q_duration_instrument}" % _.position.to_f
-              puts "%.3f duration_pitch #{q_duration_pitch}" % _.position.to_f
-              puts "%.3f starts_before dynamics #{starts_before[:dynamics] || 'nil'}" % _.position.to_f
-              puts "%.3f starts_before instrument #{starts_before[:instrument] || 'nil'}" % _.position.to_f
-              puts "%.3f starts_before pitch #{starts_before[:pitch] || 'nil'}" % _.position.to_f
-
-              puts "%.3f effective_duration_pitch #{q_effective_duration_pitch}" % _.position.to_f
+              _.log "effective_duration_pitch #{q_effective_duration_pitch.inspect(base: resolution)}"
 
               render_pitch pitch,
                            q_effective_duration_pitch,

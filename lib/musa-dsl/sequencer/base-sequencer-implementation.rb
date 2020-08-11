@@ -463,6 +463,11 @@ module Musa
         every_groups = {}
         group_counter = {}
 
+        positions = Array.new(size)
+        q_durations = Array.new(size)
+        position_jitters = Array.new(size)
+        duration_jitters = Array.new(size)
+
         size.times.each do |i|
           every_groups[every[i]] ||= []
           every_groups[every[i]] << i
@@ -498,10 +503,28 @@ module Musa
               # centered on the current tick (current tick +- 1/2 tick duration).
               # This allow to round the irregularly timed positions due to every intervals not integer
               # multiples of the tick_duration.
-
+              #
               if group_position >= position - tick_duration && group_position < position + tick_duration
                 process_indexes << affected_indexes
+
                 group_counter[group_interval] += 1
+
+                next_group_position = start_position +
+                    if group_interval
+                      (group_interval * group_counter[group_interval])
+                    else
+                      effective_duration
+                    end
+
+                next_group_q_position = _quantize(next_group_position)
+
+                affected_indexes.each do |i|
+                  positions[i] = group_position
+                  q_durations[i] = next_group_q_position - position
+
+                  position_jitters[i] = group_position - position
+                  duration_jitters[i] = next_group_position - next_group_q_position
+                end
               end
             end
 
@@ -543,27 +566,47 @@ module Musa
                   if array_mode
                     binder.apply(effective_values, effective_next_values,
                                  control: control,
+                                 position: positions,
                                  duration: _durations(every_groups, effective_duration),
+                                 quantized_duration: q_durations,
                                  starts_before: _starts_before(last_position, position, process_indexes),
+                                 position_jitter: position_jitters,
+                                 duration_jitter: duration_jitters,
                                  right_open: right_open)
                   elsif hash_mode
                     binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
                                  _hash_from_keys_and_values(hash_keys, effective_next_values),
                                  control: control,
-                                 duration: _hash_from_keys_and_values(hash_keys,
-                                                                      _durations(every_groups, effective_duration)),
-                                 starts_before: _hash_from_keys_and_values(hash_keys,
-                                                                           _starts_before(last_position,
-                                                                                          position,
-                                                                                          process_indexes)),
-                                 right_open: right_open)
+                                 position: _hash_from_keys_and_values(
+                                     hash_keys,
+                                     positions),
+                                 duration: _hash_from_keys_and_values(
+                                     hash_keys,
+                                     _durations(every_groups, effective_duration)),
+                                 quantized_duration: _hash_from_keys_and_values(
+                                     hash_keys,
+                                     q_durations),
+                                 starts_before: _hash_from_keys_and_values(
+                                     hash_keys,
+                                     _starts_before(last_position, position, process_indexes)),
+                                 position_jitter: _hash_from_keys_and_values(
+                                     hash_keys,
+                                     position_jitters),
+                                 duration_jitter: _hash_from_keys_and_values(
+                                     hash_keys,
+                                     duration_jitters),
+                                 right_open: _hash_from_keys_and_values(hash_keys, right_open))
                   else
                     binder.apply(effective_values.first,
                                  effective_next_values.first,
                                  control: control,
+                                 position: positions.first,
                                  duration: _durations(every_groups, effective_duration).first,
+                                 quantized_duration: q_durations.first,
+                                 position_jitter: position_jitters.first,
+                                 duration_jitter: duration_jitters.first,
                                  starts_before: nil,
-                                 right_open: right_open)
+                                 right_open: right_open.first)
                   end
 
               yield *value_parameters, **key_parameters
@@ -602,6 +645,10 @@ module Musa
         end
       end
 
+      def _quantize(value)
+        (value / tick_duration).round * tick_duration
+      end
+
       def _hash_from_keys_and_values(keys, values)
         {}.tap { |h| keys.each_index { |i| h[keys[i]] = values[i] } }
       end
@@ -630,11 +677,18 @@ module Musa
         end
       end
 
-      def _log(msg = nil)
+      def _log(msg = nil, decimals: nil)
         m = '...' unless msg
         m = ": #{msg}" if msg
 
-        warn "#{position.to_f.round(3)} [#{position}]#{m}"
+
+        decimals ||= @log_decimals
+        integer_digits = decimals.to_i
+        decimal_digits = ((decimals - integer_digits) * 10).round
+
+        p = "%#{integer_digits + decimal_digits + 1}s" % ("%.#{decimal_digits}f" % position.to_f)
+
+        warn "#{p}#{m} [#{position}]"
       end
     end
   end

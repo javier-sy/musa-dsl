@@ -22,9 +22,13 @@ module Musa
       def_delegators :@context, :launch, :on
       def_delegators :@context, :run
 
-      def initialize(beats_per_bar, ticks_per_beat, sequencer: nil, do_log: nil, do_error_log: nil, &block)
+      def initialize(beats_per_bar, ticks_per_beat, sequencer: nil, do_log: nil, do_error_log: nil, log_decimals: nil, &block)
         @sequencer = sequencer
-        @sequencer ||= BaseSequencer.new beats_per_bar, ticks_per_beat, do_log: do_log, do_error_log: do_error_log
+        @sequencer ||= BaseSequencer.new beats_per_bar, ticks_per_beat,
+                                         do_log: do_log,
+                                         do_error_log: do_error_log,
+                                         log_decimals: log_decimals
+
         @context = DSLContext.new @sequencer
 
         with &block if block_given?

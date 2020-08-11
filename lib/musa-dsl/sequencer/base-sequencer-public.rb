@@ -11,7 +11,7 @@ module Musa
 
       @@tick_mutex = Mutex.new
 
-      def initialize(beats_per_bar, ticks_per_beat, do_log: nil, do_error_log: nil)
+      def initialize(beats_per_bar, ticks_per_beat, do_log: nil, do_error_log: nil, log_decimals: nil)
         @on_debug_at = []
         @on_error = []
 
@@ -36,6 +36,7 @@ module Musa
 
         @do_log ||= do_log
         @do_error_log = do_error_log.nil? ? true : do_error_log
+        @log_decimals = log_decimals || 3.3
 
         reset
       end
@@ -245,8 +246,8 @@ module Musa
         control
       end
 
-      def log(msg = nil)
-        _log msg
+      def log(msg = nil, decimals: nil)
+        _log(msg, decimals: decimals)
       end
 
       def inspect

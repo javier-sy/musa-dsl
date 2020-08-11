@@ -47,12 +47,27 @@ def render_pitch(pitch, duration, score:, instrument:, position:, data: nil)
 end
 
 class Rational
-  def inspect
-    "%.4f (#{self.numerator}/#{self.denominator})" % self.to_f
-  end
+  def inspect(base: nil, digits: nil)
+    if base
+      factor = base.denominator / denominator
+      n = numerator * factor
+      d = base.denominator
+    else
+      n = numerator
+      d = denominator
+    end
 
-  def to_s
-    inspect
+    if base
+      denominator_digits = Math.log10(d).to_i + 1
+      numerator_digits = 1 # denominator_digits + 2
+    else
+      digits ||= 1.1
+
+      numerator_digits = digits.to_i
+      denominator_digits = ((digits - numerator_digits) * 10).round
+    end
+
+    "(%#{numerator_digits}s/%#{denominator_digits}s)" % [n, d]
   end
 end
 

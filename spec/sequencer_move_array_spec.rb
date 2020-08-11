@@ -6,7 +6,7 @@ include Musa::Sequencer
 
 RSpec.describe Musa::Sequencer do
   context 'Basic move array sequencing' do
-=begin
+
     it 'Basic move sequencing (every, from, to, duration)' do
       s = BaseSequencer.new 4, 4
 
@@ -623,13 +623,13 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq({
         1r => [ [0, 60], [1, 1/2r], [nil, nil] ],
-        1.5r => [ [0, 61], [1, 1/2r], [-1/2r, nil] ],
+        1.5r => [ [0, 61], [1, 1/2r], [1/2r, nil] ],
         2r => [ [1, 62], [1, 1/2r], [nil, nil] ],
-        2.5r => [ [1, 63], [1, 1/2r], [-1/2r, nil] ],
+        2.5r => [ [1, 63], [1, 1/2r], [1/2r, nil] ],
         3r => [ [2, 64], [1, 1/2r], [nil, nil] ],
-        3.5r => [ [2, 65], [1, 1/2r], [-1/2r, nil] ],
+        3.5r => [ [2, 65], [1, 1/2r], [1/2r, nil] ],
         4r => [ [3, 66], [1, 1/2r], [nil, nil] ],
-        4.5r => [ [3, 67], [1, 1/2r], [-1/2r, nil] ] })
+        4.5r => [ [3, 67], [1, 1/2r], [1/2r, nil] ] })
     end
 
     it "Bugfix: bad calculation of common_interval" do
@@ -670,29 +670,14 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq({
                           1r => { value: [0, 0], duration: [4, 1], starts_before: [nil, nil] },
-                          2r => { value: [0, 1], duration: [4, 1], starts_before: [-1, nil] },
-                          3r => { value: [0, 2], duration: [4, 1], starts_before: [-2, nil] },
-                          4r => { value: [0, 3], duration: [4, 1], starts_before: [-3, nil] }
+                          2r => { value: [0, 1], duration: [4, 1], starts_before: [1, nil] },
+                          3r => { value: [0, 2], duration: [4, 1], starts_before: [2, nil] },
+                          4r => { value: [0, 3], duration: [4, 1], starts_before: [3, nil] }
                       })
     end
 
     it 'different right_open options (missing implementation)' do
       expect(0).to eq 1
-    end
-=end
-    it '' do
-      c = {}
-      s = Sequencer.new(4, 32) do |_|
-        _.at 1 do
-          _.move from: [0, 0], to: [3, 5], duration: 4, step: [1, nil], right_open: true do |_, value, duration:, starts_before:|
-            c[_.position] = { value: value, duration: duration, starts_before: starts_before }
-          end
-        end
-      end
-
-      s.run
-
-      pp c
     end
   end
 end
