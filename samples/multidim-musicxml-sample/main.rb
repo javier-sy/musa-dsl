@@ -8,9 +8,9 @@ include Musa::Datasets
 
 using Musa::Extension::Matrix
 
-# [quarter-notes position, pitch, from_dynamics, instrument]
+# [quarter-notes position, pitch, segment_from_dynamics, instrument]
 
-line = Matrix[ [0 * 4, 60, 6, 2],
+poly_line = Matrix[ [0 * 4, 60, 6, 2],
                [10 * 4, 60, 6, 5],
                [15 * 4, 65, 7, 2],
                [20 * 4, 65, 8, 5],
@@ -18,7 +18,7 @@ line = Matrix[ [0 * 4, 60, 6, 2],
                [30 * 4, 60, 5, 2] ]
 
 
-line = Matrix[
+poly_line = Matrix[
     [0  * 4, 60, 6, 0],
     [4  * 4, 60, 6, 0], # changes nothing
     [8  * 4, 60, 8, 0], # changes dynamics
@@ -36,21 +36,21 @@ line = Matrix[
     [42 * 4, 57, 10, 5] # changes dynamics & pitch & instrument
 ]
 
-line = Matrix[
+poly_line = Matrix[
     [0 * 4, 66, 6, 0], # changes dynamics
     [10 * 4, 57, 10, 5] # changes dynamics & pitch & instrument
 
 ] if false
 
-line = Matrix[
+poly_line = Matrix[
     [0 * 4, 60, 8, 0], # changes dynamics & pitch & instrument
     [2 * 4, 61, 8, 3]
 ] if false
 
-line = Matrix[
+poly_line = Matrix[
     [0 * 4, 60, 10, 0], # changes dynamics & pitch & instrument
     [2 * 4, 61, 8, 3]
-] if false
+]
 
 
 Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
@@ -66,13 +66,13 @@ debug = false
 
 sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |_|
   _.at 1 do |_|
-    line.to_p(0).each do |p|
-      _.play p.to_ps_serie do |_, segment|
+    poly_line.to_p(0).each do |p|
+      _.play p.to_ps_serie do |_, line|
 
-        segment_from = Packed.new(*segment[:from])
-        segment_to = Packed.new(*segment[:to])
+        segment_from = Packed.new(*line[:from])
+        segment_to = Packed.new(*line[:to])
 
-        duration = segment[:duration]
+        duration = line[:duration]
 
         q_duration = quantize(duration, ticks_per_bar)
 
@@ -121,7 +121,12 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                        dynamics: segment_to.dynamics },
                  right_open: { instrument: true, dynamics: true },
                  duration: q_duration,
-                 step: 1 do |_, value, next_value, position:, duration:, quantized_duration:, position_jitter:, duration_jitter:, starts_before:|
+                 step: 1 do |_, value, next_value,
+                                position:,
+                                duration:,
+                                quantized_duration:,
+                                position_jitter:, duration_jitter:,
+                                starts_before:|
 
             puts
             puts
@@ -155,31 +160,71 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                 start_dynamics_position = _.position - (starts_before[:dynamics] || 0)
                 finish_dynamics_position = start_dynamics_position + quantized_duration[:dynamics]
 
-                q_effective_duration_dynamics = [finish_instrument_position, finish_dynamics_position].min - _.position
-                effective_finish_dynamics_position = _.position + q_effective_duration_dynamics
+                segment_q_effective_duration =
+                    [finish_instrument_position, finish_dynamics_position].min - _.position
 
+                segment_effective_finish_position = _.position + segment_q_effective_duration
 
                 # relative start and finish position are ratios from 0 (beginning) to 1 (finish)
                 #
-                relative_start_position_over_instrument_timeline = Rational(_.position - start_instrument_position, finish_instrument_position - start_instrument_position)
-                relative_finish_position_over_instrument_timeline = Rational(effective_finish_dynamics_position - start_instrument_position, finish_instrument_position - start_instrument_position)
+                segment_relative_start_position_over_instrument_timeline =
+                    Rational(_.position - start_instrument_position,
+                             finish_instrument_position - start_instrument_position)
 
-                from_dynamics_from_instrument = (value[:dynamics] * (1r - relative_start_position_over_instrument_timeline)).round
-                to_dynamics_from_instrument = ((next_value[:dynamics] || value[:dynamics]) * (1r - relative_finish_position_over_instrument_timeline)).round
+                segment_relative_finish_position_over_instrument_timeline =
+                    Rational(segment_effective_finish_position - start_instrument_position,
+                             finish_instrument_position - start_instrument_position)
+                #
+                segment_relative_start_position_over_dynamics_timeline =
+                    Rational(_.position - start_dynamics_position,
+                             finish_dynamics_position - start_dynamics_position)
 
-                from_dynamics_to_instrument = (value[:dynamics] * relative_start_position_over_instrument_timeline).round
-                to_dynamics_to_instrument = ((next_value[:dynamics] || value[:dynamics]) * relative_finish_position_over_instrument_timeline).round
+                segment_relative_finish_position_over_dynamics_timeline =
+                    Rational(segment_effective_finish_position - start_dynamics_position,
+                             finish_dynamics_position - start_dynamics_position)
+
+                delta_dynamics = (next_value[:dynamics] || value[:dynamics]) - value[:dynamics]
+
+                segment_from_dynamics =
+                    value[:dynamics] +
+                    delta_dynamics * segment_relative_start_position_over_dynamics_timeline
+
+                segment_to_dynamics =
+                    value[:dynamics] +
+                    delta_dynamics * segment_relative_finish_position_over_dynamics_timeline
+
+                segment_from_dynamics_from_instrument =
+                    segment_from_dynamics *
+                        (1r - segment_relative_start_position_over_instrument_timeline)
+
+                segment_to_dynamics_from_instrument =
+                    segment_to_dynamics *
+                        (1r - segment_relative_finish_position_over_instrument_timeline)
+
+                segment_from_dynamics_to_instrument =
+                    segment_from_dynamics *
+                        segment_relative_start_position_over_instrument_timeline
+
+                segment_to_dynamics_to_instrument =
+                    segment_to_dynamics *
+                        segment_relative_finish_position_over_instrument_timeline
 
                 if from_instrument && to_instrument
-                  render_dynamics from_dynamics_from_instrument, to_dynamics_from_instrument,
-                                  q_effective_duration_dynamics,
-                                  score: score, instrument: from_instrument_symbol, position: _.position
+                  render_dynamics segment_from_dynamics_from_instrument.round(half: :up),
+                                  segment_to_dynamics_from_instrument.round(half: :up),
+                                  segment_q_effective_duration,
+                                  score: score,
+                                  instrument: from_instrument_symbol,
+                                  position: _.position
                 end
 
                 if to_instrument
-                  render_dynamics from_dynamics_to_instrument, to_dynamics_to_instrument,
-                                  q_effective_duration_dynamics,
-                                  score: score, instrument: to_instrument_symbol, position: _.position
+                  render_dynamics segment_from_dynamics_to_instrument.round(half: :down),
+                                  segment_to_dynamics_to_instrument.round(half: :down),
+                                  segment_q_effective_duration,
+                                  score: score,
+                                  instrument: to_instrument_symbol,
+                                  position: _.position
                 end
               end
 
@@ -187,13 +232,19 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
               _.log "new_dynamics_now = #{new_dynamics_now} new_instrument_now = #{new_instrument_now} new_pitch_now = #{new_pitch_now}"
               _.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol}"
 
-              _.log "q_effective_duration_dynamics #{q_effective_duration_dynamics&.inspect(base: resolution) || 'nil'}"
-              _.log "relative_start_position_over_instrument_timeline = #{relative_start_position_over_instrument_timeline&.inspect(base: resolution) || 'nil'}"
-              _.log "relative_finish_position_over_instrument_timeline = #{relative_finish_position_over_instrument_timeline&.inspect(base: resolution) || 'nil'}"
+              _.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: resolution) || 'nil'}"
 
-              _.log "value[:dynamics] = #{value[:dynamics]} next_value[:dynamics] = #{next_value[:dynamics]}"
-              _.log "#{from_instrument_symbol} from_dynamics #{from_dynamics_from_instrument} to_dynamics #{to_dynamics_from_instrument}"
-              _.log "#{to_instrument_symbol} from_dynamics #{from_dynamics_to_instrument} to_dynamics #{to_dynamics_to_instrument}"
+              _.log "segment_relative_start_position_over_dynamics_timeline = #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+              _.log "segment_relative_finish_position_over_dynamics_timeline = #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+
+              _.log "value[:dynamics] = #{value[:dynamics].to_f.round(2)} delta_dynamics = #{delta_dynamics.to_f.round(2)}"
+              _.log "segment_from_dynamics = #{segment_from_dynamics.to_f.round(2)} to_dynamics = #{to_dynamics.to_f.round(2)}"
+
+              _.log "segment_relative_start_position_over_instrument_timeline = #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+              _.log "segment_relative_finish_position_over_instrument_timeline = #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+
+              _.log "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
+              _.log "#{to_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
 
               _.log "pitch #{pitch}"
               _.log "duration_instrument #{q_duration_instrument.inspect(base: resolution)}"

@@ -566,13 +566,13 @@ module Musa
                   if array_mode
                     binder.apply(effective_values, effective_next_values,
                                  control: control,
-                                 position: positions,
+                                 position: positions.dup,
                                  duration: _durations(every_groups, effective_duration),
-                                 quantized_duration: q_durations,
+                                 quantized_duration: q_durations.dup,
                                  starts_before: _starts_before(last_position, position, process_indexes),
-                                 position_jitter: position_jitters,
-                                 duration_jitter: duration_jitters,
-                                 right_open: right_open)
+                                 position_jitter: position_jitters.dup,
+                                 duration_jitter: duration_jitters.dup,
+                                 right_open: right_open.dup)
                   elsif hash_mode
                     binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
                                  _hash_from_keys_and_values(hash_keys, effective_next_values),
