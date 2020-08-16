@@ -203,6 +203,10 @@ module Musa
         def stop
           @every_control.stop
         end
+
+        def stopped?
+          @stop
+        end
       end
 
       private_constant :MoveControl

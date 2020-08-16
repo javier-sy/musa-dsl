@@ -191,7 +191,7 @@ RSpec.describe Musa::Sequencer do
       s.tick
 
       expect(c).to eq([Rational(5), Rational(6), Rational(7)])
-      expect(s.moving).to include move_control
+      expect(s.moving.size).to eq 0
 
       s.tick
 
@@ -364,7 +364,7 @@ RSpec.describe Musa::Sequencer do
 
         when 5 - 1/4r
           expect(c).to eq([4, 4, 4, 4])
-          expect(s.moving).to include move_control
+          expect(s.moving.size).to eq 0
 
           tests_passed += 1
 

@@ -487,11 +487,11 @@ module Musa
         @event_handlers.push control
 
         _numeric_at start_position, control do
-          values = from.dup
-          next_values = Array.new(size)
-          last_position = Array.new(size)
+          next_values = from.dup
 
-          first = true
+          values = Array.new(size)
+          stop = Array.new(size, false)
+          last_position = Array.new(size)
 
           _every _common_interval(every_groups.keys), control.every_control do
             process_indexes = []
@@ -530,36 +530,36 @@ module Musa
 
             process_indexes.flatten!
 
-            if first || process_indexes.any?
-              if first
-                first = false
-              else
-                i = process_indexes.first
+            if process_indexes.any?
 
-                if to[i] && (values[i] >= to[i] && step[i].positive? || values[i] <= to[i] && step[i].negative?)
-                  control.stop
-                else
-                  process_indexes.each do |i|
-                    values[i] += step[i]
+              process_indexes.each do |i|
+                unless stop[i]
+                  values[i] = next_values[i]
+                  next_values[i] += step[i]
+
+                  if to[i]
+                    stop[i] = if right_open[i]
+                                step[i].positive? ? next_values[i] >= to[i] : next_values[i] <= to[i]
+                              else
+                                step[i].positive? ? next_values[i] > to[i] : next_values[i] < to[i]
+                              end
+
+                    if stop[i]
+                      next_values[i] = nil
+                    end
                   end
                 end
               end
 
-              process_indexes.each do |i|
-                next_values[i] = values[i] + step[i]
-                if to[i] && (next_values[i] > to[i] && step[i].positive? ||
-                    next_values[i] < to[i] && step[i].negative?)
-
-                  next_values[i] = nil
-                end
-              end
+              control.stop if stop.all?
 
               effective_values = from.clone(freeze: false).map!.with_index do |_, i|
-                function[i].call(values[i]) * function_range[i] + function_offset[i]
+                function[i].call(values[i]) * function_range[i] + function_offset[i] unless values[i].nil?
               end
 
               effective_next_values = from.clone(freeze: false).map!.with_index do |_, i|
-                function[i].call(next_values[i]) * function_range[i] + function_offset[i] unless next_values[i].nil?
+                function[i].call(next_values[i]) * function_range[i] +
+                    function_offset[i] unless next_values[i].nil?
               end
 
               value_parameters, key_parameters =
@@ -569,7 +569,7 @@ module Musa
                                  position: positions.dup,
                                  duration: _durations(every_groups, effective_duration),
                                  quantized_duration: q_durations.dup,
-                                 starts_before: _starts_before(last_position, position, process_indexes),
+                                 started_ago: _started_ago(last_position, position, process_indexes),
                                  position_jitter: position_jitters.dup,
                                  duration_jitter: duration_jitters.dup,
                                  right_open: right_open.dup)
@@ -586,9 +586,9 @@ module Musa
                                  quantized_duration: _hash_from_keys_and_values(
                                      hash_keys,
                                      q_durations),
-                                 starts_before: _hash_from_keys_and_values(
+                                 started_ago: _hash_from_keys_and_values(
                                      hash_keys,
-                                     _starts_before(last_position, position, process_indexes)),
+                                     _started_ago(last_position, position, process_indexes)),
                                  position_jitter: _hash_from_keys_and_values(
                                      hash_keys,
                                      position_jitters),
@@ -605,7 +605,7 @@ module Musa
                                  quantized_duration: q_durations.first,
                                  position_jitter: position_jitters.first,
                                  duration_jitter: duration_jitters.first,
-                                 starts_before: nil,
+                                 started_ago: nil,
                                  right_open: right_open.first)
                   end
 
@@ -621,7 +621,7 @@ module Musa
         control
       end
 
-      def _starts_before(last_positions, position, affected_indexes)
+      def _started_ago(last_positions, position, affected_indexes)
         Array.new(last_positions.size).tap do |a|
           last_positions.each_index do |i|
             if last_positions[i] && !affected_indexes.include?(i)

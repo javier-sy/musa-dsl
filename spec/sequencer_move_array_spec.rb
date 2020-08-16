@@ -191,7 +191,7 @@ RSpec.describe Musa::Sequencer do
       s.tick
 
       expect(c).to eq([Rational(5), Rational(6), Rational(7)])
-      expect(s.moving).to include move_control
+      expect(s.moving.size).to eq 0
 
       s.tick
 
@@ -396,7 +396,7 @@ RSpec.describe Musa::Sequencer do
 
         when 5 - 1/16r
           expect(c).to eq([2, 3, 4])
-          expect(s.moving).to include move_control
+          expect(s.moving.size).to eq 0
 
           tests_passed += 1
 
@@ -568,7 +568,7 @@ RSpec.describe Musa::Sequencer do
 
         when 5 - 1/4r
           expect(c).to eq([4, 4, 4, 4])
-          expect(s.moving).to include move_control
+          expect(s.moving.size).to eq 0
 
           tests_passed += 1
 
@@ -611,8 +611,8 @@ RSpec.describe Musa::Sequencer do
 
       s = Sequencer.new(4, 32) do |_|
         _.at 1 do
-          _.move from: [0, 60], to: [3, 67], duration: 4, step: 1 do |value, duration:, starts_before:|
-            c[_.position] = [value, duration, starts_before]
+          _.move from: [0, 60], to: [3, 67], duration: 4, step: 1 do |value, duration:, started_ago:|
+            c[_.position] = [value, duration, started_ago]
           end
         end
       end
@@ -660,8 +660,8 @@ RSpec.describe Musa::Sequencer do
       c = {}
       s = Sequencer.new(4, 32) do |_|
         _.at 1 do
-          _.move from: [0, 0], to: [0, 4], duration: 4, step: 1, right_open: true do |_, value, duration:, starts_before:|
-            c[_.position] = { value: value, duration: duration, starts_before: starts_before }
+          _.move from: [0, 0], to: [0, 4], duration: 4, step: 1, right_open: true do |_, value, duration:, started_ago:|
+            c[_.position] = { value: value, duration: duration, started_ago: started_ago }
           end
         end
       end
@@ -669,15 +669,38 @@ RSpec.describe Musa::Sequencer do
       s.run
 
       expect(c).to eq({
-                          1r => { value: [0, 0], duration: [4, 1], starts_before: [nil, nil] },
-                          2r => { value: [0, 1], duration: [4, 1], starts_before: [1, nil] },
-                          3r => { value: [0, 2], duration: [4, 1], starts_before: [2, nil] },
-                          4r => { value: [0, 3], duration: [4, 1], starts_before: [3, nil] }
+                          1r => { value: [0, 0], duration: [4, 1], started_ago: [nil, nil] },
+                          2r => { value: [0, 1], duration: [4, 1], started_ago: [1, nil] },
+                          3r => { value: [0, 2], duration: [4, 1], started_ago: [2, nil] },
+                          4r => { value: [0, 3], duration: [4, 1], started_ago: [3, nil] }
                       })
     end
 
-    it 'different right_open options (missing implementation)' do
-      expect(0).to eq 1
+    it 'Different right_option values' do
+      c = {}
+      s = Sequencer.new(4, 32, log_decimals: 1.3) do |_|
+        _.at 1 do
+          _.move from: [ 5, 60, 6 ],
+                 to: [ 2, 65, 7 ],
+                 right_open: [ true, false, true ],
+                 duration: 5,
+                 step: 1 do |_, value|
+
+            c[_.position] ||= []
+            c[_.position] << value
+          end
+        end
+      end
+
+      s.run
+
+      expect(c).to eq({ 1r        => [[5, 60, 6]],
+                        235/128r  => [[5, 61, 6]],
+                        341/128r  => [[4, 62, 6]],
+                        7/2r      => [[4, 63, 6]],
+                        555/128r  => [[3, 64, 6]],
+                        661/128r  => [[3, 65, 6]] })
     end
+
   end
 end
