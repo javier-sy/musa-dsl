@@ -684,22 +684,22 @@ RSpec.describe Musa::Sequencer do
                  to: [ 2, 65, 7 ],
                  right_open: [ true, false, true ],
                  duration: 5,
-                 step: 1 do |_, value|
+                 step: 1 do |_, value, next_value, right_open:|
 
             c[_.position] ||= []
-            c[_.position] << value
+            c[_.position] << [value, next_value, right_open]
           end
         end
       end
 
       s.run
 
-      expect(c).to eq({ 1r        => [[5, 60, 6]],
-                        235/128r  => [[5, 61, 6]],
-                        341/128r  => [[4, 62, 6]],
-                        7/2r      => [[4, 63, 6]],
-                        555/128r  => [[3, 64, 6]],
-                        661/128r  => [[3, 65, 6]] })
+      expect(c).to eq({ 1r        => [[[5, 60, 6], [4, 61, 7], [true, false, true]]],
+                        235/128r  => [[[5, 61, 6], [4, 62, 7], [true, false, true]]],
+                        341/128r  => [[[4, 62, 6], [3, 63, 7], [true, false, true]]],
+                        7/2r      => [[[4, 63, 6], [3, 64, 7], [true, false, true]]],
+                        555/128r  => [[[3, 64, 6], [2, 65, 7], [true, false, true]]],
+                        661/128r  => [[[3, 65, 6], [2, nil, 7], [true, false, true]]] })
     end
 
   end

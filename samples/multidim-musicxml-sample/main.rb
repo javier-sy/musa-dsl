@@ -15,9 +15,12 @@ poly_line = Matrix[ [0 * 4, 60, 6, 2],
                [15 * 4, 65, 7, 2],
                [20 * 4, 65, 8, 5],
                [25 * 4, 60, 7, 0],
-               [30 * 4, 60, 5, 2] ]
+               [30 * 4, 60, 5, 2] ] if false
 
 
+# TODO tiene un fallo, parece que en el último compás faltaría el crescendo hasta fff
+# hay que revisarlo
+#
 poly_line = Matrix[
     [0  * 4, 60, 6, 0],
     [4  * 4, 60, 6, 0], # changes nothing
@@ -47,10 +50,12 @@ poly_line = Matrix[
     [2 * 4, 61, 8, 3]
 ] if false
 
+# TODO no salen los crescendo/decrescendo
+#
 poly_line = Matrix[
     [0 * 4, 60, 10, 0], # changes dynamics & pitch & instrument
     [2 * 4, 61, 8, 3]
-] if false
+]
 
 
 Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
@@ -89,7 +94,7 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                to: { instrument: line_to.instrument,
                      pitch: line_to.pitch,
                      dynamics: line_to.dynamics },
-               right_open: { instrument: true, dynamics: true },
+               right_open: { dynamics: true },
                duration: q_duration,
                step: 1 do |_, value, next_value,
                               position:,

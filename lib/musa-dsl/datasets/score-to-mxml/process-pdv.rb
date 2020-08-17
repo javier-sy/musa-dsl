@@ -81,7 +81,7 @@ module Musa::Datasets::Score::ToMXML
                'continue'
              elsif first && !effective_duration_decomposition.empty?
                'start'
-             elsif effective_duration_decomposition.empty?
+             elsif !first && effective_duration_decomposition.empty?
                'stop'
              else
                nil

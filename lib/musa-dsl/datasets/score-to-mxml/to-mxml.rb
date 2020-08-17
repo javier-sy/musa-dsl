@@ -89,6 +89,9 @@ module Musa::Datasets::Score::ToMXML
 
         puts "fill_part: bar #{bar} first = #{first}"
 
+        # TODO habrá que arreglar el cálculo de pointer cuando haya avances y retrocesos para que
+        # TODO no añada silencios incorrectos al principio o al final
+
         if (first[:time_in_interval] || first[:start_in_interval]) > bar
           pointer = process_pdv(measure, bar, divisions_per_bar,
                                 { start: bar,
@@ -107,6 +110,14 @@ module Musa::Datasets::Score::ToMXML
           else
             # ignored
           end
+        end
+
+        if pointer < 1r
+          process_pdv(measure, bar, divisions_per_bar,
+              { start: bar + pointer,
+                       finish: bar + 1 - Rational(1, divisions_per_bar),
+                       dataset: { pitch: :silence, duration: 1r - pointer }.extend(PDV) },
+                      pointer)
         end
       end
     end
