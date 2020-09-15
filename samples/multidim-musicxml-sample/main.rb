@@ -37,9 +37,8 @@ Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
 beats_per_bar = 4r
 ticks_per_beat = 32r
 ticks_per_bar = beats_per_bar * ticks_per_beat
-resolution = 1 / ticks_per_bar
 
-score = Score.new(resolution)
+score = Score.new
 
 sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |_|
   _.at 1 do |_|
@@ -166,7 +165,7 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
 
               _.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
 
-              _.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: resolution) || 'nil'}"
+              _.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: 0.0001) || 'nil'}"
 
               _.log "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
               _.log "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
@@ -213,7 +212,7 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                   q_duration_pitch - (started_ago[:pitch] || 0),
                   q_duration_dynamics - (started_ago[:dynamics] || 0)].min
 
-            _.log "effective_duration_pitch #{q_effective_duration_pitch.inspect(base: resolution)}"
+            _.log "effective_duration_pitch #{q_effective_duration_pitch.inspect(base: 0.0001)}"
 
             render_pitch pitch,
                          q_effective_duration_pitch,

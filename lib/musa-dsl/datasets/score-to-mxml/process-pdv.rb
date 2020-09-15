@@ -8,7 +8,7 @@ module Musa::Datasets::Score::ToMXML
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
     continue_from_previous_bar = element[:start] < bar
-    continue_to_next_bar = element[:finish] >= bar + 1r
+    continue_to_next_bar = element[:finish] > bar + 1r
 
     effective_start = continue_from_previous_bar ? 0r : element[:start] - bar
 

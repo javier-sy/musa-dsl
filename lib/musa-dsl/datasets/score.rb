@@ -78,7 +78,7 @@ module Musa::Datasets
           .select { |i| i[:start] >= closed_interval_start && i[:start] < open_interval_finish }
           .collect { |i| i.clone.merge({ change: :start, time: i[:start] }) } +
         @indexer
-          .select { |i| i[:finish] >= closed_interval_start && i[:finish] < open_interval_finish }
+          .select { |i| i[:finish] > closed_interval_start && i[:finish] <= open_interval_finish }
           .collect { |i| i.clone.merge({ change: :finish, time: i[:finish] }) } )
         .sort_by { |i| i[:time] }
         .collect { |i| { change: i[:change],
