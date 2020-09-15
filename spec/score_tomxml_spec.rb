@@ -8,7 +8,7 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
   context 'Score with complexities to MXML generation' do
 
     it 'converts a pdv + ps with dynamics dataset score to MusicXML' do
-      score = Score.new(0.125)
+      score = Score.new
 
       score.at 1, add: { pitch: 60, duration: 1/4r }.extend(PDV)
       score.at 1.25, add: { pitch: 60, duration: 1/4r }.extend(PDV)
@@ -25,15 +25,16 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
                            title: 'work title',
                            creators: { composer: 'Javier Sánchez Yeste' },
                            encoding_date: DateTime.new(2020, 7, 31),
-                           parts: { piano: { name: 'Piano', abbreviation: 'pno', clefs: { g: 2, f: 4 } } } )
+                           parts: { piano: { name: 'Piano', abbreviation: 'pno', clefs: { g: 2, f: 4 } } },
+                           do_log: true)
 
-      # File.open(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
+      File.open(File.join(File.dirname(__FILE__), "score_tomxml_1_spec_REMOVE.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
 
       expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml")).strip
     end
-
+=begin
     it 'manages irregular durations (unfinished test case)' do
-      score = Score.new(1/32r)
+      score = Score.new
 
       # score.at 1, add: { pitch: 60, duration: 5/16r }.extend(PDV)
 
@@ -56,5 +57,6 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
 
       expect(1).to eq 0 # TODO unfinished test case
     end
+=end
   end
 end

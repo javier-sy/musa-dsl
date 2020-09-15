@@ -8,13 +8,12 @@ RSpec.describe Musa::Datasets::Score do
 
   context 'Score' do
     it 'refuses things that are not a Dataset' do
-
-      s = Score.new(0.125)
+      s = Score.new
       expect { s.at(1, add: { something: 1 }) }.to raise_error(ArgumentError)
     end
 
     it 'manages event agrupation correctly' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(1, add: { something: 1 }.extend(AbsD))
       s.at(2, add: { something: -1 }.extend(AbsD))
@@ -42,7 +41,7 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages group_by' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
       s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
@@ -64,7 +63,7 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages select_attribute' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
       s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
@@ -83,7 +82,7 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages sort_by_attribute' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
       s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
@@ -103,7 +102,7 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages subset' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
       s.at(2, add: { something: -1, criteria: :b }.extend(AbsD))
@@ -126,7 +125,7 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages between' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
       s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
@@ -138,14 +137,15 @@ RSpec.describe Musa::Datasets::Score do
 
       l = s.between(2, 4)
 
-      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 }, start: 1r, finish: 3.875r, start_in_interval: 2r, finish_in_interval: 3.875r },
-                        { dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r, start_in_interval: 2r, finish_in_interval: 4r  },
+      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 }, start: 1r, finish: 4r, start_in_interval: 2r, finish_in_interval: 4r },
+                        { dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 5r, start_in_interval: 2r, finish_in_interval: 4r  },
                         { dataset: { something: -1, criteria: :b }, start: 3, finish: 3r, start_in_interval: 3r, finish_in_interval: 3r  },
-                        { dataset: { something: 99, criteria: :b, duration: 0.5 }, start: 3.5r, finish: 3.875r, start_in_interval: 3.5r, finish_in_interval: 3.875r  } ]
+                        { dataset: { something: 99, criteria: :b, duration: 0.5 }, start: 3.5r, finish: 4r, start_in_interval: 3.5r, finish_in_interval: 4r  } ]
+
     end
 
-    it 'manages events_between' do
-      s = Score.new(0.125)
+    it 'manages changes_between' do
+      s = Score.new
 
       s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
       s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
@@ -157,11 +157,11 @@ RSpec.describe Musa::Datasets::Score do
 
       l = s.changes_between(2, 3)
 
-      expect(l).to eq [ { change: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 4.875r, start_in_interval: 2r, finish_in_interval: 3r, time_in_interval: 2r } ]
+      expect(l).to eq [ { change: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 5r, start_in_interval: 2r, finish_in_interval: 3r, time_in_interval: 2r } ]
     end
 
     it 'manages finish' do
-      s = Score.new(0.125)
+      s = Score.new
 
       s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
       s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
@@ -172,7 +172,7 @@ RSpec.describe Musa::Datasets::Score do
       s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
       s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
 
-      expect(s.finish).to eq 7.875r
+      expect(s.finish).to eq 8r
     end
 
     it 'manages Queryable' do

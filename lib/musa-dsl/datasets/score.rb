@@ -7,8 +7,7 @@ module Musa::Datasets
     require_relative 'score-to-mxml/to-mxml'
     include Musa::Datasets::Score::ToMXML
 
-    def initialize(resolution)
-      @resolution = resolution.rationalize
+    def initialize
       @score = {}
       @indexer = []
     end
@@ -30,7 +29,7 @@ module Musa::Datasets
       slot << add
 
       @indexer << { start: time,
-                    finish: time + (add.duration || @resolution).rationalize - @resolution,
+                    finish: time + add.duration.rationalize,
                     dataset: add }
 
       nil
@@ -55,9 +54,9 @@ module Musa::Datasets
 
     def between(closed_interval_start, open_interval_finish)
       @indexer
-          .select { |i| i[:start] <= closed_interval_start && i[:finish] >= closed_interval_start ||
-                        i[:start] < open_interval_finish && i[:finish] >= open_interval_finish ||
-                        i[:start] >= closed_interval_start && i[:finish] < open_interval_finish }
+          .select { |i| i[:start] <= closed_interval_start && i[:finish] > closed_interval_start ||
+                        i[:start] < open_interval_finish && i[:finish] > open_interval_finish ||
+                        i[:start] >= closed_interval_start && i[:finish] <= open_interval_finish }
           .sort_by { |i| i[:start] }
           .collect { |i| { start: i[:start],
                            finish: i[:finish],
@@ -72,10 +71,7 @@ module Musa::Datasets
       @score
     end
 
-
-    # hay que implementar un effective_start y effective_finish con el inicio/fin dentro del bar, no absoluto
-
-
+    # TODO hay que implementar un effective_start y effective_finish con el inicio/fin dentro del bar, no absoluto
 
     def changes_between(closed_interval_start, open_interval_finish)
       ( @indexer
@@ -110,7 +106,7 @@ module Musa::Datasets
     def subset
       raise ArgumentError, "subset needs a block with the inclusion condition on the dataset" unless block_given?
 
-      filtered_score = Score.new(@resolution)
+      filtered_score = Score.new
 
       @score.each_pair do |time, datasets|
         datasets.each do |dataset|

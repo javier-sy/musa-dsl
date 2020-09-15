@@ -13,7 +13,7 @@ module Musa::Datasets
     attr_accessor :base_duration
 
     def to_neuma
-      # ???????
+      # TODO ???????
     end
 
     def to_pdv
@@ -28,5 +28,8 @@ module Musa::Datasets
       # ?????
     end
 
+    def to_score(score: nil, position: nil)
+
+    end
   end
 end

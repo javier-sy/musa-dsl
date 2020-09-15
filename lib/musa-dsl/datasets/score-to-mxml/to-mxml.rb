@@ -52,7 +52,7 @@ module Musa::Datasets::Score::ToMXML
 
     if do_log
       warn "\nscore.to_mxl log:"
-      warn "-----------------"
+      warn   "-----------------"
     end
 
     parts.each_key do |part_id|
