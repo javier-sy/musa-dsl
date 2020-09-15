@@ -1,12 +1,13 @@
 module Musa::Datasets::Score::ToMXML
   private
 
-
   DynamicsContext = Struct.new(:last_dynamics)
   private_constant :DynamicsContext
 
-  def process_ps(measure, element, context = nil)
+  def process_ps(measure, element, context, do_log)
     context ||= DynamicsContext.new
+
+    warn "\nprocess_ps #{element}" if do_log
 
     case element[:dataset][:type]
     when :crescendo, :diminuendo

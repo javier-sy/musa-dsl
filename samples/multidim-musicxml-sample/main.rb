@@ -10,17 +10,9 @@ using Musa::Extension::Matrix
 
 # [quarter-notes position, pitch, segment_from_dynamics, instrument]
 
-poly_line = Matrix[ [0 * 4, 60, 6, 2],
-               [10 * 4, 60, 6, 5],
-               [15 * 4, 65, 7, 2],
-               [20 * 4, 65, 8, 5],
-               [25 * 4, 60, 7, 0],
-               [30 * 4, 60, 5, 2] ] if false
+# TODO ligar notas (para hacer legato)?
+# TODO ligar notas cuando no cambia de altura en el mismo instrumento?
 
-
-# TODO tiene un fallo, parece que en el último compás faltaría el crescendo hasta fff
-# hay que revisarlo
-#
 poly_line = Matrix[
     [0  * 4, 60, 6, 0],
     [4  * 4, 60, 6, 0], # changes nothing
@@ -36,27 +28,9 @@ poly_line = Matrix[
     [31 * 4, 66, 4, 0], # changes dynamics & instrument
 
     [32 * 4, 66, 6, 0], # changes dynamics
-    [42 * 4, 57, 10, 5] # changes dynamics & pitch & instrument
-] if false
-
-poly_line = Matrix[
-    [0 * 4, 66, 6, 0], # changes dynamics
-    [10 * 4, 57, 10, 5] # changes dynamics & pitch & instrument
-
-] if false
-
-poly_line = Matrix[
-    [0 * 4, 60, 8, 0], # changes dynamics & pitch & instrument
-    [2 * 4, 61, 8, 3]
-] if false
-
-# TODO no salen los crescendo/decrescendo
-#
-poly_line = Matrix[
-    [0 * 4, 60, 10, 0], # changes dynamics & pitch & instrument
-    [2 * 4, 61, 8, 3]
+    [42 * 4, 57, 10, 5], # changes dynamics & pitch & instrument
+    [46 * 4, 57, 10, 5] # change nothing
 ]
-
 
 Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
 
@@ -75,6 +49,10 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
         line_from = Packed.new(*line[:from])
         line_to = Packed.new(*line[:to])
 
+        puts
+        _.log "line from #{line_from}"
+        _.log "line to #{line_to}"
+
         duration = line[:duration]
 
         q_duration = quantize(duration, ticks_per_bar)
@@ -84,8 +62,6 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
         pitch_change = line_from.pitch != line_to.pitch
 
         puts
-        puts
-        _.log "line #{line}"
         _.log "dynamics_change #{dynamics_change} instrument_change #{instrument_change} pitch_change #{pitch_change}"
 
         _.move from: { instrument: line_from.instrument,
@@ -104,11 +80,16 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                               started_ago:|
 
           puts
-          _.log "\tvalue = #{value}\n\tnext = #{next_value}\n\tposition = #{position}\n\tduration = #{duration}\n\tquantized_duration = #{quantized_duration}\n\tstarted_ago = #{started_ago}\n\tposition_jitter = #{position_jitter}\n\tduration_jitter = #{duration_jitter}"
+          _.log "\n\tvalue #{value}\n\tnext #{next_value}\n\tposition #{position}\n\tduration #{duration}" \
+                "\n\tquantized_duration #{quantized_duration}\n\tstarted_ago #{started_ago}"\
+                "\n\tposition_jitter #{position_jitter}\n\tduration_jitter #{duration_jitter}"
 
           new_instrument_now = !started_ago[:instrument]
           new_dynamics_now = !started_ago[:dynamics]
           new_pitch_now = !started_ago[:pitch]
+
+          puts
+          _.log "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
 
           if new_instrument_now || new_dynamics_now || new_pitch_now
 
@@ -183,50 +164,49 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                   segment_to_dynamics *
                       segment_relative_finish_position_over_instrument_timeline
 
+              _.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
+
+              _.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: resolution) || 'nil'}"
+
+              _.log "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+              _.log "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+
+              _.log "value[:dynamics] #{value[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
+              _.log "segment_from_dynamics #{segment_from_dynamics.to_f.round(2)} to_dynamics #{to_dynamics.to_f.round(2)}"
+
+              _.log "segment_relative_start_position_over_instrument_timeline #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+              _.log "segment_relative_finish_position_over_instrument_timeline #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+
+              _.log "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
+              _.log "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
+
               if from_instrument && to_instrument
-                render_dynamics segment_from_dynamics_from_instrument.round(half: :up),
-                                segment_to_dynamics_from_instrument.round(half: :up),
+                render_dynamics segment_from_dynamics_from_instrument,
+                                segment_to_dynamics_from_instrument,
                                 segment_q_effective_duration,
                                 score: score,
                                 instrument: from_instrument_symbol,
                                 position: _.position
-              end
 
-              if to_instrument
-                render_dynamics segment_from_dynamics_to_instrument.round(half: :down),
-                                segment_to_dynamics_to_instrument.round(half: :down),
+                render_dynamics segment_from_dynamics_to_instrument,
+                                segment_to_dynamics_to_instrument,
                                 segment_q_effective_duration,
                                 score: score,
                                 instrument: to_instrument_symbol,
                                 position: _.position
               end
+
+              if from_instrument && !to_instrument
+                render_dynamics segment_from_dynamics,
+                                segment_to_dynamics,
+                                segment_q_effective_duration,
+                                score: score,
+                                instrument: from_instrument_symbol,
+                                position: _.position
+              end
             end
 
-            puts
-            _.log "new_dynamics_now = #{new_dynamics_now} new_instrument_now = #{new_instrument_now} new_pitch_now = #{new_pitch_now}"
-            _.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol}"
-
-            _.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: resolution) || 'nil'}"
-
-            _.log "segment_relative_start_position_over_dynamics_timeline = #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
-            _.log "segment_relative_finish_position_over_dynamics_timeline = #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
-
-            _.log "value[:dynamics] = #{value[:dynamics].to_f.round(2)} delta_dynamics = #{delta_dynamics.to_f.round(2)}"
-            _.log "segment_from_dynamics = #{segment_from_dynamics.to_f.round(2)} to_dynamics = #{to_dynamics.to_f.round(2)}"
-
-            _.log "segment_relative_start_position_over_instrument_timeline = #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
-            _.log "segment_relative_finish_position_over_instrument_timeline = #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
-
-            _.log "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
-            _.log "#{to_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
-
             _.log "pitch #{pitch}"
-            _.log "duration_instrument #{q_duration_instrument.inspect(base: resolution)}"
-            _.log "duration_dynamics #{q_duration_dynamics.inspect(base: resolution)}"
-            _.log "duration_pitch #{q_duration_pitch.inspect(base: resolution)}"
-            _.log "started_ago dynamics #{started_ago[:dynamics]&.inspect(base: resolution) || 'nil'}"
-            _.log "started_ago instrument #{started_ago[:instrument]&.inspect(base: resolution) || 'nil'}"
-            _.log "started_ago pitch #{started_ago[:pitch]&.inspect(base: resolution) || 'nil'}"
 
             q_effective_duration_pitch =
                 [ q_duration_instrument - (started_ago[:instrument] || 0),
@@ -239,16 +219,14 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                          q_effective_duration_pitch,
                          score: score,
                          instrument: from_instrument_symbol,
-                         position: _.position,
-                         data: "new_dynamics_now = #{new_dynamics_now} new_instrument_now = #{new_instrument_now} new_pitch_now = #{new_pitch_now} from_instrument = #{from_instrument_symbol} pitch = #{pitch} to_instrument = #{to_instrument_symbol} (from)"
+                         position: _.position
 
             if to_instrument
               render_pitch pitch,
                            q_effective_duration_pitch,
                            score: score,
                            instrument: to_instrument_symbol,
-                           position: _.position,
-                           data: "new_dynamics_now = #{new_dynamics_now} new_instrument_now = #{new_instrument_now} new_pitch_now = #{new_pitch_now} from_instrument = #{from_instrument_symbol} pitch = #{pitch} to_instrument = #{to_instrument_symbol} (to)"
+                           position: _.position
             end
           end
         end
@@ -279,7 +257,8 @@ mxml = score.to_mxml(beats_per_bar, ticks_per_beat,
                               vln3: { name: 'Violin 3', abbreviation: 'vln3', clefs: { g: 2 } },
                               vln4: { name: 'Violin 4', abbreviation: 'vln4', clefs: { g: 2 } },
                               vln5: { name: 'Violin 5', abbreviation: 'vln5', clefs: { g: 2 } }
-                     } )
+                     },
+                     do_log: true)
 
 File.open(File.join(File.dirname(__FILE__), "multidim_sample.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
 

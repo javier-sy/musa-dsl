@@ -544,8 +544,12 @@ module Musa
                                 step[i].positive? ? next_values[i] > to[i] : next_values[i] < to[i]
                               end
 
-                    if stop[i] && !right_open[i]
-                      next_values[i] = nil
+                    if stop[i]
+                      if right_open[i]
+                        next_values[i] = nil if values[i] == to[i]
+                      else
+                        next_values[i] = nil
+                      end
                     end
                   end
                 end

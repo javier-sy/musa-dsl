@@ -539,6 +539,36 @@ RSpec.describe Musa::Sequencer do
 
       expect(c).to eq({ 1r => [0, 4] })
     end
-
   end
+
+  it 'Bugfix: right open interval with same from and to value and step parameter sends an incorrect next_value of source value + 1; correct value should be nil' do
+    c = {}
+    s = Sequencer.new(4, 32) do |_|
+      _.at 1 do
+        _.move from: 0, to: 0, duration: 4, step: 1, right_open: true do |_, value, next_value, duration:|
+          c[_.position] = [value, next_value, duration]
+        end
+      end
+    end
+
+    s.run
+
+    expect(c).to eq({ 1r => [0, nil, 4] })
+  end
+
+  it 'Right open interval with only one step must send a next_value with target value source but execute only once' do
+    c = {}
+    s = Sequencer.new(4, 32) do |_|
+      _.at 1 do
+        _.move from: 0, to: 1, duration: 4, step: 1, right_open: true do |_, value, next_value, duration:|
+          c[_.position] = [value, next_value, duration]
+        end
+      end
+    end
+
+    s.run
+
+    expect(c).to eq({ 1r => [0, 1, 4] })
+  end
+
 end

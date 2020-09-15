@@ -3,7 +3,7 @@ require 'prime'
 module Musa::Datasets::Score::ToMXML
   private
 
-  def process_pdv(measure, bar, divisions_per_bar, element, pointer)
+  def process_pdv(measure, bar, divisions_per_bar, element, pointer, do_log)
 
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
@@ -20,32 +20,31 @@ module Musa::Datasets::Score::ToMXML
       integrate_as_dotteable_durations(
         decompose_as_sum_of_simple_durations(effective_duration))
 
-    puts
-    puts "process_pdv: #{element}"
-    puts
-    puts "             pointer = #{pointer} continue_from_previous = #{continue_from_previous_bar} continue_to_next = #{continue_to_next_bar}"
-    puts "             effective_start = #{effective_start} effective_duration = #{effective_duration}"
-    puts "             decomp = #{effective_duration_decomposition}"
+    if do_log
+      warn "\nprocess_pdv #{element}"
+      warn ""
+      warn "             pointer #{pointer} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
+      warn "             effective_start #{effective_start} effective_duration #{effective_duration}"
+      warn "             duration decomposition #{effective_duration_decomposition}"
+    end
 
     if pointer > effective_start
       duration_to_go_back = (pointer - effective_start)
 
-      puts
-      puts "         ->  adding backup #{duration_to_go_back * divisions_per_bar}"
+      warn "\n         ->  adding backup #{duration_to_go_back * divisions_per_bar}" if do_log
 
       measure.add_backup(duration_to_go_back * divisions_per_bar)
       pointer -= duration_to_go_back
 
 
     elsif pointer < effective_start
-      puts
-      puts "         ->  adding start rest start #{bar + pointer} finish #{bar + effective_start} duration = #{effective_start - pointer}"
+      warn "\n         ->  adding start rest duration #{effective_start - pointer} start #{bar + pointer} finish #{bar + effective_start}" if do_log
 
       pointer = process_pdv(measure, bar, divisions_per_bar,
                             { start: bar + pointer,
                               finish: bar + effective_start,
                               dataset: { pitch: :silence, duration: effective_start - pointer }.extend(PDV) },
-                            pointer)
+                            pointer, do_log)
     end
 
     # TODO generalize articulations and other musicxml elements

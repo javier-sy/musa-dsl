@@ -7,7 +7,7 @@
 	<identification>
 		<creator type="composer">Javier Sánchez Yeste</creator>
 		<encoding>
-			<encoding-date>2020-08-17</encoding-date>
+			<encoding-date>2020-09-15</encoding-date>
 			<software>MusaDSL: MusicXML output formatter</software>
 		</encoding>
 	</identification>
@@ -61,10 +61,157 @@
 			<direction placement="below">
 				<direction-type>
 					<dynamics>
-						<fff />
+						<mp />
 					</dynamics>
 				</direction-type>
 			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="3">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="4">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="5">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="6">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mf />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="7">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="8">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<f />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="9">
 			<direction placement="below">
 				<direction-type>
 					<wedge type="diminuendo"/>
@@ -76,8 +223,27 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>64</duration>
+				<duration>96</duration>
+				<tie type="start"/>
 				<type>half</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>6</duration>
+				<tie type="stop"/>
+				<type>32nd</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
 			</note>
 			<direction placement="below">
 				<direction-type>
@@ -86,11 +252,457 @@
 			</direction>
 			<note>
 				<rest />
+				<duration>24</duration>
+				<type>eighth</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>2</duration>
+				<type>64th</type>
+			</note>
+		</measure>
+		<measure number="10">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="11">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="12">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="13">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="14">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="15">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="16">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="17">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="18">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="19">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="20">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="21">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="22">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="23">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="24">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="25">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="26">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="27">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="28">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="29">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="30">
+			<note>
+				<rest />
 				<duration>64</duration>
 				<type>half</type>
 			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
 		</measure>
-		<measure number="2">
+		<measure number="31">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<p />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>96</duration>
+				<type>half</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<pp />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="32">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<p />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="33">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="34">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+		</measure>
+		<measure number="35">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="36">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="37">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="38">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="39">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="40">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="41">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="42">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="43">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="44">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="45">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="46">
 			<note>
 				<rest />
 				<duration>128</duration>
@@ -119,6 +731,62 @@
 					</metronome>
 				</direction-type>
 			</direction>
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="3">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="4">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="5">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="6">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="7">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="8">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="9">
 			<direction placement="below">
 				<direction-type>
 					<wedge type="crescendo" niente="yes"/>
@@ -130,8 +798,27 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>64</duration>
+				<duration>96</duration>
+				<tie type="start"/>
 				<type>half</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>6</duration>
+				<tie type="stop"/>
+				<type>32nd</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
 			</note>
 			<direction placement="below">
 				<direction-type>
@@ -141,14 +828,7 @@
 			<direction placement="below">
 				<direction-type>
 					<dynamics>
-						<ff />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<dynamics>
-						<fff />
+						<f />
 					</dynamics>
 				</direction-type>
 			</direction>
@@ -163,16 +843,613 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
+				<duration>24</duration>
+				<tie type="start"/>
+				<type>eighth</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>64th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="10">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
 				<duration>64</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
 				<type>half</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>12</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
 			</note>
 			<direction placement="below">
 				<direction-type>
 					<wedge type="stop" niente="yes"/>
 				</direction-type>
 			</direction>
+			<note>
+				<rest />
+				<duration>48</duration>
+				<type>quarter</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
 		</measure>
-		<measure number="2">
+		<measure number="11">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="12">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="13">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="14">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="15">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="16">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="17">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="18">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="19">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="20">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="21">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="22">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="23">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="24">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="25">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="26">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="27">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="28">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="29">
+			<note>
+				<rest />
+				<duration>96</duration>
+				<type>half</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="30">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<p />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="31">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>96</duration>
+				<type>half</type>
+				<dot />
+			</note>
+		</measure>
+		<measure number="32">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="33">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="34">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mf />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="35">
+			<note>
+				<pitch>
+					<step>E</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<pp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>E</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="36">
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>16</duration>
+				<type>eighth</type>
+			</note>
+			<note>
+				<rest />
+				<duration>4</duration>
+				<type>32nd</type>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+		</measure>
+		<measure number="37">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="38">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="39">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="40">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="41">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="42">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="43">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="44">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="45">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="46">
 			<note>
 				<rest />
 				<duration>128</duration>
@@ -203,8 +1480,71 @@
 			</direction>
 			<note>
 				<rest />
-				<duration>64</duration>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="2">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="3">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="4">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="5">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="6">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="7">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="8">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="9">
+			<note>
+				<rest />
+				<duration>96</duration>
 				<type>half</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>6</duration>
+				<type>32nd</type>
+				<dot />
 			</note>
 			<direction placement="below">
 				<direction-type>
@@ -217,8 +1557,71 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
+				<duration>24</duration>
+				<tie type="start"/>
+				<type>eighth</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>64th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="10">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
 				<duration>64</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
 				<type>half</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>12</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
 			</note>
 			<direction placement="below">
 				<direction-type>
@@ -228,12 +1631,10 @@
 			<direction placement="below">
 				<direction-type>
 					<dynamics>
-						<ff />
+						<f />
 					</dynamics>
 				</direction-type>
 			</direction>
-		</measure>
-		<measure number="2">
 			<direction placement="below">
 				<direction-type>
 					<wedge type="diminuendo"/>
@@ -242,6 +1643,543 @@
 			<note>
 				<pitch>
 					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>48</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="11">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>48</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>12</duration>
+				<type>16th</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+		</measure>
+		<measure number="12">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="13">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="14">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="15">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="16">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="17">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="18">
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<pp />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="19">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mf />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="20">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="21">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="22">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>16</duration>
+				<type>eighth</type>
+			</note>
+			<note>
+				<rest />
+				<duration>4</duration>
+				<type>32nd</type>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+		</measure>
+		<measure number="23">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="24">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="25">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="26">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="27">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="28">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="29">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>96</duration>
+				<type>half</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="30">
+			<note>
+				<pitch>
+					<step>F</step>
 					<alter>1</alter>
 					<octave>4</octave>
 				</pitch>
@@ -257,6 +2195,325 @@
 				<rest />
 				<duration>64</duration>
 				<type>half</type>
+			</note>
+		</measure>
+		<measure number="31">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="32">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="33">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="34">
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>16</duration>
+				<type>eighth</type>
+			</note>
+			<note>
+				<rest />
+				<duration>4</duration>
+				<type>32nd</type>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="35">
+			<note>
+				<pitch>
+					<step>E</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<pp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>E</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="36">
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mf />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="37">
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="38">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="39">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="40">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="41">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="42">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="43">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="44">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="45">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="46">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
 			</note>
 		</measure>
 	</part>
@@ -288,6 +2545,78 @@
 			</note>
 		</measure>
 		<measure number="2">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="3">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="4">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="5">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="6">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="7">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="8">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="9">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="10">
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>12</duration>
+				<type>16th</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
 			<direction placement="below">
 				<direction-type>
 					<wedge type="crescendo" niente="yes"/>
@@ -296,11 +2625,62 @@
 			<note>
 				<pitch>
 					<step>C</step>
-					<alter>1</alter>
+					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>64</duration>
-				<type>half</type>
+				<duration>48</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="11">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>48</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
 			</note>
 			<direction placement="below">
 				<direction-type>
@@ -314,14 +2694,968 @@
 					</dynamics>
 				</direction-type>
 			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>12</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>128th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="12">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>24</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>96</duration>
+				<type>half</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>6</duration>
+				<type>32nd</type>
+				<dot />
+			</note>
+		</measure>
+		<measure number="13">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="14">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="15">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="16">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="17">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="18">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mf />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<pp />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="19">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+		</measure>
+		<measure number="20">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="21">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="22">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>128th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="23">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+		</measure>
+		<measure number="24">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="25">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="26">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="27">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="28">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="29">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>96</duration>
+				<type>half</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+		</measure>
+		<measure number="30">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="31">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="32">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="33">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="34">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="35">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="36">
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="37">
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<f />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="38">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
 			<note>
 				<pitch>
 					<step>C</step>
 					<alter>1</alter>
 					<octave>4</octave>
 				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="39">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
 				<duration>64</duration>
+				<tie type="start"/>
 				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+		</measure>
+		<measure number="40">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="41">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="42">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="43">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="44">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="45">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="46">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
 			</note>
 		</measure>
 	</part>
@@ -359,6 +3693,968 @@
 				<type>whole</type>
 			</note>
 		</measure>
+		<measure number="3">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="4">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="5">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="6">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="7">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="8">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="9">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="10">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="11">
+			<note>
+				<rest />
+				<duration>48</duration>
+				<type>quarter</type>
+				<dot />
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>12</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>128th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="12">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>24</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>2</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<f />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>96</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<dot />
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>6</duration>
+				<tie type="stop"/>
+				<type>32nd</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="13">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="14">
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="15">
+			<note>
+				<pitch>
+					<step>E</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="16">
+			<note>
+				<pitch>
+					<step>F</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="17">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="18">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>16</duration>
+				<type>eighth</type>
+			</note>
+			<note>
+				<rest />
+				<duration>4</duration>
+				<type>32nd</type>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+		</measure>
+		<measure number="19">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="20">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="21">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="22">
+			<note>
+				<rest />
+				<duration>32</duration>
+				<type>quarter</type>
+			</note>
+			<note>
+				<rest />
+				<duration>8</duration>
+				<type>16th</type>
+			</note>
+			<note>
+				<rest />
+				<duration>3</duration>
+				<type>64th</type>
+				<dot />
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>128th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="23">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="24">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="25">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="26">
+			<note>
+				<pitch>
+					<step>G</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="27">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="28">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="29">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="30">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="31">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="32">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="33">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="34">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="35">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="36">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="37">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="38">
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="39">
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<ff />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="40">
+			<note>
+				<pitch>
+					<step>B</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<p />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>B</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="41">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>16</duration>
+				<type>eighth</type>
+			</note>
+			<note>
+				<rest />
+				<duration>4</duration>
+				<type>32nd</type>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+		</measure>
+		<measure number="42">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="43">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="44">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="45">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="46">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
 	</part>
 	<part id="vln5">
 		<measure number="1">
@@ -390,6 +4686,559 @@
 		<measure number="2">
 			<note>
 				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="3">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="4">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="5">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="6">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="7">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="8">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="9">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="10">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="11">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="12">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="13">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="14">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="15">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="16">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="17">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="18">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="19">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="20">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="21">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="22">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="23">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="24">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="25">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="26">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="27">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="28">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="29">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="30">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="31">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="32">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="33">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="34">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="35">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="36">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="37">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="38">
+			<note>
+				<rest />
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+		</measure>
+		<measure number="39">
+			<note>
+				<rest />
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<note>
+				<rest />
+				<duration>16</duration>
+				<type>eighth</type>
+			</note>
+			<note>
+				<rest />
+				<duration>4</duration>
+				<type>32nd</type>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo" niente="yes"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<alter>0</alter>
+					<octave>4</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="40">
+			<note>
+				<pitch>
+					<step>B</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<p />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>B</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>64</duration>
+				<type>half</type>
+			</note>
+		</measure>
+		<measure number="41">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>32</duration>
+				<tie type="start"/>
+				<type>quarter</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>8</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>16th</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>3</duration>
+				<tie type="stop"/>
+				<type>64th</type>
+				<dot />
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<ff />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>64</duration>
+				<tie type="start"/>
+				<type>half</type>
+				<notations>
+					<tied type="start"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>16</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>eighth</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>4</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>32nd</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>1</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>1</duration>
+				<tie type="stop"/>
+				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="42">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>128</duration>
+				<type>whole</type>
+			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<fff />
+					</dynamics>
+				</direction-type>
+			</direction>
+		</measure>
+		<measure number="43">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="44">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="45">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
+				<duration>128</duration>
+				<tie type="stop"/>
+				<tie type="start"/>
+				<type>whole</type>
+				<notations>
+					<tied type="continue"/>
+				</notations>
+			</note>
+		</measure>
+		<measure number="46">
+			<note>
+				<pitch>
+					<step>A</step>
+					<alter>0</alter>
+					<octave>3</octave>
+				</pitch>
 				<duration>128</duration>
 				<type>whole</type>
 			</note>

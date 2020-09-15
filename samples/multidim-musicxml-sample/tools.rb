@@ -25,7 +25,7 @@ def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, positio
   dynamicsF ||= dynamics0
 
   score.at position,
-           add: s = { instrument: instrument,
+           add: { instrument: instrument,
                   type: case dynamicsF <=> dynamics0
                         when 1
                           :crescendo

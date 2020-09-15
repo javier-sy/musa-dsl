@@ -14,11 +14,13 @@ module Musa::Datasets::Score::ToMXML
               title: nil,
               creators: nil,
               encoding_date: nil,
-              parts:)
+              parts:,
+              do_log: nil)
 
     bpm ||= 90
     title ||= 'Untitled'
     creators ||= { composer: 'Unknown' }
+    do_log ||= nil
 
     mxml = ScorePartwise.new do |_|
       _.work_title title
@@ -48,8 +50,13 @@ module Musa::Datasets::Score::ToMXML
       end
     end
 
+    if do_log
+      warn "\nscore.to_mxl log:"
+      warn "-----------------"
+    end
+
     parts.each_key do |part_id|
-      fill_part mxml.parts[part_id], beats_per_bar * ticks_per_beat, (parts.size > 1 ? part_id : nil)
+      fill_part mxml.parts[part_id], beats_per_bar * ticks_per_beat, (parts.size > 1 ? part_id : nil), do_log
     end
 
     mxml
@@ -57,14 +64,16 @@ module Musa::Datasets::Score::ToMXML
 
   private
 
-  def fill_part(part, divisions_per_bar, instrument = nil)
+  def fill_part(part, divisions_per_bar, instrument, do_log)
     measure = nil
     dynamics_context = nil
 
     (1..finish || 0).each do |bar|
-      puts
-      puts msg = "processing instrument #{instrument} bar #{bar}"
-      puts "-" * msg.size
+      if do_log
+        warn ""
+        warn msg = "filling part #{part.name} (#{instrument}): processing bar #{bar}"
+        warn "-" * msg.size
+      end
 
       measure = part.add_measure if measure
       measure ||= part.measures.last
@@ -76,48 +85,65 @@ module Musa::Datasets::Score::ToMXML
       bar_elements = \
         (instrument_score.changes_between(bar, bar + 1).select { |p| p[:dataset].is_a?(PS) } +
           (pdvs = instrument_score.between(bar, bar + 1).select { |p| p[:dataset].is_a?(PDV) }))
-        .sort_by { |element| element[:time_in_interval] || element[:start_in_interval] }
+                                 .sort_by { |e| [ e[:time_in_interval] || e[:start_in_interval],
+                                                  e[:dataset].is_a?(PS) ? 0 : 1 ] }
 
       if pdvs.empty?
+        warn "\nadded full bar silence" if do_log
+
         process_pdv(measure, bar, divisions_per_bar,
                     { start: bar,
                       finish: bar + 1,
                       dataset: { pitch: :silence, duration: 1 }.extend(PDV) },
-                    pointer)
+                    pointer,
+                    do_log)
       else
         first = bar_elements.first
 
-        puts "fill_part: bar #{bar} first = #{first}"
+        warn "\nfirst element #{first}" if do_log
 
         # TODO habrá que arreglar el cálculo de pointer cuando haya avances y retrocesos para que
         # TODO no añada silencios incorrectos al principio o al final
 
         if (first[:time_in_interval] || first[:start_in_interval]) > bar
+
+          silence_duration = first[:start_in_interval] - bar
+
+          warn "\nadded initial silence for duration #{silence_duration}" if do_log
+
           pointer = process_pdv(measure, bar, divisions_per_bar,
                                 { start: bar,
                                   finish: first[:start_in_interval],
-                                  dataset: { pitch: :silence, duration: first[:start_in_interval] - bar }.extend(PDV) },
-                                pointer)
+                                  dataset: { pitch: :silence, duration: silence_duration }.extend(PDV) },
+                                pointer,
+                                do_log)
         end
 
         bar_elements.each do |element|
           case element[:dataset]
           when PDV
-            pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer)
+            pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer, do_log)
 
           when PS
-            dynamics_context = process_ps(measure, element, dynamics_context)
+            dynamics_context = process_ps(measure, element, dynamics_context, do_log)
+
           else
             # ignored
           end
         end
 
         if pointer < 1r
+          silence_duration = 1r - pointer
+
+          warn "\nadded ending silence for duration #{silence_duration}" if do_log
+
           process_pdv(measure, bar, divisions_per_bar,
               { start: bar + pointer,
                        finish: bar + 1 - Rational(1, divisions_per_bar),
-                       dataset: { pitch: :silence, duration: 1r - pointer }.extend(PDV) },
-                      pointer)
+                       dataset: { pitch: :silence, duration: silence_duration }.extend(PDV) },
+                      pointer,
+                      do_log)
+
         end
       end
     end
