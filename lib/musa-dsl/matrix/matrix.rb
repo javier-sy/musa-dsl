@@ -142,7 +142,6 @@ module Musa
                 directional_segments << b if b.size > 1
               end
             end
-
           end
 
           return directional_segments
