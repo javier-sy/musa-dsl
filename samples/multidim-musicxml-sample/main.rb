@@ -8,7 +8,7 @@ include Musa::Datasets
 
 using Musa::Extension::Matrix
 
-# [quarter-notes position, pitch, segment_from_dynamics, instrument]
+# [quarter-notes position, pitch, dynamics, instrument]
 
 # TODO ligar notas (para hacer legato)?
 # TODO ligar notas cuando no cambia de altura en el mismo instrumento?
