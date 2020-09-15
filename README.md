@@ -9,4 +9,4 @@ Some works can be listened on [yeste.studio](https://soundcloud.com/yeste-studio
 
 ---
 
-Coded on [Jetbrains RubyMine IDE](https://www.jetbrains.com/?from=Musa-DSL). Thanks a lot for your support letting me use an Open source project free license! 
+Coded on [Jetbrains RubyMine IDE](https://www.jetbrains.com/?from=Musa-DSL). Thanks a lot for your support letting me use an Open Source project free license! 
