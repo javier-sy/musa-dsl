@@ -11,8 +11,6 @@ require_relative 'musa-dsl/matrix'
 require_relative 'musa-dsl/neumalang'
 require_relative 'musa-dsl/neumas'
 
-require_relative 'musa-dsl/score'
-
 require_relative 'musa-dsl/transport'
 require_relative 'musa-dsl/sequencer'
 require_relative 'musa-dsl/repl'
@@ -49,7 +47,6 @@ module Musa::All
   include Musa::MIDIRecorder
   include Musa::MIDIVoices
 
-  include Musa::Score
   include Musa::MusicXML
 
   include Musa::Transcription

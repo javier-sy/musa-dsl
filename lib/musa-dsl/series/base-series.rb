@@ -1,7 +1,7 @@
-require_relative '../core-ext/duplicate'
+require_relative '../core-ext/deep-copy'
 require_relative '../generative/generative-grammar'
 
-using Musa::Extension::Duplicate
+using Musa::Extension::DeepCopy
 
 module Musa
   module Series
@@ -148,7 +148,7 @@ module Musa
 
         serie = instance
 
-        serie = serie.duplicate if duplicate
+        serie = serie.clone(deep: true) if duplicate
         serie = serie.restart if restart
 
         while value = serie.next_value

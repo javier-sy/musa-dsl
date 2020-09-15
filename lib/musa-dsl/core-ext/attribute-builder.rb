@@ -176,11 +176,11 @@ module Musa
             instance_variable_get variable
           else
             if first_parameter
-              klass.new(first_parameter, *parameters, **parameters, &block).tap do |object|
+              klass.new(first_parameter, *parameters, **key_parameters, &block).tap do |object|
                 instance_variable_set variable, object
               end
             else
-              klass.new(*parameters, **parameters, &block).tap do |object|
+              klass.new(*parameters, **key_parameters, &block).tap do |object|
                 instance_variable_set variable, object
               end
             end

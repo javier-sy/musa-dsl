@@ -1,1 +1,1 @@
-require_relative 'musicxml/score-partwise'
+require_relative 'musicxml/builder/score-partwise'

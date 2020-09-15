@@ -11,6 +11,8 @@ include Musa::Neumalang
 include Musa::Neumas
 include Musa::Sequencer
 
+using Musa::Extension::DeepCopy
+
 RSpec.describe Musa::Neumalang do
   context 'Neuma with neumalang advanced parsing' do
     scale = Scales.default_system.default_tuning.major[60]
@@ -95,7 +97,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.to_a(true)
+        pp serie.to_a(recursive: true)
         puts
       end
 
@@ -160,7 +162,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.to_a(true)
+        pp serie.to_a(recursive: true)
         puts
       end
 
@@ -245,7 +247,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.duplicate.restart.to_a(true)
+        pp serie.duplicate.restart.to_a(recursive: true)
         puts
       end
 
@@ -344,7 +346,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.duplicate.to_a(true)
+        pp serie.to_a(dr:true)
         puts
       end
 
@@ -371,7 +373,7 @@ RSpec.describe Musa::Neumalang do
         end
       end
 
-      sequencer.tick until sequencer.empty?
+      sequencer.run
 
       if debug
         puts
@@ -538,3 +540,4 @@ RSpec.describe Musa::Neumalang do
     end
   end
 end
+

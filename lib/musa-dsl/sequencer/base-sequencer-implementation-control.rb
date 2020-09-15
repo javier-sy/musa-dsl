@@ -129,7 +129,8 @@ module Musa
       class EveryControl < EventHandler
         attr_reader :duration_value, :till_value, :condition_block, :do_on_stop, :do_after
 
-        attr_accessor :_start
+        attr_accessor :_start_position
+        attr_accessor :_execution_counter
 
         def initialize(parent, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil)
           super parent
@@ -171,29 +172,22 @@ module Musa
       private_constant :EveryControl
 
       class MoveControl < EventHandler
-        attr_reader :every_controls, :do_on_stop, :do_after
+        attr_reader :every_control, :do_on_stop, :do_after
 
-        def initialize(parent, size, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil)
+        def initialize(parent, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil)
           super parent
 
-          @every_controls = size.times.collect { EveryControl.new(self, duration: duration, till: till) }
+          @every_control = EveryControl.new(self, duration: duration, till: till)
 
-          @running = @every_controls.size
           @do_on_stop = []
           @do_after = []
 
           @do_on_stop << on_stop if on_stop
           self.after after_bars, &after if after
 
-          @every_controls.each do |control|
-            control.on_stop do
-              @running -= 1
-
-              if @running == 0
-                @stop = true
-                @do_on_stop.each(&:call)
-              end
-            end
+          @every_control.on_stop do
+            @stop = true
+            @do_on_stop.each(&:call)
           end
         end
 
@@ -207,7 +201,11 @@ module Musa
         end
 
         def stop
-          @every_controls.each(&:stop)
+          @every_control.stop
+        end
+
+        def stopped?
+          @stop
         end
       end
 

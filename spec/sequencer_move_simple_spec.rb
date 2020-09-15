@@ -191,7 +191,7 @@ RSpec.describe Musa::Sequencer do
       s.tick
 
       expect(c).to eq(Rational(5))
-      expect(s.moving).to include move_control
+      expect(s.moving.size).to eq 0
 
       s.tick
 
@@ -200,7 +200,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, step, every, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -264,7 +264,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right_closed interval values]' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -313,7 +313,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right open interval values]' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -362,7 +362,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -418,7 +418,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration)' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       c = 0
       move_control = nil
@@ -468,7 +468,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration) receiving duration, open/closed interval, initial value and final value' do
-      s = BaseSequencer.new 4, 4, do_log: true
+      s = BaseSequencer.new 4, 4
 
       cv = 0
       ct = 0
@@ -524,5 +524,51 @@ RSpec.describe Musa::Sequencer do
 
       expect(tests_passed).to eq 4
     end
+
+    it 'Bugfix: right open interval with same from and to value and step parameter throws an exception because common interval has a nil duration' do
+      c = {}
+      s = Sequencer.new(4, 32) do |_|
+        _.at 1 do
+          _.move from: 0, to: 0, duration: 4, step: 1, right_open: true do |_, value, duration:|
+            c[_.position] = [value, duration]
+          end
+        end
+      end
+
+      s.run
+
+      expect(c).to eq({ 1r => [0, 4] })
+    end
   end
+
+  it 'Bugfix: right open interval with same from and to value and step parameter sends an incorrect next_value of source value + 1; correct value should be nil' do
+    c = {}
+    s = Sequencer.new(4, 32) do |_|
+      _.at 1 do
+        _.move from: 0, to: 0, duration: 4, step: 1, right_open: true do |_, value, next_value, duration:|
+          c[_.position] = [value, next_value, duration]
+        end
+      end
+    end
+
+    s.run
+
+    expect(c).to eq({ 1r => [0, nil, 4] })
+  end
+
+  it 'Right open interval with only one step must send a next_value with target value source but execute only once' do
+    c = {}
+    s = Sequencer.new(4, 32) do |_|
+      _.at 1 do
+        _.move from: 0, to: 1, duration: 4, step: 1, right_open: true do |_, value, next_value, duration:|
+          c[_.position] = [value, next_value, duration]
+        end
+      end
+    end
+
+    s.run
+
+    expect(c).to eq({ 1r => [0, 1, 4] })
+  end
+
 end

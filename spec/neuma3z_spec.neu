@@ -25,7 +25,7 @@
 
 (I) (I) (I)
 
-[(I) (II) (III)].reverse.duplicate
+[(I) (II) (III)].reverse.clone(deep: true)
 
 [(I) (III) (V) || (II) (IV) (VI)].reverse
 

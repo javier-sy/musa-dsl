@@ -7,7 +7,6 @@ include Musa::Sequencer
 
 RSpec.describe Musa::Sequencer do
   context 'Basic sequencing' do
-
     it 'Basic at sequencing' do
       s = BaseSequencer.new 4, 4
 
@@ -165,6 +164,48 @@ RSpec.describe Musa::Sequencer do
       expect(e).to eq(0)
     end
 
+    it 'Basic every sequencing with nil every (should be like an at)' do
+      s = BaseSequencer.new 4, 4
+
+      c = 0
+
+      s.at 1 do
+        s.every nil do
+          c += 1
+        end
+      end
+
+      expect(c).to eq(0)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      14.times do
+        s.tick
+      end
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      s.tick
+
+      expect(c).to eq(1)
+
+      15.times do
+        s.tick
+      end
+
+      expect(c).to eq(1)
+    end
+
     it 'Basic every sequencing' do
       s = BaseSequencer.new 4, 4
 
@@ -304,6 +345,22 @@ RSpec.describe Musa::Sequencer do
       16.times { s.tick }
 
       expect(c).to eq(3)
+    end
+
+    it 'Bugfix: every sequencing with interval not on tick resolution' do
+      s = BaseSequencer.new 4, 4
+
+      p = []
+
+      s.at 1 do
+        s.every 4/5r, duration: 4 do
+          p << s.position
+        end
+      end
+
+      s.run
+
+      expect(p).to eq [1r, 29/16r, 21/8r, 27/8r, 67/16r, 5r]
     end
 
     it 'Basic play sequencing' do

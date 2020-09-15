@@ -11,7 +11,7 @@ module Musa
 
       @@tick_mutex = Mutex.new
 
-      def initialize(beats_per_bar, ticks_per_beat, do_log: nil, do_error_log: nil)
+      def initialize(beats_per_bar, ticks_per_beat, do_log: nil, do_error_log: nil, log_decimals: nil)
         @on_debug_at = []
         @on_error = []
 
@@ -36,6 +36,7 @@ module Musa
 
         @do_log ||= do_log
         @do_error_log = do_error_log.nil? ? true : do_error_log
+        @log_decimals = log_decimals || 3.3
 
         reset
       end
@@ -48,7 +49,7 @@ module Musa
 
         @event_handlers = [EventHandler.new]
 
-        @position = @position_mutex.synchronize { @ticks_per_bar - 1 }
+        @ticks_position = @position_mutex.synchronize { @ticks_per_bar - 1 }
       end
 
       def tick
@@ -65,6 +66,10 @@ module Musa
 
       def empty?
         @timeslots.empty?
+      end
+
+      def run
+        tick until empty?
       end
 
       def round(bar)
@@ -92,18 +97,18 @@ module Musa
       end
 
       def position
-        Rational(@position, @ticks_per_bar)
+        Rational(@ticks_position, @ticks_per_bar)
       end
 
-      def position=(bposition)
-        position = bposition * @ticks_per_bar
+      def position=(new_position)
+        new_ticks_position = new_position * @ticks_per_bar
 
-        raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{position}" if position < @position
+        raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@ticks_position} new position: #{new_ticks_position}" if new_ticks_position < @ticks_position
 
         _hold_public_ticks
         @on_fast_forward.each { |block| block.call(true) }
 
-        _tick while @position < position
+        _tick while @ticks_position < new_ticks_position
 
         @on_fast_forward.each { |block| block.call(false) }
         _release_public_ticks
@@ -209,13 +214,14 @@ module Musa
               **parameters[:mode_args]
       end
 
-      def every(binterval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-        binterval = binterval.rationalize
+      def every(interval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+        # nil interval means 'only once'
+        interval = interval.rationalize unless interval.nil?
 
         control = EveryControl.new @event_handlers.last, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
         @event_handlers.push control
 
-        _every binterval, control, &block
+        _every interval, control, &block
 
         @event_handlers.pop
 
@@ -240,8 +246,8 @@ module Musa
         control
       end
 
-      def log(msg = nil)
-        _log msg
+      def log(msg = nil, decimals: nil)
+        _log(msg, decimals: decimals)
       end
 
       def inspect

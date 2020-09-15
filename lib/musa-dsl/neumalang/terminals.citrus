@@ -23,6 +23,10 @@ grammar Musa::Neumalang::Neumalang::Parser::Grammar::Terminals
         space | dot | rbracket | rpar | rbrace | eol | eos
     end
 
+    rule true 'true' end
+    rule false 'false' end
+    rule nil 'nil' end
+
     rule optional_separation (spaces | comment)* end
     rule separation (spaces | comment)+ end
 

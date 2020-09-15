@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-require 'musa-dsl/core-ext/duplicate.rb'
+require 'musa-dsl/core-ext/deep-copy.rb'
 
-using Musa::Extension::Duplicate
+using Musa::Extension::DeepCopy
 
-describe Musa::Extension::Duplicate::Duplicate do
+describe Musa::Extension::DeepCopy::DeepCopy do
 
   describe '.duplicate' do
 
-    subject { described_class.duplicate(value) }
+    subject { described_class.deep_copy(value) }
 
     context 'when value is a Object' do
       let(:value) { Object.new.tap { |s| s.instance_eval { @dog = 'bark' } } }
@@ -249,7 +249,100 @@ describe Musa::Extension::Duplicate::Duplicate do
       it { expect(subject.dog).to_not be value.dog }
 
     end
-
   end
 
+  describe 'complementary methods' do
+    context 'singleton_class modules' do
+
+      module M; end
+      module N; end
+
+      it 'copy_singleton_class_included_modules' do
+        a = [1, 2, 3, [4, 5, 6]]
+
+        a.extend(M)
+        a.extend(N)
+
+        expect(a).to be_a(M)
+        expect(a).to be_a(N)
+
+        b = Musa::Extension::DeepCopy::DeepCopy.copy_singleton_class_modules(a, a.clone)
+
+        expect(b).to be_a(M)
+        expect(b).to be_a(N)
+      end
+
+      it '.dup(deep: true)' do
+        a = [1, 2, 3, [4, 5, 6]]
+
+        a.extend(M)
+        a.extend(N)
+
+        b = a.dup(deep: true)
+
+        b[0] = 10
+        b[3][0] = 40
+
+        expect(b).to_not be_a(M)
+        expect(b).to_not be_a(N)
+
+        expect(a).to eq [1, 2, 3, [4, 5, 6]]
+        expect(b).to eq [10, 2, 3, [40, 5, 6]]
+      end
+
+      it '.dup' do
+        a = [1, 2, 3, [4, 5, 6]]
+
+        a.extend(M)
+        a.extend(N)
+
+        b = a.dup
+
+        b[0] = 10
+        b[3][0] = 40
+
+        expect(b).to_not be_a(M)
+        expect(b).to_not be_a(N)
+
+        expect(a).to eq [1, 2, 3, [40, 5, 6]]
+        expect(b).to eq [10, 2, 3, [40, 5, 6]]
+      end
+
+      it '.clone(deep: true)' do
+        a = [1, 2, 3, [4, 5, 6]]
+
+        a.extend(M)
+        a.extend(N)
+
+        b = a.clone(deep: true)
+
+        b[0] = 10
+        b[3][0] = 40
+
+        expect(b).to be_a(M)
+        expect(b).to be_a(N)
+
+        expect(a).to eq [1, 2, 3, [4, 5, 6]]
+        expect(b).to eq [10, 2, 3, [40, 5, 6]]
+      end
+
+      it '.clone' do
+        a = [1, 2, 3, [4, 5, 6]]
+
+        a.extend(M)
+        a.extend(N)
+
+        b = a.clone
+
+        b[0] = 10
+        b[3][0] = 40
+
+        expect(b).to be_a(M)
+        expect(b).to be_a(N)
+
+        expect(a).to eq [1, 2, 3, [40, 5, 6]]
+        expect(b).to eq [10, 2, 3, [40, 5, 6]]
+      end
+    end
+  end
 end

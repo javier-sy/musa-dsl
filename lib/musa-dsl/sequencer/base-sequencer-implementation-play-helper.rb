@@ -1,4 +1,4 @@
-using Musa::Extension::Duplicate
+using Musa::Extension::DeepCopy
 
 module Musa
   module Sequencer
