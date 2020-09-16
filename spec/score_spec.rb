@@ -6,7 +6,7 @@ include Musa::Datasets
 
 RSpec.describe Musa::Datasets::Score do
 
-  context 'Score' do
+  context 'Score insert operations' do
     it 'refuses things that are not a Dataset' do
       s = Score.new
       expect { s.at(1, add: { something: 1 }) }.to raise_error(ArgumentError)
@@ -123,63 +123,147 @@ RSpec.describe Musa::Datasets::Score do
 
       expect(s2[5][0]).to eq({ something: 100, criteria: :a })
     end
+  end
 
-    it 'manages between' do
-      s = Score.new
+  context 'Score querying operations' do
+    s = Score.new
 
-      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
-      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
-      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
-      s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
-      s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
+    s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
+    s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
+    s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
+    s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
+    s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
+    s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
+    s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
+
+    it 'manages between with some duration' do
 
       l = s.between(2, 4)
 
-      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 }, start: 1r, finish: 4r, start_in_interval: 2r, finish_in_interval: 4r },
-                        { dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 5r, start_in_interval: 2r, finish_in_interval: 4r  },
-                        { dataset: { something: -1, criteria: :b }, start: 3, finish: 3r, start_in_interval: 3r, finish_in_interval: 3r  },
-                        { dataset: { something: 99, criteria: :b, duration: 0.5 }, start: 3.5r, finish: 4r, start_in_interval: 3.5r, finish_in_interval: 4r  } ]
+      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 },
+                          start: 1r, finish: 4r,
+                          start_in_interval: 2r, finish_in_interval: 4r },
 
+                        { dataset: { something: 1, criteria: :a, duration: 3 },
+                          start: 2r, finish: 5r,
+                          start_in_interval: 2r, finish_in_interval: 4r  },
+
+                        { dataset: { something: -1, criteria: :b },
+                          start: 3, finish: 3r,
+                          start_in_interval: 3r, finish_in_interval: 3r  },
+
+                        { dataset: { something: 99, criteria: :b, duration: 0.5 },
+                          start: 3.5r, finish: 4r,
+                          start_in_interval: 3.5r, finish_in_interval: 4r  } ]
     end
 
-    it 'manages changes_between' do
-      s = Score.new
+    it 'manages between with no duration' do
 
-      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
-      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
-      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
-      s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
-      s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
+      l = s.between(3, 3)
 
+      expect(l).to eq [ { dataset: { something: 100, criteria: :a, duration: 3 },
+                          start: 1r, finish: 4r,
+                          start_in_interval: 3r, finish_in_interval: 3r  },
+                        { dataset: { something: 1, criteria: :a, duration: 3 },
+                          start: 2r, finish: 5r,
+                          start_in_interval: 3r, finish_in_interval: 3r  },
+                        { dataset: { something: -1, criteria: :b },
+                          start: 3, finish: 3r,
+                          start_in_interval: 3r, finish_in_interval: 3r  } ]
+    end
+
+
+    it 'manages changes_between with some duration (1)' do
       l = s.changes_between(2, 3)
 
-      expect(l).to eq [ { change: :start, time: 2r, dataset: { something: 1, criteria: :a, duration: 3 }, start: 2r, finish: 5r, start_in_interval: 2r, finish_in_interval: 3r, time_in_interval: 2r } ]
+      expect(l).to eq [ { change: :start,
+                          time: 2r,
+                          dataset: { something: 1, criteria: :a, duration: 3 },
+                          start: 2r,
+                          finish: 5r,
+                          start_in_interval: 2r,
+                          finish_in_interval: 3r,
+                          time_in_interval: 2r } ]
+    end
+
+    it 'manages changes_between with some duration (2)' do
+      l = s.changes_between(3, 4)
+
+      expect(l).to eq [ { change: :start,
+                           time: 3r,
+                           dataset: { something: -1, criteria: :b },
+                           start: 3r,
+                           finish: 3r,
+                           start_in_interval: 3r,
+                           finish_in_interval: 3r,
+                           time_in_interval: 3r },
+                         { change: :finish,
+                           time: 3r,
+                           dataset: { something: -1, criteria: :b },
+                           start: 3r,
+                           finish: 3r,
+                           start_in_interval: 3r,
+                           finish_in_interval: 3r,
+                           time_in_interval: 3r },
+                         { change: :start,
+                           time: 3.5r,
+                           dataset: { something: 99, criteria: :b, duration: 0.5 },
+                           start: 3.5r,
+                           finish: 4r,
+                           start_in_interval: 3.5r,
+                           finish_in_interval: 4r,
+                           time_in_interval: 3.5r },
+                         { change: :finish,
+                           time: 4r,
+                           dataset: { something: 100, criteria: :a, duration: 3 },
+                           start: 1r,
+                           finish: 4r,
+                           start_in_interval: 3r,
+                           finish_in_interval: 4r,
+                           time_in_interval: 4r },
+                         { change: :finish,
+                           time: 4r,
+                           dataset: { something: 99, criteria: :b, duration: 0.5 },
+                           start: 3.5r,
+                           finish: 4r,
+                           start_in_interval: 3.5r,
+                           finish_in_interval: 4r,
+                           time_in_interval: 4r }
+                       ]
+    end
+
+    it 'manages changes_between with 0 duration' do
+      l = s.changes_between(3, 3)
+
+      expect(l).to eq [ { change: :start,
+                          time: 3r,
+                          dataset: { something: -1, criteria: :b },
+                          start: 3r,
+                          finish: 3r,
+                          start_in_interval: 3r,
+                          finish_in_interval: 3r,
+                          time_in_interval: 3r },
+                        { change: :finish,
+                          time: 3r,
+                          dataset: { something: -1, criteria: :b },
+                          start: 3r,
+                          finish: 3r,
+                          start_in_interval: 3r,
+                          finish_in_interval: 3r,
+                          time_in_interval: 3r }
+                      ]
     end
 
     it 'manages finish' do
-      s = Score.new
-
-      s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
-      s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
-      s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
-      s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
-      s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
-      s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
-
       expect(s.finish).to eq 8r
     end
 
-    it 'manages Queryable' do
-      # todo
+    it 'manages Queryable (unfinished test case)' do
+      raise NotImplementedError, "test case pending implementation"
     end
-    it 'manages QueryableByDataset' do
-      # todo
+    
+    it 'manages QueryableByDataset (unfinished test case)' do
+      raise NotImplementedError, "test case pending implementation"
     end
   end
 end

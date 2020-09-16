@@ -54,18 +54,17 @@ module Musa::Datasets
 
     def between(closed_interval_start, open_interval_finish)
       @indexer
-          .select { |i| i[:start] <= closed_interval_start && i[:finish] > closed_interval_start ||
-                        i[:start] < open_interval_finish && i[:finish] > open_interval_finish ||
-                        i[:start] >= closed_interval_start && i[:finish] <= open_interval_finish }
-          .sort_by { |i| i[:start] }
-          .collect { |i| { start: i[:start],
-                           finish: i[:finish],
-                           start_in_interval: i[:start] > closed_interval_start ? i[:start] : closed_interval_start,
-                           finish_in_interval: i[:finish] < open_interval_finish ? i[:finish] : open_interval_finish,
-                           dataset: i[:dataset] } }.extend(QueryableByDataset)
+        .select { |i| i[:start] < open_interval_finish && i[:finish] > closed_interval_start ||
+                      closed_interval_start == open_interval_finish &&
+                          i[:start] == i[:finish] &&
+                          i[:start] == closed_interval_start }
+        .sort_by { |i| i[:start] }
+        .collect { |i| { start: i[:start],
+                         finish: i[:finish],
+                         start_in_interval: i[:start] > closed_interval_start ? i[:start] : closed_interval_start,
+                         finish_in_interval: i[:finish] < open_interval_finish ? i[:finish] : open_interval_finish,
+                         dataset: i[:dataset] } }.extend(QueryableByDataset)
     end
-
-
 
     def _score # TODO delete; only for debug
       @score
@@ -74,12 +73,41 @@ module Musa::Datasets
     # TODO hay que implementar un effective_start y effective_finish con el inicio/fin dentro del bar, no absoluto
 
     def changes_between(closed_interval_start, open_interval_finish)
-      ( @indexer
+      (
+        #
+        # we have a start event if the element
+        # begins between queried interval start (included) and interval finish (excluded)
+        #
+        @indexer
           .select { |i| i[:start] >= closed_interval_start && i[:start] < open_interval_finish }
           .collect { |i| i.clone.merge({ change: :start, time: i[:start] }) } +
+
+        #
+        # we have a finish event if the element interval finishes
+        # between queried interval start (excluded) and queried interval finish (included) or
+        # element interval finishes exactly on queried interval start
+        # but the element interval started before queried interval start
+        # (the element is not an instant)
+        #
         @indexer
-          .select { |i| i[:finish] > closed_interval_start && i[:finish] <= open_interval_finish }
-          .collect { |i| i.clone.merge({ change: :finish, time: i[:finish] }) } )
+          .select { |i| ( i[:finish] > closed_interval_start ||
+                          i[:finish] == closed_interval_start && i[:finish] == i[:start])   &&
+                        ( i[:finish] < open_interval_finish ||
+                          i[:finish] == open_interval_finish && i[:start] < open_interval_finish) }
+          .collect { |i| i.clone.merge({ change: :finish, time: i[:finish] }) } +
+
+        #
+        # when the queried interval has no duration (it's an instant) we have a start and a finish event
+        # if the element also is an instant exactly coincident with the queried interval
+        #
+        @indexer
+          .select { |i| ( closed_interval_start == open_interval_finish &&
+                          i[:start] == closed_interval_start &&
+                          i[:finish] == open_interval_finish) }
+          .collect { |i| [i.clone.merge({ change: :start, time: i[:start] }),
+                          i.clone.merge({ change: :finish, time: i[:finish] })] }
+          .flatten(1)
+      )
         .sort_by { |i| i[:time] }
         .collect { |i| { change: i[:change],
                          time: i[:time],
@@ -89,8 +117,10 @@ module Musa::Datasets
                          finish_in_interval: i[:finish] < open_interval_finish ? i[:finish] : open_interval_finish,
                          time_in_interval: if i[:time] < closed_interval_start
                                              closed_interval_start
+                                           elsif i[:time] > open_interval_finish
+                                             open_interval_finish
                                            else
-                                             i[:time] > open_interval_finish ? open_interval_finish : i[:time]
+                                             i[:time]
                                            end,
                          dataset: i[:dataset] } }.extend(QueryableByDataset)
     end

@@ -26,7 +26,7 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
                            creators: { composer: 'Javier Sánchez Yeste' },
                            encoding_date: DateTime.new(2020, 7, 31),
                            parts: { piano: { name: 'Piano', abbreviation: 'pno', clefs: { g: 2, f: 4 } } },
-                           do_log: true)
+                           do_log: false)
 
       # File.open(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
 
