@@ -6,13 +6,26 @@ include Musa::Datasets
 
 RSpec.describe Musa::Datasets::Score do
 
+  context 'Dataset compatibility' do
+    it 'is an AbsD and has a duration' do
+      s = Score.new
+
+      expect(s).to be_a AbsD
+      expect(s).to be_a Score
+
+      expect(s[:duration]).to eq 0
+      expect(s.duration).to eq 0
+    end
+  end
+
   context 'Score insert operations' do
+
     it 'refuses things that are not a Dataset' do
       s = Score.new
       expect { s.at(1, add: { something: 1 }) }.to raise_error(ArgumentError)
     end
 
-    it 'manages event agrupation correctly' do
+    it 'manages event grouping correctly' do
       s = Score.new
 
       s.at(1, add: { something: 1 }.extend(AbsD))
@@ -49,7 +62,7 @@ RSpec.describe Musa::Datasets::Score do
       s.at(1, add: { something: 5 }.extend(AbsD))
       s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
 
-      h = s[1].group_by_attribute(:criteria)
+      h = s.at(1).group_by_attribute(:criteria)
 
       expect(h.keys).to eq [:a, :b, nil]
 
@@ -71,8 +84,8 @@ RSpec.describe Musa::Datasets::Score do
       s.at(1, add: { something: 5 }.extend(AbsD))
       s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
 
-      l = s[1].select_by_attribute(:criteria)
-      l2 = s[1].select_by_attribute(:criteria, :a)
+      l = s.at(1).select_by_attribute(:criteria)
+      l2 = s.at(1).select_by_attribute(:criteria, :a)
 
       expect(l).to eq [{ something: 1, criteria: :a }, { something: -1, criteria: :b }, { something: 100, criteria: :a }]
       expect(l2).to eq [{ something: 1, criteria: :a }, { something: 100, criteria: :a }]
@@ -90,7 +103,7 @@ RSpec.describe Musa::Datasets::Score do
       s.at(1, add: { something: nil, criteria: nil }.extend(AbsD))
       s.at(1, add: { something: 5 }.extend(AbsD))
 
-      l = s[1].sort_by_attribute(:something)
+      l = s.at(1).sort_by_attribute(:something)
 
       expect(l).to eq [{ something: -1, criteria: :b },
                        { something: 1, criteria: :a },
@@ -114,14 +127,14 @@ RSpec.describe Musa::Datasets::Score do
 
       expect(s2.size).to eq 2
 
-      expect(s2[1][0]).to eq({ something: 1, criteria: :a })
-      expect(s2[5][0]).to eq({ something: 100, criteria: :a })
+      expect(s2.at(1)[0]).to eq({ something: 1, criteria: :a })
+      expect(s2.at(5)[0]).to eq({ something: 100, criteria: :a })
 
       s3 = s2.subset { |dataset| dataset[:something] == 100}
 
       expect(s3.size).to eq 1
 
-      expect(s2[5][0]).to eq({ something: 100, criteria: :a })
+      expect(s2.at(5)[0]).to eq({ something: 100, criteria: :a })
     end
   end
 
@@ -256,6 +269,10 @@ RSpec.describe Musa::Datasets::Score do
 
     it 'manages finish' do
       expect(s.finish).to eq 8r
+    end
+
+    it 'manages duration' do
+      expect(s.duration).to eq 7r
     end
 
     it 'manages Queryable (unfinished test case)' do

@@ -3,6 +3,9 @@ require_relative 'e'
 module Musa::Datasets
   class Score
     include Enumerable
+    include AbsD
+
+    NaturalKeys = NaturalKeys.freeze
 
     require_relative 'score-to-mxml/to-mxml'
     include Musa::Datasets::Score::ToMXML
@@ -17,25 +20,38 @@ module Musa::Datasets
       @indexer.clear
     end
 
-    def at(time, add:)
-      raise ArgumentError, "#{add} is not a Abs dataset" unless add&.is_a?(Musa::Datasets::Abs)
-
-      time = time.rationalize
-
-      slot = @score[time] ||= [].extend(QueryableByTimeSlot)
-
-      slot << add
-
-      @indexer << { start: time,
-                    finish: time + add.duration.rationalize,
-                    dataset: add }
-
-      nil
+    def [](key)
+      if NaturalKeys.include?(key) && self.respond_to?(key)
+        self.send(key)
+      end
     end
 
-    def [](time)
+    def finish
+      @indexer.collect { |i| i[:finish] }.max
+    end
+
+    def duration
+      (finish || 1r) - 1r
+    end
+
+    def at(time, add: nil)
       time = time.rationalize
-      @score[time] ||= [].extend(QueryableByTimeSlot)
+
+      if add
+        raise ArgumentError, "#{add} is not a Abs dataset" unless add&.is_a?(Musa::Datasets::Abs)
+
+        slot = @score[time] ||= [].extend(QueryableByTimeSlot)
+
+        slot << add
+
+        @indexer << { start: time,
+                      finish: time + add.duration.rationalize,
+                      dataset: add }
+
+        nil
+      else
+        @score[time] ||= [].extend(QueryableByTimeSlot)
+      end
     end
 
     def size
@@ -144,10 +160,6 @@ module Musa::Datasets
       end
 
       filtered_score
-    end
-
-    def finish
-      @indexer.collect { |i| i[:finish] }.max
     end
   end
 
