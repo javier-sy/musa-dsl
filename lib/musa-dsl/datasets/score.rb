@@ -12,8 +12,6 @@ module Musa::Datasets
       @indexer = []
     end
 
-    attr_reader :resolution
-
     def reset
       @score.clear
       @indexer.clear
