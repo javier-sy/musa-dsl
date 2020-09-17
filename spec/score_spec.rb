@@ -16,6 +16,25 @@ RSpec.describe Musa::Datasets::Score do
       expect(s[:duration]).to eq 0
       expect(s.duration).to eq 0
     end
+
+    it 'is an AbsD and has a duration' do
+      s = Score.new
+
+      s.at(1, add: { something: 1 }.extend(AbsD))
+
+      expect(s[:duration]).to eq 0
+      expect(s.duration).to eq 0
+
+      s.at(1, add: { something: 1, duration: 2 }.extend(AbsD))
+
+      expect(s[:duration]).to eq 2
+      expect(s.duration).to eq 2
+
+      s.at(2, add: { something: 1, duration: 3 }.extend(AbsD))
+
+      expect(s[:duration]).to eq 4
+      expect(s.duration).to eq 4
+    end
   end
 
   context 'Score insert operations' do
