@@ -108,7 +108,8 @@ module Musa::Datasets
                           i.clone.merge({ change: :finish, time: i[:finish] })] }
           .flatten(1)
       )
-        .sort_by { |i| i[:time] }
+        .sort_by { |i| [ i[:time],
+                         i[:start] < i[:finish] && i[:change] == :finish ? 0 : 1] }
         .collect { |i| { change: i[:change],
                          time: i[:time],
                          start: i[:start],

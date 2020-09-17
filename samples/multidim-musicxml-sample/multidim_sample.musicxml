@@ -7,7 +7,7 @@
 	<identification>
 		<creator type="composer">Javier Sánchez Yeste</creator>
 		<encoding>
-			<encoding-date>2020-09-16</encoding-date>
+			<encoding-date>2020-09-17</encoding-date>
 			<software>MusaDSL: MusicXML output formatter</software>
 		</encoding>
 	</identification>
@@ -440,18 +440,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<p />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -460,6 +448,11 @@
 					<dynamics>
 						<p />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -836,18 +829,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<f />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -856,6 +837,11 @@
 					<dynamics>
 						<f />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -1113,18 +1099,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<p />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -1133,6 +1107,11 @@
 					<dynamics>
 						<p />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -1252,18 +1231,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mf />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -1272,6 +1239,11 @@
 					<dynamics>
 						<mf />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -1328,18 +1300,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<pp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -1348,6 +1308,11 @@
 					<dynamics>
 						<pp />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -1674,18 +1639,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<f />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -1694,6 +1647,11 @@
 					<dynamics>
 						<f />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -1971,18 +1929,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mf />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -1991,6 +1937,11 @@
 					<dynamics>
 						<mf />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -2209,18 +2160,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -2229,6 +2168,11 @@
 					<dynamics>
 						<mp />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -2368,18 +2312,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<pp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="crescendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -2388,6 +2320,11 @@
 					<dynamics>
 						<pp />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -2444,18 +2381,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mf />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -2464,6 +2389,11 @@
 					<dynamics>
 						<mf />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -2775,18 +2705,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<f />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -2795,6 +2713,11 @@
 					<dynamics>
 						<f />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -2981,18 +2904,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mf />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -3001,6 +2912,11 @@
 					<dynamics>
 						<mf />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -3225,18 +3141,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -3245,6 +3149,11 @@
 					<dynamics>
 						<mp />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -3960,13 +3869,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<f />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -4333,13 +4235,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<mp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -4591,18 +4486,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<ff />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -4611,6 +4494,11 @@
 					<dynamics>
 						<ff />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -4667,18 +4555,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<p />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="diminuendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -4687,6 +4563,11 @@
 					<dynamics>
 						<p />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -5176,18 +5057,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<p />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="crescendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -5196,6 +5065,11 @@
 					<dynamics>
 						<p />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -5252,18 +5126,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<dynamics>
-						<ff />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="crescendo"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<wedge type="stop"/>
 				</direction-type>
 			</direction>
@@ -5272,6 +5134,11 @@
 					<dynamics>
 						<ff />
 					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="crescendo"/>
 				</direction-type>
 			</direction>
 			<note>
