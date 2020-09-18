@@ -202,7 +202,6 @@ module Musa
           value
         end
       end
-
     end
 
     class Slave
