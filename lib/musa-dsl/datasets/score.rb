@@ -2,7 +2,7 @@ require_relative 'e'
 
 require_relative 'score/queriable'
 require_relative 'score/to-mxml/to-mxml'
-require_relative 'score/play'
+require_relative 'score/render'
 
 module Musa::Datasets
   class Score
@@ -13,7 +13,7 @@ module Musa::Datasets
 
     include ToMXML
     include Queriable
-    include Play
+    include Render
 
     def initialize
       @score = {}
