@@ -24,12 +24,12 @@ module Musa::Datasets; class Score
 
       mxml = ScorePartwise.new do |_|
         _.work_title title
-        _.creators creators
+        _.creators **creators
         _.encoding_date encoding_date if encoding_date
 
         parts.each_pair do |id, part_info|
           _.part id,
-                 name: part_info&.[](:name) ,
+                 name: part_info&.[](:name),
                  abbreviation: part_info&.[](:abbreviation) do |_|
 
             _.measure do |_|

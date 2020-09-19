@@ -46,6 +46,7 @@ RSpec.describe Musa::Datasets::Score do
   context 'Nested scores' do
     s1 = Score.new
     s2 = Score.new
+    s3 = Score.new
 
     s2.at(1, add: { something: 7777 }.extend(AbsD))
     s2.at(1.5, add: { something: 777 }.extend(AbsD))
@@ -57,27 +58,20 @@ RSpec.describe Musa::Datasets::Score do
     s1.at(2.5, add: s2)
     s1.at(3, add: { something: 10 }.extend(AbsD))
 
+    s3.at(1, add: { something: 1000 }.extend(AbsD))
+    s3.at(2, add: { something: 100 }.extend(AbsD))
+    s3.at(2.5, add: s3)
+    s3.at(3, add: { something: 10 }.extend(AbsD))
+    s3.at(4, add: { something: 1 }.extend(AbsD))
+
     it 'score with nested score duration' do
       expect(s2.duration).to eq 3r
       expect(s1.duration).to eq 4.5r
     end
 
     it 'score with nested score render' do
-      s1 = Score.new
-      s2 = Score.new
-
       seq = Sequencer.new 4, 24
       r = {}
-
-      s2.at(1, add: { something: 7777 }.extend(AbsD))
-      s2.at(1.5, add: { something: 777 }.extend(AbsD))
-      s2.at(2, add: { something: 77 }.extend(AbsD))
-      s2.at(4, add: { something: 7 }.extend(AbsD))
-
-      s1.at(1, add: { something: 1000 }.extend(AbsD))
-      s1.at(2, add: { something: 100 }.extend(AbsD))
-      s1.at(2.5, add: s2)
-      s1.at(3, add: { something: 10 }.extend(AbsD))
 
       seq.at 1 do
         s1.render on: seq do |element|
@@ -104,14 +98,8 @@ RSpec.describe Musa::Datasets::Score do
       seq = Sequencer.new 4, 24
       r = {}
 
-      s1.at(1, add: { something: 1000 }.extend(AbsD))
-      s1.at(2, add: { something: 100 }.extend(AbsD))
-      s1.at(2.5, add: s1)
-      s1.at(3, add: { something: 10 }.extend(AbsD))
-      s1.at(4, add: { something: 1 }.extend(AbsD))
-
       seq.at 1 do
-        s1.render on: seq do |element|
+        s3.render on: seq do |element|
           r[seq.position] ||= []
           r[seq.position] << element[:something]
         end
@@ -133,7 +121,6 @@ RSpec.describe Musa::Datasets::Score do
                           6.5r => [100]
                       })
 
-      expect(r.duration).to eq nil
     end
 
   end

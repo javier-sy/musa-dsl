@@ -33,7 +33,11 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
       expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml")).strip
     end
 
-    it 'manages irregular durations (unfinished test case)' do
+    it 'manages nested scores (unfinished test case)', pending: true do
+      expect(1).to eq 0 # TODO unfinished test case
+    end
+
+    it 'manages irregular durations (unfinished test case)', pending: true do
       score = Score.new
 
       # score.at 1, add: { pitch: 60, duration: 5/16r }.extend(PDV)
