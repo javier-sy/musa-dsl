@@ -1,6 +1,5 @@
 require_relative 'e'
-
-require_relative 'helper'
+require_relative 'score'
 
 module Musa::Datasets
   module PS
@@ -30,6 +29,12 @@ module Musa::Datasets
 
     def to_score(score: nil, position: nil)
 
+      score ||= Musa::Datasets::Score.new
+      position ||= 1r
+
+
+
+      score
     end
   end
 end

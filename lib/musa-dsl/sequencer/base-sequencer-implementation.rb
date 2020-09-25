@@ -295,7 +295,9 @@ module Musa
           control._start_position ||= position
           control._execution_counter ||= 0
 
-          duration_exceeded = (control._start_position + control.duration_value - interval) <= position if interval && control.duration_value
+          duration_exceeded =
+              (control._start_position + control.duration_value - interval) <= position if interval && control.duration_value
+
           till_exceeded = control.till_value - interval <= position if interval && control.till_value
 
           condition_failed = !control.condition_block.call if control.condition_block
@@ -323,7 +325,14 @@ module Musa
         nil
       end
 
-      def _move(every: nil, from:, to: nil, step: nil, duration: nil, till: nil, function: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+      def _move(every: nil,
+                from:, to: nil, step: nil,
+                duration: nil, till: nil,
+                function: nil,
+                right_open: nil,
+                on_stop: nil,
+                after_bars: nil, after: nil,
+                &block)
 
         raise ArgumentError,
               "Cannot use duration: #{duration} and till: #{till} parameters at the same time. " \

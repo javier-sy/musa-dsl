@@ -52,20 +52,20 @@ module Musa
         @ticks_position = @position_mutex.synchronize { @ticks_per_bar - 1 }
       end
 
-      def tick
-        if @hold_public_ticks
-          @hold_ticks += 1
-        else
-          _tick
-        end
-      end
-
       def size
         @timeslots.sum(&:size)
       end
 
       def empty?
         @timeslots.empty?
+      end
+
+      def tick
+        if @hold_public_ticks
+          @hold_ticks += 1
+        else
+          _tick
+        end
       end
 
       def run
