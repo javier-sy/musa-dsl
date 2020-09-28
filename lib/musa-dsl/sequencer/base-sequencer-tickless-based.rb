@@ -13,12 +13,14 @@ module Musa
           0r
         end
 
+        # TODO implementar hold_public_ticks adaptado a modo tickless para permitir que una operación de asignación de
+        # TODO posición con .position = X, finalice antes de comenzar a procesar el resto de ticks en un contexto multithread.
+        # TODO pero tiene sentido cuando el modo tickless se usa SOLO con .run?
+        # TODO tendría sentido sólo si también se usa con ticks temporizados, lo cual ocurriría si se reimplementa el modo tickbased
+        # TODO a partir del modo tickless.
+
         def tick
-          if @hold_public_ticks
-            @hold_ticks += 1
-          else
-            _tick @position_mutex.synchronize { @position = @timeslots.first_after(@position) }
-          end
+          _tick @position_mutex.synchronize { @position = @timeslots.first_after(@position) }
         end
 
         # TODO puede pensarse que un sequencer tickbased es como un ticklessbased en que cada tick se aavanza el position en 1 / ticks_per_bar
