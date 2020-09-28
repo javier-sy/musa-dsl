@@ -15,10 +15,9 @@ module Musa
 
       private
 
-      def _tick
-        position_to_run = @position_mutex.synchronize { @ticks_position += 1 }
+      def _tick(position_to_run)
 
-        @before_tick.each { |block| block.call Rational(position_to_run, @ticks_per_bar) }
+        @before_tick.each { |block| block.call position_to_run }
 
         queue = @timeslots[position_to_run]
 
@@ -31,13 +30,13 @@ module Musa
             if command.key?(:parent_control) && !command[:parent_control].stopped?
               @event_handlers.push command[:parent_control]
 
-              @@tick_mutex.synchronize do
+              @tick_mutex.synchronize do
                 command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
               end
 
               @event_handlers.pop
             else
-              @@tick_mutex.synchronize do
+              @tick_mutex.synchronize do
                 command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
               end
             end
@@ -47,89 +46,70 @@ module Musa
         Thread.pass
       end
 
-      def _hold_public_ticks
-        @hold_public_ticks = true
-      end
-
-      def _release_public_ticks
-        @hold_ticks.times { _tick }
-        @hold_ticks = 0
-        @hold_public_ticks = false
-      end
-
       def _raw_numeric_at(at_position, force_first: nil, &block)
         force_first ||= false
 
-        ticks_position = at_position.rationalize * @ticks_per_bar
-
-        if ticks_position == @ticks_position
+        if at_position == @position
           begin
             yield
           rescue StandardError, ScriptError => e
             _rescue_error e
           end
 
-        elsif ticks_position > @ticks_position
-          @timeslots[ticks_position] ||= []
+        elsif at_position > @position
+          @timeslots[at_position] ||= []
 
           value = { block: block, value_parameters: [], key_parameters: {} }
           if force_first
-            @timeslots[ticks_position].insert 0, value
+            @timeslots[at_position].insert 0, value
           else
-            @timeslots[ticks_position] << value
+            @timeslots[at_position] << value
           end
         else
-          _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{Rational(ticks_position, @ticks_per_bar)}" if @do_log
+          _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{at_position}" if @do_log
         end
 
         nil
       end
 
       def _numeric_at(at_position, control, with: nil, debug: nil, &block)
-        raise ArgumentError, 'Block is mandatory' unless block
+        raise ArgumentError, "'at_position' parameter cannot be nil" if at_position.nil?
+        raise ArgumentError, 'Yield block is mandatory' unless block
 
-        ticks_position = at_position.rationalize * @ticks_per_bar
-
-        if ticks_position != ticks_position.round
-          original_ticks_position = ticks_position
-          ticks_position = ticks_position.round.to_r
-
-          if @do_log
-            _log "BaseSequencer._numeric_at: warning: rounding position #{at_position} (#{original_ticks_position.to_f.round(2)} ticks) "\
-                  "to tick precision: #{ticks_position / @ticks_per_bar} (#{ticks_position.to_i} ticks)"
-          end
-        end
+        at_position = _check_position(at_position)
 
         value_parameters = []
         value_parameters << with if !with.nil? && !with.is_a?(Hash)
 
-        if block_given?
-          block_key_parameters_binder =
-              SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
+        block_key_parameters_binder =
+            SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
-          key_parameters = {}
-          key_parameters.merge! block_key_parameters_binder._apply(nil, with).last if with.is_a?(Hash)
+        key_parameters = {}
+        key_parameters.merge! block_key_parameters_binder._apply(nil, with).last if with.is_a?(Hash)
 
-          key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
+        key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
-          if ticks_position == @ticks_position
-            @debug_at.call if debug && @debug_at
+        if at_position == @position
+          @debug_at.call if debug && @debug_at
 
-            begin
-              locked = @@tick_mutex.try_lock
-              block_key_parameters_binder._call(value_parameters, key_parameters)
-            ensure
-              @@tick_mutex.unlock if locked
-            end
-
-          elsif ticks_position > @ticks_position
-            @timeslots[ticks_position] ||= []
-
-            @timeslots[ticks_position] << {parent_control: control, block: @on_debug_at } if debug && @on_debug_at
-            @timeslots[ticks_position] << {parent_control: control, block: block_key_parameters_binder, value_parameters: value_parameters, key_parameters: key_parameters }
-          else
-            _log "BaseSequencer._numeric_at: warning: ignoring past at command for #{Rational(ticks_position, @ticks_per_bar)}" if @do_log
+          begin
+            locked = @tick_mutex.try_lock
+            block_key_parameters_binder._call(value_parameters, key_parameters)
+          ensure
+            @tick_mutex.unlock if locked
           end
+
+        elsif @position.nil? || at_position > @position
+
+          @timeslots[at_position] ||= []
+
+          @timeslots[at_position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
+
+          @timeslots[at_position] << { parent_control: control, block: block_key_parameters_binder,
+                                       value_parameters: value_parameters,
+                                       key_parameters: key_parameters }
+        else
+          _log "BaseSequencer._numeric_at: warning: ignoring past 'at' command for #{at_position}" if @do_log
         end
 
         nil
@@ -415,6 +395,7 @@ module Musa
 
           size.times do |i|
             if to[i] && step[i] && !every[i]
+
               steps = (to[i] - from[i]) / step[i]
 
               # When to == from don't need to do any iteration with every
@@ -425,14 +406,19 @@ module Musa
               end
 
             elsif to[i] && !step[i] && !every[i]
-              function_range[i] = to[i] - from[i]
-              function_offset[i] = from[i]
 
-              from[i] = 0r
-              to[i] = 1r
+              if tick_duration > 0
+                function_range[i] = to[i] - from[i]
+                function_offset[i] = from[i]
 
-              step[i] = 1r / (effective_duration * @ticks_per_bar - right_open_offset[i])
-              every[i] = @tick_duration
+                from[i] = 0r
+                to[i] = 1r
+
+                step[i] = 1r / (effective_duration * ticks_per_bar - right_open_offset[i])
+                every[i] = tick_duration
+              else
+                raise ArgumentError, "Cannot use sequencer tickless mode without 'step' or 'every' parameter values"
+              end
 
             elsif to[i] && !step[i] && every[i]
               function_range[i] = to[i] - from[i]
@@ -513,7 +499,9 @@ module Musa
               # This allow to round the irregularly timed positions due to every intervals not integer
               # multiples of the tick_duration.
               #
-              if group_position >= position - tick_duration && group_position < position + tick_duration
+              if tick_duration == 0 && group_position == position ||
+                 group_position >= position - tick_duration && group_position < position + tick_duration
+
                 process_indexes << affected_indexes
 
                 group_counter[group_interval] += 1
@@ -656,10 +644,6 @@ module Musa
             a << largest_duration
           end
         end
-      end
-
-      def _quantize(value)
-        (value / tick_duration).round * tick_duration
       end
 
       def _hash_from_keys_and_values(keys, values)

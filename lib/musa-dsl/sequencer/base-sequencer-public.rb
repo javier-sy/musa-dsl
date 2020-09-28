@@ -3,32 +3,48 @@ require_relative '../core-ext/smart-proc-binder'
 
 require_relative '../series'
 
+require_relative 'timeslots'
+
+require_relative 'base-sequencer-tick-based'
+require_relative 'base-sequencer-tickless-based'
+
 module Musa
   module Sequencer
     class BaseSequencer
-      attr_reader :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration, :running_position
+      attr_reader :beats_per_bar, :ticks_per_beat
+      attr_reader :running_position
       attr_reader :everying, :playing, :moving
 
-      @@tick_mutex = Mutex.new
+      def initialize(beats_per_bar = nil, ticks_per_beat = nil, do_log: nil, do_error_log: nil, log_decimals: nil)
 
-      def initialize(beats_per_bar, ticks_per_beat, do_log: nil, do_error_log: nil, log_decimals: nil)
+        raise ArgumentError,
+              "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
+              unless !(beats_per_bar || ticks_per_beat) || (beats_per_bar && ticks_per_beat)
+
+        if beats_per_bar && ticks_per_beat
+          @beats_per_bar = Rational(beats_per_bar)
+          @ticks_per_beat = Rational(ticks_per_beat)
+
+          self.singleton_class.include TickBasedTiming
+        else
+          self.singleton_class.include TicklessBasedTiming
+        end
+
+        _init_timing
+
+        @hold_public_ticks = false
+        @hold_ticks = 0
+
         @on_debug_at = []
         @on_error = []
 
         @before_tick = []
         @on_fast_forward = []
 
-        @beats_per_bar = Rational(beats_per_bar)
-        @ticks_per_beat = Rational(ticks_per_beat)
-
-        @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
-        @tick_duration = Rational(1, @ticks_per_bar)
-
+        @tick_mutex = Mutex.new
         @position_mutex = Mutex.new
-        @hold_public_ticks = false
-        @hold_ticks = 0
 
-        @timeslots = {}
+        @timeslots = Timeslots.new
 
         @everying = []
         @playing = []
@@ -49,31 +65,19 @@ module Musa
 
         @event_handlers = [EventHandler.new]
 
-        @ticks_position = @position_mutex.synchronize { @ticks_per_bar - 1 }
+        _reset_timing
       end
 
       def size
-        @timeslots.sum(&:size)
+        @timeslots.values.sum(&:size)
       end
 
       def empty?
         @timeslots.empty?
       end
 
-      def tick
-        if @hold_public_ticks
-          @hold_ticks += 1
-        else
-          _tick
-        end
-      end
-
       def run
         tick until empty?
-      end
-
-      def round(bar)
-        Rational((bar * @ticks_per_bar).round(0), @ticks_per_bar)
       end
 
       def event_handler
@@ -94,24 +98,6 @@ module Musa
 
       def before_tick(&block)
         @before_tick << SmartProcBinder.new(block)
-      end
-
-      def position
-        Rational(@ticks_position, @ticks_per_bar)
-      end
-
-      def position=(new_position)
-        new_ticks_position = new_position * @ticks_per_bar
-
-        raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@ticks_position} new position: #{new_ticks_position}" if new_ticks_position < @ticks_position
-
-        _hold_public_ticks
-        @on_fast_forward.each { |block| block.call(true) }
-
-        _tick while @ticks_position < new_ticks_position
-
-        @on_fast_forward.each { |block| block.call(false) }
-        _release_public_ticks
       end
 
       def on(event, &block)
@@ -157,7 +143,7 @@ module Musa
       end
 
       def raw_at(bar_position, force_first: nil, &block)
-        _raw_numeric_at bar_position, force_first: force_first, &block
+        _raw_numeric_at bar_position.rationalize, force_first: force_first, &block
 
         nil
       end
@@ -169,7 +155,7 @@ module Musa
         @event_handlers.push control
 
         if bar_position.is_a? Numeric
-          _numeric_at bar_position, control, with: with, debug: debug, &block
+          _numeric_at bar_position.rationalize, control, with: with, debug: debug, &block
         else
           bar_position = Series::S(*bar_position) if bar_position.is_a? Array
           bar_position = bar_position.instance if bar_position
@@ -218,7 +204,14 @@ module Musa
         # nil interval means 'only once'
         interval = interval.rationalize unless interval.nil?
 
-        control = EveryControl.new @event_handlers.last, duration: duration, till: till, condition: condition, on_stop: on_stop, after_bars: after_bars, after: after
+        control = EveryControl.new @event_handlers.last,
+                                   duration: duration,
+                                   till: till,
+                                   condition: condition,
+                                   on_stop: on_stop,
+                                   after_bars: after_bars,
+                                   after: after
+
         @event_handlers.push control
 
         _every interval, control, &block
@@ -234,8 +227,25 @@ module Musa
         control
       end
 
-      def move(every: nil, from: nil, to: nil, step: nil, duration: nil, till: nil, function: nil, right_open: nil, on_stop: nil, after_bars: nil, after: nil, &block)
-        control = _move every: every, from: from, to: to, step: step, duration: duration, till: till, function: function, right_open: right_open, on_stop: on_stop, after_bars: after_bars, after: after, &block
+      def move(every: nil,
+               from: nil, to: nil, step: nil,
+               duration: nil, till: nil,
+               function: nil,
+               right_open: nil,
+               on_stop: nil,
+               after_bars: nil,
+               after: nil,
+               &block)
+
+        control = _move every: every,
+                        from: from, to: to, step: step,
+                        duration: duration, till: till,
+                        function: function,
+                        right_open: right_open,
+                        on_stop: on_stop,
+                        after_bars: after_bars,
+                        after: after,
+                        &block
 
         @moving << control
 

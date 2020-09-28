@@ -8,11 +8,12 @@ module Musa
       extend Forwardable
 
       def_delegators :@sequencer,
-                     :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration, :round,
+                     :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration,
                      :size, :empty?,
                      :on_debug_at, :on_error, :on_fast_forward, :before_tick,
                      :raw_at,
                      :tick,
+                     :reset,
                      :position=,
                      :event_handler
 
@@ -34,10 +35,6 @@ module Musa
         with &block if block_given?
       end
 
-      def reset
-        @sequencer.reset
-      end
-
       class DSLContext
         extend Forwardable
         include Musa::Extension::SmartProcBinder
@@ -48,7 +45,7 @@ module Musa
         def_delegators :@sequencer,
                        :launch, :on,
                        :position, :size, :everying, :playing, :moving,
-                       :ticks_per_bar, :round, :log, :inspect,
+                       :ticks_per_bar, :log, :inspect,
                        :run
 
         def initialize(sequencer)
