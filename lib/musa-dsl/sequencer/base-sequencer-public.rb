@@ -32,9 +32,6 @@ module Musa
 
         _init_timing
 
-        @hold_public_ticks = false
-        @hold_ticks = 0
-
         @on_debug_at = []
         @on_error = []
 

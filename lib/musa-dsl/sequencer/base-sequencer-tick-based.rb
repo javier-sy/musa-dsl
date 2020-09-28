@@ -32,6 +32,9 @@ module Musa
         def _init_timing
           @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
           @tick_duration = Rational(1, @ticks_per_bar)
+
+          @hold_public_ticks = false
+          @hold_ticks = 0
         end
 
         def _reset_timing
