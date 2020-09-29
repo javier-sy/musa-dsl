@@ -1,6 +1,8 @@
 require_relative 'e'
 require_relative 'score'
 
+require_relative '../sequencer'
+
 module Musa::Datasets
   module PS
     include AbsD
@@ -74,6 +76,7 @@ module Musa::Datasets
                       position_jitter: position_jitter,
                       duration_jitter: duration_jitter,
                       started_ago: started_ago,
+                      score: score,
                       s: _
         end
       end

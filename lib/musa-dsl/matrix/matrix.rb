@@ -1,6 +1,7 @@
 require 'matrix'
 
 require_relative '../datasets/p'
+require_relative '../sequencer'
 
 module Musa
   module Matrix
@@ -90,6 +91,58 @@ module Musa
             end
 
             line.extend(Datasets::P)
+          end
+        end
+
+        def to_score(time_dimension, mapper: nil, score: nil, position: nil, sequencer: nil, beats_per_bar: nil, ticks_per_beat: nil, right_open: nil, &block)
+
+          raise ArgumentError,
+                "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
+              unless beats_per_bar && ticks_per_beat ||
+                     beats_per_bar.nil? && ticks_per_beat.nil?
+
+          raise ArgumentError,
+                "'sequencer' parameter should not be used when 'beats_per_bar' and 'ticks_per_beat' parameters are used" \
+            if sequencer && beats_per_bar
+
+          raise ArgumentError,
+                "'time_dimension' parameter should be an index number if no 'mapping' is provided" \
+            unless time_dimension.is_a?(Symbol) && mapper&.include?(time_dimension) ||
+                   time_dimension.is_a?(Integer) && (0..self.column_size-1).include(time_dimension)
+
+          time_dimension = mapper&.find_index(time_dimension) if time_dimension.is_a?(Symbol)
+
+          mapper = mapper.clone.tap { |_| _.delete_at(time_dimension) } if mapper
+
+          run_sequencer = sequencer.nil?
+
+          score ||= Musa::Datasets::Score.new
+
+          sequencer ||= Sequencer::Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3)
+
+          right_open = right_open.clone.tap { |_| _.delete_at(time_dimension) } if right_open&.is_a?(Array)
+
+
+
+          # SEGUIIIIR AQUI propagando el mapper y time_dimension que puede ser numeric o symbol hacia P y PS
+
+
+
+          sequencer.at(position || 1r) do |_|
+            to_p(time_dimension).each do |p|
+              p.to_score(score: score,
+                         sequencer: _,
+                         position: _.position,
+                         right_open: right_open,
+                         &block)
+            end
+          end
+
+          if run_sequencer
+            sequencer.run
+            score
+          else
+            nil
           end
         end
 

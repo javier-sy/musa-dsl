@@ -1,6 +1,8 @@
 require_relative 'dataset'
 require_relative 'ps'
 
+require_relative '../sequencer'
+
 module Musa::Datasets
   module P
     include Dataset
@@ -29,8 +31,9 @@ module Musa::Datasets
             "'sequencer' parameter should not be used when 'beats_per_bar' and 'ticks_per_beat' parameters are used" \
             if sequencer && beats_per_bar
 
-      score ||= Musa::Datasets::Score.new
+      run_sequencer = sequencer.nil?
 
+      score ||= Musa::Datasets::Score.new
 
       sequencer ||= Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3)
 
@@ -51,10 +54,12 @@ module Musa::Datasets
         end
       end
 
-      sequencer.run
-
-      score
-
+      if run_sequencer
+        sequencer.run
+        score
+      else
+        nil
+      end
     end
 
 
