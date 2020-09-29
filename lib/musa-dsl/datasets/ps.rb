@@ -27,7 +27,12 @@ module Musa::Datasets
       # ?????
     end
 
-    def to_score(score: nil, position: nil, sequencer: nil, beats_per_bar: nil, ticks_per_beat: nil, right_open: nil, &block)
+    def to_score(score: nil,
+                 position: nil,
+                 sequencer: nil,
+                 beats_per_bar: nil, ticks_per_beat: nil,
+                 right_open: nil,
+                 &block)
 
       raise ArgumentError,
             "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
@@ -48,11 +53,6 @@ module Musa::Datasets
       ticks_per_bar = sequencer.ticks_per_bar
 
       sequencer.at(position || 1r) do |_|
-        puts
-
-        _.log "line from #{self[:from]}"
-        _.log "line to #{self[:to]}"
-
         _.move from: self[:from],
                to: self[:to],
                right_open: right_open,

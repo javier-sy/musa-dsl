@@ -21,8 +21,8 @@ module Musa
           indexes
         end
 
-        def to_p(time_dimension)
-          condensed_matrices.collect { |m| m.to_p(time_dimension) }
+        def to_p(time_dimension, keep_time: nil)
+          condensed_matrices.collect { |m| m.to_p(time_dimension, keep_time: keep_time) }
         end
 
         def condensed_matrices
@@ -68,22 +68,23 @@ module Musa
       refine ::Matrix do
         include Musa::Datasets
 
-        def to_p(time_dimension)
+        def to_p(time_dimension, keep_time: nil)
+
           decompose(self.to_a, time_dimension).collect do |points|
             line = []
 
-            start_point = points[0].extend(Datasets::V)
+            start_point = points[0]
             start_time = start_point[time_dimension]
 
-            line << start_point
+            line << start_point.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
 
             (1..points.size-1).each do |i|
-              end_point = points[i].extend(Datasets::V)
+              end_point = points[i]
 
               end_time = end_point[time_dimension]
 
               line << end_time - start_time
-              line << end_point
+              line << end_point.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
 
               start_time = end_time
             end

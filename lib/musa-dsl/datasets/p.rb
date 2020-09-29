@@ -40,8 +40,8 @@ module Musa::Datasets
 
             # TODO limpiar estas llamadas a to_packed_V!!!!!!
             #
-            line[:from] = line[:from].to_packed_V([:time, :pitch, :dynamics, :instrument])
-            line[:to] = line[:to].to_packed_V([:time, :pitch, :dynamics, :instrument])
+            line[:from] = line[:from].to_packed_V([:pitch, :dynamics, :instrument])
+            line[:to] = line[:to].to_packed_V([:pitch, :dynamics, :instrument])
 
             line.to_score(sequencer: _,
                           score: score,
