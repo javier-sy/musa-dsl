@@ -32,12 +32,6 @@ poly_line = Matrix[
     [46 * 4, 57, 10, 5] # change nothing
 ]
 
-poly_line = Matrix[
-    [0  * 4, 60, 6, 0],
-    [4  * 4, 60, 6, 0], # changes nothing
-    [8  * 4, 60, 8, 0]
-] if false
-
 Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
 
 beats_per_bar = 4r
@@ -52,15 +46,13 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
       _.play p.to_ps_serie do |_, line|
 
 
-        FALLA PORQUE AÑADE UNA NOTA EXTRA HACIA EL FINAL!!!!!
-
-        FALTA PASAR A p.to_score(....)
-
-
         # TODO limpiar estas llamadas a to_packed_V!!!!!!
         #
         line[:from] = line[:from].to_packed_V([:time, :pitch, :dynamics, :instrument])
+        line[:from].delete :time
         line[:to] = line[:to].to_packed_V([:time, :pitch, :dynamics, :instrument])
+        line[:to].delete :time
+
 
         line.to_score(score: score,
                       position: _.position,
