@@ -64,8 +64,8 @@ RSpec.describe Musa::Sequencer do
       c = []
 
       s.at 1 do
-        s.move from: 100, to: 101, duration: 4, step: 1 do |value, position:|
-          c << [position, value]
+        s.move from: 100, to: 101, duration: 4, step: 1 do |value|
+          c << [s.position, value]
         end
       end
 

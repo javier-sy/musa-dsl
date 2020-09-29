@@ -7,7 +7,7 @@
 	<identification>
 		<creator type="composer">Javier Sánchez Yeste</creator>
 		<encoding>
-			<encoding-date>2020-09-19</encoding-date>
+			<encoding-date>2020-09-29</encoding-date>
 			<software>MusaDSL: MusicXML output formatter</software>
 		</encoding>
 	</identification>
@@ -2381,11 +2381,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<dynamics>
 						<mf />
 					</dynamics>
@@ -2396,6 +2391,7 @@
 					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
+			<backup><duration>1</duration></backup>
 			<note>
 				<pitch>
 					<step>D</step>
@@ -2429,27 +2425,26 @@
 					<alter>1</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>4</duration>
+				<duration>6</duration>
 				<tie type="stop"/>
-				<tie type="start"/>
 				<type>32nd</type>
-				<notations>
-					<tied type="continue"/>
-				</notations>
-			</note>
-			<note>
-				<pitch>
-					<step>D</step>
-					<alter>1</alter>
-					<octave>4</octave>
-				</pitch>
-				<duration>1</duration>
-				<tie type="stop"/>
-				<type>128th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
 			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<mf />
+					</dynamics>
+				</direction-type>
+			</direction>
 		</measure>
 		<measure number="37">
 			<note>
@@ -3450,9 +3445,8 @@
 			</note>
 			<note>
 				<rest />
-				<duration>3</duration>
+				<duration>2</duration>
 				<type>64th</type>
-				<dot />
 			</note>
 			<direction placement="below">
 				<direction-type>
@@ -3492,23 +3486,10 @@
 					<alter>1</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>4</duration>
+				<duration>6</duration>
 				<tie type="stop"/>
-				<tie type="start"/>
 				<type>32nd</type>
-				<notations>
-					<tied type="continue"/>
-				</notations>
-			</note>
-			<note>
-				<pitch>
-					<step>D</step>
-					<alter>1</alter>
-					<octave>4</octave>
-				</pitch>
-				<duration>1</duration>
-				<tie type="stop"/>
-				<type>128th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
@@ -5126,11 +5107,6 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<dynamics>
 						<ff />
 					</dynamics>
@@ -5141,6 +5117,7 @@
 					<wedge type="crescendo"/>
 				</direction-type>
 			</direction>
+			<backup><duration>1</duration></backup>
 			<note>
 				<pitch>
 					<step>A</step>
@@ -5174,27 +5151,26 @@
 					<alter>1</alter>
 					<octave>3</octave>
 				</pitch>
-				<duration>4</duration>
+				<duration>6</duration>
 				<tie type="stop"/>
-				<tie type="start"/>
 				<type>32nd</type>
-				<notations>
-					<tied type="continue"/>
-				</notations>
-			</note>
-			<note>
-				<pitch>
-					<step>A</step>
-					<alter>1</alter>
-					<octave>3</octave>
-				</pitch>
-				<duration>1</duration>
-				<tie type="stop"/>
-				<type>128th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
 			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<ff />
+					</dynamics>
+				</direction-type>
+			</direction>
 		</measure>
 		<measure number="42">
 			<note>

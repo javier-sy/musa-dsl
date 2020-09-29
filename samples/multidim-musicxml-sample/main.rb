@@ -32,54 +32,50 @@ poly_line = Matrix[
     [46 * 4, 57, 10, 5] # change nothing
 ]
 
+poly_line = Matrix[
+    [0  * 4, 60, 6, 0],
+    [4  * 4, 60, 6, 0], # changes nothing
+    [8  * 4, 60, 8, 0]
+] if false
+
 Packed = Struct.new(:time, :pitch, :dynamics, :instrument)
 
 beats_per_bar = 4r
 ticks_per_beat = 32r
-ticks_per_bar = beats_per_bar * ticks_per_beat
 
 score = Score.new
 
 sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |_|
   _.at 1 do |_|
     poly_line.to_p(0).each do |p|
+
       _.play p.to_ps_serie do |_, line|
 
-        line_from = Packed.new(*line[:from])
-        line_to = Packed.new(*line[:to])
 
-        puts
-        _.log "line from #{line_from}"
-        _.log "line to #{line_to}"
+        FALLA PORQUE AÑADE UNA NOTA EXTRA HACIA EL FINAL!!!!!
 
-        duration = line[:duration]
+        FALTA PASAR A p.to_score(....)
 
-        q_duration = quantize(duration, ticks_per_bar)
 
-        dynamics_change = line_from.dynamics != line_to.dynamics
-        instrument_change = line_from.instrument != line_to.instrument
-        pitch_change = line_from.pitch != line_to.pitch
+        # TODO limpiar estas llamadas a to_packed_V!!!!!!
+        #
+        line[:from] = line[:from].to_packed_V([:time, :pitch, :dynamics, :instrument])
+        line[:to] = line[:to].to_packed_V([:time, :pitch, :dynamics, :instrument])
 
-        puts
-        _.log "dynamics_change #{dynamics_change} instrument_change #{instrument_change} pitch_change #{pitch_change}"
-
-        _.move from: { instrument: line_from.instrument,
-                       pitch: line_from.pitch,
-                       dynamics: line_from.dynamics },
-               to: { instrument: line_to.instrument,
-                     pitch: line_to.pitch,
-                     dynamics: line_to.dynamics },
-               right_open: { dynamics: true },
-               duration: q_duration,
-               step: 1 do |_, value, next_value,
-                              position:,
-                              duration:,
-                              quantized_duration:,
-                              position_jitter:, duration_jitter:,
-                              started_ago:|
+        line.to_score(score: score,
+                      position: _.position,
+                      right_open: { dynamics: true },
+                      beats_per_bar: beats_per_bar, ticks_per_beat: ticks_per_beat) do
+          | value, next_value,
+            position:,
+            duration:,
+            quantized_duration:,
+            position_jitter:, duration_jitter:,
+            started_ago:,
+            s:|
 
           puts
-          _.log "\n\tvalue #{value}\n\tnext #{next_value}\n\tposition #{position}\n\tduration #{duration}" \
+          s.log "\n\tvalue #{value}\n\tnext #{next_value}\n\tscore_position #{position}\n\tduration #{duration}" \
                 "\n\tquantized_duration #{quantized_duration}\n\tstarted_ago #{started_ago}"\
                 "\n\tposition_jitter #{position_jitter}\n\tduration_jitter #{duration_jitter}"
 
@@ -88,7 +84,7 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
           new_pitch_now = !started_ago[:pitch]
 
           puts
-          _.log "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
+          s.log "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
 
           if new_instrument_now || new_dynamics_now || new_pitch_now
 
@@ -108,21 +104,21 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
 
             if new_instrument_now || new_dynamics_now
 
-              start_instrument_position = _.position - (started_ago[:instrument] || 0)
+              start_instrument_position = position - (started_ago[:instrument] || 0)
               finish_instrument_position = start_instrument_position + quantized_duration[:instrument]
 
-              start_dynamics_position = _.position - (started_ago[:dynamics] || 0)
+              start_dynamics_position = position - (started_ago[:dynamics] || 0)
               finish_dynamics_position = start_dynamics_position + quantized_duration[:dynamics]
 
               segment_q_effective_duration =
-                  [finish_instrument_position, finish_dynamics_position].min - _.position
+                  [finish_instrument_position, finish_dynamics_position].min - position
 
-              segment_effective_finish_position = _.position + segment_q_effective_duration
+              segment_effective_finish_position = position + segment_q_effective_duration
 
               # relative start and finish position are ratios from 0 (beginning) to 1 (finish)
               #
               segment_relative_start_position_over_instrument_timeline =
-                  Rational(_.position - start_instrument_position,
+                  Rational(position - start_instrument_position,
                            finish_instrument_position - start_instrument_position)
 
               segment_relative_finish_position_over_instrument_timeline =
@@ -130,7 +126,7 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                            finish_instrument_position - start_instrument_position)
               #
               segment_relative_start_position_over_dynamics_timeline =
-                  Rational(_.position - start_dynamics_position,
+                  Rational(position - start_dynamics_position,
                            finish_dynamics_position - start_dynamics_position)
 
               segment_relative_finish_position_over_dynamics_timeline =
@@ -141,11 +137,11 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
 
               segment_from_dynamics =
                   value[:dynamics] +
-                  delta_dynamics * segment_relative_start_position_over_dynamics_timeline
+                      delta_dynamics * segment_relative_start_position_over_dynamics_timeline
 
               segment_to_dynamics =
                   value[:dynamics] +
-                  delta_dynamics * segment_relative_finish_position_over_dynamics_timeline
+                      delta_dynamics * segment_relative_finish_position_over_dynamics_timeline
 
               segment_from_dynamics_from_instrument =
                   segment_from_dynamics *
@@ -163,21 +159,21 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                   segment_to_dynamics *
                       segment_relative_finish_position_over_instrument_timeline
 
-              _.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
+              s.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
 
-              _.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: 0.0001) || 'nil'}"
+              s.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: 0.0001) || 'nil'}"
 
-              _.log "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
-              _.log "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+              s.log "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+              s.log "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
 
-              _.log "value[:dynamics] #{value[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
-              _.log "segment_from_dynamics #{segment_from_dynamics.to_f.round(2)} to_dynamics #{to_dynamics.to_f.round(2)}"
+              s.log "value[:dynamics] #{value[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
+              s.log "segment_from_dynamics #{segment_from_dynamics.to_f.round(2)} to_dynamics #{to_dynamics.to_f.round(2)}"
 
-              _.log "segment_relative_start_position_over_instrument_timeline #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
-              _.log "segment_relative_finish_position_over_instrument_timeline #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+              s.log "segment_relative_start_position_over_instrument_timeline #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+              s.log "segment_relative_finish_position_over_instrument_timeline #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
 
-              _.log "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
-              _.log "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
+              s.log "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
+              s.log "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
 
               if from_instrument && to_instrument
                 render_dynamics segment_from_dynamics_from_instrument,
@@ -185,14 +181,14 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                                 segment_q_effective_duration,
                                 score: score,
                                 instrument: from_instrument_symbol,
-                                position: _.position
+                                position: position
 
                 render_dynamics segment_from_dynamics_to_instrument,
                                 segment_to_dynamics_to_instrument,
                                 segment_q_effective_duration,
                                 score: score,
                                 instrument: to_instrument_symbol,
-                                position: _.position
+                                position: position
               end
 
               if from_instrument && !to_instrument
@@ -201,34 +197,35 @@ sequencer = Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3) do |
                                 segment_q_effective_duration,
                                 score: score,
                                 instrument: from_instrument_symbol,
-                                position: _.position
+                                position: position
               end
             end
 
-            _.log "pitch #{pitch}"
+            s.log "pitch #{pitch}"
 
             q_effective_duration_pitch =
                 [ q_duration_instrument - (started_ago[:instrument] || 0),
                   q_duration_pitch - (started_ago[:pitch] || 0),
                   q_duration_dynamics - (started_ago[:dynamics] || 0)].min
 
-            _.log "effective_duration_pitch #{q_effective_duration_pitch.inspect(base: 0.0001)}"
+            s.log "effective_duration_pitch #{q_effective_duration_pitch.inspect(base: 0.0001)}"
 
             render_pitch pitch,
                          q_effective_duration_pitch,
                          score: score,
                          instrument: from_instrument_symbol,
-                         position: _.position
+                         position: position
 
             if to_instrument
               render_pitch pitch,
                            q_effective_duration_pitch,
                            score: score,
                            instrument: to_instrument_symbol,
-                           position: _.position
+                           position: position
             end
           end
         end
+
       end
     end
   end

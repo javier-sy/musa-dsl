@@ -19,7 +19,7 @@ module Musa
 
         raise ArgumentError,
               "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
-              unless !(beats_per_bar || ticks_per_beat) || (beats_per_bar && ticks_per_beat)
+              unless beats_per_bar && ticks_per_beat || beats_per_bar.nil? && ticks_per_beat.nil?
 
         if beats_per_bar && ticks_per_beat
           @beats_per_bar = Rational(beats_per_bar)

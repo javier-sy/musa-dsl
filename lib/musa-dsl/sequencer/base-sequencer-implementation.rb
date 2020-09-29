@@ -436,7 +436,7 @@ module Musa
               step[i] = 1r
 
             else
-              raise ArgumentError, 'Cannot use this parameters combination'
+              raise ArgumentError, 'Cannot use this parameters combination (with \'duration\' or \'till\')'
             end
           end
         else
@@ -563,11 +563,12 @@ module Musa
                     function_offset[i] unless next_values[i].nil?
               end
 
+              # TODO add to values and next_values the modules of the original from and/or to objects.
+
               value_parameters, key_parameters =
                   if array_mode
                     binder.apply(effective_values, effective_next_values,
                                  control: control,
-                                 position: positions.dup,
                                  duration: _durations(every_groups, effective_duration),
                                  quantized_duration: q_durations.dup,
                                  started_ago: _started_ago(last_position, position, process_indexes),
@@ -578,9 +579,6 @@ module Musa
                     binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
                                  _hash_from_keys_and_values(hash_keys, effective_next_values),
                                  control: control,
-                                 position: _hash_from_keys_and_values(
-                                     hash_keys,
-                                     positions),
                                  duration: _hash_from_keys_and_values(
                                      hash_keys,
                                      _durations(every_groups, effective_duration)),
@@ -601,7 +599,6 @@ module Musa
                     binder.apply(effective_values.first,
                                  effective_next_values.first,
                                  control: control,
-                                 position: positions.first,
                                  duration: _durations(every_groups, effective_duration).first,
                                  quantized_duration: q_durations.first,
                                  position_jitter: position_jitters.first,

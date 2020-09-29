@@ -17,10 +17,6 @@ def instrument_number_to_symbol(number)
   "vln#{number.to_i.to_s}".to_sym
 end
 
-def quantize(duration, ticks_per_bar)
-  ((duration.rationalize * ticks_per_bar).round / ticks_per_bar).to_r
-end
-
 def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, position:)
   dynamicsF ||= dynamics0
 
