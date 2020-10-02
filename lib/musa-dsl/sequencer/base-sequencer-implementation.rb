@@ -662,27 +662,13 @@ module Musa
 
       def _rescue_error(e)
         if @do_error_log
-          _log e
-          _log e.full_message(order: :top)
+          log e
+          log e.full_message(order: :top)
         end
 
         @on_error.each do |block|
           block.call e
         end
-      end
-
-      def _log(msg = nil, decimals: nil)
-        m = '...' unless msg
-        m = ": #{msg}" if msg
-
-
-        decimals ||= @log_decimals
-        integer_digits = decimals.to_i
-        decimal_digits = ((decimals - integer_digits) * 10).round
-
-        p = "%#{integer_digits + decimal_digits + 1}s" % ("%.#{decimal_digits}f" % position.to_f)
-
-        warn "#{p}#{m} [#{position}]"
       end
     end
   end

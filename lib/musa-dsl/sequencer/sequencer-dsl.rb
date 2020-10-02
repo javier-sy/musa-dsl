@@ -17,18 +17,24 @@ module Musa
                      :position=,
                      :event_handler
 
-      def_delegators :@context, :position, :log
+      def_delegators :@context, :position, :logger, :debug
       def_delegators :@context, :with, :now, :at, :wait, :play, :every, :move
       def_delegators :@context, :everying, :playing, :moving
       def_delegators :@context, :launch, :on
       def_delegators :@context, :run
 
-      def initialize(beats_per_bar, ticks_per_beat, sequencer: nil, do_log: nil, do_error_log: nil, log_decimals: nil, &block)
+      def initialize(beats_per_bar, ticks_per_beat,
+                     sequencer: nil,
+                     logger: nil,
+                     do_log: nil, do_error_log: nil, log_position_format: nil,
+                     &block)
+
         @sequencer = sequencer
         @sequencer ||= BaseSequencer.new beats_per_bar, ticks_per_beat,
+                                         logger: logger,
                                          do_log: do_log,
                                          do_error_log: do_error_log,
-                                         log_decimals: log_decimals
+                                         log_position_format: log_position_format
 
         @context = DSLContext.new @sequencer
 
@@ -45,7 +51,7 @@ module Musa
         def_delegators :@sequencer,
                        :launch, :on,
                        :position, :size, :everying, :playing, :moving,
-                       :ticks_per_bar, :log, :inspect,
+                       :ticks_per_bar, :logger, :debug, :inspect,
                        :run
 
         def initialize(sequencer)

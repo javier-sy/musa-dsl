@@ -1,5 +1,6 @@
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/smart-proc-binder'
+require_relative '../logger'
 
 require_relative '../series'
 
@@ -14,12 +15,22 @@ module Musa
       attr_reader :beats_per_bar, :ticks_per_beat
       attr_reader :running_position
       attr_reader :everying, :playing, :moving
+      attr_reader :logger
 
-      def initialize(beats_per_bar = nil, ticks_per_beat = nil, do_log: nil, do_error_log: nil, log_decimals: nil)
+      def initialize(beats_per_bar = nil, ticks_per_beat = nil, logger: nil, do_log: nil, do_error_log: nil, log_position_format: nil)
 
         raise ArgumentError,
               "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
               unless beats_per_bar && ticks_per_beat || beats_per_bar.nil? && ticks_per_beat.nil?
+
+        if logger
+          @logger = logger
+        else
+          @logger = Musa::Logger::Logger.new(sequencer: self, position_format: log_position_format)
+
+          @logger.error! if do_error_log || do_error_log.nil?
+          @logger.debug! if do_log
+        end
 
         if beats_per_bar && ticks_per_beat
           @beats_per_bar = Rational(beats_per_bar)
@@ -46,10 +57,6 @@ module Musa
         @everying = []
         @playing = []
         @moving = []
-
-        @do_log ||= do_log
-        @do_error_log = do_error_log.nil? ? true : do_error_log
-        @log_decimals = log_decimals || 3.3
 
         reset
       end
@@ -253,15 +260,13 @@ module Musa
         control
       end
 
-      def log(msg = nil, decimals: nil)
-        _log(msg, decimals: decimals)
+      def debug(msg = nil)
+        @logger.debug { msg || '...' }
       end
 
-      def inspect
+      def to_s
         super + ": position=#{position}"
       end
-
-      alias to_s inspect
     end
   end
 end

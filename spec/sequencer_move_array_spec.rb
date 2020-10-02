@@ -678,7 +678,7 @@ RSpec.describe Musa::Sequencer do
 =end
     it 'Different right_open values' do
       c = {}
-      s = Sequencer.new(4, 32, log_decimals: 1.3) do |_|
+      s = Sequencer.new(4, 32, log_position_format: 1.3) do |_|
         _.at 1 do
           _.move from: [ 5, 60, 6 ],
                  to: [ 2, 65, 7 ],

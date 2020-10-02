@@ -1,3 +1,7 @@
+require_relative '../../lib/musa-dsl'
+
+include Musa::Datasets
+
 def decode_instrument(instrument)
   instrument_1 = instrument.round
   instrument_2 = instrument_1 + (instrument <=> instrument_1)
@@ -35,35 +39,9 @@ def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, positio
                   duration: duration }.extend(PS)
 end
 
-def render_pitch(pitch, duration, score:, instrument:, position:, data: nil)
+def render_pitch(pitch, duration, score:, instrument:, position:)
   { instrument: instrument,
     pitch: pitch,
-    duration: duration,
-    data: data }.extend(PDV).tap { |note| score.at position, add: note }
-end
-
-class Rational
-  def inspect(base: nil, digits: nil)
-    if base
-      factor = base.denominator / denominator
-      n = numerator * factor
-      d = base.denominator
-    else
-      n = numerator
-      d = denominator
-    end
-
-    if base
-      denominator_digits = Math.log10(d).to_i + 1
-      numerator_digits = 1 # denominator_digits + 2
-    else
-      digits ||= 1.1
-
-      numerator_digits = digits.to_i
-      denominator_digits = ((digits - numerator_digits) * 10).round
-    end
-
-    "(%#{numerator_digits}s/%#{denominator_digits}s)" % [n, d]
-  end
+    duration: duration }.extend(PDV).tap { |note| score.at position, add: note }
 end
 

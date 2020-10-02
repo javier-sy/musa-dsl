@@ -3,10 +3,8 @@ require_relative 'tools'
 
 require 'matrix'
 
-include Musa::Sequencer
-include Musa::Datasets
-
 using Musa::Extension::Matrix
+using Musa::Extension::InspectNice
 
 # [quarter-notes position, pitch, dynamics, instrument]
 
@@ -46,19 +44,19 @@ score = poly_line.to_score(:time,
     position_jitter:, duration_jitter:,
     started_ago:,
     score:,
-    s: |
+    logger: |
 
-  puts
-  s.log "\n\tvalue #{value}\n\tnext #{next_value}\n\tscore_position #{position}\n\tduration #{duration}" \
-              "\n\tquantized_duration #{quantized_duration}\n\tstarted_ago #{started_ago}"\
-              "\n\tposition_jitter #{position_jitter}\n\tduration_jitter #{duration_jitter}"
+  logger.debug
+  logger.debug "new element on position #{position}\n\tvalue #{value}\n\tnext #{next_value}\n\tduration #{duration}" \
+               "\n\tquantized_duration #{quantized_duration}\n\tstarted_ago #{started_ago}"\
+               "\n\tposition_jitter #{position_jitter}\n\tduration_jitter #{duration_jitter}"
 
   new_instrument_now = !started_ago[:instrument]
   new_dynamics_now = !started_ago[:dynamics]
   new_pitch_now = !started_ago[:pitch]
 
-  puts
-  s.log "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
+  logger.debug
+  logger.debug "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
 
   if new_instrument_now || new_dynamics_now || new_pitch_now
 
@@ -133,21 +131,21 @@ score = poly_line.to_score(:time,
           segment_to_dynamics *
               segment_relative_finish_position_over_instrument_timeline
 
-      s.log "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
+      logger.debug "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
 
-      s.log "segment_q_effective_duration #{segment_q_effective_duration&.inspect(base: 0.0001) || 'nil'}"
+      logger.debug "segment_q_effective_duration #{segment_q_effective_duration&.inspect || 'nil'}"
 
-      s.log "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
-      s.log "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+      logger.debug "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
+      logger.debug "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
 
-      s.log "value[:dynamics] #{value[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
-      s.log "segment_from_dynamics #{segment_from_dynamics.to_f.round(2)} to_dynamics #{to_dynamics.to_f.round(2)}"
+      logger.debug "value[:dynamics] #{value[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
+      logger.debug "segment_from_dynamics #{segment_from_dynamics.to_f.round(2)} to_dynamics #{to_dynamics.to_f.round(2)}"
 
-      s.log "segment_relative_start_position_over_instrument_timeline #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
-      s.log "segment_relative_finish_position_over_instrument_timeline #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+      logger.debug "segment_relative_start_position_over_instrument_timeline #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
+      logger.debug "segment_relative_finish_position_over_instrument_timeline #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
 
-      s.log "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
-      s.log "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
+      logger.debug "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
+      logger.debug "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
 
       if from_instrument && to_instrument
         render_dynamics segment_from_dynamics_from_instrument,
@@ -175,14 +173,14 @@ score = poly_line.to_score(:time,
       end
     end
 
-    s.log "pitch #{pitch}"
+    logger.debug "pitch #{pitch}"
 
     q_effective_duration_pitch =
         [ q_duration_instrument - (started_ago[:instrument] || 0),
           q_duration_pitch - (started_ago[:pitch] || 0),
           q_duration_dynamics - (started_ago[:dynamics] || 0)].min
 
-    s.log "effective_duration_pitch #{q_effective_duration_pitch.inspect(base: 0.0001)}"
+    logger.debug "effective_duration_pitch #{q_effective_duration_pitch.inspect}"
 
     render_pitch pitch,
                  q_effective_duration_pitch,
@@ -200,16 +198,6 @@ score = poly_line.to_score(:time,
   end
 end
 
-puts
-puts "score"
-puts "-----"
-score.values_of(:instrument).each do |instrument|
-  puts
-  puts msg = "instrument #{instrument}"
-  puts "-" * msg.size
-  pp score.subset { |dataset| dataset[:instrument] == instrument}._score
-end
-
 mxml = score.to_mxml(beats_per_bar, ticks_per_beat,
                      bpm: 90,
                      title: 'work title',
@@ -221,7 +209,7 @@ mxml = score.to_mxml(beats_per_bar, ticks_per_beat,
                               vln4: { name: 'Violin 4', abbreviation: 'vln4', clefs: { g: 2 } },
                               vln5: { name: 'Violin 5', abbreviation: 'vln5', clefs: { g: 2 } }
                      },
-                     do_log: true)
+                     do_log: false)
 
 File.open(File.join(File.dirname(__FILE__), "multidim_sample.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
 

@@ -18,22 +18,24 @@ module Musa::Datasets
     end
 
     def to_pdv
-      # ??????
+      # TODO ??????
     end
 
     def to_gdv
-      # ?????
+      # TODO ?????
     end
 
     def to_absI
-      # ?????
+      # TODO ?????
     end
 
     def to_score(score: nil,
+                 mapper: nil,
                  position: nil,
                  sequencer: nil,
                  beats_per_bar: nil, ticks_per_beat: nil,
                  right_open: nil,
+                 do_log: nil,
                  &block)
 
       raise ArgumentError,
@@ -50,13 +52,24 @@ module Musa::Datasets
 
       score ||= Musa::Datasets::Score.new
 
-      sequencer ||= Musa::Sequencer::Sequencer.new(beats_per_bar, ticks_per_beat)
+      sequencer ||= Musa::Sequencer::Sequencer.new(beats_per_bar, ticks_per_beat, do_log: do_log)
 
       ticks_per_bar = sequencer.ticks_per_bar
 
+      from = mapper && self[:from].is_a?(V) ? self[:from].to_packed_V(mapper) : self[:from]
+      to = mapper && self[:to].is_a?(V) ? self[:to].to_packed_V(mapper) : self[:to]
+
+      if right_open.is_a?(Array)
+        right_open = right_open.collect do |v|
+          v.is_a?(Symbol) ? v : mapper[v]
+        end
+      end
+
+      # TODO sequencer step should be 1????
+      #
       sequencer.at(position || 1r) do |_|
-        _.move from: self[:from],
-               to: self[:to],
+        _.move from: from,
+               to: to,
                right_open: right_open,
                duration: _quantize(self[:duration], ticks_per_bar),
                step: 1 do
@@ -67,8 +80,6 @@ module Musa::Datasets
             position_jitter:, duration_jitter:,
             started_ago:|
 
-          # TODO remove s parameter; only for testing
-          #
           binder.call value, next_value,
                       position: _.position,
                       duration: duration,
@@ -77,7 +88,7 @@ module Musa::Datasets
                       duration_jitter: duration_jitter,
                       started_ago: started_ago,
                       score: score,
-                      s: _
+                      logger: _.logger
         end
       end
 
@@ -98,7 +109,5 @@ module Musa::Datasets
         duration.rationalize
       end
     end
-
-
   end
 end

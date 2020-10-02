@@ -21,7 +21,14 @@ module Musa::Datasets
       end
     end
 
-    def to_score(score: nil, position: nil, sequencer: nil, beats_per_bar: nil, ticks_per_beat: nil, right_open: nil, &block)
+    def to_score(score: nil,
+                 mapper: nil,
+                 position: nil,
+                 sequencer: nil,
+                 beats_per_bar: nil, ticks_per_beat: nil,
+                 right_open: nil,
+                 do_log: nil,
+                 &block)
 
       raise ArgumentError,
             "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
@@ -35,19 +42,15 @@ module Musa::Datasets
 
       score ||= Musa::Datasets::Score.new
 
-      sequencer ||= Sequencer.new(beats_per_bar, ticks_per_beat, log_decimals: 1.3)
+      sequencer ||= Sequencer.new(beats_per_bar, ticks_per_beat, do_log: do_log)
 
       sequencer.at(position || 1r) do |_|
 
           _.play to_ps_serie do |_, line|
 
-            # TODO limpiar estas llamadas a to_packed_V!!!!!!
-            #
-            line[:from] = line[:from].to_packed_V([:pitch, :dynamics, :instrument])
-            line[:to] = line[:to].to_packed_V([:pitch, :dynamics, :instrument])
-
             line.to_score(sequencer: _,
                           score: score,
+                          mapper: mapper,
                           position: _.position,
                           right_open: right_open,
                           &block)
@@ -61,7 +64,5 @@ module Musa::Datasets
         nil
       end
     end
-
-
   end
 end
