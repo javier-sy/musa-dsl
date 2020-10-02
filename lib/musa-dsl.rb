@@ -11,6 +11,8 @@ require_relative 'musa-dsl/matrix'
 require_relative 'musa-dsl/neumalang'
 require_relative 'musa-dsl/neumas'
 
+require_relative 'musa-dsl/logger'
+
 require_relative 'musa-dsl/transport'
 require_relative 'musa-dsl/sequencer'
 require_relative 'musa-dsl/repl'
@@ -25,6 +27,8 @@ require_relative 'musa-dsl/music'
 require_relative 'musa-dsl/generative'
 
 module Musa::All
+  include Musa::Logger
+
   include Musa::Clock
   include Musa::Transport
   include Musa::Sequencer

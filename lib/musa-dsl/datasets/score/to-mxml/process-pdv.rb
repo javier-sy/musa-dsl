@@ -3,7 +3,7 @@ require 'prime'
 module Musa::Datasets::Score::ToMXML
   private
 
-  def process_pdv(measure, bar, divisions_per_bar, element, pointer, do_log)
+  def process_pdv(measure, bar, divisions_per_bar, element, pointer, logger, do_log)
 
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
@@ -21,17 +21,17 @@ module Musa::Datasets::Score::ToMXML
         decompose_as_sum_of_simple_durations(effective_duration))
 
     if do_log
-      warn "\nprocess_pdv #{element}"
-      warn ""
-      warn "             pointer #{pointer} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
-      warn "             effective_start #{effective_start} effective_duration #{effective_duration}"
-      warn "             duration decomposition #{effective_duration_decomposition}"
+      logger.debug "\nprocess_pdv #{element}"
+      logger.debug ""
+      logger.debug "             pointer #{pointer} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
+      logger.debug "             effective_start #{effective_start} effective_duration #{effective_duration}"
+      logger.debug "             duration decomposition #{effective_duration_decomposition}"
     end
 
     if pointer > effective_start
       duration_to_go_back = (pointer - effective_start)
 
-      warn "\n         ->  adding backup #{duration_to_go_back * divisions_per_bar}" if do_log
+      logger.debug "\n         ->  adding backup #{duration_to_go_back * divisions_per_bar}" if do_log
 
       measure.add_backup(duration_to_go_back * divisions_per_bar)
       pointer -= duration_to_go_back
@@ -44,7 +44,8 @@ module Musa::Datasets::Score::ToMXML
                             { start: bar + pointer,
                               finish: bar + effective_start,
                               dataset: { pitch: :silence, duration: effective_start - pointer }.extend(PDV) },
-                            pointer, do_log)
+                            pointer,
+                            logger, do_log)
     end
 
     # TODO generalize articulations and other musicxml elements

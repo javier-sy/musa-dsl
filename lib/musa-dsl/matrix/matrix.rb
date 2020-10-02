@@ -1,10 +1,11 @@
 require 'matrix'
 
 require_relative '../datasets/p'
+require_relative '../sequencer'
 
 module Musa
   module Matrix
-    ## ??????
+    ## TODO should exist this module?
   end
 
   module Extension
@@ -21,8 +22,8 @@ module Musa
           indexes
         end
 
-        def to_p(time_dimension)
-          condensed_matrices.collect { |m| m.to_p(time_dimension) }
+        def to_p(time_dimension, keep_time: nil)
+          condensed_matrices.collect { |m| m.to_p(time_dimension, keep_time: keep_time) }
         end
 
         def condensed_matrices
@@ -68,27 +69,84 @@ module Musa
       refine ::Matrix do
         include Musa::Datasets
 
-        def to_p(time_dimension)
+        def to_p(time_dimension, keep_time: nil)
+
           decompose(self.to_a, time_dimension).collect do |points|
             line = []
 
-            start_point = points[0].extend(Datasets::V)
+            start_point = points[0]
             start_time = start_point[time_dimension]
 
-            line << start_point
+            line << start_point.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
 
             (1..points.size-1).each do |i|
-              end_point = points[i].extend(Datasets::V)
+              end_point = points[i]
 
               end_time = end_point[time_dimension]
 
               line << end_time - start_time
-              line << end_point
+              line << end_point.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
 
               start_time = end_time
             end
 
             line.extend(Datasets::P)
+          end
+        end
+
+        def to_score(time_dimension,
+                     mapper: nil,
+                     score: nil,
+                     position: nil,
+                     sequencer: nil,
+                     beats_per_bar: nil, ticks_per_beat: nil,
+                     right_open: nil,
+                     do_log: nil,
+                     &block)
+
+          raise ArgumentError,
+                "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
+              unless beats_per_bar && ticks_per_beat ||
+                     beats_per_bar.nil? && ticks_per_beat.nil?
+
+          raise ArgumentError,
+                "'sequencer' parameter should not be used when 'beats_per_bar' and 'ticks_per_beat' parameters are used" \
+            if sequencer && beats_per_bar
+
+          raise ArgumentError,
+                "'time_dimension' parameter should be an index number if no 'mapping' is provided" \
+            unless time_dimension.is_a?(Symbol) && mapper&.include?(time_dimension) ||
+                   time_dimension.is_a?(Integer) && (0..self.column_size-1).include(time_dimension)
+
+          time_dimension = mapper&.find_index(time_dimension) if time_dimension.is_a?(Symbol)
+
+          mapper = mapper.clone.tap { |_| _.delete_at(time_dimension) } if mapper
+
+          run_sequencer = sequencer.nil?
+
+          score ||= Musa::Datasets::Score.new
+
+          sequencer ||= Sequencer::Sequencer.new(beats_per_bar, ticks_per_beat, do_log: do_log)
+
+          right_open = right_open.clone.tap { |_| _.delete_at(time_dimension) } if right_open&.is_a?(Array)
+
+          sequencer.at(position || 1r) do |_|
+            to_p(time_dimension).each do |p|
+              p.to_score(score: score,
+                         mapper: mapper,
+                         sequencer: _,
+                         position: _.position,
+                         right_open: right_open,
+                         do_log: do_log,
+                         &block)
+            end
+          end
+
+          if run_sequencer
+            sequencer.run
+            score
+          else
+            nil
           end
         end
 

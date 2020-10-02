@@ -3,30 +3,42 @@ module Musa
     module InspectNice
       refine Hash do
         def inspect
-          all = collect { |key, value| [', ', key.is_a?(Symbol) ? key.to_s + ': ' : key.to_s + ' => ', value.inspect] }.flatten
+          all = collect { |key, value| [', ', key.is_a?(Symbol) ? key.to_s + ': ' : key.inspect + ' => ', value.inspect] }.flatten
           all.shift
           '{ ' + all.join + ' }'
         end
+
+        alias _to_s to_s
+        alias to_s inspect
       end
 
       refine Rational do
-        def inspect
-          d = self - to_i
-          if d != 0
-            "#{to_i}(#{d.numerator}/#{d.denominator})"
+        def inspect(simple: nil)
+          value = self.abs
+          sign = negative? ? '-' : ''
+
+          if simple
+            if value.denominator == 1
+              "#{sign}#{value.numerator}"
+            else
+              "#{sign}#{value.numerator}/#{value.denominator}"
+            end
           else
-            to_i.to_s
+            sign2 = negative? ? '-' : '+'
+
+            d = value - value.to_i
+
+            if d == 0
+              "#{sign}#{value.to_i.to_s}r"
+            else
+              i = "#{value.to_i}#{sign2}" if value.to_i != 0
+              "#{sign}#{i}#{d.numerator}/#{d.denominator}r"
+            end
           end
         end
 
-        alias _to_s to_s
-
         def to_s
-          if to_i == self
-            to_i.to_s
-          else
-            _to_s
-          end
+          inspect simple: true
         end
       end
     end

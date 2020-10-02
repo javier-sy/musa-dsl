@@ -4,6 +4,8 @@ require_relative 'score/queriable'
 require_relative 'score/to-mxml/to-mxml'
 require_relative 'score/render'
 
+require_relative '../core-ext/inspect-nice'
+
 module Musa::Datasets
   class Score
     include Enumerable
@@ -15,9 +17,23 @@ module Musa::Datasets
     include Queriable
     include Render
 
-    def initialize
+    using Musa::Extension::InspectNice
+
+    def initialize(hash = nil)
+      raise ArgumentError, "'hash' parameter should be a Hash with time and events information" unless hash.nil? || hash.is_a?(Hash)
+
       @score = {}
       @indexer = []
+
+      if hash
+        hash.sort.each do |k, v|
+          raise ArgumentError, "'hash' values for time #{k} should be an Array of events" unless v.is_a?(Array)
+
+          v.each do |vv|
+            at(k, add: vv)
+          end
+        end
+      end
     end
 
     def reset
@@ -71,6 +87,10 @@ module Musa::Datasets
       @score.sort.each(&block)
     end
 
+    def to_h
+      @score.sort.to_h
+    end
+
     def between(closed_interval_start, open_interval_finish)
       @indexer
         .select { |i| i[:start] < open_interval_finish && i[:finish] > closed_interval_start ||
@@ -83,10 +103,6 @@ module Musa::Datasets
                          start_in_interval: i[:start] > closed_interval_start ? i[:start] : closed_interval_start,
                          finish_in_interval: i[:finish] < open_interval_finish ? i[:finish] : open_interval_finish,
                          dataset: i[:dataset] } }.extend(QueryableByDataset)
-    end
-
-    def _score # TODO delete; only for debug
-      @score
     end
 
     # TODO hay que implementar un effective_start y effective_finish con el inicio/fin dentro del bar, no absoluto
@@ -165,6 +181,30 @@ module Musa::Datasets
       end
 
       filtered_score
+    end
+
+    def inspect
+      s = StringIO.new
+
+      first_level1 = true
+
+      s.write "Musa::Datasets::Score.new({\n"
+
+      @score.each do |k, v|
+        s.write "#{ ", \n" unless first_level1 }  #{ k.inspect } => [\n"
+        first_level1 = false
+        first_level2 = true
+
+        v.each do |vv|
+          s.write "#{ ", \n" unless first_level2 }\t#{ vv }"
+          first_level2 = false
+        end
+
+        s.write  " ]"
+      end
+      s.write "\n})"
+
+      s.string
     end
   end
 end
