@@ -2,8 +2,8 @@ source 'https://rubygems.org'
 
 group :neuma do
   gem 'citrus', '~> 3.0.0'
-
 end
+
 
 group :transport do
   gem 'midi-message', '~> 0.4', '>= 0.4.9'
@@ -11,6 +11,7 @@ group :transport do
 end
 
 group :test do
+  gem 'logger'
   gem 'rspec', '~> 3.0'
   gem 'descriptive-statistics'
 end
