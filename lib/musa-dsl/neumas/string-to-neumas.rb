@@ -24,6 +24,7 @@ module Musa
           end
         end
 
+
         alias_method :neumas, :to_neumas
         alias_method :n, :to_neumas
         alias_method :nn, :to_neumas_to_node
