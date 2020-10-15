@@ -21,7 +21,7 @@ module Musa; module Logger
 
           progname = "[#{progname}]" if progname
 
-          "#{position}#{level}#{progname}#{msg}\n"
+          "#{position}#{level}#{progname} #{msg}\n"
         else
           "\n"
         end

@@ -166,7 +166,7 @@ module Musa
         end
 
         def eval_p(p)
-          p.to_ps_serie(@decoder.base_duration).instance
+          p.to_ps_serie(base_duration: @decoder.base_duration).instance
         end
 
         def eval_serie(serie)

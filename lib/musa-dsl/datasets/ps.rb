@@ -29,6 +29,20 @@ module Musa::Datasets
       # TODO ?????
     end
 
+    def valid?
+      case self[:from]
+      when Array
+        self[:to].is_a?(Array) &&
+            self[:from].size == self[:to].size
+      when Hash
+        self[:to].is_a?(Hash) &&
+            self[:from].keys == self[:to].keys
+      else
+        false
+      end &&
+          self[:duration].is_a?(Numeric) && self[:duration] > 0
+    end
+
     def to_score(score: nil,
                  mapper: nil,
                  position: nil,
@@ -65,7 +79,7 @@ module Musa::Datasets
         end
       end
 
-      # TODO sequencer step should be 1????
+      # TODO sequencer step should be 1 always????
       #
       sequencer.at(position || 1r) do |_|
         _.move from: from,

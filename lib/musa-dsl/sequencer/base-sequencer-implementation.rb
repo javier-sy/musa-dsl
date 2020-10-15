@@ -1,8 +1,10 @@
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/smart-proc-binder'
 
+
 require_relative 'base-sequencer-implementation-control'
 require_relative 'base-sequencer-implementation-play-helper'
+require_relative 'base-sequencer-implementation-move2'
 
 using Musa::Extension::Arrayfy
 using Musa::Extension::DeepCopy
@@ -66,7 +68,7 @@ module Musa
             @timeslots[at_position] << value
           end
         else
-          _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{at_position}" if @do_log
+          debug "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{at_position}"
         end
 
         nil
@@ -109,7 +111,7 @@ module Musa
                                        value_parameters: value_parameters,
                                        key_parameters: key_parameters }
         else
-          _log "BaseSequencer._numeric_at: warning: ignoring past 'at' command for #{at_position}" if @do_log
+          debug "BaseSequencer._numeric_at: warning: ignoring past 'at' command for #{at_position}"
         end
 
         nil
@@ -306,7 +308,8 @@ module Musa
       end
 
       def _move(every: nil,
-                from:, to: nil, step: nil,
+                from:, to: nil,
+                step: nil,
                 duration: nil, till: nil,
                 function: nil,
                 right_open: nil,
@@ -661,10 +664,8 @@ module Musa
       end
 
       def _rescue_error(e)
-        if @do_error_log
-          log e
-          log e.full_message(order: :top)
-        end
+        logger.error e
+        logger.error e.full_message(order: :top)
 
         @on_error.each do |block|
           block.call e

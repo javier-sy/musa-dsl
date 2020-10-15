@@ -7,8 +7,8 @@ module Musa::Datasets
   module P
     include Dataset
 
-    def to_ps_serie(base_duration = nil)
-      base_duration ||= 1/4r
+    def to_ps_serie(base_duration: nil)
+      base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
       p = clone
 

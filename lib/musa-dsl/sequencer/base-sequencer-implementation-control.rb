@@ -45,7 +45,7 @@ module Musa
           @handlers[event] ||= {}
 
           # TODO: add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
-          @handlers[event][name] = {block: SmartProcBinder.new(block), only_once: only_once }
+          @handlers[event][name] = { block: SmartProcBinder.new(block), only_once: only_once }
         end
 
         def launch(event, *value_parameters, **key_parameters)
@@ -210,6 +210,31 @@ module Musa
       end
 
       private_constant :MoveControl
+
+      class Move2Control < EventHandler
+        attr_reader :do_on_stop, :do_after
+
+        def initialize(parent, on_stop: nil, after_bars: nil, after: nil)
+          super parent
+          @do_on_stop = []
+          @do_after = []
+
+          @do_on_stop << on_stop if on_stop
+          self.after after_bars, &after if after
+        end
+
+        def on_stop(&block)
+          @do_on_stop << block
+        end
+
+        def after(bars = nil, &block)
+          bars ||= 0
+          @do_after << { bars: bars.rationalize, block: block }
+        end
+      end
+
+      private_constant :Move2Control
+
     end
   end
 end

@@ -5,6 +5,17 @@ module Musa::Datasets
     include Dataset
 
     NaturalKeys = [].freeze
+
+    # TODO implement valid? in all 'subclasses'. This implies recollecting from other places where validations are done and refactoring
+    # TODO should valid? and validate! be on Dataset instead of E? P dataset inherits from Dataset but probably it could be validated
+    #
+    def valid?
+      true
+    end
+
+    def validate!
+      raise IndexError, "Invalid dataset #{self}" unless valid?
+    end
   end
 
   module Abs
