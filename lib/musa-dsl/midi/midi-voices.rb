@@ -3,6 +3,8 @@ require 'midi-message'
 
 require_relative '../core-ext/arrayfy'
 
+using Musa::Extension::Arrayfy
+
 module Musa
   module MIDIVoices
     class MIDIVoices
