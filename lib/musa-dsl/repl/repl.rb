@@ -7,7 +7,6 @@ module Musa
 
       def initialize(binder, port: nil, after_eval: nil)
         port ||= 1327
-        redirect_stderr ||= false
 
         @block_source = nil
 
@@ -15,7 +14,7 @@ module Musa
             binder.receiver.sequencer.respond_to?(:on_error)
 
           binder.receiver.sequencer.on_error do |e|
-            send_exception e
+            send_exception e, output: @connection
           end
         end
 
@@ -25,12 +24,12 @@ module Musa
         @main_thread = Thread.new do
           @server = TCPServer.new(port)
           begin
-            while (connection = @server.accept) && @run
+            while (@connection = @server.accept) && @run
               @client_threads << Thread.new do
                 buffer = nil
 
                 begin
-                  while (line = connection.gets) && @run
+                  while (line = @connection.gets) && @run
                     line.chomp!
                     case line
                     when '#begin'
@@ -40,11 +39,11 @@ module Musa
                         @block_source = buffer.string
 
                         begin
-                          send_echo @block_source, output: connection
+                          send_echo @block_source, output: @connection
                           binder.eval @block_source, "(repl)", 1
 
                         rescue StandardError, ScriptError => e
-                          send_exception e, output: connection
+                          send_exception e, output: @connection
                         else
                           after_eval.call @block_source if after_eval
                         end
@@ -57,7 +56,7 @@ module Musa
                   warn e.message
                 end
 
-                connection.close
+                @connection.close
               end
             end
           rescue Errno::ECONNRESET, Errno::EPIPE => e
