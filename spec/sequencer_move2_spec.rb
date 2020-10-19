@@ -8,41 +8,40 @@ include Musa::Datasets
 using Musa::Extension::InspectNice
 
 RSpec.describe Musa::Sequencer do
-  # context 'Move2 testing' do
-  #   it '' do
-  #     s = BaseSequencer.new do_log: true, do_error_log: true
-  #
-  #     p = [{ a: 0r, b: 1r }.extend(PackedV), 3, { a: 4r, b: 5.75r }.extend(PackedV), 2, { a: 1.5r, b: 2.33r }.extend(PackedV) ].extend(P)
-  #
-  #     s.at 1 do
-  #       s._move2 p.to_ps_serie(base_duration: 1).i, step: 1, reference: 0 do |values|
-  #         s.debug "values = #{values.inspect}"
-  #       end
-  #     end
-  #
-  #     puts
-  #     s.run
-  #     puts
-  #
-  #   end
-  # end
+  context 'Move2 testing' do
+    it '' do
+      s = BaseSequencer.new do_log: true, do_error_log: true
+
+      p = [{ a: 0r, b: 1r }.extend(PackedV), 3, { a: 4r, b: 5.75r }.extend(PackedV), 2, { a: 1.5r, b: 2.33r }.extend(PackedV) ].extend(P)
+
+      s.at 1 do
+        s._move2 p.to_ps_serie(base_duration: 1).i, step: 1, reference: 0 do |values, duration:|
+          s.debug "values = #{values.inspect} duration #{duration}"
+        end
+      end
+
+      puts
+      s.run
+      puts
+
+    end
+  end
 
   context 'Move2 quantizing detection' do
+
     it 'empty line' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
-      r = cc.crossing
+      expect(cc.pop).to be_nil
 
-      expect(r).to be_nil
     end
 
     it 'empty line with only 1 point' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
       cc.push time: 0r, value: 0r
-      r = cc.crossing
 
-      expect(r).to be_nil
+      expect(cc.pop).to be_nil
     end
 
     it 'allow time only to go forward' do
@@ -63,77 +62,48 @@ RSpec.describe Musa::Sequencer do
       expect { cc.push time: 2r, value: 2r }.to raise_exception(ArgumentError)
     end
 
-    it 'line with no crossing points' do
+
+    it 'line with 2 points with one boundary crossing' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
-      cc.push time: 0r, value: 0.5r
-      cc.push time: 5r, value: 0.75r
+      cc.push time: 0r, value: 0r
+      cc.push time: 1r, value: 1r, last: true
 
-      r = cc.crossing
-
-      expect(r).to eq []
+      expect(cc.pop).to eq({ time: 0r, value: 0r, first: true, last: false, duration: 0.5r })
+      expect(cc.pop).to eq({ time: 0.5r, value: 1r, first: false, last: true, duration: 0.5r })
+      expect(cc.pop).to be_nil
     end
 
-    it 'line with no crossing points (negative values)' do
+    it 'line with 2 points with 2 boundary crossings' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
-      cc.push time: 0r, value: -0.75r
-      cc.push time: 5r, value: -0.5r
+      cc.push time: 0r, value: 0r
+      cc.push time: 2r, value: 2r, last: true
 
-      r = cc.crossing
-
-      expect(r).to eq []
+      expect(cc.pop).to eq({ time: 0r, value: 0r, first: true, last: false, duration: 0.5r })
+      expect(cc.pop).to eq({ time: 0.5r, value: 1r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 1.5r, value: 2r, first: false, last: true, duration: 0.5r })
+      expect(cc.pop).to be_nil
     end
 
-    it 'line with no crossing points (descending line)' do
+    it 'line with no crossing boundaries' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
-      cc.push time: 0r, value: 0.75r
-      cc.push time: 5r, value: 0.5r
+      cc.push time: 0r, value: 0.65r
+      cc.push time: 2r, value: 0.70r
+      cc.push time: 5r, value: 0.75r, last: true
 
-      r = cc.crossing
-
-      expect(r).to eq []
+      expect(cc.pop).to eq({ time: 0r, value: 1r, first: true, last: true, duration: 5r })
     end
 
-    it 'line with no crossing points (descending line and negative)' do
+    it 'line with no crossing boundaries (negative values)' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
-      cc.push time: 0r, value: -0.5r
-      cc.push time: 5r, value: -0.75r
+      cc.push time: 0r, value: -0.65r
+      cc.push time: 2r, value: -0.70r
+      cc.push time: 5r, value: -0.75r, last: true
 
-      r = cc.crossing
-
-      expect(r).to eq []
-    end
-
-    it 'long line with no crossing points' do
-      cc = BaseSequencer::Quantizer.new(0r, 1r)
-
-      cc.push time: 0r, value: 0.5r
-      cc.push time: 5r, value: 0.75r
-
-      r = cc.crossing
-
-      expect(r).to eq []
-
-      cc.push time: 6r, value: 0.5r
-
-      r = cc.crossing
-
-      expect(r).to eq []
-
-      cc.push time: 7r, value: 0.5r
-
-      r = cc.crossing
-
-      expect(r).to eq []
-
-      cc.push time: 8r, value: 0.75r
-
-      r = cc.crossing
-
-      expect(r).to eq []
+      expect(cc.pop).to eq({ time: 0r, value: -1r, first: true, last: true, duration: 5r })
     end
 
     it 'line goes up and after goes down' do
@@ -142,85 +112,130 @@ RSpec.describe Musa::Sequencer do
       cc.push time: 0, value: 0r
       cc.push time: 3, value: 3r
 
-      r = cc.crossing
 
-      expect(r).to eq [{ time: 0r, value: 0r, crossing: false, first: true, last: false, sign: 1 },
-                       { time: 1r, value: 1r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 2r, value: 2r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 3r, value: 3r, crossing: false, first: false, last: false, sign: nil  } ]
+      expect(cc.pop).to eq({ time: 0r, value: 0r, first: true, last: false, duration: 0.5r })
+      expect(cc.pop).to eq({ time: 0.5r, value: 1r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 1.5r, value: 2r, first: false, last: false, duration: 1r })
+
+      expect(cc.pop).to be_nil
 
       cc.push time: 5, value: 1r, last: true
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 2.5r, value: 3r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 3.5r, value: 2r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 4.5r, value: 1r, first: false, last: true, duration: 0.5r })
 
-      expect(r).to eq [{ time: 3r, value: 3r, crossing: true, first: false, last: false, sign: -1 },
-                       { time: 4r, value: 2r, crossing: true, first: false, last: false, sign: -1 },
-                       { time: 5r, value: 1r, crossing: false, first: false, last: true, sign: nil } ]
+      expect(cc.pop).to be_nil
 
     end
 
-    it 'line from 0 to 5 quantized to (0, 1): expected first 0, last 5 and crossing from 1 to 4' do
+    it 'line from 0 to 5 quantized to (0, 1)' do
       cc = BaseSequencer::Quantizer.new(0r, 1r)
 
       cc.push time: 0r, value: 0r
       cc.push time: 3r, value: 3r
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 0r, value: 0r, first: true, last: false, duration: 0.5r })
+      expect(cc.pop).to eq({ time: 0.5r, value: 1r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 1.5r, value: 2r, first: false, last: false, duration: 1r })
 
-      expect(r).to eq [{ time: 0r, value: 0r, crossing: false, first: true, last: false, sign: 1 },
-                       { time: 1r, value: 1r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 2r, value: 2r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 3r, value: 3r, crossing: false, first: false, last: false, sign: nil  } ]
+      expect(cc.pop).to be_nil
 
       cc.push time: 5r, value: 5r, last: true
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 2.5r, value: 3r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 3.5r, value: 4r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 4.5r, value: 5r, first: false, last: true, duration: 0.5r })
 
-      expect(r).to eq [{ time: 3r, value: 3r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 4r, value: 4r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 5r, value: 5r, crossing: false, first: false, last: true, sign: nil } ]
+      expect(cc.pop).to be_nil
     end
 
-    it 'line from 0 to 5 quantized to (0.5, 1): expected crossing from 0.5 to 4.5, no first or last' do
+    it 'line from 0 to 5 quantized to (0.5, 1)' do
       cc = BaseSequencer::Quantizer.new(0.5r, 1r)
 
       cc.push time: 0r, value: 0r
       cc.push time: 3r, value: 3r
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 0r, value: 0.5r, first: true, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 1r, value: 1.5r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 2r, value: 2.5r, first: false, last: false, duration: 1r })
 
-      expect(r).to eq [{ time: 0.5r, value: 0.5r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 1.5r, value: 1.5r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 2.5r, value: 2.5r, crossing: true, first: false, last: false, sign: 1 } ]
+      expect(cc.pop).to be_nil
 
       cc.push time: 5r, value: 5r, last: true
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 3r, value: 3.5r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 4r, value: 4.5r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 5r, value: 5.5r, first: false, last: true })
 
-      expect(r).to eq [{ time: 3.5r, value: 3.5r, crossing: true, first: false, last: false, sign: 1 },
-                       { time: 4.5r, value: 4.5r, crossing: true, first: false, last: false, sign: 1 }]
+      expect(cc.pop).to be_nil
+
     end
 
-    it 'line from 2 to -3 quantized to (0.5, 1) (descending line, crossing 0, negative values): expected crossing from 2.5 to -2.5, no first or last' do
+    it 'line from 2 to -3 quantized to (0.5, 1) (descending line, crossing 0, negative values)' do
       cc = BaseSequencer::Quantizer.new(0.5r, 1r)
 
       cc.push time: 0r, value: 2r
       cc.push time: 3r, value: -1r
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 0r, value: 1.5r, first: true, last: false, duration: 1r})
+      expect(cc.pop).to eq({ time: 1r, value: 0.5r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 2r, value: -0.5r, first: false, last: false, duration: 1r })
 
-      expect(r).to eq [{ time: 0.5r, value: 1.5r, crossing: true, first: false, last: false, sign: -1 },
-                       { time: 1.5r, value: 0.5r, crossing: true, first: false, last: false, sign: -1 },
-                       { time: 2.5r, value: -0.5r, crossing: true, first: false, last: false, sign: -1 } ]
+      expect(cc.pop).to be_nil
 
       cc.push time: 5r, value: -3r, last: true
 
-      r = cc.crossing
+      expect(cc.pop).to eq({ time: 3r, value: -1.5r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 4r, value: -2.5r, first: false, last: false, duration: 1r })
+      expect(cc.pop).to eq({ time: 5r, value: -3.5r, first: false, last: true })
 
-      expect(r).to eq [{ time: 3.5r, value: -1.5r, crossing: true, first: false, last: false, sign: -1 },
-                       { time: 4.5r, value: -2.5r, crossing: true, first: false, last: false, sign: -1 } ]
+      expect(cc.pop).to be_nil
     end
 
+    it 'pushing several values and poping all together is the same as pushing and poping alternatively' do
+      cc1 = BaseSequencer::Quantizer.new(0r, 1r)
+
+      l1 = []
+
+      cc1.push time: 0r, value: 0r
+
+      while v = cc1.pop
+        l1 << v
+      end
+
+      cc1.push time: 3r, value: 3r
+
+      while v = cc1.pop
+        l1 << v
+      end
+
+      cc1.push time: 5r, value: 5r
+
+      while v = cc1.pop
+        l1 << v
+      end
+
+      cc1.push time: 8r, value: -5r, last: true
+
+      while v = cc1.pop
+        l1 << v
+      end
+
+      cc2 = BaseSequencer::Quantizer.new(0r, 1r)
+      l2 = []
+
+      cc2.push time: 0r, value: 0r
+      cc2.push time: 3r, value: 3r
+      cc2.push time: 5r, value: 5r
+      cc2.push time: 8r, value: -5r, last: true
+
+      while v = cc2.pop
+        l2 << v
+      end
+
+      expect(l1).to eq(l2)
+    end
 
   end
 end

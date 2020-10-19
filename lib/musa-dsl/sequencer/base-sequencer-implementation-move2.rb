@@ -31,12 +31,12 @@ module Musa; module Sequencer
           component = ps[:from].keys
           reference = reference.hashify(keys: ps[:from].keys)
           step = step.hashify(keys: ps[:from].keys)
-          quantizer = {}.tap { |_| component.each { |k| _[k] = Quantizer.new } }
+          quantizer = {}.tap { |_| component.each { |k| _[k] = Quantizer.new reference[k], step[k] } }
         else
           component = (0 .. ps[:from].size-1).to_a
           reference = reference.arrayfy(size: ps[:from].size)
           step = step.arrayfy(size: ps[:from].size)
-          quantizer = Array.new(ps[:from].size) { Quantizer.new }
+          quantizer = Array.new(ps[:from].size) { |i| Quantizer.new reference[i], step[i] }
         end
 
         component.each { |c| quantizer[c].push time: position, value: ps[:from][c] }
@@ -74,7 +74,7 @@ module Musa; module Sequencer
       raise NotImplementedError
     end
 
-    def _move2_step(ps_serie, hash_mode, components, references, steps, binder, control, quantizers, first_ps = true)
+    def _move2_step(ps_serie, hash_mode, components, references, steps, binder, control, quantizers)
 
       if ps = ps_serie.next_value
         ps.validate!
@@ -84,32 +84,30 @@ module Musa; module Sequencer
 
         finish_position = position + ps[:duration]
 
-        periodic_group = {}
+        same_time_events = {}
 
         components.each do |c|
-
           quantizers[c].push time: finish_position, value: ps[:to][c], last: ps_serie.peek_next_value.nil?
 
-          quantizers[c].crossing(references[c] + steps[c] / 2r, steps[c]).each do |v|
+          while qi = quantizers[c].pop
+            time = qi[:time]
 
-            time = v[:time]
-            value = v[:value]
-            crossing = v[:crossing]
-            sign = v[:sign]
-            first = v[:first]
-            last = v[:last]
-
-            if crossing
-              periodic_group[time] ||= {}
-              periodic_group[time][c] = value + sign * steps[c] / 2r
-            end
+            same_time_events[time] ||= {}
+            same_time_events[time][c] = { value: qi[:value], duration: qi[:duration] }
           end
         end
 
-        periodic_group.each_pair do |time, effective_values|
+        same_time_events.each_pair do |time, events|
+          values = {}
+          durations = {}
+
+          events.each_pair do |component, parameters|
+            values[component] = parameters[:value]
+            durations[component] = parameters[:duration]
+          end
 
           _numeric_at time, control do
-            binder.call(effective_values, control: control)
+            binder.call(values, duration: durations, control: control)
           end
 
           # binder.apply(effective_values, effective_next_values,
@@ -123,7 +121,7 @@ module Musa; module Sequencer
         end
 
         _numeric_at finish_position, control do
-          _move2_step(ps_serie, hash_mode, components, references, steps, binder, control, quantizers, false)
+          _move2_step(ps_serie, hash_mode, components, references, steps, binder, control, quantizers)
         end
 
       else
@@ -147,44 +145,32 @@ module Musa; module Sequencer
 
 
     class Quantizer
-      # Quantizer gets a flow of time and value pairs of one line (via push method) and can answer
-      # where the line cross and touch the quantizing boundaries (via crossing method).
+      # Quantizer gets a flow of time and value pairs of one line (via push method) and offers a flow of quantized segments
+      # with transitions on boundary crossings (via pop method).
       #
       def initialize(reference, step_size)
-        @reference = reference
+        @halfway_offset = step_size / 2r
+
+        @reference = reference - @halfway_offset
         @step_size = step_size
 
         reset
       end
 
       def push(time:, value:, last: nil)
+        last ||= false
+
         raise ArgumentError, "'time:' value should be greater than previous time pushed" \
           unless @values.empty? || time > @values.last[:time]
 
         raise ArgumentError, "Can't push more values because last value has been received. You can 'reset' the quantizer to restart." \
           if @received_last
 
-        if @values.empty?
-          @first = value
-        end
-
-        @values.push({ time: time, value: value, is_last: last })
+        @values.push(v = { time: time, value: value, is_first: @values.empty?, is_last: last })
         @received_last = true if last
-
-        if @values.size > 2
-          @values.shift
-          @first = nil
-        end
 
         nil
       end
-
-      # el planteamiento de quantizer tiene que ser que se puedan ir enviando por push datos
-      # y que se vayan consumiendo con crossing() pero sólo si efectivamente hay cruces; si no los hay se guardan los datos
-      # para ir acumulando los time y que las duration se puedan calcular correctamente
-      # en el peor de los casos, cuando se recibe un push last: true habrá que contar todos los elementos añadidos y
-      # generar aunque sea un sólo crossing "falso" que cuente la duración desde el principio hasta el final y quede como first: true, last: true y crossing: false
-
 
       def last
         @values.last
@@ -192,85 +178,107 @@ module Musa; module Sequencer
 
       def reset
         @values = []
-        @first = nil
-        @last = nil
         @received_last = nil
 
         @time_cursor = nil
         @crossings = []
       end
 
-      def crossing(upto_index = nil)
-        upto_index = 1
-        # The method returns an array of the crossing quantizing boundaries crossed or touched by the line.
-        # The method calculates the possible steps where the line could
-        # touch or cross a quantizing boundary (defined by a reference start point and a step_size incremental).
-        # If the line doesn't cross nor touches any quantizing boundary the method returns [].
-        # If the line is incomplete (not pushed a minimum of 2 points) the method returns nil.
-        # For each possible crossing point the method calculates whether it is only a "touch" point (touching but not crossing the quantizing boundary)
-        # or it is a crossing point (where the line really cross the boundary).
-        # First and last points of the line could be touching points but as no previous (for first) or further (for last) line continuation exists
-        # the method can't know if them really cross the boundary. For this reason the method returns a first: true or last: true,
-        # to indicate this condition.
-        # On each point the method returns, when known (on start and on crossing), whether the next point will be greater (sign 1) or minor (sign -1).
-        # Please note the method doesn't return the begin and end points of the line unless they are a touch point. The method only returns
-        # the crossing or touch points.
-        # For instance: for a line (time, value) from (1, 1.5) to (3, 4), reference = 0 and step_size = 1, the method
-        # only returns the crossing at values 2 (crossing: true), 3 (crossing: true) and the touch point 4 (crossing: false, last: true).
-
-        return nil unless @values && @values.size >= 2
-
-        last = @values[upto_index]
-        previous = @values[upto_index - 1]
-
-        last_value = last[:value]
-        last_time = last[:time]
-
-        previous_value = previous[:value]
-        previous_time = previous[:time]
-
-        sign = last_value >= previous_value ? 1r : -1r
-
-        if sign == 1
-          previous_step = ((previous_value - @reference) / @step_size).ceil
-          last_step = ((last_value - @reference) / @step_size).floor
+      def pop
+        if @crossings.size > 1
+          cross = @crossings.shift
+          cross[:duration] = @crossings.first[:time] - cross[:time]
         else
-          previous_step = ((previous_value - @reference) / @step_size).floor
-          last_step = ((last_value - @reference) / @step_size).ceil
+          process_next
+
+          if @crossings.size > 1
+            cross = @crossings.shift
+            cross[:duration] = @crossings.first[:time] - cross[:time]
+          elsif @crossings.size == 1 && @crossings[0][:last]
+            cross = @crossings.shift
+          else
+            nil
+          end
         end
 
-        delta_value = last_value - previous_value
-        delta_time = last_time - previous_time
+        cross
+      end
+
+      private def process_next
+        crossings = []
+        i = 0
+
+        while crossings.empty? && i < @values.size - 1
+          crossings = calculate_crossings(
+              @values[0][:time],
+              @values[0][:value],
+              @values[i+1][:time],
+              @values[i+1][:value],
+              is_first: @values[0][:is_first],
+              is_last: @values[i+1][:is_last])
+
+          i += 1
+        end
+
+        if !crossings.empty?
+          if !@crossings.empty? && @crossings[-1][:time] == crossings[0][:time]
+            @crossings[-1] = crossings.shift
+          end
+
+          until crossings.empty?
+            @crossings << crossings.shift
+          end
+
+          i.times { @values.shift }
+        end
+
+      end
+
+      private def calculate_crossings(from_time, from_value, to_time, to_value, is_first:, is_last:)
+        sign = to_value >= from_value ? 1r : -1r
+
+        if sign == 1
+          previous_step = ((from_value - @reference) / @step_size).ceil
+          last_step = ((to_value - @reference) / @step_size).floor
+        else
+          previous_step = ((from_value - @reference) / @step_size).floor
+          last_step = ((to_value - @reference) / @step_size).ceil
+        end
+
+        delta_value = to_value - from_value
+        delta_time = to_time - from_time
 
         crossings = []
 
-        # if @first
-        #   crossings << { time: previous_time,
-        #                  value: round_quantize(previous_value, @reference, @step_size),
-        #                  first: true,
-        #                  last: false,
-        #                  sign: sign,
-        #                  crossing: !(previous_step <=> last_step).zero? }
-        # end
-
         previous_step.step(last_step, sign) do |i|
-
           value = @reference + i * @step_size
 
-          first = !!(i == previous_step && @first == value)
+          first = is_first && i == previous_step
+          last = is_last && i == last_step
 
-          crossing = if sign > 0
-                       value < last_value
-                     else
-                       value > last_value
-                     end && !first
+          if first && from_value != value
+            crossings << { time: from_time,
+                           value: @reference + (i - sign) * @step_size + sign * @halfway_offset,
+                           first: first,
+                           last: false }
+          end
 
-          crossings << { time: previous_time + (delta_time / delta_value) * (value - previous_value),
-                         value: value,
-                         first: first,
-                         last: !!(i == last_step && last_value == value && last[:is_last]),
-                         sign: first || crossing ? sign : nil,
-                         crossing: crossing }
+          crossings << { time: from_time + (delta_time / delta_value) * (value - from_value),
+                         value: value + sign * @halfway_offset,
+                         first: first && from_value == value,
+                         last: last }
+
+          if last && to_value != value
+            crossings.last[:duration] = to_time - crossings.last[:time]
+          end
+        end
+
+        if crossings.empty? && is_first && is_last
+          crossings << { time: from_time,
+                         value: round_quantize(from_value, @reference + @halfway_offset, @step_size),
+                         first: true,
+                         last: true,
+                         duration: to_time - from_time }
         end
 
         crossings
