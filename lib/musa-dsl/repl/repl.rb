@@ -39,6 +39,7 @@ module Musa
                     case line
                     when '#begin'
                       buffer = StringIO.new
+
                     when '#end'
                       @@repl_mutex.synchronize do
                         @block_source = buffer.string
@@ -48,8 +49,8 @@ module Musa
                           binder.eval @block_source, "(repl)", 1
 
                         rescue StandardError, ScriptError => e
-                          @logger.debug('REPL') { 'code execution error' }
-                          @logger.debug('REPL') { e.full_message(highlight: true, order: :top) }
+                          @logger.warn('REPL') { 'code execution error' }
+                          @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
 
                           send_exception e, output: @connection
                         else
@@ -64,12 +65,6 @@ module Musa
                 rescue IOError, Errno::ECONNRESET, Errno::EPIPE => e
                   @logger.warn('REPL') { 'lost connection' }
                   @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
-
-                rescue Exception, SystemExit, Interrupt
-                  puts "EXCEPTION / SYSTEM EXIT / INTERUPT"
-                  $stdout.flush
-                  @logger.warn('REPL') { 'received interruption; will close connection...' }
-                  raise
 
                 ensure
                   @logger.debug("REPL") { "closing connection (running #{@run})" }
@@ -92,6 +87,7 @@ module Musa
 
         @main_thread.terminate
         Thread.pass
+
         @main_thread = nil
 
         @client_threads.each { |t| t.terminate; Thread.pass }

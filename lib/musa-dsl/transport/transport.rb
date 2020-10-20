@@ -126,21 +126,21 @@ module Musa
       private
 
       def do_before_begin
-        logger.debug('Transport') { 'doing before_begin initialization...' unless @before_begin.empty? }
+        logger.debug('Transport') { 'doing before_begin initialization...' } unless @before_begin.empty?
         @before_begin.each { |block| block.call @sequencer }
-        logger.debug('Transport') { 'doing before_begin initialization... done' unless @before_begin.empty? }
+        logger.debug('Transport') { 'doing before_begin initialization... done' } unless @before_begin.empty?
       end
 
       def do_on_start
-        logger.debug('Transport') { 'starting...' unless @on_start.empty? }
+        logger.debug('Transport') { 'starting...' } unless @on_start.empty?
         @on_start.each { |block| block.call @sequencer }
-        logger.debug('Transport') { 'starting... done' unless @on_start.empty? }
+        logger.debug('Transport') { 'starting... done' } unless @on_start.empty?
       end
 
       def do_stop
-        logger.debug('Transport') { 'stopping...' unless @after_stop.empty? }
+        logger.debug('Transport') { 'stopping...' } unless @after_stop.empty?
         @after_stop.each { |block| block.call @sequencer }
-        logger.debug('Transport') { 'stopping... done' unless @after_stop.empty? }
+        logger.debug('Transport') { 'stopping... done' } unless @after_stop.empty?
 
         logger.debug('Transport') { 'resetting sequencer...' }
         @sequencer.reset

@@ -66,7 +66,7 @@ module Musa
             @timeslots[at_position] << value
           end
         else
-          _log "BaseSequencer._raw_numeric_at: warning: ignoring past at command for #{at_position}" if @do_log
+          @logger.warn('BaseSequencer') { "._raw_numeric_at: warning: ignoring past at command for #{at_position}" }
         end
 
         nil
@@ -90,7 +90,7 @@ module Musa
         key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
         if at_position == @position
-          @debug_at.call if debug && @debug_at
+          @on_debug_at.each { |c| c.call } if @logger.sev_threshold >= ::Logger::Severity::DEBUG
 
           begin
             locked = @tick_mutex.try_lock
@@ -103,13 +103,17 @@ module Musa
 
           @timeslots[at_position] ||= []
 
-          @timeslots[at_position] << { parent_control: control, block: @on_debug_at } if debug && @on_debug_at
+          if @logger.sev_threshold <= ::Logger::Severity::DEBUG
+            @on_debug_at.each do |block|
+              @timeslots[at_position] << { parent_control: control, block: block }
+            end
+          end
 
           @timeslots[at_position] << { parent_control: control, block: block_key_parameters_binder,
                                        value_parameters: value_parameters,
                                        key_parameters: key_parameters }
         else
-          _log "BaseSequencer._numeric_at: warning: ignoring past 'at' command for #{at_position}" if @do_log
+          @logger.warn('BaseSequencer') { "._numeric_at: warning: ignoring past 'at' command for #{at_position}" }
         end
 
         nil
@@ -661,10 +665,8 @@ module Musa
       end
 
       def _rescue_error(e)
-        if @do_error_log
-          log e
-          log e.full_message(order: :top)
-        end
+        @logger.error('BaseSequencer') { e.to_s }
+        @logger.error('BaseSequencer') { e.full_message(highlight: true, order: :top) }
 
         @on_error.each do |block|
           block.call e
