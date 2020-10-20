@@ -5,8 +5,10 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      def initialize(binder, port: nil, after_eval: nil)
+      def initialize(binder, port: nil, after_eval: nil, logger: nil)
         port ||= 1327
+
+        @logger = logger || Musa::Logger::Logger.new
 
         @block_source = nil
 
@@ -30,6 +32,9 @@ module Musa
 
                 begin
                   while (line = @connection.gets) && @run
+
+                    @logger.warn('REPL') { 'input line is nil; will close connection...' } if line.nil?
+
                     line.chomp!
                     case line
                     when '#begin'
@@ -43,6 +48,9 @@ module Musa
                           binder.eval @block_source, "(repl)", 1
 
                         rescue StandardError, ScriptError => e
+                          @logger.debug('REPL') { 'code execution error' }
+                          @logger.debug('REPL') { e.full_message(highlight: true, order: :top) }
+
                           send_exception e, output: @connection
                         else
                           after_eval.call @block_source if after_eval
@@ -52,16 +60,29 @@ module Musa
                       buffer.puts line
                     end
                   end
+
                 rescue IOError, Errno::ECONNRESET, Errno::EPIPE => e
-                  warn e.message
+                  @logger.warn('REPL') { 'lost connection' }
+                  @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
+
+                rescue Exception, SystemExit, Interrupt
+                  puts "EXCEPTION / SYSTEM EXIT / INTERUPT"
+                  $stdout.flush
+                  @logger.warn('REPL') { 'received interruption; will close connection...' }
+                  raise
+
+                ensure
+                  @logger.debug("REPL") { "closing connection (running #{@run})" }
+                  @connection.close
                 end
 
-                @connection.close
               end
             end
           rescue Errno::ECONNRESET, Errno::EPIPE => e
-            warn e.message
+            @logger.warn('REPL') { 'connection failure while getting server port; will retry...' }
+            @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
             retry
+
           end
         end
       end
@@ -70,9 +91,10 @@ module Musa
         @run = false
 
         @main_thread.terminate
-        @client_threads.each { |t| t.terminate }
-
+        Thread.pass
         @main_thread = nil
+
+        @client_threads.each { |t| t.terminate; Thread.pass }
         @client_threads.clear
       end
 
@@ -85,6 +107,8 @@ module Musa
       end
 
       def send_exception(e, output:)
+
+        @logger.error('REPL') { e.full_message(highlight: true, order: :top) }
 
         send output: output, command: '//error'
 
