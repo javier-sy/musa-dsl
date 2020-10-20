@@ -3,10 +3,11 @@ require 'logger'
 module Musa; module Logger
   class Logger < ::Logger
     def initialize(sequencer: nil, position_format: nil)
-      super STDERR
+      super STDERR, level: WARN
 
       @sequencer = sequencer
       @position_format = position_format || 3.3
+
 
       self.formatter = proc do |severity, time, progname, msg|
         level = "[#{severity}] " unless severity == 'DEBUG'
