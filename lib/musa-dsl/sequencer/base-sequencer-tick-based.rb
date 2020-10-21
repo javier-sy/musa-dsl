@@ -48,8 +48,8 @@ module Musa
             original_position = position
             position = ticks_position.round * @tick_duration
 
-            @logger.warn('BaseSequencer') { "._numeric_at: warning: rounding "\
-                "position #{position} (#{original_position.to_f.round(5)}) "\
+            @logger.warn('BaseSequencer') { "._numeric_at: rounding "\
+                "position #{original_position} (#{original_position.to_f.round(5)}) "\
                 "to tick precision: #{position} (#{position.to_f.round(5)})" }
           end
 

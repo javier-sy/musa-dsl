@@ -66,7 +66,7 @@ module Musa
             @timeslots[at_position] << value
           end
         else
-          @logger.warn('BaseSequencer') { "._raw_numeric_at: warning: ignoring past at command for #{at_position}" }
+          @logger.warn('BaseSequencer') { "._raw_numeric_at: ignoring past at command for #{at_position}" }
         end
 
         nil
@@ -113,7 +113,7 @@ module Musa
                                        value_parameters: value_parameters,
                                        key_parameters: key_parameters }
         else
-          @logger.warn('BaseSequencer') { "._numeric_at: warning: ignoring past 'at' command for #{at_position}" }
+          @logger.warn('BaseSequencer') { "._numeric_at: ignoring past 'at' command for #{at_position}" }
         end
 
         nil
