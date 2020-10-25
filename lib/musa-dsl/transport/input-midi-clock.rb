@@ -4,13 +4,20 @@ require 'nibbler'
 module Musa
   module Clock
     class InputMidiClock < Clock
-      def initialize(input, do_log: nil)
+      def initialize(input, logger: nil, do_log: nil)
         do_log ||= false
 
         super()
 
         @input = input
-        @do_log = do_log
+        @logger = logger
+
+        if logger
+          @logger = logger
+        else
+          @logger = Musa::Logger::Logger.new
+          @logger.debug! if do_log
+        end
 
         @nibbler = Nibbler.new
       end
@@ -52,7 +59,7 @@ module Musa
                 messages[index + 1].name == 'Song Position Pointer' &&
                 messages[index + 2].name == 'Continue'
 
-              warn 'InputMidiClock: processing Stop + Song Position Pointer + Continue...' if @do_log
+              @logger.debug('InputMidiClock') { 'processing Stop + Song Position Pointer + Continue...' }
 
               process_start unless @started
 
@@ -62,7 +69,7 @@ module Musa
 
               index += 2
 
-              warn 'InputMidiClock: processing Stop + Song Position Pointer + Continue... done' if @do_log
+              @logger.debug('InputMidiClock') { 'processing Stop + Song Position Pointer + Continue... done' }
 
             else
               process_message messages[index] do
@@ -84,12 +91,12 @@ module Musa
       private
 
       def process_start
-        warn 'InputMidiClock: processing Start...' if @do_log
+        @logger.debug('InputMidiClock') { 'processing Start...' }
 
         @on_start.each(&:call)
         @started = true
 
-        warn 'InputMidiClock: processing Start... done' if @do_log
+        @logger.debug('InputMidiClock') { 'processing Start... done' }
       end
 
       def process_message(m)
@@ -98,16 +105,16 @@ module Musa
           process_start
 
         when 'Stop'
-          warn 'InputMidiClock: processing Stop...' if @do_log
+          @logger.debug('InputMidiClock') { 'processing Stop...' }
 
           @on_stop.each(&:call)
           @started = false
 
-          warn 'InputMidiClock: processing Stop... done' if @do_log
+          @logger.debug('InputMidiClock') { 'processing Stop... done' }
 
         when 'Continue'
-          warn 'InputMidiClock: processing Continue...' if @do_log
-          warn 'InputMidiClock: processing Continue... done' if @do_log
+          @logger.debug('InputMidiClock') { 'processing Continue...' }
+          @logger.debug('InputMidiClock') { 'processing Continue... done' }
 
         when 'Clock'
           yield if block_given? && @started
@@ -116,9 +123,9 @@ module Musa
           new_position_in_midi_beats =
               m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
 
-          warn "InputMidiClock: processing Song Position Pointer new_position_in_midi_beats #{new_position_in_midi_beats}..." if @do_log
+          @logger.debug('InputMidiClock') { "processing Song Position Pointer new_position_in_midi_beats #{new_position_in_midi_beats}..." }
           @on_change_position.each { |block| block.call midi_beats: new_position_in_midi_beats }
-          warn "InputMidiClock: processing Song Position Pointer new_position_in_beats #{new_position_in_midi_beats}... done" if @do_log
+          @logger.debug('InputMidiClock') { "processing Song Position Pointer new_position_in_beats #{new_position_in_midi_beats}... done" }
         end
       end
     end

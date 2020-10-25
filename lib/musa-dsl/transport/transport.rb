@@ -1,5 +1,8 @@
 require_relative '../core-ext/smart-proc-binder'
+require_relative '../core-ext/inspect-nice'
 require_relative '../sequencer'
+
+using Musa::Extension::InspectNice
 
 module Musa
   module Transport
@@ -15,6 +18,7 @@ module Musa
                      on_start: nil,
                      after_stop: nil,
                      on_position_change: nil,
+                     logger: nil,
                      do_log: nil)
 
         beats_per_bar ||= 4
@@ -37,7 +41,7 @@ module Musa
 
         @do_log = do_log
 
-        @sequencer = Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, do_log: @do_log
+        @sequencer = Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, logger: logger, do_log: @do_log
 
         @clock.on_start do
           do_on_start
@@ -78,15 +82,20 @@ module Musa
       end
 
       def change_position_to(bars: nil, beats: nil, midi_beats: nil)
-        warn "Transport: asked to change position to #{"#{bars} bars " if bars}#{"#{beats} beats " if beats}#{"#{midi_beats} midi beats " if midi_beats}" if @do_log
+        logger.debug('Transport') do
+          "asked to change position to #{"#{bars} bars " if bars}#{"#{beats} beats " if beats}" \
+          "#{"#{midi_beats} midi beats " if midi_beats}"
+        end
 
         position = bars&.rationalize || 1r
         position += Rational(midi_beats, 4 * @sequencer.beats_per_bar) if midi_beats
         position += Rational(beats, @sequencer.beats_per_bar) if beats
 
+        position -= @sequencer.tick_duration
+
         raise ArgumentError, "undefined new position" unless position
 
-        warn "Transport: received message position change to #{position}" if @do_log
+        logger.debug('Transport') { "received message position change to #{position.inspect}" }
 
         start_again_later = false
 
@@ -95,7 +104,7 @@ module Musa
           start_again_later = true
         end
 
-        warn "Transport: setting sequencer position #{position}" if @do_log
+        logger.debug('Transport') { "setting sequencer position #{position.inspect}" }
 
         @sequencer.raw_at position, force_first: true do
           @on_change_position.each { |block| block.call @sequencer }
@@ -110,28 +119,32 @@ module Musa
         @clock.terminate
       end
 
+      def logger
+        @sequencer.logger
+      end
+
       private
 
       def do_before_begin
-        warn 'Transport: doing before_begin initialization...' unless @before_begin.empty? || !@do_log
+        logger.debug('Transport') { 'doing before_begin initialization...' } unless @before_begin.empty?
         @before_begin.each { |block| block.call @sequencer }
-        warn 'Transport: doing before_begin initialization... done' unless @before_begin.empty? || !@do_log
+        logger.debug('Transport') { 'doing before_begin initialization... done' } unless @before_begin.empty?
       end
 
       def do_on_start
-        warn 'Transport: starting...' unless @on_start.empty? || !@do_log
+        logger.debug('Transport') { 'starting...' } unless @on_start.empty?
         @on_start.each { |block| block.call @sequencer }
-        warn 'Transport: starting... done'  unless @on_start.empty? || !@do_log
+        logger.debug('Transport') { 'starting... done' } unless @on_start.empty?
       end
 
       def do_stop
-        warn 'Transport: stoping...' unless @after_stop.empty? || !@do_log
+        logger.debug('Transport') { 'stopping...' } unless @after_stop.empty?
         @after_stop.each { |block| block.call @sequencer }
-        warn 'Transport: stoping... done' unless @after_stop.empty? || !@do_log
+        logger.debug('Transport') { 'stopping... done' } unless @after_stop.empty?
 
-        warn 'Transport: resetting sequencer...' if @do_log
+        logger.debug('Transport') { 'resetting sequencer...' }
         @sequencer.reset
-        warn 'Transport: resetting sequencer... done' if @do_log
+        logger.debug('Transport') { 'resetting sequencer... done' }
 
         do_before_begin
         @before_begin_already_done = true

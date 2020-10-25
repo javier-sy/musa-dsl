@@ -13,7 +13,7 @@ module Musa
           when :neumalang
             NeumalangModePlayEval.new block_procedure_binder, decoder, nl_context
           else
-            raise ArgumentError, "Mode #{mode} not allowed"
+            raise ArgumentError, "Unknown mode #{mode}"
           end
         end
 
