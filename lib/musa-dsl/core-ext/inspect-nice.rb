@@ -12,6 +12,11 @@ module Musa
         alias to_s inspect
       end
 
+
+      refine Rational.singleton_class do
+        attr_accessor :to_s_as_inspect
+      end
+
       refine Rational do
         def inspect(simple: nil)
           value = self.abs
@@ -38,7 +43,7 @@ module Musa
         end
 
         def to_s
-          inspect simple: true
+          inspect simple: true # !Rational.to_s_as_inspect
         end
       end
     end

@@ -29,13 +29,19 @@ module Musa; module Sequencer
 
         if hash_mode
           component = ps[:from].keys
+          last_positions = {}
+
           reference = reference.hashify(keys: ps[:from].keys)
           step = step.hashify(keys: ps[:from].keys)
+
           quantizer = {}.tap { |_| component.each { |k| _[k] = Quantizer.new reference[k], step[k] } }
         else
           component = (0 .. ps[:from].size-1).to_a
+          last_positions = []
+
           reference = reference.arrayfy(size: ps[:from].size)
           step = step.arrayfy(size: ps[:from].size)
+
           quantizer = Array.new(ps[:from].size) { |i| Quantizer.new reference[i], step[i] }
         end
 
@@ -58,7 +64,7 @@ module Musa; module Sequencer
       if every
         _move2_every(ps_serie, hash_mode, component, every, binder, control)
       elsif step
-        _move2_step(ps_serie, hash_mode, component, reference, step, binder, control, quantizer)
+        _move2_step(ps_serie, hash_mode, component, last_positions, binder, control, quantizer)
       else
         # normal move from: to: ¿¿?? too many missing parameters to be a reasonable option?
       end
@@ -74,20 +80,24 @@ module Musa; module Sequencer
       raise NotImplementedError
     end
 
-    def _move2_step(ps_serie, hash_mode, components, references, steps, binder, control, quantizers)
+    def _move2_step(ps_serie, hash_mode, components, start_position = nil, last_positions, binder, control, quantizers)
+
 
       if ps = ps_serie.next_value
         ps.validate!
+        is_last = ps_serie.peek_next_value.nil?
 
         puts
-        puts "#{position.inspect}: ps #{ps}"
+        puts "#{position.inspect}: ps #{ps} is_last = #{is_last}"
 
-        finish_position = position + ps[:duration]
+        start_position ||= position
+
+        finish_position = start_position + ps[:duration]
 
         same_time_events = {}
 
         components.each do |c|
-          quantizers[c].push time: finish_position, value: ps[:to][c], last: ps_serie.peek_next_value.nil?
+          quantizers[c].push time: finish_position, value: ps[:to][c], last: is_last
 
           while qi = quantizers[c].pop
             time = qi[:time]
@@ -97,31 +107,44 @@ module Musa; module Sequencer
           end
         end
 
-        same_time_events.each_pair do |time, events|
-          values = {}
-          durations = {}
+        last_time = nil
+
+        same_time_events.keys.sort.each do |time|
+          events = same_time_events[time]
+
+          values = hash_mode ? {} : []
+          durations = hash_mode ? {} : []
+          q_durations = hash_mode ? {} : []
+          started_ago = hash_mode ? {} : []
 
           events.each_pair do |component, parameters|
             values[component] = parameters[:value]
             durations[component] = parameters[:duration]
+
+            q_durations[component] = _quantize(time + durations[component]) - _quantize(time)
+
+            last_positions[component] = time
+          end
+
+          components.each do |component|
+            if last_positions[component] && last_positions[component] != time
+              started_ago[component] = time - last_positions[component]
+            end
           end
 
           _numeric_at time, control do
-            binder.call(values, duration: durations, control: control)
+            binder.call(values, 'next_values',
+                        duration: durations,
+                        quantized_duration: q_durations,
+                        started_ago: started_ago,
+                        control: control)
           end
 
-          # binder.apply(effective_values, effective_next_values,
-          #              control: control,
-          #              duration: _durations(every_groups, effective_duration),
-          #              quantized_duration: q_durations.dup,
-          #              started_ago: _started_ago(last_position, position, process_indexes),
-          #              position_jitter: position_jitters.dup,
-          #              duration_jitter: duration_jitters.dup,
-          #              right_open: right_open.dup)
+          last_time = time
         end
 
-        _numeric_at finish_position, control do
-          _move2_step(ps_serie, hash_mode, components, references, steps, binder, control, quantizers)
+        _numeric_at last_time, control do
+          _move2_step(ps_serie, hash_mode, components, finish_position, last_positions, binder, control, quantizers)
         end
 
       else
@@ -187,17 +210,25 @@ module Musa; module Sequencer
       def pop
         if @crossings.size > 1
           cross = @crossings.shift
-          cross[:duration] = @crossings.first[:time] - cross[:time]
+          next_cross = @crossings.first
+
+          cross[:duration] = next_cross[:time] - cross[:time]
+          cross[:last] = next_cross[:last] && !@crossings[0][:duration]
         else
           process_next
 
           if @crossings.size > 1
             cross = @crossings.shift
-            cross[:duration] = @crossings.first[:time] - cross[:time]
-          elsif @crossings.size == 1 && @crossings[0][:last]
+            next_cross = @crossings.first
+
+            cross[:duration] = next_cross[:time] - cross[:time]
+            cross[:last] = next_cross[:last] && !@crossings[0][:duration]
+
+          elsif @crossings.size == 1 && @crossings[0][:last] && @crossings[0][:duration]
             cross = @crossings.shift
+
           else
-            nil
+            cross = nil
           end
         end
 
@@ -288,12 +319,6 @@ module Musa; module Sequencer
         ((value - reference) / step_size).round * step_size + reference
       end
     end
-
-    # TODO uncomment: private_constant :Quantizer
-
-
-
-
   end
 end; end
 

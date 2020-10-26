@@ -12,11 +12,11 @@ RSpec.describe Musa::Sequencer do
     it '' do
       s = BaseSequencer.new do_log: true, do_error_log: true
 
-      p = [{ a: 0r, b: 1r }.extend(PackedV), 3, { a: 4r, b: 5.75r }.extend(PackedV), 2, { a: 1.5r, b: 2.33r }.extend(PackedV) ].extend(P)
+      p = [{ a: 0r, b: 1r }.extend(PackedV), 3, { a: 4r, b: 5.75r }.extend(PackedV), 2, { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
 
       s.at 1 do
-        s._move2 p.to_ps_serie(base_duration: 1).i, step: 1, reference: 0 do |values, duration:|
-          s.debug "values = #{values.inspect} duration #{duration}"
+        s._move2 p.to_ps_serie(base_duration: 1).i, step: 1, reference: 0 do |values, duration:, quantized_duration:, started_ago:|
+          s.debug "values = #{values.inspect} duration #{duration} q_duration #{quantized_duration} started_ago #{started_ago}"
         end
       end
 
@@ -165,8 +165,7 @@ RSpec.describe Musa::Sequencer do
       cc.push time: 5r, value: 5r, last: true
 
       expect(cc.pop).to eq({ time: 3r, value: 3.5r, first: false, last: false, duration: 1r })
-      expect(cc.pop).to eq({ time: 4r, value: 4.5r, first: false, last: false, duration: 1r })
-      expect(cc.pop).to eq({ time: 5r, value: 5.5r, first: false, last: true })
+      expect(cc.pop).to eq({ time: 4r, value: 4.5r, first: false, last: true, duration: 1r })
 
       expect(cc.pop).to be_nil
 
@@ -187,8 +186,7 @@ RSpec.describe Musa::Sequencer do
       cc.push time: 5r, value: -3r, last: true
 
       expect(cc.pop).to eq({ time: 3r, value: -1.5r, first: false, last: false, duration: 1r })
-      expect(cc.pop).to eq({ time: 4r, value: -2.5r, first: false, last: false, duration: 1r })
-      expect(cc.pop).to eq({ time: 5r, value: -3.5r, first: false, last: true })
+      expect(cc.pop).to eq({ time: 4r, value: -2.5r, first: false, last: true, duration: 1r })
 
       expect(cc.pop).to be_nil
     end
