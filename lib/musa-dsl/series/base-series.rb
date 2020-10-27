@@ -180,15 +180,11 @@ module Musa
 
       private_constant :Nodificator
 
-      protected
-
-      def propagate_value(value)
+      protected def propagate_value(value)
         @_slaves.each { |s| s.push_next_value value } if @_slaves
       end
 
-      private
-
-      def process_for_to_a(value)
+      private def process_for_to_a(value)
         case value
         when Serie
           value.to_a(recursive: true, restart: false, duplicate: false)
