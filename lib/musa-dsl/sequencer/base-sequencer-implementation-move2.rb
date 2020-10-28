@@ -16,9 +16,6 @@ module Musa; module Sequencer
       raise ArgumentError,
             "Cannot use 'every' and 'step' parameters at the same time. Use only one of them." if every && step
 
-      raise ArgumentError,
-            "Cannot use 'every' and 'step' parameters at the same time. Use only one of them." if every && step
-
       raise NotImplementedError, "TODO: add description for exception" unless every || step # TODO
 
       if ps = ps_serie.peek_next_value

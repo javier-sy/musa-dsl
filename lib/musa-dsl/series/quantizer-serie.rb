@@ -27,11 +27,11 @@ module Musa
         mark_regarding! source
       end
 
-      def _prototype
+      def _prototype!
         @source = @source.prototype.freeze
       end
 
-      def _instance
+      def _instance!
         @source = @source.instance
       end
 
@@ -48,7 +48,6 @@ module Musa
           next_cross = @crossings.first
 
           cross[:duration] = next_cross[:time] - cross[:time]
-          cross[:last] = next_cross[:last] && !@crossings[0][:duration]
 
         else
           while process_next && @crossings.size <= 1; end
@@ -58,9 +57,8 @@ module Musa
             next_cross = @crossings.first
 
             cross[:duration] = next_cross[:time] - cross[:time]
-            cross[:last] = next_cross[:last] && !@crossings[0][:duration]
 
-          elsif @crossings.size == 1 && @crossings[0][:last] && @crossings[0][:duration]
+          elsif @crossings.size == 1 && @crossings[0][:duration]
             cross = @crossings.shift
 
           else
@@ -137,15 +135,11 @@ module Musa
 
           if first && from_value != value
             crossings << { time: from_time,
-                           value: @reference + (i - sign) * @step_size + sign * @halfway_offset,
-                           first: first,
-                           last: false }
+                           value: @reference + (i - sign) * @step_size + sign * @halfway_offset }
           end
 
           crossings << { time: from_time + (delta_time / delta_value) * (value - from_value),
-                         value: value + sign * @halfway_offset,
-                         first: first && from_value == value,
-                         last: last }
+                         value: value + sign * @halfway_offset }
 
           if last && to_value != value
             crossings.last[:duration] = to_time - crossings.last[:time]
@@ -155,8 +149,6 @@ module Musa
         if crossings.empty? && is_first && is_last
           crossings << { time: from_time,
                          value: round_quantize(from_value, @reference + @halfway_offset, @step_size),
-                         first: true,
-                         last: true,
                          duration: to_time - from_time }
         end
 

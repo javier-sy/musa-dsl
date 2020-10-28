@@ -110,16 +110,6 @@ module Musa
         ProcessWith.new self, &yield_block
       end
 
-      # TODO: test case
-      def slave
-        slave_serie = Slave.new self
-
-        @_slaves ||= []
-        @_slaves << slave_serie
-
-        slave_serie
-      end
-
       ###
       ### Implementation
       ###
@@ -145,12 +135,12 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
           @with_sources = @with_sources.transform_values { |s| s.prototype }
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
           @with_sources = @with_sources.transform_values { |s| s.instance }
         end
@@ -201,23 +191,23 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :_prototype
+          if get == :_prototype!
             @sources.freeze
           end
 
           mark_regarding! @selector
         end
 
-        def _prototype
+        def _prototype!
           @selector = @selector.prototype
           @sources = @sources.collect(&:prototype).freeze if @sources.is_a? Array
           @sources.transform_values(&:prototype).freeze if @sources.is_a? Hash
         end
 
-        def _instance
+        def _instance!
           @selector = @selector.instance
           @sources = @sources.collect(&:instance) if @sources.is_a? Array
-          @sources.transform_values(&:_instance) if @sources.is_a? Hash
+          @sources.transform_values(&:_instance!) if @sources.is_a? Hash
         end
 
         def _restart
@@ -260,23 +250,23 @@ module Musa
 
           _restart false
 
-          if get == :_prototype
+          if get == :_prototype!
             @sources.freeze
           end
 
           mark_regarding! @selector
         end
 
-        def _prototype
+        def _prototype!
           @selector = @selector.prototype
           @sources = @sources.collect(&:prototype).freeze if @sources.is_a? Array
           @sources.transform_values(&:prototype).freeze if @sources.is_a? Hash
         end
 
-        def _instance
+        def _instance!
           @selector = @selector.instance
           @sources = @sources.collect(&:instance) if @sources.is_a? Array
-          @sources.transform_values(&:_instance) if @sources.is_a? Hash
+          @sources.transform_values(&:_instance!) if @sources.is_a? Hash
         end
 
         def _restart(restart_sources = true)
@@ -325,23 +315,23 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :_prototype
+          if get == :_prototype!
             @sources.freeze
           end
 
           mark_regarding! @selector
         end
 
-        def _prototype
+        def _prototype!
           @selector = @selector.prototype
           @sources = @sources.collect(&:prototype).freeze if @sources.is_a? Array
           @sources.transform_values(&:prototype).freeze if @sources.is_a? Hash
         end
 
-        def _instance
+        def _instance!
           @selector = @selector.instance
           @sources = @sources.collect(&:instance) if @sources.is_a? Array
-          @sources.transform_values(&:_instance) if @sources.is_a? Hash
+          @sources.transform_values(&:_instance!) if @sources.is_a? Hash
         end
 
         def _restart
@@ -381,11 +371,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -428,12 +418,12 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
           @condition = calculate_condition
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
           @condition = calculate_condition
         end
@@ -491,11 +481,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -532,11 +522,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -572,12 +562,12 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
           _restart false
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
           _restart false
         end
@@ -631,11 +621,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -699,11 +689,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -758,11 +748,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -798,11 +788,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -831,7 +821,7 @@ module Musa
             mark_as_instance!
           end
 
-          def _prototype
+          def _prototype!
             raise PrototypingSerieError, 'Cannot get prototype of a cut serie'
           end
 
@@ -871,11 +861,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -916,11 +906,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
           _restart false, true
         end
@@ -963,11 +953,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -1011,11 +1001,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -1051,11 +1041,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -1092,11 +1082,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 
@@ -1128,11 +1118,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
+        def _prototype!
           @source = @source.prototype
         end
 
-        def _instance
+        def _instance!
           @source = @source.instance
         end
 

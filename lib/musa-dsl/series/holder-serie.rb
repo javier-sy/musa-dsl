@@ -32,7 +32,7 @@ module Musa
         self
       end
 
-      def _prototype
+      def _prototype!
         raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
       end
 

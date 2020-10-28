@@ -166,11 +166,11 @@ module Musa
         mark_regarding! series[0]
       end
 
-      def _prototype
+      def _prototype!
         @sources = @sources.collect(&:prototype).freeze
       end
 
-      def _instance
+      def _instance!
         @sources = @sources.collect(&:instance)
       end
 
@@ -473,11 +473,11 @@ module Musa
         mark_as_prototype!
       end
 
-      def _prototype
+      def _prototype!
         @sources = @sources.clone.transform_values(&:prototype).freeze
       end
 
-      def _instance
+      def _instance!
         @sources = @sources.clone.transform_values(&:instance)
       end
 
@@ -544,11 +544,11 @@ module Musa
         mark_as_prototype!
       end
 
-      def _prototype
+      def _prototype!
         @sources = @sources.collect(&:prototype).freeze
       end
 
-      def _instance
+      def _instance!
         @sources = @sources.collect(&:instance)
       end
 

@@ -18,26 +18,24 @@ module Musa
 
       def prototype
         if @is_instance
-          @instance_of || (@instance_of = clone.tap(&:_prototype).mark_as_prototype!)
+          @instance_of || (@instance_of = self.clone.tap(&:_prototype!).mark_as_prototype!)
         else
           self
         end
       end
 
-      def _prototype
+      alias_method :p, :prototype
+
+      protected def _prototype!
         nil
       end
 
-      alias_method :p, :prototype
-
-      def mark_as_prototype!
+      protected def mark_as_prototype!
         @is_instance = nil
         freeze
       end
 
-      protected :_prototype, :mark_as_prototype!
-
-      def mark_regarding!(source)
+      protected def mark_regarding!(source)
         if source.prototype?
           mark_as_prototype!
         else
@@ -45,29 +43,25 @@ module Musa
         end
       end
 
-      protected :mark_regarding!
-
       def instance
         if @is_instance
           self
         else
-          clone(freeze: false).tap(&:_instance).mark_as_instance!(self)
+          clone(freeze: false).tap(&:_instance!).mark_as_instance!(self)
         end
       end
 
       alias_method :i, :instance
 
-      def _instance
+      protected def _instance!
         nil
       end
 
-      def mark_as_instance!(prototype = nil)
+      protected def mark_as_instance!(prototype = nil)
         @instance_of = prototype
         @is_instance = true
         self
       end
-
-      protected :_instance, :mark_as_instance!
 
       class PrototypingSerieError < RuntimeError
         def initialize(message = nil)
@@ -105,8 +99,6 @@ module Musa
             @_current_value = _next_value
           end
         end
-
-        propagate_value @_current_value
 
         @_current_value
       end
@@ -180,10 +172,6 @@ module Musa
 
       private_constant :Nodificator
 
-      protected def propagate_value(value)
-        @_slaves.each { |s| s.push_next_value value } if @_slaves
-      end
-
       private def process_for_to_a(value)
         case value
         when Serie
@@ -197,47 +185,6 @@ module Musa
         else
           value
         end
-      end
-    end
-
-    class Slave
-      include Serie
-
-      attr_reader :master
-
-      def initialize(master)
-        @master = master
-        @next_value = []
-      end
-
-      def _restart
-        throw OperationNotAllowedError, "SlaveSerie #{self}: slave series cannot be restarted"
-      end
-
-      def next_value
-        value = @next_value.shift
-
-        raise "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
-
-        propagate_value value
-
-        value
-      end
-
-      def peek_next_value
-        value = @next_value.first
-
-        raise "Warning: slave serie #{self} has lost sync with his master serie #{@master}" if value.nil? && !@master.peek_next_value.nil?
-
-        value
-      end
-
-      def infinite?
-        @master.infinite?
-      end
-
-      def push_next_value(value)
-        @next_value << value
       end
     end
   end
