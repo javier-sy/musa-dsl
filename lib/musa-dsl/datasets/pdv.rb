@@ -6,7 +6,6 @@ require_relative 'helper'
 module Musa::Datasets
   module PDV
     include AbsD
-    include AbsI
 
     include Helper
 

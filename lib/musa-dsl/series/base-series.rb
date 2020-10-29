@@ -26,23 +26,6 @@ module Musa
 
       alias_method :p, :prototype
 
-      protected def _prototype!
-        nil
-      end
-
-      protected def mark_as_prototype!
-        @is_instance = nil
-        freeze
-      end
-
-      protected def mark_regarding!(source)
-        if source.prototype?
-          mark_as_prototype!
-        else
-          mark_as_instance!
-        end
-      end
-
       def instance
         if @is_instance
           self
@@ -53,8 +36,47 @@ module Musa
 
       alias_method :i, :instance
 
+      # By default, if there is a @source attribute that contains the source of the serie, SeriePrototyping will
+      # handle prototyping/instancing automatically.
+      # If there is a @sources attribute with the eventual several sources, SeriePrototyping will handle them by
+      # default.
+      # If needed the subclasses can override this behaviour to accomodate to real subclass specificities.
+      #
+      protected def _prototype!
+        @source = @source.prototype if @source
+
+        if @sources
+          if @sources.is_a?(Array)
+            @sources = @sources.collect(&:prototype).freeze
+          elsif @sources.is_a?(Hash)
+            @sources = @sources.transform_values(&:prototype).freeze
+          end
+        end
+      end
+
       protected def _instance!
-        nil
+        @source = @source.instance if @source
+
+        if @sources
+          if @sources.is_a?(Array)
+            @sources = @sources.collect(&:instance)
+          elsif @sources.is_a?(Hash)
+            @sources = @sources.transform_values(&:instance)
+          end
+        end
+      end
+
+      protected def mark_regarding!(source)
+        if source.prototype?
+          mark_as_prototype!
+        else
+          mark_as_instance!
+        end
+      end
+
+      protected def mark_as_prototype!
+        @is_instance = nil
+        freeze
       end
 
       protected def mark_as_instance!(prototype = nil)

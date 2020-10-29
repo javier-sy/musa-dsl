@@ -1,6 +1,7 @@
 require_relative 'dataset'
 require_relative 'ps'
 
+require_relative '../series'
 require_relative '../sequencer'
 
 module Musa::Datasets
@@ -10,6 +11,7 @@ module Musa::Datasets
     def to_ps_serie(base_duration: nil)
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
+      # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
       p = clone
 
       Musa::Series::E() do
@@ -18,6 +20,30 @@ module Musa::Datasets
             duration: p.shift * base_duration,
             to: p.first,
             right_open: (p.length > 1) }.extend(PS).tap { |_| _.base_duration = base_duration } : nil
+      end
+    end
+
+    def to_timed_serie(time_start = nil, base_duration: nil)
+      time_start ||= 0r
+      base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
+
+      # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
+
+      time = time_start
+
+      p = clone
+
+      Musa::Series::E() do
+        value = p.shift
+
+        if value
+          r = { time: time, value: value } if !value.nil?
+
+          delta_time = p.shift
+          time += delta_time * base_duration if delta_time
+
+          r&.extend(TimedAbsI)
+        end
       end
     end
 

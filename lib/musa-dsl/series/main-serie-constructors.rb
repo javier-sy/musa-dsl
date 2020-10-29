@@ -166,14 +166,6 @@ module Musa
         mark_regarding! series[0]
       end
 
-      def _prototype!
-        @sources = @sources.collect(&:prototype).freeze
-      end
-
-      def _instance!
-        @sources = @sources.collect(&:instance)
-      end
-
       def _restart(restart_sources = true)
         @index = 0
         @sources[@index].restart if restart_sources
@@ -464,21 +456,13 @@ module Musa
 
       attr_reader :sources, :cycle
 
-      def initialize(series_hash, cycle_all_series)
-        @sources = series_hash.clone.transform_values(&:prototype).freeze
+      def initialize(hash_of_series, cycle_all_series)
+        @sources = hash_of_series.clone.transform_values(&:prototype).freeze
         @cycle = cycle_all_series
 
         _restart false
 
         mark_as_prototype!
-      end
-
-      def _prototype!
-        @sources = @sources.clone.transform_values(&:prototype).freeze
-      end
-
-      def _instance!
-        @sources = @sources.clone.transform_values(&:instance)
       end
 
       def _restart(restart_sources = true)
@@ -542,14 +526,6 @@ module Musa
         _restart false
 
         mark_as_prototype!
-      end
-
-      def _prototype!
-        @sources = @sources.collect(&:prototype).freeze
-      end
-
-      def _instance!
-        @sources = @sources.collect(&:instance)
       end
 
       def _restart(restart_sources = true)

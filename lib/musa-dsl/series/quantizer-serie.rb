@@ -1,3 +1,5 @@
+require_relative '../datasets/e'
+
 module Musa
   module Series
     extend self
@@ -66,7 +68,7 @@ module Musa
           end
         end
 
-        cross
+        cross&.extend(AbsD)
       end
 
       private def process_next

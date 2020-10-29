@@ -39,8 +39,7 @@ module Musa::Datasets
             self[:from].keys == self[:to].keys
       else
         false
-      end &&
-          self[:duration].is_a?(Numeric) && self[:duration] > 0
+      end && self[:duration].is_a?(Numeric) && self[:duration] > 0
     end
 
     def to_score(score: nil,

@@ -14,13 +14,12 @@ module Musa::Datasets
     end
 
     def validate!
-      raise IndexError, "Invalid dataset #{self}" unless valid?
+      raise RuntimeError, "Invalid dataset #{self}" unless valid?
     end
   end
 
   module Abs
     include E
-    def duration; 0; end
   end
 
   module Delta
@@ -31,6 +30,12 @@ module Musa::Datasets
     include Abs
   end
 
+  module TimedAbsI
+    include AbsI
+
+    NaturalKeys = (NaturalKeys + [:time]).freeze
+  end
+
   module DeltaI
     include Delta
   end
@@ -38,10 +43,11 @@ module Musa::Datasets
   module AbsD
     include Abs
 
-    NaturalKeys = [:duration, # duration of the process (note reproduction, dynamics evolution, etc)
-                   :note_duration, # duration of the note (a staccato note is effectvely shorter than elapsed duration until next note)
-                   :forward_duration # duration to wait until next event (if 0 means the next event should be executed at the same time than this one)
-    ].freeze
+    NaturalKeys = (NaturalKeys +
+                   [:duration, # duration of the process (note reproduction, dynamics evolution, etc)
+                    :note_duration, # duration of the note (a staccato note is effectvely shorter than elapsed duration until next note)
+                    :forward_duration # duration to wait until next event (if 0 means the next event should be executed at the same time than this one)
+                   ]).freeze
 
     def forward_duration
       self[:forward_duration] || self[:duration]
