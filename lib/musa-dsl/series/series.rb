@@ -12,4 +12,4 @@ require_relative 'queue-serie'
 require_relative 'hash-or-array-serie-splitter'
 
 require_relative 'quantizer-serie'
-require_relative 'flatten-timed-serie'
+require_relative 'flattener-timed-serie'

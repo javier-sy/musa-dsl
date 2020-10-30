@@ -30,8 +30,8 @@ module Musa::Datasets
     include Abs
   end
 
-  module TimedAbsI
-    include AbsI
+  module AbsTimed
+    include Abs
 
     NaturalKeys = (NaturalKeys + [:time]).freeze
   end

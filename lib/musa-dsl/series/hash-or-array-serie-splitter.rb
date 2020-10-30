@@ -29,12 +29,8 @@ module Musa
             mark_regarding! @source
           end
 
-          protected def _prototype!
-            @source = @source.prototype
-          end
-
           protected def _instance!
-            @source = @source.instance
+            super
             restart
           end
 
@@ -75,26 +71,18 @@ module Musa
           include Serie
 
           def initialize(proxy, key_or_index)
-            @proxy = proxy
+            @source = proxy
             @key_or_index = key_or_index
 
-            mark_regarding! @proxy
-          end
-
-          def _prototype!
-            @proxy = @proxy.prototype
-          end
-
-          def _instance!
-            @proxy = @proxy.instance
+            mark_regarding! @source
           end
 
           def _restart
-            @proxy.restart
+            @source.restart
           end
 
           def _next_value
-            @proxy.next_value(@key_or_index)
+            @source.next_value(@key_or_index)
           end
         end
 

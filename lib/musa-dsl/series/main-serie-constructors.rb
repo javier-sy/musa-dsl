@@ -1,4 +1,5 @@
 require_relative '../core-ext/arrayfy'
+require_relative '../core-ext/smart-proc-binder'
 
 using Musa::Extension::Arrayfy
 using Musa::Extension::ExplodeRanges
@@ -22,11 +23,11 @@ module Musa
     end
 
     def H(**series_hash)
-      FromHash.new series_hash, false
+      FromHashOfSeries.new series_hash, false
     end
 
     def HC(**series_hash)
-      FromHash.new series_hash, true
+      FromHashOfSeries.new series_hash, true
     end
 
     def A(*series)
@@ -37,14 +38,8 @@ module Musa
       FromArrayOfSeries.new series, true
     end
 
-    def E(**args, &block)
-      if args.key?(:start) && args.length == 1
-        FromAutoEvalBlockOnSeed.new args[:start], &block
-      elsif args.empty?
-        FromEvalBlock.new &block
-      else
-        raise ArgumentError, 'only optional start: argument is allowed'
-      end
+    def E(*value_args, **key_args, &block)
+      FromEvalBlockWithParameters.new *value_args, **key_args, &block
     end
 
     def FOR(from: nil, to: nil, step: nil)
@@ -196,71 +191,46 @@ module Musa
 
     private_constant :Sequence
 
-    class FromAutoEvalBlockOnSeed
+    class FromEvalBlockWithParameters
       include Serie
-
-      attr_reader :start, :block
-
-      def initialize(start, &block)
-        @start = start
-        @block = block
-
-        @current = nil
-        @first = true
-
-        mark_as_prototype!
-      end
-
-      def _restart
-        @current = nil
-        @first = true
-      end
-
-      def _next_value
-        if @first
-          @first = false
-          @current = @start
-        else
-          raise 'Block is undefined' unless @block
-
-          @current = @block.call @current unless @current.nil?
-        end
-
-        @current
-      end
-    end
-
-    private_constant :FromAutoEvalBlockOnSeed
-
-    class FromEvalBlock
-      include Serie
+      include Musa::Extension::SmartProcBinder
 
       attr_reader :block
 
-      def initialize(&block)
-        @block = block
+      def initialize(*values, **key_values, &block)
+        raise ArgumentError, 'Yield block is undefined' unless block
+
+        @original_value_parameters = values
+        @original_key_parameters = key_values
+
+        @block = SmartProcBinder.new(block)
+
         _restart
 
         mark_as_prototype!
       end
 
       def _restart
-        @index = 0
+        @value_parameters = @original_value_parameters.collect(&:clone)
+        @key_parameters = @original_key_parameters.transform_values(&:clone)
+
+        @first = true
         @value = nil
       end
 
       def _next_value
-        raise 'Block is undefined' unless @block
+        @value = if !@value.nil? || @value.nil? && @first
+                   @value = @block.call(*@value_parameters, last_value: @value, **@key_parameters)
+                 else
+                   nil
+                 end
 
-        @value = @block.call @index unless @value.nil? && @index > 0
-        value = @value
-        @index += 1
-
-        value
+        @first = false
+        @value
       end
     end
 
-    private_constant :FromEvalBlock
+    private_constant :FromEvalBlockWithParameters
 
     class ForLoop
       include Serie
@@ -451,7 +421,7 @@ module Musa
 
     private_constant :RandomNumbersFromRange
 
-    class FromHash
+    class FromHashOfSeries
       include Serie
 
       attr_reader :sources, :cycle
@@ -512,7 +482,7 @@ module Musa
       end
     end
 
-    private_constant :FromHash
+    private_constant :FromHashOfSeries
 
     class FromArrayOfSeries
       include Serie

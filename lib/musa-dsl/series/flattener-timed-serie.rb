@@ -30,7 +30,7 @@ module Musa
             time = source_value[:time]
 
             source_value[:value].each_pair do |key, value|
-              result[key] = { time: time, value: value }.extend(TimedAbsI)
+              result[key] = { time: time, value: value }.extend(AbsTimed)
             end
 
             result

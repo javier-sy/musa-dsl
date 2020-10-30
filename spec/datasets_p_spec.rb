@@ -14,17 +14,17 @@ RSpec.describe Musa::Datasets::P do
       expect(v = s.next_value).to eq( { time: 0, value: { a: 1, b: 10, c: 100 } } )
 
       expect(v[:value]).to be_a(PackedV)
-      expect(v).to be_a(TimedAbsI)
+      expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to eq( { time: 1, value: { a: 2, b: 20, c: 200 } } )
 
       expect(v[:value]).to be_a(PackedV)
-      expect(v).to be_a(TimedAbsI)
+      expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to eq( { time: 3, value: { a: 3, b: 30, c: 300 } } )
 
       expect(v[:value]).to be_a(PackedV)
-      expect(v).to be_a(TimedAbsI)
+      expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to be_nil
     end
@@ -39,17 +39,17 @@ RSpec.describe Musa::Datasets::P do
       expect(v = s.next_value).to eq( { time: 10, value: { a: 1, b: 10, c: 100 } } )
 
       expect(v[:value]).to be_a(PackedV)
-      expect(v).to be_a(TimedAbsI)
+      expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to eq( { time: 11, value: { a: 2, b: 20, c: 200 } } )
 
       expect(v[:value]).to be_a(PackedV)
-      expect(v).to be_a(TimedAbsI)
+      expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to eq( { time: 13, value: { a: 3, b: 30, c: 300 } } )
 
       expect(v[:value]).to be_a(PackedV)
-      expect(v).to be_a(TimedAbsI)
+      expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to be_nil
     end

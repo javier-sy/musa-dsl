@@ -99,6 +99,8 @@ module Musa
         MergeSerieOfSeries.new self
       end
 
+      # TODO on with and map methods implement parameter passing with cloning on restart as on E()
+      #
       def with(block = nil, on_restart: nil, **with_series, &yield_block)
         block ||= yield_block
         ProcessWith.new self, with_series, on_restart, &block

@@ -29,14 +29,6 @@ module Musa
         mark_regarding! source
       end
 
-      def _prototype!
-        @source = @source.prototype.freeze
-      end
-
-      def _instance!
-        @source = @source.instance
-      end
-
       def _restart(restart_sources = true)
         @source_values = []
         @crossings = []
@@ -68,7 +60,7 @@ module Musa
           end
         end
 
-        cross&.extend(AbsD)
+        cross&.extend(AbsD).extend(AbsTimed)
       end
 
       private def process_next

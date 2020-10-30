@@ -12,9 +12,8 @@ module Musa::Datasets
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
-      p = clone
 
-      Musa::Series::E() do
+      Musa::Series::E(clone) do |p|
         (p.size >= 3) ?
           { from: p.shift,
             duration: p.shift * base_duration,
@@ -28,12 +27,9 @@ module Musa::Datasets
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
-
       time = time_start
 
-      p = clone
-
-      Musa::Series::E() do
+      Musa::Series::E(clone) do |p|
         value = p.shift
 
         if value
@@ -42,7 +38,7 @@ module Musa::Datasets
           delta_time = p.shift
           time += delta_time * base_duration if delta_time
 
-          r&.extend(TimedAbsI)
+          r&.extend(AbsTimed)
         end
       end
     end

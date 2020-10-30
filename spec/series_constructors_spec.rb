@@ -48,9 +48,9 @@ RSpec.describe Musa::Series do
       expect(s1.next_value).to eq nil
     end
 
-    it 'E(start: 100) { |v| v + 1 unless v == 103 }' do
+    it 'E with one argument' do
 
-      s1 = E(start: 100) { |v| v + 1 unless v == 103 }.i
+      s1 = E(100) { |v, last_value:| (last_value ? last_value + 1 : v) unless last_value == 103 }.i
 
       expect(s1.next_value).to eq 100
       expect(s1.next_value).to eq 101
@@ -86,31 +86,8 @@ RSpec.describe Musa::Series do
       expect(s1.next_value).to eq nil
     end
 
-    it 'E(start: nil) { |v| v ? v + 1 : 1 }' do
-      s1 = E(start: nil) { |v| v ? v + 1 : 1 }.i
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
     it 'E() { |i| i + 1 unless i == 3 }' do
-      s1 = E() { |i| i + 1 unless i == 3 }.i
+      s1 = E() { |last_value:| (last_value || 0) + 1 unless last_value == 3 }.i
 
       expect(s1.next_value).to eq 1
       expect(s1.next_value).to eq 2

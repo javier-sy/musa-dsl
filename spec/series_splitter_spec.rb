@@ -6,6 +6,48 @@ include Musa::Series
 
 RSpec.describe Musa::Series do
   context 'Series splitter handles' do
+
+    it 'prototype / instance management and split series independence' do
+      s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
+
+      expect(s.prototype?).to eq true
+      expect(s.instance?).to eq false
+
+      ss = s.split
+
+      expect(ss[0].prototype?).to eq true
+      expect(ss[0].instance?).to eq false
+
+      ss0i = ss[0].instance
+
+      expect(ss0i.prototype?).to eq false
+      expect(ss0i.instance?).to eq true
+
+      expect(ss[0].prototype?).to eq true
+      expect(ss[0].instance?).to eq false
+
+      expect(ss0i.next_value).to eq 1
+
+      expect(ss0i.prototype?).to eq false
+      expect(ss0i.instance?).to eq true
+
+      expect(ss[0].prototype?).to eq true
+      expect(ss[0].instance?).to eq false
+
+      ss0i2 = ss[0].instance
+
+      expect(ss0i2.next_value).to eq 1
+      expect(ss0i2.next_value).to eq 2
+      expect(ss0i2.next_value).to eq 3
+
+      expect(ss0i.next_value).to eq 2
+
+      expect(ss0i2.next_value).to be_nil
+
+      expect(ss0i.next_value).to eq 3
+      expect(ss0i.next_value).to be_nil
+    end
+
     it 'serie of array elements (instancing split components)' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       ss = s.split
