@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.0">
+	<work>
+		<work-title>work title</work-title>
+	</work>
+	<identification>
+		<creator type="composer">Javier Sánchez Yeste</creator>
+		<encoding>
+			<encoding-date>2020-10-31</encoding-date>
+			<software>MusaDSL: MusicXML output formatter</software>
+		</encoding>
+	</identification>
+	<part-list>
+		<score-part id="vln0">
+			<part-name>Violin 0</part-name>
+			<part-abbreviation>vln0</part-abbreviation>
+		</score-part>
+		<score-part id="vln1">
+			<part-name>Violin 1</part-name>
+			<part-abbreviation>vln1</part-abbreviation>
+		</score-part>
+		<score-part id="vln2">
+			<part-name>Violin 2</part-name>
+			<part-abbreviation>vln2</part-abbreviation>
+		</score-part>
+		<score-part id="vln3">
+			<part-name>Violin 3</part-name>
+			<part-abbreviation>vln3</part-abbreviation>
+		</score-part>
+		<score-part id="vln4">
+			<part-name>Violin 4</part-name>
+			<part-abbreviation>vln4</part-abbreviation>
+		</score-part>
+		<score-part id="vln5">
+			<part-name>Violin 5</part-name>
+			<part-abbreviation>vln5</part-abbreviation>
+		</score-part>
+	</part-list>
+	<part id="vln0">
+		<measure number="1">
+			<attributes>
+				<divisions>32</divisions>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement="above">
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+		</measure>
+	</part>
+	<part id="vln1">
+		<measure number="1">
+			<attributes>
+				<divisions>32</divisions>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement="above">
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+		</measure>
+	</part>
+	<part id="vln2">
+		<measure number="1">
+			<attributes>
+				<divisions>32</divisions>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement="above">
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+		</measure>
+	</part>
+	<part id="vln3">
+		<measure number="1">
+			<attributes>
+				<divisions>32</divisions>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement="above">
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+		</measure>
+	</part>
+	<part id="vln4">
+		<measure number="1">
+			<attributes>
+				<divisions>32</divisions>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement="above">
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+		</measure>
+	</part>
+	<part id="vln5">
+		<measure number="1">
+			<attributes>
+				<divisions>32</divisions>
+				<time number="1">
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef number="1">
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement="above">
+				<direction-type>
+					<metronome>
+						<beat-unit>quarter</beat-unit>
+						<per-minute>90</per-minute>
+					</metronome>
+				</direction-type>
+			</direction>
+		</measure>
+	</part>
+</score-partwise>

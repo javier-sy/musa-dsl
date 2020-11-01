@@ -13,7 +13,7 @@ module Musa::Datasets
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
 
-      Musa::Series::E(clone) do |p|
+      Musa::Series::E(clone, base_duration) do |p, base_duration|
         (p.size >= 3) ?
           { from: p.shift,
             duration: p.shift * base_duration,
@@ -27,18 +27,31 @@ module Musa::Datasets
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
-      time = time_start
 
-      Musa::Series::E(clone) do |p|
+      Musa::Series::E(clone, base_duration, context: { time: time_start }) do |p, base_duration, context: |
         value = p.shift
 
         if value
-          r = { time: time, value: value } if !value.nil?
+          r = { time: context[:time], value: value } if !value.nil?
 
           delta_time = p.shift
-          time += delta_time * base_duration if delta_time
+          context[:time] += delta_time * base_duration if delta_time
 
           r&.extend(AbsTimed)
+        end
+      end
+    end
+
+    def map(&block)
+      i = 0
+      clone.map! do |element|
+        # Process with block only the values (values are the alternating elements because P
+        # structure is <value> <duration> <value> <duration> <value>)
+        #
+        if (i += 1) % 2 == 1
+          block.call(element)
+        else
+          element
         end
       end
     end

@@ -13,11 +13,36 @@ RSpec.describe Musa::Sequencer do
   context 'Move2 testing' do
 
     it '' do
-      p = [{ a: 0r, b: 1r }.extend(PackedV), 3, { a: 4r, b: 5.75r }.extend(PackedV), 2, { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
+      p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
+            { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
+            { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
+
+      s = BaseSequencer.new do_log: true, do_error_log: true
+
+      s.at 1 do
+        s.move3(p.to_timed_serie) do |values, next_values, duration:, quantized_duration:, started_ago:|
+          s.debug "values #{values} next_values #{next_values} duration #{duration} quantized_duration #{quantized_duration} started_ago #{started_ago}"
+        end
+      end
+
+      s.run
+
+    end
 
 
-      p.to_ps_serie == [ { from: { a: 0, b: 1 }.extend(PackedV), to: { a: 4, b: 5.75r }.extend(PackedV),  duration: 3 }.extend(PS),
-                         { from: { a: 4, b: 5.75 }.extend(PackedV), to: { a: 1.5, b: 2 + 1/3r }.extend(PackedV),  duration: 2 }.extend(PS) ]
+    it '' do
+      p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
+            { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
+            { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
+
+
+      # pp p.to_ps_serie.to_a
+      puts
+      puts "to_timed_serie.flatten_timed"
+      pp p.to_timed_serie.flatten_timed.to_a
+
+      p.to_ps_serie == [ { from: { a: 0, b: 1 }.extend(PackedV), to: { a: 4, b: 5.75r }.extend(PackedV),  duration: 3*4 }.extend(PS),
+                         { from: { a: 4, b: 5.75 }.extend(PackedV), to: { a: 1.5, b: 2 + 1/3r }.extend(PackedV),  duration: 2*4 }.extend(PS) ]
 
 
       p.to_timed_serie ==
@@ -35,10 +60,16 @@ RSpec.describe Musa::Sequencer do
 
 
 
-      sa = split[:a].instance
+      puts
+      puts "split[:a].to_a"
+      pp split[:a].to_a
 
-      qa = QUANTIZE(split[:a].map { |t| [t[:time], t[:value]] }).instance
-      qb = QUANTIZE(split[:b].map { |t| [t[:time], t[:value]] }).instance
+      puts
+      puts "split[:b].to_a"
+      pp split[:b].to_a
+
+      qa = QUANTIZE(split[:a]).instance
+      qb = QUANTIZE(split[:b]).instance
 
 
       s = BaseSequencer.new do_log: true, do_error_log: true
@@ -53,6 +84,10 @@ RSpec.describe Musa::Sequencer do
         end
 
       end
+
+
+
+
 
 
       puts

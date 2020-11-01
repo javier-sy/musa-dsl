@@ -4,11 +4,12 @@ module Musa
   module Series
     extend self
 
-    def QUANTIZE(time_value_serie, reference: nil, step: nil)
+    def QUANTIZE(time_value_serie, reference: nil, step: nil, value_attribute: nil)
       reference ||= 0r
       step ||= 1r
+      value_attribute ||= :value
 
-      Quantizer.new(reference, step, time_value_serie)
+      Quantizer.new(reference, step, time_value_serie, value_attribute)
     end
 
     class Quantizer
@@ -16,13 +17,14 @@ module Musa
 
       attr_reader :source
 
-      def initialize(reference, step, source)
+      def initialize(reference, step, source, value_attribute)
         @halfway_offset = step / 2r
 
         @reference = reference - @halfway_offset
         @step_size = step
 
         @source = source
+        @value_attribute = value_attribute
 
         _restart false
 
@@ -64,7 +66,20 @@ module Musa
       end
 
       private def process_next
-        time, value = @source.next_value
+        n = @source.next_value
+
+        case n
+        when nil
+          time = value = nil
+        when AbsTimed
+          time = n[:time]
+          value = n[@value_attribute]
+        when Array
+          time = n[0]
+          value = n[1]
+        else
+          raise RuntimeError, "Don't know how to process #{n}"
+        end
 
         if time && value
           raise RuntimeError, "'time:' value should be greater than previous time pushed" \
@@ -79,6 +94,8 @@ module Musa
             new_crossings = calculate_crossings(
                 @source_values[0][:time],
                 @source_values[0][:value],
+                @source_values[i][:time],
+                @source_values[i][:value],
                 @source_values[i+1][:time],
                 @source_values[i+1][:value],
                 is_first: @source_values[0][:is_first],
@@ -105,7 +122,7 @@ module Musa
         end
       end
 
-      private def calculate_crossings(from_time, from_value, to_time, to_value, is_first:, is_last:)
+      private def calculate_crossings(from_time, from_value, last_from_time, last_from_value, to_time, to_value, is_first:, is_last:)
         sign = to_value >= from_value ? 1r : -1r
 
         if sign == 1
@@ -129,11 +146,11 @@ module Musa
 
           if first && from_value != value
             crossings << { time: from_time,
-                           value: @reference + (i - sign) * @step_size + sign * @halfway_offset }
+                           @value_attribute => @reference + (i - sign) * @step_size + sign * @halfway_offset }
           end
 
           crossings << { time: from_time + (delta_time / delta_value) * (value - from_value),
-                         value: value + sign * @halfway_offset }
+                         @value_attribute => value + sign * @halfway_offset }
 
           if last && to_value != value
             crossings.last[:duration] = to_time - crossings.last[:time]
@@ -142,7 +159,7 @@ module Musa
 
         if crossings.empty? && is_first && is_last
           crossings << { time: from_time,
-                         value: round_quantize(from_value, @reference + @halfway_offset, @step_size),
+                         @value_attribute => round_quantize(from_value, @reference + @halfway_offset, @step_size),
                          duration: to_time - from_time }
         end
 

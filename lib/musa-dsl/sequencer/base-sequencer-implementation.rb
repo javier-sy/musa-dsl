@@ -78,7 +78,7 @@ module Musa
         raise ArgumentError, "'at_position' parameter cannot be nil" if at_position.nil?
         raise ArgumentError, 'Yield block is mandatory' unless block
 
-        at_position = _check_position(at_position)
+        at_position = _quantize_position(at_position)
 
         value_parameters = []
         value_parameters << with if !with.nil? && !with.is_a?(Hash)
@@ -520,7 +520,7 @@ module Musa
                       effective_duration
                     end
 
-                next_group_q_position = _quantize(next_group_position)
+                next_group_q_position = _quantize_position(next_group_position)
 
                 affected_indexes.each do |i|
                   positions[i] = group_position
