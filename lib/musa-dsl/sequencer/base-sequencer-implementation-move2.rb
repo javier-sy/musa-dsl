@@ -34,32 +34,29 @@ module Musa; module Sequencer
       reference ||= 0r
       step ||= 1r
 
-
-
-
-      ###########################################################
+      # ###########################################################
+      # #
       #
-
-      components = [:pitch, :dynamics, :instrument]
-      reference = reference.hashify(keys: components)
-      step = step.hashify(keys: components)
-      quantized_series = {}
-      split = timed_serie.flatten_timed.split
-      components.each do |component|
-        puts "\n\ncomponent #{component}"
-        pp split[component].to_a
-        puts "\n\ncomponent #{component}"
-        quantized_series[component] =
-            QUANTIZE(split[component],
-                     reference: reference[component],
-                     step: step[component]).instance
-        pp quantized_series[component].to_a
-      end
-
-      return
-
+      # components = [:pitch, :dynamics, :instrument]
+      # reference = reference.hashify(keys: components)
+      # step = step.hashify(keys: components)
+      # quantized_series = {}
+      # split = timed_serie.flatten_timed.split
+      # components.each do |component|
+      #   puts "\n\ncomponent #{component} (raw)"
+      #   pp split[component].to_a
+      #   puts "\n\ncomponent #{component} (quantized)"
+      #   quantized_series[component] =
+      #       QUANTIZE(split[component],
+      #                reference: reference[component],
+      #                step: step[component]).instance
+      #   pp quantized_series[component].to_a
+      # end
       #
-      ###########################################################
+      # return
+      #
+      # #
+      # ###########################################################
 
       if first_value_sample = timed_serie.peek_next_value
 
@@ -115,20 +112,22 @@ module Musa; module Sequencer
 
 
     def _move3_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
-      affected_components = {}
+
+      affected_components_by_time = {}
+
       components.each do |component|
         if v = quantized_series[component].peek_next_value
 
           debug "_move3_step: quantized_series[#{component}].peek_next_value #{v}"
           time = v[:time]
 
-          affected_components[time] ||= []
-          affected_components[time] << component
+          affected_components_by_time[time] ||= []
+          affected_components_by_time[time] << component
         end
       end
 
-      if !affected_components.empty?
-        time = affected_components.keys.sort.first
+      if !affected_components_by_time.empty?
+        time = affected_components_by_time.keys.sort.first
 
         values = hash_mode ? {} : []
         next_values = hash_mode ? {} : []
@@ -136,7 +135,7 @@ module Musa; module Sequencer
         q_durations = hash_mode ? {} : []
         started_ago = hash_mode ? {} : []
 
-        affected_components[time].each do |component|
+        affected_components_by_time[time].each do |component|
           value = quantized_series[component].next_value
 
           values[component] = value[:value]
@@ -145,6 +144,70 @@ module Musa; module Sequencer
           q_durations[component] =
               _quantize_position(time + durations[component], warn: false) -
               _quantize_position(time, warn: false)
+
+          last_positions[component] = _quantize_position(time, warn: false)
+        end
+
+        components.each do |component|
+          nv = quantized_series[component].peek_next_value
+          next_values[component] = nv[:value] if nv
+
+          if last_positions[component] && last_positions[component] != time
+            started_ago[component] = _quantize_position(time, warn: false) - last_positions[component]
+          end
+        end
+
+        _numeric_at start_position + _quantize_position(time, warn: false), control do
+          binder.call(values, next_values,
+                      duration: durations,
+                      quantized_duration: q_durations,
+                      started_ago: started_ago,
+                      control: control)
+
+          _move3_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
+        end
+      end
+    end
+
+
+
+    # Este es un modo muy interesante pero que implica un procesamiento diferente en el yield_block que no me
+    # sirve para el código de samples/multidim_sample, puesto que en este el next_values es literal, mientras que samples/multidim_sample
+    # necesita que el next_value sea nil si el valor no cambia durante el periodo.
+    #
+    def _move3_tipoA_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
+
+      affected_components_by_time = {}
+
+      components.each do |component|
+        if v = quantized_series[component].peek_next_value
+
+          debug "_move3_step: quantized_series[#{component}].peek_next_value #{v}"
+          time = v[:time]
+
+          affected_components_by_time[time] ||= []
+          affected_components_by_time[time] << component
+        end
+      end
+
+      if !affected_components_by_time.empty?
+        time = affected_components_by_time.keys.sort.first
+
+        values = hash_mode ? {} : []
+        next_values = hash_mode ? {} : []
+        durations = hash_mode ? {} : []
+        q_durations = hash_mode ? {} : []
+        started_ago = hash_mode ? {} : []
+
+        affected_components_by_time[time].each do |component|
+          value = quantized_series[component].next_value
+
+          values[component] = value[:value]
+          durations[component] = value[:duration]
+
+          q_durations[component] =
+              _quantize_position(time + durations[component], warn: false) -
+                  _quantize_position(time, warn: false)
 
           last_positions[component] = _quantize_position(time, warn: false)
         end

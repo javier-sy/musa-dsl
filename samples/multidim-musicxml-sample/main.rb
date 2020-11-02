@@ -36,7 +36,7 @@ ticks_per_beat = 32r
 score = poly_line.to_score(:time,
                            mapper: [:time, :pitch, :dynamics, :instrument],
                            right_open: { dynamics: true },
-                           beats_per_bar: beats_per_bar, ticks_per_beat: ticks_per_beat) do
+                           beats_per_bar: beats_per_bar, ticks_per_beat: ticks_per_beat, do_log: true) do
   | value, next_value,
     position:,
     duration:,

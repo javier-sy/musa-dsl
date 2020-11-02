@@ -17,7 +17,9 @@ module Musa
       attr_reader :everying, :playing, :moving
       attr_reader :logger
 
-      def initialize(beats_per_bar = nil, ticks_per_beat = nil, logger: nil, do_log: nil, do_error_log: nil, log_position_format: nil)
+      def initialize(beats_per_bar = nil, ticks_per_beat = nil,
+                     logger: nil,
+                     do_log: nil, do_error_log: nil, log_position_format: nil)
 
         raise ArgumentError,
               "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \

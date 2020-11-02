@@ -79,7 +79,7 @@ RSpec.describe Musa::Series do
       expect(cc.next_value).to be_nil
     end
 
-    it 'line with no crossing boundaries' do
+    it 'simple line with no crossing boundaries' do
       c = S([0r, 0.65r], [2r, 0.70r], [5r, 0.75r])
 
       cc = QUANTIZE(c, reference: 0r, step: 1r).i
@@ -90,7 +90,7 @@ RSpec.describe Musa::Series do
     end
 
 
-    it 'line with no crossing boundaries (negative values)' do
+    it 'simple line with no crossing boundaries (negative values)' do
       c = S([0r, -0.65r], [2r, -0.70r], [5r, -0.75r])
 
       cc = QUANTIZE(c, reference: 0r, step: 1r).i
@@ -162,19 +162,47 @@ RSpec.describe Musa::Series do
 
       expect(cc.next_value).to be_nil
     end
-=end
-    it 'bufix: ' do
-      # c = S([0, 60], [4, 60], [8, 60], [12, 60], [16, 67],
-      #       [20, 67], [24, 67], [28, 66], [31, 66], [32, 66], [42, 57], [46, 57])
 
-      c = S([0, 60], [4, 60], [8, 60], [12, 60], [16, 67])
+    it 'bufix: quantizer was ignoring the intermediate points on a flat value line' do
+      c = S([0, 60], [4, 60], [8, 60], [12, 60], [16, 64])
 
       cc = QUANTIZE(c).i
 
-      while v = cc.next_value
-        puts "v = #{v}"
-      end
+      expect(cc.next_value).to eq({ time: 0r, value: 60r, duration: 12+1/2r })
+      expect(cc.next_value).to eq({ time: 12+1/2r, value: 61r, duration: 1r })
+      expect(cc.next_value).to eq({ time: 13+1/2r, value: 62r, duration: 1r })
+      expect(cc.next_value).to eq({ time: 14+1/2r, value: 63r, duration: 1r })
+      expect(cc.next_value).to eq({ time: 15+1/2r, value: 64r, duration: 1/2r })
 
+      expect(cc.next_value).to be_nil
     end
+=end
+    it 'bufix: quantizer was ignoring the intermediate points on a flat value line (longer)' do
+      c = S([0, 60], [4, 60], [8, 60], [12, 60], [16, 64], [20, 64], [24, 64], [28, 68], [32, 72])
+
+      cc = QUANTIZE(c).i
+
+      pp cc.to_a
+
+      # expect(cc.next_value).to eq({ time: 0r, value: 60r, duration: 12+1/2r })
+      #
+      # expect(cc.next_value).to eq({ time: 12+1/2r, value: 61r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 13+1/2r, value: 62r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 14+1/2r, value: 63r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 15+1/2r, value: 64r, duration: 9r })
+      #
+      # expect(cc.next_value).to eq({ time: 24+1/2r, value: 65r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 25+1/2r, value: 66r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 26+1/2r, value: 67r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 27+1/2r, value: 68r, duration: 1r })
+      #
+      # expect(cc.next_value).to eq({ time: 28+1/2r, value: 69r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 29+1/2r, value: 70r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 30+1/2r, value: 71r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 31+1/2r, value: 72r, duration: 1/2r })
+      #
+      # expect(cc.next_value).to be_nil
+    end
+
   end
 end
