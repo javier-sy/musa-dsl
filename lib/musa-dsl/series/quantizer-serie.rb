@@ -4,15 +4,159 @@ module Musa
   module Series
     extend self
 
-    def QUANTIZE(time_value_serie, reference: nil, step: nil, value_attribute: nil)
+    def QUANTIZE(time_value_serie, reference: nil, step: nil, value_attribute: nil, crossings_aware: nil)
       reference ||= 0r
       step ||= 1r
       value_attribute ||= :value
+      crossings_aware ||= false
 
-      Quantizer.new(reference, step, time_value_serie, value_attribute)
+      if crossings_aware
+        CrossingsAwareQuantizer.new(reference, step, time_value_serie, value_attribute)
+      else
+        RawQuantizer.new(reference, step, time_value_serie, value_attribute)
+      end
     end
 
-    class Quantizer
+    class RawQuantizer
+      include Serie
+
+      attr_reader :source
+
+      def initialize(reference, step, source, value_attribute)
+        @reference = reference
+        @step_size = step
+
+        @source = source
+        @value_attribute = value_attribute
+
+        _restart false
+
+        mark_regarding! source
+      end
+
+      def _restart(restart_sources = true)
+        @last_processed_q_value = nil
+        @last_processed_time = nil
+
+        @before_last_processed_q_value = nil
+
+        @points = []
+        @crossings = []
+
+        @source.restart if restart_sources
+      end
+
+      def _next_value
+        if !@crossings.empty?
+          @crossings.shift.extend(AbsD).extend(AbsTimed)
+        else
+          while @points.size < 2 && process_more; end
+
+          there_are_more_values = !!@source.peek_next_value
+
+          if @points.size >= 2
+            point = @points.shift
+            # point[:info] ||= ""
+
+            next_point = @points[0]
+
+            from_value = point[@value_attribute]
+            from_time = point[:time]
+
+            to_value = next_point[@value_attribute]
+            to_time = next_point[:time]
+
+            sign = to_value > from_value ? 1r : -1r
+
+            if to_value != from_value
+              time_increment = to_time - from_time
+              step_time_increment = time_increment / (to_value - from_value)
+
+              step_size_increment = @step_size.abs * sign
+
+              intermediate_point_time = from_time
+
+              from_value.step(to_value, step_size_increment) do |value|
+
+                if value == to_value && there_are_more_values
+                  @crossings[-1][:duration] = to_time - @crossings[-1][:time]
+                  # @crossings[-1][:info] += "; added duration at intermediate on value == to_value && there_are_more_values"
+                else
+                  intermediate_point = point.clone
+
+                  intermediate_point[:time] = intermediate_point_time
+                  intermediate_point[@value_attribute] = value
+
+                  # intermediate_point[:info] += "intermediate_point there_are_more_values #{there_are_more_values || 'nil'}"
+                  @crossings << intermediate_point
+
+                  if @crossings[-2]
+                    @crossings[-2][:duration] = @crossings[-1][:time] - @crossings[-2][:time]
+                    # @crossings[-2][:info] += "; added duration at intermediate"
+                  end
+
+                  intermediate_point_time += step_time_increment
+                end
+              end
+            else
+              point[:duration] = @points.first[:time] - point[:time]
+              # point[:info] += "standalone"
+              @crossings << point
+            end
+
+            _next_value
+          else
+            nil
+          end
+        end
+      end
+
+      private def process_more
+        case n = @source.next_value
+        when nil
+          time = value = nil
+        when AbsTimed
+          time = n[:time].rationalize
+          value = n[@value_attribute].rationalize
+        when Array
+          time = n[0].rationalize
+          value = n[1].rationalize
+        else
+          raise RuntimeError, "Don't know how to process #{n}"
+        end
+
+        if time && value
+          q_value = round_quantize(value, @reference, @step_size)
+
+          if q_value != @last_processed_q_value
+            if @last_processed_q_value && @last_processed_time != @points.last[:time]
+              @points << { time: @last_processed_time, @value_attribute => @last_processed_q_value }
+            end
+
+            @points << { time: time, @value_attribute => q_value }
+          end
+
+          @last_processed_q_value = q_value
+          @last_processed_time = time
+
+          true
+        else
+          false
+        end
+      end
+
+      private def round_quantize(value, reference, step_size)
+        ((value - reference) / step_size).round * step_size + reference
+      end
+
+      def infinite?
+        !!@source.infinite?
+      end
+    end
+
+    private_constant :RawQuantizer
+
+    class CrossingsAwareQuantizer
       include Serie
 
       attr_reader :source
@@ -149,8 +293,8 @@ module Musa
           added_start_point_as_crossing = true
 
           crossings << x = { time: from_time,
-                         @value_attribute =>
-                             @reference + (from_step - sign) * @step_size + sign * @halfway_offset }
+                             @value_attribute =>
+                                 @reference + (from_step - sign) * @step_size + sign * @halfway_offset }
 
           # puts "calculate_crossings:\tfrom_time < last_from_time && (previous_step <=> last_step) == sign"
           # puts "calculate_crossings:\tadded #{x}"
@@ -169,13 +313,13 @@ module Musa
 
           if first && from_value != value
             crossings << x = { time: last_from_time,
-                           @value_attribute => @reference + (i - sign) * @step_size + sign * @halfway_offset }
+                               @value_attribute => @reference + (i - sign) * @step_size + sign * @halfway_offset }
             # puts "calculate_crossings:\tfirst && from_value != value"
             # puts "calculate_crossings:\tadded #{x}"
           end
 
           crossings << x = { time: last_from_time + (delta_time / delta_value) * (value - last_from_value),
-                         @value_attribute => value + sign * @halfway_offset }
+                             @value_attribute => value + sign * @halfway_offset }
 
 
           if last && to_value != value
@@ -188,8 +332,8 @@ module Musa
 
         if crossings.empty? && is_first && is_last
           crossings << x = { time: from_time,
-                         @value_attribute => round_quantize(from_value, @reference + @halfway_offset, @step_size),
-                         duration: to_time - from_time }
+                             @value_attribute => round_quantize(from_value, @reference + @halfway_offset, @step_size),
+                             duration: to_time - from_time }
           # puts "calculate_crossings:\tcrossings.empty? && is_first && is_last"
           # puts "calculate_crossings:\tadded #{x}"
         end
@@ -206,6 +350,7 @@ module Musa
       end
     end
 
-    private_constant :Quantizer
+    private_constant :CrossingsAwareQuantizer
+
   end
 end

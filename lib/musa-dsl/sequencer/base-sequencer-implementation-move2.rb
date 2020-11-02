@@ -351,7 +351,7 @@ module Musa; module Sequencer
           reference = reference.hashify(keys: ps[:from].keys)
           step = step.hashify(keys: ps[:from].keys)
 
-          quantizer = {}.tap { |_| component.each { |k| _[k] = Quantizer.new reference[k], step[k] } }
+          quantizer = {}.tap { |_| component.each { |k| _[k] = RawQuantizer.new reference[k], step[k] } }
         else
           component = (0 .. ps[:from].size-1).to_a
           last_positions = []
@@ -359,7 +359,7 @@ module Musa; module Sequencer
           reference = reference.arrayfy(size: ps[:from].size)
           step = step.arrayfy(size: ps[:from].size)
 
-          quantizer = Array.new(ps[:from].size) { |i| Quantizer.new reference[i], step[i] }
+          quantizer = Array.new(ps[:from].size) { |i| RawQuantizer.new reference[i], step[i] }
         end
 
         component.each { |c| quantizer[c].push time: position, value: ps[:from][c] }

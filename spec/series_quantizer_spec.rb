@@ -180,9 +180,11 @@ RSpec.describe Musa::Series do
     it 'bufix: quantizer was ignoring the intermediate points on a flat value line (longer)' do
       c = S([0, 60], [4, 60], [8, 60], [12, 60], [16, 64], [20, 64], [24, 64], [28, 68], [32, 72])
 
-      cc = QUANTIZE(c).i
+      cc = QUANTIZE(c, crossings_aware: true).i
 
-      pp cc.to_a
+      cc.to_a.each do |x|
+        puts "#{x.inspect}"
+      end
 
       # expect(cc.next_value).to eq({ time: 0r, value: 60r, duration: 12+1/2r })
       #
