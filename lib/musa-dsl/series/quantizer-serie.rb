@@ -7,13 +7,21 @@ using Musa::Extension::InspectNice
 module Musa
   module Series
     module SerieOperations
-      def quantize(reference: nil, step: nil, value_attribute: nil, predictive: nil, stops: nil)
+      def quantize(reference: nil, step: nil,
+                   value_attribute: nil,
+                   stops: nil,
+                   predictive: nil,
+                   preemptive: nil,
+                   right_open: nil)
+
         Series.QUANTIZE(self,
                         reference: reference,
                         step: step,
                         value_attribute: value_attribute,
+                        stops: stops,
                         predictive: predictive,
-                        stops: stops)
+                        preemptive: preemptive,
+                        right_open: right_open)
       end
     end
   end
@@ -21,17 +29,29 @@ module Musa
   module Series
     extend self
 
-    def QUANTIZE(time_value_serie, reference: nil, step: nil, value_attribute: nil, predictive: nil, stops: nil)
+    def QUANTIZE(time_value_serie,
+                 reference: nil, step: nil,
+                 value_attribute: nil,
+                 stops: nil,
+                 predictive: nil,
+                 preemptive: nil,
+                 right_open: nil)
+
       reference ||= 0r
       step ||= 1r
       value_attribute ||= :value
-      predictive ||= false
       stops ||= false
+      predictive ||= false
 
       if predictive
+        raise ArgumentError, "Predictive quantization doesn't allow parameters 'preemptive' or 'right_open'" unless preemptive.nil? && right_open.nil?
+
         PredictiveQuantizer.new(reference, step, time_value_serie, value_attribute, stops)
       else
-        RawQuantizer.new(reference, step, time_value_serie, value_attribute, stops)
+        preemptive ||= false
+        right_open = right_open.nil? ? true : false
+
+        RawQuantizer.new(reference, step, time_value_serie, value_attribute, stops, preemptive, right_open)
       end
     end
 
@@ -62,7 +82,7 @@ module Musa
 
       attr_reader :source
 
-      def initialize(reference, step, source, value_attribute, stops)
+      def initialize(reference, step, source, value_attribute, stops, preemptive, right_open)
         @reference = reference
         @step_size = step.abs
 
@@ -70,6 +90,8 @@ module Musa
         @value_attribute = value_attribute
 
         @ignore_stops = !stops
+        @preemptive = preemptive
+        @right_open = right_open
 
         _restart false
 
@@ -91,11 +113,10 @@ module Musa
       def _next_value
         if !@segments.empty?
           @segments.shift.extend(AbsD).extend(AbsTimed)
-
         else
           while @points.size < 2 &&
-              process(*get_time_value(@source.next_value),
-                      !@source.peek_next_value); end
+              process(*get_time_value(@source.next_value), !@source.peek_next_value)
+          end
 
           if @points.size >= 2
             point = @points.shift
@@ -113,10 +134,12 @@ module Musa
 
               if last && last[@value_attribute] == to_value
                 last[:duration] = to_time - last[:time]
+                # last[:info] += "; edited duration on a"
               else
                 @segments << { time: from_time,
                                @value_attribute => from_value,
                                duration: to_time - from_time }
+                               # info: "added on a (last #{last || 'nil'})"}
               end
 
               @points.shift
@@ -135,31 +158,47 @@ module Musa
             time_increment = to_time - from_time
             sign = to_value > from_value ? 1r : -1r
 
-            step_time_increment = time_increment / (to_value - from_value).abs
-            step_size_increment = @step_size * sign
+            step_value_increment = @step_size * sign
 
+            if @right_open
+              step_time_increment = time_increment / (to_value - from_value).abs
+            else
+              step_time_increment = time_increment / ((to_value - from_value).abs + 1r)
+            end
+
+            if @preemptive
+              loop_from_value = from_value + step_value_increment
+            else
+              loop_from_value = from_value
+            end
+
+            loop_to_value = to_value
             intermediate_point_time = from_time
 
-            from_value.step(to_value, step_size_increment) do |value|
+            loop_from_value.step(loop_to_value, step_value_increment) do |value|
               if to_time > intermediate_point_time
 
-                if @ignore_stops && @segments[-1] && @segments[-1][@value_attribute] == value
+                if @ignore_stops &&
+                    @segments[-1] &&
+                    @segments[-1][@value_attribute] == value
                   # ignore this step
                 else
                   @segments <<  { time: intermediate_point_time,
                                    @value_attribute => value,
                                    duration: to_time - intermediate_point_time } # provisional duration
+                                   # info: "added on b" }
                 end
 
                 if @segments[-2]
                   @segments[-2][:duration] = @segments[-1][:time] - @segments[-2][:time]
+                  # @segments[-2][:info] += "; edited on b"
                 end
 
                 intermediate_point_time += step_time_increment
               end
             end
 
-            _next_value
+            return _next_value
           else
             nil
           end

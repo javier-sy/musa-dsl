@@ -52,10 +52,12 @@ s.at 1 do
     next_values = {}
     quantized_durations = {}
 
-    s.move3(line.map {|v| v.to_packed_V(mapper) }.to_timed_serie) do |value, next_value, duration:, quantized_duration:, started_ago:|
+    s.move3(line.map {|v| v.to_packed_V(mapper) }.to_timed_serie) do
+    |value, next_value, duration:, quantized_duration:, started_ago:|
+
       logger.debug
       logger.debug "new element at position #{s.position.inspect}\n\t\tvalue #{value}\n\t\tnext #{next_value}\n\t\tduration #{duration}" \
-               "\n\t\tquantized_duration #{quantized_duration}\n\t\tstarted_ago #{started_ago}"
+               "\n\t\tquantized_duration #{quantized_duration}\n\t\tstarted_ago #{started_ago}\n"
 
       new_instrument_now = !started_ago[:instrument]
       new_dynamics_now = !started_ago[:dynamics]

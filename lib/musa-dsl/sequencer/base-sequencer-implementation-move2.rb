@@ -84,7 +84,9 @@ module Musa; module Sequencer
           quantized_series[component] =
               QUANTIZE(split[component],
                        reference: reference[component],
-                       step: step[component]).instance
+                       step: step[component],
+                       preemptive: true,
+                       stops: true).instance
         end
 
         last_positions = hash_mode ? {} : []
@@ -126,7 +128,7 @@ module Musa; module Sequencer
         end
       end
 
-      if !affected_components_by_time.empty?
+      if affected_components_by_time.any?
         time = affected_components_by_time.keys.sort.first
 
         values = hash_mode ? {} : []
@@ -145,19 +147,23 @@ module Musa; module Sequencer
               _quantize_position(time + durations[component], warn: false) -
               _quantize_position(time, warn: false)
 
+          nv = quantized_series[component].peek_next_value
+          next_values[component] = (nv && nv[:value] != values[component]) ? nv[:value] : nil
+
+          puts "values = #{values}\nnext = #{next_values}"
+
           last_positions[component] = _quantize_position(time, warn: false)
         end
 
         components.each do |component|
-          nv = quantized_series[component].peek_next_value
-          next_values[component] = nv[:value] if nv
-
           if last_positions[component] && last_positions[component] != time
-            started_ago[component] = _quantize_position(time, warn: false) - last_positions[component]
+            sa = _quantize_position(time, warn: false) - last_positions[component]
+            started_ago[component] = (sa == 0) ? nil : sa
           end
         end
 
         _numeric_at start_position + _quantize_position(time, warn: false), control do
+
           binder.call(values, next_values,
                       duration: durations,
                       quantized_duration: q_durations,

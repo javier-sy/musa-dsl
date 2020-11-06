@@ -514,5 +514,37 @@ RSpec.describe Musa::Series do
       expect(cc.next_value).to be_nil
     end
 
+    it 'line with two flat segments (raw with preemptive mode)' do
+      # c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 60], [32, 72], [36, 76], [40, 70])
+
+      c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 68], [32, 72], [36, 76])
+
+      cc = QUANTIZE(c, preemptive: false, stops: true).i
+
+
+      cc.to_a.each { |i| puts i.inspect }
+
+      # expect(cc.next_value).to eq({ time: 0r, value: 60r, duration: 8r })
+      # expect(cc.next_value).to eq({ time: 8r, value: 60r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 9r, value: 61r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 10r, value: 62r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 11r, value: 63r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 12r, value: 64r, duration: 8r })
+      # expect(cc.next_value).to eq({ time: 20r, value: 64r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 21r, value: 65r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 22r, value: 66r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 23r, value: 67r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 24r, value: 68r, duration: 2r })
+      # expect(cc.next_value).to eq({ time: 26r, value: 69r, duration: 2r })
+      # expect(cc.next_value).to eq({ time: 28r, value: 70r, duration: 2r })
+      # expect(cc.next_value).to eq({ time: 30r, value: 71r, duration: 2r })
+      # expect(cc.next_value).to eq({ time: 32r, value: 72r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 33r, value: 73r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 34r, value: 74r, duration: 1r })
+      # expect(cc.next_value).to eq({ time: 35r, value: 75r, duration: 1r })
+      #
+      # expect(cc.next_value).to be_nil
+    end
+
   end
 end
