@@ -13,6 +13,8 @@ RSpec.describe Musa::Sequencer do
   context 'Move2 testing' do
 
     it '' do
+      raise NotImplementedError
+
       p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
             { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
             { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
@@ -20,7 +22,7 @@ RSpec.describe Musa::Sequencer do
       s = BaseSequencer.new do_log: true, do_error_log: true
 
       s.at 1 do
-        s.move3(p.to_timed_serie) do |values, next_values, duration:, quantized_duration:, started_ago:|
+        s.play_timed(p.to_timed_serie) do |values, next_values, duration:, quantized_duration:, started_ago:|
           s.debug "values #{values} next_values #{next_values} duration #{duration} quantized_duration #{quantized_duration} started_ago #{started_ago}"
         end
       end
@@ -31,6 +33,7 @@ RSpec.describe Musa::Sequencer do
 
 
     it '' do
+      raise NotImplementedError
       p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
             { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
             { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)

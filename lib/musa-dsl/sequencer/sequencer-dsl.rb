@@ -89,6 +89,14 @@ module Musa
           end
         end
 
+        def play_timed(*value_parameters, **key_parameters, &block)
+          block ||= proc {}
+
+          @sequencer.play_timed *value_parameters, **key_parameters do |*value_args, **key_args|
+            with *value_args, **key_args, &block
+          end
+        end
+
         def every(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 

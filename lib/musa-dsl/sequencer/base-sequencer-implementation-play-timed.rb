@@ -5,40 +5,19 @@ using Musa::Extension::InspectNice
 
 module Musa; module Sequencer
   class BaseSequencer
-
-    def move3(timed_serie,
-              reference: nil,
-              step: nil,
-              right_open: nil,
-              on_stop: nil,
-              after_bars: nil, after: nil,
-              &block)
-
-      control = _move3(timed_serie.instance,
-                       reference: reference,
-                       step: step,
-                       right_open: right_open,
-                       on_stop: on_stop,
-                       after_bars: after_bars, after: after,
-                       &block)
-
-      # TODO falta pasar la craeción del control y la parte final de on_stop, after_bars aquí (ahora está en _move3)
-    end
-
-    def _move3(timed_serie,
-               reference: nil,
-               step: nil,
-               right_open: nil,
-               on_stop: nil,
-               after_bars: nil, after: nil,
-               &block)
+    private def _play_timed(timed_serie,
+                    control,
+                    reference: nil,
+                    step: nil,
+                    right_open: nil,
+                    &block)
 
       reference ||= 0r
       step ||= 1r
 
       if first_value_sample = timed_serie.peek_next_value
 
-        debug "_move3: first_value_sample #{first_value_sample}"
+        debug "_play_timed: first_value_sample #{first_value_sample}"
 
         hash_mode = first_value_sample[:value].is_a?(Hash)
 
@@ -72,35 +51,23 @@ module Musa; module Sequencer
         last_positions = hash_mode ? {} : []
       end
 
-      control = Move2Control.new(@event_handlers.last,
-                                 on_stop: on_stop, after_bars: after_bars, after: after)
-
-      control.on_stop do
-        control.do_after.each do |do_after|
-          _numeric_at position + do_after[:bars], control, &do_after[:block]
-        end
-      end
-
       binder = SmartProcBinder.new(block)
 
-      @event_handlers.push control
 
-      _move3_step(hash_mode, components, quantized_series, position, last_positions, binder, control)
+      _play_timed_step(hash_mode, components, quantized_series, position, last_positions, binder, control)
 
-      @event_handlers.pop
-
-      control
     end
 
 
-    def _move3_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
+    private def _play_timed_step(hash_mode, components, quantized_series, start_position, last_positions,
+                                 binder, control)
 
       affected_components_by_time = {}
 
       components.each do |component|
         if v = quantized_series[component].peek_next_value
 
-          debug "_move3_step: quantized_series[#{component}].peek_next_value #{v}"
+          debug "_play_timed_step: quantized_series[#{component}].peek_next_value #{v}"
           time = v[:time]
 
           affected_components_by_time[time] ||= []
@@ -142,7 +109,7 @@ module Musa; module Sequencer
 
         _numeric_at start_position + _quantize_position(time, warn: false), control do
 
-          debug "_move_3_step: before binder.call: durations #{durations} q_durations #{q_durations}"
+          debug "_play_timed_step: before binder.call: durations #{durations} q_durations #{q_durations}"
 
           binder.call(values, next_values,
                       duration: durations,
@@ -150,25 +117,24 @@ module Musa; module Sequencer
                       started_ago: started_ago,
                       control: control)
 
-          _move3_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
+          _play_timed_step(hash_mode, components, quantized_series, start_position, last_positions,
+                           binder, control)
         end
       end
     end
 
-
-
+    # TODO implement this alternative play method as another mode
     # Este es un modo muy interesante pero que implica un procesamiento diferente en el yield_block que no me
-    # sirve para el código de samples/multidim_sample, puesto que en este el next_values es literal, mientras que samples/multidim_sample
-    # necesita que el next_value sea nil si el valor no cambia durante el periodo.
+    # sirve para el código de samples/multidim_sample, puesto que en este el next_values es literal,
+    # mientras que samples/multidim_sample necesita que el next_value sea nil si el valor no cambia durante el periodo.
     #
-    def _move3_tipoA_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
+    private def _play_timed_step_b(hash_mode, components, quantized_series, start_position, last_positions,
+                                   binder, control)
 
       affected_components_by_time = {}
 
       components.each do |component|
         if v = quantized_series[component].peek_next_value
-
-          debug "_move3_step: quantized_series[#{component}].peek_next_value #{v}"
           time = v[:time]
 
           affected_components_by_time[time] ||= []
@@ -214,10 +180,35 @@ module Musa; module Sequencer
                       started_ago: started_ago,
                       control: control)
 
-          _move3_step(hash_mode, components, quantized_series, start_position, last_positions, binder, control)
+          _play_timed_step_b(hash_mode, components, quantized_series, start_position, last_positions,
+                             binder, control)
         end
       end
     end
+
+    class PlayTimedControl < EventHandler
+      attr_reader :do_on_stop, :do_after
+
+      def initialize(parent, on_stop: nil, after_bars: nil, after: nil)
+        super parent
+        @do_on_stop = []
+        @do_after = []
+
+        @do_on_stop << on_stop if on_stop
+        self.after after_bars, &after if after
+      end
+
+      def on_stop(&block)
+        @do_on_stop << block
+      end
+
+      def after(bars = nil, &block)
+        bars ||= 0
+        @do_after << { bars: bars.rationalize, block: block }
+      end
+    end
+
+    private_constant :PlayTimedControl
   end
 end; end
 
