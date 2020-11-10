@@ -149,63 +149,6 @@ RSpec.describe Musa::Series do
       expect(s1.next_value).to eq nil
     end
 
-    it 'HOLDER(E(start: nil) { |v| v ? v + 1 : 1 })' do
-      s1 = HOLDER(E(start: nil) { |v| v ? v + 1 : 1 })
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'E() { |i| i + 1 unless i == 3 }' do
-      s1 = HOLDER(E() { |i| i + 1 unless i == 3 })
-
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.next_value).to eq 3
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.peek_next_value).to eq 1
-      expect(s1.next_value).to eq 1
-      expect(s1.next_value).to eq 2
-      expect(s1.peek_next_value).to eq 3
-      expect(s1.next_value).to eq 3
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
     it 'HOLDER(HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)))' do
       s1 = HOLDER(HC(x: S(1,2), y: S(:a, :b, :c), z: S(1, 2, 3, 4)))
 

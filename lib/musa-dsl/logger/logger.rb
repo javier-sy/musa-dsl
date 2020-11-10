@@ -20,9 +20,9 @@ module Musa; module Logger
                        "%#{integer_digits + decimal_digits + 1}s: " % ("%.#{decimal_digits}f" % sequencer.position.to_f)
                      end
 
-          progname = "[#{progname}] " if progname
+          progname = "[#{progname}]" if progname
 
-          "#{position}#{level}#{progname}#{msg}\n"
+          "#{position}#{level}#{progname} #{msg}\n"
         else
           "\n"
         end

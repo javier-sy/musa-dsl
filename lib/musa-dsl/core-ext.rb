@@ -1,5 +1,6 @@
 require_relative 'core-ext/array-explode-ranges'
 require_relative 'core-ext/arrayfy'
+require_relative 'core-ext/hashify'
 require_relative 'core-ext/deep-copy'
 require_relative 'core-ext/smart-proc-binder'
 require_relative 'core-ext/inspect-nice'

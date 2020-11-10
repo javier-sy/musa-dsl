@@ -5,11 +5,21 @@ module Musa::Datasets
     include Dataset
 
     NaturalKeys = [].freeze
+
+    # TODO implement valid? in all 'subclasses'. This implies recollecting from other places where validations are done and refactoring
+    # TODO should valid? and validate! be on Dataset instead of E? P dataset inherits from Dataset but probably it could be validated
+    #
+    def valid?
+      true
+    end
+
+    def validate!
+      raise RuntimeError, "Invalid dataset #{self}" unless valid?
+    end
   end
 
   module Abs
     include E
-    def duration; 0; end
   end
 
   module Delta
@@ -20,6 +30,12 @@ module Musa::Datasets
     include Abs
   end
 
+  module AbsTimed
+    include Abs
+
+    NaturalKeys = (NaturalKeys + [:time]).freeze
+  end
+
   module DeltaI
     include Delta
   end
@@ -27,10 +43,11 @@ module Musa::Datasets
   module AbsD
     include Abs
 
-    NaturalKeys = [:duration, # duration of the process (note reproduction, dynamics evolution, etc)
-                   :note_duration, # duration of the note (a staccato note is effectvely shorter than elapsed duration until next note)
-                   :forward_duration # duration to wait until next event (if 0 means the next event should be executed at the same time than this one)
-    ].freeze
+    NaturalKeys = (NaturalKeys +
+                   [:duration, # duration of the process (note reproduction, dynamics evolution, etc)
+                    :note_duration, # duration of the note (a staccato note is effectvely shorter than elapsed duration until next note)
+                    :forward_duration # duration to wait until next event (if 0 means the next event should be executed at the same time than this one)
+                   ]).freeze
 
     def forward_duration
       self[:forward_duration] || self[:duration]

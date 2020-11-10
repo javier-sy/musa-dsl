@@ -9,7 +9,6 @@ using Musa::Extension::InspectNice
 module Musa::Datasets
   module GDV
     include AbsD
-    include AbsI
 
     include Helper
 

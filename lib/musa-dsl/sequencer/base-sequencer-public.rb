@@ -17,7 +17,9 @@ module Musa
       attr_reader :everying, :playing, :moving
       attr_reader :logger
 
-      def initialize(beats_per_bar = nil, ticks_per_beat = nil, logger: nil, do_log: nil, do_error_log: nil, log_position_format: nil)
+      def initialize(beats_per_bar = nil, ticks_per_beat = nil,
+                     logger: nil,
+                     do_log: nil, do_error_log: nil, log_position_format: nil)
 
         raise ArgumentError,
               "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
@@ -175,10 +177,18 @@ module Musa
         control
       end
 
-      def play(serie, mode: nil, parameter: nil, after: nil, context: nil, **mode_args, &block)
+      def play(serie,
+               mode: nil,
+               parameter: nil,
+               after_bars: nil,
+               after: nil,
+               context: nil,
+               **mode_args,
+               &block)
+
         mode ||= :wait
 
-        control = PlayControl.new @event_handlers.last, after: after
+        control = PlayControl.new @event_handlers.last, after_bars: after_bars, after: after
         @event_handlers.push control
 
         _play serie.instance, control, context, mode: mode, parameter: parameter, **mode_args, &block
@@ -197,14 +207,57 @@ module Musa
       def continuation_play(parameters)
         _play parameters[:serie],
               parameters[:control],
-              parameters[:nl_context],
+              parameters[:neumalang_context],
               mode: parameters[:mode],
               decoder: parameters[:decoder],
               __play_eval: parameters[:play_eval],
               **parameters[:mode_args]
       end
 
-      def every(interval, duration: nil, till: nil, condition: nil, on_stop: nil, after_bars: nil, after: nil, &block)
+      def play_timed(timed_serie,
+                     reference: nil,
+                     step: nil,
+                     right_open: nil,
+                     on_stop: nil,
+                     after_bars: nil, after: nil,
+                     &block)
+
+        control = PlayTimedControl.new(@event_handlers.last,
+                                       on_stop: on_stop, after_bars: after_bars, after: after)
+
+        control.on_stop do
+          control.do_after.each do |do_after|
+            _numeric_at position + do_after[:bars], control, &do_after[:block]
+          end
+        end
+
+        @event_handlers.push control
+
+        _play_timed(timed_serie.instance,
+                    control,
+                    reference: reference,
+                    step: step,
+                    right_open: right_open,
+                    &block)
+
+        @event_handlers.pop
+
+        @playing << control
+
+        control.after do
+          @playing.delete control
+        end
+
+        control
+      end
+
+      def every(interval,
+                duration: nil, till: nil,
+                condition: nil,
+                on_stop: nil,
+                after_bars: nil, after: nil,
+                &block)
+
         # nil interval means 'only once'
         interval = interval.rationalize unless interval.nil?
 

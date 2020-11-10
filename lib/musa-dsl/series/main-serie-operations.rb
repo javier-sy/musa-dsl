@@ -99,6 +99,8 @@ module Musa
         MergeSerieOfSeries.new self
       end
 
+      # TODO on with and map methods implement parameter passing with cloning on restart as on E()
+      #
       def with(block = nil, on_restart: nil, **with_series, &yield_block)
         block ||= yield_block
         ProcessWith.new self, with_series, on_restart, &block
@@ -110,16 +112,6 @@ module Musa
         ProcessWith.new self, &yield_block
       end
 
-      # TODO: test case
-      def slave
-        slave_serie = Slave.new self
-
-        @_slaves ||= []
-        @_slaves << slave_serie
-
-        slave_serie
-      end
-
       ###
       ### Implementation
       ###
@@ -128,42 +120,33 @@ module Musa
         include Musa::Extension::SmartProcBinder
         include Serie
 
-        attr_reader :source, :with_sources, :on_restart, :block
+        attr_reader :source, :on_restart, :block
+        def with_sources; @sources; end
 
         def initialize(serie, with_series = nil, on_restart = nil, &block)
           @source = serie
-          @with_sources = with_series || {}
+          @sources = with_series || {}
           @on_restart = on_restart
           @block = SmartProcBinder.new(block) if block_given?
 
           if @source.prototype?
-            @with_sources = @with_sources.transform_values { |s| s.prototype }
+            @sources = @sources.transform_values { |s| s.prototype }
           else
-            @with_sources = @with_sources.transform_values { |s| s.instance }
+            @sources = @sources.transform_values { |s| s.instance }
           end
 
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-          @with_sources = @with_sources.transform_values { |s| s.prototype }
-        end
-
-        def _instance
-          @source = @source.instance
-          @with_sources = @with_sources.transform_values { |s| s.instance }
-        end
-
         def _restart
           @source.restart
-          @with_sources.values.each { |s| s.restart }
+          @sources.values.each { |s| s.restart }
           @on_restart.call if @on_restart
         end
 
         def _next_value
           main = @source.next_value
-          others = @with_sources.transform_values { |v| v.next_value }
+          others = @sources.transform_values { |v| v.next_value }
 
           value = nil
 
@@ -179,7 +162,7 @@ module Musa
         end
 
         def infinite?
-          @source.infinite? && !@with_sources.values.find { |s| !s.infinite? }
+          @source.infinite? && !@sources.values.find { |s| !s.infinite? }
         end
       end
 
@@ -188,12 +171,13 @@ module Musa
       class Switcher
         include Serie
 
-        attr_accessor :selector, :sources
+        attr_accessor :sources
+        def selector; @source; end
 
         def initialize(selector, indexed_series, hash_series)
 
-          @selector = selector
-          get = @selector.prototype? ? :prototype : :instance
+          @source = selector
+          get = @source.prototype? ? :prototype : :instance
 
           if indexed_series && !indexed_series.empty?
             @sources = indexed_series.collect(&get)
@@ -201,35 +185,26 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :_prototype
+          if get == :_prototype!
             @sources.freeze
           end
 
-          mark_regarding! @selector
-        end
-
-        def _prototype
-          @selector = @selector.prototype
-          @sources = @sources.collect(&:prototype).freeze if @sources.is_a? Array
-          @sources.transform_values(&:prototype).freeze if @sources.is_a? Hash
-        end
-
-        def _instance
-          @selector = @selector.instance
-          @sources = @sources.collect(&:instance) if @sources.is_a? Array
-          @sources.transform_values(&:_instance) if @sources.is_a? Hash
+          mark_regarding! @source
         end
 
         def _restart
-          @selector.restart
-          @sources.each(&:restart) if @sources.is_a? Array
-          @sources.each { |_key, serie| serie.restart } if @sources.is_a? Hash
+          @source.restart
+          if @sources.is_a? Array
+            @sources.each(&:restart)
+          elsif @sources.is_a? Hash
+            @sources.each { |_key, serie| serie.restart }
+          end
         end
 
         def _next_value
           value = nil
 
-          index_or_key = @selector.next_value
+          index_or_key = @source.next_value
 
           value = @sources[index_or_key].next_value unless index_or_key.nil?
 
@@ -237,7 +212,7 @@ module Musa
         end
 
         def infinite?
-          @selector.infinite? && @sources.any? { |serie| serie.infinite? }
+          @source.infinite? && @sources.any? { |serie| serie.infinite? }
         end
       end
 
@@ -246,11 +221,12 @@ module Musa
       class MultiplexSelector
         include Serie
 
-        attr_accessor :selector, :sources
+        def selector; @source; end
+        attr_accessor :sources
 
         def initialize(selector, indexed_series, hash_series)
-          @selector = selector
-          get = @selector.prototype? ? :prototype : :instance
+          @source = selector
+          get = @source.prototype? ? :prototype : :instance
 
           if indexed_series && !indexed_series.empty?
             @sources = indexed_series.collect(&get)
@@ -260,32 +236,23 @@ module Musa
 
           _restart false
 
-          if get == :_prototype
+          if get == :_prototype!
             @sources.freeze
           end
 
-          mark_regarding! @selector
-        end
-
-        def _prototype
-          @selector = @selector.prototype
-          @sources = @sources.collect(&:prototype).freeze if @sources.is_a? Array
-          @sources.transform_values(&:prototype).freeze if @sources.is_a? Hash
-        end
-
-        def _instance
-          @selector = @selector.instance
-          @sources = @sources.collect(&:instance) if @sources.is_a? Array
-          @sources.transform_values(&:_instance) if @sources.is_a? Hash
+          mark_regarding! @source
         end
 
         def _restart(restart_sources = true)
           @current_value = nil
 
           if restart_sources
-            @selector.restart
-            @sources.each(&:restart) if @sources.is_a? Array
-            @sources.each { |_key, serie| serie.restart } if @sources.is_a? Hash
+            @source.restart
+            if @sources.is_a? Array
+              @sources.each(&:restart)
+            elsif @sources.is_a? Hash
+              @sources.each { |_key, serie| serie.restart }
+            end
           end
 
           @first = true
@@ -295,7 +262,7 @@ module Musa
           @current_value =
               if @first || !@current_value.nil?
                 @first = false
-                index_or_key = @selector.next_value
+                index_or_key = @source.next_value
                 unless index_or_key.nil?
                   @sources.each(&:next_value)
                   @sources[index_or_key].current_value
@@ -304,7 +271,7 @@ module Musa
         end
 
         def infinite?
-          @selector.infinite? && @sources.any? { |serie| serie.infinite? }
+          @source.infinite? && @sources.any? { |serie| serie.infinite? }
         end
       end
 
@@ -313,11 +280,12 @@ module Musa
       class SwitchFullSerie
         include Serie
 
-        attr_accessor :selector, :sources
+        def selector; @source; end
+        attr_accessor :sources
 
         def initialize(selector, indexed_series, hash_series)
-          @selector = selector
-          get = @selector.prototype? ? :prototype : :instance
+          @source = selector
+          get = @source.prototype? ? :prototype : :instance
 
           if indexed_series && !indexed_series.empty?
             @sources = indexed_series.collect(&get)
@@ -325,27 +293,15 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :_prototype
+          if get == :_prototype!
             @sources.freeze
           end
 
-          mark_regarding! @selector
-        end
-
-        def _prototype
-          @selector = @selector.prototype
-          @sources = @sources.collect(&:prototype).freeze if @sources.is_a? Array
-          @sources.transform_values(&:prototype).freeze if @sources.is_a? Hash
-        end
-
-        def _instance
-          @selector = @selector.instance
-          @sources = @sources.collect(&:instance) if @sources.is_a? Array
-          @sources.transform_values(&:_instance) if @sources.is_a? Hash
+          mark_regarding! @source
         end
 
         def _restart
-          @selector.restart
+          @source.restart
           @sources.each(&:restart)
         end
 
@@ -355,7 +311,7 @@ module Musa
           value = @sources[@index_or_key].next_value unless @index_or_key.nil?
 
           if value.nil?
-            @index_or_key = @selector.next_value
+            @index_or_key = @source.next_value
 
             value = next_value unless @index_or_key.nil?
           end
@@ -364,7 +320,7 @@ module Musa
         end
 
         def infinite?
-          !!(@selector.infinite? || @sources.find(&:infinite?))
+          !!(@source.infinite? || @sources.find(&:infinite?))
         end
       end
 
@@ -379,14 +335,6 @@ module Musa
           @source = serie
 
           mark_regarding! @source
-        end
-
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
         end
 
         def _restart
@@ -428,13 +376,13 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
+        def _prototype!
+          super
           @condition = calculate_condition
         end
 
-        def _instance
-          @source = @source.instance
+        def _instance!
+          super
           @condition = calculate_condition
         end
 
@@ -462,9 +410,7 @@ module Musa
           @source.infinite?
         end
 
-        private
-
-        def calculate_condition
+        private def calculate_condition
           if @external_condition
             @external_condition
           elsif @times
@@ -489,14 +435,6 @@ module Musa
           _restart false
 
           mark_regarding! @source
-        end
-
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
         end
 
         def _restart(restart_sources = true)
@@ -532,14 +470,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart(restart_sources = true)
           @source.restart if restart_sources
           @first = true
@@ -572,13 +502,13 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
+        def _prototype!
+          super
           _restart false
         end
 
-        def _instance
-          @source = @source.instance
+        def _instance!
+          super
           _restart false
         end
 
@@ -629,14 +559,6 @@ module Musa
           _restart false
 
           mark_regarding! @source
-        end
-
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
         end
 
         def _restart(restart_sources = true)
@@ -699,14 +621,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart(restart_source = true)
           @source.restart if restart_source
           @pending_values = []
@@ -758,14 +672,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart
           @source.restart
         end
@@ -798,14 +704,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart
           @source.restart
         end
@@ -831,7 +729,8 @@ module Musa
             mark_as_instance!
           end
 
-          def _prototype
+          def _prototype!
+            # TODO review why cannot get prototype of a cut serie
             raise PrototypingSerieError, 'Cannot get prototype of a cut serie'
           end
 
@@ -871,14 +770,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart
           @index = 0
         end
@@ -916,12 +807,8 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
+        def _instance!
+          super
           _restart false, true
         end
 
@@ -963,22 +850,12 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart(restart_sources = true)
           @source.restart if restart_sources
           @values = @source.to_a
         end
 
         def _next_value
-          _restart(false) if @needs_restart
-
           if !@values.empty?
             position = @random.rand(0...@values.size)
             value = @values[position]
@@ -1011,14 +888,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart(restart_sources = true)
           @source.restart if restart_sources
 
@@ -1049,14 +918,6 @@ module Musa
           _restart false
 
           mark_regarding! @source
-        end
-
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
         end
 
         def _restart(restart_sources = true)
@@ -1092,14 +953,6 @@ module Musa
           mark_regarding! @source
         end
 
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
-        end
-
         def _restart(restart_sources = true)
           @source.restart if restart_sources
         end
@@ -1126,14 +979,6 @@ module Musa
           _restart false
 
           mark_regarding! @source
-        end
-
-        def _prototype
-          @source = @source.prototype
-        end
-
-        def _instance
-          @source = @source.instance
         end
 
         def _restart(restart_sources = true)

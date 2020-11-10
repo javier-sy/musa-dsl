@@ -1,18 +1,19 @@
 require_relative 'dataset'
 require_relative 'ps'
 
+require_relative '../series'
 require_relative '../sequencer'
 
 module Musa::Datasets
   module P
     include Dataset
 
-    def to_ps_serie(base_duration = nil)
-      base_duration ||= 1/4r
+    def to_ps_serie(base_duration: nil)
+      base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
-      p = clone
+      # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
 
-      Musa::Series::E() do
+      Musa::Series::E(clone, base_duration) do |p, base_duration|
         (p.size >= 3) ?
           { from: p.shift,
             duration: p.shift * base_duration,
@@ -21,47 +22,37 @@ module Musa::Datasets
       end
     end
 
-    def to_score(score: nil,
-                 mapper: nil,
-                 position: nil,
-                 sequencer: nil,
-                 beats_per_bar: nil, ticks_per_beat: nil,
-                 right_open: nil,
-                 do_log: nil,
-                 &block)
+    def to_timed_serie(time_start = nil, base_duration: nil)
+      time_start ||= 0r
+      base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
-      raise ArgumentError,
-            "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
-              unless beats_per_bar && ticks_per_beat || beats_per_bar.nil? && ticks_per_beat.nil?
+      # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
 
-      raise ArgumentError,
-            "'sequencer' parameter should not be used when 'beats_per_bar' and 'ticks_per_beat' parameters are used" \
-            if sequencer && beats_per_bar
+      Musa::Series::E(clone, base_duration, context: { time: time_start }) do |p, base_duration, context: |
+        value = p.shift
 
-      run_sequencer = sequencer.nil?
+        if value
+          r = { time: context[:time], value: value } if !value.nil?
 
-      score ||= Musa::Datasets::Score.new
+          delta_time = p.shift
+          context[:time] += delta_time * base_duration if delta_time
 
-      sequencer ||= Sequencer.new(beats_per_bar, ticks_per_beat, do_log: do_log)
-
-      sequencer.at(position || 1r) do |_|
-
-          _.play to_ps_serie do |_, line|
-
-            line.to_score(sequencer: _,
-                          score: score,
-                          mapper: mapper,
-                          position: _.position,
-                          right_open: right_open,
-                          &block)
+          r&.extend(AbsTimed)
         end
       end
+    end
 
-      if run_sequencer
-        sequencer.run
-        score
-      else
-        nil
+    def map(&block)
+      i = 0
+      clone.map! do |element|
+        # Process with block only the values (values are the alternating elements because P
+        # structure is <value> <duration> <value> <duration> <value>)
+        #
+        if (i += 1) % 2 == 1
+          block.call(element)
+        else
+          element
+        end
       end
     end
   end

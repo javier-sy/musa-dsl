@@ -41,23 +41,21 @@ module Musa
           @position = @position_mutex.synchronize { 1r - @tick_duration }
         end
 
-        def _check_position(position)
+        def _quantize_position(position, warn: true)
           ticks_position = position / @tick_duration
 
           if ticks_position.round != ticks_position
             original_position = position
             position = ticks_position.round * @tick_duration
 
-            @logger.warn('BaseSequencer') { "._numeric_at: rounding "\
-                "position #{original_position} (#{original_position.to_f.round(5)}) "\
-                "to tick precision: #{position} (#{position.to_f.round(5)})" }
+            if warn
+              @logger.warn('BaseSequencer') { "_check_position: rounding "\
+                  "position #{original_position} (#{original_position.to_f.round(5)}) "\
+                  "to tick precision: #{position} (#{position.to_f.round(5)})" }
+            end
           end
 
           position
-        end
-
-        def _quantize(position)
-          (position / @tick_duration).round * @tick_duration
         end
 
         def _hold_public_ticks

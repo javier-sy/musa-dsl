@@ -62,11 +62,7 @@ module Musa
           @position = nil
         end
 
-        def _check_position(position)
-          position
-        end
-
-        def _quantize(position)
+        def _quantize_position(position, warn: false)
           position
         end
       end
