@@ -10,95 +10,75 @@ using Musa::Extension::InspectNice
 
 
 RSpec.describe Musa::Sequencer do
-  context 'Move2 testing' do
+  context 'play_timed' do
 
-    it '' do
+    it 'works well with a simple case' do
       p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
             { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
             { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
 
-      s = BaseSequencer.new do_log: true, do_error_log: true
+      s = BaseSequencer.new do_log: false, do_error_log: true
 
-      s.at 1 do |_|
-        _.play_timed(p.to_timed_serie) do |values, next_values, duration:, quantized_duration:, started_ago:|
-          _.debug "values #{values} next_values #{next_values} duration #{duration} quantized_duration #{quantized_duration} started_ago #{started_ago}"
-        end
-      end
+      expected = [
+          { position: 1r,
+            values: { a: 0r, b: 1r }, next_values: { a: 1r, b: 2r },
+            duration: { a: 3/4r, b: 3/5r }, quantized_duration: { a: 3/4r, b: 3/5r }, started_ago: {  } },
+          { position: 1+3/5r,
+            values: { b: 2r }, next_values: { b: 3r },
+            duration: { b: 3/5r }, quantized_duration: { b: 3/5r }, started_ago: { a: 3/5r } },
+          { position: 1+3/4r,
+            values: { a: 1r }, next_values: { a: 2r },
+            duration: { a: 3/4r }, quantized_duration: { a: 3/4r }, started_ago: { b: 3/20r } },
+          { position: 2+1/5r,
+            values: { b: 3r }, next_values: { b: 4r },
+            duration: { b: 3/5r }, quantized_duration: { b: 3/5r }, started_ago: { a: 9/20r } },
+          { position: 2+1/2r,
+            values: { a: 2r }, next_values: { a: 3r },
+            duration: { a: 3/4r }, quantized_duration: { a: 3/4r }, started_ago: { b: 3/10r } },
+          { position: 2+4/5r,
+            values: { b: 4r }, next_values: { b: 5r },
+            duration: { b: 3/5r }, quantized_duration: { b: 3/5r }, started_ago: { a: 3/10r } },
+          { position: 3+1/4r,
+            values: { a: 3r }, next_values: { a: 4r },
+            duration: { a: 3/4r }, quantized_duration: { a: 3/4r }, started_ago: { b: 9/20r } },
+          { position: 3+2/5r,
+            values: { b: 5r }, next_values: { b: 6r },
+            duration: { b: 3/5r }, quantized_duration: { b: 3/5r }, started_ago: { a: 3/20r } },
+          { position: 4r,
+            values: { a: 4r, b: 6r }, next_values: { a: 3r, b: 5r },
+            duration: { a: 2/3r, b: 1/2r }, quantized_duration: { a: 2/3r, b: 1/2r }, started_ago: {  } },
+          { position: 4+1/2r,
+            values: { b: 5r }, next_values: { b: 4r },
+            duration: { b: 1/2r }, quantized_duration: { b: 1/2r }, started_ago: { a: 1/2r } },
+          { position: 4+2/3r,
+            values: { a: 3r }, next_values: { a: 2r },
+            duration: { a: 2/3r }, quantized_duration: { a: 2/3r }, started_ago: { b: 1/6r } },
+          { position: 5r,
+            values: { b: 4r }, next_values: { b: 3r },
+            duration: { b: 1/2r }, quantized_duration: { b: 1/2r }, started_ago: { a: 1/3r } },
+          { position: 5+1/3r,
+            values: { a: 2r }, next_values: { a: nil },
+            duration: { a: 2/3r }, quantized_duration: { a: 2/3r }, started_ago: { b: 1/3r } },
+          { position: 5+1/2r,
+            values: { b: 3r }, next_values: { b: nil },
+            duration: { b: 1/2r }, quantized_duration: { b: 1/2r }, started_ago: { a: 1/6r } }]
 
-      s.run
-
-      raise NotImplementedError
-
-    end
-
-
-    it '' do
-      p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
-            { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
-            { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
-
-
-      # pp p.to_ps_serie.to_a
-      puts
-      puts "to_timed_serie.flatten_timed"
-      pp p.to_timed_serie.flatten_timed.to_a
-
-      p.to_ps_serie == [ { from: { a: 0, b: 1 }.extend(PackedV), to: { a: 4, b: 5.75r }.extend(PackedV),  duration: 3*4 }.extend(PS),
-                         { from: { a: 4, b: 5.75 }.extend(PackedV), to: { a: 1.5, b: 2 + 1/3r }.extend(PackedV),  duration: 2*4 }.extend(PS) ]
-
-
-      p.to_timed_serie ==
-      [ { time: 0, value: { a: 0r, b: 1r }.extend(PackedV) }.extend(AbsTimed),
-        { time: 3, value: { a: 4r, b: 5.75r }.extend(PackedV) }.extend(AbsTimed),
-        { time: 5, value: { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) }.extend(AbsTimed) ]
-
-
-      p.to_timed_serie.flatten_timed ==
-      [ {a: { time: 0, value: 0r }.extend(AbsTimed), b: {time: 0, value: 1r }.extend(AbsTimed) },
-        {a: { time: 3, value: 4r }.extend(AbsTimed), b: {time: 3, value: 5.75r }.extend(AbsTimed) },
-        {a: { time: 5, value: 1.5r }.extend(AbsTimed), b: {time: 5, value: 2 + 1/3r }.extend(AbsTimed) } ]
-
-      split = p.to_timed_serie.flatten_timed.split
-
-
-
-      puts
-      puts "split[:a].to_a"
-      pp split[:a].to_a
-
-      puts
-      puts "split[:b].to_a"
-      pp split[:b].to_a
-
-      qa = QUANTIZE(split[:a]).instance
-      qb = QUANTIZE(split[:b]).instance
-
-
-      s = BaseSequencer.new do_log: true, do_error_log: true
+      result = []
 
       s.at 1 do
-        s.play qa, mode: :neumalang do |value|
-          s.debug "a = #{value}"
+        s.play_timed(p.to_timed_serie) do |values, next_values, duration:, quantized_duration:, started_ago:|
+          result << { position: s.position,
+                      values: values.clone,
+                      next_values: next_values.clone,
+                      duration: duration.clone,
+                      quantized_duration: quantized_duration.clone,
+                      started_ago: started_ago.clone }
         end
-
-        s.play qb, mode: :neumalang do |value|
-          s.debug "b = #{value}"
-        end
-
       end
 
-
-
-
-
-
-      puts
       s.run
-      puts
 
-      raise NotImplementedError
-
+      expect(result).to eq(expected)
     end
-
   end
 end

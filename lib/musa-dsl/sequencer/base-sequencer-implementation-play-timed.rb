@@ -53,9 +53,7 @@ module Musa; module Sequencer
 
       binder = SmartProcBinder.new(block)
 
-
       _play_timed_step(hash_mode, components, quantized_series, position, last_positions, binder, control)
-
     end
 
 
@@ -108,9 +106,7 @@ module Musa; module Sequencer
         end
 
         _numeric_at start_position + _quantize_position(time, warn: false), control do
-
           debug "_play_timed_step: before binder.call: durations #{durations} q_durations #{q_durations}"
-
           binder.call(values, next_values,
                       duration: durations,
                       quantized_duration: q_durations,
