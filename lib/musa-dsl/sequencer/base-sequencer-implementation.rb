@@ -144,7 +144,7 @@ module Musa
         nil
       end
 
-      def _play(serie, control, nl_context = nil, mode: nil, decoder: nil, __play_eval: nil, **mode_args, &block)
+      def _play(serie, control, neumalang_context = nil, mode: nil, decoder: nil, __play_eval: nil, **mode_args, &block)
 
         block ||= proc {}
 
@@ -153,20 +153,20 @@ module Musa
           SmartProcBinder.new(block,
                               on_rescue: proc { |e| _rescue_error(e) }),
           decoder,
-          nl_context
+          neumalang_context
 
         element = nil
 
         if control.stopped?
           # nothing to do
         elsif control.paused?
-          control.store_continuation  sequencer: self,
-                                      serie: serie,
-                                      nl_context: nl_context,
-                                      mode: mode,
-                                      decoder: decoder,
-                                      play_eval: __play_eval,
-                                      mode_args: mode_args
+          control.store_continuation sequencer: self,
+                                     serie: serie,
+                                     neumalang_context: neumalang_context,
+                                     mode: mode,
+                                     decoder: decoder,
+                                     play_eval: __play_eval,
+                                     mode_args: mode_args
         else
           element = serie.next_value
         end
@@ -570,7 +570,7 @@ module Musa
                     function_offset[i] unless next_values[i].nil?
               end
 
-              # TODO add to values and next_values the modules of the original from and/or to objects.
+              # TODO add to 'values' and 'next_values' elements the modules of the original from and/or to objects (i.e. GDV).
 
               value_parameters, key_parameters =
                   if array_mode

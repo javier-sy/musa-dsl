@@ -199,7 +199,7 @@ module Musa
       def continuation_play(parameters)
         _play parameters[:serie],
               parameters[:control],
-              parameters[:nl_context],
+              parameters[:neumalang_context],
               mode: parameters[:mode],
               decoder: parameters[:decoder],
               __play_eval: parameters[:play_eval],

@@ -117,7 +117,7 @@ module Musa
 
         @@id = 0
 
-        attr_reader :nl_context
+        attr_reader :neumalang_context
         attr_reader :block_procedure_binder
 
         def initialize(block_procedure_binder, decoder, nl_context, parent: nil)

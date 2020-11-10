@@ -100,12 +100,12 @@ module Musa
           @paused = true
         end
 
-        def store_continuation(sequencer:, serie:, nl_context:, mode:, decoder:, play_eval:, mode_args:)
+        def store_continuation(sequencer:, serie:, neumalang_context:, mode:, decoder:, play_eval:, mode_args:)
           @continuation_sequencer = sequencer
           @continuation_parameters = {
               serie: serie,
               control: self,
-              nl_context: nl_context,
+              neumalang_context: neumalang_context,
               mode: mode,
               decoder: decoder,
               play_eval: play_eval,
