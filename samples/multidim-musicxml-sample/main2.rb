@@ -52,7 +52,7 @@ s.at 1 do
     next_values = {}
     quantized_durations = {}
 
-    s.play_timed(line.map {|v| v.to_packed_V(mapper) }.to_timed_serie, right_open: {dynamics: true } ) do
+    s.play_timed(line.map {|v| v.to_packed_V(mapper) }.to_timed_serie, right_open: { dynamics: true } ) do
     |value, next_value, duration:, quantized_duration:, started_ago:|
 
       logger.debug
