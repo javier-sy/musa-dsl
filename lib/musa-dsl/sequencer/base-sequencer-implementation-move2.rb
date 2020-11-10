@@ -9,6 +9,7 @@ module Musa; module Sequencer
     def move3(timed_serie,
               reference: nil,
               step: nil,
+              right_open: nil,
               on_stop: nil,
               after_bars: nil, after: nil,
               &block)
@@ -16,6 +17,7 @@ module Musa; module Sequencer
       control = _move3(timed_serie.instance,
                        reference: reference,
                        step: step,
+                       right_open: right_open,
                        on_stop: on_stop,
                        after_bars: after_bars, after: after,
                        &block)
@@ -27,36 +29,13 @@ module Musa; module Sequencer
     def _move3(timed_serie,
                reference: nil,
                step: nil,
+               right_open: nil,
                on_stop: nil,
                after_bars: nil, after: nil,
                &block)
 
       reference ||= 0r
       step ||= 1r
-
-      # ###########################################################
-      # #
-      #
-      # components = [:pitch, :dynamics, :instrument]
-      # reference = reference.hashify(keys: components)
-      # step = step.hashify(keys: components)
-      # quantized_series = {}
-      # split = timed_serie.flatten_timed.split
-      # components.each do |component|
-      #   puts "\n\ncomponent #{component} (raw)"
-      #   pp split[component].to_a
-      #   puts "\n\ncomponent #{component} (quantized)"
-      #   quantized_series[component] =
-      #       QUANTIZE(split[component],
-      #                reference: reference[component],
-      #                step: step[component]).instance
-      #   pp quantized_series[component].to_a
-      # end
-      #
-      # return
-      #
-      # #
-      # ###########################################################
 
       if first_value_sample = timed_serie.peek_next_value
 
@@ -69,12 +48,14 @@ module Musa; module Sequencer
 
           reference = reference.hashify(keys: components)
           step = step.hashify(keys: components)
+          right_open = right_open.hashify(keys:components)
         else
           size = first_value_sample[:value].size
           components = (0 .. size-1).to_a
 
           reference = reference.arrayfy(size: size)
           step = step.arrayfy(size: size)
+          right_open = right_open.arrayfy(size: size)
         end
 
         split = timed_serie.flatten_timed.split
@@ -85,7 +66,7 @@ module Musa; module Sequencer
               QUANTIZE(split[component],
                        reference: reference[component],
                        step: step[component],
-                       preemptive: true,
+                       right_open: right_open[component],
                        stops: true).instance
         end
 
@@ -150,8 +131,6 @@ module Musa; module Sequencer
           nv = quantized_series[component].peek_next_value
           next_values[component] = (nv && nv[:value] != values[component]) ? nv[:value] : nil
 
-          puts "values = #{values}\nnext = #{next_values}"
-
           last_positions[component] = _quantize_position(time, warn: false)
         end
 
@@ -163,6 +142,8 @@ module Musa; module Sequencer
         end
 
         _numeric_at start_position + _quantize_position(time, warn: false), control do
+
+          debug "_move_3_step: before binder.call: durations #{durations} q_durations #{q_durations}"
 
           binder.call(values, next_values,
                       duration: durations,

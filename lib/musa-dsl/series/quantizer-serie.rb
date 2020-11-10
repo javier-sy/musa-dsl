@@ -1,8 +1,8 @@
 require_relative '../datasets/e'
 require_relative '../core-ext/inspect-nice'
 
+# TODO remove debugging puts, intermediate hash comments on :info and InspectNice
 using Musa::Extension::InspectNice
-
 
 module Musa
   module Series
@@ -11,7 +11,7 @@ module Musa
                    value_attribute: nil,
                    stops: nil,
                    predictive: nil,
-                   preemptive: nil,
+                   left_open: nil,
                    right_open: nil)
 
         Series.QUANTIZE(self,
@@ -20,7 +20,7 @@ module Musa
                         value_attribute: value_attribute,
                         stops: stops,
                         predictive: predictive,
-                        preemptive: preemptive,
+                        left_open: left_open,
                         right_open: right_open)
       end
     end
@@ -34,7 +34,7 @@ module Musa
                  value_attribute: nil,
                  stops: nil,
                  predictive: nil,
-                 preemptive: nil,
+                 left_open: nil,
                  right_open: nil)
 
       reference ||= 0r
@@ -44,14 +44,19 @@ module Musa
       predictive ||= false
 
       if predictive
-        raise ArgumentError, "Predictive quantization doesn't allow parameters 'preemptive' or 'right_open'" unless preemptive.nil? && right_open.nil?
+        raise ArgumentError, "Predictive quantization doesn't allow parameters 'left_open' or 'right_open'" if left_open || right_open
 
         PredictiveQuantizer.new(reference, step, time_value_serie, value_attribute, stops)
       else
-        preemptive ||= false
-        right_open = right_open.nil? ? true : false
+        # By default: left closed and right_open
+        # By default 2:
+        #   if right_open is true and left_open is nil, left_open will be false
+        #   if left_open is true and right_open is nil, right_open will be false
 
-        RawQuantizer.new(reference, step, time_value_serie, value_attribute, stops, preemptive, right_open)
+        right_open = right_open.nil? ? !left_open : right_open
+        left_open = left_open.nil? ? !right_open : left_open
+
+        RawQuantizer.new(reference, step, time_value_serie, value_attribute, stops, left_open, right_open)
       end
     end
 
@@ -82,15 +87,17 @@ module Musa
 
       attr_reader :source
 
-      def initialize(reference, step, source, value_attribute, stops, preemptive, right_open)
+      attr_reader :points_history
+
+      def initialize(reference, step, source, value_attribute, stops, left_open, right_open)
         @reference = reference
         @step_size = step.abs
 
         @source = source
         @value_attribute = value_attribute
 
-        @ignore_stops = !stops
-        @preemptive = preemptive
+        @stops = stops
+        @left_open = left_open
         @right_open = right_open
 
         _restart false
@@ -111,116 +118,206 @@ module Musa
       end
 
       def _next_value
-        if !@segments.empty?
-          @segments.shift.extend(AbsD).extend(AbsTimed)
-        else
-          while @points.size < 2 &&
-              process(*get_time_value(@source.next_value), !@source.peek_next_value)
+        if @stops
+          i = 2
+
+          loop do
+            while @segments.size < i && process2; end
+
+            first = @segments[0]
+            last = @segments[i - 1]
+
+            # puts "_next_value: first #{first || 'nil'} last #{last || 'nil'}"
+
+            break if first.nil?
+
+            if last.nil? || last[:stop] || first[:value] != last[:value]
+              # puts "_next_value: found segments:"
+
+              durations_to_sum = @segments.shift(i-1)
+
+              # durations_to_sum.each { |i| puts i.inspect }
+              #
+              # puts "_next_value: result #{{ time: first[:time],
+              #                  @value_attribute => first[:value],
+              #                  duration: durations_to_sum.sum { |_| _[:duration] } }}"
+
+              return { time: first[:time],
+                       @value_attribute => first[:value],
+                       duration: durations_to_sum.sum { |_| _[:duration] } }.extend(AbsTimed).extend(AbsD)
+            else
+              i += 1
+            end
           end
 
-          if @points.size >= 2
-            point = @points.shift
+          return nil
 
-            from_time = point[:time]
-            from_value = point[@value_attribute]
+        else
+          i = 2
+          # puts "\n\n"
+          loop do
+            while @segments.size < i && process2; end
 
-            next_point = @points.first
+            first = @segments[0]
+            last = @segments[i - 1]
 
-            to_time = next_point[:time]
-            to_value = next_point[@value_attribute]
+            # puts "_next_value: first #{first || 'nil'} last #{last || 'nil'}"
 
-            while to_value == from_value
-              last = @segments.last
+            break if first.nil?
 
-              if last && last[@value_attribute] == to_value
-                last[:duration] = to_time - last[:time]
-                # last[:info] += "; edited duration on a"
-              else
-                @segments << { time: from_time,
-                               @value_attribute => from_value,
-                               duration: to_time - from_time }
-                               # info: "added on a (last #{last || 'nil'})"}
-              end
+            if last.nil? || first[:value] != last[:value]
 
-              @points.shift
+              # puts "_next_value: found segments:"
 
-              return _next_value if @points.empty?
+              durations_to_sum = @segments.shift(i-1)
 
-              next_point = @points.first
+              # durations_to_sum.each { |i| puts i.inspect }
+              #
+              # puts "_next_value: result #{{ time: first[:time],
+              #                  @value_attribute => first[:value],
+              #                  duration: durations_to_sum.sum { |_| _[:duration] } }}"
 
-              from_time = to_time
-              from_value = to_value
+              return { time: first[:time],
+                       @value_attribute => first[:value],
+                       duration: durations_to_sum.sum { |_| _[:duration] } }.extend(AbsTimed).extend(AbsD)
+            else
+              i += 1
+            end
+          end
 
-              to_time = next_point[:time]
-              to_value = next_point[@value_attribute]
+          return nil
+        end
+      end
+
+      private def process2
+        while (ready_count = count_ready_points) <= 2 &&
+              process(*get_time_value(@source.next_value), !@source.peek_next_value)
+        end
+
+        if ready_count >= 2
+          point = @points.shift
+
+          from_time = point[:time]
+          from_value = point[:value]
+
+          next_point = @points.first
+
+          to_time = next_point[:time]
+          to_value = next_point[:value]
+          to_point_is_last = next_point[:last]
+
+          sign = to_value <=> from_value # to_value > from_value => +1
+
+          # puts "process2: from_time #{from_time} from_value #{from_value} to_time #{to_time} to_value #{to_value} to_last #{to_point_is_last || 'nil'} sign #{sign}"
+
+          if sign == 0
+            if @segments.last && @segments.last[:time] == from_time
+
+              @segments.last[:duration] = to_time - from_time
+              @segments.last[:info] += "; edited on a as start"
+
+            else
+              @segments << { time: from_time,
+                             value: from_value,
+                             duration: to_time - from_time,
+                             info: "added on a as start" }
+
             end
 
+            if !to_point_is_last
+              @segments << { time: to_time,
+                             value: from_value,
+                             duration: 0,
+                             stop: true,
+                             info: "added on a as end stop" }
+            end
+          else
             time_increment = to_time - from_time
-            sign = to_value > from_value ? 1r : -1r
 
             step_value_increment = @step_size * sign
 
+            extra_steps = 0
+
             if @right_open
-              step_time_increment = time_increment / (to_value - from_value).abs
+              loop_to_value = to_value - step_value_increment
             else
-              step_time_increment = time_increment / ((to_value - from_value).abs + 1r)
+              loop_to_value = to_value
+              extra_steps += 1
             end
 
-            if @preemptive
+            if @left_open
               loop_from_value = from_value + step_value_increment
+              extra_steps -= 1
             else
               loop_from_value = from_value
             end
 
-            loop_to_value = to_value
+            step_time_increment = time_increment / ((to_value - from_value).abs + extra_steps)
+
             intermediate_point_time = from_time
 
+            # puts "process2: loop_from_value #{loop_from_value} loop_to_value #{loop_to_value} step_value_increment #{step_value_increment} step_time_increment #{step_time_increment}"
+
             loop_from_value.step(loop_to_value, step_value_increment) do |value|
-              if to_time > intermediate_point_time
+              if @segments.last &&
+                @segments.last[:time] == intermediate_point_time &&
+                @segments.last[:value] == value
 
-                if @ignore_stops &&
-                    @segments[-1] &&
-                    @segments[-1][@value_attribute] == value
-                  # ignore this step
-                else
-                  @segments <<  { time: intermediate_point_time,
-                                   @value_attribute => value,
-                                   duration: to_time - intermediate_point_time } # provisional duration
-                                   # info: "added on b" }
-                end
+                @segments.last[:duration] = step_time_increment
+                @segments.last[:info] += "; edited on b"
 
-                if @segments[-2]
-                  @segments[-2][:duration] = @segments[-1][:time] - @segments[-2][:time]
-                  # @segments[-2][:info] += "; edited on b"
-                end
+                # puts "process2: editing #{@segments.last}"
 
-                intermediate_point_time += step_time_increment
+              else
+                @segments <<  v = { time: intermediate_point_time,
+                                    value: value,
+                                    duration: step_time_increment,
+                                    info: "added on b" }
+
+                # puts "process2: adding #{v.inspect}"
               end
-            end
 
-            return _next_value
-          else
-            nil
+              intermediate_point_time += step_time_increment
+            end
           end
+
+          true
+        else
+          false
         end
       end
 
-      private def process(time, value, is_last)
+      private def count_ready_points
+        @points.select { |_| _[:ready] }.size
+      end
+
+      private def process(time, value, last_time_value)
         if time && value
           raise RuntimeError, "time only can go forward" if @last_processed_time && time <= @last_processed_time
 
           q_value = round_quantize(value)
 
-          if q_value != @last_processed_q_value || is_last
+          # A continuation point time will be changed if new points of equal value arrive.
+          # For this reason this point is not ready to consume.
+          # A ready point is a well determined point that can be consumed.
+          # When we arrive to a well determined point all the previous points become also determined (ready).
 
-            if @last_processed_q_value &&
-                @last_processed_time != @points.last[:time]
-
-              @points << { time: @last_processed_time,
-                           @value_attribute => @last_processed_q_value }
+          if q_value == @last_processed_q_value && !last_time_value
+            if @points.size == 1 || @points.last[:ready]
+              # If @points.last is the first point of a segment the new point is a continuation point.
+              # The continuation point is used as a stop point.
+              @points << { time: time, value: q_value }
+            else
+              # @points.last is NOT the first point of a segment but a continuation point.
+              @points.last[:time] = time
+            end
+          else
+            @points.reverse_each do |point|
+              break if point[:ready]
+              point[:ready] = true
             end
 
-            @points << { time: time, @value_attribute => q_value }
+            @points << { time: time, value: q_value, ready: true, last: last_time_value }
           end
 
           @last_processed_q_value = q_value

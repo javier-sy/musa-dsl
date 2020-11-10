@@ -9,7 +9,6 @@ using Musa::Extension::InspectNice
 
 RSpec.describe Musa::Series do
   context 'Quantizer series handles' do
-
     it 'empty line (raw algorithm)' do
       cc = QUANTIZE(NIL(), reference: 0r, step: 1r).i
 
@@ -514,37 +513,259 @@ RSpec.describe Musa::Series do
       expect(cc.next_value).to be_nil
     end
 
-    it 'line with two flat segments (raw with preemptive mode)' do
-      # c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 60], [32, 72], [36, 76], [40, 70])
+    it 'line with two flat segments and several up and down movements (raw mode right_open without stops)' do
+      c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 60], [32, 72], [36, 76], [40, 70])
 
-      c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 68], [32, 72], [36, 76])
+      cc = QUANTIZE(c, right_open: true, stops: false).i
 
-      cc = QUANTIZE(c, preemptive: false, stops: true).i
+      expected = [{ time: 0r, value: 60r, duration: 9r },
+                  { time: 9r, value: 61r, duration: 1r },
+                  { time: 10r, value: 62r, duration: 1r },
+                  { time: 11r, value: 63r, duration: 1r },
+                  { time: 12r, value: 64r, duration: 9r },
+                  { time: 21r, value: 63r, duration: 1r },
+                  { time: 22r, value: 62r, duration: 1r },
+                  { time: 23r, value: 61r, duration: 1r },
+                  { time: 24r, value: 60r, duration: 2/3r },
+                  { time: 24+2/3r, value: 61r, duration: 2/3r },
+                  { time: 25+1/3r, value: 62r, duration: 2/3r },
+                  { time: 26r, value: 63r, duration: 2/3r },
+                  { time: 26+2/3r, value: 64r, duration: 2/3r },
+                  { time: 27+1/3r, value: 65r, duration: 2/3r },
+                  { time: 28r, value: 66r, duration: 2/3r },
+                  { time: 28+2/3r, value: 67r, duration: 2/3r },
+                  { time: 29+1/3r, value: 68r, duration: 2/3r },
+                  { time: 30r, value: 69r, duration: 2/3r },
+                  { time: 30+2/3r, value: 70r, duration: 2/3r },
+                  { time: 31+1/3r, value: 71r, duration: 2/3r },
+                  { time: 32r, value: 72r, duration: 1r },
+                  { time: 33r, value: 73r, duration: 1r },
+                  { time: 34r, value: 74r, duration: 1r },
+                  { time: 35r, value: 75r, duration: 1r },
+                  { time: 36r, value: 76r, duration: 2/3r },
+                  { time: 36+2/3r, value: 75r, duration: 2/3r },
+                  { time: 37+1/3r, value: 74r, duration: 2/3r },
+                  { time: 38r, value: 73r, duration: 2/3r },
+                  { time: 38+2/3r, value: 72r, duration: 2/3r },
+                  { time: 39+1/3r, value: 71r, duration: 2/3r } ]
 
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
 
-      cc.to_a.each { |i| puts i.inspect }
-
-      # expect(cc.next_value).to eq({ time: 0r, value: 60r, duration: 8r })
-      # expect(cc.next_value).to eq({ time: 8r, value: 60r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 9r, value: 61r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 10r, value: 62r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 11r, value: 63r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 12r, value: 64r, duration: 8r })
-      # expect(cc.next_value).to eq({ time: 20r, value: 64r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 21r, value: 65r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 22r, value: 66r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 23r, value: 67r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 24r, value: 68r, duration: 2r })
-      # expect(cc.next_value).to eq({ time: 26r, value: 69r, duration: 2r })
-      # expect(cc.next_value).to eq({ time: 28r, value: 70r, duration: 2r })
-      # expect(cc.next_value).to eq({ time: 30r, value: 71r, duration: 2r })
-      # expect(cc.next_value).to eq({ time: 32r, value: 72r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 33r, value: 73r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 34r, value: 74r, duration: 1r })
-      # expect(cc.next_value).to eq({ time: 35r, value: 75r, duration: 1r })
-      #
-      # expect(cc.next_value).to be_nil
+      expect(cc.next_value).to be_nil
     end
 
+    it 'line with two flat segments and several up and down movements (raw mode left_open without stops)' do
+      c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 60], [32, 72], [36, 76], [40, 70])
+
+      cc = QUANTIZE(c, left_open: true, stops: false).i
+
+      expected = [{ time: 0r, value: 60r, duration: 8r },
+                  { time: 8r, value: 61r, duration: 1r },
+                  { time: 9r, value: 62r, duration: 1r },
+                  { time: 10r, value: 63r, duration: 1r },
+                  { time: 11r, value: 64r, duration: 9r },
+                  { time: 20r, value: 63r, duration: 1r },
+                  { time: 21r, value: 62r, duration: 1r },
+                  { time: 22r, value: 61r, duration: 1r },
+                  { time: 23r, value: 60r, duration: 1r },
+                  { time: 24r, value: 61r, duration: 2/3r },
+                  { time: 24+2/3r, value: 62r, duration: 2/3r },
+                  { time: 25+1/3r, value: 63r, duration: 2/3r },
+                  { time: 26r, value: 64r, duration: 2/3r },
+                  { time: 26+2/3r, value: 65r, duration: 2/3r },
+                  { time: 27+1/3r, value: 66r, duration: 2/3r },
+                  { time: 28r, value: 67r, duration: 2/3r },
+                  { time: 28+2/3r, value: 68r, duration: 2/3r },
+                  { time: 29+1/3r, value: 69r, duration: 2/3r },
+                  { time: 30r, value: 70r, duration: 2/3r },
+                  { time: 30+2/3r, value: 71r, duration: 2/3r },
+                  { time: 31+1/3r, value: 72r, duration: 2/3r },
+                  { time: 32r, value: 73r, duration: 1r },
+                  { time: 33r, value: 74r, duration: 1r },
+                  { time: 34r, value: 75r, duration: 1r },
+                  { time: 35r, value: 76r, duration: 1r },
+                  { time: 36r, value: 75r, duration: 2/3r },
+                  { time: 36+2/3r, value: 74r, duration: 2/3r },
+                  { time: 37+1/3r, value: 73r, duration: 2/3r },
+                  { time: 38r, value: 72r, duration: 2/3r },
+                  { time: 38+2/3r, value: 71r, duration: 2/3r },
+                  { time: 39+1/3r, value: 70r, duration: 2/3r } ]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
+
+    it 'line with two flat segments and several up and down movements (raw mode right_open with stops)' do
+      c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 60], [32, 72], [36, 76], [40, 70])
+
+      cc = QUANTIZE(c, right_open: true, stops: true).i
+
+      expected = [{ time: 0r, value: 60r, duration: 8r },
+                  { time: 8r, value: 60r, duration: 1r },
+                  { time: 9r, value: 61r, duration: 1r },
+                  { time: 10r, value: 62r, duration: 1r },
+                  { time: 11r, value: 63r, duration: 1r },
+                  { time: 12r, value: 64r, duration: 8r },
+                  { time: 20r, value: 64r, duration: 1r },
+                  { time: 21r, value: 63r, duration: 1r },
+                  { time: 22r, value: 62r, duration: 1r },
+                  { time: 23r, value: 61r, duration: 1r },
+                  { time: 24r, value: 60r, duration: 2/3r },
+                  { time: 24+2/3r, value: 61r, duration: 2/3r },
+                  { time: 25+1/3r, value: 62r, duration: 2/3r },
+                  { time: 26r, value: 63r, duration: 2/3r },
+                  { time: 26+2/3r, value: 64r, duration: 2/3r },
+                  { time: 27+1/3r, value: 65r, duration: 2/3r },
+                  { time: 28r, value: 66r, duration: 2/3r },
+                  { time: 28+2/3r, value: 67r, duration: 2/3r },
+                  { time: 29+1/3r, value: 68r, duration: 2/3r },
+                  { time: 30r, value: 69r, duration: 2/3r },
+                  { time: 30+2/3r, value: 70r, duration: 2/3r },
+                  { time: 31+1/3r, value: 71r, duration: 2/3r },
+                  { time: 32r, value: 72r, duration: 1r },
+                  { time: 33r, value: 73r, duration: 1r },
+                  { time: 34r, value: 74r, duration: 1r },
+                  { time: 35r, value: 75r, duration: 1r },
+                  { time: 36r, value: 76r, duration: 2/3r },
+                  { time: 36+2/3r, value: 75r, duration: 2/3r },
+                  { time: 37+1/3r, value: 74r, duration: 2/3r },
+                  { time: 38r, value: 73r, duration: 2/3r },
+                  { time: 38+2/3r, value: 72r, duration: 2/3r },
+                  { time: 39+1/3r, value: 71r, duration: 2/3r } ]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
+
+
+    it 'line with two flat segments and several up and down movements (raw mode left_open with stops)' do
+      c = S([0, 60], [4, 60], [8, 60], [12, 64], [16, 64], [20, 64], [24, 60], [32, 72], [36, 76], [40, 70])
+
+      cc = QUANTIZE(c, left_open: true, stops: true).i
+
+      expected = [{ time: 0r, value: 60r, duration: 8r },
+                  { time: 8r, value: 60r, duration: 0 },
+                  { time: 8r, value: 61r, duration: 1r },
+                  { time: 9r, value: 62r, duration: 1r },
+                  { time: 10r, value: 63r, duration: 1r },
+                  { time: 11r, value: 64r, duration: 9r },
+                  { time: 20r, value: 64r, duration: 0 },
+                  { time: 20r, value: 63r, duration: 1r },
+                  { time: 21r, value: 62r, duration: 1r },
+                  { time: 22r, value: 61r, duration: 1r },
+                  { time: 23r, value: 60r, duration: 1r },
+                  { time: 24r, value: 61r, duration: 2/3r },
+                  { time: 24+2/3r, value: 62r, duration: 2/3r },
+                  { time: 25+1/3r, value: 63r, duration: 2/3r },
+                  { time: 26r, value: 64r, duration: 2/3r },
+                  { time: 26+2/3r, value: 65r, duration: 2/3r },
+                  { time: 27+1/3r, value: 66r, duration: 2/3r },
+                  { time: 28r, value: 67r, duration: 2/3r },
+                  { time: 28+2/3r, value: 68r, duration: 2/3r },
+                  { time: 29+1/3r, value: 69r, duration: 2/3r },
+                  { time: 30r, value: 70r, duration: 2/3r },
+                  { time: 30+2/3r, value: 71r, duration: 2/3r },
+                  { time: 31+1/3r, value: 72r, duration: 2/3r },
+                  { time: 32r, value: 73r, duration: 1r },
+                  { time: 33r, value: 74r, duration: 1r },
+                  { time: 34r, value: 75r, duration: 1r },
+                  { time: 35r, value: 76r, duration: 1r },
+                  { time: 36r, value: 75r, duration: 2/3r },
+                  { time: 36+2/3r, value: 74r, duration: 2/3r },
+                  { time: 37+1/3r, value: 73r, duration: 2/3r },
+                  { time: 38r, value: 72r, duration: 2/3r },
+                  { time: 38+2/3r, value: 71r, duration: 2/3r },
+                  { time: 39+1/3r, value: 70r, duration: 2/3r } ]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
+
+
+    it 'line ending with flat segment (raw mode right_open with stops)'  do
+
+      c = S([0, 60], [4, 64], [8, 64])
+
+      cc = QUANTIZE(c, right_open: true, stops: true).i
+
+      expected = [{ time: 0r, value: 60r, duration: 1r },
+                  { time: 1r, value: 61r, duration: 1r },
+                  { time: 2r, value: 62r, duration: 1r },
+                  { time: 3r, value: 63r, duration: 1r },
+                  { time: 4r, value: 64r, duration: 4r } ]
+
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
+
+    it 'line ending with flat segment (raw mode left_open with stops)'  do
+      c = S([0, 60], [4, 64], [8, 64])
+
+      cc = QUANTIZE(c, left_open: true, stops: true).i
+
+      expected = [{ time: 0r, value: 61r, duration: 1r },
+                  { time: 1r, value: 62r, duration: 1r },
+                  { time: 2r, value: 63r, duration: 1r },
+                  { time: 3r, value: 64r, duration: 5r } ]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
+
+    it 'line ending with flat segment (predictive mode with stops)'  do
+
+      c = S([0, 60], [4, 64], [8, 64])
+
+      cc = QUANTIZE(c, predictive: true, stops: true).i
+
+      expected = [{ time: 0r, value: 60r, duration: 1/2r },
+                  { time: 1/2r, value: 61r, duration: 1r },
+                  { time: 1+1/2r, value: 62r, duration: 1r },
+                  { time: 2+1/2r, value: 63r, duration: 1r },
+                  { time: 3+1/2r, value: 64r, duration: 4+1/2r } ]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
+
+    it 'line ending with flat segment (predictive mode without stops)'  do
+
+      c = S([0, 60], [4, 64], [8, 64])
+
+      cc = QUANTIZE(c, predictive: true, stops: false).i
+
+      expected = [{ time: 0r, value: 60r, duration: 1/2r },
+                  { time: 1/2r, value: 61r, duration: 1r },
+                  { time: 1+1/2r, value: 62r, duration: 1r },
+                  { time: 2+1/2r, value: 63r, duration: 1r },
+                  { time: 3+1/2r, value: 64r, duration: 4+1/2r } ]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
   end
 end
