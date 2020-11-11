@@ -18,12 +18,13 @@ module Musa
                      :event_handler
 
       def_delegators :@context, :position, :logger, :debug
-      def_delegators :@context, :with, :now, :at, :wait, :play, :every, :move
+      def_delegators :@context, :with, :now, :at, :wait, :play, :play_timed, :every, :move
       def_delegators :@context, :everying, :playing, :moving
       def_delegators :@context, :launch, :on
       def_delegators :@context, :run
 
-      def initialize(beats_per_bar, ticks_per_beat,
+      def initialize(beats_per_bar = nil,
+                     ticks_per_beat = nil,
                      sequencer: nil,
                      logger: nil,
                      do_log: nil, do_error_log: nil, log_position_format: nil,

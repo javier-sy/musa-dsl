@@ -65,7 +65,7 @@ module Musa
         case n
         when nil
           time = value = nil
-        when AbsTimed
+        when Musa::Datasets::AbsTimed
           time = n[:time].rationalize
           value = n[@value_attribute].rationalize
         when Array
@@ -144,7 +144,9 @@ module Musa
 
               return { time: first[:time],
                        @value_attribute => first[:value],
-                       duration: durations_to_sum.sum { |_| _[:duration] } }.extend(AbsTimed).extend(AbsD)
+                       duration: durations_to_sum.sum { |_| _[:duration] } }
+                         .extend(Musa::Datasets::AbsTimed)
+                         .extend(Musa::Datasets::AbsD)
             else
               i += 1
             end
@@ -179,7 +181,9 @@ module Musa
 
               return { time: first[:time],
                        @value_attribute => first[:value],
-                       duration: durations_to_sum.sum { |_| _[:duration] } }.extend(AbsTimed).extend(AbsD)
+                       duration: durations_to_sum.sum { |_| _[:duration] } }
+                         .extend(Musa::Datasets::AbsTimed)
+                         .extend(Musa::Datasets::AbsD)
             else
               i += 1
             end
@@ -400,7 +404,9 @@ module Musa
             if time > first_time
               result = { time: first_time,
                          @value_attribute => round_to_nearest_quantize(first_value, value),
-                         duration: time - first_time }.extend(AbsD).extend(AbsTimed)
+                         duration: time - first_time }
+                           .extend(Musa::Datasets::AbsD)
+                           .extend(Musa::Datasets::AbsTimed)
             else
               result = _next_value
             end
@@ -409,7 +415,9 @@ module Musa
               next_time = @crossings[1][:time]
               result = { time: time,
                          @value_attribute => value,
-                         duration: next_time - time }.extend(AbsD).extend(AbsTimed)
+                         duration: next_time - time }
+                           .extend(Musa::Datasets::AbsD)
+                           .extend(Musa::Datasets::AbsTimed)
 
               @crossings.shift
 
@@ -417,7 +425,9 @@ module Musa
               if @last_time && @last_time > @crossings[0][:time]
                 result = { time: @crossings[0][:time],
                            @value_attribute => @crossings[0][@value_attribute],
-                           duration: @last_time - @crossings[0][:time] }.extend(AbsD).extend(AbsTimed)
+                           duration: @last_time - @crossings[0][:time] }
+                             .extend(Musa::Datasets::AbsD)
+                             .extend(Musa::Datasets::AbsTimed)
 
                 @last_time = nil
               end
@@ -427,7 +437,9 @@ module Musa
           if @first && @last_time && @last_time > first_time
             result = { time: first_time,
                        value: round_to_nearest_quantize(first_value),
-                       duration: @last_time - first_time }.extend(AbsD).extend(AbsTimed)
+                       duration: @last_time - first_time }
+                         .extend(Musa::Datasets::AbsD)
+                         .extend(Musa::Datasets::AbsTimed)
 
             @first = false
             @last_time = false
