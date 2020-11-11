@@ -33,12 +33,12 @@ module Musa
             when Hash
               result = {}
               source_value_value.each_pair do |key, value|
-                result[key] = { time: time, value: value }.extend(AbsTimed)
+                result[key] = { time: time, value: value }.extend(Musa::Datasets::AbsTimed)
               end
             when Array
               result = []
               source_value_value.each_index do |index|
-                result[index] = { time: time, value: source_value_value[index] }.extend(AbsTimed)
+                result[index] = { time: time, value: source_value_value[index] }.extend(Musa::Datasets::AbsTimed)
               end
             else
               raise RuntimeError, "Don't know how to handle #{source_value_value}"

@@ -1,5 +1,5 @@
 module Musa
-  VERSION = '0.22.0'
+  VERSION = '0.22.1'
 end
 
 require_relative 'musa-dsl/core-ext'
