@@ -56,12 +56,12 @@ module Musa
             result = {}
           elsif @array_mode
             result = []
-          else
-            result = nil
+          else # value mode
+            result = []
           end
 
-          @components.each do |target_key_or_index, placement|
-            result[target_key_or_index] = selected_values.dig(placement[0], :value, placement[1])
+          @components.each do |target_key_or_index, source_placement|
+            result[target_key_or_index] = selected_values.dig(*source_placement)
           end
 
           { time: time,
@@ -69,7 +69,6 @@ module Musa
         else
           nil
         end
-
       end
 
       def infinite?
@@ -87,15 +86,18 @@ module Musa
           @hash_mode = true
 
           source_value[:value].keys.each do |key|
-            @components[key] = [i, key]
+            @components[key] = [i, :value, key]
           end
         when Array
           @array_mode = true
 
           (0..source_value[:value].size - 1).each do |index|
-            @components[target_index] = [i, index]
+            @components[target_index] = [i, :value, index]
             target_index += 1
           end
+        else
+          @components[target_index] = [i, :value]
+          target_index += 1
         end
       end
 
