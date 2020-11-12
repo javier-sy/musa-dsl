@@ -28,24 +28,44 @@ module Musa
 
       private def _restart(restart_sources = true)
         @sources.each { |serie| serie.restart } if restart_sources
-        @next_values = Array.new(@sources.size)
+        @sources_next_values = Array.new(@sources.size)
+
+        @components = nil
+        @hash_mode = @array_mode = nil
       end
 
       private def _next_value
+        sources_values = @sources_next_values.each_index.collect do |i|
+          @sources_next_values[i] || (@sources_next_values[i] = @sources[i].next_value)
+        end
 
-        values = @next_values.each_index.collect { |i| @next_values[i] || (@next_values[i] = @sources[i].next_value) }
+        infer_components(sources_values) if !@components
 
-        time = values.collect { |_| _&.[](:time) }.compact.min
+        time = sources_values.collect { |_| _&.[](:time) }.compact.min
 
         if time
-          results = values.select { |_| _&.[](:time) == time }
+          selected_values = sources_values.collect { |_| _ if _&.[](:time) == time }
 
-          @next_values.each_index do |i|
-            @next_values[i] = nil if @next_values[i]&.[](:time) == time
+          @sources_next_values.each_index do |i|
+            if @sources_next_values[i]&.[](:time) == time
+              @sources_next_values[i] = nil
+            end
+          end
+
+          if @hash_mode
+            result = {}
+          elsif @array_mode
+            result = []
+          else
+            result = nil
+          end
+
+          @components.each do |target_key_or_index, placement|
+            result[target_key_or_index] = selected_values.dig(placement[0], :value, placement[1])
           end
 
           { time: time,
-            value: results.collect { |_| _[:value] }.inject(:merge) }
+            value: result }
         else
           nil
         end
@@ -55,6 +75,31 @@ module Musa
       def infinite?
         !!@sources.find(&:infinite?)
       end
+    end
+
+    private def infer_components(sources_values)
+      @components = {}
+      target_index = 0
+
+      sources_values.each_with_index do |source_value, i|
+        case source_value[:value]
+        when Hash
+          @hash_mode = true
+
+          source_value[:value].keys.each do |key|
+            @components[key] = [i, key]
+          end
+        when Array
+          @array_mode = true
+
+          (0..source_value[:value].size - 1).each do |index|
+            @components[target_index] = [i, index]
+            target_index += 1
+          end
+        end
+      end
+
+      raise RuntimeError, "source series values are of incompatible type (can't combine Hash and Array values)" if @array_mode && @hash_mode
     end
 
     private_constant :UnionTimed
