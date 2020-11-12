@@ -30,6 +30,7 @@ module Musa
         else
           @logger = Musa::Logger::Logger.new(sequencer: self, position_format: log_position_format)
 
+          @logger.fatal!
           @logger.error! if do_error_log || do_error_log.nil?
           @logger.debug! if do_log
         end

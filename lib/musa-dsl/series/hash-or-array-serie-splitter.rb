@@ -6,6 +6,8 @@ module Musa
       end
 
       class Splitter
+        include Enumerable
+
         def initialize(proxy)
           @proxy = proxy
           @series = {}
@@ -19,6 +21,30 @@ module Musa
           end
         end
 
+        def each
+          if block_given?
+            if @proxy.hash_mode?
+              @proxy.components.each do |key|
+                yield [key, self[key]]
+              end
+            elsif @proxy.array_mode?
+              @proxy.components.each do |index|
+                yield self[index]
+              end
+            else
+              # do nothing
+            end
+          else
+            if @proxy.hash_mode?
+              @proxy.components.collect { |key| [key, self[key]] }.each
+            elsif @proxy.array_mode?
+              @proxy.components.collect { |index| self[index] }.each
+            else
+              [].each
+            end
+          end
+        end
+
         class BufferedProxy
           include SeriePrototyping
 
@@ -29,6 +55,11 @@ module Musa
             mark_regarding! @source
           end
 
+          attr_reader :components
+
+          def hash_mode?; @hash_mode; end
+          def array_mode?; @array_mode; end
+
           protected def _instance!
             super
             restart
@@ -36,22 +67,39 @@ module Musa
 
           def restart(restart_source: true)
             @source.restart if restart_source
-            @values = nil
+
+            source = @source.instance
+            sample = source.current_value || source.peek_next_value
+
+            case sample
+            when Array
+              @components = (0..sample.size-1).to_a
+              @values = []
+              @array_mode = true
+              @hash_mode = false
+            when Hash
+              @components = sample.keys.clone
+              @values = {}
+              @array_mode = false
+              @hash_mode = true
+            else
+              @components = []
+              @values = nil
+              @array_mode = @hash_mode = false
+            end
           end
 
           def next_value(key_or_index)
-            if @values.nil? || @values[key_or_index].nil? || @values[key_or_index].empty?
+            if @values[key_or_index].nil? || @values[key_or_index].empty?
               hash_or_array_value = @source.next_value
 
               case hash_or_array_value
               when Hash
-                @values ||= {}
                 hash_or_array_value.each do |k, v|
                   @values[k] ||= []
                   @values[k] << v
                 end
               when Array
-                @values ||= []
                 hash_or_array_value.each_index do |i|
                   @values[i] ||= []
                   @values[i] << hash_or_array_value[i]

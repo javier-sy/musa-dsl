@@ -268,9 +268,7 @@ module Musa
         @to.nil?
       end
 
-      private
-
-      def sign_adjust_step
+      private def sign_adjust_step
         @step = (-@step if @to && (@from < @to && @step < 0 || @from > @to && @step > 0)) || @step
       end
     end
@@ -337,9 +335,7 @@ module Musa
         end
       end
 
-      private
-
-      def adjust_step
+      private def adjust_step
         @step = (-@step if @from < @to && @step < 0 || @from > @to && @step > 0) || @step
         @step_count = ((@to - @from) / @step).to_i
       end
@@ -411,9 +407,7 @@ module Musa
         value
       end
 
-      private
-
-      def adjust_step
+      private def adjust_step
         @step = (-@step if @from < @to && @step < 0 || @from > @to && @step > 0) || @step
         @step_count = ((@to - @from) / @step).to_i
       end

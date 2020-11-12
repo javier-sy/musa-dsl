@@ -13,3 +13,4 @@ require_relative 'hash-or-array-serie-splitter'
 
 require_relative 'quantizer-serie'
 require_relative 'flattener-timed-serie'
+require_relative 'union-timed-series'

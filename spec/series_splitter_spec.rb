@@ -286,4 +286,39 @@ RSpec.describe Musa::Series do
       expect(s2i.next_value).to be_nil
     end
   end
+
+  context 'Series split and collected' do
+    it 'serie of hash elements split collected merges to hash serie again' do
+      s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
+      h = s.hashify(:a, :b, :c)
+      ss = h.split
+
+
+      s2 = H(**ss.collect.to_h)
+
+      s2i = s2.instance
+
+      expect(s2i.next_value).to eq( { a: 1, b: 10, c: 100 } )
+      expect(s2i.next_value).to eq( { a: 2, b: 20, c: 200 } )
+      expect(s2i.next_value).to eq( { a: 3, b: 30, c: 300 } )
+
+      expect(s2i.next_value).to be_nil
+    end
+
+    it 'serie of array elements split collected merges to array serie again' do
+      s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
+      ss = s.split
+
+      s2 = A(*ss.collect)
+
+      s2i = s2.instance
+
+      expect(s2i.next_value).to eq( [ 1, 10, 100 ] )
+      expect(s2i.next_value).to eq( [ 2, 20, 200 ] )
+      expect(s2i.next_value).to eq( [ 3, 30, 300 ] )
+
+      expect(s2i.next_value).to be_nil
+    end
+  end
+
 end
