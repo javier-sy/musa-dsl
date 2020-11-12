@@ -5,11 +5,11 @@ module Musa
 
     extend self
 
-    def UNION(*timed_series)
-      UnionTimed.new(timed_series)
+    def TIMED_UNION(*timed_series)
+      TimedUnion.new(timed_series)
     end
 
-    class UnionTimed
+    class TimedUnion
       include Serie
 
       attr_reader :sources
@@ -102,6 +102,6 @@ module Musa
       raise RuntimeError, "source series values are of incompatible type (can't combine Hash and Array values)" if @array_mode && @hash_mode
     end
 
-    private_constant :UnionTimed
+    private_constant :TimedUnion
   end
 end

@@ -23,7 +23,7 @@ RSpec.describe Musa::Series do
       pt1 = p1.to_timed_serie
       pt2 = p2.to_timed_serie
 
-      u = UNION(pt1, pt2).i
+      u = TIMED_UNION(pt1, pt2).i
 
       expected = [{ time: 0r, value: { a: 1, b: 10, c: 100, d: 9, e: 90, f: 900 } },
                   { time: 1/2r, value: { a: nil, b: nil, c: nil, d: 8, e: 80, f: 800 } },
@@ -57,7 +57,7 @@ RSpec.describe Musa::Series do
     pt1 = p1.to_timed_serie
     pt2 = p2.to_timed_serie
 
-    u = UNION(pt1, pt2).i
+    u = TIMED_UNION(pt1, pt2).i
 
     expected = [{ time: 0r, value: [ 1, 10, 100, 9, 90, 900 ] },
                 { time: 1/2r, value: [ nil, nil, nil, 8, 80, 800 ] },
