@@ -22,8 +22,10 @@ module Musa::Datasets
       end
     end
 
-    def to_timed_serie(time_start = nil, base_duration: nil)
+    def to_timed_serie(time_start: nil, time_start_component: nil, base_duration: nil)
       time_start ||= 0r
+      time_start += self.first&.[](time_start_component) || 0r
+
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment

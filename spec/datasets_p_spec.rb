@@ -34,7 +34,7 @@ RSpec.describe Musa::Datasets::P do
             { a: 2, b: 20, c: 200 }.extend(PackedV), 2 * 4,
             { a: 3, b: 30, c: 300 }.extend(PackedV) ].extend(P)
 
-      s = p.to_timed_serie(10).i
+      s = p.to_timed_serie(time_start: 10).i
 
       expect(v = s.next_value).to eq( { time: 10, value: { a: 1, b: 10, c: 100 } } )
 
@@ -47,6 +47,56 @@ RSpec.describe Musa::Datasets::P do
       expect(v).to be_a(AbsTimed)
 
       expect(s.next_value).to eq( { time: 13, value: { a: 3, b: 30, c: 300 } } )
+
+      expect(v[:value]).to be_a(PackedV)
+      expect(v).to be_a(AbsTimed)
+
+      expect(s.next_value).to be_nil
+    end
+
+    it 'to timed serie starting with time of a component' do
+      p = [ { a: 1, b: 10, c: 100 }.extend(PackedV), 1 * 4,
+            { a: 2, b: 20, c: 200 }.extend(PackedV), 2 * 4,
+            { a: 3, b: 30, c: 300 }.extend(PackedV) ].extend(P)
+
+      s = p.to_timed_serie(time_start_component: :c).i
+
+      expect(v = s.next_value).to eq( { time: 100, value: { a: 1, b: 10, c: 100 } } )
+
+      expect(v[:value]).to be_a(PackedV)
+      expect(v).to be_a(AbsTimed)
+
+      expect(s.next_value).to eq( { time: 101, value: { a: 2, b: 20, c: 200 } } )
+
+      expect(v[:value]).to be_a(PackedV)
+      expect(v).to be_a(AbsTimed)
+
+      expect(s.next_value).to eq( { time: 103, value: { a: 3, b: 30, c: 300 } } )
+
+      expect(v[:value]).to be_a(PackedV)
+      expect(v).to be_a(AbsTimed)
+
+      expect(s.next_value).to be_nil
+    end
+
+    it 'to timed serie starting with time of a component plus time start offset' do
+      p = [ { a: 1, b: 10, c: 100 }.extend(PackedV), 1 * 4,
+            { a: 2, b: 20, c: 200 }.extend(PackedV), 2 * 4,
+            { a: 3, b: 30, c: 300 }.extend(PackedV) ].extend(P)
+
+      s = p.to_timed_serie(time_start: 10, time_start_component: :c).i
+
+      expect(v = s.next_value).to eq( { time: 110, value: { a: 1, b: 10, c: 100 } } )
+
+      expect(v[:value]).to be_a(PackedV)
+      expect(v).to be_a(AbsTimed)
+
+      expect(s.next_value).to eq( { time: 111, value: { a: 2, b: 20, c: 200 } } )
+
+      expect(v[:value]).to be_a(PackedV)
+      expect(v).to be_a(AbsTimed)
+
+      expect(s.next_value).to eq( { time: 113, value: { a: 3, b: 30, c: 300 } } )
 
       expect(v[:value]).to be_a(PackedV)
       expect(v).to be_a(AbsTimed)
