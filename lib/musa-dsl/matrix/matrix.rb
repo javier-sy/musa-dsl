@@ -71,9 +71,6 @@ module Musa
 
         def to_p(time_dimension, keep_time: nil)
           decompose(self.to_a, time_dimension).collect do |points|
-
-            puts "to_p: points #{points}"
-
             line = []
 
             start_point = points[0]
@@ -110,8 +107,9 @@ module Musa
 
           x_dim_values_indexes.keys.sort.each do |value|
             x_dim_values_indexes[value].each do |index|
+              #
               # hacia un lado
-
+              #
               unless used_indexes.include?(index)
                 i = index
                 xx = array[i][time_dimension]
@@ -126,11 +124,11 @@ module Musa
                   i -= 1
                 end
 
-                puts "decompose: a #{a}"
                 directional_segments << a if a.size > 1
 
+                #
                 # y hacia el otro
-
+                #
                 i = index
                 xx = array[i][time_dimension]
 
@@ -144,7 +142,6 @@ module Musa
                   i += 1
                 end
 
-                puts "decompose: b #{b}"
                 directional_segments << b if b.size > 1
               end
             end

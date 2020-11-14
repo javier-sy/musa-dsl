@@ -122,7 +122,7 @@ RSpec.describe Musa::Matrix do
                  [100, 200, 0],
                  [1000, 2000, 1]]
 
-      expect { pp m.to_p(2) }.not_to raise_error
+      expect { m.to_p(2) }.not_to raise_error
     end
   end
 end
