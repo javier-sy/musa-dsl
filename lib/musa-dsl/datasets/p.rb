@@ -24,7 +24,7 @@ module Musa::Datasets
 
     def to_timed_serie(time_start: nil, time_start_component: nil, base_duration: nil)
       time_start ||= 0r
-      time_start += self.first&.[](time_start_component) || 0r
+      time_start += self.first[time_start_component] if time_start_component
 
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 

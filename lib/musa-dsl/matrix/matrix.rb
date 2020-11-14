@@ -22,8 +22,8 @@ module Musa
           indexes
         end
 
-        def to_p(time_dimension, keep_time: nil)
-          condensed_matrices.collect { |m| m.to_p(time_dimension, keep_time: keep_time) }
+        def to_p(time_dimension:, keep_time: nil)
+          condensed_matrices.collect { |m| m.to_p(time_dimension: time_dimension, keep_time: keep_time) }
         end
 
         def condensed_matrices
@@ -69,7 +69,7 @@ module Musa
       refine ::Matrix do
         include Musa::Datasets
 
-        def to_p(time_dimension, keep_time: nil)
+        def to_p(time_dimension:, keep_time: nil)
           decompose(self.to_a, time_dimension).collect do |points|
             line = []
 
