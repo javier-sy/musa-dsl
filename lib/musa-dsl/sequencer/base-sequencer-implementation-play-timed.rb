@@ -9,11 +9,15 @@ module Musa; module Sequencer
                     control,
                     reference: nil,
                     step: nil,
+                    predictive: nil,
                     right_open: nil,
+                    stops: nil,
                     &block)
 
       reference ||= 0r
       step ||= 1r
+      predictive ||= predictive
+      stops = stops.nil? ? true : stops
 
       if first_value_sample = timed_serie.peek_next_value
 
@@ -26,6 +30,8 @@ module Musa; module Sequencer
 
           reference = reference.hashify(keys: components)
           step = step.hashify(keys: components)
+          predictive = predictive.hashify(keys:components)
+          stops = stops.hashify(keys:components)
           right_open = right_open.hashify(keys:components)
         else
           size = first_value_sample[:value].size
@@ -33,6 +39,8 @@ module Musa; module Sequencer
 
           reference = reference.arrayfy(size: size)
           step = step.arrayfy(size: size)
+          predictive = predictive.arrayfy(size: size)
+          stops = stops.arrayfy(size: size)
           right_open = right_open.arrayfy(size: size)
         end
 
@@ -44,8 +52,9 @@ module Musa; module Sequencer
               QUANTIZE(split[component],
                        reference: reference[component],
                        step: step[component],
+                       predictive: predictive[component],
                        right_open: right_open[component],
-                       stops: true).instance
+                       stops: stops[component]).instance
         end
 
         last_positions = hash_mode ? {} : []

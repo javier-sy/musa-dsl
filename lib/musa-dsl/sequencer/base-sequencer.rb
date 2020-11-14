@@ -218,6 +218,8 @@ module Musa
       def play_timed(timed_serie,
                      reference: nil,
                      step: nil,
+                     predictive: nil,
+                     stops: nil,
                      right_open: nil,
                      on_stop: nil,
                      after_bars: nil, after: nil,
@@ -238,6 +240,8 @@ module Musa
                     control,
                     reference: reference,
                     step: step,
+                    predictive: predictive,
+                    stops: stops,
                     right_open: right_open,
                     &block)
 
