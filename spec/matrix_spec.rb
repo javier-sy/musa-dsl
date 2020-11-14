@@ -108,7 +108,6 @@ RSpec.describe Musa::Matrix do
     end
 
     it 'Multidim matrix set of 3, 2 condensing begin-end, 1 standalone' do
-
       mm = [ Matrix[[0,0], [2,2], [3,4], [4,3]],
              Matrix[[3,1], [2,3], [1,2], [0,0]],
              Matrix[[1,9], [2,5], [0,0], [3, 2]]].condensed_matrices
@@ -116,6 +115,14 @@ RSpec.describe Musa::Matrix do
       expect(mm.collect(&:to_a)).to eq \
         [[[3, 1], [2, 3], [1, 2], [0, 0], [2, 2], [3, 4], [4, 3]],
          [[1, 9], [2, 5], [0, 0], [3, 2]]]
+    end
+
+    it 'bugfix for runtime error on 3d matrix going forward and back in time' do
+      m = Matrix[[10, 20, 1],
+                 [100, 200, 0],
+                 [1000, 2000, 1]]
+
+      expect { pp m.to_p(2) }.not_to raise_error
     end
   end
 end

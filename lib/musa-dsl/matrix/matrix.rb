@@ -71,12 +71,15 @@ module Musa
 
         def to_p(time_dimension, keep_time: nil)
           decompose(self.to_a, time_dimension).collect do |points|
+
+            puts "to_p: points #{points}"
+
             line = []
 
             start_point = points[0]
             start_time = start_point[time_dimension]
 
-            line << start_point.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
+            line << start_point.clone.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
 
             (1..points.size-1).each do |i|
               end_point = points[i]
@@ -84,7 +87,7 @@ module Musa
               end_time = end_point[time_dimension]
 
               line << end_time - start_time
-              line << end_point.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
+              line << end_point.clone.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
 
               start_time = end_time
             end
@@ -123,6 +126,7 @@ module Musa
                   i -= 1
                 end
 
+                puts "decompose: a #{a}"
                 directional_segments << a if a.size > 1
 
                 # y hacia el otro
@@ -140,6 +144,7 @@ module Musa
                   i += 1
                 end
 
+                puts "decompose: b #{b}"
                 directional_segments << b if b.size > 1
               end
             end
