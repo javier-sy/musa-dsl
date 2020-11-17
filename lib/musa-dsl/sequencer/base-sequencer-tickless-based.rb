@@ -53,16 +53,14 @@ module Musa
           @on_fast_forward.each { |block| block.call(false) }
         end
 
-        private
-
-        def _init_timing
+        private def _init_timing
         end
 
-        def _reset_timing
+        private def _reset_timing
           @position = nil
         end
 
-        def _quantize_position(position, warn: false)
+        private def _quantize_position(position, warn: false)
           position
         end
       end

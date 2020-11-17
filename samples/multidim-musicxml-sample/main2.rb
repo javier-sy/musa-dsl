@@ -44,7 +44,7 @@ score = Score.new
 mapper = [:pitch, :dynamics, :instrument]
 
 s.at 1 do
-  poly_line.to_p(0).each do |line|
+  poly_line.to_p(time_dimension: 0).each do |line|
 
     puts "line = #{line}\n\n"
 
@@ -52,8 +52,26 @@ s.at 1 do
     next_values = {}
     quantized_durations = {}
 
-    s.play_timed(line.map {|v| v.to_packed_V(mapper) }.to_timed_serie, right_open: { dynamics: true } ) do
-    |value, next_value, duration:, quantized_duration:, started_ago:|
+    u = TIMED_UNION(
+        **line.map { |v| v.to_packed_V(mapper) }
+              .to_timed_serie
+              .flatten_timed
+              .split
+              .to_h
+              .collect { |key, serie|
+                [ key,
+                  serie.quantize(stops: true, right_open: (key == :dynamics))
+                      .compact_timed
+                      .anticipate { |c, n|
+                        n ? c.clone.tap { |_| _[:next_value] = n[:value] } :
+                            c } ] }.to_h )
+
+    s.play_timed(u) do |value, next_value:, duration:, started_ago:|
+      quantized_duration =
+          duration.keys.collect do |component, _|
+            [component, s.quantize_position(s.position + duration[component]) -
+                s.quantize_position(s.position)]
+          end.to_h
 
       logger.debug
       logger.debug "new element at position #{s.position.inspect}\n\t\tvalue #{value}\n\t\tnext #{next_value}\n\t\tduration #{duration}" \

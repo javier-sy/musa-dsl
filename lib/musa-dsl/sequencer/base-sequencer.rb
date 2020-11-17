@@ -83,6 +83,10 @@ module Musa
         @timeslots.empty?
       end
 
+      def quantize_position(position)
+        _quantize_position(position, warn: false)
+      end
+
       def run
         tick until empty?
       end
@@ -115,22 +119,19 @@ module Musa
         @event_handlers.last.launch event, *value_parameters, **key_parameters
       end
 
-      def wait(bars_delay, with: nil, debug: nil, &block)
+      def wait(bars_delay, debug: nil, &block)
         debug ||= false
 
         control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
         if bars_delay.is_a? Numeric
-          _numeric_at position + bars_delay.rationalize, control, with: with, debug: debug, &block
+          _numeric_at position + bars_delay.rationalize, control, debug: debug, &block
         else
           bars_delay = Series::S(*bars_delay) if bars_delay.is_a?(Array)
           bars_delay = bars_delay.instance if bars_delay
 
-          with = Series::S(*with).repeat if with.is_a?(Array)
-          with = with.instance if with
-
-          _serie_at bars_delay.eval { |delay| position + delay }, control, with: with, debug: debug, &block
+          _serie_at bars_delay.eval { |delay| position + delay }, control, debug: debug, &block
         end
 
         @event_handlers.pop
@@ -138,11 +139,11 @@ module Musa
         control
       end
 
-      def now(with: nil, &block)
+      def now(&block)
         control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
-        _numeric_at position, control, with: with, &block
+        _numeric_at position, control, &block
 
         @event_handlers.pop
 
@@ -155,22 +156,19 @@ module Musa
         nil
       end
 
-      def at(bar_position, with: nil, debug: nil, &block)
+      def at(bar_position, debug: nil, &block)
         debug ||= false
 
         control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
         if bar_position.is_a? Numeric
-          _numeric_at bar_position.rationalize, control, with: with, debug: debug, &block
+          _numeric_at bar_position.rationalize, control, debug: debug, &block
         else
           bar_position = Series::S(*bar_position) if bar_position.is_a? Array
           bar_position = bar_position.instance if bar_position
 
-          with = Series::S(*with).repeat if with.is_a? Array
-          with = with.instance if with
-
-          _serie_at bar_position, control, with: with, debug: debug, &block
+          _serie_at bar_position, control, debug: debug, &block
         end
 
         @event_handlers.pop
@@ -216,11 +214,6 @@ module Musa
       end
 
       def play_timed(timed_serie,
-                     reference: nil,
-                     step: nil,
-                     predictive: nil,
-                     stops: nil,
-                     right_open: nil,
                      on_stop: nil,
                      after_bars: nil, after: nil,
                      &block)
@@ -236,14 +229,7 @@ module Musa
 
         @event_handlers.push control
 
-        _play_timed(timed_serie.instance,
-                    control,
-                    reference: reference,
-                    step: step,
-                    predictive: predictive,
-                    stops: stops,
-                    right_open: right_open,
-                    &block)
+        _play_timed(timed_serie.instance, control, &block)
 
         @event_handlers.pop
 

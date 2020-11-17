@@ -3,6 +3,7 @@ require 'spec_helper'
 require 'musa-dsl'
 
 include Musa::Series
+include Musa::Datasets
 
 RSpec.describe Musa::Series do
   context 'Series prototype and instance:' do

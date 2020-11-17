@@ -324,8 +324,13 @@ module Musa
               run_operation eval_use_variable(element[:use_variable])
 
             when :event
-              value_parameters = element[:value_parameters] ? element[:value_parameters].collect { |e| subcontext.eval_element(e) } : []
-              key_parameters = element[:key_parameters] ? element[:key_parameters].collect { |k, e| [k, subcontext.eval_element(e)] }.to_h : {}
+              value_parameters = element[:value_parameters] ?
+                                     element[:value_parameters].collect { |e| subcontext.eval_element(e) } :
+                                     []
+
+              key_parameters = element[:key_parameters] ?
+                                   element[:key_parameters].collect { |k, e| [k, subcontext.eval_element(e)] }.to_h :
+                                   {}
 
               { current_operation: :event,
                 current_event: element[:event],

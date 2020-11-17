@@ -30,7 +30,7 @@ module Musa
         if @is_instance
           self
         else
-          clone(freeze: false).tap(&:_instance!).mark_as_instance!(self)
+          clone(freeze: false).tap(&:_instance!).mark_as_instance!(self).tap(&:restart)
         end
       end
 
@@ -40,7 +40,7 @@ module Musa
       # handle prototyping/instancing automatically.
       # If there is a @sources attribute with the eventual several sources, SeriePrototyping will handle them by
       # default.
-      # If needed the subclasses can override this behaviour to accomodate to real subclass specificities.
+      # If needed the subclasses can override this behaviour to accommodate to real subclass specificities.
       #
       protected def _prototype!
         @source = @source.prototype if @source

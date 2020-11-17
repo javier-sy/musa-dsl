@@ -45,6 +45,22 @@ module Musa
           end
         end
 
+        def to_hash
+          if @proxy.hash_mode?
+            @proxy.components.collect { |key| [key, self[key]] }.to_h
+          else
+            raise RuntimeError, 'Splitter is not based on Hash: can\'t convert to Hash'
+          end
+        end
+
+        def to_array
+          if @proxy.array_mode?
+            [].tap { |_| @proxy.components.each { |i| _[i] = self[i] } }
+          else
+            raise RuntimeError, 'Splitter is not based on Array: can\'t convert to Array'
+          end
+        end
+
         class BufferedProxy
           include SeriePrototyping
 

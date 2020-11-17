@@ -63,21 +63,16 @@ module Musa; module Sequencer
       nil
     end
 
-    private def _numeric_at(at_position, control, with: nil, debug: nil, &block)
+    private def _numeric_at(at_position, control, debug: nil, &block)
       raise ArgumentError, "'at_position' parameter cannot be nil" if at_position.nil?
       raise ArgumentError, 'Yield block is mandatory' unless block
 
       at_position = _quantize_position(at_position)
 
-      value_parameters = []
-      value_parameters << with if !with.nil? && !with.is_a?(Hash)
-
       block_key_parameters_binder =
           SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
       key_parameters = {}
-      key_parameters.merge! block_key_parameters_binder._apply(nil, with).last if with.is_a?(Hash)
-
       key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
       if at_position == @position
@@ -85,7 +80,7 @@ module Musa; module Sequencer
 
         begin
           locked = @tick_mutex.try_lock
-          block_key_parameters_binder._call(value_parameters, key_parameters)
+          block_key_parameters_binder._call(nil, key_parameters)
         ensure
           @tick_mutex.unlock if locked
         end
@@ -100,8 +95,8 @@ module Musa; module Sequencer
           end
         end
 
-        @timeslots[at_position] << { parent_control: control, block: block_key_parameters_binder,
-                                     value_parameters: value_parameters,
+        @timeslots[at_position] << { parent_control: control,
+                                     block: block_key_parameters_binder,
                                      key_parameters: key_parameters }
       else
         @logger.warn('BaseSequencer') { "._numeric_at: ignoring past 'at' command for #{at_position}" }
@@ -110,20 +105,14 @@ module Musa; module Sequencer
       nil
     end
 
-    private def _serie_at(bar_position_serie, control, with: nil, debug: nil, &block)
-      bar_position = bar_position_serie.next_value
-
-      with_value = if with.respond_to? :next_value
-                     with.next_value
-                   else
-                     with
-                   end
+    private def _serie_at(position_or_serie, control, debug: nil, &block)
+      bar_position = position_or_serie.next_value
 
       if bar_position
-        _numeric_at bar_position, control, with: with_value, debug: debug, &block
+        _numeric_at bar_position, control, debug: debug, &block
 
         _numeric_at bar_position, control, debug: false do
-          _serie_at bar_position_serie, control, with: with, debug: debug, &block
+          _serie_at position_or_serie, control, debug: debug, &block
         end
       else
         # serie finalizada
@@ -224,8 +213,3 @@ module Musa; module Sequencer
     private_constant :EventHandler
   end
 end; end
-
-require_relative 'base-sequencer-implementation-every'
-require_relative 'base-sequencer-implementation-move'
-require_relative 'base-sequencer-implementation-play'
-require_relative 'base-sequencer-implementation-play-timed'

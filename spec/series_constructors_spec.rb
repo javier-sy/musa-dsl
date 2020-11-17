@@ -120,6 +120,40 @@ RSpec.describe Musa::Series do
       expect(s1.next_value).to eq nil
     end
 
+    it 'bugfix for E serie with parameters used as temporary value holders that had bizarre results on second instance (series instance of a prototype didn\'t restarted)' do
+      array = [1, 2, 3, 4, 5]
+
+      u = Musa::Series::E(array, context: { time: 0 }) do |p, context: |
+        value = p.shift
+
+        if value
+          r = { time: context[:time], value: value } if !value.nil?
+
+          delta_time = p.shift
+          context[:time] += delta_time if delta_time
+
+          r
+        end
+      end
+
+      u1 = u.i
+      au1 = []
+
+      while v = u1.next_value
+        au1 << v.clone
+      end
+
+      u2 = u.i
+      au2 = []
+
+      while v = u2.next_value
+        au2 << v.clone
+      end
+
+      expect(au2.size).to eq(au1.size)
+      expect(au2).to eq(au1)
+    end
+
     it 'FOR(from: 10, to: 13, step: 1)' do
       s1 = FOR(from: 10, to: 13, step: 1).i
 

@@ -787,6 +787,19 @@ RSpec.describe Musa::Series do
       expect(ss.next_value).to eq nil
     end
 
+    it 'Serie anticipate' do
+      s = S(1, 2, 3, 4, 5, 6)
+
+      ss = s.anticipate do |current, next_value|
+        if next_value
+          current + next_value * 10
+        else
+          current
+        end
+      end
+
+      expect(ss.to_a).to eq [21, 32, 43, 54, 65, 6]
+    end
 
     it 'Generative grammar nodes of series to serie' do
       a = N(1)
