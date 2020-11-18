@@ -192,6 +192,8 @@ module Musa
     private_constant :Sequence
 
     class FromEvalBlockWithParameters
+      using Musa::Extension::DeepCopy
+
       include Serie
       include Musa::Extension::SmartProcBinder
 
@@ -211,8 +213,8 @@ module Musa
       end
 
       def _restart
-        @value_parameters = @original_value_parameters.collect(&:clone)
-        @key_parameters = @original_key_parameters.transform_values(&:clone)
+        @value_parameters = @original_value_parameters.clone(deep: true)
+        @key_parameters = @original_key_parameters.clone(deep: true)
 
         @first = true
         @value = nil

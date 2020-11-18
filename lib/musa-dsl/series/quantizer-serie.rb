@@ -87,8 +87,6 @@ module Musa
 
       attr_reader :source
 
-      attr_reader :points_history
-
       def initialize(reference, step, source, value_attribute, stops, left_open, right_open)
         @reference = reference
         @step_size = step.abs
@@ -218,13 +216,13 @@ module Musa
             if @segments.last && @segments.last[:time] == from_time
 
               @segments.last[:duration] = to_time - from_time
-              @segments.last[:info] += "; edited on a as start"
+              @segments.last[:info] += '; edited on a as start'
 
             else
               @segments << { time: from_time,
                              value: from_value,
                              duration: to_time - from_time,
-                             info: "added on a as start" }
+                             info: 'added on a as start' }
 
             end
 
@@ -233,7 +231,7 @@ module Musa
                              value: from_value,
                              duration: 0,
                              stop: true,
-                             info: "added on a as end stop" }
+                             info: 'added on a as end stop' }
             end
           else
             time_increment = to_time - from_time
@@ -268,7 +266,7 @@ module Musa
                 @segments.last[:value] == value
 
                 @segments.last[:duration] = step_time_increment
-                @segments.last[:info] += "; edited on b"
+                @segments.last[:info] += '; edited on b'
 
                 # puts "process2: editing #{@segments.last}"
 
@@ -276,7 +274,7 @@ module Musa
                 @segments <<  v = { time: intermediate_point_time,
                                     value: value,
                                     duration: step_time_increment,
-                                    info: "added on b" }
+                                    info: 'added on b' }
 
                 # puts "process2: adding #{v.inspect}"
               end
@@ -297,7 +295,7 @@ module Musa
 
       private def process(time, value, last_time_value)
         if time && value
-          raise RuntimeError, "time only can go forward" if @last_processed_time && time <= @last_processed_time
+          raise RuntimeError, 'time only can go forward' if @last_processed_time && time <= @last_processed_time
 
           q_value = round_quantize(value)
 

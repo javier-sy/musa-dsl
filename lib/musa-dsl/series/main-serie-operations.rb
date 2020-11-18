@@ -112,6 +112,10 @@ module Musa
         ProcessWith.new self, &yield_block
       end
 
+      def anticipate(&yield_block)
+        Anticipate.new self, &yield_block
+      end
+
       ###
       ### Implementation
       ###
@@ -130,7 +134,7 @@ module Musa
           @block = SmartProcBinder.new(block) if block_given?
 
           if @source.prototype?
-            @sources = @sources.transform_values { |s| s.prototype }
+            @sources = @sources.transform_values { |s| s.prototype }.freeze
           else
             @sources = @sources.transform_values { |s| s.instance }
           end
@@ -168,6 +172,37 @@ module Musa
 
       private_constant :ProcessWith
 
+      class Anticipate
+        include Musa::Extension::SmartProcBinder
+        include Serie
+
+        attr_reader :source, :block
+
+        def initialize(serie, &block)
+          @source = serie
+          @block = block
+
+          mark_regarding! @source
+        end
+
+        def _restart
+          @source.restart
+        end
+
+        def _next_value
+          value = @source.next_value
+          peek_next_value = @source.peek_next_value
+
+          @block.call(value, peek_next_value)
+        end
+
+        def infinite?
+          @source.infinite?
+        end
+      end
+
+      private_constant :Anticipate
+
       class Switcher
         include Serie
 
@@ -185,7 +220,7 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :_prototype!
+          if get == :prototype!
             @sources.freeze
           end
 
@@ -236,7 +271,7 @@ module Musa
 
           _restart false
 
-          if get == :_prototype!
+          if get == :prototype
             @sources.freeze
           end
 
@@ -293,7 +328,7 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :_prototype!
+          if get == :prototype
             @sources.freeze
           end
 

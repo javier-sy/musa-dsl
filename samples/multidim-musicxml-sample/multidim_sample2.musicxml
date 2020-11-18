@@ -7,7 +7,7 @@
 	<identification>
 		<creator type="composer">Javier Sánchez Yeste</creator>
 		<encoding>
-			<encoding-date>2020-11-10</encoding-date>
+			<encoding-date>2020-11-18</encoding-date>
 			<software>MusaDSL: MusicXML output formatter</software>
 		</encoding>
 	</identification>
@@ -1144,13 +1144,17 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>3</duration>
+				<duration>2</duration>
 				<tie type="stop"/>
 				<type>64th</type>
-				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -1807,13 +1811,17 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>3</duration>
+				<duration>2</duration>
 				<tie type="stop"/>
 				<type>64th</type>
-				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -2863,12 +2871,18 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>4</duration>
+				<duration>3</duration>
 				<tie type="stop"/>
-				<type>32nd</type>
+				<type>64th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -3267,24 +3281,15 @@
 				</pitch>
 				<duration>4</duration>
 				<tie type="stop"/>
-				<tie type="start"/>
 				<type>32nd</type>
-				<notations>
-					<tied type="continue"/>
-				</notations>
-			</note>
-			<note>
-				<pitch>
-					<step>D</step>
-					<alter>1</alter>
-					<octave>4</octave>
-				</pitch>
-				<duration>1</duration>
-				<tie type="stop"/>
-				<type>128th</type>
 				<notations>
 					<tied type="stop"/>
 				</notations>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -3823,12 +3828,18 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>4</duration>
+				<duration>3</duration>
 				<tie type="stop"/>
-				<type>32nd</type>
+				<type>64th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
+			</note>
+			<note>
+				<rest />
+				<duration>1</duration>
+				<type>128th</type>
 			</note>
 			<note>
 				<pitch>

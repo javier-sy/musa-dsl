@@ -17,7 +17,7 @@ module Musa
                      :position=,
                      :event_handler
 
-      def_delegators :@context, :position, :logger, :debug
+      def_delegators :@context, :position, :quantize_position, :logger, :debug
       def_delegators :@context, :with, :now, :at, :wait, :play, :play_timed, :every, :move
       def_delegators :@context, :everying, :playing, :moving
       def_delegators :@context, :launch, :on
@@ -51,7 +51,9 @@ module Musa
 
         def_delegators :@sequencer,
                        :launch, :on,
-                       :position, :size, :everying, :playing, :moving,
+                       :position, :quantize_position,
+                       :size,
+                       :everying, :playing, :moving,
                        :ticks_per_bar, :logger, :debug, :inspect,
                        :run
 

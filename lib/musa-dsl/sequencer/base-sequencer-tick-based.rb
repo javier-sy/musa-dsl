@@ -27,9 +27,7 @@ module Musa
           _release_public_ticks
         end
 
-        private
-
-        def _init_timing
+        private def _init_timing
           @ticks_per_bar = Rational(beats_per_bar * ticks_per_beat)
           @tick_duration = Rational(1, @ticks_per_bar)
 
@@ -37,11 +35,11 @@ module Musa
           @hold_ticks = 0
         end
 
-        def _reset_timing
+        private def _reset_timing
           @position = @position_mutex.synchronize { 1r - @tick_duration }
         end
 
-        def _quantize_position(position, warn: true)
+        private def _quantize_position(position, warn: true)
           ticks_position = position / @tick_duration
 
           if ticks_position.round != ticks_position
@@ -58,11 +56,11 @@ module Musa
           position
         end
 
-        def _hold_public_ticks
+        private def _hold_public_ticks
           @hold_public_ticks = true
         end
 
-        def _release_public_ticks
+        private def _release_public_ticks
           @hold_ticks.times { _tick(@position_mutex.synchronize { @position += @tick_duration }) }
           @hold_ticks = 0
           @hold_public_ticks = false
