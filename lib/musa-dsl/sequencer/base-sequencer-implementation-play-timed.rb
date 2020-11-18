@@ -16,11 +16,11 @@ module Musa; module Sequencer
 
         if hash_mode
           component_ids = first_value_sample[:value].keys
-          extra_attribute_names = Set[*(first_value_sample.keys - [:time, :value])]
         else
           size = first_value_sample[:value].size
           component_ids = (0 .. size-1).to_a
         end
+        extra_attribute_names = Set[*(first_value_sample.keys - [:time, :value])]
 
         last_positions = hash_mode ? {} : []
       end
