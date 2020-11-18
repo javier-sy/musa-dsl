@@ -83,8 +83,9 @@ module Musa
         @timeslots.empty?
       end
 
-      def quantize_position(position)
-        _quantize_position(position, warn: false)
+      def quantize_position(position, warn: nil)
+        warn ||= false
+        _quantize_position(position, warn: warn)
       end
 
       def run
