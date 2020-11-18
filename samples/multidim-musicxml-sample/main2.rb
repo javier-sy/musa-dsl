@@ -60,17 +60,15 @@ s.at 1 do
               .to_h
               .collect { |key, serie|
                 [ key,
-                  serie.quantize(stops: true, right_open: (key == :dynamics))
-                      .compact_timed
+                  serie.quantize(stops: true)
                       .anticipate { |c, n|
-                        n ? c.clone.tap { |_| _[:next_value] = n[:value] } :
+                        n ? c.clone.tap { |_| _[:next_value] = (c[:value] == n[:value]) ? nil : n[:value] } :
                             c } ] }.to_h )
 
     s.play_timed(u) do |value, next_value:, duration:, started_ago:|
       quantized_duration =
-          duration.keys.collect do |component, _|
-            [component, s.quantize_position(s.position + duration[component]) -
-                s.quantize_position(s.position)]
+          duration.keys.collect do |component|
+            [component, s.quantize_position(s.position + duration[component]) - s.position]
           end.to_h
 
       logger.debug
