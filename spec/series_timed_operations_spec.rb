@@ -21,6 +21,9 @@ RSpec.describe Musa::Series do
           { a: { time: 2, value: 30, extra1: 300, extra2: 3000 }, b: { time: 2, value: 33, extra1: 303, extra2: 3003 } }]
 
       while v = ft.next_value
+        expect(v[:a]).to be_a(AbsTimed)
+        expect(v[:b]).to be_a(AbsTimed)
+
         expect(v).to eq(expected.shift)
       end
 
@@ -41,6 +44,9 @@ RSpec.describe Musa::Series do
           [{ time: 2, value: 30, extra1: 300, extra2: 3000 }, { time: 2, value: 33, extra1: 303, extra2: 3003 }]]
 
       while v = ft.next_value
+        expect(v[0]).to be_a(AbsTimed)
+        expect(v[1]).to be_a(AbsTimed)
+
         expect(v).to eq(expected.shift)
       end
 
@@ -61,6 +67,7 @@ RSpec.describe Musa::Series do
           { time: 2, value: 30, extra1: 300, extra2: 3000 }]
 
       while v = ft.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -157,6 +164,7 @@ RSpec.describe Musa::Series do
                   { time: 8r, value: [ 5, nil ] }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -180,6 +188,7 @@ RSpec.describe Musa::Series do
                   { time: 2, value: [3, 7], extra1: [30, nil], extra2: [nil, 70] }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -203,6 +212,7 @@ RSpec.describe Musa::Series do
                   { time: 2, value: { s1: 3, s2: 7 }, extra1: { s1: 30, s2: nil }, extra2: { s1: nil, s2: 70 } }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -226,6 +236,7 @@ RSpec.describe Musa::Series do
                   { time: 2, value: [3, 30, 7, 70], extra1: [30, 300, nil, nil], extra2: [nil, nil, 70, 700] }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -260,6 +271,7 @@ RSpec.describe Musa::Series do
                     extra2: { a: nil, b: nil, c: 70, d: 700 } }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -306,6 +318,7 @@ RSpec.describe Musa::Series do
                   { time: 8r, value: { a: 5, b: 50, c: 500, d: nil, e: nil, f: nil } }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -338,6 +351,7 @@ RSpec.describe Musa::Series do
                   { time: 8r, value: [ 5, 50, 500, nil, nil, nil ] }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -370,6 +384,7 @@ RSpec.describe Musa::Series do
                   { time: 8r, value: { a: 5, b: 50, c: 500, d: nil, e: nil, f: nil } }]
 
       while v = u.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -380,10 +395,10 @@ RSpec.describe Musa::Series do
 
   context 'timed_series + timed_union + split decomposition + compact timed + timed_union' do
     it 'timed_serie with direct value compact_timed' do
-      s = S({ time: 0, value: 1 },
-             { time: 1, value: 2 },
-             { time: 2, value: nil },
-             { time: 3, value: 3 })
+      s = S({ time: 0, value: 1 }.extend(AbsTimed),
+             { time: 1, value: 2 }.extend(AbsTimed),
+             { time: 2, value: nil }.extend(AbsTimed),
+             { time: 3, value: 3 }.extend(AbsTimed))
 
       c = s.compact_timed.i
 
@@ -392,6 +407,7 @@ RSpec.describe Musa::Series do
                   { time: 3, value: 3 }]
 
       while v = c.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -400,12 +416,12 @@ RSpec.describe Musa::Series do
    end
 
     it 'timed_serie with hash values compact_timed' do
-      s = S({ time: 0, value: { a: 1, b: 10 } },
-            { time: 1, value: { a: 2, b: 20 } },
-            { time: 2, value: nil },
-            { time: 3, value: { a: 3, b: nil } },
-            { time: 4, value: { a: nil, b: nil } },
-            { time: 5, value: { a: 4, b: 40 } })
+      s = S({ time: 0, value: { a: 1, b: 10 } }.extend(AbsTimed),
+            { time: 1, value: { a: 2, b: 20 } }.extend(AbsTimed),
+            { time: 2, value: nil }.extend(AbsTimed),
+            { time: 3, value: { a: 3, b: nil } }.extend(AbsTimed),
+            { time: 4, value: { a: nil, b: nil } }.extend(AbsTimed),
+            { time: 5, value: { a: 4, b: 40 } }.extend(AbsTimed))
 
       c = s.compact_timed.i
 
@@ -415,6 +431,7 @@ RSpec.describe Musa::Series do
                   { time: 5, value: { a: 4, b: 40 } }]
 
       while v = c.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -423,12 +440,12 @@ RSpec.describe Musa::Series do
     end
 
     it 'timed_serie with array values compact_timed' do
-      s = S({ time: 0, value: [ 1, 10 ] },
-            { time: 1, value: [ 2, 20 ] },
-            { time: 2, value: nil },
-            { time: 3, value: [ 3, nil ] },
-            { time: 4, value: [ nil, nil ] },
-            { time: 5, value: [ 4, 40 ] })
+      s = S({ time: 0, value: [ 1, 10 ] }.extend(AbsTimed),
+            { time: 1, value: [ 2, 20 ] }.extend(AbsTimed),
+            { time: 2, value: nil }.extend(AbsTimed),
+            { time: 3, value: [ 3, nil ] }.extend(AbsTimed),
+            { time: 4, value: [ nil, nil ] }.extend(AbsTimed),
+            { time: 5, value: [ 4, 40 ] }.extend(AbsTimed))
 
       c = s.compact_timed.i
 
@@ -438,6 +455,7 @@ RSpec.describe Musa::Series do
                   { time: 5, value: [ 4, 40 ] }]
 
       while v = c.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -476,6 +494,7 @@ RSpec.describe Musa::Series do
                   { time: 8r, value: { a: 5, b: 50, c: 500, d: nil, e: nil, f: nil } }]
 
       while v = u2.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 
@@ -514,6 +533,7 @@ RSpec.describe Musa::Series do
                   { time: 8r, value: [ 5, 50, 500, nil, nil, nil ] }]
 
       while v = u2.next_value
+        expect(v).to be_a(AbsTimed)
         expect(v).to eq(expected.shift)
       end
 

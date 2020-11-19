@@ -8,15 +8,15 @@ module Musa
       raise ArgumentError, 'Can\'t union an array of series with a hash of series' if array_of_timed_series.any? && hash_of_timed_series.any?
 
       if array_of_timed_series.any?
-        TimedUnionOfArrayOfSeries.new(array_of_timed_series)
+        TimedUnionOfArrayOfTimedSeries.new(array_of_timed_series)
       elsif hash_of_timed_series.any?
-        TimedUnionOfHashOfSeries.new(hash_of_timed_series)
+        TimedUnionOfHashOfTimedSeries.new(hash_of_timed_series)
       else
         raise ArgumentError, 'Missing argument series'
       end
     end
 
-    class TimedUnionOfArrayOfSeries
+    class TimedUnionOfArrayOfTimedSeries
       include Serie
 
       attr_reader :sources
@@ -74,7 +74,7 @@ module Musa
             end
           end
 
-          result
+          result.extend(AbsTimed)
         else
           nil
         end
@@ -146,9 +146,9 @@ module Musa
       return components, hash_mode, array_mode
     end
 
-    private_constant :TimedUnionOfArrayOfSeries
+    private_constant :TimedUnionOfArrayOfTimedSeries
 
-    class TimedUnionOfHashOfSeries
+    class TimedUnionOfHashOfTimedSeries
       include Serie
 
       attr_reader :sources
@@ -205,7 +205,7 @@ module Musa
             end
           end
 
-          result
+          result.extend(AbsTimed)
         else
           nil
         end
@@ -228,7 +228,7 @@ module Musa
       end
     end
 
-    private_constant :TimedUnionOfHashOfSeries
+    private_constant :TimedUnionOfHashOfTimedSeries
 
     module SerieOperations
       def flatten_timed
@@ -300,7 +300,7 @@ module Musa
               result = source_value.clone.extend(Musa::Datasets::AbsTimed)
             end
 
-            result
+            result.extend(AbsTimed)
           else
             nil
           end
