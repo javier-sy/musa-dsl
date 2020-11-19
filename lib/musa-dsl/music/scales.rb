@@ -303,7 +303,7 @@ module Musa
 
       def [](grade_or_symbol)
 
-        raise ArgumentError, "grade_or_symbol '#{grade_or_symbol}' should be a Numeric, String or Symbol" unless grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String) || grade_or_symbol.is_a?(Integer)
+        raise ArgumentError, "grade_or_symbol '#{grade_or_symbol}' should be a Integer, String or Symbol" unless grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String) || grade_or_symbol.is_a?(Integer)
 
         wide_grade, sharps = grade_of(grade_or_symbol)
 
