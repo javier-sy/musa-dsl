@@ -169,6 +169,7 @@ module Musa
       private_constant :ControllersControl
 
       class NoteControl
+        attr_reader :voice, :pitch, :velocity, :velocity_off, :duration
         attr_reader :start_position, :end_position
 
         def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil)
