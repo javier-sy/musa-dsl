@@ -192,10 +192,10 @@ module Musa
     private_constant :Sequence
 
     class FromEvalBlockWithParameters
-      using Musa::Extension::DeepCopy
-
       include Serie
       include Musa::Extension::SmartProcBinder
+
+      using Musa::Extension::DeepCopy
 
       attr_reader :block
 
@@ -222,7 +222,7 @@ module Musa
 
       def _next_value
         @value = if !@value.nil? || @value.nil? && @first
-                   @value = @block.call(*@value_parameters, last_value: @value, **@key_parameters)
+                   @value = @block.call(*@value_parameters, last_value: @value, caller: self, **@key_parameters)
                  else
                    nil
                  end

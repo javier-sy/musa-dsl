@@ -1,9 +1,9 @@
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
   s.version     = '0.22.6'
-  s.date        = '2020-11-19'
+  s.date        = '2020-11-21'
   s.summary     = 'A simple Ruby DSL for making complex music'
-  s.description = 'Musa-DSL: A Ruby DSL for algorithmic music composition, device language neutral (MIDI, OSC, etc)'
+  s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
   s.authors     = ['Javier Sánchez Yeste']
   s.email       = 'javier.sy@gmail.com'
   s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples)/}) }

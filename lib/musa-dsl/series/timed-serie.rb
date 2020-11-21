@@ -34,7 +34,7 @@ module Musa
       end
 
       private def _restart(restart_sources = true)
-        @sources.each { |serie| serie.restart } if restart_sources
+        @sources.each(&:restart) if restart_sources
         @sources_next_values = Array.new(@sources.size)
 
         @components = nil
@@ -74,7 +74,7 @@ module Musa
             end
           end
 
-          result.extend(AbsTimed)
+          result.extend(Musa::Datasets::AbsTimed)
         else
           nil
         end
@@ -168,15 +168,17 @@ module Musa
       end
 
       private def _restart(restart_sources = true)
-        @sources.each_value { |serie| serie.restart } if restart_sources
+        @sources.each_value(&:restart) if restart_sources
         @sources_next_values = @components.collect { |k| [k, nil] }.to_h
         @other_attributes = nil
       end
 
       private def _next_value
-        sources_values = @sources_next_values.collect do |key, _|
-          [key, @sources_next_values[key] || (@sources_next_values[key] = @sources[key].next_value)]
-        end.to_h
+        sources_values = {}
+
+        @components.each do |key|
+          sources_values[key] = @sources_next_values[key] || (@sources_next_values[key] = @sources[key].next_value)
+        end
 
         @other_attributes = infer_other_attributes(sources_values) unless @other_attributes
 
@@ -205,7 +207,7 @@ module Musa
             end
           end
 
-          result.extend(AbsTimed)
+          result.extend(Musa::Datasets::AbsTimed)
         else
           nil
         end
@@ -300,7 +302,7 @@ module Musa
               result = source_value.clone.extend(Musa::Datasets::AbsTimed)
             end
 
-            result.extend(AbsTimed)
+            result.extend(Musa::Datasets::AbsTimed)
           else
             nil
           end

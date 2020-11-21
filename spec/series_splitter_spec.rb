@@ -4,9 +4,10 @@ require 'musa-dsl'
 
 include Musa::Series
 
+using Musa::Extension::Matrix
+
 RSpec.describe Musa::Series do
   context 'Series splitter handles' do
-
     it 'prototype / instance management and split series independence' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
 
@@ -125,7 +126,7 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
     end
 
-    it 'serie of hash elements (instancing split components) with restart on one split component' do
+    it 'serie of hash elements (instancing split components) with restart on one split component [???]' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
       ss = h.split
@@ -179,7 +180,77 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
     end
 
-    it 'serie of hash elements (instancing split components) with restart on three split component' do
+    it 'serie of hash elements (instancing split components) with restart on three split component should really restart when all 3 components are restarted [???]' do
+      s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
+      h = s.hashify(:a, :b, :c)
+      ss = h.split
+
+      ss_a = ss[:a].instance
+      ss_b = ss[:b].instance
+      ss_c = ss[:c].instance
+
+      expect(ss_a.next_value).to eq 1
+      expect(ss_b.next_value).to eq 10
+      expect(ss_c.next_value).to eq 100
+
+      expect(ss_a.next_value).to eq 2
+      expect(ss_b.next_value).to eq 20
+
+      expect(ss_a.next_value).to eq 3
+      expect(ss_b.next_value).to eq 30
+
+      expect(ss_c.next_value).to eq 200
+
+      expect(ss_a.next_value).to be_nil
+      expect(ss_b.next_value).to be_nil
+
+      expect(ss_a.next_value).to be_nil
+      expect(ss_b.next_value).to be_nil
+
+      expect(ss_c.next_value).to eq 300
+
+      expect(ss_a.next_value).to be_nil
+      expect(ss_a.next_value).to be_nil
+
+      expect(ss_b.next_value).to be_nil
+      expect(ss_b.next_value).to be_nil
+
+      expect(ss_c.next_value).to be_nil
+      expect(ss_c.next_value).to be_nil
+
+      ss_a.restart
+
+      expect(ss_a.next_value).to be_nil
+      expect(ss_a.next_value).to be_nil
+
+      ss_b.restart
+
+      expect(ss_a.next_value).to be_nil
+
+      expect(ss_b.next_value).to be_nil
+      expect(ss_b.next_value).to be_nil
+
+      ss_c.restart
+
+      expect(ss_a.next_value).to eq 1
+      expect(ss_b.next_value).to eq 10
+      expect(ss_c.next_value).to eq 100
+
+      expect(ss_a.next_value).to eq 2
+      expect(ss_a.next_value).to eq 3
+      expect(ss_a.next_value).to be_nil
+
+      expect(ss_b.next_value).to eq 20
+      expect(ss_b.next_value).to eq 30
+      expect(ss_b.next_value).to be_nil
+
+      expect(ss_c.next_value).to eq 200
+      expect(ss_c.next_value).to eq 300
+
+      expect(ss_c.next_value).to be_nil
+    end
+
+    it 'serie of hash elements (instancing split components) with restart on three split component [???]' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
       ss = h.split
@@ -287,7 +358,8 @@ RSpec.describe Musa::Series do
     end
   end
 
-  context 'Series split and collected' do
+  context 'Series split and collected:' do
+
     it 'serie of hash elements split collected merges to hash serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
@@ -319,6 +391,21 @@ RSpec.describe Musa::Series do
 
       expect(s2i.next_value).to be_nil
     end
-  end
 
+    it 'bugfix for complex split of a timed_union of a split p.timed_serie skipping values on next_value' do
+      line = [ { a: 1, b: 10, c: 100 }.extend(Musa::Datasets::PackedV), 1 * 4,
+               { a: 2, b: 20, c: 200 }.extend(Musa::Datasets::PackedV), 2 * 4,
+               { a: 3, b: 30, c: 300 }.extend(Musa::Datasets::PackedV), 1 * 4,
+               { a: 4, b: 40, c: 400 }.extend(Musa::Datasets::PackedV)].extend(Musa::Datasets::P)
+
+      series = TIMED_UNION(**line.to_timed_serie.flatten_timed.split).flatten_timed.split.to_h
+
+      series_a = series[:a].instance
+
+      expect(series.prototype?).to eq true
+      expect(series_a.instance?).to eq true
+
+      expect(series_a.next_value).to eq({ time: 0, value: 1})
+    end
+  end
 end

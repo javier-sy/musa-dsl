@@ -28,20 +28,7 @@ module Musa::Datasets
 
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
-      # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
-
-      Musa::Series::E(clone, base_duration, context: { time: time_start }) do |p, base_duration, context: |
-        value = p.shift
-
-        if value
-          r = { time: context[:time], value: value } if !value.nil?
-
-          delta_time = p.shift
-          context[:time] += delta_time * base_duration if delta_time
-
-          r&.extend(AbsTimed)
-        end
-      end
+      PtoTimedSerie.new(self, base_duration, time_start)
     end
 
     def map(&block)
@@ -54,6 +41,38 @@ module Musa::Datasets
           block.call(element)
         else
           element
+        end
+      end
+    end
+
+    class PtoTimedSerie
+      include Musa::Series::Serie
+
+      attr_reader :origin
+
+      def initialize(origin, base_duration, time_start)
+        @origin = origin
+        @base_duration = base_duration
+        @time_start = time_start
+
+        _restart
+
+        mark_as_prototype!
+      end
+
+      def _restart
+        @p = @origin.clone
+        @time = @time_start
+      end
+
+      def _next_value
+        if value = @p.shift
+          r = { time: @time, value: value }.extend(AbsTimed)
+
+          delta_time = @p.shift
+          @time += delta_time * @base_duration if delta_time
+
+          r
         end
       end
     end

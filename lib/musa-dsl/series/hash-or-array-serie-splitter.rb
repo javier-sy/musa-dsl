@@ -66,6 +66,9 @@ module Musa
 
           def initialize(hash_or_array_serie)
             @source = hash_or_array_serie
+
+            infer_components
+
             restart restart_source: false
 
             mark_regarding! @source
@@ -76,14 +79,20 @@ module Musa
           def hash_mode?; @hash_mode; end
           def array_mode?; @array_mode; end
 
-          protected def _instance!
-            super
-            restart
+          def restart(key_or_index = nil, restart_source: true)
+            if key_or_index
+              @asked_to_restart[key_or_index] = true
+            else
+              @components.each { |c| @asked_to_restart[c] = true }
+            end
+
+            if @asked_to_restart.values.all?
+              @source.restart if restart_source
+              infer_components
+            end
           end
 
-          def restart(restart_source: true)
-            @source.restart if restart_source
-
+          private def infer_components
             source = @source.instance
             sample = source.current_value || source.peek_next_value
 
@@ -103,10 +112,17 @@ module Musa
               @values = nil
               @array_mode = @hash_mode = false
             end
+
+            @asked_to_restart = {}
+
+            @components.each do |component|
+              @asked_to_restart[component] = false
+            end
           end
 
           def next_value(key_or_index)
             if @values[key_or_index].nil? || @values[key_or_index].empty?
+
               hash_or_array_value = @source.next_value
 
               case hash_or_array_value
@@ -142,7 +158,7 @@ module Musa
           end
 
           def _restart
-            @source.restart
+            @source.restart @key_or_index
           end
 
           def _next_value
