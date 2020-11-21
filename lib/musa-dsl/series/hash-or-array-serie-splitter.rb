@@ -53,7 +53,7 @@ module Musa
           end
         end
 
-        def to_array
+        def to_ary
           if @proxy.array_mode?
             [].tap { |_| @proxy.components.each { |i| _[i] = self[i] } }
           else
