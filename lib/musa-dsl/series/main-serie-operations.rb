@@ -962,7 +962,7 @@ module Musa
 
         def _next_value
           if value = @source.next_value
-            while @block.call(value, @history)
+            while value && @block.call(value, @history)
               @history << value
               value = @source.next_value
             end

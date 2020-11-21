@@ -402,7 +402,7 @@ RSpec.describe Musa::Series do
 
       series_a = series[:a].instance
 
-      expect(series.prototype?).to eq true
+      expect(series[:a].prototype?).to eq true
       expect(series_a.instance?).to eq true
 
       expect(series_a.next_value).to eq({ time: 0, value: 1})
