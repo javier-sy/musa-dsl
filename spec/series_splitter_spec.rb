@@ -126,7 +126,7 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
     end
 
-    it 'serie of hash elements (instancing split components) with restart on one split component [???]' do
+    it 'serie of hash elements (instancing split components) with restart on one split component [!!!!]' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
       ss = h.split
@@ -180,7 +180,7 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
     end
 
-    it 'serie of hash elements (instancing split components) with restart on three split component should really restart when all 3 components are restarted [???]' do
+    it 'serie of hash elements (instancing split components) with restart on three split component should really restart when all 3 components are restarted [!!!!]' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
       ss = h.split
@@ -250,7 +250,7 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
     end
 
-    it 'serie of hash elements (instancing split components) with restart on three split component [???]' do
+    it 'serie of hash elements (instancing split components) with restart on three split component [!!!!]' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
       ss = h.split
