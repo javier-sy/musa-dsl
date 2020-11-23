@@ -1,13 +1,13 @@
 module Musa::Datasets::Score::ToMXML
-  private
+  using Musa::Extension::InspectNice
 
   DynamicsContext = Struct.new(:last_dynamics)
   private_constant :DynamicsContext
 
-  def process_ps(measure, element, context, logger, do_log)
+  private def process_ps(measure, element, context, logger, do_log)
     context ||= DynamicsContext.new
 
-    logger.debug "\nprocess_ps #{element}" if do_log
+    logger.debug "\nprocess_ps #{element.inspect}" if do_log
 
     case element[:dataset][:type]
     when :crescendo, :diminuendo

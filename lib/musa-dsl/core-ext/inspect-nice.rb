@@ -42,7 +42,7 @@ module Musa
         end
 
         def to_s
-          inspect simple: true # !Rational.to_s_as_inspect
+          inspect simple: !Rational.to_s_as_inspect
         end
       end
     end

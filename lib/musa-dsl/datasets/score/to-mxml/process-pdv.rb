@@ -1,9 +1,9 @@
 require 'prime'
 
 module Musa::Datasets::Score::ToMXML
-  private
+  using Musa::Extension::InspectNice
 
-  def process_pdv(measure, bar, divisions_per_bar, element, pointer, logger, do_log)
+  private def process_pdv(measure, bar, divisions_per_bar, element, pointer, logger, do_log)
 
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
@@ -23,8 +23,8 @@ module Musa::Datasets::Score::ToMXML
     if do_log
       logger.debug "\nprocess_pdv #{element.inspect}"
       logger.debug ""
-      logger.debug "             pointer #{pointer} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
-      logger.debug "             effective_start #{effective_start} effective_duration #{effective_duration}"
+      logger.debug "             pointer #{pointer.inspect} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
+      logger.debug "             effective_start #{effective_start.inspect} effective_duration #{effective_duration.inspect}"
       logger.debug "             duration decomposition #{effective_duration_decomposition}"
     end
 
@@ -125,7 +125,7 @@ module Musa::Datasets::Score::ToMXML
     pointer
   end
 
-  def pitch_and_octave_and_sharps(pdv)
+  private def pitch_and_octave_and_sharps(pdv)
     if pdv[:pitch] == :silence
       [:silence, nil, nil]
     else
@@ -143,7 +143,7 @@ module Musa::Datasets::Score::ToMXML
     end
   end
 
-  def dynamics_index_of(midi_velocity)
+  private def dynamics_index_of(midi_velocity)
     return nil unless midi_velocity
 
     # ppp = midi 16 ... fff = midi 127
@@ -153,7 +153,7 @@ module Musa::Datasets::Score::ToMXML
        .index { |r| r.cover? midi_velocity.round.to_i }
   end
 
-  def dynamics_to_string(dynamics_index)
+  private def dynamics_to_string(dynamics_index)
     return nil unless dynamics_index
     ['pppppp', 'ppppp', 'pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][dynamics_index.round.to_i]
   end

@@ -9,6 +9,8 @@ module Musa; module Sequencer
     include Musa::Extension::SmartProcBinder
     include Musa::Extension::DeepCopy
 
+    using Musa::Extension::InspectNice
+
     private def _tick(position_to_run)
       @before_tick.each { |block| block.call position_to_run }
       queue = @timeslots[position_to_run]

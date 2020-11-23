@@ -66,9 +66,10 @@ module Musa; module Sequencer
           end
         end
 
-        _numeric_at start_position + _quantize_position(time, warn: false), control do
+        _numeric_at _quantize_position(start_position + time, warn: true), control do
           binder.call(values,
                       **extra_attributes,
+                      time: start_position + time,
                       started_ago: started_ago,
                       control: control)
 

@@ -11,6 +11,8 @@ module Musa::Datasets; class Score
     include Musa::MusicXML::Builder
     include Musa::Datasets
 
+    using Musa::Extension::InspectNice
+
     def to_mxml(beats_per_bar, ticks_per_beat,
                 bpm: nil,
                 title: nil,
@@ -61,8 +63,8 @@ module Musa::Datasets; class Score
 
       if do_log
         logger.debug ""
-        logger.debug"score.to_mxl log:"
-        logger.debug"-----------------"
+        logger.debug"score.to_mxml log:"
+        logger.debug"------------------"
       end
 
       parts.each_key do |part_id|
@@ -83,7 +85,8 @@ module Musa::Datasets; class Score
 
       (1..finish || 0).each do |bar|
         if do_log
-          logger.debug msg = "\nfilling part #{part.name} (#{instrument || 'nil'}): processing bar #{bar}"
+          logger.debug ""
+          logger.debug msg = "filling part #{part.name} (#{instrument || 'nil'}): processing bar #{bar}"
           logger.debug "-" * msg.size
         end
 
@@ -113,7 +116,7 @@ module Musa::Datasets; class Score
         else
           first = bar_elements.first
 
-          logger.debug "\nfirst element #{first}" if do_log
+          logger.debug "\nfirst element #{first.inspect}" if do_log
 
           # TODO habrá que arreglar el cálculo de pointer cuando haya avances y retrocesos para que
           # TODO no añada silencios incorrectos al principio o al final
