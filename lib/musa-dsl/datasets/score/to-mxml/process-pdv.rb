@@ -21,7 +21,7 @@ module Musa::Datasets::Score::ToMXML
         decompose_as_sum_of_simple_durations(effective_duration))
 
     if do_log
-      logger.debug "\nprocess_pdv #{element}"
+      logger.debug "\nprocess_pdv #{element.inspect}"
       logger.debug ""
       logger.debug "             pointer #{pointer} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
       logger.debug "             effective_start #{effective_start} effective_duration #{effective_duration}"

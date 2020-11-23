@@ -12,7 +12,6 @@ module Musa
         alias to_s inspect
       end
 
-
       refine Rational.singleton_class do
         attr_accessor :to_s_as_inspect
       end

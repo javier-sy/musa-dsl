@@ -1,5 +1,6 @@
 require_relative '../../../logger'
 require_relative '../../../musicxml'
+require_relative '../../../core-ext/inspect-nice'
 
 require_relative 'process-time'
 require_relative 'process-pdv'
@@ -22,7 +23,12 @@ module Musa::Datasets; class Score
       bpm ||= 90
       title ||= 'Untitled'
       creators ||= { composer: 'Unknown' }
-      logger ||= Musa::Logger::Logger.new
+
+      if logger.nil?
+        logger = Musa::Logger::Logger.new
+        logger.debug! if do_log
+      end
+
       do_log ||= nil
 
       mxml = ScorePartwise.new do |_|
@@ -54,12 +60,16 @@ module Musa::Datasets; class Score
       end
 
       if do_log
-        logger.debug"\nscore.to_mxl log:"
-        logger.debug  "-----------------"
+        logger.debug ""
+        logger.debug"score.to_mxl log:"
+        logger.debug"-----------------"
       end
 
       parts.each_key do |part_id|
-        fill_part mxml.parts[part_id], beats_per_bar * ticks_per_beat, (parts.size > 1 ? part_id : nil), logger, do_log
+        fill_part mxml.parts[part_id],
+                  beats_per_bar * ticks_per_beat,
+                  (parts.size > 1 ? part_id : nil),
+                  logger, do_log
       end
 
       mxml
@@ -73,8 +83,7 @@ module Musa::Datasets; class Score
 
       (1..finish || 0).each do |bar|
         if do_log
-          logger.debug ""
-          logger.debug msg = "filling part #{part.name} (#{instrument}): processing bar #{bar}"
+          logger.debug msg = "\nfilling part #{part.name} (#{instrument || 'nil'}): processing bar #{bar}"
           logger.debug "-" * msg.size
         end
 
@@ -83,7 +92,7 @@ module Musa::Datasets; class Score
 
         pointer = 0r
 
-        instrument_score = subset { |dataset| dataset[:instrument] == instrument }
+        instrument_score = subset { |dataset| instrument.nil? || dataset[:instrument] == instrument }
 
         bar_elements = \
         (instrument_score.changes_between(bar, bar + 1).select { |p| p[:dataset].is_a?(PS) } +
@@ -92,7 +101,7 @@ module Musa::Datasets; class Score
                                                     e[:dataset].is_a?(PS) ? 0 : 1 ] }
 
         if pdvs.empty?
-          logger.debug "\nadded full bar silence" if do_log
+          logger.debug "\nadding full bar silence..." if do_log
 
           process_pdv(measure, bar, divisions_per_bar,
                       { start: bar,
@@ -113,7 +122,7 @@ module Musa::Datasets; class Score
 
             silence_duration = first[:start_in_interval] - bar
 
-            logger.debug "\nadded initial silence for duration #{silence_duration}" if do_log
+            logger.debug "\nadding initial silence for duration #{silence_duration}..." if do_log
 
             pointer = process_pdv(measure, bar, divisions_per_bar,
                                   { start: bar,
@@ -123,6 +132,8 @@ module Musa::Datasets; class Score
                                   logger,
                                   do_log)
           end
+
+          logger.debug "\nadding PDV and PS elements..." if do_log
 
           bar_elements.each do |element|
             case element[:dataset]
@@ -140,7 +151,7 @@ module Musa::Datasets; class Score
           if pointer < 1r
             silence_duration = 1r - pointer
 
-            logger.debug "\nadded ending silence for duration #{silence_duration}" if do_log
+            logger.debug "\nadded ending silence for duration #{silence_duration}..." if do_log
 
             process_pdv(measure, bar, divisions_per_bar,
                         { start: bar + pointer,

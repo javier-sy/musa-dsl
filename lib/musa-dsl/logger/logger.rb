@@ -1,7 +1,12 @@
 require 'logger'
 
+require_relative '../core-ext/inspect-nice'
+
+
 module Musa; module Logger
   class Logger < ::Logger
+    using Musa::Extension::InspectNice
+
     def initialize(sequencer: nil, position_format: nil)
       super STDERR, level: WARN
 
@@ -22,7 +27,7 @@ module Musa; module Logger
 
           progname = "[#{progname}]" if progname
 
-          "#{position}#{level}#{progname} #{msg}\n"
+          "#{position}#{level}#{progname}#{' ' if position || level || progname}#{msg}\n"
         else
           "\n"
         end
