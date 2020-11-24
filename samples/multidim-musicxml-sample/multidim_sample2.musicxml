@@ -895,19 +895,7 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<dynamics>
-						<ppp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="crescendo"/>
+					<wedge type="crescendo" niente="yes"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -947,6 +935,18 @@
 				<duration>128</duration>
 				<type>whole</type>
 			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<pp />
+					</dynamics>
+				</direction-type>
+			</direction>
 			<direction placement="below">
 				<direction-type>
 					<wedge type="stop" niente="yes"/>
@@ -1037,6 +1037,13 @@
 		<measure number="35">
 			<direction placement="below">
 				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
 					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
@@ -1079,13 +1086,8 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<dynamics>
-						<p />
+						<mf />
 					</dynamics>
 				</direction-type>
 			</direction>
@@ -1144,17 +1146,13 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>2</duration>
+				<duration>3</duration>
 				<tie type="stop"/>
 				<type>64th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
-			</note>
-			<note>
-				<rest />
-				<duration>1</duration>
-				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -1629,6 +1627,13 @@
 		<measure number="30">
 			<direction placement="below">
 				<direction-type>
+					<dynamics>
+						<mp />
+					</dynamics>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
 					<wedge type="diminuendo"/>
 				</direction-type>
 			</direction>
@@ -1643,13 +1648,8 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
 					<dynamics>
-						<ppp />
+						<p />
 					</dynamics>
 				</direction-type>
 			</direction>
@@ -1746,19 +1746,7 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<dynamics>
-						<pppp />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="crescendo"/>
+					<wedge type="crescendo" niente="yes"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -1811,17 +1799,13 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>2</duration>
+				<duration>3</duration>
 				<tie type="stop"/>
 				<type>64th</type>
+				<dot />
 				<notations>
 					<tied type="stop"/>
 				</notations>
-			</note>
-			<note>
-				<rest />
-				<duration>1</duration>
-				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -1885,7 +1869,7 @@
 			<direction placement="below">
 				<direction-type>
 					<dynamics>
-						<f />
+						<mf />
 					</dynamics>
 				</direction-type>
 			</direction>
@@ -1960,7 +1944,7 @@
 			<direction placement="below">
 				<direction-type>
 					<dynamics>
-						<pp />
+						<f />
 					</dynamics>
 				</direction-type>
 			</direction>
@@ -2634,23 +2618,11 @@
 					<tied type="stop"/>
 				</notations>
 			</note>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<dynamics>
-						<pp />
-					</dynamics>
-				</direction-type>
-			</direction>
 		</measure>
 		<measure number="38">
 			<direction placement="below">
 				<direction-type>
-					<wedge type="crescendo"/>
+					<wedge type="crescendo" niente="yes"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -2843,7 +2815,7 @@
 			<direction placement="below">
 				<direction-type>
 					<dynamics>
-						<pppp />
+						<ff />
 					</dynamics>
 				</direction-type>
 			</direction>
@@ -2871,18 +2843,12 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>3</duration>
+				<duration>4</duration>
 				<tie type="stop"/>
-				<type>64th</type>
-				<dot />
+				<type>32nd</type>
 				<notations>
 					<tied type="stop"/>
 				</notations>
-			</note>
-			<note>
-				<rest />
-				<duration>1</duration>
-				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -3281,15 +3247,24 @@
 				</pitch>
 				<duration>4</duration>
 				<tie type="stop"/>
+				<tie type="start"/>
 				<type>32nd</type>
 				<notations>
-					<tied type="stop"/>
+					<tied type="continue"/>
 				</notations>
 			</note>
 			<note>
-				<rest />
+				<pitch>
+					<step>D</step>
+					<alter>1</alter>
+					<octave>4</octave>
+				</pitch>
 				<duration>1</duration>
+				<tie type="stop"/>
 				<type>128th</type>
+				<notations>
+					<tied type="stop"/>
+				</notations>
 			</note>
 			<note>
 				<pitch>
@@ -3794,19 +3769,7 @@
 			</note>
 			<direction placement="below">
 				<direction-type>
-					<wedge type="stop"/>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<dynamics>
-						<mf />
-					</dynamics>
-				</direction-type>
-			</direction>
-			<direction placement="below">
-				<direction-type>
-					<wedge type="crescendo"/>
+					<wedge type="crescendo" niente="yes"/>
 				</direction-type>
 			</direction>
 			<note>
@@ -3828,18 +3791,12 @@
 					<alter>0</alter>
 					<octave>4</octave>
 				</pitch>
-				<duration>3</duration>
+				<duration>4</duration>
 				<tie type="stop"/>
-				<type>64th</type>
-				<dot />
+				<type>32nd</type>
 				<notations>
 					<tied type="stop"/>
 				</notations>
-			</note>
-			<note>
-				<rest />
-				<duration>1</duration>
-				<type>128th</type>
 			</note>
 			<note>
 				<pitch>
@@ -3926,6 +3883,18 @@
 				<duration>128</duration>
 				<type>whole</type>
 			</note>
+			<direction placement="below">
+				<direction-type>
+					<wedge type="stop"/>
+				</direction-type>
+			</direction>
+			<direction placement="below">
+				<direction-type>
+					<dynamics>
+						<fff />
+					</dynamics>
+				</direction-type>
+			</direction>
 			<direction placement="below">
 				<direction-type>
 					<wedge type="stop" niente="yes"/>

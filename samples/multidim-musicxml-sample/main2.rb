@@ -61,23 +61,24 @@ s.at 1 do
               .collect { |key, serie|
                 [ key,
                   serie.quantize(stops: true)
-                      .anticipate { |c, n|
+                      .anticipate { |_, c, n|
                         n ? c.clone.tap { |_| _[:next_value] = (c[:value] == n[:value]) ? nil : n[:value] } :
                             c } ] }.to_h )
 
-    s.play_timed(u) do |value, next_value:, duration:, started_ago:|
-      quantized_duration =
-          duration.keys.collect do |component|
-            [component, s.quantize_position(s.position + duration[component]) - s.position]
-          end.to_h
+    s.play_timed(u) do |value, time:, next_value:, duration:, started_ago:|
+      quantized_duration = {}
+
+      duration.each_pair do |component, value|
+        quantized_duration[component] = s.quantize_position(time + value) - s.position if value
+      end
 
       logger.debug
       logger.debug "new element at position #{s.position.inspect}\n\t\tvalue #{value}\n\t\tnext #{next_value}\n\t\tduration #{duration}" \
                "\n\t\tquantized_duration #{quantized_duration}\n\t\tstarted_ago #{started_ago}\n"
 
-      new_instrument_now = !started_ago[:instrument]
-      new_dynamics_now = !started_ago[:dynamics]
-      new_pitch_now = !started_ago[:pitch]
+      new_instrument_now = !!duration[:instrument]
+      new_dynamics_now = !!duration[:dynamics]
+      new_pitch_now = !!duration[:pitch]
 
       # logger.debug
       # logger.debug "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
@@ -111,15 +112,22 @@ s.at 1 do
         pitch = values[:pitch]
 
         if new_instrument_now || new_dynamics_now
+          if new_instrument_now
+            start_instrument_position = s.position - (started_ago[:instrument] || 0)
+            finish_instrument_position = start_instrument_position + quantized_durations[:instrument]
+          else
+            start_instrument_position = finish_instrument_position = nil
+          end
 
-          start_instrument_position = s.position - (started_ago[:instrument] || 0)
-          finish_instrument_position = start_instrument_position + quantized_durations[:instrument]
-
-          start_dynamics_position = s.position - (started_ago[:dynamics] || 0)
-          finish_dynamics_position = start_dynamics_position + quantized_durations[:dynamics]
+          if new_dynamics_now
+            start_dynamics_position = s.position - (started_ago[:dynamics] || 0)
+            finish_dynamics_position = start_dynamics_position + quantized_durations[:dynamics]
+          else
+            start_dynamics_position = finish_dynamics_position = nil
+          end
 
           segment_q_effective_duration =
-              [finish_instrument_position, finish_dynamics_position].min - s.position
+              [finish_instrument_position, finish_dynamics_position].compact.min - s.position
 
           segment_effective_finish_position = s.position + segment_q_effective_duration
 
@@ -139,7 +147,6 @@ s.at 1 do
             segment_relative_finish_position_over_instrument_timeline =
                 Rational(segment_effective_finish_position - start_instrument_position,
                          finish_instrument_position - start_instrument_position)
-
           end
 
           # for dynamics
@@ -183,22 +190,15 @@ s.at 1 do
               segment_to_dynamics *
                   segment_relative_finish_position_over_instrument_timeline
 
-          # logger.debug "from_instrument #{from_instrument_symbol} to_instrument #{to_instrument_symbol || 'nil'}"
-          #
-          # logger.debug "segment_q_effective_duration #{segment_q_effective_duration&.inspect || 'nil'}"
-          #
-          # logger.debug "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
-          # logger.debug "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.to_f&.round(2) || 'nil'}"
-          #
-          # logger.debug "value[:dynamics] #{values[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
-          # logger.debug "segment_from_dynamics #{segment_from_dynamics.to_f.round(2)} to_dynamics #{to_dynamics.to_f.round(2)}"
-          #
-          # logger.debug "segment_relative_start_position_over_instrument_timeline #{segment_relative_start_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
-          # logger.debug "segment_relative_finish_position_over_instrument_timeline #{segment_relative_finish_position_over_instrument_timeline&.to_f&.round(2) || 'nil'}"
-          #
-          # logger.debug "#{from_instrument_symbol} segment_from_dynamics #{segment_from_dynamics_from_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_from_instrument.to_f.round(2)}"
-          # logger.debug "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
-          #
+          logger.debug "start_dynamics_position #{start_dynamics_position&.inspect || 'nil'}"
+          logger.debug "finish_dynamics_position #{finish_dynamics_position&.inspect || 'nil'}"
+          logger.debug "segment_effective_finish_position #{segment_effective_finish_position&.inspect || 'nil'}"
+
+          logger.debug "segment_relative_start_position_over_dynamics_timeline #{segment_relative_start_position_over_dynamics_timeline&.inspect || 'nil'}"
+          logger.debug "segment_relative_finish_position_over_dynamics_timeline #{segment_relative_finish_position_over_dynamics_timeline&.inspect || 'nil'}"
+
+          logger.debug "values[:dynamics] #{values[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
+
           if from_instrument && to_instrument
             logger.debug "rendering dynamics for instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}"
 
@@ -230,13 +230,13 @@ s.at 1 do
         end
 
         logger.debug "pitch #{pitch}"
-        logger.debug "q_duration_pitch #{q_duration_pitch.inspect} q_duration_dynamics #{q_duration_dynamics.inspect} q_duration_instrument #{q_duration_instrument.inspect}"
+        logger.debug "q_duration_pitch #{q_duration_pitch.inspect} q_duration_dynamics #{q_duration_dynamics.inspect} q_duration_instrument #{q_duration_instrument&.inspect}"
         logger.debug "started_ago #{started_ago.inspect}"
 
-        q_effective_duration_pitch =
-            [ q_duration_instrument - (started_ago[:instrument] || 0),
-              q_duration_pitch - (started_ago[:pitch] || 0),
-              q_duration_dynamics - (started_ago[:dynamics] || 0)].min
+        q_effective_duration_pitch = [
+            q_duration_pitch - (started_ago[:pitch] || 0),
+            q_duration_dynamics - (started_ago[:dynamics] || 0),
+            q_duration_instrument && (q_duration_instrument - (started_ago[:instrument] || 0))].compact.min
 
         logger.debug "effective_duration_pitch #{q_effective_duration_pitch.inspect}"
 
