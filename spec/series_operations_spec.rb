@@ -790,15 +790,15 @@ RSpec.describe Musa::Series do
     it 'Serie anticipate' do
       s = S(1, 2, 3, 4, 5, 6)
 
-      ss = s.anticipate do |current, next_value|
-        if next_value
-          current + next_value * 10
+      ss = s.anticipate do |previous, current, next_v|
+        if next_v
+          [previous, current + next_v * 10]
         else
-          current
+          [previous, current]
         end
       end
 
-      expect(ss.to_a).to eq [21, 32, 43, 54, 65, 6]
+      expect(ss.to_a).to eq [[nil, 21], [1, 32], [2, 43], [3, 54], [4, 65], [5, 6]]
     end
 
     it 'Generative grammar nodes of series to serie' do

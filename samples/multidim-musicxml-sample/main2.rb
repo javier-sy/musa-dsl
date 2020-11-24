@@ -82,16 +82,16 @@ s.at 1 do
       # logger.debug
       # logger.debug "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
 
-      quantized_duration.each_pair do |component, duration|
-        quantized_durations[component] = duration
-      end
-
       value.each_pair do |component, value|
         values[component] = value
       end
 
       next_value.each_pair do |component, value|
         next_values[component] = value
+      end
+
+      quantized_duration.each_pair do |component, duration|
+        quantized_durations[component] = duration
       end
 
       if new_instrument_now || new_dynamics_now || new_pitch_now
@@ -200,6 +200,8 @@ s.at 1 do
           # logger.debug "#{to_instrument_symbol || 'nil'} segment_from_dynamics #{segment_from_dynamics_to_instrument.to_f.round(2)} to_dynamics #{segment_to_dynamics_to_instrument.to_f.round(2)}"
           #
           if from_instrument && to_instrument
+            logger.debug "rendering dynamics for instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}"
+
             render_dynamics segment_from_dynamics_from_instrument,
                             segment_to_dynamics_from_instrument,
                             segment_q_effective_duration,
@@ -216,6 +218,8 @@ s.at 1 do
           end
 
           if from_instrument && !to_instrument
+            logger.debug "rendering dynamics without instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}"
+
             render_dynamics segment_from_dynamics,
                             segment_to_dynamics,
                             segment_q_effective_duration,

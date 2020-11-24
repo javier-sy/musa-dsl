@@ -190,10 +190,15 @@ module Musa
         end
 
         def _next_value
+          previous_value = @source.current_value
           value = @source.next_value
           peek_next_value = @source.peek_next_value
 
-          @block.call(value, peek_next_value)
+          if value.nil?
+            nil
+          else
+            @block.call(previous_value, value, peek_next_value)
+          end
         end
 
         def infinite?
