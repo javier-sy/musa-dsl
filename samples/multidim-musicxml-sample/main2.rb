@@ -125,21 +125,37 @@ s.at 1 do
 
           # relative start and finish position are ratios from 0 (beginning) to 1 (finish)
           #
-          segment_relative_start_position_over_instrument_timeline =
-              Rational(s.position - start_instrument_position,
-                       finish_instrument_position - start_instrument_position)
 
-          segment_relative_finish_position_over_instrument_timeline =
-              Rational(segment_effective_finish_position - start_instrument_position,
-                       finish_instrument_position - start_instrument_position)
+          # for instrument
           #
-          segment_relative_start_position_over_dynamics_timeline =
-              Rational(s.position - start_dynamics_position,
-                       finish_dynamics_position - start_dynamics_position)
+          if finish_instrument_position == start_instrument_position
+            segment_relative_start_position_over_instrument_timeline = 0r
+            segment_relative_finish_position_over_instrument_timeline = 1r
+          else
+            segment_relative_start_position_over_instrument_timeline =
+                Rational(s.position - start_instrument_position,
+                         finish_instrument_position - start_instrument_position)
 
-          segment_relative_finish_position_over_dynamics_timeline =
-              Rational(segment_effective_finish_position - start_dynamics_position,
-                       finish_dynamics_position - start_dynamics_position)
+            segment_relative_finish_position_over_instrument_timeline =
+                Rational(segment_effective_finish_position - start_instrument_position,
+                         finish_instrument_position - start_instrument_position)
+
+          end
+
+          # for dynamics
+          #
+          if finish_dynamics_position == start_dynamics_position
+            segment_relative_start_position_over_dynamics_timeline = 0r
+            segment_relative_finish_position_over_dynamics_timeline = 1r
+          else
+            segment_relative_start_position_over_dynamics_timeline =
+                Rational(s.position - start_dynamics_position,
+                         finish_dynamics_position - start_dynamics_position)
+
+            segment_relative_finish_position_over_dynamics_timeline =
+                Rational(segment_effective_finish_position - start_dynamics_position,
+                         finish_dynamics_position - start_dynamics_position)
+          end
 
           delta_dynamics = (next_values[:dynamics] || values[:dynamics]) - values[:dynamics]
 
@@ -209,14 +225,16 @@ s.at 1 do
           end
         end
 
-        # logger.debug "pitch #{pitch}"
+        logger.debug "pitch #{pitch}"
+        logger.debug "q_duration_pitch #{q_duration_pitch.inspect} q_duration_dynamics #{q_duration_dynamics.inspect} q_duration_instrument #{q_duration_instrument.inspect}"
+        logger.debug "started_ago #{started_ago.inspect}"
 
         q_effective_duration_pitch =
             [ q_duration_instrument - (started_ago[:instrument] || 0),
               q_duration_pitch - (started_ago[:pitch] || 0),
               q_duration_dynamics - (started_ago[:dynamics] || 0)].min
 
-        # logger.debug "effective_duration_pitch #{q_effective_duration_pitch.inspect}"
+        logger.debug "effective_duration_pitch #{q_effective_duration_pitch.inspect}"
 
         render_pitch pitch,
                      q_effective_duration_pitch,
