@@ -91,7 +91,7 @@ RSpec.describe Musa::Sequencer do
                 .transform_values { |_|
                   _.quantize
                     .compact_timed
-                    .anticipate { |c, n|
+                    .anticipate { |_, c, n|
                       n ? c.clone.tap { |_| _[:next_value] = n[:value] } :
                           c } })
 
@@ -179,7 +179,7 @@ RSpec.describe Musa::Sequencer do
                 .transform_values { |_|
                   _.quantize(stops: false)
                       .compact_timed
-                      .anticipate { |c, n|
+                      .anticipate { |_, c, n|
                         n ? c.clone.tap { |_| _[:next_value] = n[:value] } :
                             c } })
 

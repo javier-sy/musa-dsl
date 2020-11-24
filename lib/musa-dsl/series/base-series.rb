@@ -113,14 +113,13 @@ module Musa
       def next_value
         raise PrototypingSerieError unless @is_instance
 
-        if !@_have_current_value || !@_current_value.nil?
+        unless @_have_current_value && @_current_value.nil?
           if @_have_peeked_next_value
             @_have_peeked_next_value = false
             @_current_value = @_peeked_next_value
           else
             @_current_value = _next_value
           end
-          @_have_current_value = true
         end
 
         @_current_value

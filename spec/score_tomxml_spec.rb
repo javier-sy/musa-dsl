@@ -78,6 +78,7 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
                            bpm: 90,
                            title: 'Title',
                            creators: { composer: 'Composer' },
+                           encoding_date: DateTime.new(2020, 11, 24),
                            parts: { vln1: { name: 'Violin 1', abbreviation: 'vln1', clefs: { g: 2 } } },
                            do_log: false)
 
