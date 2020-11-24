@@ -21,7 +21,7 @@ def instrument_number_to_symbol(number)
   "vln#{number.to_i.to_s}".to_sym
 end
 
-def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, position:)
+def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, position:, logger:)
   dynamicsF ||= dynamics0
 
   score.at position,
@@ -39,7 +39,7 @@ def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, positio
                   duration: duration }.extend(PS)
 end
 
-def render_pitch(pitch, duration, score:, instrument:, position:)
+def render_pitch(pitch, duration, score:, instrument:, position:, logger:)
   { instrument: instrument,
     pitch: pitch,
     duration: duration }.extend(PDV).tap { |note| score.at position, add: note }

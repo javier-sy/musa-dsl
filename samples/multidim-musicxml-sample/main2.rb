@@ -73,8 +73,12 @@ s.at 1 do
       end
 
       logger.debug
-      logger.debug "new element at position #{s.position.inspect}\n\t\tvalue #{value}\n\t\tnext #{next_value}\n\t\tduration #{duration}" \
-               "\n\t\tquantized_duration #{quantized_duration}\n\t\tstarted_ago #{started_ago}\n"
+      logger.debug "new element at position #{s.position.inspect}\n" \
+              "\t\tvalue #{value}\n" \
+              "\t\tnext #{next_value}\n" \
+              "\t\tduration #{duration}\n" \
+              "\t\tquantized_duration #{quantized_duration}\n" \
+              "\t\tstarted_ago #{started_ago}\n"
 
       new_instrument_now = !!duration[:instrument]
       new_dynamics_now = !!duration[:dynamics]
@@ -115,15 +119,11 @@ s.at 1 do
           if new_instrument_now
             start_instrument_position = s.position - (started_ago[:instrument] || 0)
             finish_instrument_position = start_instrument_position + quantized_durations[:instrument]
-          else
-            start_instrument_position = finish_instrument_position = nil
           end
 
           if new_dynamics_now
             start_dynamics_position = s.position - (started_ago[:dynamics] || 0)
             finish_dynamics_position = start_dynamics_position + quantized_durations[:dynamics]
-          else
-            start_dynamics_position = finish_dynamics_position = nil
           end
 
           segment_q_effective_duration =
@@ -136,10 +136,7 @@ s.at 1 do
 
           # for instrument
           #
-          if finish_instrument_position == start_instrument_position
-            segment_relative_start_position_over_instrument_timeline = 0r
-            segment_relative_finish_position_over_instrument_timeline = 1r
-          else
+          if new_instrument_now
             segment_relative_start_position_over_instrument_timeline =
                 Rational(s.position - start_instrument_position,
                          finish_instrument_position - start_instrument_position)
@@ -147,14 +144,14 @@ s.at 1 do
             segment_relative_finish_position_over_instrument_timeline =
                 Rational(segment_effective_finish_position - start_instrument_position,
                          finish_instrument_position - start_instrument_position)
+          else
+            segment_relative_start_position_over_instrument_timeline = 0r
+            segment_relative_finish_position_over_instrument_timeline = 1r
           end
 
           # for dynamics
           #
-          if finish_dynamics_position == start_dynamics_position
-            segment_relative_start_position_over_dynamics_timeline = 0r
-            segment_relative_finish_position_over_dynamics_timeline = 1r
-          else
+          if new_dynamics_now
             segment_relative_start_position_over_dynamics_timeline =
                 Rational(s.position - start_dynamics_position,
                          finish_dynamics_position - start_dynamics_position)
@@ -162,6 +159,9 @@ s.at 1 do
             segment_relative_finish_position_over_dynamics_timeline =
                 Rational(segment_effective_finish_position - start_dynamics_position,
                          finish_dynamics_position - start_dynamics_position)
+          else
+            segment_relative_start_position_over_dynamics_timeline = 0r
+            segment_relative_finish_position_over_dynamics_timeline = 1r
           end
 
           delta_dynamics = (next_values[:dynamics] || values[:dynamics]) - values[:dynamics]
@@ -200,37 +200,40 @@ s.at 1 do
           logger.debug "values[:dynamics] #{values[:dynamics].to_f.round(2)} delta_dynamics #{delta_dynamics.to_f.round(2)}"
 
           if from_instrument && to_instrument
-            logger.debug "rendering dynamics for instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}"
+            logger.debug "rendering dynamics for instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}..."
 
             render_dynamics segment_from_dynamics_from_instrument,
                             segment_to_dynamics_from_instrument,
                             segment_q_effective_duration,
                             score: score,
                             instrument: from_instrument_symbol,
-                            position: s.position
+                            position: s.position,
+                            logger: logger
 
             render_dynamics segment_from_dynamics_to_instrument,
                             segment_to_dynamics_to_instrument,
                             segment_q_effective_duration,
                             score: score,
                             instrument: to_instrument_symbol,
-                            position: s.position
+                            position: s.position,
+                            logger: logger
           end
 
           if from_instrument && !to_instrument
-            logger.debug "rendering dynamics without instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}"
+            logger.debug "rendering dynamics without instrument change: new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now}..."
 
             render_dynamics segment_from_dynamics,
                             segment_to_dynamics,
                             segment_q_effective_duration,
                             score: score,
                             instrument: from_instrument_symbol,
-                            position: s.position
+                            position: s.position,
+                            logger: logger
           end
         end
 
         logger.debug "pitch #{pitch}"
-        logger.debug "q_duration_pitch #{q_duration_pitch.inspect} q_duration_dynamics #{q_duration_dynamics.inspect} q_duration_instrument #{q_duration_instrument&.inspect}"
+        logger.debug "q_duration_pitch #{q_duration_pitch.inspect} q_duration_dynamics #{q_duration_dynamics.inspect} q_duration_instrument #{q_duration_instrument.inspect}"
         logger.debug "started_ago #{started_ago.inspect}"
 
         q_effective_duration_pitch = [
@@ -244,16 +247,17 @@ s.at 1 do
                      q_effective_duration_pitch,
                      score: score,
                      instrument: from_instrument_symbol,
-                     position: s.position
+                     position: s.position,
+                     logger: logger
 
         if to_instrument
           render_pitch pitch,
                        q_effective_duration_pitch,
                        score: score,
                        instrument: to_instrument_symbol,
-                       position: s.position
+                       position: s.position,
+                       logger: logger
         end
-
       end
     end
   end
