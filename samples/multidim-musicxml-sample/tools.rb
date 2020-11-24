@@ -21,11 +21,11 @@ def instrument_number_to_symbol(number)
   "vln#{number.to_i.to_s}".to_sym
 end
 
-def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, position:, logger:)
+def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, position:, logger: nil)
   dynamicsF ||= dynamics0
 
   score.at position,
-           add: { instrument: instrument,
+           add: d = { instrument: instrument,
                   type: case dynamicsF <=> dynamics0
                         when 1
                           :crescendo
@@ -37,9 +37,12 @@ def render_dynamics(dynamics0, dynamicsF, duration, score:, instrument:, positio
                   from: dynamics0,
                   to: dynamicsF,
                   duration: duration }.extend(PS)
+
+  di = d.inspect
+  logger.debug "render_dynamics: #{di}"
 end
 
-def render_pitch(pitch, duration, score:, instrument:, position:, logger:)
+def render_pitch(pitch, duration, score:, instrument:, position:, logger: nil)
   { instrument: instrument,
     pitch: pitch,
     duration: duration }.extend(PDV).tap { |note| score.at position, add: note }

@@ -84,8 +84,8 @@ s.at 1 do
       new_dynamics_now = !!duration[:dynamics]
       new_pitch_now = !!duration[:pitch]
 
-      # logger.debug
-      # logger.debug "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
+      logger.debug
+      logger.debug "new_dynamics_now #{new_dynamics_now} new_instrument_now #{new_instrument_now} new_pitch_now #{new_pitch_now}"
 
       value.each_pair do |component, value|
         values[component] = value
@@ -116,53 +116,48 @@ s.at 1 do
         pitch = values[:pitch]
 
         if new_instrument_now || new_dynamics_now
-          if new_instrument_now
-            start_instrument_position = s.position - (started_ago[:instrument] || 0)
-            finish_instrument_position = start_instrument_position + quantized_durations[:instrument]
-          end
+          start_instrument_position = s.position - (started_ago[:instrument] || 0)
+          finish_instrument_position = start_instrument_position + quantized_durations[:instrument]
 
-          if new_dynamics_now
-            start_dynamics_position = s.position - (started_ago[:dynamics] || 0)
-            finish_dynamics_position = start_dynamics_position + quantized_durations[:dynamics]
-          end
+          logger.debug "start_instrument_position #{start_instrument_position&.inspect || 'nil'}"
+          logger.debug "finish_instrument_position #{finish_instrument_position&.inspect || 'nil'}"
+
+          start_dynamics_position = s.position - (started_ago[:dynamics] || 0)
+          finish_dynamics_position = start_dynamics_position + quantized_durations[:dynamics]
+
+          logger.debug "start_dynamics_position #{start_dynamics_position&.inspect || 'nil'}"
+          logger.debug "finish_dynamics_position #{finish_dynamics_position&.inspect || 'nil'}"
 
           segment_q_effective_duration =
               [finish_instrument_position, finish_dynamics_position].compact.min - s.position
 
           segment_effective_finish_position = s.position + segment_q_effective_duration
 
+          logger.debug "segment_effective_finish_position #{segment_effective_finish_position&.inspect || 'nil'}"
+
           # relative start and finish position are ratios from 0 (beginning) to 1 (finish)
           #
 
           # for instrument
           #
-          if new_instrument_now
-            segment_relative_start_position_over_instrument_timeline =
-                Rational(s.position - start_instrument_position,
-                         finish_instrument_position - start_instrument_position)
+          segment_relative_start_position_over_instrument_timeline =
+              Rational(s.position - start_instrument_position,
+                       finish_instrument_position - start_instrument_position)
 
-            segment_relative_finish_position_over_instrument_timeline =
-                Rational(segment_effective_finish_position - start_instrument_position,
-                         finish_instrument_position - start_instrument_position)
-          else
-            segment_relative_start_position_over_instrument_timeline = 0r
-            segment_relative_finish_position_over_instrument_timeline = 1r
-          end
+          segment_relative_finish_position_over_instrument_timeline =
+              Rational(segment_effective_finish_position - start_instrument_position,
+                       finish_instrument_position - start_instrument_position)
 
           # for dynamics
           #
-          if new_dynamics_now
-            segment_relative_start_position_over_dynamics_timeline =
-                Rational(s.position - start_dynamics_position,
-                         finish_dynamics_position - start_dynamics_position)
+          segment_relative_start_position_over_dynamics_timeline =
+              Rational(s.position - start_dynamics_position,
+                       finish_dynamics_position - start_dynamics_position)
 
-            segment_relative_finish_position_over_dynamics_timeline =
-                Rational(segment_effective_finish_position - start_dynamics_position,
-                         finish_dynamics_position - start_dynamics_position)
-          else
-            segment_relative_start_position_over_dynamics_timeline = 0r
-            segment_relative_finish_position_over_dynamics_timeline = 1r
-          end
+          segment_relative_finish_position_over_dynamics_timeline =
+              Rational(segment_effective_finish_position - start_dynamics_position,
+                       finish_dynamics_position - start_dynamics_position)
+          #
 
           delta_dynamics = (next_values[:dynamics] || values[:dynamics]) - values[:dynamics]
 
@@ -208,7 +203,7 @@ s.at 1 do
                             score: score,
                             instrument: from_instrument_symbol,
                             position: s.position,
-                            logger: logger
+                            logger: s.logger
 
             render_dynamics segment_from_dynamics_to_instrument,
                             segment_to_dynamics_to_instrument,
@@ -216,7 +211,7 @@ s.at 1 do
                             score: score,
                             instrument: to_instrument_symbol,
                             position: s.position,
-                            logger: logger
+                            logger: s.logger
           end
 
           if from_instrument && !to_instrument
@@ -228,7 +223,7 @@ s.at 1 do
                             score: score,
                             instrument: from_instrument_symbol,
                             position: s.position,
-                            logger: logger
+                            logger: s.logger
           end
         end
 

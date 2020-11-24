@@ -15,7 +15,14 @@ module Musa::Datasets::Score::ToMXML
         dynamics = dynamics_to_string(element[:dataset][:from])
 
         if dynamics != context.last_dynamics
-          measure.add_dynamics dynamics, placement: 'below' if dynamics && element[:dataset][:from] > 0
+          if dynamics
+            if element[:dataset][:from] < 0
+              logger.warn { "process_ps: dynamics #{element[:dataset][:from]} not renderizable" }
+            elsif element[:dataset][:from] > 0
+              measure.add_dynamics dynamics, placement: 'below'
+            end
+          end
+
           context.last_dynamics = dynamics
         end
 
@@ -29,7 +36,16 @@ module Musa::Datasets::Score::ToMXML
 
         dynamics = dynamics_to_string(element[:dataset][:to])
 
-        measure.add_dynamics dynamics, placement: 'below' if dynamics && element[:dataset][:to] > 0
+        if dynamics != context.last_dynamics
+          if dynamics
+            if element[:dataset][:to] < 0
+              logger.warn { "process_ps: dynamics #{element[:dataset][:to]} not renderizable" }
+            elsif element[:dataset][:to] > 0
+              measure.add_dynamics dynamics, placement: 'below'
+            end
+          end
+        end
+
         context.last_dynamics = dynamics
       end
 
