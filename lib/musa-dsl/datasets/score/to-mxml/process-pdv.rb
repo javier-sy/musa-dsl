@@ -21,24 +21,26 @@ module Musa::Datasets::Score::ToMXML
         decompose_as_sum_of_simple_durations(effective_duration))
 
     if do_log
-      logger.debug "\nprocess_pdv #{element.inspect}"
-      logger.debug ""
-      logger.debug "             pointer #{pointer.inspect} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}"
-      logger.debug "             effective_start #{effective_start.inspect} effective_duration #{effective_duration.inspect}"
-      logger.debug "             duration decomposition #{effective_duration_decomposition}"
+      logger.debug ''
+      logger.debug('process_pdv') { "processing #{element.inspect}" }
+      logger.debug { "" }
+      logger.debug { "           pointer #{pointer.inspect} continue_from_previous #{continue_from_previous_bar} continue_to_next #{continue_to_next_bar}" }
+      logger.debug { "           effective_start #{effective_start.inspect} effective_duration #{effective_duration.inspect}" }
+      logger.debug { "           duration decomposition #{effective_duration_decomposition}" }
     end
 
     if pointer > effective_start
       duration_to_go_back = (pointer - effective_start)
 
-      logger.debug "\n         ->  adding backup #{duration_to_go_back * divisions_per_bar}" if do_log
+      logger.debug ''
+      logger.debug { "       ->  adding backup #{duration_to_go_back * divisions_per_bar}" } if do_log
 
       measure.add_backup(duration_to_go_back * divisions_per_bar)
       pointer -= duration_to_go_back
 
 
     elsif pointer < effective_start
-      warn "\n         ->  adding start rest duration #{effective_start - pointer} start #{bar + pointer} finish #{bar + effective_start}" if do_log
+      logger.warn { "       ->  adding start rest duration #{effective_start - pointer} start #{bar + pointer} finish #{bar + effective_start}" } if do_log
 
       pointer = process_pdv(measure, bar, divisions_per_bar,
                             { start: bar + pointer,

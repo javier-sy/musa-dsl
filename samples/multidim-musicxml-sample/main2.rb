@@ -150,13 +150,18 @@ s.at 1 do
 
           # for dynamics
           #
-          segment_relative_start_position_over_dynamics_timeline =
-              Rational(s.position - start_dynamics_position,
-                       finish_dynamics_position - start_dynamics_position)
+          if finish_dynamics_position > start_dynamics_position
+            segment_relative_start_position_over_dynamics_timeline =
+                Rational(s.position - start_dynamics_position,
+                         finish_dynamics_position - start_dynamics_position)
 
-          segment_relative_finish_position_over_dynamics_timeline =
-              Rational(segment_effective_finish_position - start_dynamics_position,
-                       finish_dynamics_position - start_dynamics_position)
+            segment_relative_finish_position_over_dynamics_timeline =
+                Rational(segment_effective_finish_position - start_dynamics_position,
+                         finish_dynamics_position - start_dynamics_position)
+          else
+            segment_relative_start_position_over_dynamics_timeline = 1
+            segment_relative_finish_position_over_dynamics_timeline = 1
+          end
           #
 
           delta_dynamics = (next_values[:dynamics] || values[:dynamics]) - values[:dynamics]

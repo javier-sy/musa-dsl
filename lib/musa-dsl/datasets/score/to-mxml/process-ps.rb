@@ -7,7 +7,8 @@ module Musa::Datasets::Score::ToMXML
   private def process_ps(measure, element, context, logger, do_log)
     context ||= DynamicsContext.new
 
-    logger.debug "\nprocess_ps #{element.inspect}" if do_log
+    logger.debug ''
+    logger.debug('process_ps') { "processing #{element.inspect}" } if do_log
 
     case element[:dataset][:type]
     when :crescendo, :diminuendo
@@ -17,7 +18,7 @@ module Musa::Datasets::Score::ToMXML
         if dynamics != context.last_dynamics
           if dynamics
             if element[:dataset][:from] < 0
-              logger.warn { "process_ps: dynamics #{element[:dataset][:from]} not renderizable" }
+              logger.warn { "dynamics #{element[:dataset][:from]} not renderizable" } if do_log
             elsif element[:dataset][:from] > 0
               measure.add_dynamics dynamics, placement: 'below'
             end
@@ -39,7 +40,7 @@ module Musa::Datasets::Score::ToMXML
         if dynamics != context.last_dynamics
           if dynamics
             if element[:dataset][:to] < 0
-              logger.warn { "process_ps: dynamics #{element[:dataset][:to]} not renderizable" }
+              logger.warn { "dynamics #{element[:dataset][:to]} not renderizable" } if do_log
             elsif element[:dataset][:to] > 0
               measure.add_dynamics dynamics, placement: 'below'
             end
@@ -53,7 +54,16 @@ module Musa::Datasets::Score::ToMXML
       dynamics = dynamics_to_string(element[:dataset][:from])
 
       if dynamics != context.last_dynamics
-        measure.add_dynamics dynamics, placement: 'below'
+
+
+        if dynamics
+          if element[:dataset][:from] < 0
+            logger.warn { "dynamics #{element[:dataset][:to]} not renderizable" } if do_log
+          elsif element[:dataset][:from] > 0
+            measure.add_dynamics dynamics, placement: 'below'
+          end
+        end
+
         context.last_dynamics = dynamics
       end
 
