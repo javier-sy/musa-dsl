@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem 'logger', '~> 1.4', '>= 1.4.3'
+
 group :neuma do
   gem 'citrus', '~> 3.0.0'
 end
