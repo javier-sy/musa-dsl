@@ -5,7 +5,10 @@ using Musa::Extension::DeepCopy
 
 module Musa
   module Series
-    module SerieOperations end
+    module Constructors; extend self; end
+    module Operations; end
+
+    include Constructors
 
     module SeriePrototyping
       def prototype?
@@ -18,7 +21,7 @@ module Musa
 
       def prototype
         if @is_instance
-          @instance_of || (@instance_of = self.clone.tap(&:_prototype!).mark_as_prototype!)
+          @instance_of || (@instance_of = clone._prototype!.mark_as_prototype!)
         else
           self
         end
@@ -30,7 +33,7 @@ module Musa
         if @is_instance
           self
         else
-          clone(freeze: false).tap(&:_instance!).mark_as_instance!(self).tap(&:restart)
+          clone(freeze: false)._instance!.mark_as_instance!(self).tap(&:restart)
         end
       end
 
@@ -52,6 +55,8 @@ module Musa
             @sources = @sources.transform_values(&:prototype).freeze
           end
         end
+
+        self
       end
 
       protected def _instance!
@@ -64,6 +69,8 @@ module Musa
             @sources = @sources.transform_values(&:instance)
           end
         end
+
+        self
       end
 
       protected def mark_regarding!(source)
@@ -77,6 +84,7 @@ module Musa
       protected def mark_as_prototype!
         @is_instance = nil
         freeze
+        self
       end
 
       protected def mark_as_instance!(prototype = nil)
@@ -95,7 +103,7 @@ module Musa
 
     module Serie
       include SeriePrototyping
-      include SerieOperations
+      include Operations
 
       def restart
         raise PrototypingSerieError unless @is_instance

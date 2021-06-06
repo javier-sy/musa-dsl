@@ -1,51 +1,57 @@
-module Musa
-  module Series
-    # TODO: adapt to series prototyping
+require_relative 'base-series'
 
+module Musa
+  module Series::Constructors
     def QUEUE(*series)
       QueueSerie.new(series)
     end
 
     class QueueSerie
-      include Serie
+      include Series::Serie
 
-      attr_reader :targets, :target
+      attr_reader :sources
 
       def initialize(series)
-        @targets = series.collect(&:instance)
-        @targets ||= []
+        @sources = if series[0].prototype?
+                     series.collect(&:prototype).freeze
+                   else
+                     series.collect(&:instance)
+                   end
 
-        mark_as_instance!
+        _restart false
 
-        _restart
+        mark_regarding! @sources[0]
       end
 
       def <<(serie)
-        @targets << serie.instance
+        # when queue is a prototype it is also frozen so no serie can be added (it would raise an Exception if tried).
+        # when queue is an instance the added serie should also be an instance (raise an Exception otherwise)
+        #
+        raise ArgumentError, "Only an instance serie can be queued" unless serie.instance?
+
+        @sources << serie
         check_current
         self
       end
 
       def clear
-        @targets.clear
+        # only instance queue can be cleared
+        #
+        @sources.clear
         restart
         self
       end
 
-      def _prototype!
-        raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
-      end
-
-      def _restart
+      def _restart(restart_sources = true)
         @index = -1
-        forward
+        forward if restart_sources
       end
 
       def _next_value
         value = nil
 
-        if @target
-          value = @target.next_value
+        if @current
+          value = @current.next_value
 
           if value.nil?
             forward
@@ -57,38 +63,37 @@ module Musa
       end
 
       def infinite?
-        !!@targets.find(&:infinite?)
+        !!@sources.find(&:infinite?)
       end
 
       private
 
       def forward
         @index += 1
-        @target = nil
-        @target = @targets[@index].restart if @index < @targets.size
+        @current = @sources[@index]&.restart
       end
 
       def check_current
-        @target = @targets[@index].restart unless @target
+        @current = @sources[@index].restart unless @current
       end
 
       def method_missing(method_name, *args, **key_args, &block)
-        if @target && @target.respond_to?(method_name)
-          @target.send method_name, *args, **key_args, &block
+        if @current&.respond_to?(method_name)
+          @current.send method_name, *args, **key_args, &block
         else
           super
         end
       end
 
       def respond_to_missing?(method_name, include_private)
-        @target && @target.respond_to?(method_name, include_private) # || super
+        @current&.respond_to?(method_name, include_private) # || super
       end
     end
+  end
 
-    module SerieOperations
-      def queued
-        Series::QueueSerie.new [self]
-      end
+  module Series::Operations
+    def queued
+      Series::Constructors.QUEUE(self)
     end
   end
 end

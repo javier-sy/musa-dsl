@@ -1,6 +1,6 @@
 module Musa
   module Series
-    module SerieOperations
+    module Operations
       def autorestart
         Autorestart.new self
       end
@@ -419,11 +419,13 @@ module Musa
         def _prototype!
           super
           @condition = calculate_condition
+          self
         end
 
         def _instance!
           super
           @condition = calculate_condition
+          self
         end
 
         def _restart(restart_sources = true)
@@ -545,11 +547,13 @@ module Musa
         def _prototype!
           super
           _restart false
+          self
         end
 
         def _instance!
           super
           _restart false
+          self
         end
 
         def _restart(restart_sources = true)
@@ -854,7 +858,7 @@ module Musa
 
         def _restart(restart_sources = true, get_reversed = true)
           @source.restart if restart_sources
-          @reversed = FromArray.new(next_values_array_of(@source).reverse).instance if get_reversed
+          @reversed = Constructors.S(*next_values_array_of(@source).reverse).instance if get_reversed
         end
 
         def _next_value

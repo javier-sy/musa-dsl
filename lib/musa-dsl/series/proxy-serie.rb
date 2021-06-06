@@ -1,69 +1,66 @@
-module Musa
-  module Series
-    # TODO: adapt to series prototyping
+require_relative 'base-series'
 
+module Musa
+  module Series::Constructors
     def PROXY(serie = nil)
       ProxySerie.new(serie)
     end
 
     class ProxySerie
-      include Serie
+      include Series::Serie
 
-      attr_reader :target
+      attr_reader :source
 
       def initialize(serie)
-        @target = serie.instance if serie
-        mark_as_instance!
+        @source = serie
+
+        if @source
+          mark_regarding! @source
+        else
+          mark_as_prototype!
+        end
       end
 
-      def target=(target)
-        @target = target.instance
+      def source=(source)
+        # when proxy is a prototype it is also frozen so we cannot change the source (it will raise an exception).
+        # when proxy is an instance the only kind of source that can be assigned is also an instance (otherwise will raise an exception)
+        #
+        raise ArgumentError, "Only an instance serie can be proxied when the proxy is an instance" unless source.instance?
+        @source = source
       end
 
-      def _prototype!
-        raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
+      def _restart
+        @source.restart if @source
       end
 
-      def restart
-        @target.restart if @target
-      end
-
-      def current_value
-        @target.current_value if @target
-      end
-
-      def next_value
-        @target.next_value if @target
-      end
-
-      def peek_next_value
-        @target.peek_next_value if @target
+      def _next_value
+        @source.next_value if @source
       end
 
       def infinite?
-        @target.infinite? if @target
+        @source.infinite? if @source
       end
 
       private
 
       def method_missing(method_name, *args, **key_args, &block)
-        if @target && @target.respond_to?(method_name)
-          @target.send method_name, *args, **key_args, &block
+        if @source && @source.respond_to?(method_name)
+          @source.send method_name, *args, **key_args, &block
         else
           super
         end
       end
 
       def respond_to_missing?(method_name, include_private)
-        @target && @target.respond_to?(method_name, include_private) # || super
+        @source && @source.respond_to?(method_name, include_private) # || super
       end
     end
+  end
 
-    module SerieOperations
-      # TODO add test case
-      def proxied
-        Series::ProxySerie.new self
-      end
+  module Series::Operations
+    # TODO add test case
+    def proxy
+      Series::ProxySerie.new self
     end
   end
 end

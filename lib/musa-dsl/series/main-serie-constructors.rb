@@ -1,15 +1,15 @@
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/smart-proc-binder'
 
+require_relative 'base-series'
+
 using Musa::Extension::Arrayfy
 using Musa::Extension::ExplodeRanges
 
 # TODO: añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
 module Musa
-  module Series
-    extend self
-
+  module Series::Constructors
     def NIL
       NilSerie.new
     end
@@ -104,7 +104,8 @@ module Musa
     ###
 
     class NilSerie
-      include Serie
+      include Musa::Series::Serie
+
       def _next_value
         nil
       end
@@ -113,7 +114,7 @@ module Musa
     private_constant :NilSerie
 
     class FromArray
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :values
 
@@ -145,7 +146,7 @@ module Musa
     private_constant :FromArray
 
     class Sequence
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :sources
 
@@ -192,7 +193,7 @@ module Musa
     private_constant :Sequence
 
     class FromEvalBlockWithParameters
-      include Serie
+      include Musa::Series::Serie
       include Musa::Extension::SmartProcBinder
 
       using Musa::Extension::DeepCopy
@@ -235,7 +236,7 @@ module Musa
     private_constant :FromEvalBlockWithParameters
 
     class ForLoop
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :from, :to, :step
 
@@ -278,7 +279,7 @@ module Musa
     private_constant :ForLoop
 
     class RandomValueFromArray
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :values, :random
 
@@ -307,7 +308,7 @@ module Musa
     private_constant :RandomValueFromArray
 
     class RandomNumberFromRange
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :from, :to, :step, :random
 
@@ -346,7 +347,7 @@ module Musa
     private_constant :RandomNumberFromRange
 
     class RandomValuesFromArray
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :values, :random
 
@@ -377,7 +378,7 @@ module Musa
     private_constant :RandomValuesFromArray
 
     class RandomNumbersFromRange
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :from, :to, :step, :random
 
@@ -418,7 +419,7 @@ module Musa
     private_constant :RandomNumbersFromRange
 
     class FromHashOfSeries
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :sources, :cycle
 
@@ -481,7 +482,7 @@ module Musa
     private_constant :FromHashOfSeries
 
     class FromArrayOfSeries
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :sources, :cycle
 
@@ -544,7 +545,7 @@ module Musa
     private_constant :FromArrayOfSeries
 
     class SinFunction
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :start, :steps, :amplitude, :center
 
@@ -595,7 +596,7 @@ module Musa
     private_constant :SinFunction
 
     class Fibonacci
-      include Serie
+      include Musa::Series::Serie
 
       def initialize
         _restart
@@ -624,7 +625,7 @@ module Musa
     private_constant :Fibonacci
 
     class HarmonicNotes
-      include Serie
+      include Musa::Series::Serie
 
       attr_reader :error, :extended
 

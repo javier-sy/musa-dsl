@@ -1,5 +1,5 @@
 module Musa
-  VERSION = '0.22.6'
+  VERSION = '0.23.0'
 end
 
 require_relative 'musa-dsl/core-ext'
@@ -27,21 +27,30 @@ require_relative 'musa-dsl/music'
 require_relative 'musa-dsl/generative'
 
 module Musa::All
+  # Core
+  #
   include Musa::Logger
 
   include Musa::Clock
   include Musa::Transport
   include Musa::Sequencer
 
-  include Musa::Scales
-  include Musa::Chords
+  include Musa::Series
   include Musa::Datasets
 
   include Musa::Neumalang
   include Musa::Neumas
-  include Musa::Matrix
 
-  include Musa::Series
+  include Musa::Transcription
+
+  include Musa::REPL
+
+  # Extensions: ojo, el nombre extensions ya se usa para algunos paquetes de core-ext que funcionan con Refinements
+  #
+  include Musa::Scales
+  include Musa::Chords
+
+  include Musa::Matrix
 
   include Musa::Darwin
   include Musa::Markov
@@ -53,8 +62,5 @@ module Musa::All
 
   include Musa::MusicXML
 
-  include Musa::Transcription
   include Musa::Transcriptors
-
-  include Musa::REPL
 end

@@ -1,34 +1,32 @@
 require_relative '../datasets/e'
 require_relative '../core-ext/inspect-nice'
 
+require_relative 'base-series'
+
 # TODO remove debugging puts, intermediate hash comments on :info and InspectNice
 using Musa::Extension::InspectNice
 
 module Musa
-  module Series
-    module SerieOperations
-      def quantize(reference: nil, step: nil,
-                   value_attribute: nil,
-                   stops: nil,
-                   predictive: nil,
-                   left_open: nil,
-                   right_open: nil)
+  module Series::Operations
+    def quantize(reference: nil, step: nil,
+                 value_attribute: nil,
+                 stops: nil,
+                 predictive: nil,
+                 left_open: nil,
+                 right_open: nil)
 
-        Series.QUANTIZE(self,
-                        reference: reference,
-                        step: step,
-                        value_attribute: value_attribute,
-                        stops: stops,
-                        predictive: predictive,
-                        left_open: left_open,
-                        right_open: right_open)
-      end
+      Series.QUANTIZE(self,
+                      reference: reference,
+                      step: step,
+                      value_attribute: value_attribute,
+                      stops: stops,
+                      predictive: predictive,
+                      left_open: left_open,
+                      right_open: right_open)
     end
   end
 
-  module Series
-    extend self
-
+  module Series::Constructors
     def QUANTIZE(time_value_serie,
                  reference: nil, step: nil,
                  value_attribute: nil,
@@ -82,7 +80,7 @@ module Musa
     private_constant :QuantizerTools
 
     class RawQuantizer
-      include Serie
+      include Series::Serie
       include QuantizerTools
 
       attr_reader :source
@@ -348,7 +346,7 @@ module Musa
     private_constant :RawQuantizer
 
     class PredictiveQuantizer
-      include Serie
+      include Series::Serie
       include QuantizerTools
 
       attr_reader :source
