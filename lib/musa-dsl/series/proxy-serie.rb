@@ -25,7 +25,7 @@ module Musa
         # when proxy is a prototype it is also frozen so we cannot change the source (it will raise an exception).
         # when proxy is an instance the only kind of source that can be assigned is also an instance (otherwise will raise an exception)
         #
-        raise ArgumentError, "Only an instance serie can be proxied when the proxy is an instance" unless source.instance?
+        raise ArgumentError, "This proxy is an instance. Tried to assign a prototype serie to it's source. Only an instance serie can be assigned." if instance? && source.prototype?
         @source = source
       end
 

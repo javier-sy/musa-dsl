@@ -13,7 +13,7 @@ module Musa
 
       def initialize(series)
         @sources = if series[0].prototype?
-                     series.collect(&:prototype).freeze
+                     series.collect(&:prototype)
                    else
                      series.collect(&:instance)
                    end

@@ -79,12 +79,12 @@ RSpec.describe Musa::Series do
       expect(s.values).to eq [1, 2, 3]
     end
 
-    it 'Prototype PROXY don\'t allow changing the source' do
+    it 'Prototype PROXY allows changing the source to a Prototype serie' do
       s = PROXY(S(1, 2, 3))
 
       expect {
         s.source = S(3, 4, 5)
-      }.to raise_error(ArgumentError)
+      }.to_not raise_error(ArgumentError)
     end
 
     it 'Instance PROXY don\'t allow changing the source to Prototype serie' do

@@ -23,7 +23,7 @@ module Musa
 
       def initialize(series)
         @sources = if series[0].prototype?
-                     series.collect(&:prototype).freeze
+                     series.collect(&:prototype)
                    else
                      series.collect(&:instance)
                    end
@@ -157,7 +157,7 @@ module Musa
         @components = series.keys
 
         @sources = if series.values.first.prototype?
-                     series.transform_values(&:prototype).freeze
+                     series.transform_values(&:prototype)
                    else
                      series.transform_values(&:instance)
                    end

@@ -63,8 +63,8 @@ module Musa
       end
     end
 
-    def MERGE(*values)
-      Sequence.new(values)
+    def MERGE(*series)
+      Sequence.new(series)
     end
 
     def RND1(*values, from: nil, to: nil, step: nil, random: nil)
@@ -152,7 +152,7 @@ module Musa
 
       def initialize(series)
         @sources = if series[0].prototype?
-                     series.collect(&:prototype).freeze
+                     series.collect(&:prototype)
                    else
                      series.collect(&:instance)
                    end
@@ -424,7 +424,7 @@ module Musa
       attr_reader :sources, :cycle
 
       def initialize(hash_of_series, cycle_all_series)
-        @sources = hash_of_series.clone.transform_values(&:prototype).freeze
+        @sources = hash_of_series.clone.transform_values(&:prototype)
         @cycle = cycle_all_series
 
         _restart false
@@ -487,7 +487,7 @@ module Musa
       attr_reader :sources, :cycle
 
       def initialize(series_array, cycle_all_series)
-        @sources = series_array.collect(&:prototype).freeze
+        @sources = series_array.collect(&:prototype)
         @cycle = cycle_all_series
 
         _restart false

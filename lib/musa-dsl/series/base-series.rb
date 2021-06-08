@@ -50,9 +50,9 @@ module Musa
 
         if @sources
           if @sources.is_a?(Array)
-            @sources = @sources.collect(&:prototype).freeze
+            @sources = @sources.collect(&:prototype)
           elsif @sources.is_a?(Hash)
-            @sources = @sources.transform_values(&:prototype).freeze
+            @sources = @sources.transform_values(&:prototype)
           end
         end
 
@@ -83,7 +83,6 @@ module Musa
 
       protected def mark_as_prototype!
         @is_instance = nil
-        freeze
         self
       end
 

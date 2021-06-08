@@ -134,7 +134,7 @@ module Musa
           @block = SmartProcBinder.new(block) if block_given?
 
           if @source.prototype?
-            @sources = @sources.transform_values { |s| s.prototype }.freeze
+            @sources = @sources.transform_values { |s| s.prototype }
           else
             @sources = @sources.transform_values { |s| s.instance }
           end
@@ -225,10 +225,6 @@ module Musa
             @sources = hash_series.clone.transform_values(&get)
           end
 
-          if get == :prototype!
-            @sources.freeze
-          end
-
           mark_regarding! @source
         end
 
@@ -275,10 +271,6 @@ module Musa
           end
 
           _restart false
-
-          if get == :prototype
-            @sources.freeze
-          end
 
           mark_regarding! @source
         end
@@ -331,10 +323,6 @@ module Musa
             @sources = indexed_series.collect(&get)
           elsif hash_series && !hash_series.empty?
             @sources = hash_series.clone.transform_values(&get)
-          end
-
-          if get == :prototype
-            @sources.freeze
           end
 
           mark_regarding! @source
@@ -854,6 +842,7 @@ module Musa
         def _instance!
           super
           _restart false, true
+          self
         end
 
         def _restart(restart_sources = true, get_reversed = true)
