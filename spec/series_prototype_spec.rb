@@ -33,10 +33,10 @@ RSpec.describe Musa::Series do
     it 'basic prototype and instance validation' do
       pp = S(1, 2, 3)
 
-      expect { pp.restart }.to raise_error(Serie::PrototypingSerieError)
-      expect { pp.next_value }.to raise_error(Serie::PrototypingSerieError)
-      expect { pp.peek_next_value }.to raise_error(Serie::PrototypingSerieError)
-      expect { pp.current_value }.to raise_error(Serie::PrototypingSerieError)
+      expect { pp.restart }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { pp.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { pp.peek_next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { pp.current_value }.to raise_error(Serie::Prototyping::PrototypingError)
 
       expect { pp.infinite? }.to_not raise_error
 

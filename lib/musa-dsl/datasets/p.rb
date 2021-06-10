@@ -13,7 +13,7 @@ module Musa::Datasets
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
 
-      Musa::Series::E(clone, base_duration) do |p, base_duration|
+      Musa::Series::Constructors.E(clone, base_duration) do |p, base_duration|
         (p.size >= 3) ?
           { from: p.shift,
             duration: p.shift * base_duration,
@@ -46,9 +46,7 @@ module Musa::Datasets
     end
 
     class PtoTimedSerie
-      include Musa::Series::Serie
-
-      attr_reader :origin
+      include Musa::Series::Serie.base
 
       def initialize(origin, base_duration, time_start)
         @origin = origin
@@ -60,16 +58,22 @@ module Musa::Datasets
         mark_as_prototype!
       end
 
+      attr_accessor :origin
+      attr_accessor :base_duration
+      attr_accessor :time_start
+
       def _restart
-        @p = @origin.clone
+        @index = 0
         @time = @time_start
       end
 
       def _next_value
-        if value = @p.shift
+        if value = @origin[@index]
+          @index += 1
           r = { time: @time, value: value }.extend(AbsTimed)
 
-          delta_time = @p.shift
+          delta_time = @origin[@index]
+          @index += 1
           @time += delta_time * @base_duration if delta_time
 
           r

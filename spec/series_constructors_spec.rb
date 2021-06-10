@@ -123,7 +123,7 @@ RSpec.describe Musa::Series do
     it 'bugfix for E serie with parameters used as temporary value holders that had bizarre results on second instance (series instance of a prototype didn\'t restarted)' do
       array = [1, 2, 3, 4, 5]
 
-      u = Musa::Series::E(array, context: { time: 0 }) do |p, context: |
+      u = Musa::Series::E(array, context: { time: 0 }) do |p, context:|
         value = p.shift
 
         if value

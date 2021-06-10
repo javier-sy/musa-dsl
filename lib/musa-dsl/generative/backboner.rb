@@ -3,13 +3,8 @@ require_relative '../core-ext/with'
 
 using Musa::Extension::Arrayfy
 
-# incluir With -> hecho
-# eliminar method_missing
-# crear rama tb debe recibir la serie de la history -> ya lo hace
-# crear rama puede repetirse (hasta terminar según ended_when) -> no
-#
-# hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
-# esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
+# TODO hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
+# TODO esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
 
 module Musa
   module Backboner

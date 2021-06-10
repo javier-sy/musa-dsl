@@ -100,9 +100,7 @@ module Musa
           options[index].to_serie.to_node
         end
 
-        def to_serie(flatten: nil, &condition)
-          flatten ||= true
-
+        def to_serie(flatten: true, &condition)
           serie = _options(&condition).collect { |o| o.collect(&:content) }.to_serie(of_series: true).merge
           serie = serie.flatten if flatten
 

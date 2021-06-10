@@ -51,6 +51,16 @@ RSpec.describe Musa::Series::Composer do
         route parte1b, to: parte2
         route input, to: a
       end
+
+
+    end
+
+    it '' do
+      x.update do
+
+        route input, to: s, as: [:with_sources, 10]
+
+      end
     end
   end
 end

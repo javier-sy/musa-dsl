@@ -7,9 +7,8 @@ module Musa
   module Markov
     class Markov
       include Musa::Extension::SmartProcBinder
-      include Musa::Series::Serie
+      include Musa::Series::Serie.base
 
-      attr_accessor :start, :finish, :random, :transitions
 
       def initialize(transitions:, start:, finish: nil, random: nil)
         @transitions = transitions.clone.freeze
@@ -25,6 +24,11 @@ module Musa
         _restart
       end
 
+      attr_accessor :start
+      attr_accessor :finish
+      attr_accessor :random
+      attr_accessor :transitions
+
       def _restart
         @current = nil
         @finished = false
@@ -38,7 +42,7 @@ module Musa
           if @current.nil?
             @current = @start
           else
-            if @transitions.has_key? @current
+            if @transitions.has_key?(@current)
               options = @transitions[@current]
 
               case options

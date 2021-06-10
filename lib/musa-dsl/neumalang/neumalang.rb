@@ -15,7 +15,7 @@ module Musa
           include Musa::Neumas
 
           def value
-            _SE(captures(:expression).collect(&:value), extends: Neuma::Serie)
+            S(*captures(:expression).collect(&:value)).extend(Neuma::Serie)
           end
         end
 

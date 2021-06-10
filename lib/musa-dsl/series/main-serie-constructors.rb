@@ -18,10 +18,6 @@ module Musa
       FromArray.new values.explode_ranges
     end
 
-    def _SE(values, extends:)
-      FromArray.new values.explode_ranges, extends
-    end
-
     def H(**series_hash)
       FromHashOfSeries.new series_hash, false
     end
@@ -104,7 +100,7 @@ module Musa
     ###
 
     class NilSerie
-      include Musa::Series::Serie
+      include Musa::Series::Serie.base
 
       def _next_value
         nil
@@ -114,18 +110,21 @@ module Musa
     private_constant :NilSerie
 
     class FromArray
-      include Musa::Series::Serie
-
-      attr_reader :values
+      include Musa::Series::Serie.base
 
       def initialize(values = nil, extends = nil)
-        @values = values.clone.freeze
+        @values = values
         @index = 0
 
-        extends.arrayfy.each { |e| extend(e) }
+        x = self
+        extends.arrayfy.each do |e|
+          x.extend(e)
+        end
 
         mark_as_prototype!
       end
+
+      attr_accessor :values
 
       def _restart
         @index = 0
@@ -146,9 +145,7 @@ module Musa
     private_constant :FromArray
 
     class Sequence
-      include Musa::Series::Serie
-
-      attr_reader :sources
+      include Musa::Series::Serie.base
 
       def initialize(series)
         @sources = if series[0].prototype?
@@ -161,6 +158,8 @@ module Musa
 
         mark_regarding! series[0]
       end
+
+      attr_accessor :sources
 
       def _restart(restart_sources = true)
         @index = 0
@@ -193,24 +192,37 @@ module Musa
     private_constant :Sequence
 
     class FromEvalBlockWithParameters
-      include Musa::Series::Serie
-      include Musa::Extension::SmartProcBinder
+      include Musa::Series::Serie.with(smart_block: true)
 
       using Musa::Extension::DeepCopy
 
-      attr_reader :block
-
-      def initialize(*values, **key_values, &block)
+      def initialize(*parameters, **key_parameters, &block)
         raise ArgumentError, 'Yield block is undefined' unless block
 
-        @original_value_parameters = values
-        @original_key_parameters = key_values
+        @original_value_parameters = parameters
+        @original_key_parameters = key_parameters
 
-        @block = SmartProcBinder.new(block)
+        self.proc = block
 
         _restart
 
         mark_as_prototype!
+      end
+
+      def parameters
+        @original_value_parameters
+      end
+
+      def parameters=(values)
+        @original_value_parameters = values
+      end
+
+      def key_parameters
+        @original_key_parameters
+      end
+
+      def key_parameters=(key_values)
+        @original_key_parameters = key_values
       end
 
       def _restart
@@ -236,9 +248,7 @@ module Musa
     private_constant :FromEvalBlockWithParameters
 
     class ForLoop
-      include Musa::Series::Serie
-
-      attr_reader :from, :to, :step
+      include Musa::Series::Serie.base
 
       def initialize(from, to, step)
         @from = from
@@ -252,17 +262,34 @@ module Musa
         mark_as_prototype!
       end
 
+      attr_reader :from, :to, :step
+
+      def from=(value)
+        @from = value
+        sign_adjust_step
+      end
+
+      def to=(value)
+        @to = value
+        sign_adjust_step
+      end
+
+      def step=(value)
+        @step = value
+        sign_adjust_step
+      end
+
       def _restart
-        @value = @from
+        @value = @from - @step
       end
 
       def _next_value
         if @value
-          value = @value
           @value += @step
+          value = @value
         end
 
-        @value = nil if @to && @value && (@value > @to && @step.positive? || @value < @to && @step.negative?)
+        @value = nil if @to && @value && (@value >= @to && @step.positive? || @value <= @to && @step.negative?)
 
         value
       end
@@ -279,18 +306,18 @@ module Musa
     private_constant :ForLoop
 
     class RandomValueFromArray
-      include Musa::Series::Serie
-
-      attr_reader :values, :random
+      include Musa::Series::Serie.base
 
       def initialize(values, random)
-        @values = values.clone.freeze
+        @values = values
         @random = random
 
         _restart
 
         mark_as_prototype!
       end
+
+      attr_accessor :values, :random
 
       def _restart
         @value = nil
@@ -308,9 +335,7 @@ module Musa
     private_constant :RandomValueFromArray
 
     class RandomNumberFromRange
-      include Musa::Series::Serie
-
-      attr_reader :from, :to, :step, :random
+      include Musa::Series::Serie.base
 
       def initialize(from, to, step, random)
         @from = from
@@ -325,6 +350,29 @@ module Musa
 
         mark_as_prototype!
       end
+
+      attr_reader :from
+
+      def from=(value)
+        @from = value
+        sign_adjust_step
+      end
+
+      attr_reader :to
+
+      def to=(value)
+        @to = value
+        sign_adjust_step
+      end
+
+      attr_reader :step
+
+      def step=(value)
+        @step = value
+        sign_adjust_step
+      end
+
+      attr_accessor :random
 
       def _restart
         @value = nil
@@ -347,9 +395,7 @@ module Musa
     private_constant :RandomNumberFromRange
 
     class RandomValuesFromArray
-      include Musa::Series::Serie
-
-      attr_reader :values, :random
+      include Musa::Series::Serie.base
 
       def initialize(values, random)
         @values = values.clone.freeze
@@ -359,6 +405,9 @@ module Musa
 
         mark_as_prototype!
       end
+
+      attr_accessor :values
+      attr_accessor :random
 
       def _restart
         @available_values = @values.dup
@@ -378,9 +427,7 @@ module Musa
     private_constant :RandomValuesFromArray
 
     class RandomNumbersFromRange
-      include Musa::Series::Serie
-
-      attr_reader :from, :to, :step, :random
+      include Musa::Series::Serie.base
 
       def initialize(from, to, step, random)
         @from = from
@@ -395,6 +442,29 @@ module Musa
 
         mark_as_prototype!
       end
+
+      attr_reader :from
+
+      def from=(value)
+        @from = value
+        adjust_step
+      end
+
+      attr_reader :to
+
+      def to=(value)
+        @to = value
+        adjust_step
+      end
+
+      attr_reader :step
+
+      def step=(value)
+        @step = value
+        adjust_step
+      end
+
+      attr_accessor :random
 
       def _restart
         @available_steps = (0..@step_count).to_a
@@ -419,18 +489,16 @@ module Musa
     private_constant :RandomNumbersFromRange
 
     class FromHashOfSeries
-      include Musa::Series::Serie
-
-      attr_reader :sources, :cycle
+      include Musa::Series::Serie.with(sources: true)
 
       def initialize(hash_of_series, cycle_all_series)
-        @sources = hash_of_series.clone.transform_values(&:prototype)
-        @cycle = cycle_all_series
+        self.sources = hash_of_series
+        self.cycle = cycle_all_series
 
         _restart false
-
-        mark_as_prototype!
       end
+
+      attr_accessor :cycle
 
       def _restart(restart_sources = true)
         @have_current = false
@@ -440,12 +508,6 @@ module Musa
           @sources.each do |_key, serie|
             serie.restart
           end
-        end
-      end
-
-      def _soft_restart
-        @sources.each do |_key, serie|
-          serie.restart if serie.current_value.nil?
         end
       end
 
@@ -477,23 +539,27 @@ module Musa
 
         @value
       end
+
+      private def _soft_restart
+        @sources.each do |_key, serie|
+          serie.restart if serie.current_value.nil?
+        end
+      end
     end
 
     private_constant :FromHashOfSeries
 
     class FromArrayOfSeries
-      include Musa::Series::Serie
-
-      attr_reader :sources, :cycle
+      include Musa::Series::Serie.with(sources: true)
 
       def initialize(series_array, cycle_all_series)
-        @sources = series_array.collect(&:prototype)
-        @cycle = cycle_all_series
+        self.sources = series_array
+        self.cycle = cycle_all_series
 
         _restart false
-
-        mark_as_prototype!
       end
+
+      attr_accessor :cycle
 
       def _restart(restart_sources = true)
         @have_current = false
@@ -503,12 +569,6 @@ module Musa
           @sources.each do |serie|
             serie.restart if serie.current_value.nil?
           end
-        end
-      end
-
-      def _soft_restart
-        @sources.each do |serie|
-          serie.restart if serie.current_value.nil?
         end
       end
 
@@ -540,14 +600,18 @@ module Musa
 
         @value
       end
+
+      private def _soft_restart
+        @sources.each do |serie|
+          serie.restart if serie.current_value.nil?
+        end
+      end
     end
 
     private_constant :FromArrayOfSeries
 
     class SinFunction
-      include Musa::Series::Serie
-
-      attr_reader :start, :steps, :amplitude, :center
+      include Musa::Series::Serie.base
 
       def initialize(start, steps, amplitude, center)
         @start = start.to_f
@@ -563,6 +627,34 @@ module Musa
         mark_as_prototype!
       end
 
+      attr_reader :start
+
+      def start=(value)
+        @start = value.to_f
+        update
+      end
+
+      attr_reader :steps
+
+      def steps=(value)
+        @steps = value
+        update
+      end
+
+      attr_reader :amplitude
+
+      def amplitude=(value)
+        @amplitude = value
+        update
+      end
+
+      attr_reader :center
+
+      def center=(value)
+        @center = value
+        update
+      end
+
       def _restart
         @position = 0
       end
@@ -576,13 +668,7 @@ module Musa
         value
       end
 
-      def to_s
-        "offset: #{@offset.round(3)}rd amplitude: #{@amplitude.round(3)} center: #{@center.round(3)} length: #{@length} step_size: #{@step_size.round(6)}"
-      end
-
-      private
-
-      def update
+      private def update
         y = 2 * (@start - @center) / @amplitude
         warn "WARNING: value for offset calc #{y} is outside asin range" if y < -1 || y > 1
         y = 1.0 if y > 1.0 # por los errores de precisión infinitesimal en el cálculo de y cuando es muy próximo a 1.0
@@ -591,16 +677,19 @@ module Musa
         @offset = Math.asin(y)
         @step_size = 2.0 * Math::PI / @steps
       end
+
+      def to_s
+        "offset: #{@offset.round(3)}rd amplitude: #{@amplitude.round(3)} center: #{@center.round(3)} length: #{@length} step_size: #{@step_size.round(6)}"
+      end
     end
 
     private_constant :SinFunction
 
     class Fibonacci
-      include Musa::Series::Serie
+      include Musa::Series::Serie.base
 
       def initialize
         _restart
-
         mark_as_prototype!
       end
 
@@ -625,9 +714,7 @@ module Musa
     private_constant :Fibonacci
 
     class HarmonicNotes
-      include Musa::Series::Serie
-
-      attr_reader :error, :extended
+      include Musa::Series::Serie.base
 
       def initialize(error, extended)
         @error = error
@@ -636,6 +723,18 @@ module Musa
         _restart
 
         mark_as_prototype!
+      end
+
+      attr_reader :error
+
+      def error=(value)
+        @error = value
+      end
+
+      attr_reader :extended
+
+      def extended=(value)
+        @extended = value
       end
 
       def _restart
