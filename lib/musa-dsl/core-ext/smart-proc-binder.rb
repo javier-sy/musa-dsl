@@ -21,6 +21,10 @@ module Musa
           end
         end
 
+        def proc
+          @procedure
+        end
+
         def parameters
           @procedure.parameters
         end

@@ -80,16 +80,17 @@ module Musa
     private_constant :QuantizerTools
 
     class RawQuantizer
-      include Series::Serie
+      include Series::Serie.with(source: true)
       include QuantizerTools
 
       attr_reader :source
 
       def initialize(reference, step, source, value_attribute, stops, left_open, right_open)
+        self.source = source
+
         @reference = reference
         @step_size = step.abs
 
-        @source = source
         @value_attribute = value_attribute
 
         @stops = stops
@@ -97,8 +98,6 @@ module Musa
         @right_open = right_open
 
         _restart false
-
-        mark_regarding! source
       end
 
       def _restart(restart_sources = true)
@@ -346,16 +345,17 @@ module Musa
     private_constant :RawQuantizer
 
     class PredictiveQuantizer
-      include Series::Serie
+      include Series::Serie.with(source: true)
       include QuantizerTools
 
       attr_reader :source
 
       def initialize(reference, step, source, value_attribute, include_stops)
+        self.source = source
+
         @reference = reference
         @step_size = step
 
-        @source = source
         @value_attribute = value_attribute
 
         @include_stops = include_stops
@@ -364,8 +364,6 @@ module Musa
         @crossing_reference = reference - @halfway_offset
 
         _restart false
-
-        mark_regarding! source
       end
 
       def _restart(restart_sources = true)

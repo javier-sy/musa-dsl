@@ -108,12 +108,12 @@ module Musa
 
       alias_method :eval, :with
 
-      def map(&yield_block)
-        ProcessWith.new self, &yield_block
+      def map(&block)
+        ProcessWith.new self, &block
       end
 
-      def anticipate(&yield_block)
-        Anticipate.new self, &yield_block
+      def anticipate(&block)
+        Anticipate.new self, &block
       end
 
       ###
@@ -121,25 +121,25 @@ module Musa
       ###
 
       class ProcessWith
-        include Musa::Extension::SmartProcBinder
-        include Serie
-
-        attr_reader :source, :on_restart, :block
-        def with_sources; @sources; end
+        include Serie.with(source: true, sources: true, sources_as: :with_sources, smart_block: true)
 
         def initialize(serie, with_series = nil, on_restart = nil, &block)
-          @source = serie
-          @sources = with_series || {}
-          @on_restart = on_restart
-          @block = SmartProcBinder.new(block) if block_given?
+          self.source = serie
+          self.with_sources = with_series || {}
+          self.on_restart = on_restart
+          self.proc = block if block
+        end
 
-          if @source.prototype?
-            @sources = @sources.transform_values { |s| s.prototype }
+        def on_restart(&block)
+          if block
+            @on_restart = block
           else
-            @sources = @sources.transform_values { |s| s.instance }
+            @on_restart
           end
+        end
 
-          mark_regarding! @source
+        def on_restart=(block)
+          @on_restart = block
         end
 
         def _restart
@@ -173,16 +173,11 @@ module Musa
       private_constant :ProcessWith
 
       class Anticipate
-        include Musa::Extension::SmartProcBinder
-        include Serie
-
-        attr_reader :source, :block
+        include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
-          @source = serie
-          @block = block
-
-          mark_regarding! @source
+          self.source = serie
+          self.proc = block
         end
 
         def _restart
@@ -209,23 +204,11 @@ module Musa
       private_constant :Anticipate
 
       class Switcher
-        include Serie
-
-        attr_accessor :sources
-        def selector; @source; end
+        include Serie.with(source: true, sources: true, sources_as: :options)
 
         def initialize(selector, indexed_series, hash_series)
-
-          @source = selector
-          get = @source.prototype? ? :prototype : :instance
-
-          if indexed_series && !indexed_series.empty?
-            @sources = indexed_series.collect(&get)
-          elsif hash_series && !hash_series.empty?
-            @sources = hash_series.clone.transform_values(&get)
-          end
-
-          mark_regarding! @source
+          self.source = selector
+          self.options = indexed_series || hash_series
         end
 
         def _restart
@@ -255,24 +238,13 @@ module Musa
       private_constant :Switcher
 
       class MultiplexSelector
-        include Serie
-
-        def selector; @source; end
-        attr_accessor :sources
+        include Serie.with(source: true, sources: true, sources_as: :options)
 
         def initialize(selector, indexed_series, hash_series)
-          @source = selector
-          get = @source.prototype? ? :prototype : :instance
-
-          if indexed_series && !indexed_series.empty?
-            @sources = indexed_series.collect(&get)
-          elsif hash_series && !hash_series.empty?
-            @sources = hash_series.clone.transform_values(&get)
-          end
+          self.source = selector
+          self.options = indexed_series || hash_series
 
           _restart false
-
-          mark_regarding! @source
         end
 
         def _restart(restart_sources = true)
@@ -310,22 +282,11 @@ module Musa
       private_constant :MultiplexSelector
 
       class SwitchFullSerie
-        include Serie
-
-        def selector; @source; end
-        attr_accessor :sources
+        include Serie.with(source: true, sources: true, sources_as: :options)
 
         def initialize(selector, indexed_series, hash_series)
-          @source = selector
-          get = @source.prototype? ? :prototype : :instance
-
-          if indexed_series && !indexed_series.empty?
-            @sources = indexed_series.collect(&get)
-          elsif hash_series && !hash_series.empty?
-            @sources = hash_series.clone.transform_values(&get)
-          end
-
-          mark_regarding! @source
+          self.source = selector
+          self.options = indexed_series || hash_series
         end
 
         def _restart
@@ -355,14 +316,10 @@ module Musa
       private_constant :SwitchFullSerie
 
       class InfiniteRepeater
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true)
 
         def initialize(serie)
-          @source = serie
-
-          mark_regarding! @source
+          self.source = serie
         end
 
         def _restart
@@ -388,32 +345,40 @@ module Musa
       private_constant :InfiniteRepeater
 
       class Repeater
-        include Serie
-
-        attr_reader :source, :times, :condition
+        include Serie.with(source: true)
 
         def initialize(serie, times = nil, &condition)
-          @source = serie
-
-          @times = times
-          @external_condition = condition
+          self.source = serie
+          self.times = times
+          self.condition = condition
 
           _restart false
-          @condition = calculate_condition
-
-          mark_regarding! @source
         end
 
-        def _prototype!
-          super
+        def times; @times; end
+
+        def times=(value)
+          @times = value
           @condition = calculate_condition
-          self
+        end
+
+        def condition(&block)
+          if block
+            @external_condition = block
+            @condition = calculate_condition
+          else
+            @external_condition
+          end
+        end
+
+        def condition=(block)
+          @external_condition = block
+          @condition = calculate_condition
         end
 
         def _instance!
           super
           @condition = calculate_condition
-          self
         end
 
         def _restart(restart_sources = true)
@@ -454,18 +419,16 @@ module Musa
       private_constant :Repeater
 
       class LengthLimiter
-        include Serie
-
-        attr_reader :source, :length
+        include Serie.with(source: true)
 
         def initialize(serie, length)
-          @source = serie
-          @length = length
+          self.source = serie
+          self.length = length
 
           _restart false
-
-          mark_regarding! @source
         end
+
+        attr_accessor :length
 
         def _restart(restart_sources = true)
           @position = 0
@@ -487,18 +450,16 @@ module Musa
       private_constant :LengthLimiter
 
       class Skipper
-        include Serie
-
-        attr_reader :source, :length
+        include Serie.with(source: true)
 
         def initialize(serie, length)
-          @source = serie
-          @length = length
+          self.source = serie
+          self.length = length
 
           _restart false
-
-          mark_regarding! @source
         end
+
+        attr_accessor :length
 
         def _restart(restart_sources = true)
           @source.restart if restart_sources
@@ -520,28 +481,22 @@ module Musa
       private_constant :Skipper
 
       class Flattener
-        include Serie
-
-        attr_reader :source
+        include Serie.base
 
         def initialize(serie)
           @source = serie
-
-          _restart false
-
           mark_regarding! @source
+          _restart false
         end
 
         def _prototype!
           super
           _restart false
-          self
         end
 
         def _instance!
           super
           _restart false
-          self
         end
 
         def _restart(restart_sources = true)
@@ -582,15 +537,12 @@ module Musa
       private_constant :Flattener
 
       class MergeSerieOfSeries
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true)
 
         def initialize(serie)
-          @source = serie
-          _restart false
+          self.source = serie
 
-          mark_regarding! @source
+          _restart false
         end
 
         def _restart(restart_sources = true)
@@ -638,20 +590,18 @@ module Musa
       private_constant :MergeSerieOfSeries
 
       class Processor
-        include Musa::Extension::SmartProcBinder
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true, smart_block: true)
 
         def initialize(serie, parameters, &processor)
-          @source = serie
-          @parameters = parameters
-          @processor = SmartProcBinder.new(processor)
+          self.source = serie
+
+          self.parameters = parameters
+          self.proc = processor if processor
 
           _restart false
-
-          mark_regarding! @source
         end
+
+        attr_accessor :parameters
 
         def _restart(restart_source = true)
           @source.restart if restart_source
@@ -666,7 +616,7 @@ module Musa
             if v.nil?
               nil
             else
-              value = @processor.call(v, **@parameters)
+              value = @block.call(v, **@parameters)
 
               if value.is_a?(Array)
                 @pending_values = value
@@ -692,16 +642,11 @@ module Musa
       end
 
       class Autorestart
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true)
 
         def initialize(serie)
-          @source = serie
-
+          self.source = serie
           @restart_on_next = false
-
-          mark_regarding! @source
         end
 
         def _restart
@@ -725,15 +670,23 @@ module Musa
       private_constant :Autorestart
 
       class Cutter
-        include Serie
-
-        attr_reader :source, :length
+        include Serie.with(source: true)
 
         def initialize(serie, length)
-          @source = serie
-          @length = length
+          self.source = serie
+          self.length = length
+        end
 
-          mark_regarding! @source
+        def source=(serie)
+          super
+          @previous&.source = serie
+        end
+
+        attr_reader :length
+
+        def length=(value)
+          @length = value
+          @previous&.length = value
         end
 
         def _restart
@@ -741,29 +694,26 @@ module Musa
         end
 
         def _next_value
-          @previous.materialize if @previous
-
+          @previous&.materialize
           @previous = CutSerie.new @source, @length if @source.peek_next_value
         end
 
-        private
-
         class CutSerie
-          include Serie
+          include Serie.with(source: true)
 
           def initialize(serie, length)
-            @source = serie
-            @length = length
+            self.source = serie.instance
+            self.length = length
 
             @values = []
             _restart
-
-            mark_as_instance!
           end
+
+          attr_accessor :length
 
           def _prototype!
             # TODO review why cannot get prototype of a cut serie
-            raise PrototypingSerieError, 'Cannot get prototype of a cut serie'
+            raise PrototypingError, 'Cannot get prototype of a cut serie'
           end
 
           def _restart
@@ -771,7 +721,7 @@ module Musa
           end
 
           def _next_value
-            value ||= @values[@count]
+            value = @values[@count]
             value ||= @values[@count] = @source.next_value if @count < @length
 
             @count += 1
@@ -783,23 +733,22 @@ module Musa
             (@values.size..@length - 1).each { |i| @values[i] = @source.next_value }
           end
         end
+
+        private_constant :CutSerie
       end
 
       private_constant :Cutter
 
       class Locker
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true)
 
         def initialize(serie)
-          @source = serie
+          self.source = serie
+
           @values = []
           @first_round = true
 
           _restart
-
-          mark_regarding! @source
         end
 
         def _restart
@@ -828,21 +777,22 @@ module Musa
       private_constant :Locker
 
       class Reverser
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true)
 
         def initialize(serie)
-          @source = serie
+          self.source = serie
           _restart false, false
+        end
 
-          mark_regarding! @source
+        def source=(serie)
+          raise ArgumentError, "A serie to reverse can't be infinite" if serie.infinite?
+          super
+          _restart false, instance?
         end
 
         def _instance!
           super
           _restart false, true
-          self
         end
 
         def _restart(restart_sources = true, get_reversed = true)
@@ -854,9 +804,7 @@ module Musa
           @reversed.next_value
         end
 
-        private
-
-        def next_values_array_of(serie)
+        private def next_values_array_of(serie)
           array = []
 
           until (value = serie.next_value).nil?
@@ -870,18 +818,16 @@ module Musa
       private_constant :Reverser
 
       class Randomizer
-        include Serie
-
-        attr_reader :source, :random
+        include Serie.with(source: true)
 
         def initialize(serie, random)
-          @source = serie
-          @random = random
+          self.source = serie
+          self.random = random
 
           _restart false
-
-          mark_regarding! @source
         end
+
+        attr_accessor :random
 
         def _restart(restart_sources = true)
           @source.restart if restart_sources
@@ -905,20 +851,31 @@ module Musa
       private_constant :Randomizer
 
       class Shifter
-        include Serie
-
-        attr_reader :source, :shift
+        include Serie.with(source: true)
 
         def initialize(serie, shift)
-          raise ArgumentError, "cannot shift to right an infinite serie #{serie}" if shift > 0 && serie.infinite?
-          raise ArgumentError, 'cannot shift to right: function not yet implemented' if shift > 0
-
-          @source = serie
-          @shift = shift
+          self.source = serie
+          self.shift = shift
 
           _restart false
 
           mark_regarding! @source
+        end
+
+        def source=(serie)
+          raise ArgumentError, "cannot shift to right an infinite serie" if @shift > 0 && serie.infinite?
+          super
+          # should _restart(false) ??? if so, we lost the shifted values of the previous serie; if not we don't shift the new serie values
+          # I think it's better to not _restart unless it's explicitly called by the caller
+        end
+
+        attr_reader :shift
+
+        def shift=(value)
+          raise ArgumentError, "cannot shift to right an infinite serie" if value > 0 && @source&.infinite?
+          raise NotImplementedError, 'cannot shift to right: function not yet implemented' if value > 0
+
+          @shift = value
         end
 
         def _restart(restart_sources = true)
@@ -939,18 +896,15 @@ module Musa
       private_constant :Shifter
 
       class Remover
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
-          @source = serie
-          @block = block
+          self.source = serie
+          self.proc = block
+
           @history = []
 
           _restart false
-
-          mark_regarding! @source
         end
 
         def _restart(restart_sources = true)
@@ -973,17 +927,13 @@ module Musa
       private_constant :Remover
 
       class Selector
-        include Serie
-
-        attr_reader :source
+        include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
-          @source = serie
-          @block = block
+          self.source = serie
+          self.proc = block
 
           _restart false
-
-          mark_regarding! @source
         end
 
         def _restart(restart_sources = true)
@@ -1002,17 +952,16 @@ module Musa
       private_constant :Selector
 
       class HashFromSeriesArray
-        include Serie
-
-        attr_reader :source, :keys
+        include Serie.with(source: true)
 
         def initialize(serie, keys)
-          @source = serie
-          @keys = keys
-          _restart false
+          self.source = serie
+          self.keys = keys
 
-          mark_regarding! @source
+          _restart false
         end
+
+        attr_accessor :keys
 
         def _restart(restart_sources = true)
           @source.restart if restart_sources

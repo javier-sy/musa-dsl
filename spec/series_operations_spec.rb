@@ -538,8 +538,8 @@ RSpec.describe Musa::Series do
     it '.merge: S(S(1, 2, 3).i, S(4, 5, 6).i, S(7, 8, 9).i)' do
       ss = S(S(1, 2, 3).i, S(4, 5, 6).i, S(7, 8, 9).i)
 
-      expect { ss.flatten.next_value }.to raise_error(Serie::PrototypingSerieError)
-      expect { ss.merge.next_value }.to raise_error(Serie::PrototypingSerieError)
+      expect { ss.flatten.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { ss.merge.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
 
       s = ss.instance.merge
 
@@ -659,8 +659,8 @@ RSpec.describe Musa::Series do
     it '.flatten: S(S(1, 2, 3).p, 33, S(4, 5, 6).p, S(7, 8, 9).p).prototype' do
       s = S(S(1, 2, 3).p, 33, S(4, 5, 6).p, S(7, 8, 9).p).prototype
 
-      expect { s.flatten.next_value }.to raise_error(Serie::PrototypingSerieError)
-      expect { s.merge.next_value }.to raise_error(Serie::PrototypingSerieError)
+      expect { s.flatten.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { s.merge.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
 
       ss = s.instance.flatten
 

@@ -7,20 +7,11 @@ module Musa
     end
 
     class QueueSerie
-      include Series::Serie
-
-      attr_reader :sources
+      include Series::Serie.with(sources: true)
 
       def initialize(series)
-        @sources = if series[0].prototype?
-                     series.collect(&:prototype)
-                   else
-                     series.collect(&:instance)
-                   end
-
+        self.sources = series
         _restart false
-
-        mark_regarding! @sources[0]
       end
 
       def <<(serie)
@@ -35,8 +26,6 @@ module Musa
       end
 
       def clear
-        # only instance queue can be cleared
-        #
         @sources.clear
         restart
         self

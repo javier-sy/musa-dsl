@@ -17,20 +17,11 @@ module Musa
     end
 
     class TimedUnionOfArrayOfTimedSeries
-      include Series::Serie
-
-      attr_reader :sources
+      include Series::Serie.with(sources: true)
 
       def initialize(series)
-        @sources = if series[0].prototype?
-                     series.collect(&:prototype)
-                   else
-                     series.collect(&:instance)
-                   end
-
+        self.sources = series
         _restart false
-
-        mark_regarding! series[0]
       end
 
       private def _restart(restart_sources = true)
@@ -149,22 +140,17 @@ module Musa
     private_constant :TimedUnionOfArrayOfTimedSeries
 
     class TimedUnionOfHashOfTimedSeries
-      include Series::Serie
-
-      attr_reader :sources
+      include Series::Serie.with(sources: true)
 
       def initialize(series)
-        @components = series.keys
-
-        @sources = if series.values.first.prototype?
-                     series.transform_values(&:prototype)
-                   else
-                     series.transform_values(&:instance)
-                   end
+        self.sources = series
 
         _restart false
+      end
 
-        mark_regarding! series.values.first
+      def sources=(series)
+        super
+        @components = series.keys
       end
 
       private def _restart(restart_sources = true)
@@ -255,13 +241,10 @@ module Musa
     end
 
     class TimedFlattener
-      include Series::Serie
-
-      attr_reader :source
+      include Series::Serie.with(source: true)
 
       def initialize(serie)
-        @source = serie
-        mark_regarding! @source
+        self.source = serie
       end
 
       def _restart
@@ -318,13 +301,10 @@ module Musa
   end
 
   class TimedCompacter
-    include Series::Serie
-
-    attr_reader :source
+    include Series::Serie.with(source: true)
 
     def initialize(serie)
-      @source = serie
-      mark_regarding! @source
+      self.source = serie
     end
 
     def _restart

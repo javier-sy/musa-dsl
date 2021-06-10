@@ -7,26 +7,10 @@ module Musa
     end
 
     class ProxySerie
-      include Series::Serie
-
-      attr_reader :source
+      include Series::Serie.with(source: true)
 
       def initialize(serie)
-        @source = serie
-
-        if @source
-          mark_regarding! @source
-        else
-          mark_as_prototype!
-        end
-      end
-
-      def source=(source)
-        # when proxy is a prototype it is also frozen so we cannot change the source (it will raise an exception).
-        # when proxy is an instance the only kind of source that can be assigned is also an instance (otherwise will raise an exception)
-        #
-        raise ArgumentError, "This proxy is an instance. Tried to assign a prototype serie to it's source. Only an instance serie can be assigned." if instance? && source.prototype?
-        @source = source
+        self.source = serie
       end
 
       def _restart

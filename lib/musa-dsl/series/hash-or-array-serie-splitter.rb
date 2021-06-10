@@ -61,7 +61,7 @@ module Musa
       end
 
       class BufferedProxy
-        include Series::SeriePrototyping
+        include Series::Serie::Prototyping
 
         def initialize(hash_or_array_serie)
           @source = hash_or_array_serie
@@ -147,7 +147,7 @@ module Musa
       end
 
       class Split
-        include Series::Serie
+        include Series::Serie.base
 
         def initialize(proxy, key_or_index)
           @source = proxy
