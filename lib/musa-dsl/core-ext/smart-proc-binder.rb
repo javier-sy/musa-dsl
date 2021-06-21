@@ -2,8 +2,8 @@ module Musa
   module Extension
     module SmartProcBinder
       class SmartProcBinder
-        def initialize(procedure, on_rescue: nil)
-          @procedure = procedure
+        def initialize(block, on_rescue: nil)
+          @block = block
           @on_rescue = on_rescue
 
           @key_parameters = {}
@@ -12,7 +12,7 @@ module Musa
           @value_parameters_count = 0
           @has_value_rest = false
 
-          procedure.parameters.each do |parameter|
+          block.parameters.each do |parameter|
             @key_parameters[parameter[1]] = nil if parameter[0] == :key || parameter[0] == :keyreq
             @has_key_rest = true if parameter[0] == :keyrest
 
@@ -22,11 +22,11 @@ module Musa
         end
 
         def proc
-          @procedure
+          @block
         end
 
         def parameters
-          @procedure.parameters
+          @block.parameters
         end
 
         def call(*value_parameters, **key_parameters)
@@ -45,25 +45,23 @@ module Musa
           end
         end
 
-        def __call(value_parameters, key_parameters)
+        private def __call(value_parameters, key_parameters)
           effective_value_parameters, effective_key_parameters = apply(*value_parameters, **key_parameters)
 
           if effective_key_parameters.empty?
             if effective_value_parameters.empty?
-              @procedure.call
+              @block.call
             else
-              @procedure.call *effective_value_parameters
+              @block.call *effective_value_parameters
             end
           else
             if effective_value_parameters.empty?
-              @procedure.call **effective_key_parameters
+              @block.call **effective_key_parameters
             else
-              @procedure.call *effective_value_parameters, **effective_key_parameters
+              @block.call *effective_value_parameters, **effective_key_parameters
             end
           end
         end
-
-        private :__call
 
         def key?(key)
           @has_key_rest || @key_parameters.include?(key)

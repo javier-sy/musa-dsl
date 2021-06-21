@@ -21,14 +21,16 @@ module Musa
 
       def initialize(series)
         self.sources = series
-        _restart false
+        init
       end
 
-      private def _restart(restart_sources = true)
-        @sources.each(&:restart) if restart_sources
+      private def _init
         @sources_next_values = Array.new(@sources.size)
-
         @components = nil
+      end
+
+      private def _restart
+        @sources.each(&:restart)
       end
 
       private def _next_value
@@ -144,8 +146,7 @@ module Musa
 
       def initialize(series)
         self.sources = series
-
-        _restart false
+        init
       end
 
       def sources=(series)
@@ -153,10 +154,13 @@ module Musa
         @components = series.keys
       end
 
-      private def _restart(restart_sources = true)
-        @sources.each_value(&:restart) if restart_sources
+      private def _init
         @sources_next_values = @components.collect { |k| [k, nil] }.to_h
         @other_attributes = nil
+      end
+
+      private def _restart
+        @sources.each_value(&:restart)
       end
 
       private def _next_value
@@ -245,13 +249,14 @@ module Musa
 
       def initialize(serie)
         self.source = serie
+        init
       end
 
-      def _restart
+      private def _restart
         @source.restart
       end
 
-      def _next_value
+      private def _next_value
         source_value = @source.next_value
 
         if !source_value.nil?
@@ -305,13 +310,14 @@ module Musa
 
     def initialize(serie)
       self.source = serie
+      init
     end
 
-    def _restart
+    private def _restart
       @source.restart
     end
 
-    def _next_value
+    private def _next_value
       while (source_value = @source.next_value) && skip_value?(source_value[:value]); end
       source_value
     end

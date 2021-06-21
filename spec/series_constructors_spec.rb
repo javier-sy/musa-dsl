@@ -703,32 +703,9 @@ RSpec.describe Musa::Series do
 
       s1.restart
 
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
-      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq([1, :a])
+      expect(s1.next_value).to eq([2, :b])
+      expect(s1.next_value).to eq([3, :c])
       expect(s1.next_value).to eq nil
       expect(s1.next_value).to eq nil
     end

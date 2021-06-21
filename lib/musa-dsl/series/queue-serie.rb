@@ -11,7 +11,7 @@ module Musa
 
       def initialize(series)
         self.sources = series
-        _restart false
+        init
       end
 
       def <<(serie)
@@ -21,22 +21,29 @@ module Musa
         raise ArgumentError, "Only an instance serie can be queued" unless serie.instance?
 
         @sources << serie
-        check_current
+        @current ||= @sources[@index]
+
         self
       end
 
       def clear
         @sources.clear
-        restart
+        init
         self
       end
 
-      def _restart(restart_sources = true)
-        @index = -1
-        forward if restart_sources
+      private def _init
+        @index = 0
+        @current = @sources[@index]
+        @restart_sources = false
       end
 
-      def _next_value
+      private def _restart
+        @current.restart
+        @restart_sources = true
+      end
+
+      private def _next_value
         value = nil
 
         if @current
@@ -55,18 +62,13 @@ module Musa
         !!@sources.find(&:infinite?)
       end
 
-      private
-
-      def forward
+      private def forward
         @index += 1
-        @current = @sources[@index]&.restart
+        @current = @sources[@index]
+        @current&.restart if @restart_sources
       end
 
-      def check_current
-        @current = @sources[@index].restart unless @current
-      end
-
-      def method_missing(method_name, *args, **key_args, &block)
+      private def method_missing(method_name, *args, **key_args, &block)
         if @current&.respond_to?(method_name)
           @current.send method_name, *args, **key_args, &block
         else
@@ -74,7 +76,7 @@ module Musa
         end
       end
 
-      def respond_to_missing?(method_name, include_private)
+      private def respond_to_missing?(method_name, include_private)
         @current&.respond_to?(method_name, include_private) # || super
       end
     end

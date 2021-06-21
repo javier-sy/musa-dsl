@@ -65,12 +65,9 @@ module Musa
 
         def initialize(hash_or_array_serie)
           @source = hash_or_array_serie
-
-          infer_components
-
-          restart restart_source: false
-
           mark_regarding! @source
+
+          init
         end
 
         attr_reader :components
@@ -78,7 +75,11 @@ module Musa
         def hash_mode?; @hash_mode; end
         def array_mode?; @array_mode; end
 
-        def restart(key_or_index = nil, restart_source: true)
+        def init
+          infer_components
+        end
+
+        def restart(key_or_index = nil)
           if key_or_index
             @asked_to_restart[key_or_index] = true
           else
@@ -86,7 +87,7 @@ module Musa
           end
 
           if @asked_to_restart.values.all?
-            @source.restart if restart_source
+            @source.restart
             infer_components
           end
         end
@@ -156,11 +157,11 @@ module Musa
           mark_regarding! @source
         end
 
-        def _restart
+        private def _restart
           @source.restart @key_or_index
         end
 
-        def _next_value
+        private def _next_value
           @source.next_value(@key_or_index)
         end
       end

@@ -21,7 +21,7 @@ module Musa
 
         @procedure_binders = {}
 
-        _restart
+        init
       end
 
       attr_accessor :start
@@ -29,13 +29,13 @@ module Musa
       attr_accessor :random
       attr_accessor :transitions
 
-      def _restart
+      private def _init
         @current = nil
         @finished = false
         @history = []
       end
 
-      def _next_value
+      private def _next_value
         if @finished
           @current = nil
         else

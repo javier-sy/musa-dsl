@@ -118,7 +118,18 @@ module Musa
         end
 
         def deep_copy_proc(register, object, method, freeze)
-          register(register, object, object.dup)
+          if (receiver_dup = registered(object.binding.receiver, register))
+            register(register,
+                     object,
+                     proc do |*args, **kargs|
+                       # when the receiver of the proc is also a duplicated object
+                       # the new copy of the proc should be the new object, not the original one.
+                       #
+                       receiver_dup.instance_exec(object, *args, **kargs, &object)
+                     end)
+          else
+            register(register, object, object.dup)
+          end
         end
 
         def deep_copy_instance_variables(register, object, duplication, method, freeze)

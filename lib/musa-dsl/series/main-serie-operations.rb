@@ -128,6 +128,8 @@ module Musa
           self.with_sources = with_series || {}
           self.on_restart = on_restart
           self.proc = block if block
+
+          init
         end
 
         def on_restart(&block)
@@ -142,13 +144,13 @@ module Musa
           @on_restart = block
         end
 
-        def _restart
+        private def _restart
           @source.restart
-          @sources.values.each { |s| s.restart }
+          @sources.values.each(&:restart)
           @on_restart.call if @on_restart
         end
 
-        def _next_value
+        private def _next_value
           main = @source.next_value
           others = @sources.transform_values { |v| v.next_value }
 
@@ -178,13 +180,15 @@ module Musa
         def initialize(serie, &block)
           self.source = serie
           self.proc = block
+
+          init
         end
 
-        def _restart
+        private def _restart
           @source.restart
         end
 
-        def _next_value
+        private def _next_value
           previous_value = @source.current_value
           value = @source.next_value
           peek_next_value = @source.peek_next_value
@@ -209,9 +213,11 @@ module Musa
         def initialize(selector, indexed_series, hash_series)
           self.source = selector
           self.options = indexed_series || hash_series
+
+          init
         end
 
-        def _restart
+        private def _restart
           @source.restart
           if @sources.is_a? Array
             @sources.each(&:restart)
@@ -220,7 +226,7 @@ module Musa
           end
         end
 
-        def _next_value
+        private def _next_value
           value = nil
 
           index_or_key = @source.next_value
@@ -244,25 +250,25 @@ module Musa
           self.source = selector
           self.options = indexed_series || hash_series
 
-          _restart false
+          init
         end
 
-        def _restart(restart_sources = true)
+        private def _init
           @current_value = nil
-
-          if restart_sources
-            @source.restart
-            if @sources.is_a? Array
-              @sources.each(&:restart)
-            elsif @sources.is_a? Hash
-              @sources.each { |_key, serie| serie.restart }
-            end
-          end
-
           @first = true
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+
+          if @sources.is_a? Array
+            @sources.each(&:restart)
+          elsif @sources.is_a? Hash
+            @sources.values.each(&:restart)
+          end
+        end
+
+        private def _next_value
           @current_value =
               if @first || !@current_value.nil?
                 @first = false
@@ -287,14 +293,16 @@ module Musa
         def initialize(selector, indexed_series, hash_series)
           self.source = selector
           self.options = indexed_series || hash_series
+
+          init
         end
 
-        def _restart
+        private def _restart
           @source.restart
           @sources.each(&:restart)
         end
 
-        def _next_value
+        private def _next_value
           value = nil
 
           value = @sources[@index_or_key].next_value unless @index_or_key.nil?
@@ -320,13 +328,14 @@ module Musa
 
         def initialize(serie)
           self.source = serie
+          init
         end
 
-        def _restart
+        private def _restart
           @source.restart
         end
 
-        def _next_value
+        private def _next_value
           value = @source.next_value
 
           if value.nil?
@@ -352,20 +361,20 @@ module Musa
           self.times = times
           self.condition = condition
 
-          _restart false
+          init
         end
 
-        def times; @times; end
+        attr_reader :times
 
         def times=(value)
           @times = value
-          @condition = calculate_condition
+          calculate_condition
         end
 
         def condition(&block)
           if block
             @external_condition = block
-            @condition = calculate_condition
+            calculate_condition
           else
             @external_condition
           end
@@ -373,20 +382,19 @@ module Musa
 
         def condition=(block)
           @external_condition = block
-          @condition = calculate_condition
+          calculate_condition
         end
 
-        def _instance!
-          super
-          @condition = calculate_condition
-        end
-
-        def _restart(restart_sources = true)
+        private def _init
           @count = 0
-          @source.restart if restart_sources
+          calculate_condition
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+        end
+
+        private def _next_value
           value = @source.next_value
 
           if value.nil?
@@ -406,13 +414,13 @@ module Musa
         end
 
         private def calculate_condition
-          if @external_condition
-            @external_condition
-          elsif @times
-            proc { @count < @times }
-          else
-            proc { false }
-          end
+          @condition = if @external_condition
+                         @external_condition
+                       elsif @times
+                         proc { @count < @times }
+                       else
+                         proc { false }
+                       end
         end
       end
 
@@ -425,17 +433,20 @@ module Musa
           self.source = serie
           self.length = length
 
-          _restart false
+          init
         end
 
         attr_accessor :length
 
-        def _restart(restart_sources = true)
+        private def _init
           @position = 0
-          @source.restart if restart_sources
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+        end
+
+        private def _next_value
           if @position < @length
             @position += 1
             @source.next_value
@@ -456,17 +467,20 @@ module Musa
           self.source = serie
           self.length = length
 
-          _restart false
+          init
         end
 
         attr_accessor :length
 
-        def _restart(restart_sources = true)
-          @source.restart if restart_sources
+        private def _init
           @first = true
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+        end
+
+        private def _next_value
           @length.times { @source.next_value } if @first
           @first = nil
 
@@ -486,31 +500,20 @@ module Musa
         def initialize(serie)
           @source = serie
           mark_regarding! @source
-          _restart false
+          init
         end
 
-        def _prototype!
-          super
-          _restart false
-        end
-
-        def _instance!
-          super
-          _restart false
-        end
-
-        def _restart(restart_sources = true)
-          if restart_sources
-            @source.restart
-            @restart_each_serie = true
-          else
-            @restart_each_serie = false
-          end
-
+        private def _init
           @stack = [@source]
+          @restart_each_serie = false
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+          @restart_each_serie = true
+        end
+
+        private def _next_value
           if @stack.last
             value = @stack.last.next_value
 
@@ -541,19 +544,20 @@ module Musa
 
         def initialize(serie)
           self.source = serie
-
-          _restart false
+          init
         end
 
-        def _restart(restart_sources = true)
-          if restart_sources
-            @source.restart
-            @restart_each_serie = true
-          end
+        private def _init
           @current_serie = nil
+          @restart_each_serie = false
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+          @restart_each_serie = true
+        end
+
+        private def _next_value
           value = nil
 
           restart_current_serie_if_needed = false
@@ -598,17 +602,20 @@ module Musa
           self.parameters = parameters
           self.proc = processor if processor
 
-          _restart false
+          init
         end
 
         attr_accessor :parameters
 
-        def _restart(restart_source = true)
-          @source.restart if restart_source
+        private def _init
           @pending_values = []
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+        end
+
+        private def _next_value
           if @pending_values.empty?
 
             v = @source.next_value
@@ -646,14 +653,18 @@ module Musa
 
         def initialize(serie)
           self.source = serie
+          init
+        end
+
+        private def _init
           @restart_on_next = false
         end
 
-        def _restart
+        private def _restart
           @source.restart
         end
 
-        def _next_value
+        private def _next_value
           if @restart_on_next
             @source.restart
             @restart_on_next = false
@@ -675,6 +686,7 @@ module Musa
         def initialize(serie, length)
           self.source = serie
           self.length = length
+          init
         end
 
         def source=(serie)
@@ -689,11 +701,11 @@ module Musa
           @previous&.length = value
         end
 
-        def _restart
+        private def _restart
           @source.restart
         end
 
-        def _next_value
+        private def _next_value
           @previous&.materialize
           @previous = CutSerie.new @source, @length if @source.peek_next_value
         end
@@ -706,7 +718,7 @@ module Musa
             self.length = length
 
             @values = []
-            _restart
+            init
           end
 
           attr_accessor :length
@@ -716,11 +728,11 @@ module Musa
             raise PrototypingError, 'Cannot get prototype of a cut serie'
           end
 
-          def _restart
+          private def _init
             @count = 0
           end
 
-          def _next_value
+          private def _next_value
             value = @values[@count]
             value ||= @values[@count] = @source.next_value if @count < @length
 
@@ -748,14 +760,14 @@ module Musa
           @values = []
           @first_round = true
 
-          _restart
+          init
         end
 
-        def _restart
+        private def _init
           @index = 0
         end
 
-        def _next_value
+        private def _next_value
           if @first_round
             value = @source.next_value
 
@@ -781,26 +793,25 @@ module Musa
 
         def initialize(serie)
           self.source = serie
-          _restart false, false
+          init
         end
 
         def source=(serie)
           raise ArgumentError, "A serie to reverse can't be infinite" if serie.infinite?
           super
-          _restart false, instance?
+          init
         end
 
-        def _instance!
-          super
-          _restart false, true
+        private def _init
+          @reversed = nil
         end
 
-        def _restart(restart_sources = true, get_reversed = true)
-          @source.restart if restart_sources
-          @reversed = Constructors.S(*next_values_array_of(@source).reverse).instance if get_reversed
+        private def _restart
+          @source.restart
         end
 
-        def _next_value
+        private def _next_value
+          @reversed ||= Constructors.S(*next_values_array_of(@source).reverse).instance
           @reversed.next_value
         end
 
@@ -824,17 +835,21 @@ module Musa
           self.source = serie
           self.random = random
 
-          _restart false
+          init
         end
 
         attr_accessor :random
 
-        def _restart(restart_sources = true)
-          @source.restart if restart_sources
-          @values = @source.to_a
+        private def _init
+          @values = @source.to_a(duplicate: false, restart: false)
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+          @values = @source.to_a(duplicate: false, restart: false)
+        end
+
+        private def _next_value
           if !@values.empty?
             position = @random.rand(0...@values.size)
             value = @values[position]
@@ -857,9 +872,7 @@ module Musa
           self.source = serie
           self.shift = shift
 
-          _restart false
-
-          mark_regarding! @source
+          init
         end
 
         def source=(serie)
@@ -878,14 +891,21 @@ module Musa
           @shift = value
         end
 
-        def _restart(restart_sources = true)
-          @source.restart if restart_sources
-
+        private def _init
           @shifted = []
-          @shift.abs.times { @shifted << @source.next_value } if @shift < 0
+          @first = true
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+        end
+
+        private def _next_value
+          if @first
+            @shift.abs.times { @shifted << @source.next_value } if @shift < 0
+            @first = false
+          end
+
           value = @source.next_value
           return value unless value.nil?
 
@@ -904,15 +924,18 @@ module Musa
 
           @history = []
 
-          _restart false
+          init
         end
 
-        def _restart(restart_sources = true)
-          @source.restart if restart_sources
+        private def _init
           @history.clear
         end
 
-        def _next_value
+        private def _restart
+          @source.restart
+        end
+
+        private def _next_value
           if value = @source.next_value
             while value && @block.call(value, @history)
               @history << value
@@ -933,14 +956,14 @@ module Musa
           self.source = serie
           self.proc = block
 
-          _restart false
+          init
         end
 
-        def _restart(restart_sources = true)
-          @source.restart if restart_sources
+        private def _restart
+          @source.restart
         end
 
-        def _next_value
+        private def _next_value
           value = @source.next_value
           until value.nil? || @block.call(value)
             value = @source.next_value
@@ -958,16 +981,16 @@ module Musa
           self.source = serie
           self.keys = keys
 
-          _restart false
+          init
         end
 
         attr_accessor :keys
 
-        def _restart(restart_sources = true)
-          @source.restart if restart_sources
+        private def _restart
+          @source.restart
         end
 
-        def _next_value
+        private def _next_value
           array = @source.next_value
 
           return nil unless array

@@ -97,10 +97,10 @@ module Musa
         @left_open = left_open
         @right_open = right_open
 
-        _restart false
+        init
       end
 
-      def _restart(restart_sources = true)
+      private def _init
         @last_processed_q_value = nil
         @last_processed_time = nil
 
@@ -108,11 +108,13 @@ module Musa
 
         @points = []
         @segments = []
-
-        @source.restart if restart_sources
       end
 
-      def _next_value
+      private def _restart
+        @source.restart
+      end
+
+      private def _next_value
         if @stops
           i = 2
 
@@ -363,23 +365,25 @@ module Musa
         @halfway_offset = step / 2r
         @crossing_reference = reference - @halfway_offset
 
-        _restart false
+        init
       end
 
-      def _restart(restart_sources = true)
-        @source.restart if restart_sources
-
+      private def _init
         @last_time = nil
         @crossings = []
 
         @first = true
       end
 
+      private def _restart
+        @source.restart
+      end
+
       def infinite?
         !!@source.infinite?
       end
 
-      def _next_value
+      private def _next_value
         result = nil
 
         first_time, first_value = get_time_value(@source.peek_next_value) if @first

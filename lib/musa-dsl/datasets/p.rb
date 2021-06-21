@@ -53,7 +53,7 @@ module Musa::Datasets
         @base_duration = base_duration
         @time_start = time_start
 
-        _restart
+        init
 
         mark_as_prototype!
       end
@@ -62,12 +62,12 @@ module Musa::Datasets
       attr_accessor :base_duration
       attr_accessor :time_start
 
-      def _restart
+      private def _init
         @index = 0
         @time = @time_start
       end
 
-      def _next_value
+      private def _next_value
         if value = @origin[@index]
           @index += 1
           r = { time: @time, value: value }.extend(AbsTimed)

@@ -39,7 +39,15 @@ module Musa
             end
           end
 
-          @dsl.with &block
+          @dsl.with &block if block
+        end
+
+        def route(from, to:, as: nil, at: nil)
+          @dsl.route(from, to: to, as: as, at: at)
+        end
+
+        def pipeline(name, *elements)
+          @dsl.pipeline(name, elements)
         end
 
         def update(&block)

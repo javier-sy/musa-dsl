@@ -104,7 +104,14 @@ module Musa
 
         def prototype
           if @is_instance
-            @instance_of || (@instance_of = clone.tap(&:_prototype!).mark_as_prototype!)
+            if !@instance_of
+              @instance_of = clone
+              @instance_of._prototype!
+              @instance_of.mark_as_prototype!
+              @instance_of.init if @instance_of.respond_to?(:init)
+            end
+
+            @instance_of
           else
             self
           end
@@ -116,7 +123,13 @@ module Musa
           if @is_instance
             self
           else
-            clone.tap(&:_instance!).mark_as_instance!(self).tap(&:restart)
+            new_instance = clone
+
+            new_instance._instance!
+            new_instance.mark_as_instance!(self)
+            new_instance.init if new_instance.respond_to?(:init)
+
+            new_instance
           end
         end
 
@@ -161,11 +174,15 @@ module Musa
         end
 
         protected def mark_as_prototype!
+          @get = :prototype
+
           @is_instance = nil
           self
         end
 
         protected def mark_as_instance!(prototype = nil)
+          @get = :instance
+
           @instance_of = prototype
           @is_instance = true
           self
@@ -184,18 +201,28 @@ module Musa
         include Prototyping
         include Operations
 
-        def restart
-          raise PrototypingError unless @is_instance
-
+        def init
           @_have_peeked_next_value = false
           @_peeked_next_value = nil
           @_have_current_value = false
           @_current_value = nil
 
-          _restart if respond_to? :_restart
+          _init
 
           self
         end
+
+        private def _init; end
+
+        def restart(...)
+          raise PrototypingError unless @is_instance
+          init
+          _restart(...)
+
+          self
+        end
+
+        private def _restart; end
 
         def next_value
           raise PrototypingError unless @is_instance
@@ -211,6 +238,8 @@ module Musa
 
           @_current_value
         end
+
+        private def _next_value; end
 
         alias_method :v, :next_value
 
@@ -232,7 +261,7 @@ module Musa
         end
 
         def infinite?
-          false
+          @source&.infinite? || false
         end
 
         def to_a(recursive: nil, duplicate: nil, restart: nil, dr: nil)

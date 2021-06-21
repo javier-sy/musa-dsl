@@ -8,6 +8,8 @@ require_relative 'array-to-serie'
 require_relative 'proxy-serie'
 require_relative 'queue-serie'
 
+require_relative 'buffer-serie'
+
 require_relative 'series-composer'
 
 require_relative 'hash-or-array-serie-splitter'

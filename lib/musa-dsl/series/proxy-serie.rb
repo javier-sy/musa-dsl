@@ -11,13 +11,14 @@ module Musa
 
       def initialize(serie)
         self.source = serie
+        init
       end
 
-      def _restart
+      private def _restart
         @source.restart if @source
       end
 
-      def _next_value
+      private def _next_value
         @source.next_value if @source
       end
 
@@ -25,9 +26,7 @@ module Musa
         @source.infinite? if @source
       end
 
-      private
-
-      def method_missing(method_name, *args, **key_args, &block)
+      private def method_missing(method_name, *args, **key_args, &block)
         if @source && @source.respond_to?(method_name)
           @source.send method_name, *args, **key_args, &block
         else
@@ -35,7 +34,7 @@ module Musa
         end
       end
 
-      def respond_to_missing?(method_name, include_private)
+      private def respond_to_missing?(method_name, include_private)
         @source && @source.respond_to?(method_name, include_private) # || super
       end
     end

@@ -102,9 +102,7 @@ module Musa
     class NilSerie
       include Musa::Series::Serie.base
 
-      def _next_value
-        nil
-      end
+      def _next_value; nil; end
     end
 
     private_constant :NilSerie
@@ -114,23 +112,23 @@ module Musa
 
       def initialize(values = nil, extends = nil)
         @values = values
-        @index = 0
+        mark_as_prototype!
 
         x = self
         extends.arrayfy.each do |e|
           x.extend(e)
         end
 
-        mark_as_prototype!
+        init
       end
 
       attr_accessor :values
 
-      def _restart
+      private def _init
         @index = 0
       end
 
-      def _next_value
+      private def _next_value
         if @values && @index < @values.size
           value = @values[@index]
           @index += 1
@@ -145,28 +143,27 @@ module Musa
     private_constant :FromArray
 
     class Sequence
-      include Musa::Series::Serie.base
+      include Musa::Series::Serie.with(sources: true)
 
       def initialize(series)
-        @sources = if series[0].prototype?
-                     series.collect(&:prototype)
-                   else
-                     series.collect(&:instance)
-                   end
+        self.sources = series
 
-        _restart false
-
-        mark_regarding! series[0]
+        init
       end
 
       attr_accessor :sources
 
-      def _restart(restart_sources = true)
+      private def _init
         @index = 0
-        @sources[@index].restart if restart_sources
+        @restart_sources = false
       end
 
-      def _next_value
+      private def _restart
+        @sources[0].restart
+        @restart_sources = true
+      end
+
+      private def _next_value
         value = nil
 
         if @index < @sources.size
@@ -175,7 +172,7 @@ module Musa
           if value.nil?
             @index += 1
             if @index < @sources.size
-              @sources[@index].restart
+              @sources[@index].restart if @restart_sources
               value = next_value
             end
           end
@@ -204,9 +201,9 @@ module Musa
 
         self.proc = block
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       def parameters
@@ -225,7 +222,7 @@ module Musa
         @original_key_parameters = key_values
       end
 
-      def _restart
+      private def _init
         @value_parameters = @original_value_parameters.clone(deep: true)
         @key_parameters = @original_key_parameters.clone(deep: true)
 
@@ -233,7 +230,7 @@ module Musa
         @value = nil
       end
 
-      def _next_value
+      private def _next_value
         @value = if !@value.nil? || @value.nil? && @first
                    @value = @block.call(*@value_parameters, last_value: @value, caller: self, **@key_parameters)
                  else
@@ -257,9 +254,9 @@ module Musa
 
         sign_adjust_step
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_reader :from, :to, :step
@@ -279,11 +276,11 @@ module Musa
         sign_adjust_step
       end
 
-      def _restart
+      private def _init
         @value = @from - @step
       end
 
-      def _next_value
+      private def _next_value
         if @value
           @value += @step
           value = @value
@@ -312,18 +309,18 @@ module Musa
         @values = values
         @random = random
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_accessor :values, :random
 
-      def _restart
+      private def _init
         @value = nil
       end
 
-      def _next_value
+      private def _next_value
         if @value
           nil
         else
@@ -346,9 +343,9 @@ module Musa
 
         @random = random
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_reader :from
@@ -374,11 +371,11 @@ module Musa
 
       attr_accessor :random
 
-      def _restart
+      private def _init
         @value = nil
       end
 
-      def _next_value
+      private def _next_value
         if @value
           nil
         else
@@ -401,19 +398,19 @@ module Musa
         @values = values.clone.freeze
         @random = random
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_accessor :values
       attr_accessor :random
 
-      def _restart
+      private def _init
         @available_values = @values.dup
       end
 
-      def _next_value
+      private def _next_value
         value = nil
         unless @available_values.empty?
           i = @random.rand(0...@available_values.size)
@@ -438,9 +435,9 @@ module Musa
 
         @random = random
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_reader :from
@@ -466,11 +463,11 @@ module Musa
 
       attr_accessor :random
 
-      def _restart
+      private def _init
         @available_steps = (0..@step_count).to_a
       end
 
-      def _next_value
+      private def _next_value
         value = nil
         unless @available_steps.empty?
           i = @random.rand(0...@available_steps.size)
@@ -495,23 +492,21 @@ module Musa
         self.sources = hash_of_series
         self.cycle = cycle_all_series
 
-        _restart false
+        init
       end
 
       attr_accessor :cycle
 
-      def _restart(restart_sources = true)
+      private def _init
         @have_current = false
         @value = nil
-
-        if restart_sources
-          @sources.each do |_key, serie|
-            serie.restart
-          end
-        end
       end
 
-      def _next_value
+      private def _restart
+        @sources.values.each(&:restart)
+      end
+
+      private def _next_value
         unless @have_current && @value.nil?
           pre_value = @sources.collect { |key, serie| [key, serie.peek_next_value] }.to_h
 
@@ -556,23 +551,21 @@ module Musa
         self.sources = series_array
         self.cycle = cycle_all_series
 
-        _restart false
+        init
       end
 
       attr_accessor :cycle
 
-      def _restart(restart_sources = true)
+      private def _init
         @have_current = false
         @value = nil
-
-        if restart_sources
-          @sources.each do |serie|
-            serie.restart if serie.current_value.nil?
-          end
-        end
       end
 
-      def _next_value
+      private def _restart
+        @sources.each(&:restart)
+      end
+
+      private def _next_value
         unless @have_current && @value.nil?
           pre_value = @sources.collect(&:peek_next_value)
 
@@ -622,9 +615,9 @@ module Musa
 
         update
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_reader :start
@@ -655,11 +648,11 @@ module Musa
         update
       end
 
-      def _restart
+      private def _init
         @position = 0
       end
 
-      def _next_value
+      private def _next_value
         value = nil
         unless @position >= @steps
           value = Math.sin(@offset + @step_size * @position) * (@amplitude / 2.0) + @center
@@ -689,16 +682,16 @@ module Musa
       include Musa::Series::Serie.base
 
       def initialize
-        _restart
         mark_as_prototype!
+        init
       end
 
-      def _restart
+      private def _init
         @a = 0
         @b = 1
       end
 
-      def _next_value
+      private def _next_value
         initial_b = @b
         @b = @a + @b
         @a = initial_b
@@ -720,9 +713,9 @@ module Musa
         @error = error
         @extended = extended
 
-        _restart
-
         mark_as_prototype!
+
+        init
       end
 
       attr_reader :error
@@ -737,7 +730,7 @@ module Musa
         @extended = value
       end
 
-      def _restart
+      def _init
         @harmonic = 0
       end
 
