@@ -14,7 +14,7 @@ module Musa
       def initialize(serie)
         self.source = serie
         @history = []
-        @buffereds = Set[]
+        @buffers = Set[]
 
         init
       end
@@ -29,23 +29,23 @@ module Musa
       end
 
       def buffer
-        @buffered ||= Buffered.new(@history)
-        @buffered.send(@get).tap { |_| @buffereds << _ }
+        @buffer ||= Buffer.new(@history)
+        @buffer.send(@get).tap { |_| @buffers << _ }
       end
 
       private def clear_old_history
-        min_last_nil_index = @buffereds.collect(&:last_nil_index).min
+        min_last_nil_index = @buffers.collect(&:last_nil_index).min
 
         if min_last_nil_index && min_last_nil_index >=0
-          min_last_nil_index.times { || @history.shift }
+          @history = @history.drop(min_last_nil_index)
 
-          @buffereds.each do |b|
-            b.reindex(min_last_nil_index)
+          @buffers.each do |b|
+            b._reindex(@history, min_last_nil_index)
           end
         end
       end
 
-      class Buffered
+      class Buffer
         include Series::Serie.base
 
         def initialize(history)
@@ -56,7 +56,9 @@ module Musa
 
         attr_reader :last_nil_index
 
-        def reindex(offset)
+        def _reindex(history, offset)
+          @history = history
+
           @last_nil_index -= offset
           @index -= offset
         end
@@ -78,13 +80,11 @@ module Musa
             end
           end
 
-          #puts "after : _next_value: @index = #{@index} @history[@index] = #{@history[@index] || 'nil'} @last_nil_index = #{@last_nil_index} @history.size = #{@history.size} wait_restart = #{@wait_restart} "
-
           @history[@index]
         end
       end
 
-      private_constant :Buffered
+      private_constant :Buffer
     end
 
     private_constant :SyncBufferSerie
@@ -100,20 +100,18 @@ module Musa
 
         @history = [nil]
         @nils = [0]
-        @buffereds = Set[]
+        @buffers = Set[]
 
         init
       end
 
       def buffer
-        @buffered ||= Buffered.new(self, @history)
-        @buffered.send(@get)
+        @buffer ||= Buffer.new(self)
+        @buffer.send(@get)
       end
 
-      def _init; end
-
       private def _restart(main)
-        raise ArgumentError, "Can't restart a ParallelBuffer serie directly. Should use a buffered instance instead." unless main
+        raise ArgumentError, "Can't restart a BufferSerie directly. Should use a buffered instance instead." unless main
 
         next_nil = @nils.find { |_| _ > main.index }
 
@@ -125,8 +123,9 @@ module Musa
           main.last_nil_index = main.index = @nils.last
         end
 
-        @source.restart
         clear_old_history
+
+        @source.restart
       end
 
       private def _next_value
@@ -144,47 +143,60 @@ module Musa
         value
       end
 
-      def _register(buffered_instance)
-        @buffereds << buffered_instance
+      def _register(buffer)
+        @buffers << buffer
+
+        buffer.history = @history
+        buffer.last_nil_index = 0
       end
 
       private def clear_old_history
-        # min_last_nil_index = @buffereds.collect(&:last_nil_index).min
-        #
-        # if min_last_nil_index && min_last_nil_index >=0
-        #   min_last_nil_index.times { || @history.shift }
-        #
-        #   @buffereds.each do |b|
-        #     b.reindex(min_last_nil_index)
-        #   end
-        # end
+        min_last_nil_index = @buffers.collect(&:last_nil_index).min
+
+        if min_last_nil_index && min_last_nil_index >=0
+
+          pre_nils = @nils.clone
+          @history = @history.drop(min_last_nil_index)
+
+          @nils.collect! { |_| _ - min_last_nil_index }
+
+          puts "BufferSerie.clear_old_history: min_last_nil_index = #{min_last_nil_index} pre = #{pre_nils} @nils = #{@nils}"
+
+          @buffers.each do |b|
+            b._reindex(@history, min_last_nil_index)
+          end
+        end
       end
 
-      class Buffered
-        include Series::Serie.base
+      class Buffer
+        include Series::Serie.with(source: true, private_source: true)
 
-        def initialize(base, history)
-          @base = base
-          @history = history
+        def initialize(base)
+          self.source = base
 
-          @last_nil_index = 0
+          mark_as_prototype! # necesario para que se creen instancias diferentes cada vez que se ejecute BufferSerie.buffer()
 
-          mark_as_prototype!
           init
         end
 
-        attr_accessor :id # todo remove
-
+        attr_accessor :history
         attr_accessor :last_nil_index
         attr_accessor :index
 
+        def _reindex(history, offset)
+          puts "Buffer._reindex: @history.size = #{@history.size} history.size = #{history.size} offset = #{offset}"
+          @history = history
+          @last_nil_index -= offset
+          @index -= offset
+        end
+
         private def _init
-          @base._register(self) if instance?
+          @source._register(self) if instance?
           @index = @last_nil_index
         end
 
         private def _restart
-          @base.restart(self)
+          @source.restart(self)
           @needs_restart = false
         end
 
@@ -196,7 +208,7 @@ module Musa
               @index += 1
               value = @history[@index]
             else
-              @base.next_value
+              @source.next_value
               value = _next_value
             end
 
@@ -209,11 +221,9 @@ module Musa
         end
       end
 
-      private_constant :Buffered
-
+      private_constant :Buffer
     end
 
     private_constant :BufferSerie
-
   end
 end

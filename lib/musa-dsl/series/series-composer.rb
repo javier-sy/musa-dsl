@@ -22,28 +22,24 @@ module Musa
           @outputs = {}
 
           inputs&.each do |input|
-            @inputs[input] = Series::Constructors.PROXY
+            @inputs[input] = Series::Constructors.PROXY.buffered
             @pipelines[input] = { input: nil, output: @inputs[input] }
 
-            @dsl.define_singleton_method input do
-              input
-            end
+            @dsl.define_singleton_method(input) { input }
           end
 
           outputs&.each do |output|
             @outputs[output] = Series::Constructors.PROXY
             @pipelines[output] = { input: @outputs[output], output: nil }
 
-            @dsl.define_singleton_method output do
-              output
-            end
+            @dsl.define_singleton_method(output) { output }
           end
 
           @dsl.with &block if block
         end
 
-        def route(from, to:, as: nil, at: nil)
-          @dsl.route(from, to: to, as: as, at: at)
+        def route(from, to:, on: nil, as: nil)
+          @dsl.route(from, to: to, on: on, as: as)
         end
 
         def pipeline(name, *elements)
@@ -65,37 +61,32 @@ module Musa
             @links_to = links_to
           end
 
-          def route(from, to:, as: nil, at: nil)
-            raise NotImplementedError, "at: parameter not yet implemented" if at
-
+          def route(from, to:, on: nil, as: nil)
             from_pipeline = @pipelines[from]
             to_pipeline = @pipelines[to]
 
             raise ArgumentError, "Pipeline '#{from}' not found." unless from_pipeline
             raise ArgumentError, "Pipeline '#{to}' not found." unless to_pipeline
 
-            # TODO add "distribution center" as a serie that replicates the stream for several consumers series input
-            # tipos:
-            # - cada línea de distribución recibe todos los elementos; estos se guardan hasta que se consumen
-            # - hay una línea master y varias followers; las followers obtienen lo que la master marque
-            # - cuando una línea pide se obtiene un valor; el resto de líneas obtienen el mismo valor si se da dentro de un margen de tiempo X; si ha pasado más tiempo obtiene un nuevo valor
-            #
+            @links_from[from] ||= Set[]
 
-            # TODO add routing to other inputs (source is the default input, sources can be an Array or a Hash of inputs, maybe others)
-            #
+            raise ArgumentError, "Pipeline '#{from}' already connected to #{to} #{as}" if @links_from[from].include?([to, as])
+            raise ArgumentError, "Pipeline '#{[to, as]}' input already connected (connected to #{@links_to[[to, as]]})" if @links_to[[to, as]]
 
-            raise ArgumentError, "Pipeline '#{from}' already used (connected to #{@links_from[from]})" if @links_from[from]
-            raise ArgumentError, "Pipeline '#{[to, as]}' input already connected (connected to #{@links_to[[to, as]]})" if @links_from[[to, as]]
+            @links_from[from] << [to, as]
 
-            @links_from[from] = [to, as]
             @links_to[[to, as]] = from
 
             @links << [from, to, as]
 
             if as
-              to_pipeline[:input].sources[as] = from_pipeline[:output]
+              on ||= :sources
+              to_pipeline[:input].send(on)[as] = from_pipeline[:output].buffer
             else
-              to_pipeline[:input].source = from_pipeline[:output]
+              on ||= :source
+              on_setter = (on.to_s + '=').to_sym
+
+              to_pipeline[:input].send(on_setter, from_pipeline[:output].buffer)
             end
           end
 
@@ -132,11 +123,9 @@ module Musa
               first ||= last
             end
 
-            @pipelines[name] = { input: first, output: last }
+            @pipelines[name] = { input: first, output: last.buffered }
 
-            define_singleton_method name do
-              name
-            end
+            define_singleton_method(name) { name }
           end
 
           private def method_missing(symbol, *args, &block)

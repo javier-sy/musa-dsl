@@ -15,7 +15,16 @@ module Musa
         SerieImplementation
       end
 
-      def self.with(source: false, sources: false, smart_block: false, block: false, source_as: nil, sources_as: nil, block_as: nil)
+      def self.with(source: false,
+                    source_as: nil,
+                    private_source: nil,
+                    sources: false,
+                    sources_as: nil,
+                    private_sources: nil,
+                    smart_block: false,
+                    block: false,
+                    block_as: nil)
+
         source_as ||= :source
         source_setter = (source_as.to_s + '=').to_sym
 
@@ -37,9 +46,14 @@ module Musa
               raise ArgumentError, "New source should be a #{@get}" unless @source.nil? || @source.prototype? == serie&.prototype?
 
               serie ||= Musa::Series::Constructors.NIL
-              @get = serie.prototype? ? :prototype : :instance
+              @get = serie&.instance? ? :instance : :prototype
               @source = serie
               mark_regarding! @source
+            end
+
+            if private_source
+              private source_as
+              private source_setter
             end
           end
 
@@ -49,18 +63,23 @@ module Musa
             end
 
             define_method sources_setter do |series|
-              getter = sample = nil
-
               case series
               when Array
-                getter = @get || ((sample = series.first).prototype? ? :prototype : :instance)
+                getter = @get || ((series.first)&.instance? ? :instance : :prototype)
                 @sources = series.collect(&getter)
               when Hash
-                getter = @get || ((sample = series.values.first).prototype? ? :prototype : :instance)
+                getter = @get || ((series.values.first)&.instance? ? :instance : :prototype)
                 @sources = series.transform_values(&getter)
+              else
+                raise ArgumentError, "Only allowed Array or Hash"
               end
 
-              mark_regarding! sample if @get.nil? && getter
+              mark_as! getter
+            end
+
+            if private_sources
+              private sources_as
+              private sources_setter
             end
           end
 
@@ -162,6 +181,17 @@ module Musa
             elsif @sources.is_a?(Hash)
               @sources = @sources.transform_values(&:instance)
             end
+          end
+        end
+
+        protected def mark_as!(getter)
+          case getter
+          when :prototype
+            mark_as_prototype!
+          when :instance
+            mark_as_instance!
+          else
+            raise ArgumentError, "Only can be marked as :prototype or :instance"
           end
         end
 
@@ -267,7 +297,7 @@ module Musa
         def to_a(recursive: nil, duplicate: nil, restart: nil, dr: nil)
           recursive ||= false
 
-          dr ||= instance?
+          dr = instance? if dr.nil?
 
           duplicate = dr if duplicate.nil?
           restart = dr if restart.nil?

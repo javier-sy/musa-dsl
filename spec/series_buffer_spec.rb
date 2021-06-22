@@ -267,5 +267,48 @@ RSpec.describe Musa::Series do
       expect(i1.next_value).to be_nil
       expect(i1.next_value).to be_nil
     end
+
+    it 'restarting one serie more than once' do
+      buffer = S(1, 2, 3, 4, 5, 6, 7).buffered.instance
+
+      i1 = buffer.buffer #.instance
+
+      expect(i1.next_value).to eq 1
+      expect(i1.next_value).to eq 2
+      expect(i1.next_value).to eq 3
+
+      i2 = buffer.buffer #.instance
+
+      expect(i2.next_value).to eq 1
+      expect(i2.next_value).to eq 2
+      expect(i2.next_value).to eq 3
+
+      i2.restart
+      i2.restart
+      i2.restart
+
+      expect(i2.next_value).to eq 1
+      expect(i2.next_value).to eq 2
+      expect(i2.next_value).to eq 3
+
+      expect(i1.next_value).to eq 4
+
+      expect(i2.next_value).to eq 4
+
+      expect(i1.next_value).to eq 5
+      expect(i1.next_value).to eq 6
+      expect(i1.next_value).to eq 7
+
+      expect(i2.next_value).to eq 5
+      expect(i2.next_value).to eq 6
+      expect(i2.next_value).to eq 7
+
+      expect(i1.next_value).to be_nil
+      expect(i2.next_value).to be_nil
+
+      expect(i1.next_value).to be_nil
+      expect(i1.next_value).to be_nil
+    end
+
   end
 end
