@@ -140,7 +140,7 @@ module Musa
       end
     end
 
-    private_constant :FromArray
+    # private_constant :FromArray
 
     class Sequence
       include Musa::Series::Serie.with(sources: true)

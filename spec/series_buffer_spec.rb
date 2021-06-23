@@ -189,7 +189,6 @@ RSpec.describe Musa::Series do
       expect(i2.next_value).to be_nil
       expect(i2.next_value).to be_nil
     end
-
   end
 
   context 'Series parallel buffer' do
@@ -197,13 +196,13 @@ RSpec.describe Musa::Series do
     it 'get next values from a original source' do
       buffer = S(1, 2, 3, 4, 5, 6, 7).buffered(sync: false).instance
 
-      i1 = buffer.buffer #.instance
+      i1 = buffer.buffer.instance
 
       expect(i1.next_value).to eq 1
       expect(i1.next_value).to eq 2
       expect(i1.next_value).to eq 3
 
-      i2 = buffer.buffer #.instance
+      i2 = buffer.buffer.instance
 
       expect(i2.next_value).to eq 1
       expect(i2.next_value).to eq 2
@@ -231,13 +230,13 @@ RSpec.describe Musa::Series do
     it 'restarting one serie allows the other series to get the full source values' do
       buffer = S(1, 2, 3, 4, 5, 6, 7).buffered(sync: false).instance
 
-      i1 = buffer.buffer #.instance
+      i1 = buffer.buffer.instance
 
       expect(i1.next_value).to eq 1
       expect(i1.next_value).to eq 2
       expect(i1.next_value).to eq 3
 
-      i2 = buffer.buffer #.instance
+      i2 = buffer.buffer.instance
 
       expect(i2.next_value).to eq 1
       expect(i2.next_value).to eq 2
@@ -268,47 +267,23 @@ RSpec.describe Musa::Series do
       expect(i1.next_value).to be_nil
     end
 
-    it 'restarting one serie more than once' do
-      buffer = S(1, 2, 3, 4, 5, 6, 7).buffered.instance
+    it 'bugfix: restarting a joined buffer generates a stack overflow' do
+      buffered = S(1, 2, 3).buffered
 
-      i1 = buffer.buffer #.instance
+      i1 = buffered.buffer
+      i2 = buffered.buffer
 
-      expect(i1.next_value).to eq 1
-      expect(i1.next_value).to eq 2
-      expect(i1.next_value).to eq 3
+      h = H(a: i1, b: i2)
+      s = h.instance
 
-      i2 = buffer.buffer #.instance
+      s.restart
 
-      expect(i2.next_value).to eq 1
-      expect(i2.next_value).to eq 2
-      expect(i2.next_value).to eq 3
+      expect(s.next_value).to eq({ a: 1, b: 1 })
+      expect(s.next_value).to eq({ a: 2, b: 2 })
+      expect(s.next_value).to eq({ a: 3, b: 3 })
 
-      i2.restart
-      i2.restart
-      i2.restart
-
-      expect(i2.next_value).to eq 1
-      expect(i2.next_value).to eq 2
-      expect(i2.next_value).to eq 3
-
-      expect(i1.next_value).to eq 4
-
-      expect(i2.next_value).to eq 4
-
-      expect(i1.next_value).to eq 5
-      expect(i1.next_value).to eq 6
-      expect(i1.next_value).to eq 7
-
-      expect(i2.next_value).to eq 5
-      expect(i2.next_value).to eq 6
-      expect(i2.next_value).to eq 7
-
-      expect(i1.next_value).to be_nil
-      expect(i2.next_value).to be_nil
-
-      expect(i1.next_value).to be_nil
-      expect(i1.next_value).to be_nil
+      expect(s.next_value).to be_nil
+      expect(s.next_value).to be_nil
     end
-
   end
 end

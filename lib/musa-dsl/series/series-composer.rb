@@ -22,8 +22,8 @@ module Musa
           @outputs = {}
 
           inputs&.each do |input|
-            @inputs[input] = Series::Constructors.PROXY.buffered
-            @pipelines[input] = { input: nil, output: @inputs[input] }
+            @inputs[input] = Series::Constructors.PROXY
+            @pipelines[input] = { input: nil, output: @inputs[input].buffered }
 
             @dsl.define_singleton_method(input) { input }
           end
@@ -74,9 +74,7 @@ module Musa
             raise ArgumentError, "Pipeline '#{[to, as]}' input already connected (connected to #{@links_to[[to, as]]})" if @links_to[[to, as]]
 
             @links_from[from] << [to, as]
-
             @links_to[[to, as]] = from
-
             @links << [from, to, as]
 
             if as
@@ -84,7 +82,7 @@ module Musa
               to_pipeline[:input].send(on)[as] = from_pipeline[:output].buffer
             else
               on ||= :source
-              on_setter = (on.to_s + '=').to_sym
+              on_setter = "#{on.to_s}=".to_sym
 
               to_pipeline[:input].send(on_setter, from_pipeline[:output].buffer)
             end
@@ -102,6 +100,7 @@ module Musa
 
                   if Musa::Series::Constructors.instance_methods.include?(operation)
                     raise ArgumentError, "Called constructor '#{operation}' ignoring previous elements" unless last.nil?
+
                     last = Musa::Series::Constructors.method(operation).call(*parameters)
 
                   elsif Musa::Series::Operations.instance_methods.include?(operation)
@@ -110,14 +109,12 @@ module Musa
 
                   end
                 else
-                  raise ArgumentError, "Don\\'t know how to handle #{e}"
+                  raise ArgumentError, "Don't know how to handle #{e}"
                 end
               when Symbol
-                operation = e
-
-                if Musa::Series::Operations.instance_methods.include?(operation)
-                  last = last.send(operation)
-                end
+                first = last = Musa::Series::Constructors.PROXY if last.nil?
+                # operation == e
+                last = last.send(e) if Musa::Series::Operations.instance_methods.include?(e)
               end
 
               first ||= last
@@ -135,15 +132,16 @@ module Musa
               symbol
             else
               raise ArgumentError, "Pipeline '#{symbol}' is undefined" if args.empty?
+
               pipeline(symbol, args)
             end
           end
 
           private def respond_to_missing?(method_name, include_private = false)
             Musa::Series::Operations.instance_methods.include?(method_name) ||
-              Musa::Series::Constructors.instance_methods.include?(method_name) ||
-              @pipelines.has_key?(method_name) ||
-              super
+            Musa::Series::Constructors.instance_methods.include?(method_name) ||
+            @pipelines.key?(method_name) ||
+            super
           end
         end
 

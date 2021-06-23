@@ -87,12 +87,34 @@ RSpec.describe Musa::Series do
       }.to_not raise_error(ArgumentError)
     end
 
-    it 'Instance PROXY don\'t allow changing the source to Prototype serie' do
+    it 'Instance PROXY don\'t allow changing the source to Instance serie' do
       s = PROXY(S(1, 2, 3)).i
 
       expect {
         s.source = S(3, 4, 5)
       }.to raise_error(ArgumentError)
+    end
+
+    it 'Prototype PROXY allows to set a prototype source and get the instance correctly' do
+      p = PROXY()
+
+      p.source = S(1, 2, 3)
+
+      s = p.instance
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+
+      expect(s.next_value).to be_nil
+
+      s.restart
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+
+      expect(s.next_value).to be_nil
     end
   end
 end

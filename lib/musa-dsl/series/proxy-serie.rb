@@ -43,7 +43,7 @@ module Musa
   module Series::Operations
     # TODO add test case
     def proxy
-      Series::ProxySerie.new self
+      Series::ProxySerie.new(self)
     end
   end
 end

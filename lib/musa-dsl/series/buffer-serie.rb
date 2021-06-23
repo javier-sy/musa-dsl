@@ -102,16 +102,24 @@ module Musa
         @nils = [0]
         @buffers = Set[]
 
+        @singleton = nil
+        @buffer = nil
+
         init
+      end
+
+      def instance
+        @singleton ||= super
       end
 
       def buffer
         @buffer ||= Buffer.new(self)
-        @buffer.send(@get)
+        @buffer
       end
 
       private def _restart(main)
-        raise ArgumentError, "Can't restart a BufferSerie directly. Should use a buffered instance instead." unless main
+        raise ArgumentError, "Can't restart a BufferSerie directly. Should use a buffer instance instead." unless main
+        return if @source_just_restarted
 
         next_nil = @nils.find { |_| _ > main.index }
 
@@ -119,20 +127,22 @@ module Musa
           main.last_nil_index = main.index = next_nil
 
         else
-          while !_next_value.nil?; end
+          until _next_value.nil?; end
           main.last_nil_index = main.index = @nils.last
         end
 
         clear_old_history
 
         @source.restart
+        @source_just_restarted = true
       end
 
       private def _next_value
+        @source_just_restarted = false
         value = @source.next_value
 
         if value.nil?
-          if !@history.last.nil?
+          unless @history.last.nil?
             @history << nil
             @nils << @history.size - 1
           end
@@ -159,8 +169,7 @@ module Musa
           @history = @history.drop(min_last_nil_index)
 
           @nils.collect! { |_| _ - min_last_nil_index }
-
-          puts "BufferSerie.clear_old_history: min_last_nil_index = #{min_last_nil_index} pre = #{pre_nils} @nils = #{@nils}"
+          @nils.delete_if(&:negative?)
 
           @buffers.each do |b|
             b._reindex(@history, min_last_nil_index)
@@ -184,7 +193,6 @@ module Musa
         attr_accessor :index
 
         def _reindex(history, offset)
-          puts "Buffer._reindex: @history.size = #{@history.size} history.size = #{history.size} offset = #{offset}"
           @history = history
           @last_nil_index -= offset
           @index -= offset
@@ -203,7 +211,7 @@ module Musa
         private def _next_value
           value = nil
 
-          if !@needs_restart
+          unless @needs_restart
             if @index + 1 < @history.size
               @index += 1
               value = @history[@index]
