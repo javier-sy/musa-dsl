@@ -73,6 +73,35 @@ RSpec.describe Musa::Series::Composer do
       expect(s.to_a(dr: false)).to eq [103, 104, 105, 103, 104, 105]
     end
 
+    it 'routing a new output to a used input raises error' do
+      expect {
+        composer = Composer.new do
+          step1 (reverse)
+          step2 (reverse)
+          step3 (reverse)
+
+          route input, to: step1
+          route step1, to: step3
+          route step2, to: step3
+        end
+
+      }.to raise_error(ArgumentError)
+    end
+
+    it 'routing again an output to a the same input raises error' do
+      expect {
+        composer = Composer.new do
+          step1 (reverse)
+          step2 (reverse)
+          step3 (reverse)
+
+          route input, to: step1
+          route step1, to: step3
+          route step1, to: step3
+        end
+      }.to raise_error(ArgumentError)
+    end
+
     it 'add pipelines and routing from composer object' do
       composer = Composer.new
 
@@ -110,7 +139,6 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'with buffered routing sending input to 2 pipelines and merging the results' do
-
       composer = Composer.new do
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
         step2 ({ eval: lambda { |v| v + 100 }})

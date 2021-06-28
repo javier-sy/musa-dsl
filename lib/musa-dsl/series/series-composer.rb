@@ -70,22 +70,19 @@ module Musa
 
             @links_from[from] ||= Set[]
 
-            raise ArgumentError, "Pipeline '#{from}' already connected to #{to} #{as}" if @links_from[from].include?([to, as])
-            raise ArgumentError, "Pipeline '#{[to, as]}' input already connected (connected to #{@links_to[[to, as]]})" if @links_to[[to, as]]
+            on ||= as ? :sources : :source
 
-            @links_from[from] << [to, as]
-            @links_to[[to, as]] = from
-            @links << [from, to, as]
+            raise ArgumentError, "Pipeline #{@links_to[[to, on, as]]} already connected to pipeline #{to} on #{on} as #{as}" if @links_to[[to, on, as]]
 
             if as
-              on ||= :sources
               to_pipeline[:input].send(on)[as] = from_pipeline[:output].buffer
             else
-              on ||= :source
-              on_setter = "#{on.to_s}=".to_sym
-
-              to_pipeline[:input].send(on_setter, from_pipeline[:output].buffer)
+              to_pipeline[:input].send("#{on.to_s}=".to_sym, from_pipeline[:output].buffer)
             end
+
+            @links_from[from] << [to, on, as]
+            @links_to[[to, on, as]] = from
+            @links << [from, to, on, as]
           end
 
           def pipeline(name, elements)
