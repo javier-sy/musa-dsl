@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
   s.version     = '0.23.0'
-  s.date        = '2021-06-04'
+  s.date        = '2021-06-29'
   s.summary     = 'A simple Ruby DSL for making complex music'
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
   s.authors     = ['Javier Sánchez Yeste']

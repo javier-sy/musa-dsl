@@ -12,8 +12,8 @@ group :transport do
 end
 
 group :test do
-  gem 'rspec', '~> 3.0'
   gem 'descriptive-statistics'
+  gem 'rspec', '~> 3.0'
 end
 
 group :documentation do
