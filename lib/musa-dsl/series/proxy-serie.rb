@@ -1,69 +1,49 @@
-module Musa
-  module Series
-    # TODO: adapt to series prototyping
+require_relative 'base-series'
 
+module Musa
+  module Series::Constructors
     def PROXY(serie = nil)
       ProxySerie.new(serie)
     end
 
     class ProxySerie
-      include Serie
-
-      attr_reader :target
+      include Series::Serie.with(source: true)
 
       def initialize(serie)
-        @target = serie.instance if serie
-        mark_as_instance!
+        self.source = serie
+        init
       end
 
-      def target=(target)
-        @target = target.instance
+      private def _restart
+        @source.restart if @source
       end
 
-      def _prototype!
-        raise PrototypingSerieError, 'Cannot get prototype of a proxy serie'
-      end
-
-      def restart
-        @target.restart if @target
-      end
-
-      def current_value
-        @target.current_value if @target
-      end
-
-      def next_value
-        @target.next_value if @target
-      end
-
-      def peek_next_value
-        @target.peek_next_value if @target
+      private def _next_value
+        @source.next_value if @source
       end
 
       def infinite?
-        @target.infinite? if @target
+        @source.infinite? if @source
       end
 
-      private
-
-      def method_missing(method_name, *args, **key_args, &block)
-        if @target && @target.respond_to?(method_name)
-          @target.send method_name, *args, **key_args, &block
+      private def method_missing(method_name, *args, **key_args, &block)
+        if @source && @source.respond_to?(method_name)
+          @source.send method_name, *args, **key_args, &block
         else
           super
         end
       end
 
-      def respond_to_missing?(method_name, include_private)
-        @target && @target.respond_to?(method_name, include_private) # || super
+      private def respond_to_missing?(method_name, include_private)
+        @source && @source.respond_to?(method_name, include_private) # || super
       end
     end
+  end
 
-    module SerieOperations
-      # TODO add test case
-      def proxied
-        Series::ProxySerie.new self
-      end
+  module Series::Operations
+    # TODO add test case
+    def proxy
+      Series::ProxySerie.new(self)
     end
   end
 end

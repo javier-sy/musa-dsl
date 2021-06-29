@@ -259,24 +259,14 @@ RSpec.describe Musa::Series do
       expect(s1.peek_next_value).to eq nil
       expect(s1.next_value).to eq nil
 
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
+      expect(s1.next_value).to eq([1, :a])
+      expect(s1.next_value).to eq([2, :b])
+      expect(s1.next_value).to eq([3, :c])
       expect(s1.next_value).to eq nil
 
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
+      expect(s1.next_value).to eq([1, :a])
+      expect(s1.next_value).to eq([2, :b])
+      expect(s1.next_value).to eq([3, :c])
       expect(s1.next_value).to eq nil
     end
 
@@ -297,67 +287,16 @@ RSpec.describe Musa::Series do
 
       s1.restart
 
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
+      expect(s1.next_value).to eq([1, :a])
+      expect(s1.next_value).to eq([2, :b])
+      expect(s1.next_value).to eq([3, :c])
       expect(s1.next_value).to eq nil
 
       s1.restart
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      s1.restart
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-      expect(s1.next_value).to eq nil
-    end
-
-    it 'A(S(1,2,3).autorestart, S(:a, :b, :c, :d).autorestart).autorestart' do
-      s1 = A(S(1, 2, 3).autorestart, S(:a, :b, :c, :d).autorestart).autorestart.i
-
-      expect(s1.current_value).to eq nil
 
       expect(s1.next_value).to eq([1, :a])
       expect(s1.next_value).to eq([2, :b])
-      expect(s1.peek_next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq([3, :c])
       expect(s1.next_value).to eq([3, :c])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.peek_next_value).to eq([1, :d])
-      expect(s1.next_value).to eq([1, :d])
-
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([2, :a])
-      expect(s1.next_value).to eq([3, :b])
-      expect(s1.current_value).to eq([3, :b])
-      expect(s1.peek_next_value).to eq nil
-      expect(s1.next_value).to eq nil
-
-      expect(s1.current_value).to eq nil
-      expect(s1.peek_next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([1, :c])
-      expect(s1.next_value).to eq([2, :d])
       expect(s1.next_value).to eq nil
     end
 

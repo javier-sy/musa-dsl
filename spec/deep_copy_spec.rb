@@ -251,6 +251,42 @@ describe Musa::Extension::DeepCopy::DeepCopy do
     end
   end
 
+  describe 'bugfixes' do
+    context 'clone(deep: true) of an instance with a proc variable that references other variables of the same instance' do
+      class ToTest
+        def initialize
+          @a = 0
+          @b = 0
+
+          @block = proc { @a + @b }
+        end
+
+        attr_reader :block
+        attr_accessor :a, :b
+
+        def add
+          @block.call
+        end
+      end
+
+      it 'clone(deep: true) of an object with a variable containing a proc that uses ' \
+          'other variables of the same object should be duplicated referencing the new object variables' do
+
+        t = ToTest.new
+
+        expect(t.add).to eq 0
+
+        tt = t.clone(deep: true)
+
+        tt.a = 1
+        tt.b = 2
+
+        expect(t.add).to eq 0
+        expect(tt.add).to eq 3
+      end
+    end
+  end
+
   describe 'complementary methods' do
     context 'singleton_class modules' do
 

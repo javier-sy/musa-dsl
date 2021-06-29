@@ -1,34 +1,32 @@
 require_relative '../datasets/e'
 require_relative '../core-ext/inspect-nice'
 
+require_relative 'base-series'
+
 # TODO remove debugging puts, intermediate hash comments on :info and InspectNice
 using Musa::Extension::InspectNice
 
 module Musa
-  module Series
-    module SerieOperations
-      def quantize(reference: nil, step: nil,
-                   value_attribute: nil,
-                   stops: nil,
-                   predictive: nil,
-                   left_open: nil,
-                   right_open: nil)
+  module Series::Operations
+    def quantize(reference: nil, step: nil,
+                 value_attribute: nil,
+                 stops: nil,
+                 predictive: nil,
+                 left_open: nil,
+                 right_open: nil)
 
-        Series.QUANTIZE(self,
-                        reference: reference,
-                        step: step,
-                        value_attribute: value_attribute,
-                        stops: stops,
-                        predictive: predictive,
-                        left_open: left_open,
-                        right_open: right_open)
-      end
+      Series.QUANTIZE(self,
+                      reference: reference,
+                      step: step,
+                      value_attribute: value_attribute,
+                      stops: stops,
+                      predictive: predictive,
+                      left_open: left_open,
+                      right_open: right_open)
     end
   end
 
-  module Series
-    extend self
-
+  module Series::Constructors
     def QUANTIZE(time_value_serie,
                  reference: nil, step: nil,
                  value_attribute: nil,
@@ -82,28 +80,27 @@ module Musa
     private_constant :QuantizerTools
 
     class RawQuantizer
-      include Serie
+      include Series::Serie.with(source: true)
       include QuantizerTools
 
       attr_reader :source
 
       def initialize(reference, step, source, value_attribute, stops, left_open, right_open)
+        self.source = source
+
         @reference = reference
         @step_size = step.abs
 
-        @source = source
         @value_attribute = value_attribute
 
         @stops = stops
         @left_open = left_open
         @right_open = right_open
 
-        _restart false
-
-        mark_regarding! source
+        init
       end
 
-      def _restart(restart_sources = true)
+      private def _init
         @last_processed_q_value = nil
         @last_processed_time = nil
 
@@ -111,11 +108,13 @@ module Musa
 
         @points = []
         @segments = []
-
-        @source.restart if restart_sources
       end
 
-      def _next_value
+      private def _restart
+        @source.restart
+      end
+
+      private def _next_value
         if @stops
           i = 2
 
@@ -348,16 +347,17 @@ module Musa
     private_constant :RawQuantizer
 
     class PredictiveQuantizer
-      include Serie
+      include Series::Serie.with(source: true)
       include QuantizerTools
 
       attr_reader :source
 
       def initialize(reference, step, source, value_attribute, include_stops)
+        self.source = source
+
         @reference = reference
         @step_size = step
 
-        @source = source
         @value_attribute = value_attribute
 
         @include_stops = include_stops
@@ -365,25 +365,25 @@ module Musa
         @halfway_offset = step / 2r
         @crossing_reference = reference - @halfway_offset
 
-        _restart false
-
-        mark_regarding! source
+        init
       end
 
-      def _restart(restart_sources = true)
-        @source.restart if restart_sources
-
+      private def _init
         @last_time = nil
         @crossings = []
 
         @first = true
       end
 
+      private def _restart
+        @source.restart
+      end
+
       def infinite?
         !!@source.infinite?
       end
 
-      def _next_value
+      private def _next_value
         result = nil
 
         first_time, first_value = get_time_value(@source.peek_next_value) if @first

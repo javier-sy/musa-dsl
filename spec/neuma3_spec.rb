@@ -16,7 +16,7 @@ using Musa::Extension::DeepCopy
 RSpec.describe Musa::Neumalang do
   context 'Neuma with neumalang advanced parsing' do
     scale = Scales.default_system.default_tuning.major[60]
-
+=begin
     it 'Simple file neumas parsing' do
       debug = false
       #debug = true
@@ -150,13 +150,13 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-
+=end
     it 'Simple file neumas parsing with call_methods on simple serie' do
       debug = false
       # debug = true
 
       gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
-      serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3c_spec.neu')
+      serie = Neumalang.parse_file( File.join(File.dirname(__FILE__), 'neuma3c_spec.neu'))
 
       if debug
         puts
@@ -235,7 +235,7 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-
+=begin
     it 'Advanced neumalang indirection features' do
       debug = false
       # debug = true
@@ -538,6 +538,7 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
+=end
   end
 end
 

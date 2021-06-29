@@ -1,9 +1,9 @@
 require_relative '../datasets/e'
 
-module Musa
-  module Series
-    extend self
+require_relative 'base-series'
 
+module Musa
+  module Series::Constructors
     def TIMED_UNION(*array_of_timed_series, **hash_of_timed_series)
       raise ArgumentError, 'Can\'t union an array of series with a hash of series' if array_of_timed_series.any? && hash_of_timed_series.any?
 
@@ -17,27 +17,20 @@ module Musa
     end
 
     class TimedUnionOfArrayOfTimedSeries
-      include Serie
-
-      attr_reader :sources
+      include Series::Serie.with(sources: true)
 
       def initialize(series)
-        @sources = if series[0].prototype?
-                     series.collect(&:prototype).freeze
-                   else
-                     series.collect(&:instance)
-                   end
-
-        _restart false
-
-        mark_regarding! series[0]
+        self.sources = series
+        init
       end
 
-      private def _restart(restart_sources = true)
-        @sources.each(&:restart) if restart_sources
+      private def _init
         @sources_next_values = Array.new(@sources.size)
-
         @components = nil
+      end
+
+      private def _restart
+        @sources.each(&:restart)
       end
 
       private def _next_value
@@ -149,28 +142,25 @@ module Musa
     private_constant :TimedUnionOfArrayOfTimedSeries
 
     class TimedUnionOfHashOfTimedSeries
-      include Serie
-
-      attr_reader :sources
+      include Series::Serie.with(sources: true)
 
       def initialize(series)
-        @components = series.keys
-
-        @sources = if series.values.first.prototype?
-                     series.transform_values(&:prototype).freeze
-                   else
-                     series.transform_values(&:instance)
-                   end
-
-        _restart false
-
-        mark_regarding! series.values.first
+        self.sources = series
+        init
       end
 
-      private def _restart(restart_sources = true)
-        @sources.each_value(&:restart) if restart_sources
+      def sources=(series)
+        super
+        @components = series.keys
+      end
+
+      private def _init
         @sources_next_values = @components.collect { |k| [k, nil] }.to_h
         @other_attributes = nil
+      end
+
+      private def _restart
+        @sources.each_value(&:restart)
       end
 
       private def _next_value
@@ -231,126 +221,123 @@ module Musa
     end
 
     private_constant :TimedUnionOfHashOfTimedSeries
+  end
 
-    module SerieOperations
-      def flatten_timed
-        TimedFlattener.new(self)
-      end
-
-      def compact_timed
-        TimedCompacter.new(self)
-      end
-
-      def union_timed(*other_timed_series, key: nil, **other_key_timed_series)
-        if key && other_key_timed_series.any?
-          Series::TIMED_UNION(key => self, **other_key_timed_series)
-
-        elsif other_timed_series.any? && other_key_timed_series.empty?
-          Series::TIMED_UNION(self, *other_timed_series)
-
-        else
-          raise ArgumentError, 'Can\'t union an array of series with a hash of series'
-        end
-      end
-
-      class TimedFlattener
-        include Serie
-
-        attr_reader :source
-
-        def initialize(serie)
-          @source = serie
-          mark_regarding! @source
-        end
-
-        def _restart
-          @source.restart
-        end
-
-        def _next_value
-          source_value = @source.next_value
-
-          if !source_value.nil?
-            time = source_value[:time]
-            source_value_value = source_value[:value]
-
-            source_value_extra = (source_value.keys - [:time, :value]).collect do |attribute_name|
-              [attribute_name, source_value[attribute_name]]
-            end.to_h
-
-            case source_value_value
-            when Hash
-              result = {}
-              source_value_value.each_pair do |key, value|
-                result[key] = { time: time, value: value }.extend(Musa::Datasets::AbsTimed)
-
-                source_value_extra.each do |attribute_name, attribute_value|
-                  result[key][attribute_name] = attribute_value[key]
-                end
-              end
-
-            when Array
-              result = []
-              source_value_value.each_index do |index|
-                result[index] = { time: time, value: source_value_value[index] }.extend(Musa::Datasets::AbsTimed)
-
-                source_value_extra.each do |attribute_name, attribute_value|
-                  result[index][attribute_name] = attribute_value[index]
-                end
-              end
-            else
-              result = source_value.clone.extend(Musa::Datasets::AbsTimed)
-            end
-
-            result.extend(Musa::Datasets::AbsTimed)
-          else
-            nil
-          end
-        end
-
-        def infinite?
-          @source.infinite?
-        end
-      end
-
-      private_constant :TimedFlattener
+  module Series::Operations
+    def flatten_timed
+      TimedFlattener.new(self)
     end
 
-    class TimedCompacter
-      include Serie
+    def compact_timed
+      TimedCompacter.new(self)
+    end
 
-      attr_reader :source
+    def union_timed(*other_timed_series, key: nil, **other_key_timed_series)
+      if key && other_key_timed_series.any?
+        Series::Constructors.TIMED_UNION(key => self, **other_key_timed_series)
+
+      elsif other_timed_series.any? && other_key_timed_series.empty?
+        Series::Constructors.TIMED_UNION(self, *other_timed_series)
+
+      else
+        raise ArgumentError, 'Can\'t union an array of series with a hash of series'
+      end
+    end
+
+    class TimedFlattener
+      include Series::Serie.with(source: true)
 
       def initialize(serie)
-        @source = serie
-        mark_regarding! @source
+        self.source = serie
+        init
       end
 
-      def _restart
+      private def _restart
         @source.restart
       end
 
-      def _next_value
-        while (source_value = @source.next_value) && skip_value?(source_value[:value]); end
-        source_value
+      private def _next_value
+        source_value = @source.next_value
+
+        if !source_value.nil?
+          time = source_value[:time]
+          source_value_value = source_value[:value]
+
+          source_value_extra = (source_value.keys - [:time, :value]).collect do |attribute_name|
+            [attribute_name, source_value[attribute_name]]
+          end.to_h
+
+          case source_value_value
+          when Hash
+            result = {}
+            source_value_value.each_pair do |key, value|
+              result[key] = { time: time, value: value }.extend(Musa::Datasets::AbsTimed)
+
+              source_value_extra.each do |attribute_name, attribute_value|
+                result[key][attribute_name] = attribute_value[key]
+              end
+            end
+
+          when Array
+            result = []
+            source_value_value.each_index do |index|
+              result[index] = { time: time, value: source_value_value[index] }.extend(Musa::Datasets::AbsTimed)
+
+              source_value_extra.each do |attribute_name, attribute_value|
+                result[index][attribute_name] = attribute_value[index]
+              end
+            end
+          else
+            result = source_value.clone.extend(Musa::Datasets::AbsTimed)
+          end
+
+          result.extend(Musa::Datasets::AbsTimed)
+        else
+          nil
+        end
       end
 
       def infinite?
         @source.infinite?
       end
-
-      private def skip_value?(timed_value)
-        case timed_value
-        when Hash
-          timed_value.all? { |_, v| v.nil? }
-        when Array
-          timed_value.all?(&:nil?)
-        else
-          timed_value.nil?
-        end
-      end
     end
 
-    private_constant :TimedCompacter
+    private_constant :TimedFlattener
   end
+
+  class TimedCompacter
+    include Series::Serie.with(source: true)
+
+    def initialize(serie)
+      self.source = serie
+      init
+    end
+
+    private def _restart
+      @source.restart
+    end
+
+    private def _next_value
+      while (source_value = @source.next_value) && skip_value?(source_value[:value]); end
+      source_value
+    end
+
+    def infinite?
+      @source.infinite?
+    end
+
+    private def skip_value?(timed_value)
+      case timed_value
+      when Hash
+        timed_value.all? { |_, v| v.nil? }
+      when Array
+        timed_value.all?(&:nil?)
+      else
+        timed_value.nil?
+      end
+    end
+  end
+
+  private_constant :TimedCompacter
 end
+

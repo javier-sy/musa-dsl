@@ -7,7 +7,7 @@ include Musa::Series
 RSpec.describe Musa::Series do
   context 'Series queue' do
     it 'Basic QUEUE series: initialized from constructor' do
-      s = QUEUE(S(1, 2, 3), S(4, 5, 6))
+      s = QUEUE(S(1, 2, 3), S(4, 5, 6)).i
 
       expect(s.current_value).to eq nil
 
@@ -43,7 +43,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'Basic QUEUE series: adding a serie' do
-      s = QUEUE(S(1, 2, 3), S(4, 5, 6))
+      s = QUEUE(S(1, 2, 3), S(4, 5, 6)).i
 
       expect(s.current_value).to eq nil
 
@@ -52,7 +52,7 @@ RSpec.describe Musa::Series do
 
       expect(s.next_value).to eq 2
 
-      s << S(7, 8, 9)
+      s << S(7, 8, 9).i
 
       expect(s.next_value).to eq 3
       expect(s.next_value).to eq 4
@@ -90,7 +90,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'Basic QUEUE series: from source with .queued method' do
-      s = S(1, 2, 3).queued
+      s = S(1, 2, 3).queued.i
 
       expect(s.current_value).to eq nil
 
@@ -104,7 +104,7 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to eq nil
       expect(s.next_value).to eq nil
 
-      s << S(4, 5, 6)
+      s << S(4, 5, 6).i
 
       expect(s.next_value).to eq 4
       expect(s.next_value).to eq 5
@@ -134,7 +134,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'Basic QUEUE series: clearing and adding' do
-      s = QUEUE(S(1, 2, 3), S(4, 5, 6))
+      s = QUEUE(S(1, 2, 3), S(4, 5, 6)).i
 
       expect(s.current_value).to eq nil
 
@@ -151,7 +151,7 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to eq nil
 
 
-      s << S(7, 8, 9)
+      s << S(7, 8, 9).i
 
       expect(s.next_value).to eq 7
       expect(s.next_value).to eq 8
@@ -180,23 +180,42 @@ RSpec.describe Musa::Series do
 
       expect(s.infinite?).to eq false
 
-      s.clear
+      s2 = s.instance
 
-      expect(s.infinite?).to eq false
+      s2.clear
 
-      s.clear
+      expect(s2.infinite?).to eq false
 
-      s << RND(from: 1, to: 10)
-      s << S(10, 11, 12)
+      s2.clear
 
-      expect(s.infinite?).to eq false
+      s2 << RND(from: 1, to: 10).i
+      s2 << S(10, 11, 12).i
 
-      s.clear
+      expect(s2.infinite?).to eq false
 
-      s << RND(from: 1, to: 10).repeat
-      s << S(10, 11, 12)
+      s2.clear
 
-      expect(s.infinite?).to eq true
+      s2 << RND(from: 1, to: 10).repeat.i
+      s2 << S(10, 11, 12).i
+
+      expect(s2.infinite?).to eq true
     end
+
+    it 'Prototype QUEUE don\'t allow adding series' do
+      s = QUEUE(S(1, 2, 3))
+
+      expect {
+        s << S(3, 4, 5)
+      }.to raise_error(ArgumentError)
+    end
+
+    it 'Instance QUEUE don\'t allow adding Prototype series to source' do
+      s = QUEUE(S(1, 2, 3)).i
+
+      expect {
+        s << S(3, 4, 5)
+      }.to raise_error(ArgumentError)
+    end
+
   end
 end

@@ -3,13 +3,8 @@ require_relative '../core-ext/with'
 
 using Musa::Extension::Arrayfy
 
-# incluir With -> hecho
-# eliminar method_missing
-# crear rama tb debe recibir la serie de la history -> ya lo hace
-# crear rama puede repetirse (hasta terminar según ended_when) -> no
-#
-# hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
-# esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
+# TODO hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
+# TODO esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
 
 module Musa
   module Backboner
@@ -17,12 +12,12 @@ module Musa
       include Musa::Extension::With
 
       def initialize(&block)
-        @context = RulesEvalContext.new(&block)
+        @dsl = RulesEvalContext.new(&block)
       end
 
       def generate_possibilities(object, confirmed_node = nil, node = nil, grow_rules = nil)
         node ||= Node.new
-        grow_rules ||= @context._grow_rules
+        grow_rules ||= @dsl._grow_rules
 
         history = confirmed_node.history if confirmed_node
         history ||= []
@@ -33,9 +28,9 @@ module Musa
         if grow_rule
           grow_rule.generate_possibilities(object, history).each do |new_object|
             new_node = Node.new new_object, node
-            new_node.mark_as_ended! if @context._ended? new_object
+            new_node.mark_as_ended! if @dsl._ended? new_object
 
-            rejection = @context._cut_rules.find { |cut_rule| cut_rule.rejects?(new_object, history) }
+            rejection = @dsl._cut_rules.find { |cut_rule| cut_rule.rejects?(new_object, history) }
             # TODO: include rejection secondary reasons in rejection message
 
             new_node.reject! rejection if rejection

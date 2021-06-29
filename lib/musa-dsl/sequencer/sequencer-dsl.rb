@@ -17,11 +17,11 @@ module Musa
                      :position=,
                      :event_handler
 
-      def_delegators :@context, :position, :quantize_position, :logger, :debug
-      def_delegators :@context, :with, :now, :at, :wait, :play, :play_timed, :every, :move
-      def_delegators :@context, :everying, :playing, :moving
-      def_delegators :@context, :launch, :on
-      def_delegators :@context, :run
+      def_delegators :@dsl, :position, :quantize_position, :logger, :debug
+      def_delegators :@dsl, :with, :now, :at, :wait, :play, :play_timed, :every, :move
+      def_delegators :@dsl, :everying, :playing, :moving
+      def_delegators :@dsl, :launch, :on
+      def_delegators :@dsl, :run
 
       def initialize(beats_per_bar = nil,
                      ticks_per_beat = nil,
@@ -37,7 +37,7 @@ module Musa
                                          do_error_log: do_error_log,
                                          log_position_format: log_position_format
 
-        @context = DSLContext.new @sequencer
+        @dsl = DSLContext.new @sequencer
 
         with &block if block_given?
       end

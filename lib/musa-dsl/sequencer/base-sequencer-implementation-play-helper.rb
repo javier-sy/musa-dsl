@@ -262,11 +262,11 @@ module Musa
 
           when Musa::Series::Serie
             { current_operation: :play,
-              current_parameter: element.restart }
+              current_parameter: element.instance.restart }
 
           when Parallel
             { current_operation: :parallel_play,
-              current_parameter: element.tap { |e| e.each(&:restart) } }
+              current_parameter: element.instance.tap { |e| e.each(&:restart) } }
 
           when Array
             { current_operation: :no_eval_play,
