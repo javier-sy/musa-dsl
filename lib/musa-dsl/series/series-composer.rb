@@ -131,8 +131,9 @@ module Musa
             elsif Musa::Series::Constructors.instance_methods.include?(symbol)
               symbol
             else
-              raise ArgumentError, "Pipeline '#{symbol}' is undefined" if args.empty?
+              raise ArgumentError, "Pipeline '#{symbol}' is undefined" if args.empty? && !block
 
+              args += [block] if block
               pipeline(symbol, args)
             end
           end
