@@ -166,5 +166,23 @@ RSpec.describe Musa::Series::Composer do
                                                               { a: 3, b: 104 },
                                                               { a: 4, b: 105 }]
     end
+
+    it 'lambda is interpreted as { eval: lambda ... }' do
+      composer = Composer.new do
+        step lambda { |v| v + 100 }
+
+        route input, to: step
+        route step, to: output
+      end
+
+      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+
+      s = composer.outputs[:output].i
+
+      s.restart
+
+      expect(s.to_a(duplicate: false, restart: false)).to eq [101, 102, 103, 104, 105]
+    end
+
   end
 end

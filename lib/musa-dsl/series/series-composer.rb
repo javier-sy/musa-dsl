@@ -110,8 +110,11 @@ module Musa
                 end
               when Symbol
                 first = last = Musa::Series::Constructors.PROXY if last.nil?
-                # operation == e
                 last = last.send(e) if Musa::Series::Operations.instance_methods.include?(e)
+
+              when Proc
+                first = last = Musa::Series::Constructors.PROXY if last.nil?
+                last = last.eval(e)
               end
 
               first ||= last
