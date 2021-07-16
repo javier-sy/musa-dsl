@@ -91,27 +91,26 @@ module Musa
             elements.each do |e|
               puts "pipeline(#{name}): processing #{e}"
 
-              first = last = Musa::Series::Constructors.PROXY if last.nil?
-
               case e
               when Hash
                 if e.size == 1
                   operation = e.first[0] # key
                   parameter = e.first[1] # value
 
-                  last = parse_element(last, operation, parameter)
+                  first, last = parse_element(first, last, operation, parameter)
                 else
                   raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash."
                 end
               when Symbol
-                last = parse_element(last, e, nil)
+                first, last = parse_element(first, last, e, nil)
 
               when Proc
-                last = if last.is_a?(Serie)
-                         last.eval(e)
-                       else
-                         e.call(last)
-                       end
+                # last = if last.is_a?(Serie)
+                #          last.eval(e)
+                #        else
+                #          e.call(last)
+                #        end
+                first, last = parse_element(first, last, :map, e)
               end
 
               first ||= last
@@ -124,24 +123,26 @@ module Musa
             define_singleton_method(name) { name }
           end
 
-          private def parse_element(last, operation, parameter)
+          private def parse_element(first, last, operation, parameter)
             if Musa::Series::Constructors.instance_methods.include?(operation)
               if last.nil?
-                Musa::Series::Constructors.method(operation).call(*parameter)
+                [first, Musa::Series::Constructors.method(operation).call(*parameter)]
               else
-                Musa::Series::Constructors.method(operation).call(*last, *parameter)
+                [first, Musa::Series::Constructors.method(operation).call(*last, *parameter)]
               end
 
             elsif Musa::Series::Operations.instance_methods.include?(operation)
-              call_operation_according_to_parameter(last, operation, parameter)
+              first = last = Musa::Series::Constructors.PROXY if last.nil?
+
+              [first, call_operation_according_to_parameter(last, operation, parameter)]
 
             else
               # non-series operation
-              call_operation_according_to_parameter(last, operation, parameter)
+              [first, call_operation_according_to_parameter(last, operation, parameter)]
             end
           end
 
-          private def call_operation_according_to_parameter(target, operation, parameter)
+          private def call_operation_according_to_parameter(target, operation, parameter, &block)
             puts "call_operation_with_parameters: operation = #{operation}"
             puts "call_operation_with_parameters: target = #{target}"
             puts "call_operation_with_parameters: parameter = #{parameter || 'nil'}"

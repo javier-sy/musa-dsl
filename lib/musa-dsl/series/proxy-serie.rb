@@ -27,15 +27,19 @@ module Musa
       end
 
       private def method_missing(method_name, *args, **key_args, &block)
-        if @source && @source.respond_to?(method_name)
-          @source.send method_name, *args, **key_args, &block
+        if @source
+          if @source.respond_to?(method_name)
+            @source.send method_name, *args, **key_args, &block
+          else
+            raise NoMethodError, "undefined method '#{method_name}' for proxied #{@source.to_s}"
+          end
         else
           super
         end
       end
 
       private def respond_to_missing?(method_name, include_private)
-        @source && @source.respond_to?(method_name, include_private) # || super
+        @source && @source.respond_to?(method_name, include_private) # || super ??
       end
     end
   end

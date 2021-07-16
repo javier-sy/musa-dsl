@@ -371,8 +371,8 @@ RSpec.describe Musa::Series do
              { d: 7, e: 70, f: 700 }.extend(PackedV), 3 * 4,
              { d: 6, e: 60, f: 600 }.extend(PackedV)].extend(P)
 
-      pt1 = p1.to_timed_serie.flatten_timed.split
-      pt2 = p2.to_timed_serie.flatten_timed.split
+      pt1 = p1.to_timed_serie.flatten_timed.split.instance
+      pt2 = p2.to_timed_serie.flatten_timed.split.instance
 
       u = TIMED_UNION(**pt1, **pt2).i
 
@@ -480,7 +480,7 @@ RSpec.describe Musa::Series do
 
       u = TIMED_UNION(pt1, pt2).i
 
-      split = u.flatten_timed.split.to_h.transform_values(&:compact_timed)
+      split = u.flatten_timed.split.instance.to_h.transform_values(&:compact_timed)
 
       expect(split.size).to eq(6)
 
@@ -519,7 +519,7 @@ RSpec.describe Musa::Series do
 
       u = TIMED_UNION(pt1, pt2).i
 
-      split = u.flatten_timed.split.to_a.collect(&:compact_timed)
+      split = u.flatten_timed.split.instance.to_a.collect(&:compact_timed)
 
       expect(split.size).to eq(6)
 

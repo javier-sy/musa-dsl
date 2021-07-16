@@ -392,11 +392,12 @@ RSpec.describe Musa::Series do
                { a: 3, b: 30, c: 300 }.extend(Musa::Datasets::PackedV), 1 * 4,
                { a: 4, b: 40, c: 400 }.extend(Musa::Datasets::PackedV)].extend(Musa::Datasets::P)
 
-      series = TIMED_UNION(**line.to_timed_serie.flatten_timed.split).flatten_timed.split.to_h
+      series = TIMED_UNION(**line.to_timed_serie.flatten_timed.split.instance).flatten_timed.split.instance.to_h
 
       series_a = series[:a].instance
 
-      expect(series[:a].prototype?).to eq true
+      # due to new .split that generates a
+      expect(series[:a].instance?).to eq true
       expect(series_a.instance?).to eq true
 
       expect(series_a.next_value).to eq({ time: 0, value: 1})

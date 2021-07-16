@@ -143,7 +143,7 @@ RSpec.describe Musa::Series::Composer do
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
         step2 ({ eval: lambda { |v| v + 100 }})
 
-        integrate ({ H: {} })
+        integrate ({ H: { } })
 
         route input, to: step1
         route input, to: step2
@@ -222,9 +222,9 @@ RSpec.describe Musa::Series::Composer do
     it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution)' do
       composer = Composer.new(inputs: nil) do
         step ({ S: [[1, 10], [2, 20], [3, 30]] }),
-             split,
-             # to_a,
-             # { collect: lambda { |_| _.eval lambda { |_| _ + 1000 } } },
+             split, instance,
+             to_a,
+             { collect: lambda { |_| _.eval lambda { |_| _ + 1000 } } },
              :A
 
         route step, to: output
@@ -234,9 +234,7 @@ RSpec.describe Musa::Series::Composer do
 
       s.restart
 
-      puts "s.next_value = #{s.next_value}"
-
-      expect(s.to_a(duplicate: false, restart: false)).to eq [[1000, 1010], [1002, 1020], [1003, 1030]]
+      expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
 
 
