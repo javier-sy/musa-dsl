@@ -117,18 +117,18 @@ module Musa
         @buffer
       end
 
-      private def _restart(main)
-        raise ArgumentError, "Can't restart a BufferSerie directly. Should use a buffer instance instead." unless main
+      private def _restart(buffer)
+        raise ArgumentError, "Can't restart a BufferSerie directly. Should use a buffer instance instead." unless buffer
         return if @source_just_restarted
 
-        next_nil = @nils.find { |_| _ > main.index }
+        next_nil = @nils.find { |_| _ > buffer.index }
 
-        if next_nil && main.index < next_nil
-          main.last_nil_index = main.index = next_nil
+        if next_nil && buffer.index < next_nil
+          buffer.last_nil_index = buffer.index = next_nil
 
         else
           until _next_value.nil?; end
-          main.last_nil_index = main.index = @nils.last
+          buffer.last_nil_index = buffer.index = @nils.last
         end
 
         clear_old_history
@@ -216,7 +216,7 @@ module Musa
               @index += 1
               value = @history[@index]
             else
-              @source.next_value
+              value = @source.next_value
               value = _next_value
             end
 

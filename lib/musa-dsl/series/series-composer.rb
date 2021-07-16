@@ -89,35 +89,34 @@ module Musa
             first = last = nil
 
             elements.each do |e|
+              puts "pipeline(#{name}): processing #{e}"
+
+              first = last = Musa::Series::Constructors.PROXY if last.nil?
+
               case e
               when Hash
                 if e.size == 1
-                  operation = e.keys.first
-                  parameters = e.values.first
+                  operation = e.first[0] # key
+                  parameter = e.first[1] # value
 
-                  if Musa::Series::Constructors.instance_methods.include?(operation)
-                    raise ArgumentError, "Called constructor '#{operation}' ignoring previous elements" unless last.nil?
-
-                    last = Musa::Series::Constructors.method(operation).call(*parameters)
-
-                  elsif Musa::Series::Operations.instance_methods.include?(operation)
-                    first = last = Musa::Series::Constructors.PROXY if last.nil?
-                    last = last.send(operation, *parameters)
-
-                  end
+                  last = parse_element(last, operation, parameter)
                 else
-                  raise ArgumentError, "Don't know how to handle #{e}"
+                  raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash."
                 end
               when Symbol
-                first = last = Musa::Series::Constructors.PROXY if last.nil?
-                last = last.send(e) if Musa::Series::Operations.instance_methods.include?(e)
+                last = parse_element(last, e, nil)
 
               when Proc
-                first = last = Musa::Series::Constructors.PROXY if last.nil?
-                last = last.eval(e)
+                last = if last.is_a?(Serie)
+                         last.eval(e)
+                       else
+                         e.call(last)
+                       end
               end
 
               first ||= last
+
+              puts "pipeline(#{name}): last = #{last}"
             end
 
             @pipelines[name] = { input: first, output: last.buffered }
@@ -125,25 +124,74 @@ module Musa
             define_singleton_method(name) { name }
           end
 
+          private def parse_element(last, operation, parameter)
+            if Musa::Series::Constructors.instance_methods.include?(operation)
+              if last.nil?
+                Musa::Series::Constructors.method(operation).call(*parameter)
+              else
+                Musa::Series::Constructors.method(operation).call(*last, *parameter)
+              end
+
+            elsif Musa::Series::Operations.instance_methods.include?(operation)
+              call_operation_according_to_parameter(last, operation, parameter)
+
+            else
+              # non-series operation
+              call_operation_according_to_parameter(last, operation, parameter)
+            end
+          end
+
+          private def call_operation_according_to_parameter(target, operation, parameter)
+            puts "call_operation_with_parameters: operation = #{operation}"
+            puts "call_operation_with_parameters: target = #{target}"
+            puts "call_operation_with_parameters: parameter = #{parameter || 'nil'}"
+
+            case parameter
+            when nil
+              target.send(operation)
+            when Array
+              # todo: it should parse parameter array to allow array, hash and proc subparameters
+              target.send(operation, *parameter)
+            when Hash
+              # todo: it should parse parameter array to allow array, hash and proc subparameters
+              target.send(operation, **parameter)
+            when Proc
+              target.send(operation, &parameter)
+            else
+              target.send(operation, parameter)
+            end
+          end
+
           private def method_missing(symbol, *args, &block)
             if Musa::Series::Operations.instance_methods.include?(symbol)
               symbol
             elsif Musa::Series::Constructors.instance_methods.include?(symbol)
               symbol
-            else
-              raise ArgumentError, "Pipeline '#{symbol}' is undefined" if args.empty? && !block
-
+            elsif args.any? || block
               args += [block] if block
               pipeline(symbol, args)
+            else # for non-series methods
+              symbol
+            end
+          end
+
+          private def const_missing(symbol)
+            # todo: allow series constructors methods with uppercase (i.e., A) to be detected without ':' (i.e., :A)
+            if Musa::Series::Constructors.instance_methods.include?(symbol)
+              symbol
+            else
+              super
             end
           end
 
           private def respond_to_missing?(method_name, include_private = false)
             Musa::Series::Operations.instance_methods.include?(method_name) ||
             Musa::Series::Constructors.instance_methods.include?(method_name) ||
-            @pipelines.key?(method_name) ||
+            @pipelines.key?(method_name) || # todo: what happens with non-series methods?
             super
           end
+
+
         end
 
         private_constant :DSLContext

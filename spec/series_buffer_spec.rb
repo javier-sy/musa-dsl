@@ -285,5 +285,23 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to be_nil
       expect(s.next_value).to be_nil
     end
+
+    it 'bugfix: restarting a buffered joined series of a split serie generates a stack overflow' do
+      s = S([1, 10], [2, 20], [3, 30])
+      ss = s.split
+
+      s2 = A(*ss).buffered
+      s2i = s2.buffer.instance
+
+      s2i.restart
+
+      expect(s2i.next_value).to eq [1, 10]
+      expect(s2i.next_value).to eq [2, 20]
+      expect(s2i.next_value).to eq [3, 30]
+
+      expect(s2i.next_value).to be_nil
+    end
+
+
   end
 end

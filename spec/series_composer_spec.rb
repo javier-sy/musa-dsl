@@ -6,8 +6,8 @@ include Musa::Series::Composer
 include Musa::Series::Constructors
 
 RSpec.describe Musa::Series::Composer do
-
   context 'Series composer' do
+
     it 'No input, simple 1 step output' do
       composer = Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
@@ -200,6 +200,46 @@ RSpec.describe Musa::Series::Composer do
 
       expect(s.to_a(duplicate: false, restart: false)).to eq [101, 102, 103, 104, 105]
     end
+
+    it 'normal functions (and constructors) can be used inside a pipeline (delayed resolution)' do
+      composer = Composer.new do
+        step split, to_a, { collect: lambda { |_| _ + 1000 } }, :A
+        # step split, to_a, { collect: { eval: lambda { |_| _ + 1000 } } }, :A
+
+        route input, to: step
+        route step, to: output
+      end
+
+      composer.inputs[:input].source = S([1, 10], [2, 20], [3, 30])
+
+      s = composer.outputs[:output].i
+
+      s.restart
+
+      expect(s.to_a(duplicate: false, restart: false)).to eq [[1000, 1010], [1002, 1020], [1003, 1030]]
+    end
+
+    it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution)' do
+      composer = Composer.new(inputs: nil) do
+        step ({ S: [[1, 10], [2, 20], [3, 30]] }),
+             split,
+             # to_a,
+             # { collect: lambda { |_| _.eval lambda { |_| _ + 1000 } } },
+             :A
+
+        route step, to: output
+      end
+
+      s = composer.outputs[:output].i
+
+      s.restart
+
+      puts "s.next_value = #{s.next_value}"
+
+      expect(s.to_a(duplicate: false, restart: false)).to eq [[1000, 1010], [1002, 1020], [1003, 1030]]
+    end
+
+
 
   end
 end

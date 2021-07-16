@@ -8,7 +8,7 @@ using Musa::Extension::Matrix
 
 RSpec.describe Musa::Series do
   context 'Series splitter handles' do
-    it 'prototype / instance management and split series independence' do
+    it 'prototype / instance management' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
 
       expect(s.prototype?).to eq true
@@ -16,46 +16,40 @@ RSpec.describe Musa::Series do
 
       ss = s.split
 
-      expect(ss[0].prototype?).to eq true
-      expect(ss[0].instance?).to eq false
+      expect(ss.prototype?).to eq true
+      expect(ss.instance?).to eq false
 
-      ss0i = ss[0].instance
+      expect { ss[0] }.to raise_error(RuntimeError)
 
-      expect(ss0i.prototype?).to eq false
-      expect(ss0i.instance?).to eq true
+      ssi = ss.instance
 
-      expect(ss[0].prototype?).to eq true
-      expect(ss[0].instance?).to eq false
+      ssi0i = ssi[0]
 
-      expect(ss0i.next_value).to eq 1
+      expect(ssi0i.prototype?).to eq false
+      expect(ssi0i.instance?).to eq true
 
-      expect(ss0i.prototype?).to eq false
-      expect(ss0i.instance?).to eq true
+      expect(ssi0i.next_value).to eq 1
 
-      expect(ss[0].prototype?).to eq true
-      expect(ss[0].instance?).to eq false
 
-      ss0i2 = ss[0].instance
+      ssi0i2 = ssi[0].instance
 
-      expect(ss0i2.next_value).to eq 1
-      expect(ss0i2.next_value).to eq 2
-      expect(ss0i2.next_value).to eq 3
+      expect(ssi0i2.prototype?).to eq false
+      expect(ssi0i2.instance?).to eq true
 
-      expect(ss0i.next_value).to eq 2
+      expect(ssi0i2.next_value).to eq 2
+      expect(ssi0i2.next_value).to eq 3
 
-      expect(ss0i2.next_value).to be_nil
+      expect(ssi0i.next_value).to be_nil
 
-      expect(ss0i.next_value).to eq 3
-      expect(ss0i.next_value).to be_nil
     end
 
     it 'serie of array elements (instancing split components)' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
-      ss = s.split
+      ss = s.split.instance
 
-      ss_a = ss[0].instance
-      ss_b = ss[1].instance
-      ss_c = ss[2].instance
+      ss_a = ss[0]
+      ss_b = ss[1]
+      ss_c = ss[2]
 
       expect(ss_a.next_value).to eq 1
       expect(ss_b.next_value).to eq 10
@@ -90,11 +84,11 @@ RSpec.describe Musa::Series do
     it 'serie of hash elements (instancing split components)' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
-      ss = h.split
+      ss = h.split.instance
 
-      ss_a = ss[:a].instance
-      ss_b = ss[:b].instance
-      ss_c = ss[:c].instance
+      ss_a = ss[:a]
+      ss_b = ss[:b]
+      ss_c = ss[:c]
 
       expect(ss_a.next_value).to eq 1
       expect(ss_b.next_value).to eq 10
@@ -321,7 +315,7 @@ RSpec.describe Musa::Series do
     it 'serie of hash elements split merges to hash serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
-      ss = h.split
+      ss = h.split.instance
 
       ss_a = ss[:a]
       ss_b = ss[:b]
@@ -340,7 +334,7 @@ RSpec.describe Musa::Series do
 
     it 'serie of array elements split merges to array serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
-      ss = s.split
+      ss = s.split.instance
 
       ss_a = ss[0]
       ss_b = ss[1]
@@ -363,7 +357,7 @@ RSpec.describe Musa::Series do
     it 'serie of hash elements split collected merges to hash serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
-      ss = h.split
+      ss = h.split.instance
 
 
       s2 = H(**ss.collect.to_h)
@@ -379,7 +373,7 @@ RSpec.describe Musa::Series do
 
     it 'serie of array elements split collected merges to array serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
-      ss = s.split
+      ss = s.split.instance
 
       s2 = A(*ss.collect)
 
@@ -407,5 +401,23 @@ RSpec.describe Musa::Series do
 
       expect(series_a.next_value).to eq({ time: 0, value: 1})
     end
+
+    it 'bugfix: restarting a joined series of a split serie when peeked_next_value and restarted generates a stack overflow' do
+      s = S([1, 10], [2, 20], [3, 30])
+      ss = s.split.instance
+
+      s2 = A(*ss)
+      s2i = s2
+
+      s2i.peek_next_value
+      s2i.restart
+
+      expect(s2i.next_value).to eq [1, 10]
+      expect(s2i.next_value).to eq [2, 20]
+      expect(s2i.next_value).to eq [3, 30]
+
+      expect(s2i.next_value).to be_nil
+    end
+
   end
 end
