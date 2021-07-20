@@ -801,6 +801,75 @@ RSpec.describe Musa::Series do
       expect(ss.to_a).to eq [[nil, 21], [1, 32], [2, 43], [3, 54], [4, 65], [5, 6]]
     end
 
+    it 'Lazy serie evaluation with data already available' do
+      s = S([1, 10], [2, 20], [3, 30])
+
+      p = s.proxy
+
+      e = p.lazy do |_|
+        _.split.instance
+         .to_a
+         .collect { |_| _.eval { |_| _ + 1000 } }
+         .then { |_| A(*_).instance }
+      end
+
+      ee = e.instance
+
+      expect(ee.next_value).to eq [1001, 1010]
+      expect(ee.next_value).to eq [1002, 1020]
+      expect(ee.next_value).to eq [1003, 1030]
+      expect(ee.next_value).to be_nil
+
+      ee.restart
+
+      expect(ee.next_value).to eq [1001, 1010]
+      expect(ee.next_value).to eq [1002, 1020]
+      expect(ee.next_value).to eq [1003, 1030]
+      expect(ee.next_value).to be_nil
+    end
+
+    it 'Lazy serie evaluation with no data available' do
+      p = PROXY()
+
+      e = p.lazy do |_|
+        _.split.instance
+         .to_a
+         .collect { |_| _.eval { |_| _ + 1000 } }
+         .then { |_| A(*_).instance } # .instance because A() without parameters returns a prototype
+      end
+
+      ee = e.instance
+
+      expect(ee.next_value).to be_nil
+    end
+
+    it 'Lazy serie evaluation with data available after proc definition' do
+      p = PROXY()
+
+      e = p.lazy do |_|
+        _.split.instance
+         .to_a
+         .collect { |_| _.eval { |_| _ + 1000 } }
+         .then { |_| A(*_).instance }
+      end
+
+      p.proxy_source = S([1, 10], [2, 20], [3, 30])
+
+      ee = e.instance
+
+      expect(ee.next_value).to eq [1001, 1010]
+      expect(ee.next_value).to eq [1002, 1020]
+      expect(ee.next_value).to eq [1003, 1030]
+      expect(ee.next_value).to be_nil
+
+      ee.restart
+
+      expect(ee.next_value).to eq [1001, 1010]
+      expect(ee.next_value).to eq [1002, 1020]
+      expect(ee.next_value).to eq [1003, 1030]
+      expect(ee.next_value).to be_nil
+    end
+
     it 'Generative grammar nodes of series to serie' do
       a = N(1)
       b = N(2)

@@ -38,12 +38,12 @@ module Musa
           include SerieImplementation
 
           if source
-            define_method source_as do ||
+            define_method source_as do
               @source
             end
 
             define_method source_setter do |serie|
-              raise ArgumentError, "New source should be a #{@get}" unless @source.nil? || @source.prototype? == serie&.prototype?
+              raise ArgumentError, "New #{source_as} should be a #{@get}" unless @source.nil? || @source.prototype? == serie&.prototype?
 
               serie ||= Musa::Series::Constructors.NIL
               @get = serie&.instance? ? :instance : :prototype

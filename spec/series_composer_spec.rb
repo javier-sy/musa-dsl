@@ -48,7 +48,7 @@ RSpec.describe Musa::Series::Composer do
         route step1, to: output
       end
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -66,7 +66,7 @@ RSpec.describe Musa::Series::Composer do
         route step2, to: output
       end
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -112,7 +112,7 @@ RSpec.describe Musa::Series::Composer do
       composer.route :step1, to: :step2
       composer.route :step2, to: :output
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -131,7 +131,7 @@ RSpec.describe Musa::Series::Composer do
         route step2, to: output
       end
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -154,7 +154,7 @@ RSpec.describe Musa::Series::Composer do
         route integrate, to: output
       end
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -175,7 +175,7 @@ RSpec.describe Musa::Series::Composer do
         route step, to: output
       end
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -192,7 +192,7 @@ RSpec.describe Musa::Series::Composer do
         route step, to: output
       end
 
-      composer.inputs[:input].source = S(1, 2, 3, 4, 5)
+      composer.inputs[:input].proxy_source = S(1, 2, 3, 4, 5)
 
       s = composer.outputs[:output].i
 
@@ -203,28 +203,60 @@ RSpec.describe Musa::Series::Composer do
 
     it 'normal functions (and constructors) can be used inside a pipeline (delayed resolution)' do
       composer = Composer.new do
-        step split, to_a, { collect: lambda { |_| _ + 1000 } }, :A
-        # step split, to_a, { collect: { eval: lambda { |_| _ + 1000 } } }, :A
+        step split, instance,
+             to_a,
+             { collect: lambda { |_| _.with { |_| _ + 1000 } } },
+             # { collect: lambda { |_| _ + 1000 } },
+             :A
+        # step split, instance, to_a, { collect: { eval: lambda { |_| _ + 1000 } } }, :A
 
         route input, to: step
         route step, to: output
       end
 
-      composer.inputs[:input].source = S([1, 10], [2, 20], [3, 30])
+      composer.inputs[:input].proxy_source = S([1, 10], [2, 20], [3, 30])
 
       s = composer.outputs[:output].i
 
       s.restart
 
+      puts "s.next_value = #{s.next_value}"
+
       expect(s.to_a(duplicate: false, restart: false)).to eq [[1000, 1010], [1002, 1020], [1003, 1030]]
     end
+
+    it 'normal functions (and constructors) can be used inside a pipeline (delayed resolution) BIZARREEEE???' do
+      composer = Composer.new do
+        step ({
+          lazy: [
+            split, instance,
+            to_a,
+            { collect: proc { |_| _.with { |_| _ + 1000 } } },
+            :A
+          ]})
+
+        route input, to: step
+        route step, to: output
+      end
+
+      composer.inputs[:input].proxy_source = S([1, 10], [2, 20], [3, 30])
+
+      s = composer.outputs[:output].i
+
+      s.restart
+
+      puts "s.next_value = #{s.next_value}"
+
+      expect(s.to_a(duplicate: false, restart: false)).to eq [[1000, 1010], [1002, 1020], [1003, 1030]]
+    end
+
 
     it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution)' do
       composer = Composer.new(inputs: nil) do
         step ({ S: [[1, 10], [2, 20], [3, 30]] }),
              split, instance,
              to_a,
-             { collect: lambda { |_| _.eval lambda { |_| _ + 1000 } } },
+             { collect: lambda { |_| _.with { |_| _ + 1000 } } },
              :A
 
         route step, to: output
@@ -237,7 +269,23 @@ RSpec.describe Musa::Series::Composer do
       expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
 
+    it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution) with lambda simplified syntax' do
+      composer = Composer.new(inputs: nil) do
+        step ({ S: [[1, 10], [2, 20], [3, 30]] }),
+             split, instance,
+             to_a,
+             { collect: { with: lambda { |_| _ + 1000 } } },
+             :A
 
+        route step, to: output
+      end
+
+      s = composer.outputs[:output].i
+
+      s.restart
+
+      expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
+    end
 
   end
 end

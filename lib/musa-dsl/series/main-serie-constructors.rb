@@ -566,7 +566,7 @@ module Musa
       end
 
       private def _next_value
-        unless @have_current && @value.nil?
+        unless @sources.empty? || @have_current && @value.nil?
           pre_value = @sources.collect(&:peek_next_value)
 
           nils = 0

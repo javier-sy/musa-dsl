@@ -70,7 +70,8 @@ module Musa
 
             @links_from[from] ||= Set[]
 
-            on ||= as ? :sources : :source
+            # TODO: be careful when accessing :sources because we are accessing directly the serie, not the proxy!
+            on ||= as ? :sources : :proxy_source
 
             raise ArgumentError, "Pipeline #{@links_to[[to, on, as]]} already connected to pipeline #{to} on #{on} as #{as}" if @links_to[[to, on, as]]
 
@@ -88,8 +89,20 @@ module Musa
           def pipeline(name, elements)
             first = last = nil
 
+            puts "pipeline(#{name}):"
+
+            first, last = parse_elements(elements, first, last)
+
+            puts "pipeline(#{name}): last = #{last}"
+
+            @pipelines[name] = { input: first, output: last.buffered }
+
+            define_singleton_method(name) { name }
+          end
+
+          private def parse_elements(elements, first, last)
             elements.each do |e|
-              puts "pipeline(#{name}): processing #{e}"
+              puts "\tprocessing #{e}"
 
               case e
               when Hash
@@ -97,33 +110,24 @@ module Musa
                   operation = e.first[0] # key
                   parameter = e.first[1] # value
 
-                  first, last = parse_element(first, last, operation, parameter)
+                  first, last = chain_operation(first, last, operation, parameter)
                 else
-                  raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash."
+                  raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash that would be evaluated as a method call."
                 end
               when Symbol
-                first, last = parse_element(first, last, e, nil)
+                first, last = chain_operation(first, last, e, nil)
 
               when Proc
-                # last = if last.is_a?(Serie)
-                #          last.eval(e)
-                #        else
-                #          e.call(last)
-                #        end
-                first, last = parse_element(first, last, :map, e)
+                first, last = chain_operation(first, last, :map, e)
               end
 
               first ||= last
-
-              puts "pipeline(#{name}): last = #{last}"
             end
 
-            @pipelines[name] = { input: first, output: last.buffered }
-
-            define_singleton_method(name) { name }
+            [first, last]
           end
 
-          private def parse_element(first, last, operation, parameter)
+          private def chain_operation(first, last, operation, parameter)
             if Musa::Series::Constructors.instance_methods.include?(operation)
               if last.nil?
                 [first, Musa::Series::Constructors.method(operation).call(*parameter)]
@@ -142,25 +146,85 @@ module Musa
             end
           end
 
-          private def call_operation_according_to_parameter(target, operation, parameter, &block)
+          private def call_operation_according_to_parameter(target, operation, parameter)
             puts "call_operation_with_parameters: operation = #{operation}"
             puts "call_operation_with_parameters: target = #{target}"
             puts "call_operation_with_parameters: parameter = #{parameter || 'nil'}"
 
-            case parameter
+
+            effective_parameter = parse_parameter(parameter)
+            # parse_parameter only returns nil, Symbol or Proc
+            
+            case effective_parameter
             when nil
               target.send(operation)
-            when Array
-              # todo: it should parse parameter array to allow array, hash and proc subparameters
-              target.send(operation, *parameter)
-            when Hash
-              # todo: it should parse parameter array to allow array, hash and proc subparameters
-              target.send(operation, **parameter)
+            when Symbol
+              target.send(operation).send(effective_parameter)
             when Proc
-              target.send(operation, &parameter)
-            else
-              target.send(operation, parameter)
+              target.send(operation, &effective_parameter)
             end
+          end
+          
+          private def parse_parameter(p)
+            # returns only nil, Proc or Symbol
+            case p
+            when nil
+              p
+            when Proc
+              p
+            when Symbol
+              p
+            when Array
+              first = last = nil
+
+              p.each do |e|
+                case e
+                when Hash
+                  if e.size == 1
+                    operation = e.first[0] # key
+                    parameter = e.first[1] # value
+
+                    first, last = chain_operation(first, last, operation, parameter)
+                  else
+                    raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash that would be evaluated as a method call."
+                  end
+                when Symbol
+                  first, last = chain_operation(first, last, e, nil)
+
+                when Proc
+                  first, last = chain_operation(first, last, :map, e)
+                end
+
+                first ||= last
+              end
+
+            when Hash
+              if p.size == 1
+                operation = p.first[0] # key
+                parameter = p.first[1] # value
+
+                case parameter
+                when Proc
+                  proc do |target|
+                    target.send(operation, &parameter)
+                  end
+                when Hash
+                  proc do |target|
+                    target.send(operation, &parse_parameter(parameter))
+                  end
+                else
+                  raise_syntax_error(p)
+                end
+              else
+                raise_syntax_error(p)
+              end
+            else
+              raise_syntax_error(p)
+            end
+          end
+
+          private def raise_syntax_error(e)
+            raise ArgumentError, "Syntax error: don't know how to handle #{e}. It could be: 1) a Hash with { method: proc { |x| do_whatever_with(x) } } structure, 2) nil, 3) a Symbol"
           end
 
           private def method_missing(symbol, *args, &block)
@@ -177,7 +241,7 @@ module Musa
           end
 
           private def const_missing(symbol)
-            # todo: allow series constructors methods with uppercase (i.e., A) to be detected without ':' (i.e., :A)
+            # TODO: allow series constructors methods with uppercase (i.e., A) to be detected without ':' (i.e., :A)
             if Musa::Series::Constructors.instance_methods.include?(symbol)
               symbol
             else
@@ -191,8 +255,6 @@ module Musa
             @pipelines.key?(method_name) || # todo: what happens with non-series methods?
             super
           end
-
-
         end
 
         private_constant :DSLContext

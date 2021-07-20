@@ -116,6 +116,10 @@ module Musa
         Anticipate.new self, &block
       end
 
+      def lazy(&block)
+        LazySerieEval.new self, &block
+      end
+
       ###
       ### Implementation
       ###
@@ -1006,6 +1010,45 @@ module Musa
       end
 
       private_constant :HashFromSeriesArray
+
+      class LazySerieEval
+        include Serie.with(source: true, block: true)
+
+        def initialize(serie, &block)
+          self.source = serie
+          self.proc = block
+
+          init
+        end
+
+        def source=(serie)
+          super
+          @processed = nil
+        end
+
+        def proc(&block)
+          super
+          @processed = nil if block
+        end
+
+        def proc=(block)
+          super
+          @processed = nil if block
+        end
+
+        private def _restart
+          @processed = nil
+          @source.restart
+        end
+
+        private def _next_value
+          @processed ||= @block.call(@source)
+          @processed.next_value
+        end
+      end
+
+      private_constant :LazySerieEval
     end
+
   end
 end

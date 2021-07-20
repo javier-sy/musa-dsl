@@ -7,10 +7,10 @@ module Musa
     end
 
     class ProxySerie
-      include Series::Serie.with(source: true)
+      include Series::Serie.with(source: true, source_as: :proxy_source)
 
       def initialize(serie)
-        self.source = serie
+        self.proxy_source = serie
         init
       end
 

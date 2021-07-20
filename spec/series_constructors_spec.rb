@@ -710,6 +710,12 @@ RSpec.describe Musa::Series do
       expect(s1.next_value).to eq nil
     end
 
+    it 'bugfix for A serie without parameters never finishes' do
+      s = A().instance
+
+      expect(s.next_value).to be_nil
+    end
+
     it 'AC(S(1,2),S(:a, :b, :c))' do
       s1 = AC(S(1, 2), S(:a, :b, :c)).i
 

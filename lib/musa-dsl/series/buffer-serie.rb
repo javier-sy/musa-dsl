@@ -216,8 +216,7 @@ module Musa
               @index += 1
               value = @history[@index]
             else
-              value = @source.next_value
-              value = _next_value
+              value = _next_value unless @source.next_value.nil?
             end
 
             if value.nil?
