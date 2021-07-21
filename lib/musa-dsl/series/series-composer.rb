@@ -87,44 +87,75 @@ module Musa
           end
 
           def pipeline(name, elements)
-            first = last = nil
-
             puts "pipeline(#{name}):"
 
-            first, last = parse_elements(elements, first, last)
+            first, last = parse_parameter(elements)
 
-            puts "pipeline(#{name}): last = #{last}"
+            puts "pipeline(#{name}): first = #{first} last = #{last}"
 
             @pipelines[name] = { input: first, output: last.buffered }
 
             define_singleton_method(name) { name }
           end
 
-          private def parse_elements(elements, first, last)
-            elements.each do |e|
-              puts "\tprocessing #{e}"
+          private def parse_parameter(p)
+            # returns only [first, last], nil, Proc or Symbol
+            case p
+            when Array
+              first = last = nil
 
-              case e
-              when Hash
-                if e.size == 1
-                  operation = e.first[0] # key
-                  parameter = e.first[1] # value
+              p.each do |e|
+                case e
+                when Hash
+                  if e.size == 1
+                    operation = e.first[0] # key
+                    parameter = e.first[1] # value
 
-                  first, last = chain_operation(first, last, operation, parameter)
+                    first, last = chain_operation(first, last, operation, parameter)
+                  else
+                    raise_syntax_error(e)
+                  end
+                when Symbol
+                  first, last = chain_operation(first, last, e, nil)
+
+                when Proc
+                  first, last = chain_operation(first, last, :map, e)
                 else
-                  raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash that would be evaluated as a method call."
+                  raise_syntax_error(e)
                 end
-              when Symbol
-                first, last = chain_operation(first, last, e, nil)
 
-              when Proc
-                first, last = chain_operation(first, last, :map, e)
+                first ||= last
               end
 
-              first ||= last
-            end
+              [first, last]
 
-            [first, last]
+            when Hash
+              if p.size == 1
+                operation = p.first[0] # key
+                parameter = p.first[1] # value
+
+                case parameter
+                when Proc
+                  proc do |target|
+                    target.send(operation, &parameter)
+                  end
+                when Hash
+                  proc do |target|
+                    target.send(operation, &parse_parameter(parameter))
+                  end
+                else
+                  raise_syntax_error(p)
+                end
+              else
+                raise_syntax_error(p)
+              end
+
+            when nil, Proc, Symbol
+              p
+
+            else
+              p
+            end
           end
 
           private def chain_operation(first, last, operation, parameter)
@@ -147,14 +178,18 @@ module Musa
           end
 
           private def call_operation_according_to_parameter(target, operation, parameter)
-            puts "call_operation_with_parameters: operation = #{operation}"
-            puts "call_operation_with_parameters: target = #{target}"
-            puts "call_operation_with_parameters: parameter = #{parameter || 'nil'}"
+            # parse_parameter only returns nil, Symbol or Proc
 
+            puts "call_operation_according_to_parameter: target = #{target}"
+            puts "                                       operation = #{operation}"
+            puts "                                       parameter = #{parameter || 'nil'}"
 
             effective_parameter = parse_parameter(parameter)
-            # parse_parameter only returns nil, Symbol or Proc
-            
+
+            puts "call_operation_according_to_parameter: target = #{target}"
+            puts "                                       operation = #{operation}"
+            puts "                                       effective_parameter = #{effective_parameter || 'nil'}"
+
             case effective_parameter
             when nil
               target.send(operation)
@@ -162,64 +197,10 @@ module Musa
               target.send(operation).send(effective_parameter)
             when Proc
               target.send(operation, &effective_parameter)
-            end
-          end
-          
-          private def parse_parameter(p)
-            # returns only nil, Proc or Symbol
-            case p
-            when nil
-              p
-            when Proc
-              p
-            when Symbol
-              p
             when Array
-              first = last = nil
-
-              p.each do |e|
-                case e
-                when Hash
-                  if e.size == 1
-                    operation = e.first[0] # key
-                    parameter = e.first[1] # value
-
-                    first, last = chain_operation(first, last, operation, parameter)
-                  else
-                    raise ArgumentError, "Don't know how to handle #{e}. It should be only one element hash that would be evaluated as a method call."
-                  end
-                when Symbol
-                  first, last = chain_operation(first, last, e, nil)
-
-                when Proc
-                  first, last = chain_operation(first, last, :map, e)
-                end
-
-                first ||= last
-              end
-
-            when Hash
-              if p.size == 1
-                operation = p.first[0] # key
-                parameter = p.first[1] # value
-
-                case parameter
-                when Proc
-                  proc do |target|
-                    target.send(operation, &parameter)
-                  end
-                when Hash
-                  proc do |target|
-                    target.send(operation, &parse_parameter(parameter))
-                  end
-                else
-                  raise_syntax_error(p)
-                end
-              else
-                raise_syntax_error(p)
-              end
+              puts "qué hacer?"
             else
-              raise_syntax_error(p)
+              target.send(operation, effective_parameter)
             end
           end
 

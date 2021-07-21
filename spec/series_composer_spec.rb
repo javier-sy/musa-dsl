@@ -12,7 +12,7 @@ RSpec.describe Musa::Series::Composer do
       composer = Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
-        step1 ({ skip: 2 }), { repeat: 2 },  reverse, { repeat: 2 }, reverse
+        step1 ({ skip: 2 }), { repeat: 2 }, reverse, { repeat: 2 }, reverse
 
         route input,to: step1
         route step1, to: output
