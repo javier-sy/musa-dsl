@@ -13,6 +13,11 @@ module Musa
         @series = {}
       end
 
+      def source=(serie)
+        @source = serie
+        @proxy.source = @source if @proxy
+      end
+
       protected def _instance!
         super
         @proxy = SplitterProxy.new(@source)
@@ -76,11 +81,18 @@ module Musa
           infer_components
         end
 
-        attr_reader :components
+        attr_reader :source
+
+        def source=(hash_or_array_serie)
+          @source = hash_or_array_serie
+          infer_components
+        end
 
         def hash_mode?; @hash_mode; end
 
         def array_mode?; @array_mode; end
+
+        attr_reader :components
 
         def restart(key_or_index = nil)
           if key_or_index

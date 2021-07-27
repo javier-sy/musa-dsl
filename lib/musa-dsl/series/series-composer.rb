@@ -8,34 +8,48 @@ module Musa
       class Composer
         using Musa::Extension::Arrayfy
 
-        attr_reader :inputs, :outputs
+        def initialize(inputs: [:input], outputs: [:output], auto_commit: nil, &block)
+          auto_commit = true if auto_commit.nil?
 
-        def initialize(inputs: [:input], outputs: [:output], &block)
           @pipelines = {}
 
-          @links = Set[]
-          @links_from = {}
-          @links_to = {}
+          def @pipelines.[]=(name, pipeline)
+            pipeline_to_add = @commited ? pipeline.commit! : pipeline
+            super(name, pipeline_to_add)
+          end
 
-          @dsl = DSLContext.new(@pipelines, @links, @links_from, @links_to)
+          @dsl = DSLContext.new(@pipelines)
           @inputs = {}
           @outputs = {}
 
           inputs&.each do |input|
-            @inputs[input] = Series::Constructors.PROXY
-            @pipelines[input] = { input: nil, output: @inputs[input].buffered }
+            p = PROXY()
+            @inputs[input] = @pipelines[input] = Pipeline.new(input, input: p, output: p.buffered, pipelines: @pipelines)
 
             @dsl.define_singleton_method(input) { input }
           end
 
           outputs&.each do |output|
-            @outputs[output] = Series::Constructors.PROXY
-            @pipelines[output] = { input: @outputs[output], output: nil }
+            p = PROXY()
+            @outputs[output] = @pipelines[output] = Pipeline.new(output, is_output: true, input: p, output: p, pipelines: @pipelines)
 
             @dsl.define_singleton_method(output) { output }
           end
 
           @dsl.with &block if block
+          commit! if auto_commit
+        end
+
+        def input(name = nil)
+          name ||= :input
+          @inputs[name].input
+        end
+
+        def output(name = nil)
+          raise "Can't access output if the Composer is uncommited. Call '.commit' first." unless @commited
+
+          name ||= :output
+          @outputs[name].output
         end
 
         def route(from, to:, on: nil, as: nil)
@@ -50,15 +64,76 @@ module Musa
           @dsl.with &block
         end
 
+        def commit!
+          raise 'Already commited' if @commited
+
+          @outputs.each_value do |pipeline|
+            pipeline.commit!
+          end
+
+          @commited = true
+        end
+
+        class Pipeline
+          def initialize(name, is_output: false, input: nil, output: nil, first_proc: nil, chain_proc: nil, pipelines:)
+            @name = name
+            @is_output = is_output
+            @input = input
+            @output = output
+            @first_proc = first_proc
+            @chain_proc = chain_proc
+            @routes = {}
+            @pipelines = pipelines
+          end
+
+          attr_reader :name, :is_output
+          attr_accessor :input, :output, :proc
+
+          def [](on, as)
+            @routes[[on, as]]
+          end
+
+          def []=(on, as, source)
+            @routes[[on, as]] = Route.new(on, as, source)
+          end
+
+          def commit!
+            first_serie_operation = @first_proc&.call(NIL())
+            @input ||= first_serie_operation
+
+            @routes.each_value do |route|
+              route.source.commit!
+
+              if @is_output
+                @input.proxy_source = route.source.output.buffer
+              elsif route.as
+                @input.send(route.on)[route.as] = route.source.output.buffer
+              else
+                @input.send("#{route.on.to_s}=".to_sym, route.source.output.buffer)
+              end
+            end
+
+            chain_serie_operation = @chain_proc&.call(@input) || @input
+            @output ||= chain_serie_operation.buffered
+
+            self
+          end
+        end
+
+        class Route
+          def initialize(on, as, source)
+            @on = on
+            @as = as
+            @source = source
+          end
+          attr_accessor :on, :as, :source
+        end
+
         class DSLContext
           include Musa::Extension::With
 
-          def initialize(pipelines, links, links_from, links_to)
+          def initialize(pipelines)
             @pipelines = pipelines
-
-            @links = links
-            @links_from = links_from
-            @links_to = links_to
           end
 
           def route(from, to:, on: nil, as: nil)
@@ -68,150 +143,153 @@ module Musa
             raise ArgumentError, "Pipeline '#{from}' not found." unless from_pipeline
             raise ArgumentError, "Pipeline '#{to}' not found." unless to_pipeline
 
-            @links_from[from] ||= Set[]
-
-            # TODO: be careful when accessing :sources because we are accessing directly the serie, not the proxy!
-            on ||= as ? :sources : :proxy_source
-
-            raise ArgumentError, "Pipeline #{@links_to[[to, on, as]]} already connected to pipeline #{to} on #{on} as #{as}" if @links_to[[to, on, as]]
-
-            if as
-              to_pipeline[:input].send(on)[as] = from_pipeline[:output].buffer
-            else
-              to_pipeline[:input].send("#{on.to_s}=".to_sym, from_pipeline[:output].buffer)
+            if to_pipeline.is_output && (on || as)
+              raise ArgumentError, "Output pipeline #{to_pipeline.name} only allows default routing"
             end
 
-            @links_from[from] << [to, on, as]
-            @links_to[[to, on, as]] = from
-            @links << [from, to, on, as]
+            on ||= (as ? :sources : :source)
+
+            raise ArgumentError,
+                  "Source of pipeline #{to} on #{on} as #{as} already connected to #{to_pipeline[on, as].source.name}" \
+                  unless to_pipeline[on, as].nil?
+
+
+            to_pipeline[on, as] = from_pipeline
           end
 
           def pipeline(name, elements)
-            puts "pipeline(#{name}):"
-
-            first, last = parse_parameter(elements)
-
-            puts "pipeline(#{name}): first = #{first} last = #{last}"
-
-            @pipelines[name] = { input: first, output: last.buffered }
+            first, chain = parse(elements)
+            @pipelines[name] = Pipeline.new(name, first_proc: first, chain_proc: chain, pipelines: @pipelines)
 
             define_singleton_method(name) { name }
           end
 
-          private def parse_parameter(p)
-            # returns only [first, last], nil, Proc or Symbol
-            case p
+          private def parse(thing)
+            case thing
             when Array
-              first = last = nil
+              first = chain = nil
 
-              p.each do |e|
-                case e
+              thing.each do |element|
+                case element
                 when Hash
-                  if e.size == 1
-                    operation = e.first[0] # key
-                    parameter = e.first[1] # value
-
-                    first, last = chain_operation(first, last, operation, parameter)
-                  else
-                    raise_syntax_error(e)
-                  end
+                  new_chain = parse(element)
                 when Symbol
-                  first, last = chain_operation(first, last, e, nil)
-
+                  new_chain = operation_as_chained_proc(element, nil)
                 when Proc
-                  first, last = chain_operation(first, last, :map, e)
+                  new_chain = operation_as_chained_proc(:map, element)
                 else
-                  raise_syntax_error(e)
+                  raise ArgumentError, "Syntax error: don't know how to handle #{element}"
                 end
 
-                first ||= last
+                if first.nil?
+                  first = new_chain unless first
+                else
+                  chain = chain ? chain >> new_chain : new_chain
+                end
               end
 
-              [first, last]
+              [first, chain]
 
             when Hash
-              if p.size == 1
-                operation = p.first[0] # key
-                parameter = p.first[1] # value
+              if thing.size == 1
+                operation = thing.first[0] # key
+                parameter = thing.first[1] # value
 
-                case parameter
-                when Proc
-                  proc do |target|
-                    target.send(operation, &parameter)
-                  end
-                when Hash
-                  proc do |target|
-                    target.send(operation, &parse_parameter(parameter))
-                  end
+                if is_a_series_constructor?(operation)
+                  operation_as_chained_proc(operation, parameter)
                 else
-                  raise_syntax_error(p)
+                  operation_as_chained_proc(operation, parse(parameter))
                 end
               else
-                raise_syntax_error(p)
+                raise ArgumentError, "Syntax error: don't know how to handle #{element}"
               end
 
-            when nil, Proc, Symbol
-              p
+            when Symbol
+              operation_as_chained_proc(operation)
+
+            when Proc
+              thing
 
             else
-              p
+              thing
             end
           end
 
-          private def chain_operation(first, last, operation, parameter)
-            if Musa::Series::Constructors.instance_methods.include?(operation)
-              if last.nil?
-                [first, Musa::Series::Constructors.method(operation).call(*parameter)]
-              else
-                [first, Musa::Series::Constructors.method(operation).call(*last, *parameter)]
+          private def operation_as_chained_proc(operation, parameter = nil)
+            if is_a_series_constructor?(operation)
+              proc do |last|
+                call_constructor_according_to_last_and_parameter(last, operation, parameter)
               end
 
-            elsif Musa::Series::Operations.instance_methods.include?(operation)
-              first = last = Musa::Series::Constructors.PROXY if last.nil?
-
-              [first, call_operation_according_to_parameter(last, operation, parameter)]
+            elsif is_a_series_operation?(operation)
+              proc { |last| call_operation_according_to_parameter(last, operation, parameter) }
 
             else
               # non-series operation
-              [first, call_operation_according_to_parameter(last, operation, parameter)]
+              proc { |last| call_operation_according_to_parameter(last, operation, parameter) }
+            end
+          end
+
+          private def call_constructor_according_to_last_and_parameter(last, constructor, parameter)
+            case last
+            when Proc
+              call_constructor_according_to_last_and_parameter(last.call, constructor, parameter)
+
+            when Serie
+              # TODO: ignoring last, should make an error?
+              Musa::Series::Constructors.method(constructor).call(*parameter)
+
+            when nil
+              Musa::Series::Constructors.method(constructor).call(*parameter)
+
+            when Array
+              raise "Unexpected parameter #{parameter} for constructor #{constructor} " \
+                "because the previous operation on the pipeline chain returned non-nil #{last}" \
+                unless parameter.nil?
+
+              Musa::Series::Constructors.method(constructor).call(*last)
+
+            when Hash
+              raise "Unexpected parameter #{parameter} for constructor #{constructor} " \
+                "because the previous operation on the pipeline chain returned non-nil #{last}" \
+                unless parameter.nil?
+
+              Musa::Series::Constructors.method(constructor).call(**last)
+
+            else
+              raise ArgumentError, "Don't know how to handle last #{last}"
             end
           end
 
           private def call_operation_according_to_parameter(target, operation, parameter)
-            # parse_parameter only returns nil, Symbol or Proc
-
-            puts "call_operation_according_to_parameter: target = #{target}"
-            puts "                                       operation = #{operation}"
-            puts "                                       parameter = #{parameter || 'nil'}"
-
-            effective_parameter = parse_parameter(parameter)
-
-            puts "call_operation_according_to_parameter: target = #{target}"
-            puts "                                       operation = #{operation}"
-            puts "                                       effective_parameter = #{effective_parameter || 'nil'}"
-
-            case effective_parameter
+            case parameter
             when nil
               target.send(operation)
             when Symbol
-              target.send(operation).send(effective_parameter)
+              target.send(operation).send(parameter)
             when Proc
-              target.send(operation, &effective_parameter)
+              target.send(operation, &parameter)
             when Array
-              puts "qué hacer?"
+              unless parameter.size == 2 && parameter.all? { |_| _.is_a?(Proc) }
+                raise ArgumentError, "Don't know how to handle parameter #{parameter}"
+              end
+
+              target.send(operation, &(parameter.first >> parameter.last))
             else
-              target.send(operation, effective_parameter)
+              target.send(operation, parameter)
             end
           end
 
-          private def raise_syntax_error(e)
-            raise ArgumentError, "Syntax error: don't know how to handle #{e}. It could be: 1) a Hash with { method: proc { |x| do_whatever_with(x) } } structure, 2) nil, 3) a Symbol"
+          private def is_a_series_constructor?(operation)
+            Musa::Series::Constructors.instance_methods.include?(operation)
+          end
+
+          private def is_a_series_operation?(operation)
+            Musa::Series::Operations.instance_methods.include?(operation)
           end
 
           private def method_missing(symbol, *args, &block)
-            if Musa::Series::Operations.instance_methods.include?(symbol)
-              symbol
-            elsif Musa::Series::Constructors.instance_methods.include?(symbol)
+            if is_a_series_constructor?(symbol) || is_a_series_operation?(symbol)
               symbol
             elsif args.any? || block
               args += [block] if block
@@ -221,23 +299,16 @@ module Musa
             end
           end
 
-          private def const_missing(symbol)
-            # TODO: allow series constructors methods with uppercase (i.e., A) to be detected without ':' (i.e., :A)
-            if Musa::Series::Constructors.instance_methods.include?(symbol)
-              symbol
-            else
-              super
-            end
-          end
-
           private def respond_to_missing?(method_name, include_private = false)
             Musa::Series::Operations.instance_methods.include?(method_name) ||
             Musa::Series::Constructors.instance_methods.include?(method_name) ||
-            @pipelines.key?(method_name) || # todo: what happens with non-series methods?
+            @pipelines.key?(method_name) ||
             super
           end
         end
 
+        private_constant :Pipeline
+        private_constant :Route
         private_constant :DSLContext
       end
     end
