@@ -175,9 +175,9 @@ RSpec.describe Musa::Series::Composer do
     it 'routing again an output to a the same input raises error' do
       expect {
         Composer.new do
-          step1 (reverse)
-          step2 (reverse)
-          step3 (reverse)
+          step1 reverse
+          step2 reverse
+          step3 reverse
 
           route input, to: step1
           route step1, to: step3
