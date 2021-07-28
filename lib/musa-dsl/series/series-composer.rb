@@ -4,6 +4,12 @@ require_relative '../core-ext/with'
 
 module Musa
   module Series
+    module Operations
+      def composer(&block)
+        Composer::Composer.new(&block).tap { |_| _.input.proxy_source = self}.output
+      end
+    end
+
     module Composer
       class Composer
         using Musa::Extension::Arrayfy

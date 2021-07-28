@@ -400,5 +400,17 @@ RSpec.describe Musa::Series::Composer do
       expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
 
+    it 'creating a single-input single-output composer as a series operation' do
+      s = S(1, 2, 3, 4, 5)
+
+      ss = s.composer do
+        step reverse
+        route input, to: step
+        route step, to: output
+      end
+
+      expect(ss.i.to_a(dr: false)).to eq [5, 4, 3, 2, 1]
+    end
+
   end
 end

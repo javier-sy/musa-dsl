@@ -294,7 +294,7 @@ module Musa
           @source&.infinite? || false
         end
 
-        def to_a(recursive: nil, duplicate: nil, restart: nil, dr: nil)
+        def to_a(duplicate: nil, recursive: nil, restart: nil, dr: nil)
           recursive ||= false
 
           dr = instance? if dr.nil?
