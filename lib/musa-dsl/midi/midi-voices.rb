@@ -10,7 +10,7 @@ using Musa::Extension::ExplodeRanges
 module Musa
   module MIDIVoices
     class MIDIVoices
-      attr_accessor :log
+      attr_accessor :do_log
 
       def initialize(sequencer:, output:, channels:, do_log: nil)
         do_log ||= false
@@ -24,7 +24,7 @@ module Musa
       end
 
       def reset
-        @voices = @channels.collect { |channel| MIDIVoice.new sequencer: @sequencer, output: @output, channel: channel, log: @do_log }.freeze
+        @voices = @channels.collect { |channel| MIDIVoice.new(sequencer: @sequencer, output: @output, channel: channel, do_log: @do_log) }.freeze
       end
 
       attr_reader :voices
@@ -48,14 +48,14 @@ module Musa
       attr_accessor :name, :do_log
       attr_reader :sequencer, :output, :channel, :active_pitches, :tick_duration
 
-      def initialize(sequencer:, output:, channel:, name: nil, log: nil)
-        log ||= false
+      def initialize(sequencer:, output:, channel:, name: nil, do_log: nil)
+        do_log ||= false
 
         @sequencer = sequencer
         @output = output
         @channel = channel
         @name = name
-        @do_log = log
+        @do_log = do_log
 
         @tick_duration = Rational(1, @sequencer.ticks_per_bar)
 
@@ -64,7 +64,7 @@ module Musa
         @active_pitches = []
         fill_active_pitches @active_pitches
 
-        log 'Warning: voice without output' unless @output
+        @sequencer.logger.warn 'voice without output' unless @output
 
         self
       end
@@ -118,7 +118,7 @@ module Musa
       end
 
       def log(msg)
-        @sequencer.log "voice #{name || @channel}: #{msg}" if @do_log
+        @sequencer.logger.info('MIDIVoice') { "voice #{name || @channel}: #{msg}" } if @do_log
       end
 
       def to_s

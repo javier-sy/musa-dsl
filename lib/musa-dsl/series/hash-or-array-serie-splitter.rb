@@ -1,19 +1,32 @@
 module Musa
   module Series::Operations
     def split
-      Splitter.new(Splitter::BufferedProxy.new(self))
+      Splitter.new(self)
     end
 
     class Splitter
       include Enumerable
+      include Series::Serie::Prototyping
 
-      def initialize(proxy)
-        @proxy = proxy
+      def initialize(source)
+        @source = source
         @series = {}
       end
 
+      def source=(serie)
+        @source = serie
+        @proxy.source = @source if @proxy
+      end
+
+      protected def _instance!
+        super
+        @proxy = SplitterProxy.new(@source)
+      end
+
       def [](key_or_index)
-        if @series.has_key?(key_or_index)
+        raise "Can't get a component because Splitter is a prototype. To get a component you need a Splitter instance." unless @is_instance
+
+        if @series.key?(key_or_index)
           @series[key_or_index]
         else
           @series[key_or_index] = Split.new(@proxy, key_or_index)
@@ -21,6 +34,8 @@ module Musa
       end
 
       def each
+        raise "Can't iterate because Splitter is a prototype. To iterate you need a Splitter instance." unless @is_instance
+
         if block_given?
           if @proxy.hash_mode?
             @proxy.components.each do |key|
@@ -60,24 +75,24 @@ module Musa
         end
       end
 
-      class BufferedProxy
-        include Series::Serie::Prototyping
-
+      class SplitterProxy
         def initialize(hash_or_array_serie)
           @source = hash_or_array_serie
-          mark_regarding! @source
-
-          init
-        end
-
-        attr_reader :components
-
-        def hash_mode?; @hash_mode; end
-        def array_mode?; @array_mode; end
-
-        def init
           infer_components
         end
+
+        attr_reader :source
+
+        def source=(hash_or_array_serie)
+          @source = hash_or_array_serie
+          infer_components
+        end
+
+        def hash_mode?; @hash_mode; end
+
+        def array_mode?; @array_mode; end
+
+        attr_reader :components
 
         def restart(key_or_index = nil)
           if key_or_index
@@ -151,18 +166,18 @@ module Musa
         include Series::Serie.base
 
         def initialize(proxy, key_or_index)
-          @source = proxy
+          @proxy = proxy
           @key_or_index = key_or_index
 
-          mark_regarding! @source
+          mark_as_instance!
         end
 
         private def _restart
-          @source.restart @key_or_index
+          @proxy.restart(@key_or_index)
         end
 
         private def _next_value
-          @source.next_value(@key_or_index)
+          @proxy.next_value(@key_or_index)
         end
       end
 

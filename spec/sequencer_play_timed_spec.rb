@@ -86,7 +86,7 @@ RSpec.describe Musa::Sequencer do
       u = TIMED_UNION(
           **p.to_timed_serie
                 .flatten_timed
-                .split
+                .split.instance
                 .to_h
                 .transform_values { |_|
                   _.quantize
@@ -174,7 +174,7 @@ RSpec.describe Musa::Sequencer do
       u = TIMED_UNION(
           **p.to_timed_serie
                 .flatten_timed
-                .split
+                .split.instance
                 .to_h
                 .transform_values { |_|
                   _.quantize(stops: false)

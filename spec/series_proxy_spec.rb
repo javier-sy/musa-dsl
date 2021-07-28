@@ -44,7 +44,7 @@ RSpec.describe Musa::Series do
 
       expect(s.next_value).to eq 1
 
-      s.source = S(4, 5, 6).i
+      s.proxy_source = S(4, 5, 6).i
 
       expect(s.next_value).to eq 4
       expect(s.next_value).to eq 5
@@ -83,22 +83,22 @@ RSpec.describe Musa::Series do
       s = PROXY(S(1, 2, 3))
 
       expect {
-        s.source = S(3, 4, 5)
-      }.to_not raise_error(ArgumentError)
+        s.proxy_source = S(3, 4, 5)
+      }.to_not raise_error
     end
 
     it 'Instance PROXY don\'t allow changing the source to Instance serie' do
       s = PROXY(S(1, 2, 3)).i
 
       expect {
-        s.source = S(3, 4, 5)
+        s.proxy_source = S(3, 4, 5)
       }.to raise_error(ArgumentError)
     end
 
     it 'Prototype PROXY allows to set a prototype source and get the instance correctly' do
       p = PROXY()
 
-      p.source = S(1, 2, 3)
+      p.proxy_source = S(1, 2, 3)
 
       s = p.instance
 
