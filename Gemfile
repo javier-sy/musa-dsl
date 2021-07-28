@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+ruby '2.7.3'
+
 gem 'logger', '~> 1.4', '>= 1.4.3'
 
 group :neuma do
