@@ -6,7 +6,7 @@ module Musa
   module Series
     module Operations
       def composer(&block)
-        Composer::Composer.new(&block).tap { |_| _.input.proxy_source = self}.output
+        Composer::Composer.new(input: self, &block).output
       end
     end
 
@@ -14,8 +14,21 @@ module Musa
       class Composer
         using Musa::Extension::Arrayfy
 
-        def initialize(inputs: [:input], outputs: [:output], auto_commit: nil, &block)
+        def initialize(input: nil, inputs: [:input], outputs: [:output], auto_commit: nil, &block)
           auto_commit = true if auto_commit.nil?
+
+          inputs = case inputs
+                   when Array
+                     inputs.collect { |_| [_, nil] }.to_h
+                   when nil
+                     {}
+                   when Hash
+                     inputs
+                   else
+                     raise ArgumentError, "inputs: expected a Hash with input names and source series { name: serie, ... } or an Array with names [name, ...] but received #{inputs}"
+                   end
+
+          inputs[:input] = input if input
 
           @pipelines = {}
 
@@ -28,8 +41,10 @@ module Musa
           @inputs = {}
           @outputs = {}
 
-          inputs&.each do |input|
+          inputs.keys&.each do |input|
             p = PROXY()
+            p.proxy_source = inputs[input] if inputs[input]
+
             @inputs[input] = @pipelines[input] = Pipeline.new(input, input: p, output: p.buffered, pipelines: @pipelines)
 
             @dsl.define_singleton_method(input) { input }

@@ -363,6 +363,21 @@ RSpec.describe Musa::Series::Composer do
       expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
 
+    it 'normal functions (and constructors) can be used inside a pipeline (input as a parameter instead of assigned after)' do
+      composer = Composer.new(inputs: { input: S([1, 10], [2, 20], [3, 30]) }) do
+        step split, instance,
+             to_a,
+             { collect: proc { |_| _.with { |_| _ + 1000 } } },
+             :A
+
+        route input, to: step
+        route step, to: output
+      end
+
+      s = composer.output.i
+
+      expect(s.to_a(dr: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
+    end
 
     it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution)' do
       composer = Composer.new(inputs: nil) do
@@ -400,7 +415,7 @@ RSpec.describe Musa::Series::Composer do
       expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
 
-    it 'creating a single-input single-output composer as a series operation' do
+    it 'creating a single-input single-output simple composer as a series operation' do
       s = S(1, 2, 3, 4, 5)
 
       ss = s.composer do
@@ -412,5 +427,19 @@ RSpec.describe Musa::Series::Composer do
       expect(ss.i.to_a(dr: false)).to eq [5, 4, 3, 2, 1]
     end
 
+    it 'creating a single-input single-output composer that needs delayed execution (autocommit true)' do
+      s = S([1, 10], [2, 20], [3, 30])
+
+      ss = s.composer do
+        step split, instance,
+             to_a,
+             { collect: { with: lambda { |_| _ + 1000 } } },
+             :A
+        route input, to: step
+        route step, to: output
+      end
+
+      expect(ss.to_a(dr: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
+    end
   end
 end
