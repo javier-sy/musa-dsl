@@ -115,6 +115,21 @@ RSpec.describe Musa::Series::Composer do
       expect(s.to_a(dr: false)).to eq [5, 4, 3, 2, 1]
     end
 
+    it 'simple external instance input' do
+      composer = Composer.new do
+        step1 reverse
+
+        route input, to: step1
+        route step1, to: output
+      end
+
+      composer.input.proxy_source = S(1, 2, 3, 4, 5).instance
+
+      s = composer.output
+
+      expect(s.to_a(dr: false)).to eq [5, 4, 3, 2, 1]
+    end
+
     it 'with external input' do
       composer = Composer.new do
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
@@ -309,10 +324,11 @@ RSpec.describe Musa::Series::Composer do
 
       s = composer.output.i
 
-      expect(s.to_a(duplicate: false, restart: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
+      expect(s.to_a(dr: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
 
       s.restart
-      expect(s.to_a(duplicate: false, restart: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
+
+      expect(s.to_a(dr: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline within a lazy operation (delayed commit)' do
@@ -335,10 +351,11 @@ RSpec.describe Musa::Series::Composer do
 
       s = composer.output.i
 
-      expect(s.to_a(duplicate: false, restart: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
+      expect(s.to_a(dr: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
 
       s.restart
-      expect(s.to_a(duplicate: false, restart: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
+
+      expect(s.to_a(dr: false)).to eq [[1_001_001, 1010], [1_001_002, 1020], [1_001_003, 1030]]
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline (delayed commit)' do
@@ -360,7 +377,7 @@ RSpec.describe Musa::Series::Composer do
 
       s.restart
 
-      expect(s.to_a(duplicate: false, restart: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
+      expect(s.to_a(dr: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline (input as a parameter instead of assigned after)' do
@@ -424,7 +441,7 @@ RSpec.describe Musa::Series::Composer do
         route step, to: output
       end
 
-      expect(ss.i.to_a(dr: false)).to eq [5, 4, 3, 2, 1]
+      expect(ss.to_a(dr: false)).to eq [5, 4, 3, 2, 1]
     end
 
     it 'creating a single-input single-output composer that needs delayed execution (autocommit true)' do

@@ -30,7 +30,7 @@ module Musa
 
       def buffer
         @buffer ||= Buffer.new(@history)
-        @buffer.send(@get).tap { |_| @buffers << _ }
+        @buffer.send(state).tap { |_| @buffers << _ }
       end
 
       private def clear_old_history
@@ -51,6 +51,7 @@ module Musa
         def initialize(history)
           @history = history
           @last_nil_index = -1
+          mark_as_prototype!
           init
         end
 
@@ -102,19 +103,31 @@ module Musa
         @nils = [0]
         @buffers = Set[]
 
-        @singleton = nil
         @buffer = nil
 
         init
       end
 
-      def instance
-        @singleton ||= super
+      def buffer
+        Buffer.new(self)
       end
 
-      def buffer
-        @buffer ||= Buffer.new(self)
-        @buffer
+      def _sources_resolved
+        (prototype || self).singleton = self if instance?
+      end
+
+      protected def singleton=(the_instance)
+        @singleton ||= the_instance
+      end
+
+      def singleton
+        if instance?
+          prototype.nil? ? @singleton : prototype.singleton
+        elsif prototype?
+          @singleton
+        else
+          raise "ES UNDEFINED!"
+        end
       end
 
       private def _restart(buffer)
@@ -163,9 +176,7 @@ module Musa
       private def clear_old_history
         min_last_nil_index = @buffers.collect(&:last_nil_index).min
 
-        if min_last_nil_index && min_last_nil_index >=0
-
-          pre_nils = @nils.clone
+        if min_last_nil_index && min_last_nil_index >= 0
           @history = @history.drop(min_last_nil_index)
 
           @nils.collect! { |_| _ - min_last_nil_index }
@@ -182,9 +193,6 @@ module Musa
 
         def initialize(base)
           self.source = base
-
-          mark_as_prototype! # necesario para que se creen instancias diferentes cada vez que se ejecute BufferSerie.buffer()
-
           init
         end
 
@@ -198,13 +206,18 @@ module Musa
           @index -= offset
         end
 
-        private def _init
-          @source._register(self) if instance?
+        # private def _init
+        #   @source.prototype.singleton._register(self) if instance?
+        #   @index = @last_nil_index
+        # end
+        #
+        private def _sources_resolved
+          @source.singleton._register(self) if instance?
           @index = @last_nil_index
         end
 
         private def _restart
-          @source.restart(self)
+          @source.singleton.restart(self)
           @needs_restart = false
         end
 
@@ -216,7 +229,7 @@ module Musa
               @index += 1
               value = @history[@index]
             else
-              value = _next_value unless @source.next_value.nil?
+              value = _next_value unless @source.singleton.next_value.nil?
             end
 
             if value.nil?

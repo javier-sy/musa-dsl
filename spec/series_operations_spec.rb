@@ -828,7 +828,7 @@ RSpec.describe Musa::Series do
       expect(ee.next_value).to be_nil
     end
 
-    it 'Lazy serie evaluation with no data available' do
+    it 'Lazy serie evaluation with no data availabl (undefined state) raises error' do
       p = PROXY()
 
       e = p.lazy do |_|
@@ -838,9 +838,7 @@ RSpec.describe Musa::Series do
          .then { |_| A(*_).instance } # .instance because A() without parameters returns a prototype
       end
 
-      ee = e.instance
-
-      expect(ee.next_value).to be_nil
+      expect { e.instance }.to raise_error(Serie::Prototyping::PrototypingError)
     end
 
     it 'Lazy serie evaluation with data available after proc definition' do

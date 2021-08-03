@@ -22,10 +22,6 @@ module Musa
         @source.next_value if @source
       end
 
-      def infinite?
-        @source.infinite? if @source
-      end
-
       private def method_missing(method_name, *args, **key_args, &block)
         if @source
           if @source.respond_to?(method_name)

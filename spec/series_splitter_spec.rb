@@ -325,9 +325,9 @@ RSpec.describe Musa::Series do
 
       s2i = s2.instance
 
-      expect(s2i.next_value).to eq( { a: 1, b: 10, c: 100 } )
-      expect(s2i.next_value).to eq( { a: 2, b: 20, c: 200 } )
-      expect(s2i.next_value).to eq( { a: 3, b: 30, c: 300 } )
+      expect(s2i.next_value).to eq({ a: 1, b: 10, c: 100 })
+      expect(s2i.next_value).to eq({ a: 2, b: 20, c: 200 })
+      expect(s2i.next_value).to eq({ a: 3, b: 30, c: 300 })
 
       expect(s2i.next_value).to be_nil
     end
@@ -344,9 +344,9 @@ RSpec.describe Musa::Series do
 
       s2i = s2.instance
 
-      expect(s2i.next_value).to eq( [ 1, 10, 100 ] )
-      expect(s2i.next_value).to eq( [ 2, 20, 200 ] )
-      expect(s2i.next_value).to eq( [ 3, 30, 300 ] )
+      expect(s2i.next_value).to eq([1, 10, 100])
+      expect(s2i.next_value).to eq([2, 20, 200])
+      expect(s2i.next_value).to eq([3, 30, 300])
 
       expect(s2i.next_value).to be_nil
     end
@@ -364,9 +364,9 @@ RSpec.describe Musa::Series do
 
       s2i = s2.instance
 
-      expect(s2i.next_value).to eq( { a: 1, b: 10, c: 100 } )
-      expect(s2i.next_value).to eq( { a: 2, b: 20, c: 200 } )
-      expect(s2i.next_value).to eq( { a: 3, b: 30, c: 300 } )
+      expect(s2i.next_value).to eq({ a: 1, b: 10, c: 100 })
+      expect(s2i.next_value).to eq({ a: 2, b: 20, c: 200 })
+      expect(s2i.next_value).to eq({ a: 3, b: 30, c: 300 })
 
       expect(s2i.next_value).to be_nil
     end
@@ -379,20 +379,24 @@ RSpec.describe Musa::Series do
 
       s2i = s2.instance
 
-      expect(s2i.next_value).to eq( [ 1, 10, 100 ] )
-      expect(s2i.next_value).to eq( [ 2, 20, 200 ] )
-      expect(s2i.next_value).to eq( [ 3, 30, 300 ] )
+      expect(s2i.next_value).to eq([1, 10, 100])
+      expect(s2i.next_value).to eq([2, 20, 200])
+      expect(s2i.next_value).to eq([3, 30, 300])
 
       expect(s2i.next_value).to be_nil
     end
 
     it 'bugfix for complex split of a timed_union of a split p.timed_serie skipping values on next_value' do
-      line = [ { a: 1, b: 10, c: 100 }.extend(Musa::Datasets::PackedV), 1 * 4,
-               { a: 2, b: 20, c: 200 }.extend(Musa::Datasets::PackedV), 2 * 4,
-               { a: 3, b: 30, c: 300 }.extend(Musa::Datasets::PackedV), 1 * 4,
-               { a: 4, b: 40, c: 400 }.extend(Musa::Datasets::PackedV)].extend(Musa::Datasets::P)
+      line = [{ a: 1, b: 10, c: 100 }.extend(Musa::Datasets::PackedV), 1 * 4,
+              { a: 2, b: 20, c: 200 }.extend(Musa::Datasets::PackedV), 2 * 4,
+              { a: 3, b: 30, c: 300 }.extend(Musa::Datasets::PackedV), 1 * 4,
+              { a: 4, b: 40, c: 400 }.extend(Musa::Datasets::PackedV)].extend(Musa::Datasets::P)
 
-      series = TIMED_UNION(**line.to_timed_serie.flatten_timed.split.instance).flatten_timed.split.instance.to_h
+      split_flattened_timed_serie = line.to_timed_serie.flatten_timed.split.instance
+      timed_union = TIMED_UNION(**split_flattened_timed_serie)
+      flattened_timed_union = timed_union.flatten_timed
+      split_flattened_timed_union = flattened_timed_union.split.instance
+      series = split_flattened_timed_union.to_h
 
       series_a = series[:a].instance
 
@@ -400,7 +404,7 @@ RSpec.describe Musa::Series do
       expect(series[:a].instance?).to eq true
       expect(series_a.instance?).to eq true
 
-      expect(series_a.next_value).to eq({ time: 0, value: 1})
+      expect(series_a.next_value).to eq({ time: 0, value: 1 })
     end
 
     it 'bugfix: restarting a joined series of a split serie when peeked_next_value and restarted generates a stack overflow' do

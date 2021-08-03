@@ -125,7 +125,9 @@ module Musa
       ###
 
       class ProcessWith
-        include Serie.with(source: true, sources: true, sources_as: :with_sources, smart_block: true)
+        include Serie.with(source: true,
+                           sources: true, sources_as: :with_sources, mandatory_sources: false,
+                           smart_block: true)
 
         def initialize(serie, with_series = nil, on_restart = nil, &block)
           self.source = serie
@@ -800,12 +802,6 @@ module Musa
           init
         end
 
-        def source=(serie)
-          raise ArgumentError, "A serie to reverse can't be infinite" if serie.infinite?
-          super
-          init
-        end
-
         private def _init
           @reversed = nil
         end
@@ -815,6 +811,8 @@ module Musa
         end
 
         private def _next_value
+          raise ArgumentError, "A serie to reverse can't be infinite" if @source.infinite?
+
           @reversed ||= Constructors.S(*next_values_array_of(@source).reverse).instance
           @reversed.next_value
         end

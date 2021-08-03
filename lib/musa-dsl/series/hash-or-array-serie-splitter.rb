@@ -5,26 +5,30 @@ module Musa
     end
 
     class Splitter
+      include Series::Serie.with(source: true)
       include Enumerable
-      include Series::Serie::Prototyping
+
+      private def has_source; true; end
+      private def has_sources; false; end
 
       def initialize(source)
-        @source = source
+        self.source = source
         @series = {}
+
+        init
       end
 
       def source=(serie)
-        @source = serie
+        super
         @proxy.source = @source if @proxy
       end
 
-      protected def _instance!
-        super
+      def _sources_resolved
         @proxy = SplitterProxy.new(@source)
       end
 
       def [](key_or_index)
-        raise "Can't get a component because Splitter is a prototype. To get a component you need a Splitter instance." unless @is_instance
+        raise "Can't get a component because Splitter is a prototype. To get a component you need a Splitter instance." unless instance?
 
         if @series.key?(key_or_index)
           @series[key_or_index]
@@ -34,7 +38,7 @@ module Musa
       end
 
       def each
-        raise "Can't iterate because Splitter is a prototype. To iterate you need a Splitter instance." unless @is_instance
+        raise "Can't iterate because Splitter is in state '#{state}'. To iterate you need a Splitter in state 'instance'." unless instance?
 
         if block_given?
           if @proxy.hash_mode?
@@ -161,6 +165,8 @@ module Musa
           end
         end
       end
+
+      private_constant :SplitterProxy
 
       class Split
         include Series::Serie.base

@@ -7,6 +7,17 @@ include Musa::Datasets
 
 RSpec.describe Musa::Series do
   context 'Series prototype and instance:' do
+    it 'An operation over an undefined serie is another undefined serie' do
+      p = PROXY()
+      s = p.reverse
+
+      expect(s.prototype?).to be false
+      expect(s.instance?).to be false
+      expect(s.undefined?).to be true
+
+      expect { s.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+    end
+
     it 'basic prototype and instance definition' do
       p = S(1, 2, 3)
       expect(p.prototype?).to be true

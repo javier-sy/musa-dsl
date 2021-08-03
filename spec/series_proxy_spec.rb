@@ -61,12 +61,8 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to eq 6
     end
 
-    it 'Basic PROXY without source' do
-      s = PROXY().i
-
-      expect(s.current_value).to eq nil
-      expect(s.next_value).to eq nil
-      expect(s.current_value).to eq nil
+    it 'Getting a PROXY instance without source raises error' do
+      expect { PROXY().i }.to raise_error(Serie::Prototyping::PrototypingError)
     end
 
     it 'Basic PROXY delegation' do
@@ -77,6 +73,38 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to eq 3
 
       expect(s.values).to eq [1, 2, 3]
+    end
+
+    it 'PROXY without source is not a prototype nor an instance' do
+      s = PROXY()
+
+      expect(s.undefined?).to be true
+
+      expect(s.defined?).to be false
+
+      expect(s.prototype?).to be false
+      expect(s.instance?).to be false
+
+      expect { s.restart }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { s.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { s.infinite? }.to raise_error(Serie::Prototyping::PrototypingError)
+    end
+
+    it 'PROXY without source allows to assign a prototype source' do
+      s = PROXY()
+      s.proxy_source = S(1, 2, 3)
+
+      expect(s.instance?).to be(false)
+      expect(s.prototype?).to be(true)
+    end
+
+    it 'PROXY without source allows to assign an instance source' do
+      s = PROXY()
+
+      s.proxy_source = S(1, 2, 3).instance
+
+      expect(s.instance?).to be(true)
+      expect(s.prototype?).to be(false)
     end
 
     it 'Prototype PROXY allows changing the source to a Prototype serie' do

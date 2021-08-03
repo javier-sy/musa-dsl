@@ -9,7 +9,6 @@ module Musa
       include Musa::Extension::SmartProcBinder
       include Musa::Series::Serie.base
 
-
       def initialize(transitions:, start:, finish: nil, random: nil)
         @transitions = transitions.clone.freeze
 
@@ -21,6 +20,7 @@ module Musa
 
         @procedure_binders = {}
 
+        mark_as_prototype!
         init
       end
 

@@ -6,7 +6,33 @@ module Musa
   module Series
     module Operations
       def composer(&block)
-        Composer::Composer.new(input: self, &block).output
+        ComposerAsOperationSerie.new(self, &block)
+      end
+
+      class ComposerAsOperationSerie
+        include Serie.with(source: true)
+
+        def initialize(serie, &block)
+          self.source = serie
+          @block = block
+
+          init
+        end
+
+        attr_reader :composer
+
+        private def _init
+          @composer = Composer::Composer.new(input: @source, &@block)
+          @output = @composer.output
+        end
+
+        private def _restart
+          @output.restart
+        end
+
+        private def _next_value
+          @output.next_value
+        end
       end
     end
 
@@ -42,8 +68,7 @@ module Musa
           @outputs = {}
 
           inputs.keys&.each do |input|
-            p = PROXY()
-            p.proxy_source = inputs[input] if inputs[input]
+            p = PROXY(inputs[input])
 
             @inputs[input] = @pipelines[input] = Pipeline.new(input, input: p, output: p.buffered, pipelines: @pipelines)
 
@@ -119,7 +144,8 @@ module Musa
           end
 
           def commit!
-            first_serie_operation = @first_proc&.call(NIL())
+            first_serie_operation = @first_proc&.call(UNDEFINED())
+
             @input ||= first_serie_operation
 
             @routes.each_value do |route|

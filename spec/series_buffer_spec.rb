@@ -6,7 +6,6 @@ include Musa::Series
 
 RSpec.describe Musa::Series do
   context 'Series synced buffer' do
-
     it 'buffered series get all source values waiting values of the main serie' do
       buffer = S(1, 2, 3, 4, 5, 6, 7).buffered(sync: true)
 
@@ -192,9 +191,8 @@ RSpec.describe Musa::Series do
   end
 
   context 'Series parallel buffer' do
-
     it 'get next values from a original source' do
-      buffer = S(1, 2, 3, 4, 5, 6, 7).buffered(sync: false).instance
+      buffer = S(1, 2, 3, 4, 5, 6, 7).buffered.instance
 
       i1 = buffer.buffer.instance
 
@@ -228,7 +226,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'restarting one serie allows the other series to get the full source values' do
-      buffer = S(1, 2, 3, 4, 5, 6, 7).buffered(sync: false).instance
+      buffer = S(1, 2, 3, 4, 5, 6, 7).buffered.instance
 
       i1 = buffer.buffer.instance
 
@@ -302,13 +300,59 @@ RSpec.describe Musa::Series do
       expect(s2i.next_value).to be_nil
     end
 
-    it '' do
+    it 'A NIL() prototype buffered series returns nil' do
       s = NIL().buffered
       ss = s.buffer.instance
 
-      puts "ss = #{ss.next_value}"
+      expect(ss.next_value).to be_nil
+    end
+
+    it 'A NIL() instance buffered series returns nil' do
+      s = NIL().instance.buffered
+      ss = s.buffer
 
       expect(ss.next_value).to be_nil
     end
+
+    it 'buffered sourced to undefined proxy handles .instance when the proxy source is assigned to a prototype serie' do
+      p = PROXY()
+      b = p.buffered
+      bb = b.buffer
+
+      p.proxy_source = S(1, 2, 3)
+
+      i = bb.instance
+
+      expect(i.next_value).to eq 1
+      expect(i.next_value).to eq 2
+      expect(i.next_value).to eq 3
+      expect(i.next_value).to be_nil
+    end
+
+    it 'buffered sourced to undefined proxy resolves to instance when the proxy source is assigned to an instance serie' do
+      p = PROXY()
+      s = p.buffered.buffer
+
+      p.proxy_source = S(1, 2, 3).instance
+
+      expect(s.prototype?).to be false
+      expect(s.instance?).to be true
+      expect(s.undefined?).to be false
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to eq 3
+      expect(s.next_value).to be_nil
+    end
+
+    it 'buffered sourced to undefined proxy handles .instance when the proxy source is assigned to an instance serie' do
+      p = PROXY()
+      s = p.buffered.buffer
+
+      expect(s.prototype?).to be_falsey
+      expect(s.instance?).to be_falsey
+      expect(s.undefined?).to be_truthy
+    end
+
   end
 end
