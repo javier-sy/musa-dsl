@@ -48,9 +48,13 @@ module Musa
       ForLoop.new from, to, step
     end
 
-    def RND(*values, from: nil, to: nil, step: nil, random: nil)
+    def RND(*_values, values: nil, from: nil, to: nil, step: nil, random: nil)
+      raise ArgumentError, "Can't use both direct values #{_values} and values named parameter #{values} at the same time." if values && !_values.empty?
+
       random = Random.new random if random.is_a?(Integer)
       random ||= Random.new
+
+      values ||= _values
 
       if !values.empty? && from.nil? && to.nil? && step.nil?
         RandomValuesFromArray.new values.explode_ranges, random
@@ -67,9 +71,13 @@ module Musa
       Sequence.new(series)
     end
 
-    def RND1(*values, from: nil, to: nil, step: nil, random: nil)
+    def RND1(*_values, values: nil, from: nil, to: nil, step: nil, random: nil)
+      raise ArgumentError, "Can't use both direct values #{_values} and values named parameter #{values} at the same time." if values && !_values.empty?
+
       random = Random.new random if random.is_a?(Integer)
       random ||= Random.new
+
+      values ||= _values
 
       if !values.empty? && from.nil? && to.nil? && step.nil?
         RandomValueFromArray.new values.explode_ranges, random

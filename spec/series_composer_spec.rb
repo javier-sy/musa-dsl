@@ -458,5 +458,28 @@ RSpec.describe Musa::Series::Composer do
 
       expect(ss.to_a(dr: false)).to eq [[1001, 1010], [1002, 1020], [1003, 1030]]
     end
+
+    it 'parsing constructors with named parameters (FOR)' do
+      c = Composer.new(inputs: nil) do
+        input ({ FOR: { from: 1, to: 5 } })
+        route input, to: output
+      end
+
+      s = c.output.i
+
+      expect(s.to_a(dr: false)).to eq [1, 2, 3, 4, 5]
+    end
+
+    it 'parsing constructors with named parameters (RND)' do
+      c = Composer.new(inputs: nil) do
+        input ({ RND: { values: [1, 2, 3, 4, 5] } })
+        route input, to: output
+      end
+
+      s = c.output.i
+
+      expect(s.to_a(dr: false).size).to eq 5
+    end
+
   end
 end

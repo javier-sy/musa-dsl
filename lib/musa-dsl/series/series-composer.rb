@@ -282,9 +282,18 @@ module Musa
             when Proc
               call_constructor_according_to_last_and_parameter(last.call, constructor, parameter)
 
+            when UndefinedSerie
+              case parameter
+              when Hash
+                Musa::Series::Constructors.method(constructor).call(**parameter)
+              when Array
+                Musa::Series::Constructors.method(constructor).call(*parameter)
+              else
+                raise "Unexpected parameter #{parameter} for constructor #{constructor}"
+              end
+
             when Serie
-              # TODO: ignoring last, should make an error?
-              Musa::Series::Constructors.method(constructor).call(*parameter)
+              raise "Unexpected source serie #{last} for constructor #{constructor}"
 
             when nil
               Musa::Series::Constructors.method(constructor).call(*parameter)
