@@ -11,6 +11,42 @@ using Musa::Extension::InspectNice
 
 RSpec.describe Musa::Sequencer do
   context 'play_timed' do
+    it 'simple after evaluation' do
+      serie = S({ time: 0, value: { a: 1 } },
+                { time: 2, value: { a: 2 } },
+                { time: 5, value: { a: 3 } })
+
+      s = BaseSequencer.new do_log: false, do_error_log: true
+
+      result = []
+      control_passed = nil
+      control_passed_at = nil
+
+      s.at 1 do
+        control = s.play_timed(serie) do |values, started_ago:|
+          result << { position: s.position,
+                      values: values.clone,
+                      started_ago: started_ago.clone }
+        end
+
+        control.after do
+          control_passed = true
+          control_passed_at = s.position
+        end
+      end
+
+      s.run
+
+      expected = [
+        { position: 1r, values: { a: 1 }, started_ago: {} },
+        { position: 3r, values: { a: 2 }, started_ago: {} },
+        { position: 6r, values: { a: 3 }, started_ago: {} } ]
+
+      expect(result).to eq(expected)
+      expect(control_passed).to be true
+      expect(control_passed_at).to eq 6
+    end
+
 
     it 'simple case timed_serie from a P of PackedV' do
       p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,

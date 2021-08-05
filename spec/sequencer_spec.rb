@@ -376,7 +376,7 @@ RSpec.describe Musa::Sequencer do
       end
 
       p.after do
-        d = 1
+        d += 1
       end
 
       expect(c).to eq(0)

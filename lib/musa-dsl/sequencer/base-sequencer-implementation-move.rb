@@ -3,7 +3,7 @@ using Musa::Extension::Arrayfy
 
 using Musa::Extension::InspectNice
 
-module Musa; module Sequencer
+module Musa::Sequencer
   class BaseSequencer
     private def _move(every: nil,
                       from:, to: nil,
@@ -436,4 +436,4 @@ module Musa; module Sequencer
 
     private_constant :MoveControl
   end
-end; end
+end

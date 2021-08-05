@@ -1,4 +1,4 @@
-module Musa; module Sequencer
+module Musa::Sequencer
   class BaseSequencer
     private def _every(interval, control, block_procedure_binder: nil, &block)
       block ||= proc {}
@@ -84,4 +84,4 @@ module Musa; module Sequencer
 
     private_constant :EveryControl
   end
-end; end
+end

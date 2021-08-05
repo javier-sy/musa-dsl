@@ -5,7 +5,7 @@ using Musa::Extension::Arrayfy
 
 using Musa::Extension::InspectNice
 
-module Musa; module Sequencer
+module Musa::Sequencer
   class BaseSequencer
     private def _play(serie,
                       control,
@@ -175,4 +175,4 @@ module Musa; module Sequencer
 
     private_constant :PlayControl
   end
-end; end
+end

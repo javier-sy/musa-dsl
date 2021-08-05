@@ -3,11 +3,9 @@ using Musa::Extension::Arrayfy
 
 using Musa::Extension::InspectNice
 
-module Musa; module Sequencer
+module Musa::Sequencer
   class BaseSequencer
-    private def _play_timed(timed_serie,
-                    control,
-                    &block)
+    private def _play_timed(timed_serie, control, &block)
 
       if first_value_sample = timed_serie.peek_next_value
         debug "_play_timed: first_value_sample #{first_value_sample}"
@@ -40,45 +38,52 @@ module Musa; module Sequencer
 
       source_next_value = timed_serie.next_value
 
-      affected_components = component_ids.select { |_| !source_next_value[:value][_].nil? } if source_next_value
+      if source_next_value
+        affected_components = component_ids.select { |_| !source_next_value[:value][_].nil? }
 
-      if affected_components && affected_components.any?
-        time = source_next_value[:time]
+        if affected_components&.any?
+          time = source_next_value[:time]
 
-        values = hash_mode ? {} : []
-        extra_attributes = extra_attribute_names.collect { |_| [_, hash_mode ? {} : []] }.to_h
-        started_ago = hash_mode ? {} : []
+          values = hash_mode ? {} : []
+          extra_attributes = extra_attribute_names.collect { |_| [_, hash_mode ? {} : []] }.to_h
+          started_ago = hash_mode ? {} : []
 
-        affected_components.each do |component|
-          values[component] = source_next_value[:value][component]
+          affected_components.each do |component|
+            values[component] = source_next_value[:value][component]
 
-          extra_attribute_names.each do |attribute_name|
-            extra_attributes[attribute_name][component] = source_next_value[attribute_name][component]
+            extra_attribute_names.each do |attribute_name|
+              extra_attributes[attribute_name][component] = source_next_value[attribute_name][component]
+            end
+
+            last_positions[component] = _quantize_position(time, warn: false)
           end
 
-          last_positions[component] = _quantize_position(time, warn: false)
-        end
+          component_ids.each do |component|
+            if last_positions[component] && last_positions[component] != time
+              sa = _quantize_position(time, warn: false) - last_positions[component]
+              started_ago[component] = (sa == 0) ? nil : sa
+            end
+          end
 
-        component_ids.each do |component|
-          if last_positions[component] && last_positions[component] != time
-            sa = _quantize_position(time, warn: false) - last_positions[component]
-            started_ago[component] = (sa == 0) ? nil : sa
+          _numeric_at _quantize_position(start_position + time, warn: true), control do
+            binder.call(values,
+                        **extra_attributes,
+                        time: start_position + time,
+                        started_ago: started_ago,
+                        control: control)
+
+            _play_timed_step(hash_mode,
+                             component_ids, extra_attribute_names,
+                             timed_serie,
+                             start_position,
+                             last_positions,
+                             binder, control)
           end
         end
+      else
 
-        _numeric_at _quantize_position(start_position + time, warn: true), control do
-          binder.call(values,
-                      **extra_attributes,
-                      time: start_position + time,
-                      started_ago: started_ago,
-                      control: control)
-
-          _play_timed_step(hash_mode,
-                           component_ids, extra_attribute_names,
-                           timed_serie,
-                           start_position,
-                           last_positions,
-                           binder, control)
+        control.do_after.each do |do_after|
+          _numeric_at position + do_after[:bars], control, &do_after[:block]
         end
       end
     end
@@ -107,5 +112,5 @@ module Musa; module Sequencer
 
     private_constant :PlayTimedControl
   end
-end; end
+end
 

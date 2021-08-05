@@ -4,7 +4,7 @@ require_relative '../core-ext/smart-proc-binder'
 using Musa::Extension::Arrayfy
 using Musa::Extension::DeepCopy
 
-module Musa; module Sequencer
+module Musa::Sequencer
   class BaseSequencer
     include Musa::Extension::SmartProcBinder
     include Musa::Extension::DeepCopy
@@ -214,4 +214,4 @@ module Musa; module Sequencer
 
     private_constant :EventHandler
   end
-end; end
+end
