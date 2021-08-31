@@ -15,7 +15,7 @@ module Musa
                  left_open: nil,
                  right_open: nil)
 
-      Series.QUANTIZE(self,
+      Series::Constructors.QUANTIZE(self,
                       reference: reference,
                       step: step,
                       value_attribute: value_attribute,

@@ -1,5 +1,3 @@
-using Musa::Extension::DeepCopy
-
 module Musa
   module Sequencer
     class BaseSequencer

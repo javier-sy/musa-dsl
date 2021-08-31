@@ -3,7 +3,8 @@ module Musa::Sequencer
     private def _every(interval, control, block_procedure_binder: nil, &block)
       block ||= proc {}
 
-      block_procedure_binder ||= SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
+      block_procedure_binder ||=
+        Musa::Extension::SmartProcBinder::SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
       _numeric_at position, control do
         control._start_position ||= position

@@ -1,6 +1,7 @@
-using Musa::Extension::Hashify
-using Musa::Extension::Arrayfy
+require_relative '../core-ext/arrayfy'
+require_relative '../core-ext/inspect-nice'
 
+using Musa::Extension::Arrayfy
 using Musa::Extension::InspectNice
 
 module Musa::Sequencer

@@ -1,16 +1,10 @@
-require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/smart-proc-binder'
+require_relative '../core-ext/inspect-nice'
 
-using Musa::Extension::Arrayfy
-using Musa::Extension::DeepCopy
+using Musa::Extension::InspectNice
 
 module Musa::Sequencer
   class BaseSequencer
-    include Musa::Extension::SmartProcBinder
-    include Musa::Extension::DeepCopy
-
-    using Musa::Extension::InspectNice
-
     private def _tick(position_to_run)
       @before_tick.each { |block| block.call position_to_run }
       queue = @timeslots[position_to_run]
@@ -72,7 +66,7 @@ module Musa::Sequencer
       at_position = _quantize_position(at_position)
 
       block_key_parameters_binder =
-          SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
+        Musa::Extension::SmartProcBinder::SmartProcBinder.new block, on_rescue: proc { |e| _rescue_error(e) }
 
       key_parameters = {}
       key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
@@ -133,8 +127,6 @@ module Musa::Sequencer
     end
 
     class EventHandler
-      include Musa::Extension::SmartProcBinder
-
       attr_accessor :continue_parameters
 
       @@counter = 0
@@ -174,7 +166,7 @@ module Musa::Sequencer
         @handlers[event] ||= {}
 
         # TODO: add on_rescue: proc { |e| _rescue_block_error(e) } [this method is on Sequencer, not in EventHandler]
-        @handlers[event][name] = { block: SmartProcBinder.new(block), only_once: only_once }
+        @handlers[event][name] = { block: Musa::Extension::SmartProcBinder::SmartProcBinder.new(block), only_once: only_once }
       end
 
       def launch(event, *value_parameters, **key_parameters)

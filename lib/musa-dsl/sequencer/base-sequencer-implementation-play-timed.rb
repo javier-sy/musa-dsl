@@ -1,5 +1,4 @@
-using Musa::Extension::Hashify
-using Musa::Extension::Arrayfy
+require_relative '../core-ext/inspect-nice'
 
 using Musa::Extension::InspectNice
 
@@ -23,7 +22,7 @@ module Musa::Sequencer
         last_positions = hash_mode ? {} : []
       end
 
-      binder = SmartProcBinder.new(block)
+      binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
 
       _play_timed_step(hash_mode, component_ids, extra_attribute_names, timed_serie,
                        position, last_positions, binder, control)

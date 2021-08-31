@@ -18,7 +18,7 @@ module Musa
                      :event_handler
 
       def_delegators :@dsl, :position, :quantize_position, :logger, :debug
-      def_delegators :@dsl, :with, :now, :at, :wait, :play, :play_timed, :every, :move
+      def_delegators :@dsl, :now, :at, :wait, :play, :play_timed, :every, :move
       def_delegators :@dsl, :everying, :playing, :moving
       def_delegators :@dsl, :launch, :on
       def_delegators :@dsl, :run
@@ -28,6 +28,7 @@ module Musa
                      sequencer: nil,
                      logger: nil,
                      do_log: nil, do_error_log: nil, log_position_format: nil,
+                     keep_proc_context: nil,
                      &block)
 
         @sequencer = sequencer
@@ -37,14 +38,17 @@ module Musa
                                          do_error_log: do_error_log,
                                          log_position_format: log_position_format
 
-        @dsl = DSLContext.new @sequencer
+        @dsl = DSLContext.new @sequencer, keep_proc_context: keep_proc_context
 
-        with &block if block_given?
+        @dsl.with &block if block_given?
+      end
+
+      def with(&block)
+        @dsl.with &block
       end
 
       class DSLContext
         extend Forwardable
-        include Musa::Extension::SmartProcBinder
         include Musa::Extension::With
 
         attr_reader :sequencer
@@ -57,8 +61,9 @@ module Musa
                        :ticks_per_bar, :logger, :debug, :inspect,
                        :run
 
-        def initialize(sequencer)
+        def initialize(sequencer, keep_proc_context:)
           @sequencer = sequencer
+          @keep_proc_context_on_with = keep_proc_context
         end
 
         def now(*value_parameters, **key_parameters, &block)
@@ -104,7 +109,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.every *value_parameters, **key_parameters do |*value_args, **key_args|
-            args = SmartProcBinder.new(block)._apply(value_args, key_args)
+            args = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)._apply(value_args, key_args)
             with *args.first, **args.last, &block
           end
         end

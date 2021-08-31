@@ -1,7 +1,5 @@
+require_relative '../core-ext/inspect-nice'
 require_relative 'base-sequencer-implementation-play-helper'
-
-using Musa::Extension::Hashify
-using Musa::Extension::Arrayfy
 
 using Musa::Extension::InspectNice
 
