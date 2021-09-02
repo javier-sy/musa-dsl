@@ -2,13 +2,12 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-include Musa::Sequencer
-
 RSpec.describe Musa::Sequencer do
   context 'Basic tickless sequencing' do
+    include Musa::Series
+
     it 'Basic at sequencing' do
-      s = BaseSequencer.new
+      s = Musa::Sequencer::BaseSequencer.new
 
       c = 0
 
@@ -60,7 +59,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Runs until finished' do
-      s = BaseSequencer.new
+      s = Musa::Sequencer::BaseSequencer.new
       c = []
 
       s.at 1 do
@@ -75,7 +74,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Move with duration but without time increment limitation should raise exception' do
-      s = BaseSequencer.new
+      s = Musa::Sequencer::BaseSequencer.new
       c = []
 
       s.at 1 do

@@ -2,44 +2,42 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Scales
-
-RSpec.describe EquallyTempered12ToneScaleSystem do
+RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
   context 'Equally tempered 12 semitones scales' do
-    scale_system = Scales[:et12][440.0]
+    scale_system = Musa::Scales::Scales[:et12][440.0]
 
     it 'Access to ScaleSystems by :symbol and by .method' do
-      sst1 = Scales[:et12][440.0]
-      sst2 = Scales.et12[440.0]
+      sst1 = Musa::Scales::Scales[:et12][440.0]
+      sst2 = Musa::Scales::Scales.et12[440.0]
 
       expect(sst1).to be sst2
     end
 
     it 'Access to ScaleKind by :symbol and by .method' do
-      sst = Scales.et12[440.0]
+      sst = Musa::Scales::Scales.et12[440.0]
 
       expect(sst.major).to be sst[:major]
     end
 
     it 'Access to Scale by :symbol and by .method' do
-      sst = Scales.et12[440.0]
+      sst = Musa::Scales::Scales.et12[440.0]
 
       expect(sst.major).to be sst[:major]
       expect(sst.major[60]).to be sst[:major][60]
     end
 
     it 'Access to default scale system an default tuning' do
-      ss = Scales[:et12]
-      sst = Scales[:et12][440.0]
+      ss = Musa::Scales::Scales[:et12]
+      sst = Musa::Scales::Scales[:et12][440.0]
 
-      expect(ss).to be Scales.default_system
-      expect(sst).to be Scales.default_system.default_tuning
-      expect(sst.chromatic).to be Scales.default_system.default_tuning.chromatic
+      expect(ss).to be Musa::Scales::Scales.default_system
+      expect(sst).to be Musa::Scales::Scales.default_system.default_tuning
+      expect(sst.chromatic).to be Musa::Scales::Scales.default_system.default_tuning.chromatic
     end
 
     it 'Access to intervals with ScaleSystem and tuning' do
-      expect(Scales.default_system.offset_of_interval(:m2)).to eq 1
-      expect(Scales.default_system.default_tuning.offset_of_interval(:m2)).to eq 1
+      expect(Musa::Scales::Scales.default_system.offset_of_interval(:m2)).to eq 1
+      expect(Musa::Scales::Scales.default_system.default_tuning.offset_of_interval(:m2)).to eq 1
     end
 
     it 'Access to intervals' do

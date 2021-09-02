@@ -1,11 +1,11 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Series
 
 RSpec.describe Musa::Series do
   context 'Series autorestart' do
+
+    include Musa::Series
+
     it 'Autorestart: S(1, 2, 3).autorestart' do
       s1 = S(1, 2, 3).autorestart.i
 

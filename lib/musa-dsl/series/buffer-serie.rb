@@ -206,11 +206,6 @@ module Musa
           @index -= offset
         end
 
-        # private def _init
-        #   @source.prototype.singleton._register(self) if instance?
-        #   @index = @last_nil_index
-        # end
-        #
         private def _sources_resolved
           @source.singleton._register(self) if instance?
           @index = @last_nil_index

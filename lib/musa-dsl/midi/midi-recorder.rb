@@ -36,8 +36,8 @@ module Musa
         @messages.each do |m|
           mm = m.message
 
-          if mm.is_a?(MIDIMessage::NoteOn)
-
+          case mm
+          when MIDIMessage::NoteOn
             if last_note[mm.channel]
               notes << { position: last_note[mm.channel], channel: mm.channel, pitch: :silence, duration: m.position - last_note[mm.channel] }
               last_note.delete mm.channel
@@ -50,8 +50,7 @@ module Musa
 
             notes << note
 
-          elsif mm.is_a?(MIDIMessage::NoteOff)
-
+          when MIDIMessage::NoteOff
             note_on[mm.channel] ||= {}
 
             note = note_on[mm.channel][mm.note]

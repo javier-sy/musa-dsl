@@ -2,16 +2,14 @@ require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/with'
 
-using Musa::Extension::Arrayfy
-using Musa::Extension::ExplodeRanges
-
 # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
   module Variatio
-    class Variatio
-      include Musa::Extension::SmartProcBinder
+    using Musa::Extension::Arrayfy
+    using Musa::Extension::ExplodeRanges
 
+    class Variatio
       def initialize(instance_name, &block)
         raise ArgumentError, 'instance_name should be a symbol' unless instance_name.is_a?(Symbol)
         raise ArgumentError, 'block is needed' unless block
@@ -26,8 +24,8 @@ module Musa
       end
 
       def on(**values)
-        constructor_binder = SmartProcBinder.new @constructor
-        finalize_binder = SmartProcBinder.new @finalize if @finalize
+        constructor_binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new @constructor
+        finalize_binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new @finalize if @finalize
 
         run_fieldset = @fieldset.clone # TODO: verificar que esto no da problemas
 
@@ -202,8 +200,6 @@ module Musa
       private_constant :A2
 
       class B
-        include Musa::Extension::SmartProcBinder
-
         attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner
 
         def initialize(parameter_name, options, affected_field_names, inner, blocks)
@@ -212,7 +208,7 @@ module Musa
           @affected_field_names = affected_field_names
           @inner = inner
 
-          @procedures = blocks.collect { |proc| SmartProcBinder.new proc }
+          @procedures = blocks.collect { |proc| Musa::Extension::SmartProcBinder::SmartProcBinder.new proc }
         end
 
         def run(parameters_with_depth, parent_parameters = nil)

@@ -1,13 +1,10 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::MusicXML::Builder
 
 RSpec.describe Musa::MusicXML::Builder do
   context 'MusicXML generation' do
     it 'ScorePartwise header structure is equal between constructor, add_ methods and builder' do
-      score1 = ScorePartwise.new
+      score1 =Musa::MusicXML::Builder::ScorePartwise.new
 
       score1.add_creator "composer", "Javier"
       score1.add_creator "lyrics", "Javier S. lyrics"
@@ -18,7 +15,7 @@ RSpec.describe Musa::MusicXML::Builder do
       score1.movement_number = "1"
       score1.encoding_date = DateTime.new(2020, 1, 29)
 
-      score2 = ScorePartwise.new work_title: "Work Title", work_number: 100,
+      score2 = Musa::MusicXML::Builder::ScorePartwise.new work_title: "Work Title", work_number: 100,
                                  movement_title: "Movement Title", movement_number: "1",
                                  creators: { composer: "Javier", lyrics: "Javier S. lyrics" },
                                  rights: { lyrics: "Javier S." },
@@ -28,7 +25,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'ScorePartwise simple header structure is correct' do
-      score = ScorePartwise.new work_title: "Work Title", work_number: 100,
+      score = Musa::MusicXML::Builder::ScorePartwise.new work_title: "Work Title", work_number: 100,
                                  movement_title: "Movement Title", movement_number: "1",
                                  creators: { composer: "Javier", lyrics: "Javier S. lyrics" },
                                  rights: { lyrics: "Javier S." },
@@ -40,7 +37,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'ScorePartwise simple header structure created with builder' do
-      score = ScorePartwise.new do
+      score = Musa::MusicXML::Builder::ScorePartwise.new do
         work_title "Work Title"
         work_number 100
 
@@ -55,7 +52,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'Score with some simple notes created with adder methods' do
-      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+      score = Musa::MusicXML::Builder::ScorePartwise.new creators: { composer: "Javier Sánchez" },
                                 encoding_date: DateTime.new(2020, 1, 29)
 
       part = score.add_part :p1, name: "Piano", abbreviation: "p."
@@ -151,7 +148,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'Score with some simple notes created with builder methods' do
-      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+      score = Musa::MusicXML::Builder::ScorePartwise.new creators: { composer: "Javier Sánchez" },
                                 encoding_date: DateTime.new(2020, 1, 29) do
 
         part :p1, name: "Piano", abbreviation: "p." do
@@ -249,7 +246,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'Score with part groups' do
-      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+      score = Musa::MusicXML::Builder::ScorePartwise.new creators: { composer: "Javier Sánchez" },
                                 encoding_date: DateTime.new(2020, 1, 29)
 
       score.add_group 1, type: 'start', name: "Grupo A"
@@ -343,7 +340,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'Score with some simple notes and tuplets' do
-      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+      score = Musa::MusicXML::Builder::ScorePartwise.new creators: { composer: "Javier Sánchez" },
                                 work_title: "Prueba de tuplets",
                                 encoding_date: DateTime.new(2020, 1, 29) do
 
@@ -475,7 +472,7 @@ RSpec.describe Musa::MusicXML::Builder do
     end
 
     it 'Score with some simple notes and crescendo from niente and from' do
-      score = ScorePartwise.new creators: { composer: "Javier Sánchez" },
+      score = Musa::MusicXML::Builder::ScorePartwise.new creators: { composer: "Javier Sánchez" },
                                 work_title: "Crescendo with/without niente attribute",
                                 encoding_date: DateTime.new(2020, 7, 23) do
 

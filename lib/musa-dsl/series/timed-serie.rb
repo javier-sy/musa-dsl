@@ -54,13 +54,13 @@ module Musa
           result = { time: time }
 
           @components.each do |attribute_name, components|
-            if @hash_mode
-              result[attribute_name] = {}
-            elsif @array_mode
-              result[attribute_name] = []
-            else # value mode
-              result[attribute_name] = []
-            end
+            result[attribute_name] = if @hash_mode
+                                       {}
+                                     elsif @array_mode
+                                       []
+                                     else # value mode
+                                       []
+                                     end
 
             components.each do |target_key_or_index, source_placement|
               result[attribute_name][target_key_or_index] = selected_values.dig(*source_placement)
@@ -76,67 +76,68 @@ module Musa
       def infinite?
         !!@sources.find(&:infinite?)
       end
-    end
 
-    private def infer_components(sources_values)
-      other_attributes = Set[]
+      private def infer_components(sources_values)
+        other_attributes = Set[]
 
-      sources_values.each do |source_value|
-        (source_value.keys - [:time, :value]).each { |_| other_attributes << _ }
-      end
+        sources_values.each do |source_value|
+          (source_value.keys - [:time, :value]).each { |_| other_attributes << _ }
+        end
 
-      components = {}
-      components[:value] = {}
+        components = {}
+        components[:value] = {}
 
-      hash_mode = array_mode = nil
+        hash_mode = array_mode = nil
 
-      other_attributes.each do |attribute_name|
-        components[attribute_name] = {}
-      end
+        other_attributes.each do |attribute_name|
+          components[attribute_name] = {}
+        end
 
-      target_index = 0
+        target_index = 0
 
-      sources_values.each_with_index do |source_value, i|
-        case source_value[:value]
-        when Hash
-          hash_mode = true
+        sources_values.each_with_index do |source_value, i|
+          case source_value[:value]
+          when Hash
+            hash_mode = true
 
-          source_value[:value].keys.each do |key|
-            raise RuntimeError, "Value: key #{key} already used" unless components[:value][key].nil?
+            source_value[:value].each_key do |key|
+              raise "Value: key #{key} already used" unless components[:value][key].nil?
 
-            components[:value][key] = [i, :value, key]
+              components[:value][key] = [i, :value, key]
 
-            other_attributes.each do |attribute_name|
-              raise RuntimeError, "Attribute #{attribute_name}: key #{key} already used" unless components[attribute_name][key].nil?
-              components[attribute_name][key] = [i, attribute_name, key]
+              other_attributes.each do |attribute_name|
+                raise "Attribute #{attribute_name}: key #{key} already used" unless components[attribute_name][key].nil?
+
+                components[attribute_name][key] = [i, attribute_name, key]
+              end
             end
-          end
-        when Array
-          array_mode = true
+          when Array
+            array_mode = true
 
-          (0..source_value[:value].size - 1).each do |index|
-            components[:value][target_index] = [i, :value, index]
+            (0..source_value[:value].size - 1).each do |index|
+              components[:value][target_index] = [i, :value, index]
+
+              other_attributes.each do |attribute_name|
+                components[attribute_name][target_index] = [i, attribute_name, index]
+              end
+
+              target_index += 1
+            end
+          else
+            components[:value][target_index] = [i, :value]
 
             other_attributes.each do |attribute_name|
-              components[attribute_name][target_index] = [i, attribute_name, index]
+              components[attribute_name][target_index] = [i, attribute_name]
             end
 
             target_index += 1
           end
-        else
-          components[:value][target_index] = [i, :value]
-
-          other_attributes.each do |attribute_name|
-            components[attribute_name][target_index] = [i, attribute_name]
-          end
-
-          target_index += 1
         end
+
+        raise "source series values are of incompatible type (can't combine Hash and Array values)" if array_mode && hash_mode
+
+        [components, hash_mode, array_mode]
       end
-
-      raise RuntimeError, "source series values are of incompatible type (can't combine Hash and Array values)" if array_mode && hash_mode
-
-      return components, hash_mode, array_mode
     end
 
     private_constant :TimedUnionOfArrayOfTimedSeries
@@ -170,7 +171,7 @@ module Musa
           sources_values[key] = @sources_next_values[key] || (@sources_next_values[key] = @sources[key].next_value)
         end
 
-        @other_attributes = infer_other_attributes(sources_values) unless @other_attributes
+        @other_attributes ||= infer_other_attributes(sources_values)
 
         time = sources_values.values.collect { |_| _&.[](:time) }.compact.min
 

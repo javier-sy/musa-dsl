@@ -2,18 +2,12 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-include Musa::Neumalang
-include Musa::Neumas
-include Musa::Datasets
-include Musa::Sequencer
-include Musa::Scales
-
 RSpec.describe Musa::Neumalang do
   context 'Neuma extended parsing' do
+    include Musa::Series
 
     it 'Neuma parsing with extended notation' do
-      result = Neumalang.parse(
+      result = Musa::Neumalang::Neumalang.parse(
           '[ (0)   (.) (+1 +1· tr) 	(+1 /)
                          (1 //) 	(-2) 		(-1 2)
                          (0 o-1 1) 	(. +1) 		(-1 //)
@@ -44,7 +38,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats' do
-      result = Neumalang.parse(
+      result = Musa::Neumalang::Neumalang.parse(
           '[ (0 1) (.) (1 /) (1# /) (2_ /) ]').to_a(recursive: true)
 
       c = -1
@@ -57,9 +51,9 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation (2): sharps and flats with differential decoder' do
-      differential_decoder = Decoders::NeumaDifferentialDecoder.new
+      differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
 
-      result = Neumalang.parse('(0 1) (.) (1 /) (1# /) (2_ /)', decode_with: differential_decoder).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse('(0 1) (.) (1 /) (1# /) (2_ /)', decode_with: differential_decoder).to_a(recursive: true)
 
       expect(result[0].base_duration).to eq 1/4r
 
@@ -73,9 +67,9 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation and differential decoder' do
-      differential_decoder = Decoders::NeumaDifferentialDecoder.new
+      differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
 
-      result = Neumalang.parse('(0) (.) (+1 1·) (2 +/· p) (silence) (silence /·) (2 / p)', decode_with: differential_decoder).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse('(0) (.) (+1 1·) (2 +/· p) (silence) (silence /·) (2 / p)', decode_with: differential_decoder).to_a(recursive: true)
 
       expect(result[0].base_duration).to eq 1/4r
 
@@ -89,13 +83,13 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation: GDV decoding' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '(0)   (1 2 ppp)   (2 tr)   (3 tr(100))  (4 tr(100/1, 400/2))   (5 tr("hola") st(1,2,3) xy(1,2,3))   (6 tr(up)) (+1) (+1 +o1 +2 +ff)'
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      result = Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
 
       c = -1
 
@@ -111,15 +105,15 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Neuma parsing with extended notation: GDV decoding, to PDV conversion, and back to GDVd' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas    = '(0)   (1 2 ppp)   (2 tr)   (3 tr(100))  (4 tr(100, 200))   (5 tr("hola") st(1,2,3) xy(1,2,3))   (6 tr(up)) (+1) (+1 +o1 +2 +ff)'
 
       neumas_ok = '(0 1 mf) (+1 +1 -ffff) (+1 tr) (+1 tr(100)) (+1 tr(100, 200)) (+1 tr("hola") st(1, 2, 3) xy(1, 2, 3)) (+1 tr(up)) (+1) (+8 +2 +ff)'
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      result_gdv = Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
+      result_gdv = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).to_a(recursive: true)
 
       result_pdv = result_gdv.collect { |gdv| gdv.to_pdv(scale) }
 

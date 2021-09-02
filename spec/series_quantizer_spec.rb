@@ -2,13 +2,13 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-include Musa::Datasets
-
 using Musa::Extension::InspectNice
 
 RSpec.describe Musa::Series do
   context 'Quantizer series handles' do
+    include Musa::Series
+    include Musa::Datasets
+
     it 'empty line (raw algorithm)' do
       cc = QUANTIZE(NIL(), reference: 0r, step: 1r).i
 
@@ -65,8 +65,8 @@ RSpec.describe Musa::Series do
       cc = QUANTIZE(c, reference: 0r, step: 1r).i
 
       while v = cc.next_value
-        expect(v).to be_a(AbsTimed)
-        expect(v).to be_a(AbsD)
+        expect(v).to be_a(Musa::Datasets::AbsTimed)
+        expect(v).to be_a(Musa::Datasets::AbsD)
       end
     end
 
@@ -76,8 +76,8 @@ RSpec.describe Musa::Series do
       cc = QUANTIZE(c, reference: 0r, step: 1r).i
 
       while v = cc.next_value
-        expect(v).to be_a(AbsTimed)
-        expect(v).to be_a(AbsD)
+        expect(v).to be_a(Musa::Datasets::AbsTimed)
+        expect(v).to be_a(Musa::Datasets::AbsD)
       end
     end
 
@@ -87,8 +87,8 @@ RSpec.describe Musa::Series do
       cc = QUANTIZE(c, reference: 0r, step: 1r, predictive: true).i
 
       while v = cc.next_value
-        expect(v).to be_a(AbsTimed)
-        expect(v).to be_a(AbsD)
+        expect(v).to be_a(Musa::Datasets::AbsTimed)
+        expect(v).to be_a(Musa::Datasets::AbsD)
       end
     end
 
@@ -98,8 +98,8 @@ RSpec.describe Musa::Series do
       cc = QUANTIZE(c, reference: 0r, step: 1r, predictive: true, stops: true).i
 
       while v = cc.next_value
-        expect(v).to be_a(AbsTimed)
-        expect(v).to be_a(AbsD)
+        expect(v).to be_a(Musa::Datasets::AbsTimed)
+        expect(v).to be_a(Musa::Datasets::AbsD)
       end
     end
 
@@ -148,7 +148,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'line with 2 points with 2 boundary crossings (with AbsTimed serie) (raw)' do
-      c = S({ time: 0r, value: 0r }.extend(AbsTimed), { time: 2r, value: 2r }.extend(AbsTimed))
+      c = S({ time: 0r, value: 0r }.extend(Musa::Datasets::AbsTimed), { time: 2r, value: 2r }.extend(Musa::Datasets::AbsTimed))
 
       cc = QUANTIZE(c, reference: 0r, step: 1r).i
 
@@ -159,7 +159,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'line with 2 points with 2 boundary crossings (with AbsTimed serie) (predictive)' do
-      c = S({ time: 0r, value: 0r }.extend(AbsTimed), { time: 2r, value: 2r }.extend(AbsTimed))
+      c = S({ time: 0r, value: 0r }.extend(Musa::Datasets::AbsTimed), { time: 2r, value: 2r }.extend(Musa::Datasets::AbsTimed))
 
       cc = QUANTIZE(c, reference: 0r, step: 1r, predictive: true).i
 
@@ -171,7 +171,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'line with 2 points with 2 boundary crossings (with AbsTimed serie with value on not default attribute) (raw)' do
-      c = S({ time: 0r, cosa: 0r }.extend(AbsTimed), { time: 2r, cosa: 2r }.extend(AbsTimed))
+      c = S({ time: 0r, cosa: 0r }.extend(Musa::Datasets::AbsTimed), { time: 2r, cosa: 2r }.extend(Musa::Datasets::AbsTimed))
 
       cc = QUANTIZE(c, reference: 0r, step: 1r, value_attribute: :cosa).i
 
@@ -182,7 +182,7 @@ RSpec.describe Musa::Series do
     end
 
     it 'line with 2 points with 2 boundary crossings (with AbsTimed serie with value on not default attribute) (predictive)' do
-      c = S({ time: 0r, cosa: 0r }.extend(AbsTimed), { time: 2r, cosa: 2r }.extend(AbsTimed))
+      c = S({ time: 0r, cosa: 0r }.extend(Musa::Datasets::AbsTimed), { time: 2r, cosa: 2r }.extend(Musa::Datasets::AbsTimed))
 
       cc = QUANTIZE(c, reference: 0r, step: 1r, value_attribute: :cosa, predictive: true).i
 

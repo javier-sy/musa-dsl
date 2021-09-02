@@ -1,6 +1,6 @@
 module Musa::Datasets
   module Helper
-    protected
+    private
 
     def positive_sign_of(x)
       x >= 0 ? '+' : ''

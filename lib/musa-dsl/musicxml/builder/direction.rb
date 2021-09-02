@@ -1,12 +1,12 @@
 require_relative '../../core-ext/with'
 require_relative 'helper'
 
-using Musa::Extension::Arrayfy
-
 module Musa
   module MusicXML
     module Builder
       module Internal
+        using Musa::Extension::Arrayfy
+
         class Direction
           extend Musa::Extension::AttributeBuilder
           include Musa::Extension::With

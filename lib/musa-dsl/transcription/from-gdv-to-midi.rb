@@ -1,7 +1,5 @@
 require_relative 'from-gdv'
 
-include Musa::Transcription
-
 module Musa::Transcriptors
   module FromGDV
     module ToMIDI
@@ -15,7 +13,7 @@ module Musa::Transcriptors
       end
 
       # Process: appogiatura (neuma)neuma
-      class Appogiatura < FeatureTranscriptor
+      class Appogiatura < Musa::Transcription::FeatureTranscriptor
         def transcript(gdv, base_duration:, tick_duration:)
           gdv_appogiatura = gdv.delete :appogiatura
 
@@ -34,7 +32,7 @@ module Musa::Transcriptors
       end
 
       # Process: .mor
-      class Mordent < FeatureTranscriptor
+      class Mordent < Musa::Transcription::FeatureTranscriptor
         def initialize(duration_factor: nil)
           @duration_factor = duration_factor || 1/4r
         end
@@ -77,7 +75,7 @@ module Musa::Transcriptors
       end
 
       # Process: .turn
-      class Turn < FeatureTranscriptor
+      class Turn < Musa::Transcription::FeatureTranscriptor
         def transcript(gdv, base_duration:, tick_duration:)
           turn = gdv.delete :turn
 
@@ -118,7 +116,7 @@ module Musa::Transcriptors
       end
 
       # Process: .tr
-      class Trill < FeatureTranscriptor
+      class Trill < Musa::Transcription::FeatureTranscriptor
         def initialize(duration_factor: nil)
           @duration_factor = duration_factor || 1/4r
         end
@@ -195,7 +193,7 @@ module Musa::Transcriptors
       end
 
       # Process: .st .st(1) .st(2) .st(3): staccato level 1 2 3
-      class Staccato < FeatureTranscriptor
+      class Staccato < Musa::Transcription::FeatureTranscriptor
         def initialize(min_duration_factor: nil)
           @min_duration_factor = min_duration_factor || 1/8r
         end

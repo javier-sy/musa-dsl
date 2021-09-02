@@ -2,10 +2,6 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Neumalang
-include Musa::Datasets
-include Musa::Neumas
-
 using Musa::Extension::Neumas
 
 RSpec.describe Musa::Neumalang do
@@ -16,12 +12,12 @@ RSpec.describe Musa::Neumalang do
 
       expect(result[0]).to eq({kind: :packed_v, packed_v: { a: 1, b: 2, c: 3 }})
 
-      expect(result[0][:packed_v]).not_to be_a V
-      expect(result[0][:packed_v]).to be_a PackedV
-      expect(result[0][:packed_v]).to be_a AbsI
-      expect(result[0][:packed_v]).to be_a Abs
-      expect(result[0][:packed_v]).to be_a E
-      expect(result[0][:packed_v]).to be_a Dataset
+      expect(result[0][:packed_v]).not_to be_a Musa::Datasets::V
+      expect(result[0][:packed_v]).to be_a Musa::Datasets::PackedV
+      expect(result[0][:packed_v]).to be_a Musa::Datasets::AbsI
+      expect(result[0][:packed_v]).to be_a Musa::Datasets::Abs
+      expect(result[0][:packed_v]).to be_a Musa::Datasets::E
+      expect(result[0][:packed_v]).to be_a Musa::Datasets::Dataset
     end
 
     it 'More than one basic packed vector' do
@@ -40,12 +36,12 @@ RSpec.describe Musa::Neumalang do
 
       expect(result[0]).to eq({kind: :v, v: [1, 2, 3]})
 
-      expect(result[0][:v]).to be_a V
-      expect(result[0][:v]).not_to be_a PackedV
-      expect(result[0][:v]).to be_a AbsI
-      expect(result[0][:v]).to be_a Abs
-      expect(result[0][:v]).to be_a E
-      expect(result[0][:v]).to be_a Dataset
+      expect(result[0][:v]).to be_a Musa::Datasets::V
+      expect(result[0][:v]).not_to be_a Musa::Datasets::PackedV
+      expect(result[0][:v]).to be_a Musa::Datasets::AbsI
+      expect(result[0][:v]).to be_a Musa::Datasets::Abs
+      expect(result[0][:v]).to be_a Musa::Datasets::E
+      expect(result[0][:v]).to be_a Musa::Datasets::Dataset
     end
 
     it 'More than one basic unpacked vector' do

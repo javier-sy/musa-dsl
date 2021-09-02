@@ -4,25 +4,18 @@ require 'pp'
 
 require 'musa-dsl'
 
-include Musa::Series
-include Musa::Scales
-include Musa::Datasets
-include Musa::Neumalang
-include Musa::Neumas
-include Musa::Sequencer
-
-using Musa::Extension::DeepCopy
-
 RSpec.describe Musa::Neumalang do
   context 'Neuma with neumalang advanced parsing' do
-    scale = Scales.default_system.default_tuning.major[60]
-=begin
+    include Musa::Series
+
+    scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
+
     it 'Simple file neumas parsing' do
       debug = false
       #debug = true
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
-      serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3a_spec.neu')
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, base_duration: 1
+      serie = Musa::Neumalang::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3a_spec.neu')
 
       if debug
         puts
@@ -35,7 +28,7 @@ RSpec.describe Musa::Neumalang do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             played[position] ||= [] if debug
@@ -90,8 +83,8 @@ RSpec.describe Musa::Neumalang do
       debug = false
       # debug = true
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
-      serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3b_spec.neu')
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, base_duration: 1
+      serie = Musa::Neumalang::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3b_spec.neu')
 
       if debug
         puts
@@ -104,7 +97,7 @@ RSpec.describe Musa::Neumalang do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             played[position] ||= [] if debug
@@ -150,13 +143,13 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-=end
+
     it 'Simple file neumas parsing with call_methods on simple serie' do
       debug = false
       # debug = true
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
-      serie = Neumalang.parse_file( File.join(File.dirname(__FILE__), 'neuma3c_spec.neu'))
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, base_duration: 1
+      serie = Musa::Neumalang::Neumalang.parse_file( File.join(File.dirname(__FILE__), 'neuma3c_spec.neu'))
 
       if debug
         puts
@@ -169,7 +162,7 @@ RSpec.describe Musa::Neumalang do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             played[position] ||= [] if debug
@@ -235,13 +228,13 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-=begin
+
     it 'Advanced neumalang indirection features' do
       debug = false
       # debug = true
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale
-      serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3d_spec.neu')
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
+      serie = Musa::Neumalang::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3d_spec.neu')
 
       if debug
         puts
@@ -257,7 +250,7 @@ RSpec.describe Musa::Neumalang do
       context = Object.new
       context.instance_variable_set :@debug, debug
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang, context: context do |gdv|
             played[position] ||= [] if debug
@@ -339,8 +332,8 @@ RSpec.describe Musa::Neumalang do
       debug = false
       #debug = true
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, base_duration: 1
-      serie = Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3z_spec.neu')
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, base_duration: 1
+      serie = Musa::Neumalang::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3z_spec.neu')
 
       if debug
         puts
@@ -353,7 +346,7 @@ RSpec.describe Musa::Neumalang do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             played[position] ||= [] if debug
@@ -538,7 +531,6 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-=end
   end
 end
 

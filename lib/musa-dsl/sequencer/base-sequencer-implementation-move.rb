@@ -1,11 +1,11 @@
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/inspect-nice'
 
-using Musa::Extension::Arrayfy
-using Musa::Extension::InspectNice
-
 module Musa::Sequencer
   class BaseSequencer
+    using Musa::Extension::Arrayfy
+    using Musa::Extension::InspectNice
+
     private def _move(every: nil,
                       from:, to: nil,
                       step: nil,
@@ -110,11 +110,11 @@ module Musa::Sequencer
             steps = (to[i] - from[i]) / step[i]
 
             # When to == from don't need to do any iteration with every
-            if steps + right_open_offset[i] > 0
-              every[i] = Rational(effective_duration, steps + right_open_offset[i])
-            else
-              every[i] = nil
-            end
+            every[i] = if steps + right_open_offset[i] > 0
+                         Rational(effective_duration, steps + right_open_offset[i])
+                       else
+                         nil
+                       end
 
           elsif to[i] && !step[i] && !every[i]
 
@@ -167,7 +167,7 @@ module Musa::Sequencer
       #
       # Prepare yield block, parameters to yield block and coincident moving interval groups
       #
-      binder = SmartProcBinder.new(block)
+      binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
 
       every_groups = {}
       group_counter = {}
@@ -300,46 +300,46 @@ module Musa::Sequencer
             # Adapt values to array/hash/value mode
             #
             value_parameters, key_parameters =
-                if array_mode
-                  binder.apply(effective_values, effective_next_values,
-                               control: control,
-                               duration: _durations(every_groups, effective_duration),
-                               quantized_duration: q_durations.dup,
-                               started_ago: _started_ago(last_position, position, process_indexes),
-                               position_jitter: position_jitters.dup,
-                               duration_jitter: duration_jitters.dup,
-                               right_open: right_open.dup)
-                elsif hash_mode
-                  binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
-                               _hash_from_keys_and_values(hash_keys, effective_next_values),
-                               control: control,
-                               duration: _hash_from_keys_and_values(
-                                   hash_keys,
-                                   _durations(every_groups, effective_duration)),
-                               quantized_duration: _hash_from_keys_and_values(
-                                   hash_keys,
-                                   q_durations),
-                               started_ago: _hash_from_keys_and_values(
-                                   hash_keys,
-                                   _started_ago(last_position, position, process_indexes)),
-                               position_jitter: _hash_from_keys_and_values(
-                                   hash_keys,
-                                   position_jitters),
-                               duration_jitter: _hash_from_keys_and_values(
-                                   hash_keys,
-                                   duration_jitters),
-                               right_open: _hash_from_keys_and_values(hash_keys, right_open))
-                else
-                  binder.apply(effective_values.first,
-                               effective_next_values.first,
-                               control: control,
-                               duration: _durations(every_groups, effective_duration).first,
-                               quantized_duration: q_durations.first,
-                               position_jitter: position_jitters.first,
-                               duration_jitter: duration_jitters.first,
-                               started_ago: nil,
-                               right_open: right_open.first)
-                end
+              if array_mode
+                binder.apply(effective_values, effective_next_values,
+                             control: control,
+                             duration: _durations(every_groups, effective_duration),
+                             quantized_duration: q_durations.dup,
+                             started_ago: _started_ago(last_position, position, process_indexes),
+                             position_jitter: position_jitters.dup,
+                             duration_jitter: duration_jitters.dup,
+                             right_open: right_open.dup)
+              elsif hash_mode
+                binder.apply(_hash_from_keys_and_values(hash_keys, effective_values),
+                             _hash_from_keys_and_values(hash_keys, effective_next_values),
+                             control: control,
+                             duration: _hash_from_keys_and_values(
+                                 hash_keys,
+                                 _durations(every_groups, effective_duration)),
+                             quantized_duration: _hash_from_keys_and_values(
+                                 hash_keys,
+                                 q_durations),
+                             started_ago: _hash_from_keys_and_values(
+                                 hash_keys,
+                                 _started_ago(last_position, position, process_indexes)),
+                             position_jitter: _hash_from_keys_and_values(
+                                 hash_keys,
+                                 position_jitters),
+                             duration_jitter: _hash_from_keys_and_values(
+                                 hash_keys,
+                                 duration_jitters),
+                             right_open: _hash_from_keys_and_values(hash_keys, right_open))
+              else
+                binder.apply(effective_values.first,
+                             effective_next_values.first,
+                             control: control,
+                             duration: _durations(every_groups, effective_duration).first,
+                             quantized_duration: q_durations.first,
+                             position_jitter: position_jitters.first,
+                             duration_jitter: duration_jitters.first,
+                             started_ago: nil,
+                             right_open: right_open.first)
+              end
 
             #
             # Do the REAL thing

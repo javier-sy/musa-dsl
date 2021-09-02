@@ -6,7 +6,6 @@ module Musa
 
   module Markov
     class Markov
-      include Musa::Extension::SmartProcBinder
       include Musa::Series::Serie.base
 
       def initialize(transitions:, start:, finish: nil, random: nil)
@@ -59,7 +58,7 @@ module Musa
                   r >= accumulated - probability && r < accumulated }[0]
 
               when Proc
-                procedure_binder = @procedure_binders[options] ||= SmartProcBinder.new(options)
+                procedure_binder = @procedure_binders[options] ||= Musa::Extension::SmartProcBinder::SmartProcBinder.new(options)
                 @current = procedure_binder.call @history
               else
                 raise ArgumentError, "Option #{option} is not allowed. Only Array, Hash or Proc are allowed."

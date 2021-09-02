@@ -1,11 +1,9 @@
 require 'spec_helper'
 require 'musa-dsl'
 
-include Musa::Datasets::Score::ToMXML
-include Musa::Datasets
-
 RSpec.describe Musa::Datasets::Score::ToMXML do
   context 'Score to MusicXML time translations' do
+    include Musa::Datasets::Score::ToMXML
 
     it 'converts durations to note type, dots and tuplet ratios' do
       l = [1/4r, 1, 2, 1/2r, 1/3r, 3/8r, 1/5r, 7/16r, 1/15r, 17/15r, 18/15r, 19/15r, 5/16r, 3/10r]

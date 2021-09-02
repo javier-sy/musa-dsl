@@ -1,11 +1,11 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Series
 
 RSpec.describe Musa::Series do
   context 'Series synced buffer' do
+
+    include Musa::Series
+
     it 'buffered series get all source values waiting values of the main serie' do
       buffer = S(1, 2, 3, 4, 5, 6, 7).buffered(sync: true)
 
@@ -191,6 +191,8 @@ RSpec.describe Musa::Series do
   end
 
   context 'Series parallel buffer' do
+    include Musa::Series
+
     it 'get next values from a original source' do
       buffer = S(1, 2, 3, 4, 5, 6, 7).buffered.instance
 

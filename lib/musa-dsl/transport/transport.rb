@@ -2,12 +2,10 @@ require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/inspect-nice'
 require_relative '../sequencer'
 
-using Musa::Extension::InspectNice
-
 module Musa
   module Transport
     class Transport
-      include Musa::Extension::SmartProcBinder
+      using Musa::Extension::InspectNice
 
       attr_reader :sequencer
 
@@ -28,20 +26,20 @@ module Musa
         @clock = clock
 
         @before_begin = []
-        @before_begin << SmartProcBinder.new(before_begin) if before_begin
+        @before_begin << Musa::Extension::SmartProcBinder::SmartProcBinder.new(before_begin) if before_begin
 
         @on_start = []
-        @on_start << SmartProcBinder.new(on_start) if on_start
+        @on_start << Musa::Extension::SmartProcBinder::SmartProcBinder.new(on_start) if on_start
 
         @on_change_position = []
-        @on_change_position << SmartProcBinder.new(on_position_change) if on_position_change
+        @on_change_position << Musa::Extension::SmartProcBinder::SmartProcBinder.new(on_position_change) if on_position_change
 
         @after_stop = []
-        @after_stop << SmartProcBinder.new(after_stop) if after_stop
+        @after_stop << Musa::Extension::SmartProcBinder::SmartProcBinder.new(after_stop) if after_stop
 
         @do_log = do_log
 
-        @sequencer = Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, logger: logger, do_log: @do_log
+        @sequencer = Musa::Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, logger: logger, do_log: @do_log
 
         @clock.on_start do
           do_on_start
@@ -57,19 +55,19 @@ module Musa
       end
 
       def before_begin(&block)
-        @before_begin << SmartProcBinder.new(block)
+        @before_begin << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def on_start(&block)
-        @on_start << SmartProcBinder.new(block)
+        @on_start << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def after_stop(&block)
-        @after_stop << SmartProcBinder.new(block)
+        @after_stop << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def on_change_position(&block)
-        @on_change_position << SmartProcBinder.new(block)
+        @on_change_position << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def start

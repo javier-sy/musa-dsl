@@ -6,6 +6,9 @@ include Musa::Series
 
 RSpec.describe Musa::Series do
   context 'Series proxy' do
+    include Musa::Series
+    include Musa::Datasets
+
     it 'Basic PROXY series substitution' do
       s = PROXY(S(1, 2, 3)).i
 

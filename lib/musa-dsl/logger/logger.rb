@@ -1,37 +1,37 @@
 require 'logger'
-
 require_relative '../core-ext/inspect-nice'
 
+module Musa
+  module Logger
+    class Logger < ::Logger
+      using Musa::Extension::InspectNice
 
-module Musa; module Logger
-  class Logger < ::Logger
-    using Musa::Extension::InspectNice
+      def initialize(sequencer: nil, position_format: nil)
+        super STDERR, level: WARN
 
-    def initialize(sequencer: nil, position_format: nil)
-      super STDERR, level: WARN
-
-      @sequencer = sequencer
-      @position_format = position_format || 3.3
+        @sequencer = sequencer
+        @position_format = position_format || 3.3
 
 
-      self.formatter = proc do |severity, time, progname, msg|
-        level = "[#{severity}] " unless severity == 'DEBUG'
+        self.formatter = proc do |severity, time, progname, msg|
+          level = "[#{severity}] " unless severity == 'DEBUG'
 
-        if msg
-          position = if @sequencer
-                       integer_digits = @position_format.to_i
-                       decimal_digits = ((@position_format - integer_digits) * 10).round
+          if msg
+            position = if @sequencer
+                         integer_digits = @position_format.to_i
+                         decimal_digits = ((@position_format - integer_digits) * 10).round
 
-                       "%#{integer_digits + decimal_digits + 1}s: " % ("%.#{decimal_digits}f" % sequencer.position.to_f)
-                     end
+                         "%#{integer_digits + decimal_digits + 1}s: " % ("%.#{decimal_digits}f" % sequencer.position.to_f)
+                       end
 
-          progname = "[#{progname}]" if progname
+            progname = "[#{progname}]" if progname
 
-          "#{position}#{level}#{progname}#{' ' if position || level || progname}#{msg}\n"
-        else
-          "\n"
+            "#{position}#{level}#{progname}#{' ' if position || level || progname}#{msg}\n"
+          else
+            "\n"
+          end
         end
       end
     end
   end
-end; end
+end

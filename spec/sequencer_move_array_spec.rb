@@ -2,13 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Sequencer
-
 RSpec.describe Musa::Sequencer do
   context 'Basic move array sequencing' do
-=begin
+
     it 'Basic move sequencing (every, from, to, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -72,7 +70,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -136,7 +134,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, every)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -200,7 +198,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, step, every, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -264,7 +262,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right_closed interval values]' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -313,7 +311,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, duration) [right open interval values]' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -362,7 +360,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -418,7 +416,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -468,7 +466,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -524,7 +522,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0, 0]
       move_control = nil
@@ -589,7 +587,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Bugfix: move dont modify from and to parameters' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       f = [1, 2, 3]
       t = [2, 3, 4]
@@ -609,7 +607,7 @@ RSpec.describe Musa::Sequencer do
     it "Bugfix: parallel move didn't executed yield block with correct value parameters when several partially coincidentals every intervals were needed" do
       c = {}
 
-      s = Sequencer.new(4, 32) do |_|
+      s = Musa::Sequencer::Sequencer.new(4, 32) do |_|
         _.at 1 do
           _.move from: [0, 60], to: [3, 67], duration: 4, step: 1 do |value, duration:, started_ago:|
             c[_.position] = [value, duration, started_ago]
@@ -634,7 +632,7 @@ RSpec.describe Musa::Sequencer do
 
     it "Bugfix: bad calculation of common_interval" do
       c = {}
-      s = Sequencer.new(4, 32) do |_|
+      s = Musa::Sequencer::Sequencer.new(4, 32) do |_|
         _.at 1 do
           _.move from: [ 0, 0 ],
                  to: [ 0, 3 ],
@@ -658,7 +656,7 @@ RSpec.describe Musa::Sequencer do
 
     it 'Bugfix: right open interval with same from and to value and step parameter throws an exception because common interval has a nil duration' do
       c = {}
-      s = Sequencer.new(4, 32) do |_|
+      s = Musa::Sequencer::Sequencer.new(4, 32) do |_|
         _.at 1 do
           _.move from: [0, 0], to: [0, 4], duration: 4, step: 1, right_open: true do |_, value, duration:, started_ago:|
             c[_.position] = { value: value, duration: duration, started_ago: started_ago }
@@ -675,10 +673,10 @@ RSpec.describe Musa::Sequencer do
                           4r => { value: [0, 3], duration: [4, 1], started_ago: [3, nil] }
                       })
     end
-=end
+
     it 'Different right_open values' do
       c = {}
-      s = Sequencer.new(4, 32, log_position_format: 1.3) do |_|
+      s = Musa::Sequencer::Sequencer.new(4, 32, log_position_format: 1.3) do |_|
         _.at 1 do
           _.move from: [ 5, 60, 6 ],
                  to: [ 2, 65, 7 ],

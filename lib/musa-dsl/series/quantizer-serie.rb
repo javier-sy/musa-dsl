@@ -4,8 +4,6 @@ require_relative '../core-ext/inspect-nice'
 require_relative 'base-series'
 
 # TODO remove debugging puts, intermediate hash comments on :info and InspectNice
-using Musa::Extension::InspectNice
-
 module Musa
   module Series::Operations
     def quantize(reference: nil, step: nil,
@@ -70,7 +68,7 @@ module Musa
           time = n[0].rationalize
           value = n[1].rationalize
         else
-          raise RuntimeError, "Don't know how to process #{n}"
+          raise "Don't know how to process #{n}"
         end
 
         return time, value
@@ -115,9 +113,8 @@ module Musa
       end
 
       private def _next_value
+        i = 2
         if @stops
-          i = 2
-
           loop do
             while @segments.size < i && process2; end
 
@@ -142,17 +139,16 @@ module Musa
               return { time: first[:time],
                        @value_attribute => first[:value],
                        duration: durations_to_sum.sum { |_| _[:duration] } }
-                         .extend(Musa::Datasets::AbsTimed)
-                         .extend(Musa::Datasets::AbsD)
+                     .extend(Musa::Datasets::AbsTimed)
+                     .extend(Musa::Datasets::AbsD)
             else
               i += 1
             end
           end
 
-          return nil
+          nil
 
         else
-          i = 2
           # puts "\n\n"
           loop do
             while @segments.size < i && process2; end
@@ -179,8 +175,8 @@ module Musa
               return { time: first[:time],
                        @value_attribute => first[:value],
                        duration: durations_to_sum.sum { |_| _[:duration] } }
-                         .extend(Musa::Datasets::AbsTimed)
-                         .extend(Musa::Datasets::AbsD)
+                     .extend(Musa::Datasets::AbsTimed)
+                     .extend(Musa::Datasets::AbsD)
             else
               i += 1
             end
@@ -211,7 +207,7 @@ module Musa
 
           # puts "process2: from_time #{from_time} from_value #{from_value} to_time #{to_time} to_value #{to_value} to_last #{to_point_is_last || 'nil'} sign #{sign}"
 
-          if sign == 0
+          if sign.zero?
             if @segments.last && @segments.last[:time] == from_time
 
               @segments.last[:duration] = to_time - from_time
@@ -261,8 +257,8 @@ module Musa
 
             loop_from_value.step(loop_to_value, step_value_increment) do |value|
               if @segments.last &&
-                @segments.last[:time] == intermediate_point_time &&
-                @segments.last[:value] == value
+                 @segments.last[:time] == intermediate_point_time &&
+                 @segments.last[:value] == value
 
                 @segments.last[:duration] = step_time_increment
                 @segments.last[:info] += '; edited on b'
@@ -294,7 +290,7 @@ module Musa
 
       private def process(time, value, last_time_value)
         if time && value
-          raise RuntimeError, 'time only can go forward' if @last_processed_time && time <= @last_processed_time
+          raise 'time only can go forward' if @last_processed_time && time <= @last_processed_time
 
           q_value = round_quantize(value)
 
@@ -399,23 +395,23 @@ module Musa
           if @first
             @first = false
 
-            if time > first_time
-              result = { time: first_time,
+            result = if time > first_time
+                       { time: first_time,
                          @value_attribute => round_to_nearest_quantize(first_value, value),
                          duration: time - first_time }
-                           .extend(Musa::Datasets::AbsD)
-                           .extend(Musa::Datasets::AbsTimed)
-            else
-              result = _next_value
-            end
+                         .extend(Musa::Datasets::AbsD)
+                         .extend(Musa::Datasets::AbsTimed)
+                     else
+                       _next_value
+                     end
           else
             if @crossings[1]
               next_time = @crossings[1][:time]
               result = { time: time,
                          @value_attribute => value,
                          duration: next_time - time }
-                           .extend(Musa::Datasets::AbsD)
-                           .extend(Musa::Datasets::AbsTimed)
+                       .extend(Musa::Datasets::AbsD)
+                       .extend(Musa::Datasets::AbsTimed)
 
               @crossings.shift
 
@@ -424,8 +420,8 @@ module Musa
                 result = { time: @crossings[0][:time],
                            @value_attribute => @crossings[0][@value_attribute],
                            duration: @last_time - @crossings[0][:time] }
-                             .extend(Musa::Datasets::AbsD)
-                             .extend(Musa::Datasets::AbsTimed)
+                         .extend(Musa::Datasets::AbsD)
+                         .extend(Musa::Datasets::AbsTimed)
 
                 @last_time = nil
               end
@@ -436,8 +432,8 @@ module Musa
             result = { time: first_time,
                        value: round_to_nearest_quantize(first_value),
                        duration: @last_time - first_time }
-                         .extend(Musa::Datasets::AbsD)
-                         .extend(Musa::Datasets::AbsTimed)
+                     .extend(Musa::Datasets::AbsD)
+                     .extend(Musa::Datasets::AbsTimed)
 
             @first = false
             @last_time = false
@@ -453,8 +449,8 @@ module Musa
             if @last_time.nil? || c[:time] > @last_time
 
               if c[:stop] &&
-                  @crossings.dig(-1, :stop) &&
-                  @crossings.dig(-1, @value_attribute) == c[@value_attribute]
+                 @crossings.dig(-1, :stop) &&
+                 @crossings.dig(-1, @value_attribute) == c[@value_attribute]
 
                 c[:stops] = (@crossings[-1][:stops] || 0) + 1
 
@@ -473,7 +469,7 @@ module Musa
         from_time, from_value = get_time_value(@source.next_value)
 
         if from_time && from_value
-          raise RuntimeError, "time only can go forward" if @last_time && from_time <= @last_time
+          raise 'time only can go forward' if @last_time && from_time <= @last_time
 
           @last_time = from_time
 
@@ -500,36 +496,36 @@ module Musa
         delta_time = to_time - from_time
 
         crossings =
-            from_step.step(last_step, sign).collect do |i|
-              value = @crossing_reference + i * @step_size
+          from_step.step(last_step, sign).collect do |i|
+            value = @crossing_reference + i * @step_size
 
-              { time: from_time + (delta_time / delta_value) * (value - from_value),
-                @value_attribute => value + sign * @halfway_offset }
-            end
+            { time: from_time + (delta_time / delta_value) * (value - from_value),
+              @value_attribute => value + sign * @halfway_offset }
+          end
 
         if @include_stops
           first_crossing_time = crossings.dig(0, :time)
           last_crossing_time = crossings.dig(-1, :time)
 
-          if first_crossing_time.nil? || from_time < first_crossing_time
-            stop_before = [ { time: from_time,
+          stop_before = if first_crossing_time.nil? || from_time < first_crossing_time
+                          [ { time: from_time,
                               @value_attribute =>
-                                  round_to_nearest_quantize(from_value,
-                                                            crossings.dig(0, @value_attribute)),
+                                                round_to_nearest_quantize(from_value,
+                                                                          crossings.dig(0, @value_attribute)),
                               stop: true } ]
-          else
-            stop_before = []
-          end
+                        else
+                          []
+                        end
 
-          if last_crossing_time.nil? || to_time > last_crossing_time
-            stop_after = [ { time: to_time,
+          stop_after = if last_crossing_time.nil? || to_time > last_crossing_time
+                         [ { time: to_time,
                              @value_attribute =>
-                                 round_to_nearest_quantize(to_value,
-                                                           crossings.dig(-1, @value_attribute)),
+                                              round_to_nearest_quantize(to_value,
+                                                                        crossings.dig(-1, @value_attribute)),
                              stop: true } ]
-          else
-            stop_after = []
-          end
+                       else
+                         []
+                       end
 
           stop_before + crossings + stop_after
         else

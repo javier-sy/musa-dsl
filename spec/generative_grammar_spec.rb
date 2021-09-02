@@ -2,12 +2,13 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::GenerativeGrammar
 
 RSpec.describe Musa do
   context 'Generative grammar' do
+    include Musa::GenerativeGrammar
+
     it 'Node repetition with min and max limit' do
-      a = N("a") + N("b")
+      a = Musa::GenerativeGrammar.N("a") + Musa::GenerativeGrammar.N("b")
 
       ar = a.next(a.next(a.repeat(max: 2))).options(raw: true)
 
@@ -37,7 +38,7 @@ RSpec.describe Musa do
 
     it 'Simple grammar with BlockNodes and fixed repetition' do
       a = N(color: :blue) { |parent| 'hola'}
-      b = N(color: :red) { |parent, attributes| OptionElement.new('adios', final: true, **attributes) }
+      b = N(color: :red) { |parent, attributes| Musa::GenerativeGrammar::OptionElement.new('adios', final: true, **attributes) }
       c = N(color: :yellow) { |parent| 'cosa' }
 
       d = (a | b | c).repeat(4)

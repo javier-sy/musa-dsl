@@ -2,10 +2,10 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-
 RSpec.describe Musa::Series do
   context 'Series queue' do
+    include Musa::Series
+
     it 'Basic QUEUE series: initialized from constructor' do
       s = QUEUE(S(1, 2, 3), S(4, 5, 6)).i
 

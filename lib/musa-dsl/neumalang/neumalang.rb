@@ -11,64 +11,49 @@ module Musa
         module Grammar; end
 
         module Sentences
-          include Musa::Series
-          include Musa::Neumas
-
           def value
-            S(*captures(:expression).collect(&:value)).extend(Neuma::Serie)
+            Musa::Series::Constructors.S(*captures(:expression).collect(&:value)).extend(Musa::Neumas::Neuma::Serie)
           end
         end
 
         module BracketedBarSentences
-          include Musa::Series
-          include Musa::Neumas
-
           def value
             { kind: :parallel,
               parallel: [{ kind: :serie,
                            serie: S(*capture(:aa).value) }] +
-                                  captures(:bb).collect { |c| { kind: :serie, serie: S(*c.value) } }
-            }.extend(Neuma::Parallel)
+                                  captures(:bb).collect { |c| { kind: :serie, serie: Musa::Series::Constructors.S(*c.value) } }
+            }.extend(Musa::Neumas::Neuma::Parallel)
           end
         end
 
         module BracketedSentences
-          include Musa::Series
-          include Musa::Neumas
-
           def value
             { kind: :serie,
-              serie: S(*capture(:sentences).value) }.extend Neuma
+              serie: Musa::Series::Constructors.S(*capture(:sentences).value) }.extend Musa::Neumas::Neuma
           end
         end
 
         module ReferenceExpression
-          include Musa::Neumas
-
           def value
             { kind: :reference,
-              reference: capture(:expression).value }.extend Neuma
+              reference: capture(:expression).value }.extend Musa::Neumas::Neuma
           end
         end
 
         module VariableAssign
-          include Musa::Neumas
-
           def value
             { kind: :assign_to,
               assign_to: captures(:use_variable).collect { |c| c.value[:use_variable] },
               assign_value: capture(:expression).value
-            }.extend Neuma
+            }.extend Musa::Neumas::Neuma
           end
         end
 
         module Event
-          include Musa::Neumas
-
           def value
             { kind: :event,
               event: capture(:name).value.to_sym
-            }.merge(capture(:parameters) ? capture(:parameters).value : {}).extend Neuma
+            }.merge(capture(:parameters) ? capture(:parameters).value : {}).extend Musa::Neumas::Neuma
           end
         end
 
@@ -104,40 +89,31 @@ module Musa
         end
 
         module BracedCommand
-          include Musa::Neumas
-
           def value
             { kind: :command,
               command: eval("proc { #{capture(:complex_command).value.strip} }")
-            }.merge(capture(:parameters) ? capture(:parameters).value : {}).extend Neuma
+            }.merge(capture(:parameters) ? capture(:parameters).value : {}).extend Musa::Neumas::Neuma
           end
         end
 
         module CallMethodsExpression
-          include Musa::Neumas
-
           def value
             { kind: :call_methods,
               call_methods: captures(:method_call).collect(&:value),
-              on: capture(:object_expression).value }.extend Neuma
+              on: capture(:object_expression).value }.extend Musa::Neumas::Neuma
           end
         end
 
         module UseVariable
-          include Musa::Neumas
-
           def value
             { kind: :use_variable,
-              use_variable: "@#{capture(:name).value}".to_sym }.extend Neuma
+              use_variable: "@#{capture(:name).value}".to_sym }.extend Musa::Neumas::Neuma
           end
         end
 
         module NeumaAsAttributes
-          include Musa::Neumas
-          include Musa::Datasets
-
           def value
-            h = {}.extend GDVd
+            h = {}.extend Musa::Datasets::GDVd
 
             capture(:grade)&.value&.tap { |_| h.merge! _ if _ }
             capture(:octave)&.value&.tap { |_| h.merge! _ if _ }
@@ -147,46 +123,35 @@ module Musa
             h[:modifiers] = {} unless captures(:modifiers).empty?
             captures(:modifiers).collect(&:value).each { |_| h[:modifiers].merge! _ if _ }
 
-            { kind: :gdvd, gdvd: h }.extend Neuma
+            { kind: :gdvd, gdvd: h }.extend Musa::Neumas::Neuma
           end
         end
 
         module PackedVector
-          include Musa::Neumas
-
           def value
-            { kind: :packed_v, packed_v: capture(:raw_packed_vector).value }.extend(Neuma)
+            { kind: :packed_v, packed_v: capture(:raw_packed_vector).value }.extend(Musa::Neumas::Neuma)
           end
         end
 
         module RawPackedVector
-          include Musa::Datasets
-
           def value
-            captures(:key_value).collect(&:value).to_h.extend(PackedV)
+            captures(:key_value).collect(&:value).to_h.extend(Musa::Datasets::PackedV)
           end
         end
 
         module Vector
-          include Musa::Neumas
-
           def value
-            { kind: :v, v: capture(:raw_vector).value }.extend(Neuma)
+            { kind: :v, v: capture(:raw_vector).value }.extend(Musa::Neumas::Neuma)
           end
         end
 
         module RawVector
-          include Musa::Datasets
-
           def value
-            captures(:raw_number).collect(&:value).extend(V)
+            captures(:raw_number).collect(&:value).extend(Musa::Datasets::V)
           end
         end
 
         module ProcessOfVectors
-          include Musa::Datasets
-          include Musa::Neumas
-
           def value
             durations_rest = []
             i = 0
@@ -198,8 +163,8 @@ module Musa
               i += 1
             end
 
-            p = ([ capture(:first).value ] + durations_rest).extend(P)
-            { kind: :p, p: p }.extend(Neuma)
+            p = ([ capture(:first).value ] + durations_rest).extend(Musa::Datasets::P)
+            { kind: :p, p: p }.extend(Musa::Neumas::Neuma)
           end
         end
 
@@ -326,39 +291,31 @@ module Musa
         end
 
         module Symbol
-          include Musa::Neumas
-
           def value
             { kind: :value,
-              value: capture(:name).value.to_sym }.extend Neuma
+              value: capture(:name).value.to_sym }.extend Musa::Neumas::Neuma
           end
         end
 
         module String
-          include Musa::Neumas
-
           def value
             { kind: :value,
-              value: capture(:everything_except_double_quote).value }.extend Neuma
+              value: capture(:everything_except_double_quote).value }.extend Musa::Neumas::Neuma
           end
         end
 
         module Number
-          include Musa::Neumas
-
           def value
             { kind: :value,
-              value: capture(:raw_number).value }.extend Neuma
+              value: capture(:raw_number).value }.extend Musa::Neumas::Neuma
           end
         end
 
         module Special
-          include Musa::Neumas
-
           def value
             v = captures(0)
             { kind: :value,
-              value: v == 'nil' ? nil : (v == 'true' ? true : false) }.extend Neuma
+              value: v == 'nil' ? nil : (v == 'true' ? true : false) }.extend Musa::Neumas::Neuma
           end
         end
       end
@@ -366,10 +323,11 @@ module Musa
       extend self
 
       def parse(string_or_file, decode_with: nil, debug: nil)
-        if string_or_file.is_a? String
+        case string_or_file
+        when String
           match = Parser::Grammar::Grammar.parse string_or_file
 
-        elsif string_or_file.is_a? File
+        when File
           match = Parser::Grammar::Grammar.parse string_or_file.read
 
         else

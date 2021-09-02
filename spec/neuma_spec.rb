@@ -2,22 +2,17 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Neumalang
-include Musa::Series
-include Musa::Scales
-include Musa::Datasets
-include Musa::Neumas
-
 using Musa::Extension::Neumas
 
 RSpec.describe Musa::Neumalang do
   context 'Neuma simple parsing' do
+    include Musa::Series
 
     it 'Basic neumas inline parsing (empty)' do
-      expect(Neumalang.parse('').to_a(recursive: true)).to eq([])
-      expect(Neumalang.parse(' ').to_a(recursive: true)).to eq([])
-      expect(Neumalang.parse('  ').to_a(recursive: true)).to eq([])
-      expect(Neumalang.parse('   ').to_a(recursive: true)).to eq([])
+      expect(Musa::Neumalang::Neumalang.parse('').to_a(recursive: true)).to eq([])
+      expect(Musa::Neumalang::Neumalang.parse(' ').to_a(recursive: true)).to eq([])
+      expect(Musa::Neumalang::Neumalang.parse('  ').to_a(recursive: true)).to eq([])
+      expect(Musa::Neumalang::Neumalang.parse('   ').to_a(recursive: true)).to eq([])
     end
 
     it 'Basic neumas inline parsing (only a comment)' do
@@ -25,15 +20,15 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neumas inline parsing (two comments)' do
-      expect(Neumalang.parse('/* comentario 1 */ /* bla bla */').to_a(recursive: true)).to eq([])
+      expect(Musa::Neumalang::Neumalang.parse('/* comentario 1 */ /* bla bla */').to_a(recursive: true)).to eq([])
     end
 
     it 'Basic neumas inline parsing (two comments with subcomments)' do
-      expect(Neumalang.parse('/* comentario  /* otro comentario */ (1) */ /* bla bla */').to_a(recursive: true)).to eq([])
+      expect(Musa::Neumalang::Neumalang.parse('/* comentario  /* otro comentario */ (1) */ /* bla bla */').to_a(recursive: true)).to eq([])
     end
 
     it 'Basic neumas inline parsing (1)' do
-      expect(Neumalang.parse('(2 3) (5 6) /* comentario 1 */ ::evento').to_a(recursive: true)).to eq(
+      expect(Musa::Neumalang::Neumalang.parse('(2 3) (5 6) /* comentario 1 */ ::evento').to_a(recursive: true)).to eq(
         [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
          { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
          { kind: :event, event: :evento }]
@@ -41,7 +36,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neumas inline parsing (2)' do
-      expect(Neumalang.parse('(2 3) (5 6) ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
+      expect(Musa::Neumalang::Neumalang.parse('(2 3) (5 6) ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
         [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
          { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
          { kind: :event, event: :evento }]
@@ -49,12 +44,12 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neumas inline parsing with comment' do
-      expect(Neumalang.parse("/* comentario (con parentesis) \n*/ (2 3)").to_a(recursive: true)).to eq(
+      expect(Musa::Neumalang::Neumalang.parse("/* comentario (con parentesis) \n*/ (2 3)").to_a(recursive: true)).to eq(
         [{ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } }])
     end
 
     it 'Basic neumas inline parsing only duration' do
-      result = Neumalang.parse('(0) (. 1/2)').to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse('(0) (. 1/2)').to_a(recursive: true)
 
       expect(result[0]).to eq(kind: :gdvd, gdvd: { abs_grade: 0 })
       expect(result[1]).to eq(kind: :gdvd, gdvd: { abs_duration: 1/2r } )
@@ -95,9 +90,9 @@ RSpec.describe Musa::Neumalang do
 
     it 'Basic neumas inline parsing with differential decoder' do
 
-      differential_decoder = Decoders::NeumaDifferentialDecoder.new(base_duration: 1)
+      differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(base_duration: 1)
 
-      result = Neumalang.parse('(0) (.) (+1) (2 p) (silence) (silence 1/3) (2 1/2 p) /*comentario 1*/', decode_with: differential_decoder).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse('(0) (.) (+1) (2 p) (silence) (silence 1/3) (2 1/2 p) /*comentario 1*/', decode_with: differential_decoder).to_a(recursive: true)
 
       expect(result[0].base_duration).to eq 1
 
@@ -111,9 +106,9 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neumas file parsing with GDV differential decoder' do
-      differential_decoder = Decoders::NeumaDifferentialDecoder.new
+      differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
 
-      result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: differential_decoder).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: differential_decoder).to_a(recursive: true)
 
       c = -1
 
@@ -157,11 +152,11 @@ RSpec.describe Musa::Neumalang do
     end
 
     it 'Basic neumas file parsing with GDV decoder' do
-      scale = Scales.default_system.default_tuning.major[60]
+      scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
 
-      decoder = Decoders::NeumaDecoder.new scale, base: { grade: 0, duration: 1, velocity: 1 }
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, base: { grade: 0, duration: 1, velocity: 1 }
 
-      result = Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: decoder).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse_file(File.join(File.dirname(__FILE__), 'neuma_spec.neu'), decode_with: decoder).to_a(recursive: true)
 
       c = -1
 
@@ -231,8 +226,8 @@ RSpec.describe Musa::Neumalang do
     it 'Neumas strings parallelized via Ruby |' do
       neumas = '(1 2 f) (a 2 c)' | '(2 3 f) (x 2 z)' | '(3 4 f) (a 1 c)'
 
-      expect(neumas).to be_a(Neuma)
-      expect(neumas).to be_a(Neuma::Parallel)
+      expect(neumas).to be_a(Musa::Neumas::Neuma)
+      expect(neumas).to be_a(Musa::Neumas::Neuma::Parallel)
 
       expect(neumas[:parallel].length).to eq 3
     end

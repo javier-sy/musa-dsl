@@ -2,13 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Extension::DynamicProxy
-
-RSpec.describe DynamicProxy do
+RSpec.describe Musa::Extension::DynamicProxy do
   context 'Dynamic Proxy forwarding' do
-    proxy1_1000 = DynamicProxy.new(1000)
-    proxy2_1000 = DynamicProxy.new(1000)
-    proxy3_2000 = DynamicProxy.new(2000)
+    proxy1_1000 = Musa::Extension::DynamicProxy::DynamicProxy.new(1000)
+    proxy2_1000 = Musa::Extension::DynamicProxy::DynamicProxy.new(1000)
+    proxy3_2000 = Musa::Extension::DynamicProxy::DynamicProxy.new(2000)
 
     it 'proxy(1000) == 1000' do
       expect(proxy1_1000).to eq 1000
@@ -35,7 +33,7 @@ RSpec.describe DynamicProxy do
     end
 
     it 'proxy(1000).is_a? DynamicProxy' do
-      expect(proxy1_1000.is_a?(DynamicProxy)).to be true
+      expect(proxy1_1000.is_a?(Musa::Extension::DynamicProxy::DynamicProxy)).to be true
     end
 
     it 'proxy(1000).kind_of? Integer' do
@@ -47,12 +45,12 @@ RSpec.describe DynamicProxy do
     end
 
     it 'proxy(1000).kind_of? DynamicProxy' do
-      expect(proxy1_1000.is_a?(DynamicProxy)).to be true
+      expect(proxy1_1000.is_a?(Musa::Extension::DynamicProxy::DynamicProxy)).to be true
     end
   end
 
   context 'Dynamic Proxy receiver change' do
-    proxy = DynamicProxy.new(1000)
+    proxy = Musa::Extension::DynamicProxy::DynamicProxy.new(1000)
 
     it 'proxy = (1000); proxy == 1000' do
       expect(proxy).to eq 1000

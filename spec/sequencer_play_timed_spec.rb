@@ -2,21 +2,18 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Sequencer
-include Musa::Datasets
-include Musa::Series
-
 using Musa::Extension::InspectNice
-
 
 RSpec.describe Musa::Sequencer do
   context 'play_timed' do
+    include Musa::Series
+
     it 'simple after evaluation' do
       serie = S({ time: 0, value: { a: 1 } },
                 { time: 2, value: { a: 2 } },
                 { time: 5, value: { a: 3 } })
 
-      s = BaseSequencer.new do_log: false, do_error_log: true
+      s = Musa::Sequencer::BaseSequencer.new do_log: false, do_error_log: true
 
       result = []
       control_passed = nil
@@ -49,11 +46,11 @@ RSpec.describe Musa::Sequencer do
 
 
     it 'simple case timed_serie from a P of PackedV' do
-      p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
-            { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
-            { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
+      p = [ { a: 0r, b: 1r }.extend(Musa::Datasets::PackedV), 3*4,
+            { a: 4r, b: 5.75r }.extend(Musa::Datasets::PackedV), 2*4,
+            { a: 1.5r, b: 2 + 1/3r }.extend(Musa::Datasets::PackedV) ].extend(Musa::Datasets::P)
 
-      s = BaseSequencer.new do_log: false, do_error_log: true
+      s = Musa::Sequencer::BaseSequencer.new do_log: false, do_error_log: true
 
       result = []
 
@@ -87,7 +84,7 @@ RSpec.describe Musa::Sequencer do
 
       u = TIMED_UNION(s1, s2)
 
-      s = BaseSequencer.new do_log: false, do_error_log: true
+      s = Musa::Sequencer::BaseSequencer.new do_log: false, do_error_log: true
 
       result = []
 
@@ -112,11 +109,11 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'works well with a simple case (with stops, as default)' do
-      p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
-            { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
-            { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
+      p = [ { a: 0r, b: 1r }.extend(Musa::Datasets::PackedV), 3*4,
+            { a: 4r, b: 5.75r }.extend(Musa::Datasets::PackedV), 2*4,
+            { a: 1.5r, b: 2 + 1/3r }.extend(Musa::Datasets::PackedV) ].extend(Musa::Datasets::P)
 
-      s = BaseSequencer.new do_log: false, do_error_log: true
+      s = Musa::Sequencer::BaseSequencer.new do_log: false, do_error_log: true
       result = []
 
       u = TIMED_UNION(
@@ -199,11 +196,11 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'works well with a simple case (without stops)' do
-      p = [ { a: 0r, b: 1r }.extend(PackedV), 3*4,
-            { a: 4r, b: 5.75r }.extend(PackedV), 2*4,
-            { a: 1.5r, b: 2 + 1/3r }.extend(PackedV) ].extend(P)
+      p = [ { a: 0r, b: 1r }.extend(Musa::Datasets::PackedV), 3*4,
+            { a: 4r, b: 5.75r }.extend(Musa::Datasets::PackedV), 2*4,
+            { a: 1.5r, b: 2 + 1/3r }.extend(Musa::Datasets::PackedV) ].extend(Musa::Datasets::P)
 
-      s = BaseSequencer.new do_log: false, do_error_log: true
+      s = Musa::Sequencer::BaseSequencer.new do_log: false, do_error_log: true
 
       result = []
 

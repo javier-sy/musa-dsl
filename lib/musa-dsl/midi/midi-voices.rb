@@ -4,11 +4,11 @@ require 'midi-message'
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/array-explode-ranges'
 
-using Musa::Extension::Arrayfy
-using Musa::Extension::ExplodeRanges
-
 module Musa
   module MIDIVoices
+    using Musa::Extension::Arrayfy
+    using Musa::Extension::ExplodeRanges
+
     class MIDIVoices
       attr_accessor :do_log
 

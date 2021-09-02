@@ -21,8 +21,6 @@ module Musa
           end
         end
 
-
-
         element
       end
     end
@@ -39,10 +37,10 @@ module Musa
         element
       end
 
-      def check(value_or_array)
+      def check(value_or_array, &block)
         if block_given?
           if value_or_array.is_a?(Array)
-            value_or_array.each { |value| yield value }
+            value_or_array.each(&block)
           else
             yield value_or_array
           end

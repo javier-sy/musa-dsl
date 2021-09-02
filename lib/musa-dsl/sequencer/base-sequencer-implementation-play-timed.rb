@@ -1,9 +1,9 @@
 require_relative '../core-ext/inspect-nice'
 
-using Musa::Extension::InspectNice
-
 module Musa::Sequencer
   class BaseSequencer
+    using Musa::Extension::InspectNice
+
     private def _play_timed(timed_serie, control, &block)
 
       if first_value_sample = timed_serie.peek_next_value

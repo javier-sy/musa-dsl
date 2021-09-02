@@ -1,13 +1,13 @@
 require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/with'
 
-using Musa::Extension::Arrayfy
-
 # TODO hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
 # TODO esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
 
 module Musa
   module Backboner
+    using Musa::Extension::Arrayfy
+
     class Backboner
       include Musa::Extension::With
 

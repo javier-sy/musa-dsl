@@ -1,15 +1,13 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Series::Composer
-include Musa::Series::Constructors
 
 RSpec.describe Musa::Series::Composer do
   context 'Series composer' do
 
+    include Musa::Series
+
     it 'No input, ultra-simple 1 step output (1 symbol operation), explicit output access' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
         step1 reverse
@@ -24,7 +22,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'No input, ultra-simple 1 step output (3 symbol operations)' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
         step1 reverse, reverse, reverse
@@ -39,7 +37,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'No input, simple 1 step output (1 hash operation)' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
         step1 ({ skip: 2 })
@@ -54,7 +52,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'No input, simple 1 step output (2 hash operation)' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
         step1 ({ skip: 2 }), { skip: 2 }
@@ -69,7 +67,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'No input, simple 1 step output' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
         step1 ({ skip: 2 }), { repeat: 2 }, reverse, { repeat: 2 }, reverse
@@ -84,7 +82,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'No input, simple 2 step output, with proc' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ S: [1, 2, 3, 4, 5] })
 
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
@@ -101,7 +99,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'simple external input and pipeline with only one symbol step, explicit access to input and output' do
-      composer = Composer.new do
+      composer = Musa::Series::Composer::Composer.new do
         step1 reverse
 
         route input, to: step1
@@ -116,7 +114,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'simple external instance input' do
-      composer = Composer.new do
+      composer = Musa::Series::Composer::Composer.new do
         step1 reverse
 
         route input, to: step1
@@ -131,7 +129,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'with external input' do
-      composer = Composer.new do
+      composer = Musa::Series::Composer::Composer.new do
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
         step2 ({ eval: lambda { |v| v + 100 } })
 
@@ -149,7 +147,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'with two inputs merged' do
-      composer = Composer.new(inputs: [:input1, :input2]) do
+      composer = Musa::Series::Composer::Composer.new(inputs: [:input1, :input2]) do
         step1 ({ skip: 1 }), reverse
         step2 ({ eval: lambda { |v| v + 100 } })
 
@@ -175,7 +173,7 @@ RSpec.describe Musa::Series::Composer do
 
     it 'routing a new output to a used input raises error' do
       expect {
-        Composer.new do
+        Musa::Series::Composer::Composer.new do
           step1 reverse
           step2 reverse
           step3 reverse
@@ -189,7 +187,7 @@ RSpec.describe Musa::Series::Composer do
 
     it 'routing again an output to a the same input raises error' do
       expect {
-        Composer.new do
+        Musa::Series::Composer::Composer.new do
           step1 reverse
           step2 reverse
           step3 reverse
@@ -202,7 +200,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'add pipelines and routing from composer object' do
-      composer = Composer.new(auto_commit: false)
+      composer = Musa::Series::Composer::Composer.new(auto_commit: false)
 
       composer.pipeline :step1, { skip: 2 }, :reverse, { repeat: 2 }, :reverse
       composer.pipeline :step2, { eval: lambda { |v| v + 100 } }
@@ -221,7 +219,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'add pipelines and routing with composer update' do
-      composer = Composer.new(auto_commit: false)
+      composer = Musa::Series::Composer::Composer.new(auto_commit: false)
 
       composer.update do
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
@@ -242,7 +240,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'with buffered routing sending input to 2 pipelines and merging the results' do
-      composer = Composer.new(auto_commit: false) do
+      composer = Musa::Series::Composer::Composer.new(auto_commit: false) do
         step1 ({ skip: 2 }), reverse, { repeat: 2 }, reverse
         step2 ({ eval: lambda { |v| v + 100 } })
 
@@ -273,7 +271,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'lambda is interpreted as { eval: lambda ... }' do
-      composer = Composer.new do
+      composer = Musa::Series::Composer::Composer.new do
         step lambda { |v| v + 100 }
 
         route input, to: step
@@ -290,7 +288,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it '{ |x| ... } is interpreted as { eval: lambda ... }' do
-      composer = Composer.new do
+      composer = Musa::Series::Composer::Composer.new do
         step { |v| v + 100 }
 
         route input, to: step
@@ -307,7 +305,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline within a lazy operation' do
-      composer = Composer.new do
+      composer = Musa::Series::Composer::Composer.new do
         step reverse,
              { lazy: [split, instance,
                       to_a,
@@ -332,7 +330,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline within a lazy operation (delayed commit)' do
-      composer = Composer.new(auto_commit: false) do
+      composer = Musa::Series::Composer::Composer.new(auto_commit: false) do
         step reverse,
              { lazy: [split, instance,
                       to_a,
@@ -359,7 +357,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline (delayed commit)' do
-      composer = Composer.new(auto_commit: false) do
+      composer = Musa::Series::Composer::Composer.new(auto_commit: false) do
         step split, instance,
              to_a,
              { collect: proc { |_| _.with { |_| _ + 1000 } } },
@@ -381,7 +379,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline (input as a parameter instead of assigned after)' do
-      composer = Composer.new(inputs: { input: S([1, 10], [2, 20], [3, 30]) }) do
+      composer = Musa::Series::Composer::Composer.new(inputs: { input: S([1, 10], [2, 20], [3, 30]) }) do
         step split, instance,
              to_a,
              { collect: proc { |_| _.with { |_| _ + 1000 } } },
@@ -397,7 +395,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution)' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         step ({ S: [[1, 10], [2, 20], [3, 30]] }),
              split, instance,
              to_a,
@@ -415,7 +413,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'normal functions (and constructors) can be used inside a pipeline (immediate resolution) with lambda simplified syntax' do
-      composer = Composer.new(inputs: nil) do
+      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         step ({ S: [[1, 10], [2, 20], [3, 30]] }),
              split, instance,
              to_a,
@@ -460,7 +458,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'parsing constructors with named parameters (FOR)' do
-      c = Composer.new(inputs: nil) do
+      c = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ FOR: { from: 1, to: 5 } })
         route input, to: output
       end
@@ -471,7 +469,7 @@ RSpec.describe Musa::Series::Composer do
     end
 
     it 'parsing constructors with named parameters (RND)' do
-      c = Composer.new(inputs: nil) do
+      c = Musa::Series::Composer::Composer.new(inputs: nil) do
         input ({ RND: { values: [1, 2, 3, 4, 5] } })
         route input, to: output
       end

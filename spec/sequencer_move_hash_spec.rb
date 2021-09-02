@@ -2,13 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Sequencer
-
 RSpec.describe Musa::Sequencer do
   context 'Basic move hash sequencing' do
 
     it 'Basic move sequencing (every, from, to, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = {a: 0, b: 0, c: 0}
       move_control = nil
@@ -72,7 +70,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = {a: 0, b: 0, c: 0}
       move_control = nil
@@ -136,7 +134,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, every)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -200,7 +198,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, step, every, duration)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -264,7 +262,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, every, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0]
       move_control = nil
@@ -320,7 +318,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic move sequencing (from, to, step, duration) with to: as unique value' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = [0, 0, 0, 0]
       move_control = nil

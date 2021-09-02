@@ -1,15 +1,12 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Darwin
-include Musa::Variatio
-include Musa::Series
 
 RSpec.describe Musa::Darwin do
   context 'Select over a range of variations' do
+    include Musa::Series
+
     it 'Simple selection 1' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a, 1..10
         field :b, %i[alfa beta gamma delta]
 
@@ -18,7 +15,7 @@ RSpec.describe Musa::Darwin do
         end
       end
 
-      d = Darwin.new do
+      d = Musa::Darwin::Darwin.new do
         measures do |object|
           die if object[:b] == :gamma
 
@@ -42,7 +39,7 @@ RSpec.describe Musa::Darwin do
     end
 
     it 'Simple selection 2' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a, 1..10
         field :b, %i[alfa beta gamma delta]
 
@@ -51,7 +48,7 @@ RSpec.describe Musa::Darwin do
         end
       end
 
-      d = Darwin.new do
+      d = Musa::Darwin::Darwin.new do
         measures do |object|
           die if object[:b] == :gamma
 

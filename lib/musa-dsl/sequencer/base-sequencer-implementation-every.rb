@@ -10,8 +10,9 @@ module Musa::Sequencer
         control._start_position ||= position
         control._execution_counter ||= 0
 
-        duration_exceeded =
-            (control._start_position + control.duration_value - interval) <= position if interval && control.duration_value
+        if interval && control.duration_value
+          duration_exceeded = (control._start_position + control.duration_value - interval) <= position
+        end
 
         till_exceeded = control.till_value - interval <= position if interval && control.till_value
 
@@ -23,16 +24,15 @@ module Musa::Sequencer
         end
 
 
-        unless control.stopped? || duration_exceeded || till_exceeded || condition_failed || interval.nil?
-          _numeric_at control._start_position + control._execution_counter * interval, control do
-            _every interval, control, block_procedure_binder: block_procedure_binder
-          end
-
-        else
+        if control.stopped? || duration_exceeded || till_exceeded || condition_failed || interval.nil?
           control.do_on_stop.each(&:call)
 
           control.do_after.each do |do_after|
             _numeric_at position + (interval || 0) + do_after[:bars], control, &do_after[:block]
+          end
+        else
+          _numeric_at control._start_position + control._execution_counter * interval, control do
+            _every interval, control, block_procedure_binder: block_procedure_binder
           end
         end
       end

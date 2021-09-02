@@ -2,14 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Sequencer
-include Musa::MIDIRecorder
-
 RSpec.describe Musa::MIDIRecorder do
   context 'Midi Recorder' do
     it 'Basic midi recorder processing (raw midi)' do
-      s = BaseSequencer.new 4, 4
-      recorder = MIDIRecorder.new s
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
+      recorder = Musa::MIDIRecorder::MIDIRecorder.new s
 
       s.tick
       s.tick
@@ -90,8 +87,8 @@ RSpec.describe Musa::MIDIRecorder do
     end
 
     it 'Basic midi recorder processing (transcription to PDV)' do
-      s = BaseSequencer.new 4, 4
-      recorder = MIDIRecorder.new s
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
+      recorder = Musa::MIDIRecorder::MIDIRecorder.new s
 
       s.tick
       s.tick

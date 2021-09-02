@@ -1,5 +1,7 @@
 require_relative '../series'
 
+# TODO: esto sería un refinement, no?
+
 class Array
   def to_serie(of_series: nil, recursive: nil)
     of_series ||= false
@@ -8,11 +10,11 @@ class Array
     raise ArgumentError, 'Cannot convert to serie of_series and recursive simultaneously' if recursive && of_series
 
     if recursive
-      S(*(collect { |_| _.is_a?(Array) ? _.to_serie(recursive: true) : _ }))
+      Musa::Series::Constructors.S(*(collect { |_| _.is_a?(Array) ? _.to_serie(recursive: true) : _ }))
     elsif of_series
-      S(*(collect { |_| S(*_) }))
+      Musa::Series::Constructors.S(*(collect { |_| Musa::Series::Constructors.S(*_) }))
     else
-      S(*self)
+      Musa::Series::Constructors.S(*self)
     end
   end
 

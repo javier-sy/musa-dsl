@@ -120,12 +120,15 @@ module Musa
           yield if block_given? && @started
 
         when 'Song Position Pointer'
-          new_position_in_midi_beats =
-              m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
+          new_position_in_midi_beats = m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
 
-          @logger.debug('InputMidiClock') { "processing Song Position Pointer new_position_in_midi_beats #{new_position_in_midi_beats}..." }
+          @logger.debug('InputMidiClock') do
+            "processing Song Position Pointer new_position_in_midi_beats #{new_position_in_midi_beats}..."
+          end
           @on_change_position.each { |block| block.call midi_beats: new_position_in_midi_beats }
-          @logger.debug('InputMidiClock') { "processing Song Position Pointer new_position_in_beats #{new_position_in_midi_beats}... done" }
+          @logger.debug('InputMidiClock') do
+            "processing Song Position Pointer new_position_in_beats #{new_position_in_midi_beats}... done"
+          end
         end
       end
     end

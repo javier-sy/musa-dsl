@@ -18,8 +18,8 @@ module Musa::Sequencer
 
       __play_eval ||= PlayEval.create \
           mode,
-          SmartProcBinder.new(block,
-                              on_rescue: proc { |e| _rescue_error(e) }),
+          Musa::Extension::SmartProcBinder::SmartProcBinder.new(block,
+                                                                on_rescue: proc { |e| _rescue_error(e) }),
           decoder,
           neumalang_context
 

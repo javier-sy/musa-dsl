@@ -3,7 +3,6 @@ require_relative 'gdv'
 
 require_relative 'helper'
 
-using Musa::Extension::InspectNice
 
 module Musa::Datasets
   module GDVd
@@ -11,6 +10,8 @@ module Musa::Datasets
     include DeltaI
 
     include Helper
+
+    using Musa::Extension::InspectNice
 
     NaturalKeys = (NaturalKeys +
                     [:abs_grade, :abs_sharps, :abs_octave,

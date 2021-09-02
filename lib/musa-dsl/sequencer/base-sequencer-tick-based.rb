@@ -2,7 +2,6 @@ module Musa
   module Sequencer
     class BaseSequencer
       module TickBasedTiming
-
         using Musa::Extension::InspectNice
 
         attr_reader :position, :ticks_per_bar, :tick_duration
@@ -49,9 +48,11 @@ module Musa
             position = ticks_position.round * @tick_duration
 
             if warn
-              @logger.warn('BaseSequencer') { "_check_position: rounding "\
+              @logger.warn('BaseSequencer') do
+                '_check_position: rounding ' \
                   "position #{original_position.inspect} (#{original_position.to_f.round(5)}) "\
-                  "to tick precision: #{position.inspect} (#{position.to_f.round(5)})" }
+                  "to tick precision: #{position.inspect} (#{position.to_f.round(5)})"
+              end
             end
           end
 

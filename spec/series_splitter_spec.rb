@@ -2,12 +2,12 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-
 using Musa::Extension::Matrix
 
 RSpec.describe Musa::Series do
   context 'Series splitter handles' do
+    include Musa::Series
+
     it 'prototype / instance management' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
 
@@ -312,6 +312,8 @@ RSpec.describe Musa::Series do
   end
 
   context 'Series split and merged cases:' do
+    include Musa::Series
+
     it 'serie of hash elements split merges to hash serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
@@ -353,6 +355,7 @@ RSpec.describe Musa::Series do
   end
 
   context 'Series split and collected:' do
+    include Musa::Series
 
     it 'serie of hash elements split collected merges to hash serie again' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])

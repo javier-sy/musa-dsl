@@ -7,7 +7,7 @@ module Musa
       refine Array do
         def to_neumas
           if length > 1
-            MERGE(*collect { |e| convert_to_neumas(e) })
+            Musa::Series::Constructors.MERGE(*collect { |e| convert_to_neumas(e) })
           else
             convert_to_neumas(first)
           end
@@ -21,7 +21,7 @@ module Musa
         def convert_to_neumas(e)
           case e
           when Musa::Neumas::Neuma::Serie then e
-          when Musa::Neumas::Neuma::Parallel then S(e).extend(Musa::Neumas::Neuma::Serie)
+          when Musa::Neumas::Neuma::Parallel then Musa::Series::Constructors.S(e).extend(Musa::Neumas::Neuma::Serie)
           when String then e.to_neumas
           else
             raise ArgumentError, "Don't know how to convert to neumas #{e}"

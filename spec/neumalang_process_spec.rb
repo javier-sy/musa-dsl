@@ -1,12 +1,5 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Neumalang
-include Musa::Datasets
-include Musa::Neumas
-include Musa::Scales
-include Musa::Sequencer
 
 using Musa::Extension::Neumas
 
@@ -22,11 +15,11 @@ RSpec.describe Musa::Neumalang do
 
       expect(a).to eq([{ kind: :p, p: [{ a: 1, b: 2, c: 3 }, 4, { a: 3, b: 5, c: 7 }, 8, { a: 1, b: 2, c: 0 }]}])
 
-      expect(a[0]).to be_a Neuma
+      expect(a[0]).to be_a Musa::Neumas::Neuma
 
-      expect(a[0][:p][0]).to be_a PackedV
+      expect(a[0][:p][0]).to be_a Musa::Datasets::PackedV
       expect(a[0][:p][1]).to be_a Numeric
-      expect(a[0][:p][2]).to be_a PackedV
+      expect(a[0][:p][2]).to be_a Musa::Datasets::PackedV
     end
 
     it 'Basic process of vectors' do
@@ -38,11 +31,11 @@ RSpec.describe Musa::Neumalang do
 
       expect(a).to eq([{ kind: :p, p: [[ 1, 2, 3 ], 4, [ 3, 5, 7 ], 8, [ 1, 2, 0 ]]}])
 
-      expect(a[0]).to be_a Neuma
+      expect(a[0]).to be_a Musa::Neumas::Neuma
 
-      expect(a[0][:p][0]).to be_a V
+      expect(a[0][:p][0]).to be_a Musa::Datasets::V
       expect(a[0][:p][1]).to be_a Numeric
-      expect(a[0][:p][2]).to be_a V
+      expect(a[0][:p][2]).to be_a Musa::Datasets::V
     end
 
     it 'process to process steps' do
@@ -71,8 +64,8 @@ RSpec.describe Musa::Neumalang do
       debug = false
       #debug = true
 
-      scale = Scales.default_system.default_tuning.major[60]
-      gdv_decoder = Decoders::NeumaDecoder.new scale
+      scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
       serie = s.to_neumas
 
@@ -91,7 +84,7 @@ RSpec.describe Musa::Neumalang do
       context = Object.new
       context.instance_variable_set :@debug, debug
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           play serie, mode: :neumalang, decoder: gdv_decoder, context: context do |thing|
             played[position] ||= [] if debug
@@ -117,9 +110,9 @@ RSpec.describe Musa::Neumalang do
 
       unless debug
         ps_array.each do |ps|
-          expect(ps).to be_a(PS)
-          expect(ps[:from]).to be_a(PackedV)
-          expect(ps[:to]).to be_a(PackedV)
+          expect(ps).to be_a(Musa::Datasets::PS)
+          expect(ps[:from]).to be_a(Musa::Datasets::PackedV)
+          expect(ps[:to]).to be_a(Musa::Datasets::PackedV)
         end
 
         expect(played).to eq [
@@ -140,8 +133,8 @@ RSpec.describe Musa::Neumalang do
       debug = false
       #debug = true
 
-      scale = Scales.default_system.default_tuning.major[60]
-      gdv_decoder = Decoders::NeumaDecoder.new scale
+      scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
       serie = s.to_neumas
 
       if debug
@@ -162,7 +155,7 @@ RSpec.describe Musa::Neumalang do
       context.instance_variable_set :@debug, debug
 
       last_position = nil
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           play serie, decoder: gdv_decoder, mode: :neumalang, context: context do |thing|
             played[position] ||= [] if debug
@@ -172,8 +165,8 @@ RSpec.describe Musa::Neumalang do
             played << thing unless debug
             last_position = position
 
-            ps_array << thing if thing.is_a?(PS)
-            gdv_array << thing if thing.is_a?(GDV)
+            ps_array << thing if thing.is_a?(Musa::Datasets::PS)
+            gdv_array << thing if thing.is_a?(Musa::Datasets::GDV)
           end
         end
       end
@@ -224,14 +217,14 @@ RSpec.describe Musa::Neumalang do
         (a: 0 b: 1 c: 2) |16| (a: 4 b: 4 c: 4) | 16 | (a: 8 b: 9 c: 10)
       string
 
-      scale = Scales.default_system.default_tuning.major[60]
-      gdv_decoder = Decoders::NeumaDecoder.new scale
+      scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
       serie = s.to_neumas
 
       mapper = {a: 0, b: 0, c: 0}
       played = {}
 
-      sequencer = Sequencer.new 4, 4 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 4 do
         at 1 do
           play serie, decoder: gdv_decoder, mode: :neumalang do |thing|
             move from: thing[:from].to_V(mapper),

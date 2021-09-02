@@ -97,19 +97,19 @@ module Musa
       end
 
       def on_debug_at(&block)
-        @on_debug_at << SmartProcBinder.new(block)
+        @on_debug_at << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def on_error(&block)
-        @on_error << SmartProcBinder.new(block)
+        @on_error << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def on_fast_forward(&block)
-        @on_fast_forward << SmartProcBinder.new(block)
+        @on_fast_forward << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def before_tick(&block)
-        @before_tick << SmartProcBinder.new(block)
+        @before_tick << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       def on(event, &block)
@@ -132,7 +132,7 @@ module Musa
           bars_delay = Series::S(*bars_delay) if bars_delay.is_a?(Array)
           bars_delay = bars_delay.instance if bars_delay
 
-          _serie_at bars_delay.eval { |delay| position + delay }, control, debug: debug, &block
+          _serie_at bars_delay.with { |delay| position + delay }, control, debug: debug, &block
         end
 
         @event_handlers.pop

@@ -3,12 +3,10 @@ require 'spec_helper'
 require 'musa-dsl'
 require 'benchmark'
 
-include Musa::Variatio
-
 RSpec.describe Musa::Variatio do
   context 'Create several kind of variations' do
     it 'With 2 fields and constructor, without external parameters' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a, 1..10
         field :b, %i[alfa beta gamma delta]
 
@@ -32,7 +30,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 2 fields and constructor, with external parameter' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a, 1..10
         field :b, %i[alfa beta gamma delta]
 
@@ -56,7 +54,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 2 fields + fieldset (2 inner fields), test with only 1 option each, constructor and finalize' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a
         field :b, [0]
         field :c, [2]
@@ -99,7 +97,7 @@ RSpec.describe Musa::Variatio do
       @e_options = [4]
       @f_options = [6]
 
-      v = Variatio.new :object do |_|
+      v = Musa::Variatio::Variatio.new :object do |_|
         _.field :a
         _.field :b, @b_options
         _.field :c, @c_options
@@ -136,7 +134,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 2 fields + fieldset (2 inner fields), test with only 1 option each and external parameters for field and fieldset options constructor and finalize' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a
         field :b, [0]
         field :c, [2]
@@ -173,7 +171,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 1 field + 2 fieldset (1 inner fields + 2 fieldset with 1 inner fields), test with only 1 option each, constructor and finalize' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a
         field :b, [0]
 
@@ -230,7 +228,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 2 fields + fieldset (2 inner fields), constructor and finalize' do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a
         field :b, [0, 1]
         field :c, [2, 3]
@@ -280,7 +278,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize', slow: true do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a
         field :b, [0, 1]
         field :c, [2, 3]
@@ -350,7 +348,7 @@ RSpec.describe Musa::Variatio do
     end
 
     it 'With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields) + fieldset with 1 inner field, constructor and finalize', slow: true do
-      v = Variatio.new :object do
+      v = Musa::Variatio::Variatio.new :object do
         field :a
         field :b, [0, 1]
         field :c, [2, 3]

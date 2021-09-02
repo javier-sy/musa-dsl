@@ -1,14 +1,12 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Series
-include Musa::Sequencer
 
 RSpec.describe Musa::Sequencer do
   context 'Basic sequencing' do
+    include Musa::Series
+
     it 'Basic at sequencing' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
 
@@ -46,7 +44,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'At sequencing with events' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -77,7 +75,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'At sequencing with events (indented 1)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -117,7 +115,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'At sequencing with events (indented 2)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -165,7 +163,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic every sequencing with nil every (should be like an at)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
 
@@ -207,7 +205,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic every sequencing' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
 
@@ -249,7 +247,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic every sequencing with control' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -313,7 +311,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic every sequencing with control condition' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       c = 0
       d = 0
@@ -348,7 +346,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Bugfix: every sequencing with interval not on tick resolution' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       p = []
 
@@ -364,7 +362,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic play sequencing' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
@@ -398,7 +396,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Basic play sequencing (II)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       serie = H value: FOR(from: 0, to: 3), duration: S(Rational(1, 16)).repeat
 
@@ -428,7 +426,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with events handled on at control' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       t = FOR(from: 0, to: 3)
 
@@ -512,7 +510,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with events handled on sequencer' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       t = FOR(from: 0, to: 3)
 
@@ -596,7 +594,7 @@ RSpec.describe Musa::Sequencer do
     end
 
     it 'Play sequencing with events (II)' do
-      s = BaseSequencer.new 4, 4
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       t = FOR(from: 0, to: 3)
 
@@ -700,7 +698,7 @@ RSpec.describe Musa::Sequencer do
           { value_c: 1, duration: 1 },
           { value_d: 1, duration: 1 })
 
-      s = BaseSequencer.new 4, 1
+      s = Musa::Sequencer::BaseSequencer.new 4, 1
 
       a = b = c = d = 0
 

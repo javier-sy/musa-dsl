@@ -1,10 +1,10 @@
 require_relative 'scales'
 require_relative 'chord-definition'
 
-using Musa::Extension::Arrayfy
-
 module Musa
   module Chords
+    using Musa::Extension::Arrayfy
+
     class Chord
       def initialize(name_or_notes_or_pitches = nil, # name | [notes] | [pitches]
                      # definitory
@@ -51,7 +51,7 @@ module Musa
 
         allow_chromatic ||= scale.nil?
 
-        if root && root.is_a?(Scales::NoteInScale)
+        if root&.is_a?(Scales::NoteInScale)
           root_pitch = root.pitch
           scale ||= root.scale
         end
@@ -98,29 +98,27 @@ module Musa
         # Eval definitory atributes
         #
 
-        if _source.nil?
-          @notes = compute_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
-        else
-          @notes = compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
-        end
+        @notes = if _source.nil?
+                   compute_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
+                 else
+                   compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
+                 end
 
         # Eval adding / droping operations
         #
 
-        if add
-          add.each do |to_add|
-            case to_add
-            when NoteInScale
-              @notes << to_add
-            when Numeric # pitch increment
-              pitch = root_pitch + to_add
-              @notes << scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)
-            when Symbol # interval name
-              pitch = root_pitch + scale.offset_of_interval(to_add)
-              @notes << scale.note_of_pitch(pitch)
-            else
-              raise ArgumentError, "Can't recognize element to add #{to_add}"
-            end
+        add&.each do |to_add|
+          case to_add
+          when NoteInScale
+            @notes << to_add
+          when Numeric # pitch increment
+            pitch = root_pitch + to_add
+            @notes << scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)
+          when Symbol # interval name
+            pitch = root_pitch + scale.offset_of_interval(to_add)
+            @notes << scale.note_of_pitch(pitch)
+          else
+            raise ArgumentError, "Can't recognize element to add #{to_add}"
           end
         end
 
@@ -167,14 +165,14 @@ module Musa
 
       def name(name = nil)
         if name.nil?
-          @chord_definition.name if @chord_definition
+          @chord_definition&.name
         else
           Chord.new(_source: self, name: name)
         end
       end
 
       def features
-        @chord_definition.features if @chord_definition
+        @chord_definition&.features
       end
 
       def featuring(*values, allow_chromatic: nil, **hash)
@@ -220,18 +218,17 @@ module Musa
       def as_scale
       end
 
-
       def project_on_all(*scales, allow_chromatic: nil)
         # TODO add match to other chords... what does it means?
         allow_chromatic ||= false
 
         note_sets = {}
         scales.each do |scale|
-          if allow_chromatic
-            note_sets[scale] = @notes.values.flatten(1).collect { |n| n.on(scale) || n.on(scale.chromatic) }
+          note_sets[scale] = if allow_chromatic
+            @notes.values.flatten(1).collect { |n| n.on(scale) || n.on(scale.chromatic) }
           else
-            note_sets[scale] = @notes.values.flatten(1).collect { |n| n.on(scale) }
-          end
+            @notes.values.flatten(1).collect { |n| n.on(scale) }
+                             end
         end
 
         note_sets_in_scale = note_sets.values.reject { |notes| notes.include?(nil) }

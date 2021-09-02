@@ -1,36 +1,33 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::Datasets
 
 RSpec.describe Musa::Datasets::Score do
 
   context 'Dataset compatibility' do
     it 'is an AbsD and has a duration' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      expect(s).to be_a AbsD
-      expect(s).to be_a Score
+      expect(s).to be_a Musa::Datasets::AbsD
+      expect(s).to be_a Musa::Datasets::Score
 
       expect(s[:duration]).to eq 0
       expect(s.duration).to eq 0
     end
 
     it 'is an AbsD and has a duration' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      s.at(1, add: { something: 1 }.extend(AbsD))
+      s.at(1, add: { something: 1 }.extend(Musa::Datasets::AbsD))
 
       expect(s[:duration]).to eq 0
       expect(s.duration).to eq 0
 
-      s.at(1, add: { something: 1, duration: 2 }.extend(AbsD))
+      s.at(1, add: { something: 1, duration: 2 }.extend(Musa::Datasets::AbsD))
 
       expect(s[:duration]).to eq 2
       expect(s.duration).to eq 2
 
-      s.at(2, add: { something: 1, duration: 3 }.extend(AbsD))
+      s.at(2, add: { something: 1, duration: 3 }.extend(Musa::Datasets::AbsD))
 
       expect(s[:duration]).to eq 4
       expect(s.duration).to eq 4
@@ -40,18 +37,18 @@ RSpec.describe Musa::Datasets::Score do
   context 'Score insert operations' do
 
     it 'refuses things that are not a Dataset' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
       expect { s.at(1, add: { something: 1 }) }.to raise_error(ArgumentError)
     end
 
     it 'manages event grouping correctly' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      s.at(1, add: { something: 1 }.extend(AbsD))
-      s.at(2, add: { something: -1 }.extend(AbsD))
-      s.at(1.25, add: { something: 4 }.extend(AbsD))
-      s.at(1.125, add: { something: 5 }.extend(AbsD))
-      s.at(1.25, add: { something: 100 }.extend(AbsD))
+      s.at(1, add: { something: 1 }.extend(Musa::Datasets::AbsD))
+      s.at(2, add: { something: -1 }.extend(Musa::Datasets::AbsD))
+      s.at(1.25, add: { something: 4 }.extend(Musa::Datasets::AbsD))
+      s.at(1.125, add: { something: 5 }.extend(Musa::Datasets::AbsD))
+      s.at(1.25, add: { something: 100 }.extend(Musa::Datasets::AbsD))
 
       expect(s.positions).to eq [1r, 1.125r, 1.25r, 2r]
 
@@ -73,13 +70,13 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages group_by' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
-      s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(1, add: { something: 4, criteria: nil }.extend(AbsD))
-      s.at(1, add: { something: 5 }.extend(AbsD))
-      s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: 1, criteria: :a }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: -1, criteria: :b }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 4, criteria: nil }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 5 }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 100, criteria: :a }.extend(Musa::Datasets::AbsD))
 
       h = s.at(1).group_by_attribute(:criteria)
 
@@ -95,13 +92,13 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages select_attribute' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
-      s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(1, add: { something: 4, criteria: nil }.extend(AbsD))
-      s.at(1, add: { something: 5 }.extend(AbsD))
-      s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: 1, criteria: :a }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: -1, criteria: :b }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 4, criteria: nil }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 5 }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 100, criteria: :a }.extend(Musa::Datasets::AbsD))
 
       l = s.at(1).select_by_attribute(:criteria)
       l2 = s.at(1).select_by_attribute(:criteria, :a)
@@ -114,13 +111,13 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages sort_by_attribute' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      s.at(1, add: { something: 100, criteria: :a }.extend(AbsD))
-      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
-      s.at(1, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(1, add: { something: nil, criteria: nil }.extend(AbsD))
-      s.at(1, add: { something: 5 }.extend(AbsD))
+      s.at(1, add: { something: 100, criteria: :a }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 1, criteria: :a }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: -1, criteria: :b }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: nil, criteria: nil }.extend(Musa::Datasets::AbsD))
+      s.at(1, add: { something: 5 }.extend(Musa::Datasets::AbsD))
 
       l = s.at(1).sort_by_attribute(:something)
 
@@ -134,13 +131,13 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'manages subset' do
-      s = Score.new
+      s = Musa::Datasets::Score.new
 
-      s.at(1, add: { something: 1, criteria: :a }.extend(AbsD))
-      s.at(2, add: { something: -1, criteria: :b }.extend(AbsD))
-      s.at(3, add: { something: 4, criteria: nil }.extend(AbsD))
-      s.at(4, add: { something: 5 }.extend(AbsD))
-      s.at(5, add: { something: 100, criteria: :a }.extend(AbsD))
+      s.at(1, add: { something: 1, criteria: :a }.extend(Musa::Datasets::AbsD))
+      s.at(2, add: { something: -1, criteria: :b }.extend(Musa::Datasets::AbsD))
+      s.at(3, add: { something: 4, criteria: nil }.extend(Musa::Datasets::AbsD))
+      s.at(4, add: { something: 5 }.extend(Musa::Datasets::AbsD))
+      s.at(5, add: { something: 100, criteria: :a }.extend(Musa::Datasets::AbsD))
 
       s2 = s.subset { |dataset| dataset[:criteria] == :a }
 
@@ -158,15 +155,15 @@ RSpec.describe Musa::Datasets::Score do
   end
 
   context 'Score querying operations' do
-    s = Score.new
+    s = Musa::Datasets::Score.new
 
-    s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(AbsD))
-    s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(AbsD))
-    s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(AbsD))
-    s.at(3, add: { something: -1, criteria: :b }.extend(AbsD))
-    s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(AbsD))
-    s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(AbsD))
-    s.at(5, add: { something: 5, duration: 3 }.extend(AbsD))
+    s.at(1, add: { something: 1000, criteria: :a, duration: 1 }.extend(Musa::Datasets::AbsD))
+    s.at(1, add: { something: 100, criteria: :a, duration: 3 }.extend(Musa::Datasets::AbsD))
+    s.at(2, add: { something: 1, criteria: :a, duration: 3 }.extend(Musa::Datasets::AbsD))
+    s.at(3, add: { something: -1, criteria: :b }.extend(Musa::Datasets::AbsD))
+    s.at(3.5, add: { something: 99, criteria: :b, duration: 0.5 }.extend(Musa::Datasets::AbsD))
+    s.at(4, add: { something: nil, criteria: nil, duration: 3 }.extend(Musa::Datasets::AbsD))
+    s.at(5, add: { something: 5, duration: 3 }.extend(Musa::Datasets::AbsD))
 
     it 'manages between with some duration' do
 

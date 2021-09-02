@@ -2,10 +2,10 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-
 RSpec.describe Musa::Series do
   context 'Series constructors' do
+
+    include Musa::Series
 
     it 'S(1, 2, 3)' do
       s1 = S(1, 2, 3).i
@@ -123,7 +123,7 @@ RSpec.describe Musa::Series do
     it 'bugfix for E serie with parameters used as temporary value holders that had bizarre results on second instance (series instance of a prototype didn\'t restarted)' do
       array = [1, 2, 3, 4, 5]
 
-      u = Musa::Series::E(array, context: { time: 0 }) do |p, context:|
+      u = E(array, context: { time: 0 }) do |p, context:|
         value = p.shift
 
         if value

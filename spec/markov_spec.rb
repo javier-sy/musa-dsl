@@ -2,16 +2,14 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Markov
-
 RSpec.describe Musa::Markov do
   context 'Markov series' do
     it 'Simple markov equal probability' do
-      m = Markov.new(start: :a, finish: :x, random: Random.new,
-                           transitions:
-                            { a: %i[b c],
-                              b: %i[a c],
-                              c: %i[a b x] }).i
+      m = Musa::Markov::Markov.new(start: :a, finish: :x, random: Random.new,
+                                   transitions:
+                                     { a: %i[b c],
+                                       b: %i[a c],
+                                       c: %i[a b x] }).i
 
       20.times do
         m.restart
@@ -20,11 +18,11 @@ RSpec.describe Musa::Markov do
     end
 
     it 'Simple markov combined equal and unequal probability' do
-      m = Markov.new(start: :a, finish: :x,
-                           transitions:
-          { a: { b: 0.2, c: 0.8 },
-            b: { a: 0.3, c: 0.7 },
-            c: %i[a b x] }).i
+      m = Musa::Markov::Markov.new(start: :a, finish: :x,
+                                   transitions:
+                                     { a: { b: 0.2, c: 0.8 },
+                                       b: { a: 0.3, c: 0.7 },
+                                       c: %i[a b x] }).i
 
       20.times do
         m.restart
@@ -33,11 +31,11 @@ RSpec.describe Musa::Markov do
     end
 
     it 'Coded markov combined equal, unequal and code based probability' do
-      m = Markov.new(start: :a, finish: :x,
-                           transitions:
-          { a: { b: 0.2, c: 0.8 },
-            b: proc { |history| history.size.even? ? :a : :c },
-            c: %i[a b x] }).i
+      m = Musa::Markov::Markov.new(start: :a, finish: :x,
+                                   transitions:
+                                     { a: { b: 0.2, c: 0.8 },
+                                       b: proc { |history| history.size.even? ? :a : :c },
+                                       c: %i[a b x] }).i
 
       20.times do
         m.restart

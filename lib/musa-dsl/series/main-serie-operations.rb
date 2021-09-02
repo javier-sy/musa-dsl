@@ -84,11 +84,11 @@ module Musa
       end
 
       def after(*series)
-        Sequence.new [self, *series]
+        Musa::Series::Constructors.MERGE self, *series
       end
 
       def +(other)
-        Sequence.new [self, other]
+        Musa::Series::Constructors.MERGE self, other
       end
 
       def cut(length)

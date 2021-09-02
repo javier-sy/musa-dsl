@@ -2,12 +2,9 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Scales
-include Musa::Chords
-
-RSpec.describe EquallyTempered12ToneScaleSystem do
+RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
   context 'Chords in equally tempered 12 tone scales' do
-    scale_system = Scales[:et12][440.0]
+    scale_system = Musa::Scales::Scales[:et12][440.0]
 
     major = scale_system[:major][60]
     minor = major.octave(-1).relative_minor.scale(:minor)

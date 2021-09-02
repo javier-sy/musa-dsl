@@ -2,14 +2,12 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Neumalang
-
 RSpec.describe Musa::Neumalang do
 
   context "Neuma advanced parsing" do
 
     it "Basic bracketed neumas inline parsing" do
-      expect(Neumalang.parse('(2 3) (5 6) [ (9 8) (6 5) ] ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
+      expect(Musa::Neumalang::Neumalang.parse('(2 3) (5 6) [ (9 8) (6 5) ] ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
         [   { kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
           { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
           { kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
@@ -18,7 +16,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline parsing with simple braced command" do
-      parsed = Neumalang.parse('(2 3) [(9 8) (6 5)] (7 8) { 100 + 10 } /* comentario 2 */').to_a(recursive: true)
+      parsed = Musa::Neumalang::Neumalang.parse('(2 3) [(9 8) (6 5)] (7 8) { 100 + 10 } /* comentario 2 */').to_a(recursive: true)
       expect(parsed[0]).to eq({ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } })
       expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
                                                        { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] })
@@ -27,7 +25,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline parsing with complex braced command" do
-      parsed = Neumalang.parse('(2 3) [(9 8) (6 5)] (7 8) { 100 + 10 + { a: 1000, b: 2000 }[:b] } /* comentario 2 */').to_a(recursive: true)
+      parsed = Musa::Neumalang::Neumalang.parse('(2 3) [(9 8) (6 5)] (7 8) { 100 + 10 + { a: 1000, b: 2000 }[:b] } /* comentario 2 */').to_a(recursive: true)
       expect(parsed[0]).to eq({ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } })
       expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
                                                        { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] })
@@ -36,7 +34,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline parsing with complex braced command" do
-      parsed = Neumalang.parse('(2 3) [(9 8) (6 5)] (7 8) { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } /* comentario 2 */').to_a(recursive: true)
+      parsed = Musa::Neumalang::Neumalang.parse('(2 3) [(9 8) (6 5)] (7 8) { 100 + 10 + { a: 1000, b: 2000 }[:b] + { a: 10000, b: 20000 }[:a] } /* comentario 2 */').to_a(recursive: true)
       expect(parsed[0]).to eq({ kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } })
       expect(parsed[1]).to eq({ kind: :serie, serie: [ { kind: :gdvd, gdvd: { abs_grade: 9, abs_duration: 8 } },
                                                        { kind: :gdvd, gdvd: { abs_grade: 6, abs_duration: 5 } } ] })
@@ -45,7 +43,7 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline recursive parsing" do
-      expect(Neumalang.parse('(2 3) (5 6) [ (9 8) [(5 4) (6 5)] (6 5) [ (5 4)]] ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
+      expect(Musa::Neumalang::Neumalang.parse('(2 3) (5 6) [ (9 8) [(5 4) (6 5)] (6 5) [ (5 4)]] ::evento /* comentario 1 */').to_a(recursive: true)).to eq(
         [   { kind: :gdvd, gdvd: { abs_grade: 2, abs_duration: 3 } },
           { kind: :gdvd, gdvd: { abs_grade: 5, abs_duration: 6 } },
           { kind: :serie, serie: [
@@ -58,14 +56,14 @@ RSpec.describe Musa::Neumalang do
     end
 
     it "Basic bracketed neumas inline recursive parsing" do
-      expect(Neumalang.parse('::evento(2.5)').to_a(recursive: true)).to eq(
+      expect(Musa::Neumalang::Neumalang.parse('::evento(2.5)').to_a(recursive: true)).to eq(
         [ { kind: :event,
             event: :evento,
             value_parameters: [ { kind: :value, value: 2.5 } ] } ] )
     end
 
     it "Complex file neumas parsing" do
-      result = Neumalang.parse_file(File.join(File.dirname(__FILE__), "neuma2_spec.neu")).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse_file(File.join(File.dirname(__FILE__), "neuma2_spec.neu")).to_a(recursive: true)
       expect(result).to eq(
         [{:kind=>:assign_to,
           :assign_to=>[:@b, :@a],

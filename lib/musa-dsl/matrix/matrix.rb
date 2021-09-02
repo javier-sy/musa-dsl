@@ -67,8 +67,6 @@ module Musa
       end
 
       refine ::Matrix do
-        include Musa::Datasets
-
         def to_p(time_dimension:, keep_time: nil)
           decompose(self.to_a, time_dimension).collect do |points|
             line = []
@@ -76,7 +74,7 @@ module Musa
             start_point = points[0]
             start_time = start_point[time_dimension]
 
-            line << start_point.clone.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
+            line << start_point.clone.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Musa::Datasets::V)
 
             (1..points.size-1).each do |i|
               end_point = points[i]
@@ -84,12 +82,12 @@ module Musa
               end_time = end_point[time_dimension]
 
               line << end_time - start_time
-              line << end_point.clone.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Datasets::V)
+              line << end_point.clone.tap { |_| _.delete_at(time_dimension) unless keep_time; _ }.extend(Musa::Datasets::V)
 
               start_time = end_time
             end
 
-            line.extend(Datasets::P)
+            line.extend(Musa::Datasets::P)
           end
         end
 

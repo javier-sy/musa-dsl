@@ -2,18 +2,14 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Datasets
-include Musa::Sequencer
-
 RSpec.describe Musa::Datasets::Score do
-
   context 'Score play on sequencer' do
     it 'relative position on sequencer start position should render at position -1 tick' do
-      s = Score.new
-      seq = Sequencer.new 4, 24
+      s = Musa::Datasets::Score.new
+      seq = Musa::Sequencer::Sequencer.new 4, 24
       r = {}
 
-      s.at(1, add: { something: 1, duration: 1 }.extend(AbsD))
+      s.at(1, add: { something: 1, duration: 1 }.extend(Musa::Datasets::AbsD))
 
       s.render on: seq do |element|
         r[seq.position] = element[:something]
@@ -25,11 +21,11 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'relative position on sequencer position 2' do
-      s = Score.new
-      seq = Sequencer.new 4, 24
+      s = Musa::Datasets::Score.new
+      seq = Musa::Sequencer::Sequencer.new 4, 24
       r = {}
 
-      s.at(1, add: { something: 1, duration: 1 }.extend(AbsD))
+      s.at(1, add: { something: 1, duration: 1 }.extend(Musa::Datasets::AbsD))
 
       seq.position = 2
 
@@ -44,25 +40,25 @@ RSpec.describe Musa::Datasets::Score do
   end
 
   context 'Nested scores' do
-    s1 = Score.new
-    s2 = Score.new
-    s3 = Score.new
+    s1 = Musa::Datasets::Score.new
+    s2 = Musa::Datasets::Score.new
+    s3 = Musa::Datasets::Score.new
 
-    s2.at(1, add: { something: 7777 }.extend(AbsD))
-    s2.at(1.5, add: { something: 777 }.extend(AbsD))
-    s2.at(2, add: { something: 77 }.extend(AbsD))
-    s2.at(4, add: { something: 7 }.extend(AbsD))
+    s2.at(1, add: { something: 7777 }.extend(Musa::Datasets::AbsD))
+    s2.at(1.5, add: { something: 777 }.extend(Musa::Datasets::AbsD))
+    s2.at(2, add: { something: 77 }.extend(Musa::Datasets::AbsD))
+    s2.at(4, add: { something: 7 }.extend(Musa::Datasets::AbsD))
 
-    s1.at(1, add: { something: 1000 }.extend(AbsD))
-    s1.at(2, add: { something: 100 }.extend(AbsD))
+    s1.at(1, add: { something: 1000 }.extend(Musa::Datasets::AbsD))
+    s1.at(2, add: { something: 100 }.extend(Musa::Datasets::AbsD))
     s1.at(2.5, add: s2)
-    s1.at(3, add: { something: 10 }.extend(AbsD))
+    s1.at(3, add: { something: 10 }.extend(Musa::Datasets::AbsD))
 
-    s3.at(1, add: { something: 1000 }.extend(AbsD))
-    s3.at(2, add: { something: 100 }.extend(AbsD))
+    s3.at(1, add: { something: 1000 }.extend(Musa::Datasets::AbsD))
+    s3.at(2, add: { something: 100 }.extend(Musa::Datasets::AbsD))
     s3.at(2.5, add: s3)
-    s3.at(3, add: { something: 10 }.extend(AbsD))
-    s3.at(4, add: { something: 1 }.extend(AbsD))
+    s3.at(3, add: { something: 10 }.extend(Musa::Datasets::AbsD))
+    s3.at(4, add: { something: 1 }.extend(Musa::Datasets::AbsD))
 
     it 'score with nested score duration' do
       expect(s2.duration).to eq 3r
@@ -70,7 +66,7 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'score with nested score render' do
-      seq = Sequencer.new 4, 24
+      seq = Musa::Sequencer::Sequencer.new 4, 24
       r = {}
 
       seq.at 1 do
@@ -93,9 +89,9 @@ RSpec.describe Musa::Datasets::Score do
     end
 
     it 'score with recursively nested score render' do
-      s1 = Score.new
+      s1 = Musa::Datasets::Score.new
 
-      seq = Sequencer.new 4, 24
+      seq = Musa::Sequencer::Sequencer.new 4, 24
       r = {}
 
       seq.at 1 do

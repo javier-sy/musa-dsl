@@ -1,11 +1,9 @@
 require_relative 'transcription'
 
-include Musa::Transcription
-
 module Musa::Transcriptors
   module FromGDV
     # Process: .base .b
-    class Base < FeatureTranscriptor
+    class Base < Musa::Transcription::FeatureTranscriptor
       def transcript(gdv, base_duration:, tick_duration:)
         base = gdv.delete :base
         base ||= gdv.delete :b

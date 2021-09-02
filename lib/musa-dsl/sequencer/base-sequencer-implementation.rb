@@ -1,9 +1,9 @@
 require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/inspect-nice'
 
-using Musa::Extension::InspectNice
-
 module Musa::Sequencer
+  using Musa::Extension::InspectNice
+
   class BaseSequencer
     private def _tick(position_to_run)
       @before_tick.each { |block| block.call position_to_run }

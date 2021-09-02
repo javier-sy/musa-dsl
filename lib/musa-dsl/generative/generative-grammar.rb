@@ -1,5 +1,7 @@
 module Musa
   module GenerativeGrammar
+    # TODO: refactor & reorganize regarding use of include Musa::GenerativeGrammar problems as default consumption mode (it forces the consumer to have new public methods -P, PN- and class names -OptionElement-)
+
     extend self
 
     def N(content = nil, **attributes, &block)

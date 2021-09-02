@@ -1,7 +1,5 @@
 require_relative 'from-gdv'
 
-include Musa::Transcription
-
 module Musa::Transcriptors
   module FromGDV
     module ToMusicXML
@@ -11,7 +9,7 @@ module Musa::Transcriptors
       end
 
       # Process: appogiatura (neuma)neuma
-      class Appogiatura < FeatureTranscriptor
+      class Appogiatura < Musa::Transcription::FeatureTranscriptor
         def transcript(gdv, base_duration:, tick_duration:)
           if gdv_appogiatura = gdv[:appogiatura]
             gdv.delete :appogiatura
@@ -30,7 +28,6 @@ module Musa::Transcriptors
           end
         end
       end
-
     end
   end
 end

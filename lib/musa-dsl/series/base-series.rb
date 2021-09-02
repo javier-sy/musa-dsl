@@ -1,8 +1,6 @@
 require_relative '../core-ext/deep-copy'
 require_relative '../generative/generative-grammar'
 
-using Musa::Extension::DeepCopy
-
 module Musa
   module Series
     module Constructors; extend self; end
@@ -337,6 +335,8 @@ module Musa
         include Serie
         include Prototyping
         include Operations
+
+        using Musa::Extension::DeepCopy
 
         def init
           @_have_peeked_next_value = false

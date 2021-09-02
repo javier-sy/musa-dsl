@@ -1,29 +1,20 @@
 require 'spec_helper'
-
 require 'musa-dsl'
 
-include Musa::Series
-include Musa::Neumalang
-include Musa::Neumas
-include Musa::Datasets
-include Musa::Sequencer
-include Musa::Scales
-include Musa::Transcription
-include Musa::Transcriptors
-
-RSpec.describe Musa::Transcriptors do
+RSpec.describe Musa::Transcription::Transcriptor do
   context 'GDV transcriptors' do
+    include Musa::Series
 
     it 'Neuma parsing with staccato extended notation' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas    = '(0 1 mf) (+1 st) (. st(1)) (. st(2)) (. st(3)) (. st(4))'
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      transcriptor = Transcriptor.new [ FromGDV::ToMIDI::Staccato.new(min_duration_factor: 1/6r) ]
+      transcriptor = Musa::Transcription::Transcriptor.new [ Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new(min_duration_factor: 1/6r) ]
 
-      result_gdv = Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
+      result_gdv = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -36,19 +27,19 @@ RSpec.describe Musa::Transcriptors do
     end
 
     it 'Neuma parsing with basic trill extended notation' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas    = '(0 1 mf) (+1 tr)'
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      transcriptor = Transcriptor.new \
-            [ FromGDV::ToMIDI::Staccato.new,
-                          FromGDV::ToMIDI::Trill.new(duration_factor: 1/6r) ],
+      transcriptor = Musa::Transcription::Transcriptor.new \
+            [ Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new,
+                          Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/6r) ],
             base_duration: 1/4r,
             tick_duration: 1/96r
 
-        result_gdv = Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
+        result_gdv = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -62,20 +53,20 @@ RSpec.describe Musa::Transcriptors do
     end
 
     it 'Neuma parsing with mordent extended notation' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '(0 1 mf) (+1 mor) (+3 +1 mor(low))'
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      transcriptor = Transcriptor.new \
-        [ FromGDV::ToMIDI::Staccato.new,
-          FromGDV::ToMIDI::Trill.new,
-          FromGDV::ToMIDI::Mordent.new(duration_factor: 1/6r) ],
+      transcriptor = Musa::Transcription::Transcriptor.new \
+        [ Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Trill.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new(duration_factor: 1/6r) ],
         base_duration: 1/4r,
         tick_duration: 1/96r
 
-      result_gdv = Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
+      result_gdv = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -90,17 +81,17 @@ RSpec.describe Musa::Transcriptors do
     end
 
     it 'Neuma parsing with mute extended notation' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '(0 1 mf) (+1) (5 base) (+2)'
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      decorators = Transcriptor.new [ FromGDV::Base.new ],
+      decorators = Musa::Transcription::Transcriptor.new [ Musa::Transcriptors::FromGDV::Base.new ],
                                     base_duration: 1/4r,
                                     tick_duration: 1/96r
 
-      result_gdv = Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.transcript(gdv) }.to_a(recursive: true)
+      result_gdv = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| decorators.transcript(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -115,20 +106,20 @@ RSpec.describe Musa::Transcriptors do
       debug = false
       #debug = true
 
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '(0 1 mf) (+1 mor) (+3 +1 mor(low)) (-2)'
 
-      transcriptor = Transcriptor.new \
-        [ FromGDV::ToMIDI::Staccato.new,
-          FromGDV::ToMIDI::Trill.new,
-          FromGDV::ToMIDI::Mordent.new(duration_factor: 1/8r) ],
+      transcriptor = Musa::Transcription::Transcriptor.new \
+        [ Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Trill.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new(duration_factor: 1/8r) ],
          base_duration: 1/4r,
          tick_duration: 1/96r
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, transcriptor: transcriptor, base_duration: 1/4r
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, transcriptor: transcriptor, base_duration: 1/4r
 
-      serie = Neumalang.parse(neumas)
+      serie = Musa::Neumalang::Neumalang.parse(neumas)
 
       if debug
         puts
@@ -141,7 +132,7 @@ RSpec.describe Musa::Transcriptors do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 24 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 24 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             if debug
@@ -199,20 +190,20 @@ RSpec.describe Musa::Transcriptors do
       debug = false
       #debug = true
 
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '(0 1 mf) (+1 *2) (5 b) (+2)'
 
-      transcriptor = Transcriptor.new \
-        [ FromGDV::Base.new,
-          FromGDV::ToMIDI::Trill.new,
-          FromGDV::ToMIDI::Mordent.new(duration_factor: 1/8r) ],
+      transcriptor = Musa::Transcription::Transcriptor.new \
+        [ Musa::Transcriptors::FromGDV::Base.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Trill.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new(duration_factor: 1/8r) ],
         base_duration: 1/4r,
         tick_duration: 1/96r
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, transcriptor: transcriptor, base_duration: 1/4r
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, transcriptor: transcriptor, base_duration: 1/4r
 
-      serie = Neumalang.parse(neumas)
+      serie = Musa::Neumalang::Neumalang.parse(neumas)
 
       if debug
         puts
@@ -225,7 +216,7 @@ RSpec.describe Musa::Transcriptors do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 24 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 24 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             if debug
@@ -272,23 +263,23 @@ RSpec.describe Musa::Transcriptors do
     end
 
     it 'Neuma parsing with apoggiatura extended notation' do
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '(0 1 mf) (+1) <(+2 //)>(+3) (0)'
 
-      result = Neumalang.parse(neumas).to_a(recursive: true)
+      result = Musa::Neumalang::Neumalang.parse(neumas).to_a(recursive: true)
 
-      decoder = Decoders::NeumaDecoder.new scale
+      decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 
-      transcriptor = Transcriptor.new \
-        [ FromGDV::ToMIDI::Appogiatura.new,
-          FromGDV::ToMIDI::Staccato.new,
-          FromGDV::ToMIDI::Trill.new,
-          FromGDV::ToMIDI::Mordent.new ],
+      transcriptor = Musa::Transcription::Transcriptor.new \
+        [ Musa::Transcriptors::FromGDV::ToMIDI::Appogiatura.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Trill.new,
+          Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new ],
         base_duration: 1/4r,
         tick_duration: 1/96r
 
-      result_gdv = Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
+      result_gdv = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder).process_with { |gdv| transcriptor.transcript(gdv) }.to_a(recursive: true)
 
       c = -1
 
@@ -303,17 +294,17 @@ RSpec.describe Musa::Transcriptors do
       debug = false
       #debug = true
 
-      scale = Scales.et12[440.0].major[60]
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
 
       neumas = '[(0 1 mf) (+1) <(+2 //)>(+3) (0) (+1)]'
 
-      transcriptor = Transcriptor.new FromGDV::ToMIDI.transcription_set,
+      transcriptor = Musa::Transcription::Transcriptor.new Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
         base_duration: 1/4r,
         tick_duration: 1/96r
 
-      gdv_decoder = Decoders::NeumaDecoder.new scale, transcriptor: transcriptor, base_duration: 1/4r
+      gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale, transcriptor: transcriptor, base_duration: 1/4r
 
-      serie = Neumalang.parse(neumas)
+      serie = Musa::Neumalang::Neumalang.parse(neumas)
 
       if debug
         puts
@@ -326,7 +317,7 @@ RSpec.describe Musa::Transcriptors do
       played = {} if debug
       played = [] unless debug
 
-      sequencer = Sequencer.new 4, 24 do
+      sequencer = Musa::Sequencer::Sequencer.new 4, 24 do
         at 1 do
           handler = play serie, decoder: gdv_decoder, mode: :neumalang do |gdv|
             if debug

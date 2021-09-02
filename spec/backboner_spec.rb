@@ -2,12 +2,10 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Backboner
-
-RSpec.describe Backboner do
+RSpec.describe Musa::Backboner do
   context 'Backboner grow/prune generation' do
 
-    rules = Backboner.new do
+    rules = Musa::Backboner::Backboner.new do
       grow 'make array' do |seed|
         #puts "rule make array: seed = #{seed} created = #{[seed, seed + 10]}"
         #puts "rule make array: seed = #{seed} created = #{[seed, seed + 11]}"

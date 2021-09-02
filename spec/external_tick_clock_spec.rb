@@ -2,13 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Clock
-
 RSpec.describe Musa::Clock do
   context 'External tick clock' do
     it 'works ok' do
 
-      clock = ExternalTickClock.new
+      clock = Musa::Clock::ExternalTickClock.new
 
       c = 0
 

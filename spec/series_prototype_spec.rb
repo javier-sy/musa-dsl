@@ -2,11 +2,11 @@ require 'spec_helper'
 
 require 'musa-dsl'
 
-include Musa::Series
-include Musa::Datasets
-
 RSpec.describe Musa::Series do
   context 'Series prototype and instance:' do
+    include Musa::Series
+    include Musa::Datasets
+
     it 'An operation over an undefined serie is another undefined serie' do
       p = PROXY()
       s = p.reverse
@@ -15,7 +15,7 @@ RSpec.describe Musa::Series do
       expect(s.instance?).to be false
       expect(s.undefined?).to be true
 
-      expect { s.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { s.next_value }.to raise_error(Musa::Series::Serie::Prototyping::PrototypingError)
     end
 
     it 'basic prototype and instance definition' do
@@ -44,10 +44,10 @@ RSpec.describe Musa::Series do
     it 'basic prototype and instance validation' do
       pp = S(1, 2, 3)
 
-      expect { pp.restart }.to raise_error(Serie::Prototyping::PrototypingError)
-      expect { pp.next_value }.to raise_error(Serie::Prototyping::PrototypingError)
-      expect { pp.peek_next_value }.to raise_error(Serie::Prototyping::PrototypingError)
-      expect { pp.current_value }.to raise_error(Serie::Prototyping::PrototypingError)
+      expect { pp.restart }.to raise_error(Musa::Series::Serie::Prototyping::PrototypingError)
+      expect { pp.next_value }.to raise_error(Musa::Series::Serie::Prototyping::PrototypingError)
+      expect { pp.peek_next_value }.to raise_error(Musa::Series::Serie::Prototyping::PrototypingError)
+      expect { pp.current_value }.to raise_error(Musa::Series::Serie::Prototyping::PrototypingError)
 
       expect { pp.infinite? }.to_not raise_error
 

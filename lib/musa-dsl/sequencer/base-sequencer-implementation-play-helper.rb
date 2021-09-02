@@ -268,7 +268,7 @@ module Musa
 
           when Array
             { current_operation: :no_eval_play,
-              current_parameter: S(*element) }
+              current_parameter: Musa::Series::Constructors.S(*element) }
           else
             case element[:kind]
             when :value
@@ -292,7 +292,7 @@ module Musa
 
               if _value.is_a?(Array)
                 { current_operation: :no_eval_play,
-                  current_parameter: S(*_value) }
+                  current_parameter: Musa::Series::Constructors.S(*_value) }
               else
                 { current_operation: :block,
                   current_parameter: _value,

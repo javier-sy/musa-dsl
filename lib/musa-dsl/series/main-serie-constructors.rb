@@ -3,13 +3,12 @@ require_relative '../core-ext/smart-proc-binder'
 
 require_relative 'base-series'
 
-using Musa::Extension::Arrayfy
-using Musa::Extension::ExplodeRanges
-
 # TODO: añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
 module Musa
   module Series::Constructors
+    using Musa::Extension::ExplodeRanges
+
     def UNDEFINED
       UndefinedSerie.new
     end
@@ -119,7 +118,8 @@ module Musa
       end
     end
 
-    private_constant :UndefinedSerie
+    # UndefinedSerie is not private because is used in Composer
+    # private_constant :UndefinedSerie
 
     class NilSerie
       include Series::Serie.base
@@ -135,6 +135,8 @@ module Musa
 
     class FromArray
       include Series::Serie.base
+
+      using Musa::Extension::Arrayfy
 
       def initialize(values = nil, extends = nil)
         @values = values

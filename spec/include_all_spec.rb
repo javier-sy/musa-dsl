@@ -1,15 +1,18 @@
 require 'spec_helper'
-
 require 'musa-dsl'
-
-include Musa::All
 
 RSpec.describe Musa::All do
   context 'Modules' do
     it 'are included correctly' do
-      s = S(1, 2, 3).i
+      class ToTest
+        include Musa::All
+        def test
+          s = S(1, 2, 3).i
+          s.next_value == 1
+        end
+      end
 
-      expect(s.next_value).to eq 1
+      expect(ToTest.new.test).to be true
     end
   end
 end

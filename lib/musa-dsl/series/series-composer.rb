@@ -1,6 +1,7 @@
 require_relative 'base-series'
 
 require_relative '../core-ext/with'
+require_relative '../core-ext/arrayfy'
 
 module Musa
   module Series
@@ -10,7 +11,7 @@ module Musa
       end
 
       class ComposerAsOperationSerie
-        include Serie.with(source: true)
+        include Musa::Series::Serie.with(source: true)
 
         def initialize(serie, &block)
           self.source = serie
@@ -68,7 +69,7 @@ module Musa
           @outputs = {}
 
           inputs.keys&.each do |input|
-            p = PROXY(inputs[input])
+            p = Musa::Series::Constructors.PROXY(inputs[input])
 
             @inputs[input] = @pipelines[input] = Pipeline.new(input, input: p, output: p.buffered, pipelines: @pipelines)
 
@@ -76,7 +77,7 @@ module Musa
           end
 
           outputs&.each do |output|
-            p = PROXY()
+            p = Musa::Series::Constructors.PROXY()
             @outputs[output] = @pipelines[output] = Pipeline.new(output, is_output: true, input: p, output: p, pipelines: @pipelines)
 
             @dsl.define_singleton_method(output) { output }
@@ -144,7 +145,7 @@ module Musa
           end
 
           def commit!
-            first_serie_operation = @first_proc&.call(UNDEFINED())
+            first_serie_operation = @first_proc&.call(Musa::Series::Constructors.UNDEFINED())
 
             @input ||= first_serie_operation
 
@@ -282,7 +283,7 @@ module Musa
             when Proc
               call_constructor_according_to_last_and_parameter(last.call, constructor, parameter)
 
-            when UndefinedSerie
+            when Musa::Series::Constructors::UndefinedSerie
               case parameter
               when Hash
                 Musa::Series::Constructors.method(constructor).call(**parameter)
