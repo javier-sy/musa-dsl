@@ -100,7 +100,7 @@ module Musa
         end
 
         def inspect
-          "KeyParametersProcedureBinder: parameters = #{@key_parameters} has_rest = #{@has_key_rest}"
+          "SmartProcBinder: parameters = #{parameters} key_parameters = #{@key_parameters} has_rest = #{@has_key_rest}"
         end
 
         alias to_s inspect
