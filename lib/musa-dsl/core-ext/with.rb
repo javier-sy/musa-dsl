@@ -19,12 +19,10 @@ module Musa
           else
             binder.call(*effective_value_parameters, **effective_key_parameters)
           end
+        elsif effective_value_parameters.empty? && effective_key_parameters.empty?
+          instance_eval &block
         else
-          if effective_value_parameters.empty? && effective_key_parameters.empty?
-            instance_eval &block
-          else
-            instance_exec *effective_value_parameters, **effective_key_parameters, &block
-          end
+          instance_exec *effective_value_parameters, **effective_key_parameters, &block
         end
       end
     end
