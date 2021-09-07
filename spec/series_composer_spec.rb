@@ -311,7 +311,7 @@ RSpec.describe Musa::Series::Composer do
                       to_a,
                       { collect: proc { |_| _.with { |_| _ + 1000 } } },
                       { A: nil }] },
-             { map: proc { |i| [i[0] + 1_000_000, i[1]] } },
+             { eval: proc { |i| [i[0] + 1_000_000, i[1]] } },
              reverse
 
         route input, to: step
@@ -336,7 +336,7 @@ RSpec.describe Musa::Series::Composer do
                       to_a,
                       { collect: proc { |_| _.with { |_| _ + 1000 } } },
                       :A] },
-             { map: proc { |i| [i[0] + 1_000_000, i[1]] } },
+             { map: proc { |i0, i1| [i0 + 1_000_000, i1] } },
              reverse
 
         route input, to: step

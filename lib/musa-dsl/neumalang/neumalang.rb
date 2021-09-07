@@ -20,7 +20,7 @@ module Musa
           def value
             { kind: :parallel,
               parallel: [{ kind: :serie,
-                           serie: S(*capture(:aa).value) }] +
+                           serie: Musa::Series::Constructors.S(*capture(:aa).value) }] +
                                   captures(:bb).collect { |c| { kind: :serie, serie: Musa::Series::Constructors.S(*c.value) } }
             }.extend(Musa::Neumas::Neuma::Parallel)
           end

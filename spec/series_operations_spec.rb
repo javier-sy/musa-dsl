@@ -351,7 +351,8 @@ RSpec.describe Musa::Series do
       s = S(0, 1, 2).multiplex(
             S(100, 200, 300, 400, 500),
             S(1000, 2000, 3000, 4000, 5000),
-            S(10000, 20000, 30000, 40000, 50000)).i
+            S(10000, 20000, 30000, 40000, 50000)
+          ).i
 
       expect(s.next_value).to eq 100
       expect(s.next_value).to eq 2000
@@ -466,7 +467,43 @@ RSpec.describe Musa::Series do
     it '.with (I)' do
       s = S(1, 2, 3).with(
         b: S(100, 200, 300, 400),
-        c: S(1000, 2000, 3000, 4000, 5000)) { |a, b:, c: | { a: a, b: b, c: c } }.i
+        c: S(1000, 2000, 3000, 4000, 5000)
+      ) { |a, b:, c:| { a: a, b: b, c: c } }.i
+
+      expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
+      expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
+      expect(s.next_value).to eq({ a: 3, b: 300, c: 3000 })
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      s.restart
+
+      expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
+      expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
+      expect(s.next_value).to eq({ a: 3, b: 300, c: 3000 })
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+      expect(s.next_value).to eq nil
+
+      expect(s.infinite?).to eq false
+    end
+
+    it '.with (I) array mode raises error if not isolated values' do
+      s = S(1, 2, 3).with(
+        S(100, 200, 300, 400),
+        S(1000, 2000, 3000, 4000, 5000)
+      ) { |a, b, c| { a: a, b: b, c: c } }.i
+
+      expect { s.next_value }.to raise_error(ArgumentError)
+    end
+
+    it '.with (I) array mode' do
+      s = S(1, 2, 3).with(
+        S(100, 200, 300, 400),
+        S(1000, 2000, 3000, 4000, 5000),
+        isolate_values: false
+      ) { |a, b, c| { a: a, b: b, c: c } }.i
 
       expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
       expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
@@ -490,7 +527,8 @@ RSpec.describe Musa::Series do
     it '.with (II)' do
       s = S(1, 2, 3, 4, 5, 6).with(
           b: S(100, 200, 300),
-          c: S(1000, 2000, 3000, 4000, 5000)) { |a, b:, c: | { a: a, b: b, c: c } }.i
+          c: S(1000, 2000, 3000, 4000, 5000)
+        ) { |a, b:, c:| { a: a, b: b, c: c } }.i
 
       expect(s.next_value).to eq({ a: 1, b: 100, c: 1000 })
       expect(s.next_value).to eq({ a: 2, b: 200, c: 2000 })
@@ -514,7 +552,8 @@ RSpec.describe Musa::Series do
     it '.with (III)' do
       s = S(1, 2, 3, 4, 5, 6).with(
           b: S(100, 200, 300),
-          c: S(1000, 2000, 3000, 4000, 5000)).i
+          c: S(1000, 2000, 3000, 4000, 5000)
+        ).i
 
       expect(s.next_value).to eq([1, { b: 100, c: 1000 }])
       expect(s.next_value).to eq([2, { b: 200, c: 2000 }])

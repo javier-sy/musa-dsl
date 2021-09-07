@@ -33,7 +33,7 @@ module Musa
           _call value_parameters, key_parameters
         end
 
-        def _call(value_parameters, key_parameters)
+        def _call(value_parameters, key_parameters = {})
           if @on_rescue
             begin
               __call value_parameters, key_parameters
@@ -45,7 +45,7 @@ module Musa
           end
         end
 
-        private def __call(value_parameters, key_parameters)
+        private def __call(value_parameters, key_parameters = {})
           effective_value_parameters, effective_key_parameters = apply(*value_parameters, **key_parameters)
 
           if effective_key_parameters.empty?

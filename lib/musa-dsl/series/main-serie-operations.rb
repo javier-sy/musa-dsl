@@ -101,15 +101,28 @@ module Musa
 
       # TODO on with and map methods implement parameter passing with cloning on restart as on E()
       #
-      def with(block = nil, on_restart: nil, **with_series, &yield_block)
-        block ||= yield_block
-        ProcessWith.new self, with_series, on_restart, &block
+      def with(*with_series, on_restart: nil, isolate_values: nil, **with_key_series, &block)
+        if with_series.any? && with_key_series.any?
+          raise ArgumentError, 'Can\'t use extra parameters series and key named parameters series'
+        end
+
+        extra_series = if with_series.any?
+                         with_series
+                       elsif with_key_series.any?
+                         with_key_series
+                       end
+
+        isolate_values ||= isolate_values.nil? ? true : isolate_values
+
+        ProcessWith.new self, extra_series, on_restart, isolate_values: isolate_values, &block
       end
 
       alias_method :eval, :with
 
-      def map(&block)
-        ProcessWith.new self, &block
+      def map(isolate_values: nil, &block)
+        isolate_values ||= isolate_values.nil? ? false : isolate_values
+
+        ProcessWith.new self, isolate_values: isolate_values, &block
       end
 
       def anticipate(&block)
@@ -129,11 +142,15 @@ module Musa
                            sources: true, sources_as: :with_sources, mandatory_sources: false,
                            smart_block: true)
 
-        def initialize(serie, with_series = nil, on_restart = nil, &block)
+        using Musa::Extension::Arrayfy
+
+        def initialize(serie, with_series = nil, on_restart = nil, isolate_values: nil, &block)
           self.source = serie
-          self.with_sources = with_series || {}
+          self.with_sources = with_series || []
           self.on_restart = on_restart
           self.proc = block if block
+
+          @isolate_values = isolate_values
 
           init
         end
@@ -152,21 +169,59 @@ module Musa
 
         private def _restart
           @source.restart
-          @sources.values.each(&:restart)
+
+          case @sources
+          when Array
+            @sources.each(&:restart)
+          when Hash
+            @sources.each_value(&:restart)
+          end
+
           @on_restart.call if @on_restart
         end
 
         private def _next_value
           main = @source.next_value
-          others = @sources.transform_values { |v| v.next_value }
+
+          others = case @sources
+                   when Array
+                     @sources.map(&:next_value)
+                   when Hash
+                     @sources.transform_values(&:next_value)
+                  end
 
           value = nil
 
-          if main && !others.values.include?(nil)
-            if @block
-              value = @block._call([main], others)
-            else
-              value = [main, others]
+
+          if main
+            case others
+            when Array
+              unless others.include?(nil)
+                value = if @block
+                          if @isolate_values
+                            raise ArgumentError, "Received 'with_sources' as an Array and asked to 'isolate_values'. This can't be done. Please, set 'isolate_values' to false or make with_sources to be a Hash." if others.any?
+
+                            @block._call([main])
+                          else
+                            @block._call(main.arrayfy + others)
+                          end
+                        else
+                          if @isolate_values
+                            [main, others]
+                          else
+                            main.arrayfy + others
+                          end
+                        end
+              end
+
+            when Hash
+              unless others.values.include?(nil)
+                value = if @block
+                          @block._call(main, others)
+                        else
+                          [main, others]
+                        end
+              end
             end
           end
 
@@ -243,7 +298,7 @@ module Musa
         end
 
         def infinite?
-          @source.infinite? && @sources.any? { |serie| serie.infinite? }
+          @source.infinite? && @sources.any?(&:infinite?)
         end
       end
 
@@ -287,7 +342,7 @@ module Musa
         end
 
         def infinite?
-          @source.infinite? && @sources.any? { |serie| serie.infinite? }
+          @source.infinite? && @sources.any?(&:infinite?)
         end
       end
 
@@ -641,9 +696,7 @@ module Musa
           else
             value = @pending_values.shift
 
-            if value.nil?
-              value = _next_value
-            end
+            value = _next_value if value.nil?
 
             value
           end
