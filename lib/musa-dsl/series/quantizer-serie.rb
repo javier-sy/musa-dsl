@@ -468,16 +468,19 @@ module Musa
       private def next_crossings
         from_time, from_value = get_time_value(@source.next_value)
 
-        if from_time && from_value
-          raise 'time only can go forward' if @last_time && from_time <= @last_time
+        return unless from_time && from_value
 
-          @last_time = from_time
+        if @last_time && from_time < @last_time
+          raise "time only can go forward: last time = #{@last_time} (#{@last_time.to_f}) but " \
+          "from_time = #{from_time} (#{from_time.to_f}) (expected last_time to be < from_time) "
+        end
 
-          to_time, to_value = get_time_value(@source.peek_next_value)
+        @last_time = from_time
 
-          if to_time && to_value
-            crossings(from_time, from_value, to_time, to_value)
-          end
+        to_time, to_value = get_time_value(@source.peek_next_value)
+
+        if to_time && to_value
+          crossings(from_time, from_value, to_time, to_value)
         end
       end
 

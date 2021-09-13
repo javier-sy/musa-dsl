@@ -767,5 +767,22 @@ RSpec.describe Musa::Series do
 
       expect(cc.next_value).to be_nil
     end
+
+    it 'bugfix for curve with 2 points at the same time' do
+
+      c = S([0, 1], [1, 2], [1, 3], [2, 4])
+
+      cc = QUANTIZE(c, predictive: true, stops: false).i
+
+      expected = [{ time: 0r, value: 1r, duration: 1/2r },
+                  { time: 1/2r, value: 2r, duration: 1r },
+                  { time: 3/2r, value: 4r, duration: 1/2r }]
+
+      while v = expected.shift
+        expect(cc.next_value).to eq(v)
+      end
+
+      expect(cc.next_value).to be_nil
+    end
   end
 end
