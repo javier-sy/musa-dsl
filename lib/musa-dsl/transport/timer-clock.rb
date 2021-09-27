@@ -3,7 +3,7 @@ require_relative 'clock'
 module Musa
   module Clock
     class TimerClock < Clock
-      def initialize(period = nil, ticks_per_beat: nil, bpm: nil, correction: nil, do_log: nil)
+      def initialize(period = nil, ticks_per_beat: nil, bpm: nil, correction: nil, logger: nil)
         do_log ||= false
 
         super()
@@ -20,7 +20,7 @@ module Musa
         @started = false
         @paused = false
 
-        @do_log = do_log
+        @logger = logger
       end
 
       attr_reader :period, :ticks_per_beat, :bpm
@@ -55,7 +55,7 @@ module Musa
         @run = true
 
         while @run
-          @timer = Timer.new(@period, correction: @correction, stop: true)
+          @timer = Timer.new(@period, correction: @correction, stop: true, logger: @logger)
 
           @timer.run do
             yield if block_given?
