@@ -3,10 +3,12 @@ module Musa
     class Timer
       attr_accessor :period
 
-      def initialize(period_in_seconds, correction: nil, stop: nil, logger: nil, do_log: nil)
-        @period = period_in_seconds.rationalize
+      def initialize(tick_period_in_seconds, correction: nil, stop: nil, delayed_ticks_error: nil, logger: nil, do_log: nil)
+        @period = tick_period_in_seconds.rationalize
         @correction = (correction || 0r).rationalize
         @stop = stop || false
+
+        @delayed_ticks_error = delayed_ticks_error || 1.0
         @logger = logger
         @do_log = do_log
       end
@@ -21,10 +23,15 @@ module Musa
             yield
 
             @next_moment += @period
-            to_sleep = (@next_moment  + @correction) - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            to_sleep = (@next_moment + @correction) - Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-            if @do_log && to_sleep.negative?
-              @logger&.error "Timer delayed #{-to_sleep}s (near #{(-to_sleep / @period).round} ticks)"
+            if @do_log && to_sleep.negative? & @logger
+              tick_errors = -to_sleep / @period
+              if tick_errors >= @delayed_ticks_error
+                @logger.error "Timer delayed #{tick_errors.round(2)} ticks (#{-to_sleep}s)"
+              else
+                @logger.warn "Timer delayed #{tick_errors.round(2)} ticks (#{-to_sleep}s)"
+              end
             end
 
             sleep to_sleep if to_sleep > 0.0
