@@ -28,9 +28,9 @@ module Musa
             if @do_log && to_sleep.negative? & @logger
               tick_errors = -to_sleep / @period
               if tick_errors >= @delayed_ticks_error
-                @logger.error "Timer delayed #{tick_errors.round(2)} ticks (#{-to_sleep}s)"
+                @logger.error "Timer delayed #{tick_errors.round(2)} ticks (#{-to_sleep.round(3)}s)"
               else
-                @logger.warn "Timer delayed #{tick_errors.round(2)} ticks (#{-to_sleep}s)"
+                @logger.warn "Timer delayed #{tick_errors.round(2)} ticks (#{-to_sleep.round(3)}s)"
               end
             end
 
