@@ -4,7 +4,7 @@ module Musa::Sequencer
   class BaseSequencer
     using Musa::Extension::InspectNice
 
-    private def _play_timed(timed_serie, control, &block)
+    private def _play_timed(timed_serie, start_position, control, &block)
 
       if first_value_sample = timed_serie.peek_next_value
         debug "_play_timed: first_value_sample #{first_value_sample}"
@@ -25,7 +25,7 @@ module Musa::Sequencer
       binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
 
       _play_timed_step(hash_mode, component_ids, extra_attribute_names, timed_serie,
-                       position, last_positions, binder, control)
+                       start_position, last_positions, binder, control)
     end
 
     private def _play_timed_step(hash_mode,

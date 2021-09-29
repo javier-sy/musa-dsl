@@ -44,6 +44,39 @@ RSpec.describe Musa::Sequencer do
       expect(control_passed_at).to eq 6
     end
 
+    it 'simple case using at' do
+      serie = S({ time: 0, value: { a: 1 } },
+                { time: 2, value: { a: 2 } },
+                { time: 5, value: { a: 3 } })
+
+      s = Musa::Sequencer::BaseSequencer.new do_log: false, do_error_log: true
+
+      result = []
+      control_passed = nil
+      control_passed_at = nil
+
+      control = s.play_timed(serie, at: 1.5r) do |values, started_ago:|
+        result << { position: s.position,
+                    values: values.clone,
+                    started_ago: started_ago.clone }
+      end
+
+      control.after do
+        control_passed = true
+        control_passed_at = s.position
+      end
+
+      s.run
+
+      expected = [
+        { position: 1.5r, values: { a: 1 }, started_ago: {} },
+        { position: 3.5r, values: { a: 2 }, started_ago: {} },
+        { position: 6.5r, values: { a: 3 }, started_ago: {} } ]
+
+      expect(result).to eq(expected)
+      expect(control_passed).to be true
+      expect(control_passed_at).to eq 6.5r
+    end
 
     it 'simple case timed_serie from a P of PackedV' do
       p = [ { a: 0r, b: 1r }.extend(Musa::Datasets::PackedV), 3*4,

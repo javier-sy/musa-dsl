@@ -21,9 +21,9 @@ module Musa
                      logger: nil,
                      do_log: nil, do_error_log: nil, log_position_format: nil)
 
-        raise ArgumentError,
-              "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values" \
-              unless beats_per_bar && ticks_per_beat || beats_per_bar.nil? && ticks_per_beat.nil?
+        unless beats_per_bar && ticks_per_beat || beats_per_bar.nil? && ticks_per_beat.nil?
+          raise ArgumentError, "'beats_per_bar' and 'ticks_per_beat' parameters should be both nil or both have values"
+        end
 
         if logger
           @logger = logger
@@ -39,9 +39,9 @@ module Musa
           @beats_per_bar = Rational(beats_per_bar)
           @ticks_per_beat = Rational(ticks_per_beat)
 
-          self.singleton_class.include TickBasedTiming
+          singleton_class.include TickBasedTiming
         else
-          self.singleton_class.include TicklessBasedTiming
+          singleton_class.include TicklessBasedTiming
         end
 
         _init_timing
@@ -215,9 +215,12 @@ module Musa
       end
 
       def play_timed(timed_serie,
+                     at: nil,
                      on_stop: nil,
                      after_bars: nil, after: nil,
                      &block)
+
+        at ||= position
 
         control = PlayTimedControl.new(@event_handlers.last,
                                        on_stop: on_stop, after_bars: after_bars, after: after)
@@ -230,7 +233,7 @@ module Musa
 
         @event_handlers.push control
 
-        _play_timed(timed_serie.instance, control, &block)
+        _play_timed(timed_serie.instance, at, control, &block)
 
         @event_handlers.pop
 
