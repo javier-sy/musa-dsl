@@ -1,4 +1,5 @@
 require 'socket'
+require 'pathname'
 
 module Musa
   module REPL
@@ -42,7 +43,7 @@ module Musa
 
                     when '#begin'
                       user_path = buffer&.string
-                      binder.local_variable_set(:user_path, user_path)
+                      binder.receiver.instance_variable_set(:@user_pathname, Pathname.new(user_path)) if user_path
 
                       buffer = StringIO.new
 
