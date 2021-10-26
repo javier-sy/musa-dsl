@@ -41,8 +41,8 @@ module Musa
                       buffer = StringIO.new
 
                     when '#begin'
-                      local_path = buffer&.string
-                      binder.local_variable_set(:local_path, local_path)
+                      user_path = buffer&.string
+                      binder.local_variable_set(:user_path, user_path)
 
                       buffer = StringIO.new
 
