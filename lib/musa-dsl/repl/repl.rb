@@ -37,7 +37,13 @@ module Musa
 
                     line.chomp!
                     case line
+                    when '#path'
+                      buffer = StringIO.new
+
                     when '#begin'
+                      local_path = buffer&.string
+                      binder.local_variable_set(:local_path, local_path)
+
                       buffer = StringIO.new
 
                     when '#end'
