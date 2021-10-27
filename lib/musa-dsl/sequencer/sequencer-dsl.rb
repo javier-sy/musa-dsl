@@ -43,8 +43,8 @@ module Musa
         @dsl.with &block if block_given?
       end
 
-      def with(&block)
-        @dsl.with &block
+      def with(*value_parameters, **key_parameters, &block)
+        @dsl.with(*value_parameters, **key_parameters, &block)
       end
 
       class DSLContext
