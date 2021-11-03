@@ -101,6 +101,10 @@ module Musa
         @client_threads.clear
       end
 
+      def puts(message)
+        send output: @connection, content: message
+      end
+
       private
 
       def send_echo(e, output:)
