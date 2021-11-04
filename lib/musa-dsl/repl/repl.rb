@@ -6,20 +6,17 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      def initialize(binder, port: nil, after_eval: nil, logger: nil)
+      attr_reader :binder
+
+      def initialize(binder = nil, port: nil, after_eval: nil, logger: nil)
+
+        self.binder = binder
+
         port ||= 1327
 
         @logger = logger || Musa::Logger::Logger.new
 
         @block_source = nil
-
-        if binder.receiver.respond_to?(:sequencer) &&
-           binder.receiver.sequencer.respond_to?(:on_error)
-
-          binder.receiver.sequencer.on_error do |e|
-            send_exception e, output: @connection
-          end
-        end
 
         @client_threads = []
         @run = true
@@ -85,6 +82,18 @@ module Musa
             @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
             retry
 
+          end
+        end
+      end
+
+      def binder=(binder)
+        @binder = binder
+
+        if @binder.receiver.respond_to?(:sequencer) &&
+           @binder.receiver.sequencer.respond_to?(:on_error)
+
+          @binder.receiver.sequencer.on_error do |e|
+            send_exception e, output: @connection
           end
         end
       end
