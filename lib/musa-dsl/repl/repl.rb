@@ -6,8 +6,6 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      attr_reader :binder
-
       def initialize(binder = nil, port: nil, after_eval: nil, logger: nil)
 
         self.binder = binder
@@ -40,7 +38,7 @@ module Musa
 
                     when '#begin'
                       user_path = buffer&.string
-                      binder.receiver.instance_variable_set(:@user_pathname, Pathname.new(user_path)) if user_path
+                      @binder.receiver.instance_variable_set(:@user_pathname, Pathname.new(user_path)) if user_path
 
                       buffer = StringIO.new
 
@@ -50,7 +48,7 @@ module Musa
 
                         begin
                           send_echo @block_source, output: @connection
-                          binder.eval @block_source, "(repl)", 1
+                          @binder.eval @block_source, "(repl)", 1
 
                         rescue StandardError, ScriptError => e
                           @logger.warn('REPL') { 'code execution error' }
@@ -87,7 +85,11 @@ module Musa
       end
 
       def binder=(binder)
+        raise 'Already binded' if @binder
+
         @binder = binder
+
+        return unless @binder
 
         if @binder.receiver.respond_to?(:sequencer) &&
            @binder.receiver.sequencer.respond_to?(:on_error)
@@ -111,7 +113,11 @@ module Musa
       end
 
       def puts(message)
-        send output: @connection, content: message
+        if @connection
+          send output: @connection, content: message&.to_s
+        else
+          @logger.warn('REPL') { "trying to print a message in Atom client but the client is not connected. Ignoring message \'#{message} \'." }
+        end
       end
 
       private

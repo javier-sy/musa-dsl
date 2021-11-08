@@ -4,13 +4,14 @@ require 'nibbler'
 module Musa
   module Clock
     class InputMidiClock < Clock
-      def initialize(input, logger: nil, do_log: nil)
+      def initialize(input = nil, logger: nil, do_log: nil)
         do_log ||= false
 
         super()
 
-        @input = input
         @logger = logger
+
+        self.input = input
 
         if logger
           @logger = logger
@@ -22,17 +23,28 @@ module Musa
         @nibbler = Nibbler.new
       end
 
+      attr_reader :input
+
+      def input=(input_midi_port)
+        @input = input_midi_port
+      end
+
       def run
         @run = true
 
         while @run
-          raw_messages = @input.gets
-          @input.buffer.clear
+          if @input
+            raw_messages = @input.gets
+            @input.buffer.clear
+          else
+            @logger.info('InputMidiClock') { 'Waiting to have clock input MIDI port' }
+            sleep 1
+          end
 
           messages = []
           stop_index = nil
 
-          raw_messages.each do |message|
+          raw_messages&.each do |message|
             mm = @nibbler.parse message[:data]
 
             if mm
