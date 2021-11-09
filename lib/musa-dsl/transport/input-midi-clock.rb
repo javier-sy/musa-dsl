@@ -27,6 +27,7 @@ module Musa
 
       def input=(input_midi_port)
         @input = input_midi_port
+        @waiting_for_input&.wakeup
       end
 
       def run
@@ -37,8 +38,13 @@ module Musa
             raw_messages = @input.gets
             @input.buffer.clear
           else
-            @logger.info('InputMidiClock') { 'Waiting to have clock input MIDI port' }
-            sleep 1
+            @logger.warn('InputMidiClock') { 'Waiting for clock input MIDI port' }
+
+            @waiting_for_input = Thread.current
+            sleep
+            @waiting_for_input = nil
+
+            @logger.info('InputMidiClock') { "Assigned clock input MIDI port '#{@input.name}'" }
           end
 
           messages = []
