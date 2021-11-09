@@ -2,7 +2,8 @@
 
 Version 3, 29 June 2007
 
-Copyright (C) 2016-2021 Javier Sánchez Yeste. <https://yeste.studio>
+Copyright (C) 2016-2021 Javier Sánchez Yeste. 
+<https://yeste.studio>
 
 Everyone is permitted to copy and distribute verbatim copies of this
 license document, but changing it is not allowed.
