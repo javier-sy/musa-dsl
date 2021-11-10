@@ -6,8 +6,9 @@ module Musa
       def with(*value_parameters, **key_parameters, &block)
         binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
 
-        keep_proc_context = @keep_proc_context_on_with
         send_self_as_underscore_parameter = binder.parameters[0][1] == :_ unless binder.parameters.empty?
+
+        keep_proc_context = @keep_proc_context_on_with
         keep_proc_context ||= send_self_as_underscore_parameter
         keep_proc_context ||= false
 
