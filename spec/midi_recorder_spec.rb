@@ -1,9 +1,13 @@
 require 'spec_helper'
 
+require 'midi-parser'
+
 require 'musa-dsl'
 
 RSpec.describe Musa::MIDIRecorder do
   context 'Midi Recorder' do
+    parser = MIDIParser.new
+
     it 'Basic midi recorder processing (raw midi)' do
       s = Musa::Sequencer::BaseSequencer.new 4, 4
       recorder = Musa::MIDIRecorder::MIDIRecorder.new s
@@ -49,36 +53,36 @@ RSpec.describe Musa::MIDIRecorder do
 
       c += 1
       expect(result[c].position).to eq(1 + Rational(1, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(176, 88, 114).data)
+      expect(result[c].message).to eq(parser.parse(176, 88, 114).first)
       c += 1
       expect(result[c].position).to eq(1 + Rational(1, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(144, 58, 15).data)
+      expect(result[c].message).to eq(parser.parse(144, 58, 15).first)
 
       c += 1
       expect(result[c].position).to eq(1 + Rational(3, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(128, 58, 64).data)
+      expect(result[c].message).to eq(parser.parse(128, 58, 64).first)
 
       c += 1
       expect(result[c].position).to eq(1 + Rational(5, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(176, 88, 34).data)
+      expect(result[c].message).to eq(parser.parse(176, 88, 34).first)
       c += 1
       expect(result[c].position).to eq(1 + Rational(5, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(144, 61, 29).data)
+      expect(result[c].message).to eq(parser.parse(144, 61, 29).first)
 
       c += 1
       expect(result[c].position).to eq(1 + Rational(6, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(128, 61, 64).data)
+      expect(result[c].message).to eq(parser.parse(128, 61, 64).first)
 
       c += 1
       expect(result[c].position).to eq(1 + Rational(8, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(176, 88, 94).data)
+      expect(result[c].message).to eq(parser.parse(176, 88, 94).first)
       c += 1
       expect(result[c].position).to eq(1 + Rational(8, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(144, 63, 36).data)
+      expect(result[c].message).to eq(parser.parse(144, 63, 36).first)
 
       c += 1
       expect(result[c].position).to eq(1 + Rational(12, 16))
-      expect(result[c].message.data).to eq(MIDIMessage::Parser.parse(128, 63, 64).data)
+      expect(result[c].message).to eq(parser.parse(128, 63, 64).first)
 
       recorder.clear
 

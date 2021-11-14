@@ -1,5 +1,6 @@
+require 'midi-parser'
+
 require_relative 'clock'
-require 'nibbler'
 
 module Musa
   module Clock
@@ -20,7 +21,7 @@ module Musa
           @logger.debug! if do_log
         end
 
-        @nibbler = Nibbler.new
+        @midi_parser = MIDIParser.new
       end
 
       attr_reader :input
@@ -51,7 +52,7 @@ module Musa
           stop_index = nil
 
           raw_messages&.each do |message|
-            mm = @nibbler.parse message[:data]
+            mm = @midi_parser.parse message[:data]
 
             if mm
               if mm.is_a? Array
@@ -65,10 +66,6 @@ module Musa
               end
             end
           end
-
-          @nibbler.processed.clear
-          @nibbler.rejected.clear
-          @nibbler.messages.clear
 
           size = messages.size
           index = 0

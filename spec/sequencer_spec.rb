@@ -246,70 +246,6 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(3)
     end
 
-    it 'Basic every sequencing with control' do
-      s = Musa::Sequencer::BaseSequencer.new 4, 4
-
-      c = 0
-      d = 0
-
-      s.at 1 do
-        s.every 1 do |control:|
-          c += 1
-
-          if c == 2
-            control.after do
-              d = 1
-            end
-          end
-
-          control.stop if c == 3
-        end
-      end
-
-      expect(c).to eq(0)
-
-      s.tick
-
-      expect(c).to eq(1)
-
-      s.tick
-
-      expect(c).to eq(1)
-
-      14.times do
-        s.tick
-      end
-
-      expect(c).to eq(1)
-
-      s.tick
-
-      expect(c).to eq(2)
-
-      s.tick
-
-      expect(c).to eq(2)
-
-      15.times do
-        s.tick
-      end
-
-      expect(c).to eq(3)
-      expect(d).to eq(0)
-
-      s.tick
-
-      expect(c).to eq(3)
-      expect(d).to eq(0)
-
-      15.times do
-        s.tick
-      end
-
-      expect(c).to eq(3)
-      expect(d).to eq(1)
-    end
-
     it 'Basic every sequencing with control condition' do
       s = Musa::Sequencer::BaseSequencer.new 4, 4
 
@@ -359,6 +295,35 @@ RSpec.describe Musa::Sequencer do
       s.run
 
       expect(p).to eq [1r, 29/16r, 21/8r, 27/8r, 67/16r, 5r]
+    end
+
+    it 'Bugfix: on every handler stop the after action is delayed 1 interval' do
+      s = Musa::Sequencer::BaseSequencer.new 4, 4
+
+      p = []
+      h = nil
+
+      s.at 1 do
+        h = s.every 1 do
+          p << s.position
+        end
+
+        h.after do
+          p << s.position
+        end
+      end
+
+      s.at 3.5 do
+        h.stop
+      end
+
+      s.at 4.5 do
+        h.stop
+      end
+
+      s.run
+
+      expect(p).to eq [1r, 2r, 3r, 4r]
     end
 
     it 'Basic play sequencing' do

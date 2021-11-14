@@ -9,8 +9,8 @@ group :neuma do
 end
 
 group :transport do
-  gem 'midi-message', '~> 0.4', '>= 0.4.9'
-  gem 'midi-nibbler', '~> 0.2', '>= 0.2.4'
+  gem 'midi-events', '~> 0.5', '>= 0.5.0'
+  gem 'midi-parser', '~> 0.3', '>= 0.3.0'
 end
 
 group :test do

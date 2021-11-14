@@ -1,11 +1,11 @@
-require 'nibbler'
+require 'midi-parser'
 
 module Musa
   module MIDIRecorder
     class MIDIRecorder
       def initialize(sequencer)
         @sequencer = sequencer
-        @nibbler = Nibbler.new
+        @midi_parser = MIDIParser.new
 
         clear
       end
@@ -15,7 +15,7 @@ module Musa
       end
 
       def record(midi_bytes)
-        m = @nibbler.parse midi_bytes
+        m = @midi_parser.parse midi_bytes
         m = [m] unless m.is_a? Array
 
         m.each do |mm|
@@ -37,7 +37,7 @@ module Musa
           mm = m.message
 
           case mm
-          when MIDIMessage::NoteOn
+          when MIDIEvents::NoteOn
             if last_note[mm.channel]
               notes << { position: last_note[mm.channel], channel: mm.channel, pitch: :silence, duration: m.position - last_note[mm.channel] }
               last_note.delete mm.channel
@@ -50,7 +50,7 @@ module Musa
 
             notes << note
 
-          when MIDIMessage::NoteOff
+          when MIDIEvents::NoteOff
             note_on[mm.channel] ||= {}
 
             note = note_on[mm.channel][mm.note]

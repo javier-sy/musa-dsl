@@ -256,79 +256,34 @@ RSpec.describe Musa::Sequencer do
       expect(c).to eq(3)
     end
 
-    it 'Basic every sequencing with control' do
-      c = 0
-      d = 0
+    it 'Bugfix: on every handler stop the after action is delayed 1 interval' do
+      p = []
+      h = nil
 
-      every_control = nil
-
-      s = Musa::Sequencer::Sequencer.new 4, 4 do
+      s = Musa::Sequencer::Sequencer.new(4, 4) do
         at 1 do
-          every_control = every 1 do |control:|
-            c += 1
-
-            if c == 2
-              control.after do
-                d = 1
-              end
-            end
-
-            control.stop if c == 3
+          h = every 1 do
+            p << position
           end
+
+          h.after do
+            p << position
+          end
+        end
+
+        at 3.5r do
+          h.stop
+        end
+
+        at 4.5r do
+          h.stop
+          puts "stop"
         end
       end
 
-      expect(c).to eq(0)
-      expect(s.everying.size).to eq 0
+      s.run
 
-      s.tick
-
-      expect(c).to eq(1)
-      expect(s.everying).to include(every_control)
-
-      s.tick
-
-      expect(c).to eq(1)
-      expect(s.everying).to include(every_control)
-
-      14.times do
-        s.tick
-      end
-
-      expect(c).to eq(1)
-      expect(s.everying).to include(every_control)
-
-      s.tick
-
-      expect(c).to eq(2)
-      expect(s.everying).to include(every_control)
-
-      s.tick
-
-      expect(c).to eq(2)
-      expect(s.everying).to include(every_control)
-
-      15.times do
-        s.tick
-      end
-
-      expect(c).to eq(3)
-      expect(d).to eq(0)
-      expect(s.everying).to include(every_control)
-
-      s.tick
-
-      expect(c).to eq(3)
-      expect(d).to eq(0)
-      expect(s.everying).to include(every_control)
-
-      15.times do
-        s.tick
-      end
-
-      expect(c).to eq(3)
-      expect(d).to eq(1)
-      expect(s.everying.size).to eq 0
+      expect(p).to eq [1r, 2r, 3r, 4r]
     end
 
     it 'Basic move sequencing' do

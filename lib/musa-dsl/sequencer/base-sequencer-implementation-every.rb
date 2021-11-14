@@ -28,7 +28,8 @@ module Musa::Sequencer
           control.do_on_stop.each(&:call)
 
           control.do_after.each do |do_after|
-            _numeric_at position + (interval || 0) + do_after[:bars], control, &do_after[:block]
+            # _numeric_at position + (interval || 0) + do_after[:bars], control, &do_after[:block]
+            _numeric_at position + do_after[:bars], control, &do_after[:block]
           end
         else
           _numeric_at control._start_position + control._execution_counter * interval, control do

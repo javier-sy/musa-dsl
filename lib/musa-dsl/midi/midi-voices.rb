@@ -1,5 +1,5 @@
 require 'set'
-require 'midi-message'
+require 'midi-events'
 
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/array-explode-ranges'
@@ -38,7 +38,7 @@ module Musa
 
         @voices.each(&:all_notes_off)
 
-        @output.puts MIDIMessage::SystemRealtime.new(0xff) if reset
+        @output.puts MIDIEvents::SystemRealtime.new(0xff) if reset
       end
     end
 
@@ -72,7 +72,7 @@ module Musa
       def fast_forward=(enabled)
         if @fast_forward && !enabled
           (0..127).each do |pitch|
-            @output.puts MIDIMessage::NoteOn.new(@channel, pitch, @active_pitches[pitch][:velocity]) unless @active_pitches[pitch][:note_controls].empty?
+            @output.puts MIDIEvents::NoteOn.new(@channel, pitch, @active_pitches[pitch][:velocity]) unless @active_pitches[pitch][:note_controls].empty?
           end
         end
 
@@ -114,7 +114,7 @@ module Musa
         @active_pitches.clear
         fill_active_pitches @active_pitches
 
-        @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, 0x7b, 0)
+        @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, 0x7b, 0)
       end
 
       def log(msg)
@@ -147,7 +147,7 @@ module Musa
           value ||= 0
 
           @controller[number] = [[0, value].max, 0xff].min
-          @output.puts MIDIMessage::ChannelMessage.new(0xb, @channel, number, @controller[number])
+          @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, number, @controller[number])
         end
 
         def [](controller_number_or_symbol)
@@ -202,7 +202,7 @@ module Musa
               @voice.active_pitches[pitch][:note_controls] << self
               @voice.active_pitches[pitch][:velocity] = velocity
 
-              msg = MIDIMessage::NoteOn.new(@voice.channel, pitch, velocity)
+              msg = MIDIEvents::NoteOn.new(@voice.channel, pitch, velocity)
               @voice.log "#{msg.verbose_name} velocity: #{velocity} duration: #{@duration}"
               @voice.output.puts msg if @voice.output && !@voice.fast_forward?
             else
@@ -235,7 +235,7 @@ module Musa
 
             next unless @voice.active_pitches[pitch][:note_controls].empty?
 
-            msg = MIDIMessage::NoteOff.new(@voice.channel, pitch, velocity_off)
+            msg = MIDIEvents::NoteOff.new(@voice.channel, pitch, velocity_off)
             @voice.log msg.verbose_name.to_s
             @voice.output.puts msg if @voice.output && !@voice.fast_forward?
           end
