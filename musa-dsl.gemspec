@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
-  s.version     = '0.25.0'
-  s.date        = '2021-11-13'
+  s.version     = '0.26.0'
+  s.date        = '2021-11-19'
   s.summary     = 'A simple Ruby DSL for making complex music'
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
   s.authors     = ['Javier Sánchez Yeste']
@@ -20,8 +20,13 @@ Gem::Specification.new do |s|
     # "changelog_uri" => ""
   #}
 
-  s.add_runtime_dependency 'citrus', '~> 3.0.0', '>= 3.0.0'
+  s.add_runtime_dependency 'logger', '~> 1.4', '>= 1.4.3'
+
+  s.add_runtime_dependency 'citrus', '~> 3.0', '>= 3.0.0'
 
   s.add_runtime_dependency 'midi-events', '~> 0.5', '>= 0.5.0'
   s.add_runtime_dependency 'midi-parser', '~> 0.3', '>= 0.3.0'
+
+  s.add_development_dependency 'descriptive-statistics'
+  s.add_development_dependency 'rspec', '~> 3.0'
 end

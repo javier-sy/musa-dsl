@@ -37,7 +37,6 @@ module Musa
         while @run
           if @input
             raw_messages = @input.gets
-            @input.buffer.clear
           else
             @logger.warn('InputMidiClock') { 'Waiting for clock input MIDI port' }
 
