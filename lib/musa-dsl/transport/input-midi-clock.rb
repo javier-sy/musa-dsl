@@ -44,7 +44,11 @@ module Musa
             sleep
             @waiting_for_input = nil
 
-            @logger.info('InputMidiClock') { "Assigned clock input MIDI port '#{@input.name}'" }
+            if @input
+              @logger.info('InputMidiClock') { "Assigned clock input MIDI port '#{@input.name}'" }
+            else
+              @logger.warn('InputMidiClock') { 'Clock input MIDI port not found' }
+            end
           end
 
           messages = []

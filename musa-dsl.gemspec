@@ -27,6 +27,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'midi-events', '~> 0.5', '>= 0.5.0'
   s.add_runtime_dependency 'midi-parser', '~> 0.3', '>= 0.3.0'
 
-  s.add_development_dependency 'descriptive-statistics'
+  s.add_development_dependency 'descriptive-statistics', '~> 2.2'
   s.add_development_dependency 'rspec', '~> 3.0'
 end
