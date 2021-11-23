@@ -138,7 +138,26 @@ module Musa
           @output = output
           @channel = channel
 
-          @controller_map = { sustain_pedal: 0x40 }
+          @controller_map = { mod_wheel: 1,
+                              breath: 2,
+                              volume: 7,
+                              expression: 11,
+                              general_purpose_1: 16,
+                              general_purpose_2: 17,
+                              general_purpose_3: 18,
+                              general_purpose_4: 19,
+
+                              mod_wheel_lsb: 1 + 32,
+                              breath_lsb: 2 + 32,
+                              volume_lsb: 7 + 32,
+                              expression_lsb: 11 + 32,
+                              general_purpose_1_lsb: 16 + 32,
+                              general_purpose_2_lsb: 17 + 32,
+                              general_purpose_3_lsb: 18 + 32,
+                              general_purpose_4_lsb: 19 + 32,
+
+                              sustain_pedal: 64,
+                              portamento: 65 }
           @controller = []
         end
 
