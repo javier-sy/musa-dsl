@@ -1,5 +1,5 @@
 module Musa
-  VERSION = '0.26.1'.freeze
+  VERSION = '0.26.2'.freeze
 end
 
 require_relative 'musa-dsl/core-ext'

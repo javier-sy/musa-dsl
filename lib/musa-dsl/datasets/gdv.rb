@@ -16,16 +16,20 @@ module Musa::Datasets
 
     attr_accessor :base_duration
 
+    # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
+    # ppp = 16 ... fff = 127 (-5 ... 4) the standard used by Musescore 3 and others starts at ppp = 16
+    VELOCITY_MAP = [1, 8, 16, 33, 49, 64, 80, 96, 112, 127].freeze
+
     def to_pdv(scale)
       pdv = {}.extend PDV
       pdv.base_duration = @base_duration
 
       if self[:grade]
         pdv[:pitch] = if self[:silence]
-                      :silence
-                    else
-                      scale[self[:grade]].sharp(self[:sharps] || 0).octave(self[:octave] || 0).pitch
-                    end
+                        :silence
+                      else
+                        scale[self[:grade]].sharp(self[:sharps] || 0).octave(self[:octave] || 0).pitch
+                      end
       end
 
       if self[:duration]
@@ -41,9 +45,19 @@ module Musa::Datasets
       end
 
       if self[:velocity]
-        # ppp = 16 ... fff = 127 (-5 ... 4) the standard used by Musescore 3 and others starts at ppp = 16
-        # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
-        pdv[:velocity] = [1, 8, 16, 33, 49, 64, 80, 96, 112, 127][self[:velocity] + 5]
+        index = if (-5..4).cover?(self[:velocity])
+                  self[:velocity]
+                else
+                  self[:velocity] < -5 ? -5 : 4
+                end
+        
+        index_min = index.floor
+        index_max = index.ceil
+
+        velocity = VELOCITY_MAP[index_min + 5] +
+          (VELOCITY_MAP[index_max + 5] - VELOCITY_MAP[index_min + 5]) * (self[:velocity] - index_min)
+
+        pdv[:velocity] = velocity
       end
 
       (keys - NaturalKeys).each { |k| pdv[k] = self[k] }
@@ -52,7 +66,7 @@ module Musa::Datasets
     end
 
     def to_neuma
-      @base_duration ||= Rational(1,4)
+      @base_duration ||= Rational(1, 4)
 
       attributes = []
 
