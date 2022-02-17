@@ -6,7 +6,7 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      def initialize(binder = nil, port: nil, after_eval: nil, logger: nil)
+      def initialize(binder = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: true)
 
         self.binder = binder
 
@@ -52,7 +52,7 @@ module Musa
 
                         rescue StandardError, ScriptError => e
                           @logger.warn('REPL') { 'code execution error' }
-                          @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
+                          @logger.warn('REPL') { e.full_message(highlight: highlight_exception, order: :top) }
 
                           send_exception e, output: @connection
                         else
@@ -66,7 +66,7 @@ module Musa
 
                 rescue IOError, Errno::ECONNRESET, Errno::EPIPE => e
                   @logger.warn('REPL') { 'lost connection' }
-                  @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
+                  @logger.warn('REPL') { e.full_message(highlight: highlight_exception, order: :top) }
 
                 ensure
                   @logger.debug("REPL") { "closing connection (running #{@run})" }
@@ -77,7 +77,7 @@ module Musa
             end
           rescue Errno::ECONNRESET, Errno::EPIPE => e
             @logger.warn('REPL') { 'connection failure while getting server port; will retry...' }
-            @logger.warn('REPL') { e.full_message(highlight: true, order: :top) }
+            @logger.warn('REPL') { e.full_message(highlight: highlight_exception, order: :top) }
             retry
 
           end
