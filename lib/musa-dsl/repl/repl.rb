@@ -13,6 +13,7 @@ module Musa
         port ||= 1327
 
         @logger = logger || Musa::Logger::Logger.new
+        @highlight_exception = highlight_exception
 
         @block_source = nil
 
@@ -52,7 +53,7 @@ module Musa
 
                         rescue StandardError, ScriptError => e
                           @logger.warn('REPL') { 'code execution error' }
-                          @logger.warn('REPL') { e.full_message(highlight: highlight_exception, order: :top) }
+                          @logger.warn('REPL') { e.full_message(highlight: @highlight_exception, order: :top) }
 
                           send_exception e, output: @connection
                         else
@@ -66,7 +67,7 @@ module Musa
 
                 rescue IOError, Errno::ECONNRESET, Errno::EPIPE => e
                   @logger.warn('REPL') { 'lost connection' }
-                  @logger.warn('REPL') { e.full_message(highlight: highlight_exception, order: :top) }
+                  @logger.warn('REPL') { e.full_message(highlight: @highlight_exception, order: :top) }
 
                 ensure
                   @logger.debug("REPL") { "closing connection (running #{@run})" }
@@ -77,7 +78,7 @@ module Musa
             end
           rescue Errno::ECONNRESET, Errno::EPIPE => e
             @logger.warn('REPL') { 'connection failure while getting server port; will retry...' }
-            @logger.warn('REPL') { e.full_message(highlight: highlight_exception, order: :top) }
+            @logger.warn('REPL') { e.full_message(highlight: @highlight_exception, order: :top) }
             retry
 
           end
@@ -130,7 +131,7 @@ module Musa
 
       def send_exception(e, output:)
 
-        @logger.error('REPL') { e.full_message(highlight: true, order: :top) }
+        @logger.error('REPL') { e.full_message(highlight: @highlight_exception, order: :top) }
 
         send output: output, command: '//error'
 
