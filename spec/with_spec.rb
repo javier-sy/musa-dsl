@@ -23,12 +23,11 @@ class Test2
 
   def initialize(value, &block)
     @value = value
-    @keep_proc_context_on_with = true
 
     if value == 200
-      with 'a string', &block if block_given?
+      with 'a string', keep_block_context: true, &block if block_given?
     else
-      with &block if block_given?
+      with keep_block_context: true, &block if block_given?
     end
   end
 
