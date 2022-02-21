@@ -38,7 +38,7 @@ module Musa
                                          do_error_log: do_error_log,
                                          log_position_format: log_position_format
 
-        @dsl = DSLContext.new @sequencer, keep_proc_context: keep_proc_context
+        @dsl = DSLContext.new @sequencer, keep_block_context: keep_proc_context
 
         @dsl.with &block if block_given?
       end
@@ -61,16 +61,16 @@ module Musa
                        :ticks_per_bar, :logger, :debug, :inspect,
                        :run
 
-        def initialize(sequencer, keep_proc_context:)
+        def initialize(sequencer, keep_block_context:)
           @sequencer = sequencer
-          @keep_proc_context_on_with = keep_proc_context
+          @keep_block_context_on_with = keep_block_context
         end
 
         def now(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
           @sequencer.now *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **key_args, &block
+            with *value_args, **key_args, keep_block_context: @keep_block_context_on_with, &block
           end
         end
 
@@ -78,14 +78,14 @@ module Musa
           block ||= proc {}
 
           @sequencer.at *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **key_args, &block
+            with *value_args, **key_args, keep_block_context: @keep_block_context_on_with, &block
           end
         end
 
         def wait(*value_parameters, **key_parameters, &block)
           block ||= proc {}
-          @sequencer.wait *value_parameters, **key_parameters do | *values, **key_values |
-            with *values, **key_values, &block
+          @sequencer.wait *value_parameters, **key_parameters do |*values, **key_values|
+            with *values, **key_values, keep_block_context: @keep_block_context_on_with, &block
           end
         end
 
@@ -93,7 +93,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.play *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **key_args, &block
+            with *value_args, **key_args, keep_block_context: @keep_block_context_on_with, &block
           end
         end
 
@@ -101,7 +101,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.play_timed *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **key_args, &block
+            with *value_args, **key_args, keep_block_context: @keep_block_context_on_with, &block
           end
         end
 
@@ -110,7 +110,7 @@ module Musa
 
           @sequencer.every *value_parameters, **key_parameters do |*value_args, **key_args|
             args = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)._apply(value_args, key_args)
-            with *args.first, **args.last, &block
+            with *args.first, **args.last, keep_block_context: @keep_block_context_on_with, &block
           end
         end
 
@@ -118,7 +118,7 @@ module Musa
           block ||= proc {}
 
           @sequencer.move *value_parameters, **key_parameters do |*value_args, **key_args|
-            with *value_args, **key_args, &block
+            with *value_args, **key_args, keep_block_context: @keep_block_context_on_with, &block
           end
         end
       end
