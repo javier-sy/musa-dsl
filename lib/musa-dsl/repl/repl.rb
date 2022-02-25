@@ -6,9 +6,9 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      def initialize(binder = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: true)
+      def initialize(bind = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: true)
 
-        self.binder = binder
+        self.bind = bind
 
         port ||= 1327
 
@@ -39,7 +39,7 @@ module Musa
 
                     when '#begin'
                       user_path = buffer&.string
-                      @binder.receiver.instance_variable_set(:@user_pathname, Pathname.new(user_path)) if user_path
+                      @bind.receiver.instance_variable_set(:@user_pathname, Pathname.new(user_path)) if user_path
 
                       buffer = StringIO.new
 
@@ -49,7 +49,7 @@ module Musa
 
                         begin
                           send_echo @block_source, output: @connection
-                          @binder.eval @block_source, "(repl)", 1
+                          @bind.receiver.execute @block_source, '(repl)', 1
 
                         rescue StandardError, ScriptError => e
                           @logger.warn('REPL') { 'code execution error' }
@@ -70,7 +70,7 @@ module Musa
                   @logger.warn('REPL') { e.full_message(highlight: @highlight_exception, order: :top) }
 
                 ensure
-                  @logger.debug("REPL") { "closing connection (running #{@run})" }
+                  @logger.debug('REPL') { "closing connection (running #{@run})" }
                   @connection.close
                 end
 
@@ -85,17 +85,17 @@ module Musa
         end
       end
 
-      def binder=(binder)
-        raise 'Already binded' if @binder
+      def bind=(bind)
+        raise 'Already binded' if @bind
 
-        @binder = binder
+        @bind = bind
 
-        return unless @binder
+        return unless @bind
 
-        if @binder.receiver.respond_to?(:sequencer) &&
-           @binder.receiver.sequencer.respond_to?(:on_error)
+        if @bind.receiver.respond_to?(:sequencer) &&
+           @bind.receiver.sequencer.respond_to?(:on_error)
 
-          @binder.receiver.sequencer.on_error do |e|
+          @bind.receiver.sequencer.on_error do |e|
             send_exception e, output: @connection
           end
         end
@@ -183,6 +183,16 @@ module Musa
         else
           text
         end
+      end
+    end
+
+    module CustomizableDSLContext
+      protected def binder
+        raise NotImplementedError, 'Binder method should be implemented in target namespace as def binder; @__binder ||= binding; end'
+      end
+
+      def execute(source_block, file, line)
+        binder.eval source_block, file, line
       end
     end
   end

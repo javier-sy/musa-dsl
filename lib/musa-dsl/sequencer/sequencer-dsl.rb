@@ -2,6 +2,8 @@ require 'forwardable'
 
 require_relative '../core-ext/with'
 
+module TEMP; end
+
 module Musa
   module Sequencer
     class Sequencer
@@ -28,7 +30,8 @@ module Musa
                      sequencer: nil,
                      logger: nil,
                      do_log: nil, do_error_log: nil, log_position_format: nil,
-                     keep_proc_context: nil,
+                     dsl_context_class: nil,
+                     keep_block_context: nil,
                      &block)
 
         @sequencer = sequencer
@@ -38,7 +41,9 @@ module Musa
                                          do_error_log: do_error_log,
                                          log_position_format: log_position_format
 
-        @dsl = DSLContext.new @sequencer, keep_block_context: keep_proc_context
+        # dsl_context_class ||= DSLContext
+
+        @dsl = dsl_context_class.new @sequencer, keep_block_context: keep_block_context
 
         @dsl.with &block if block_given?
       end
@@ -122,8 +127,6 @@ module Musa
           end
         end
       end
-
-      private_constant :DSLContext
     end
   end
 end
