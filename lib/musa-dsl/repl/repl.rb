@@ -113,9 +113,11 @@ module Musa
         @client_threads.clear
       end
 
-      def puts(message)
+      def puts(*messages)
         if @connection
-          send output: @connection, content: message&.to_s
+          messages.each do |message|
+            send output: @connection, content: message&.to_s
+          end
         else
           @logger.warn('REPL') { "trying to print a message in Atom client but the client is not connected. Ignoring message \'#{message} \'." }
         end
