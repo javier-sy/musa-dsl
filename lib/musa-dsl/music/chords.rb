@@ -175,6 +175,14 @@ module Musa
         @chord_definition&.features
       end
 
+      def pitches(*grades)
+        grades = @notes.keys if grades.empty?
+
+        @notes.values_at(*grades).collect do |notes|
+          notes.collect(&:pitch)
+        end.flatten
+      end
+
       def featuring(*values, allow_chromatic: nil, **hash)
         features = @chord_definition.features.dup if @chord_definition
         features ||= {}

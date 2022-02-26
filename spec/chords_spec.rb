@@ -211,6 +211,11 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(c[4]).to eq nil
     end
 
+    it 'Getting pitches' do
+      c = major.dominant.chord(:seventh).duplicate(root: -2, third: [-1, 1])
+      expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77]
+    end
+
     it 'test to be refined' do
       # TODO Complete the test and the functionality
       begin

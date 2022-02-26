@@ -1,3 +1,5 @@
+require_relative 'chords'
+
 module Musa
   module Scales
     module Scales
@@ -407,7 +409,7 @@ module Musa
       end
 
       def chord_of(*grades_or_symbols)
-        Chord.new(notes: grades_or_symbols.collect { |g| self[g] })
+        Musa::Chords::Chord.new(notes: grades_or_symbols.collect { |g| self[g] })
       end
 
       def ==(other)
@@ -560,7 +562,7 @@ module Musa
 
       def chord(*feature_values, allow_chromatic: nil, **features_hash)
         features = { size: :triad } if feature_values.empty? && features_hash.empty?
-        features ||= ChordDefinition.features_from(feature_values, features_hash)
+        features ||= Musa::Chords::ChordDefinition.features_from(feature_values, features_hash)
 
         Musa::Chords::Chord.new(root: self, allow_chromatic: allow_chromatic, features: features)
       end
