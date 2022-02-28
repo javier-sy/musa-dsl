@@ -41,7 +41,7 @@ module Musa
                                          do_error_log: do_error_log,
                                          log_position_format: log_position_format
 
-        # dsl_context_class ||= DSLContext
+        dsl_context_class ||= DSLContext
 
         @dsl = dsl_context_class.new @sequencer, keep_block_context: keep_block_context
 

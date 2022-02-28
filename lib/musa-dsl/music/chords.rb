@@ -49,7 +49,7 @@ module Musa
 
         raise ArgumentError, "Duplicate parameter: root: #{root} and root_grade: #{root_grade}" if root && root_grade
 
-        allow_chromatic ||= scale.nil?
+        allow_chromatic = scale.nil? if allow_chromatic.nil?
 
         if root&.is_a?(Scales::NoteInScale)
           root_pitch = root.pitch

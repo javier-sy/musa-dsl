@@ -139,7 +139,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
       expect(c.notes.size).to eq 3
 
-      c = major.dominant.chord :seventh
+      c = major.dominant.chord :seventh, allow_chromatic: false
 
       expect(c.features).to include({dominant: :dominant})
 
@@ -176,7 +176,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'V7/V chord' do
-      chord = major.dominant.octave(-1).major.dominant.chord :seventh
+      chord = major.dominant.octave(-1).major.dominant.chord :seventh, allow_chromatic: false
 
       expect(chord.features).to include({dominant: :dominant})
 
@@ -185,7 +185,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'Notes moved to another absolute octave' do
-      c = major.dominant.chord(:seventh).move(root: -1, third: -1, seventh: 1)
+      c = major.dominant.chord(:seventh, allow_chromatic: false).move(root: -1, third: -1, seventh: 1)
 
       expect(c[0].first.pitch).to eq 67 - 12
       expect(c[1].first.pitch).to eq 71 - 12
@@ -195,7 +195,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'Notes duplicated to another absolute octave' do
-      c = major.dominant.chord(:seventh).duplicate(root: -2, third: [-1, 1])
+      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
 
       expect(c[:root][0].pitch).to eq 67
       expect(c[:root][1].pitch).to eq 67 - 24
@@ -212,71 +212,64 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'Getting pitches' do
-      c = major.dominant.chord(:seventh).duplicate(root: -2, third: [-1, 1])
+      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
       expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77]
     end
 
-    it 'test to be refined' do
+    it 'test to be refined', pending: true do
       # TODO Complete the test and the functionality
-      begin
-        c1 = major.tonic.chord inversion: 1
+      c1 = major.tonic.chord inversion: 1
 
-        c1 = major.tonic.chord inversion: 1, duplicate: { fundamental: -1, third: -2 }
+      c1 = major.tonic.chord inversion: 1, duplicate: { fundamental: -1, third: -2 }
 
-        c1 = major.tonic.chord :minor, inversion: 1, duplicate: { fundamental: -1, third: -2 }
+      c1 = major.tonic.chord :minor, inversion: 1, duplicate: { fundamental: -1, third: -2 }
 
-        c1 = major.dominant.chord 2, inversion: 1
+      c1 = major.dominant.chord 2, inversion: 1
 
-        c1 = major.dominant.chord 3, inversion: 1
+      c1 = major.dominant.chord 3, inversion: 1
 
-        c1 = major.dominant.chord :seventh, inversion: 1
-        c1 = major.dominant.chord 4, inversion: 1
+      c1 = major.dominant.chord :seventh, inversion: 1
+      c1 = major.dominant.chord 4, inversion: 1
 
-        c1 = major.dominant.chord :ninth, inversion: 1
-        c1 = major.dominant.chord 5, inversion: 1
+      c1 = major.dominant.chord :ninth, inversion: 1
+      c1 = major.dominant.chord 5, inversion: 1
 
-        c1 = major.dominant.chord :eleventh, inversion: 1
-        c1 = major.dominant.chord 6, inversion: 1
+      c1 = major.dominant.chord :eleventh, inversion: 1
+      c1 = major.dominant.chord 6, inversion: 1
 
-        c1 = major.dominant.chord :thirteenth, inversion: 1
-        c1 = major.dominant.chord 7, inversion: 1
-      rescue
-      end
+      c1 = major.dominant.chord :thirteenth, inversion: 1
+      c1 = major.dominant.chord 7, inversion: 1
     end
 
-    it 'test to be refined' do
+    it 'test to be refined', pending: true do
       # TODO Complete the test and the functionality
-      begin
-        c = Chord.new root: major.tonic,
-                      scale_system: scale_system[:major],
-                      scale: major,
-                      # NO: specie: :major,
-                      name: :major, # :minor, :maj7, :min
-                      size: 3, # :fifth, :seventh, :sixth?, ...
-                      # NO: generative_interval: :third, # :fourth, :fifth?
-                      inversion: 1,
-                      state: :third,
-                      position: :fifth,
-                      duplicate: { third: -1 },
-                      move: { fifth: 1 },
-                      drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
+      c = Chord.new root: major.tonic,
+                    scale_system: scale_system[:major],
+                    scale: major,
+                    # NO: specie: :major,
+                    name: :major, # :minor, :maj7, :min
+                    size: 3, # :fifth, :seventh, :sixth?, ...
+                    # NO: generative_interval: :third, # :fourth, :fifth?
+                    inversion: 1,
+                    state: :third,
+                    position: :fifth,
+                    duplicate: { third: -1 },
+                    move: { fifth: 1 },
+                    drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
 
-        c = Chord.new root: 60,
-                      scale_system: scale_system[:major],
-                      scale: major,
-                      # NO: specie: :major,
-                      name: :major, # :minor, :maj7, :min
-                      size: 3, # :fifth, :seventh, :sixth?, ...
-                      # NO: generative_interval: :third, # :fourth, :fifth?
-                      inversion: 1,
-                      state: :third,
-                      position: :fifth,
-                      duplicate: { third: -1 },
-                      move: { fifth: 1 },
-                      drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
-      rescue
-      end
-
+      c = Chord.new root: 60,
+                    scale_system: scale_system[:major],
+                    scale: major,
+                    # NO: specie: :major,
+                    name: :major, # :minor, :maj7, :min
+                    size: 3, # :fifth, :seventh, :sixth?, ...
+                    # NO: generative_interval: :third, # :fourth, :fifth?
+                    inversion: 1,
+                    state: :third,
+                    position: :fifth,
+                    duplicate: { third: -1 },
+                    move: { fifth: 1 },
+                    drop: { third: 0 } # drop: :third, drop: [ :third, :root ]
     end
   end
 end

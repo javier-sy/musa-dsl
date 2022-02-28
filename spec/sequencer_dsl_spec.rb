@@ -416,8 +416,8 @@ RSpec.describe Musa::Sequencer do
       expect(s.playing.size).to eq 0
 
       s.with do
-        play_control = play serie do |element, control:|
-          c = element[:value]
+        play_control = play serie do |value:, control:|
+          c = value
 
           control.after do # this will be executed 4 times
             d += 1
@@ -462,9 +462,9 @@ RSpec.describe Musa::Sequencer do
 
       s = Musa::Sequencer::Sequencer.new 4, 4 do
         cat = at 1 do
-          play serie do |element, control:|
+          play serie do |value:, control:|
             inner_control = control
-            c = element[:value] if element[:value]
+            c = value if value
           end
         end
       end
@@ -533,8 +533,8 @@ RSpec.describe Musa::Sequencer do
 
       s = Musa::Sequencer::Sequencer.new 4, 4 do
         cat = at 1 do
-          cplay = play serie do |element, control:|
-            c = element[:value] if element[:value]
+          cplay = play serie do |value:, control:|
+            c = value if value
           end
         end
       end

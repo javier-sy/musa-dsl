@@ -334,8 +334,8 @@ RSpec.describe Musa::Sequencer do
       c = -1
       d = 0
 
-      p = s.play serie do |element, control:|
-        c = element[:value]
+      p = s.play serie do |value:, control:|
+        c = value
       end
 
       p.after do
@@ -368,8 +368,8 @@ RSpec.describe Musa::Sequencer do
       c = -1
       d = 0
 
-      p = s.play serie, after: proc { d = 1 } do |element, control:|
-        c = element[:value]
+      p = s.play serie, after: proc { d = 1 } do |value:, control:|
+        c = value
       end
 
       expect(c).to eq(0)
@@ -404,12 +404,12 @@ RSpec.describe Musa::Sequencer do
       f = 0
 
       handler = s.at 1 do
-        s.play serie1 do |element, control:|
+        s.play serie1 do |value:, control:|
           c += 1
-          if element[:value] == 3
-            s.play serie2 do |element2, control:|
+          if value == 3
+            s.play serie2 do |value:, control:|
               d += 1
-              control.launch :evento, 100 if element2[:value] == 3
+              control.launch :evento, 100 if value == 3
             end
           end
         end
@@ -488,12 +488,12 @@ RSpec.describe Musa::Sequencer do
       f = 0
 
       s.at 1 do
-        s.play serie1 do |element, control:|
+        s.play serie1 do |value:, control:|
           c += 1
-          if element[:value] == 3
-            s.play serie2 do |element2, control:|
+          if value == 3
+            s.play serie2 do |value:, control:|
               d += 1
-              control.launch :evento, 100 if element2[:value] == 3
+              control.launch :evento, 100 if value == 3
             end
           end
         end
@@ -573,12 +573,12 @@ RSpec.describe Musa::Sequencer do
       g = 0
 
       handler = s.at 1 do
-        handler2 = s.play serie1 do |element, control:|
+        handler2 = s.play serie1 do |value:, control:|
           c += 1
-          if element[:value] == 3
-            s.play serie2 do |element2, control:|
+          if value == 3
+            s.play serie2 do |value:, control:|
               d += 1
-              control.launch :evento, 100 if element2[:value] == 3
+              control.launch :evento, 100 if value == 3
             end
           end
         end
@@ -668,11 +668,11 @@ RSpec.describe Musa::Sequencer do
       a = b = c = d = 0
 
       s.at 1 do
-        s.play serie do |thing|
-          a += thing[:value_a] if thing[:value_a]
-          b += thing[:value_b] if thing[:value_b]
-          c += thing[:value_c] if thing[:value_c]
-          d += thing[:value_d] if thing[:value_d]
+        s.play serie do |value_a:, value_b:, value_c:, value_d:|
+          a += value_a if value_a
+          b += value_b if value_b
+          c += value_c if value_c
+          d += value_d if value_d
         end
       end
 

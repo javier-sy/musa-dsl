@@ -45,7 +45,12 @@ module Musa::Sequencer
         case operation[:current_operation]
         when :none
         when :block
-          __play_eval.block_procedure_binder.call operation[:current_parameter], control: control
+          # duplicating parameters as direct object value (operation[:current_parameter])
+          # and key_passed parameters (**operation[:current_parameter])
+          #
+          __play_eval.block_procedure_binder.call operation[:current_parameter],
+                                                  **operation[:current_parameter],
+                                                  control: control
 
         when :event
           control._launch operation[:current_event],
