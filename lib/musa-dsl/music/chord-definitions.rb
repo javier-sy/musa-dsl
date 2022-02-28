@@ -4,7 +4,7 @@ Musa::Chords::ChordDefinition.register :maj, quality: :major, size: :triad, offs
 Musa::Chords::ChordDefinition.register :min, quality: :minor, size: :triad, offsets: { root: 0, third: 3, fifth: 7 }
 
 Musa::Chords::ChordDefinition.register :maj7, quality: :major, size: :seventh, offsets: { root: 0, third: 4, fifth: 7, seventh: 11 }
-Musa::Chords::ChordDefinition.register :maj7, quality: :major, size: :seventh, dominant: :dominant , offsets: { root: 0, third: 4, fifth: 7, seventh: 10 }
+Musa::Chords::ChordDefinition.register :dom7, quality: :major, size: :seventh, dominant: :dominant, offsets: { root: 0, third: 4, fifth: 7, seventh: 10 }
 
 Musa::Chords::ChordDefinition.register :min7, quality: :minor, size: :seventh, offsets: { root: 0, third: 3, fifth: 7, seventh: 11 }
 
