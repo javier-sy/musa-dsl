@@ -21,7 +21,7 @@ module Musa
           @logger.debug! if do_log
         end
 
-        @time_table = {}
+        @time_table = []
         @midi_parser = MIDIParser.new
       end
 
@@ -123,6 +123,7 @@ module Musa
         case m.name
         when 'Start'
           process_start
+          @time_table.clear
 
         when 'Stop'
           @logger.debug('InputMidiClock') { 'processing Stop...' }
@@ -137,13 +138,15 @@ module Musa
           @logger.debug('InputMidiClock') { 'processing Continue... done' }
 
         when 'Clock'
-          start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
-          yield if block_given? && @started
-          finish_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
+          if block_given? && @started
+            start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
+            yield
+            finish_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
 
-          duration = finish_time - start_time
-          @time_table[duration] ||= 0
-          @time_table[duration] += 1
+            duration = finish_time - start_time
+            @time_table[duration] ||= 0
+            @time_table[duration] += 1
+          end
 
         when 'Song Position Pointer'
           new_position_in_midi_beats = m.data[0] & 0x7F | ((m.data[1] & 0x7F) << 7)
