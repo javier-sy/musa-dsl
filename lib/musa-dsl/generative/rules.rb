@@ -5,10 +5,10 @@ require_relative '../core-ext/with'
 # TODO esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
 
 module Musa
-  module Backboner
+  module Rules
     using Musa::Extension::Arrayfy
 
-    class Backboner
+    class Rules
       include Musa::Extension::With
 
       def initialize(&block)

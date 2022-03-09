@@ -20,8 +20,6 @@ module Musa
                      position: nil,
                      move: nil,
                      duplicate: nil,
-                     add: nil,
-                     drop: nil,
                      #
                      _source: nil)
 
@@ -104,27 +102,9 @@ module Musa
                    compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
                  end
 
-        # Eval adding / droping operations
-        #
-
-        add&.each do |to_add|
-          case to_add
-          when NoteInScale
-            @notes << to_add
-          when Numeric # pitch increment
-            pitch = root_pitch + to_add
-            @notes << scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)
-          when Symbol # interval name
-            pitch = root_pitch + scale.offset_of_interval(to_add)
-            @notes << scale.note_of_pitch(pitch)
-          else
-            raise ArgumentError, "Can't recognize element to add #{to_add}"
-          end
-        end
-
         # TODO: Missing chord operations: drop, inversion, state, position
         #
-        raise NotImplementedError, 'Missing chord operations: drop, inversion, state, position' if drop || inversion || state || position
+        raise NotImplementedError, 'Missing chord operations: inversion, state, position' if inversion || state || position
 
         # Eval voice increment operations
         #

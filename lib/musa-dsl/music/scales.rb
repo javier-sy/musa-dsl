@@ -560,11 +560,24 @@ module Musa
         scale.note_of_pitch @pitch
       end
 
-      def chord(*feature_values, allow_chromatic: nil, **features_hash)
+      def chord(*feature_values,
+                allow_chromatic: nil,
+                inversion: nil, state: nil,
+                position: nil,
+                move: nil,
+                duplicate: nil,
+                **features_hash)
+
         features = { size: :triad } if feature_values.empty? && features_hash.empty?
         features ||= Musa::Chords::ChordDefinition.features_from(feature_values, features_hash)
 
-        Musa::Chords::Chord.new(root: self, allow_chromatic: allow_chromatic, features: features)
+        Musa::Chords::Chord.new(root: self,
+                                allow_chromatic: allow_chromatic,
+                                inversion: inversion, state: state,
+                                position: position,
+                                move: move,
+                                duplicate: duplicate,
+                                features: features)
       end
 
       def ==(other)

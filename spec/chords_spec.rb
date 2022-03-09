@@ -141,7 +141,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
       c = major.dominant.chord :seventh, allow_chromatic: false
 
-      expect(c.features).to include({dominant: :dominant})
+      expect(c.features).to include({ quality: :dominant })
 
       expect(c[0].first.pitch).to eq 67
       expect(c[1].first.pitch).to eq 71
@@ -178,7 +178,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     it 'V7/V chord' do
       chord = major.dominant.octave(-1).major.dominant.chord :seventh, allow_chromatic: false
 
-      expect(chord.features).to include({dominant: :dominant})
+      expect(chord.features).to include({ quality: :dominant })
 
       expect(chord.project_on(major)).to eq nil
       expect(chord.project_on(major, allow_chromatic: true).notes.size).to eq 4
@@ -214,6 +214,11 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     it 'Getting pitches' do
       c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
       expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77]
+    end
+
+    it 'Calling chord operations as parameters instead of using explicit methods' do
+      vi_m = major.sixth.chord :triad, duplicate: { root: 1 }, move: { third: 1 }
+      expect(vi_m.pitches.sort).to eq [69, 73 + 12, 76, 69 + 12].sort
     end
 
     it 'test to be refined', pending: true do

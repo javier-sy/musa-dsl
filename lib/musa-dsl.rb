@@ -54,7 +54,7 @@ module Musa::All
 
   include Musa::Darwin
   include Musa::Markov
-  include Musa::Backboner
+  include Musa::Rules
   include Musa::Variatio
 
   include Musa::MIDIRecorder
