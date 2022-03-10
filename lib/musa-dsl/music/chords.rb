@@ -93,38 +93,27 @@ module Musa
           raise ArgumentError, "Can't recognize #{name_or_notes_or_pitches}"
         end
 
+        raise ArgumentError, 'move: expected nil or Hash' unless move.nil? || move.is_a?(Hash)
+
+        @moved = move&.clone&.freeze
+
+        raise ArgumentError, 'duplicate: expected nil or Hash' unless duplicate.nil? || duplicate.is_a?(Hash)
+
+        @duplicated = duplicate&.clone&.freeze
+
         # Eval definitory atributes
         #
 
         @notes = if _source.nil?
-                   compute_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
+                   compute_notes(name, root_pitch, scale, notes, pitches, @moved, @duplicated, features, allow_chromatic)
                  else
-                   compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
+                   compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, @moved, @duplicated, features, allow_chromatic)
                  end
 
-        # TODO: Missing chord operations: drop, inversion, state, position
+        # TODO: Missing chord operations: inversion, state, position
         #
-        raise NotImplementedError, 'Missing chord operations: inversion, state, position' if inversion || state || position
-
-        # Eval voice increment operations
-        #
-
-        if move
-          raise ArgumentError, 'move: expected a Hash' unless move.is_a?(Hash)
-
-          move.each do |position, octave|
-            @notes[position][0] = @notes[position][0].octave(octave)
-          end
-        end
-
-        if duplicate
-          raise ArgumentError, 'duplicate: expected a Hash' unless duplicate.is_a?(Hash)
-
-          duplicate.each do |position, octave|
-            octave.arrayfy.each do |octave|
-              @notes[position] << @notes[position][0].octave(octave)
-            end
-          end
+        if inversion || state || position
+          raise NotImplementedError, 'Missing chord operations: inversion, state, position'
         end
 
         # Identify chord
@@ -141,7 +130,7 @@ module Musa
         end
       end
 
-      attr_reader :notes, :chord_definition
+      attr_reader :notes, :chord_definition, :moved, :duplicated
 
       def name(name = nil)
         if name.nil?
@@ -204,6 +193,7 @@ module Musa
 
       # Converts the chord to a specific scale with the notes in the chord
       def as_scale
+        raise NotImplementedError
       end
 
       def project_on_all(*scales, allow_chromatic: nil)
@@ -240,7 +230,28 @@ module Musa
 
       private
 
-      def compute_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
+      def compute_notes(name, root_pitch, scale, notes, pitches, moved, duplicated, features, allow_chromatic)
+        compute_moved_and_duplicated(
+          compute_core_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic),
+          moved,
+          duplicated)
+      end
+
+      def compute_moved_and_duplicated(notes, moved, duplicated)
+        moved&.each do |position, octave|
+          notes[position][0] = notes[position][0].octave(octave)
+        end
+
+        duplicated&.each do |position, octave|
+          octave.arrayfy.each do |octave|
+            notes[position] << notes[position][0].octave(octave)
+          end
+        end
+
+        notes
+      end
+
+      def compute_core_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
         if name && root_pitch && scale && !(notes || pitches || features)
 
           chord_definition = ChordDefinition[name]
@@ -292,18 +303,25 @@ module Musa
         end
       end
 
-      def compute_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
+      def compute_notes_from_source(source, name, root_pitch, scale, notes, pitches, moved, duplicated, features, allow_chromatic)
+        compute_moved_and_duplicated(compute_core_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic),
+                                     moved,
+                                     duplicated)
+      end
+
+      def compute_core_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
         if !(name || root_pitch || scale || notes || pitches || features)
           source.notes
 
         elsif features && !(name || root_pitch || scale || notes || pitches)
-          compute_notes(nil, source.root.first.pitch, source.root.first.scale, nil, nil, features, allow_chromatic)
+          compute_notes(nil, source.root.first.pitch, source.root.first.scale, nil, nil, source.moved, source.duplicated, features, allow_chromatic)
 
         else
           pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
           raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
         end
       end
+
     end
   end
 end

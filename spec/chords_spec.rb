@@ -211,6 +211,22 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(c[4]).to eq nil
     end
 
+    it 'Chord with notes moved and getting a featured chord from it' do
+      c = major.root.chord(:triad, move: { fifth: 1 }).featuring(size: :seventh)
+      d = major.root.chord(:triad).move(fifth: 1).featuring(size: :seventh)
+
+      expect(c.pitches).to eq [60, 64, 67 + 12, 71]
+      expect(d.pitches).to eq [60, 64, 67 + 12, 71]
+    end
+
+    it 'Chord with notes duplicated and getting a featured chord from it' do
+      c = major.root.chord(:triad, duplicate: { fifth: 1 }).featuring(size: :seventh)
+      d = major.root.chord(:triad).duplicate(fifth: 1).featuring(size: :seventh)
+
+      expect(c.pitches.sort).to eq [60, 64, 67, 67 + 12, 71].sort
+      expect(d.pitches.sort).to eq [60, 64, 67, 67 + 12, 71].sort
+    end
+
     it 'Getting pitches' do
       c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
       expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77]
