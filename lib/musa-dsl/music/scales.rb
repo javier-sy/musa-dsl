@@ -182,8 +182,6 @@ module Musa
     end
 
     class ScaleKind
-      extend Forwardable
-
       def initialize(tuning)
         @tuning = tuning
         @scales = {}

@@ -113,7 +113,7 @@ module Musa
       EquallyTempered12ToneScaleSystem.register MajorScaleKind
     end
 
-    class MinorScaleKind < ScaleKind
+    class MinorNaturalScaleKind < ScaleKind
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],
@@ -156,7 +156,7 @@ module Musa
         end
       end
 
-      EquallyTempered12ToneScaleSystem.register MinorScaleKind
+      EquallyTempered12ToneScaleSystem.register MinorNaturalScaleKind
     end
 
     class MinorHarmonicScaleKind < ScaleKind
