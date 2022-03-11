@@ -203,9 +203,9 @@ module Musa
         note_sets = {}
         scales.each do |scale|
           note_sets[scale] = if allow_chromatic
-            @notes.values.flatten(1).collect { |n| n.on(scale) || n.on(scale.chromatic) }
-          else
-            @notes.values.flatten(1).collect { |n| n.on(scale) }
+                               @notes.values.flatten(1).collect { |n| n.on(scale) || n.on(scale.chromatic) }
+                             else
+                               @notes.values.flatten(1).collect { |n| n.on(scale) }
                              end
         end
 

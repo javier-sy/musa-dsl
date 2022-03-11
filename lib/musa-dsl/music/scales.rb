@@ -454,13 +454,13 @@ module Musa
         @scale.kind.class.pitches[grade][:functions]
       end
 
-      def octave(octave = nil)
+      def octave(octave = nil, absolute: false)
         if octave.nil?
           @octave
         else
           raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
 
-          @scale[@grade + (@octave + octave) * @scale.kind.class.grades]
+          @scale[@grade + ((absolute ? 0 : @octave) + octave) * @scale.kind.class.grades]
         end
       end
 
