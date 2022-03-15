@@ -1,8 +1,9 @@
 require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/with'
 
-# TODO hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
-# TODO esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
+# TODO: hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
+# TODO: esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
+# TODO: optimizar la llamada a .with que internamente genera cada vez un SmartProcBinder; podría generarse sólo una vez por cada &block
 
 module Musa
   module Rules
@@ -15,7 +16,7 @@ module Musa
         @dsl = RulesEvalContext.new(&block)
       end
 
-      def generate_possibilities(object, confirmed_node = nil, node = nil, grow_rules = nil)
+      def generate_possibilities(object, confirmed_node = nil, node = nil, grow_rules = nil, **parameters)
         node ||= Node.new
         grow_rules ||= @dsl._grow_rules
 
@@ -26,11 +27,11 @@ module Musa
         grow_rule = grow_rules.shift
 
         if grow_rule
-          grow_rule.generate_possibilities(object, history).each do |new_object|
+          grow_rule.generate_possibilities(object, history, **parameters).each do |new_object|
             new_node = Node.new new_object, node
             new_node.mark_as_ended! if @dsl._ended? new_object
 
-            rejection = @dsl._cut_rules.find { |cut_rule| cut_rule.rejects?(new_object, history) }
+            rejection = @dsl._cut_rules.find { |cut_rule| cut_rule.rejects?(new_object, history, **parameters) }
             # TODO: include rejection secondary reasons in rejection message
 
             new_node.reject! rejection if rejection
@@ -41,14 +42,14 @@ module Musa
 
         unless grow_rules.empty?
           node.children.each do |node|
-            generate_possibilities node.object, confirmed_node, node, grow_rules unless node.rejected || node.ended?
+            generate_possibilities node.object, confirmed_node, node, grow_rules, **parameters unless node.rejected || node.ended?
           end
         end
 
         node
       end
 
-      def apply(object_or_list, node = nil)
+      def apply(object_or_list, node = nil, **parameters)
         list = object_or_list.arrayfy.clone
 
         node ||= Node.new
@@ -56,7 +57,7 @@ module Musa
         seed = list.shift
 
         if seed
-          result = generate_possibilities seed, node
+          result = generate_possibilities seed, node, **parameters
 
           fished = result.fish
 
@@ -64,7 +65,7 @@ module Musa
 
           fished.each do |object|
             subnode = node.add(object).mark_as_ended!
-            apply list, subnode
+            apply list, subnode, **parameters
           end
         end
 
@@ -109,10 +110,10 @@ module Musa
             @block = block
           end
 
-          def generate_possibilities(object, history)
+          def generate_possibilities(object, history, **parameters)
             # TODO: optimize context using only one instance for all genereate_possibilities calls
             context = GrowRuleEvalContext.new
-            context.with object, history, &@block
+            context.with object, history, **parameters, &@block
 
             context._branches
           end
@@ -145,10 +146,10 @@ module Musa
             @block = block
           end
 
-          def rejects?(object, history)
+          def rejects?(object, history, **parameters)
             # TODO: optimize context using only one instance for all rejects? checks
             context = CutRuleEvalContext.new
-            context.with object, history, &@block
+            context.with object, history, **parameters, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
 
