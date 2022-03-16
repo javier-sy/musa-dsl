@@ -68,20 +68,21 @@ module Musa
           name = name_or_notes_or_pitches
 
         when Array
+          notes ||= []
           name_or_notes_or_pitches.each do |note_or_pitch|
             case note_or_pitch
             when Scales::NoteInScale
-              notes ||= [] << note_or_pitch
+              notes << note_or_pitch
             when Numeric
               if scale
-                notes ||= [] << scale[note_or_pitch]
+                notes << scale[note_or_pitch]
               else
-                pitches ||= [] << note_or_pitch
+                pitches << note_or_pitch
               end
             when Symbol
               raise ArgumentError, "Don't know how to recognize #{note_or_pitch} in parameter list #{name_or_notes_or_pitches}: it's a symbol but the scale is not provided" unless scale
 
-              notes ||= [] << scale[note_or_pitch]
+              notes << scale[note_or_pitch]
             else
               raise ArgumentError, "Can't recognize #{note_or_pitch} in parameter list #{name_or_notes_or_pitches}"
             end
@@ -119,11 +120,15 @@ module Musa
         # Identify chord
         #
 
+        @notes.each_value(&:freeze)
         @notes.freeze
 
         @chord_definition = ChordDefinition.find_by_pitches(@notes.values.flatten(1).collect(&:pitch))
 
-        ChordDefinition.feature_values.each do |name|
+        # no hay que definir el método de las features que ya tiene el propio acorde
+        # (p.ej. no hay que definir el método seventh si el propio acorde ya es de tipo seventh)
+        #
+        (ChordDefinition.feature_values - (@chord_definition&.features&.values || [])).each do |name|
           define_singleton_method name do
             featuring(name)
           end
@@ -172,10 +177,29 @@ module Musa
       def [](position)
         case position
         when Numeric
-          @notes.values[position]
+          sorted_notes[position].values.first
         when Symbol
           @notes[position]
         end
+      end
+
+      def size
+        sorted_notes.size
+      end
+
+      def sorted_notes
+        return @sorted_notes if @sorted_notes
+
+        @sorted_notes = []
+        @notes.each_pair do |name, array_of_notes|
+          array_of_notes.each do |note|
+            @sorted_notes << { name => note }
+          end
+        end
+
+        @sorted_notes.sort_by! { |hash_of_note| hash_of_note.values.first.pitch }
+
+        @sorted_notes.freeze
       end
 
       def move(**octaves)
@@ -311,7 +335,7 @@ module Musa
 
       def compute_core_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
         if !(name || root_pitch || scale || notes || pitches || features)
-          source.notes
+          source.notes.dup.tap { |notes| notes.transform_values!(&:dup) }
 
         elsif features && !(name || root_pitch || scale || notes || pitches)
           compute_notes(nil, source.root.first.pitch, source.root.first.scale, nil, nil, source.moved, source.duplicated, features, allow_chromatic)

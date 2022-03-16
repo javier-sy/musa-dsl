@@ -22,24 +22,49 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
       expect(maj3.root.first.pitch).to eq 60
       expect(maj3.scale).to be major
-      expect(maj3.features).to include({quality: :major})
+      expect(maj3.features).to include({ quality: :major })
 
-      expect(maj3[0].first.pitch).to eq 60
-      expect(maj3[0].first.grade).to eq 0
-      expect(maj3[0].first.octave).to eq 0
-      expect(maj3[0].first.scale).to be major
+      expect(maj3[:root].first.pitch).to eq 60
+      expect(maj3[:root].first.grade).to eq 0
+      expect(maj3[:root].first.octave).to eq 0
+      expect(maj3[:root].first.scale).to be major
 
       expect(maj3[:third].first.pitch).to eq 64
       expect(maj3[:third].first.grade).to eq 2
       expect(maj3[:third].first.octave).to eq 0
       expect(maj3[:third].first.scale).to be major
 
-      expect(maj3[2].first.pitch).to eq 67
-      expect(maj3[2].first.grade).to eq 4
-      expect(maj3[2].first.octave).to eq 0
-      expect(maj3[2].first.scale).to be major
+      expect(maj3[:fifth].first.pitch).to eq 67
+      expect(maj3[:fifth].first.grade).to eq 4
+      expect(maj3[:fifth].first.octave).to eq 0
+      expect(maj3[:fifth].first.scale).to be major
 
-      expect(maj3[3]).to eq nil
+      expect(maj3[:seventh]).to eq nil
+      expect(maj3.notes.size).to eq 3
+    end
+
+    it 'Basic triad major chord creation' do
+      maj3 = major.tonic.chord
+
+      expect(maj3.root.first.pitch).to eq 60
+      expect(maj3.scale).to be major
+      expect(maj3.features).to include({ quality: :major })
+
+      expect(maj3[:root].first.pitch).to eq 60
+      expect(maj3[:root].first.grade).to eq 0
+      expect(maj3[:root].first.octave).to eq 0
+      expect(maj3[:root].first.scale).to be major
+
+      expect(maj3[:third].first.pitch).to eq 64
+      expect(maj3[:third].first.grade).to eq 2
+      expect(maj3[:third].first.octave).to eq 0
+      expect(maj3[:third].first.scale).to be major
+
+      expect(maj3[:fifth].first.pitch).to eq 67
+      expect(maj3[:fifth].first.grade).to eq 4
+      expect(maj3[:fifth].first.octave).to eq 0
+      expect(maj3[:fifth].first.scale).to be major
+
       expect(maj3.notes.size).to eq 3
     end
 
@@ -58,17 +83,16 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(min3[:root].first.octave).to eq 0
       expect(min3[:root].first.scale).to be major
 
-      expect(min3[1].first.pitch).to eq 63
-      expect(min3[1].first.grade).to eq 3
-      expect(min3[1].first.octave).to eq 0
-      expect(min3[1].first.scale).to eq chromatic
+      expect(min3[:third].first.pitch).to eq 63
+      expect(min3[:third].first.grade).to eq 3
+      expect(min3[:third].first.octave).to eq 0
+      expect(min3[:third].first.scale).to eq chromatic
 
-      expect(min3[2].first.pitch).to eq 67
-      expect(min3[2].first.grade).to eq 4
-      expect(min3[2].first.octave).to eq 0
-      expect(min3[2].first.scale).to be major
+      expect(min3[:fifth].first.pitch).to eq 67
+      expect(min3[:fifth].first.grade).to eq 4
+      expect(min3[:fifth].first.octave).to eq 0
+      expect(min3[:fifth].first.scale).to be major
 
-      expect(maj3[3]).to eq nil
       expect(min3.notes.size).to eq 3
     end
 
@@ -86,18 +110,18 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(chord.root.first.pitch).to eq 60
 
       expect(chord.scale).to be scale_system[:minor][60]
-      expect(chord[0].first.scale).to be scale_system[:minor][60]
-      expect(chord[1].first.scale).to be scale_system[:minor][60]
-      expect(chord[2].first.scale).to be scale_system[:minor][60]
+      expect(chord[:root].first.scale).to be scale_system[:minor][60]
+      expect(chord[:third].first.scale).to be scale_system[:minor][60]
+      expect(chord[:fifth].first.scale).to be scale_system[:minor][60]
 
       chord = matches[1]
 
       expect(chord.root.first.pitch).to eq 60
 
       expect(chord.scale).to be scale_system[:chromatic][60]
-      expect(chord[0].first.scale).to be scale_system[:chromatic][60]
-      expect(chord[1].first.scale).to be scale_system[:chromatic][60]
-      expect(chord[2].first.scale).to be scale_system[:chromatic][60]
+      expect(chord[:root].first.scale).to be scale_system[:chromatic][60]
+      expect(chord[:third].first.scale).to be scale_system[:chromatic][60]
+      expect(chord[:fifth].first.scale).to be scale_system[:chromatic][60]
     end
 
     it 'Basic triad chord chromatically defined to major chord navigation' do
@@ -125,17 +149,16 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(maj3[:fifth].first.octave).to eq 0
       expect(maj3[:fifth].first.scale).to be major
 
-      expect(maj3[3]).to eq nil
       expect(maj3.notes.size).to eq 3
     end
 
     it 'Big chords on major scale over dominant' do
       c = major.dominant.chord :triad
 
-      expect(c[0].first.pitch).to eq 67
-      expect(c[1].first.pitch).to eq 71
-      expect(c[2].first.pitch).to eq 74
-      expect(c[3]).to eq nil
+      expect(c[:root].first.pitch).to eq 67
+      expect(c[:third].first.pitch).to eq 71
+      expect(c[:fifth].first.pitch).to eq 74
+      expect(c[:seventh]).to eq nil
 
       expect(c.notes.size).to eq 3
 
@@ -143,11 +166,11 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
       expect(c.features).to include({ quality: :dominant })
 
-      expect(c[0].first.pitch).to eq 67
-      expect(c[1].first.pitch).to eq 71
-      expect(c[2].first.pitch).to eq 74
-      expect(c[3].first.pitch).to eq 77
-      expect(c[4]).to eq nil
+      expect(c[:root].first.pitch).to eq 67
+      expect(c[:third].first.pitch).to eq 71
+      expect(c[:fifth].first.pitch).to eq 74
+      expect(c[:seventh].first.pitch).to eq 77
+      expect(c[:ninth]).to eq nil
 
       expect(c.notes.size).to eq 4
 
@@ -158,19 +181,19 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(c[:fifth].first.pitch).to eq 74
       expect(c[:seventh].first.pitch).to eq 78
       expect(c[:ninth].first.pitch).to eq 81
-      expect(c[5]).to eq nil
+      expect(c[:eleventh]).to eq nil
 
       expect(c.notes.size).to eq 5
 
       c = major.dominant.chord :eleventh, :major
 
-      expect(c[0].first.pitch).to eq 67
-      expect(c[1].first.pitch).to eq 71
-      expect(c[2].first.pitch).to eq 74
-      expect(c[3].first.pitch).to eq 78
-      expect(c[4].first.pitch).to eq 81
-      expect(c[5].first.pitch).to eq 84
-      expect(c[6]).to eq nil
+      expect(c[:root].first.pitch).to eq 67
+      expect(c[:third].first.pitch).to eq 71
+      expect(c[:fifth].first.pitch).to eq 74
+      expect(c[:seventh].first.pitch).to eq 78
+      expect(c[:ninth].first.pitch).to eq 81
+      expect(c[:eleventh].first.pitch).to eq 84
+      expect(c[:thirteenth]).to eq nil
 
       expect(c.notes.size).to eq 6
     end
@@ -187,11 +210,11 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     it 'Notes moved to another absolute octave' do
       c = major.dominant.chord(:seventh, allow_chromatic: false).move(root: -1, third: -1, seventh: 1)
 
-      expect(c[0].first.pitch).to eq 67 - 12
-      expect(c[1].first.pitch).to eq 71 - 12
-      expect(c[2].first.pitch).to eq 74
-      expect(c[3].first.pitch).to eq 77 + 12
-      expect(c[4]).to eq nil
+      expect(c[:root].first.pitch).to eq 67 - 12
+      expect(c[:third].first.pitch).to eq 71 - 12
+      expect(c[:fifth].first.pitch).to eq 74
+      expect(c[:seventh].first.pitch).to eq 77 + 12
+      expect(c[:ninth]).to eq nil
     end
 
     it 'Notes duplicated to another absolute octave' do
@@ -208,7 +231,12 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(c[:fifth][1]).to eq nil
       expect(c[:seventh][0].pitch).to eq 77
       expect(c[:seventh][1]).to eq nil
-      expect(c[4]).to eq nil
+      expect(c[:eleventh]).to eq nil
+    end
+
+    it 'Getting pitches' do
+      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
+      expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77]
     end
 
     it 'Chord with notes moved and getting a featured chord from it' do
@@ -227,14 +255,34 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(d.pitches.sort).to eq [60, 64, 67, 67 + 12, 71].sort
     end
 
-    it 'Getting pitches' do
+    it 'Getting a chord on a different octave' do
       c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
-      expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77]
+      d = c.octave(-1).pitches
+
+      puts "c = #{c}"
+      puts "d = #{d}"
+
+      expect(d).to eq [67 - 12, 67 - 24 - 12, 71 - 12, 71 - 12 - 12, 71 + 12 - 12, 74 - 12, 77 - 12]
+    end
+
+    it 'Getting sorted notes pitches' do
+      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
+      expect(c.sorted_notes.collect(&:values).collect(&:first).collect(&:pitch)).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77].sort
     end
 
     it 'Calling chord operations as parameters instead of using explicit methods' do
       vi_m = major.sixth.chord :triad, duplicate: { root: 1 }, move: { third: 1 }
       expect(vi_m.pitches.sort).to eq [69, 73 + 12, 76, 69 + 12].sort
+    end
+
+    it 'Bugfix: when a chord has a move operation generating a new chord it changes the original chord' do
+      chord = major.root.chord(:seventh)
+      expect(chord.pitches.sort).to eq [60, 64, 67, 71]
+
+      other_chord = chord.move root: 1
+      expect(other_chord.pitches.sort).to eq [64, 67, 71, 72]
+
+      expect(chord.pitches.sort).to eq [60, 64, 67, 71]
     end
 
     it 'test to be refined', pending: true do

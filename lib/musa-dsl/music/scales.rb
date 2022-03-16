@@ -277,6 +277,7 @@ module Musa
           end
         end
 
+        freeze
       end
 
       def_delegators :@kind, :a_tuning

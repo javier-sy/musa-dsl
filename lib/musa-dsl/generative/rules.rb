@@ -29,7 +29,11 @@ module Musa
         if grow_rule
           grow_rule.generate_possibilities(object, history, **parameters).each do |new_object|
             new_node = Node.new new_object, node
-            new_node.mark_as_ended! if @dsl._ended? new_object
+            if @dsl._has_ending? && @dsl._ended?(new_object, history, **parameters) ||
+              !@dsl._has_ending? && grow_rules.empty?
+
+              new_node.mark_as_ended!
+            end
 
             rejection = @dsl._cut_rules.find { |cut_rule| cut_rule.rejects?(new_object, history, **parameters) }
             # TODO: include rejection secondary reasons in rejection message
@@ -78,11 +82,12 @@ module Musa
         attr_reader :_grow_rules, :_ended_when, :_cut_rules
 
         def initialize(&block)
+          @_grow_rules = []
+          @_cut_rules = []
           with &block
         end
 
         def grow(name, &block)
-          @_grow_rules ||= []
           @_grow_rules << GrowRule.new(name, &block)
           self
         end
@@ -93,13 +98,20 @@ module Musa
         end
 
         def cut(reason, &block)
-          @_cut_rules ||= []
           @_cut_rules << CutRule.new(reason, &block)
           self
         end
 
-        def _ended?(object)
-          instance_exec object, &@_ended_when
+        def _has_ending?
+          !@_ended_when.nil?
+        end
+
+        def _ended?(object, history, **parameters)
+          if @_ended_when
+            with object, history, **parameters, &@_ended_when
+          else
+            false
+          end
         end
 
         class GrowRule
@@ -114,6 +126,8 @@ module Musa
             # TODO: optimize context using only one instance for all genereate_possibilities calls
             context = GrowRuleEvalContext.new
             context.with object, history, **parameters, &@block
+
+            puts "grow #{@name} for #{object}\ngenerates #{context._branches}" if context._branches.any?
 
             context._branches
           end
@@ -152,6 +166,8 @@ module Musa
             context.with object, history, **parameters, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
+
+            puts "cut #{@reason} for #{object}\ncuts because #{reasons}" if reasons.any?
 
             reasons.empty? ? nil : reasons
           end
@@ -204,7 +220,7 @@ module Musa
           @children.each(&:update_rejection_by_children!)
 
           if !@children.empty? && !@children.find { |n| !n.rejected }
-            reject! "Node rejected because all children are rejected"
+            reject! 'Node rejected because all children are rejected'
           end
 
           @ended = true
