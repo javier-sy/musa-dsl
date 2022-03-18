@@ -1,3 +1,5 @@
+require 'set'
+
 module Musa
   module Chords
     class ChordDefinition
@@ -6,13 +8,16 @@ module Musa
       end
 
       def self.register(name, offsets:, **features)
-        definition = ChordDefinition.new(name, offsets: offsets, **features).freeze
+        definition = ChordDefinition.new(name, offsets: offsets, **features)
 
         @definitions ||= {}
         @definitions[definition.name] = definition
 
         @features_by_value ||= {}
         definition.features.each { |k, v| @features_by_value[v] = k }
+
+        @feature_keys ||= Set[]
+        features.keys.each { |feature_name| @feature_keys << feature_name }
 
         self
       end
@@ -44,17 +49,26 @@ module Musa
         @features_by_value.keys
       end
 
+      def self.feature_keys
+        @feature_keys
+      end
+
       def initialize(name, offsets:, **features)
-        @name = name
-        @features = features.clone.freeze
-        @pitch_offsets = offsets.clone.freeze
-        @pitch_names = offsets.collect { |k, v| [v, k] }.to_h
+        @name = name.freeze
+        @features = features.transform_values(&:dup).transform_values(&:freeze).freeze
+        @pitch_offsets = offsets.dup.freeze
+        @pitch_names = offsets.collect { |k, v| [v, k] }.to_h.freeze
+        freeze
       end
 
       attr_reader :name, :features, :pitch_offsets, :pitch_names
 
       def pitches(root_pitch)
         @pitch_offsets.values.collect { |offset| root_pitch + offset }
+      end
+
+      def in_scale?(scale, chord_root_pitch:)
+        !pitches(chord_root_pitch).find { |chord_pitch| scale.note_of_pitch(chord_pitch).nil? }
       end
 
       def named_pitches(elements_or_pitches, &block)
@@ -93,7 +107,7 @@ module Musa
 
       alias to_s inspect
 
-      protected
+      private
 
       def octave_reduce(pitches)
         pitches.collect { |p| p % 12 }

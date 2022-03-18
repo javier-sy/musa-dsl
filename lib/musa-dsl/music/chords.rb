@@ -3,349 +3,213 @@ require_relative 'chord-definition'
 
 module Musa
   module Chords
-    using Musa::Extension::Arrayfy
-
     class Chord
-      def initialize(name_or_notes_or_pitches = nil, # name | [notes] | [pitches]
-                     # definitory
-                     name: nil,
-                     root: nil, root_grade: nil,
-                     notes: nil, pitches: nil,
-                     features: nil,
-                     # target scale (or scale reference)
-                     scale: nil,
-                     allow_chromatic: nil,
-                     # operations
-                     inversion: nil, state: nil,
-                     position: nil,
-                     move: nil,
-                     duplicate: nil,
-                     #
-                     _source: nil)
 
-        # Preparing notes and pitches Arrays: they will we used to collect further notes and pitches
-        #
-        if notes
-          notes = notes.collect do |n|
-            case n
-            when Scales::NoteInScale
-              n
-            when Numeric, Symbol
-              scale[n]
+      using Musa::Extension::Arrayfy
+
+      def self.with_root(root_note_or_pitch_or_symbol, scale: nil, allow_chromatic: false, name: nil, move: nil, duplicate: nil, **features)
+        root =
+          case root_note_or_pitch_or_symbol
+          when Scales::NoteInScale
+            root_note_or_pitch_or_symbol
+          when Numeric
+            if scale
+              scale.note_of_pitch(root_note_or_pitch_or_symbol, allow_chromatic: allow_chromatic)
             else
-              raise ArgumentError, "Can't recognize #{n} in notes list #{notes}"
+              scale = Musa::Scales::Scales.default_system.default_tuning[root_note_or_pitch_or_symbol].major
+              scale.note_of_pitch(root_note_or_pitch_or_symbol)
             end
-          end
-        end
+          when Symbol
+            raise ArgumentError, "Missing scale parameter to calculate root note for #{root_note_or_pitch_or_symbol}" unless scale
 
-        pitches = pitches.clone if pitches
-
-        # Preparing root_pitch
-        #
-
-        root_pitch = nil
-
-        raise ArgumentError, "Duplicate parameter: root: #{root} and root_grade: #{root_grade}" if root && root_grade
-
-        allow_chromatic = scale.nil? if allow_chromatic.nil?
-
-        if root&.is_a?(Scales::NoteInScale)
-          root_pitch = root.pitch
-          scale ||= root.scale
-        end
-
-        raise ArgumentError, "Don't know how to recognize root_grade #{root_grade}: scale is not provided" if root_grade && !scale
-
-        root_pitch = scale[root_grade].pitch if root_grade && scale
-
-        # Parse name_or_notes_or_pitches to name, notes, pitches
-        #
-        #
-        case name_or_notes_or_pitches
-        when Symbol
-          raise ArgumentError, "Duplicate parameter #{name_or_notes_or_pitches} and name: #{name}" if name
-
-          name = name_or_notes_or_pitches
-
-        when Array
-          notes ||= []
-          name_or_notes_or_pitches.each do |note_or_pitch|
-            case note_or_pitch
-            when Scales::NoteInScale
-              notes << note_or_pitch
-            when Numeric
-              if scale
-                notes << scale[note_or_pitch]
-              else
-                pitches << note_or_pitch
-              end
-            when Symbol
-              raise ArgumentError, "Don't know how to recognize #{note_or_pitch} in parameter list #{name_or_notes_or_pitches}: it's a symbol but the scale is not provided" unless scale
-
-              notes << scale[note_or_pitch]
-            else
-              raise ArgumentError, "Can't recognize #{note_or_pitch} in parameter list #{name_or_notes_or_pitches}"
-            end
+            scale[root_note_or_pitch_or_symbol]
+          else
+            raise ArgumentError, "Unexpected #{root_note_or_pitch_or_symbol}"
           end
 
-        when nil
-          # nothing happens
-        else
-          raise ArgumentError, "Can't recognize #{name_or_notes_or_pitches}"
-        end
+        scale ||= root.scale
 
-        raise ArgumentError, 'move: expected nil or Hash' unless move.nil? || move.is_a?(Hash)
-
-        @moved = move&.clone&.freeze
-
-        raise ArgumentError, 'duplicate: expected nil or Hash' unless duplicate.nil? || duplicate.is_a?(Hash)
-
-        @duplicated = duplicate&.clone&.freeze
-
-        # Eval definitory atributes
-        #
-
-        @notes = if _source.nil?
-                   compute_notes(name, root_pitch, scale, notes, pitches, @moved, @duplicated, features, allow_chromatic)
-                 else
-                   compute_notes_from_source(_source, name, root_pitch, scale, notes, pitches, @moved, @duplicated, features, allow_chromatic)
-                 end
-
-        # TODO: Missing chord operations: inversion, state, position
-        #
-        if inversion || state || position
-          raise NotImplementedError, 'Missing chord operations: inversion, state, position'
-        end
-
-        # Identify chord
-        #
-
-        @notes.each_value(&:freeze)
-        @notes.freeze
-
-        @chord_definition = ChordDefinition.find_by_pitches(@notes.values.flatten(1).collect(&:pitch))
-
-        # no hay que definir el método de las features que ya tiene el propio acorde
-        # (p.ej. no hay que definir el método seventh si el propio acorde ya es de tipo seventh)
-        #
-        (ChordDefinition.feature_values - (@chord_definition&.features&.values || [])).each do |name|
-          define_singleton_method name do
-            featuring(name)
-          end
-        end
-      end
-
-      attr_reader :notes, :chord_definition, :moved, :duplicated
-
-      def name(name = nil)
-        if name.nil?
-          @chord_definition&.name
-        else
-          Chord.new(_source: self, name: name)
-        end
-      end
-
-      def features
-        @chord_definition&.features
-      end
-
-      def pitches(*grades)
-        grades = @notes.keys if grades.empty?
-
-        @notes.values_at(*grades).collect do |notes|
-          notes.collect(&:pitch)
-        end.flatten
-      end
-
-      def featuring(*values, allow_chromatic: nil, **hash)
-        features = @chord_definition.features.dup if @chord_definition
-        features ||= {}
-
-        ChordDefinition.features_from(values, hash).each { |k, v| features[k] = v }
-
-        Chord.new(_source: self, allow_chromatic: allow_chromatic, features: features)
-      end
-
-      def root(root = nil)
-        if root.nil?
-          @notes[:root]
-        else
-          Chord.new(_source: self, root: root)
-        end
-      end
-
-      def [](position)
-        case position
-        when Numeric
-          sorted_notes[position].values.first
-        when Symbol
-          @notes[position]
-        end
-      end
-
-      def size
-        sorted_notes.size
-      end
-
-      def sorted_notes
-        return @sorted_notes if @sorted_notes
-
-        @sorted_notes = []
-        @notes.each_pair do |name, array_of_notes|
-          array_of_notes.each do |note|
-            @sorted_notes << { name => note }
-          end
-        end
-
-        @sorted_notes.sort_by! { |hash_of_note| hash_of_note.values.first.pitch }
-
-        @sorted_notes.freeze
-      end
-
-      def move(**octaves)
-        Chord.new(_source: self, move: octaves)
-      end
-
-      def duplicate(**octaves)
-        Chord.new(_source: self, duplicate: octaves)
-      end
-
-      def scale
-        scales = @notes.values.flatten(1).collect(&:scale).uniq
-        scales.first if scales.size == 1
-      end
-
-      # Converts the chord to a specific scale with the notes in the chord
-      def as_scale
-        raise NotImplementedError
-      end
-
-      def project_on_all(*scales, allow_chromatic: nil)
-        # TODO add match to other chords... what does it means?
-        allow_chromatic ||= false
-
-        note_sets = {}
-        scales.each do |scale|
-          note_sets[scale] = if allow_chromatic
-                               @notes.values.flatten(1).collect { |n| n.on(scale) || n.on(scale.chromatic) }
-                             else
-                               @notes.values.flatten(1).collect { |n| n.on(scale) }
-                             end
-        end
-
-        note_sets_in_scale = note_sets.values.reject { |notes| notes.include?(nil) }
-        note_sets_in_scale.collect { |notes| Chord.new(notes: notes) }
-      end
-
-      def project_on(*scales, allow_chromatic: nil)
-        allow_chromatic ||= false
-        project_on_all(*scales, allow_chromatic: allow_chromatic).first
-      end
-
-      def ==(other)
-        self.class == other.class && @notes == other.notes
-      end
-
-      def inspect
-        "<Chord: notes = #{@notes}>"
-      end
-
-      alias to_s inspect
-
-      private
-
-      def compute_notes(name, root_pitch, scale, notes, pitches, moved, duplicated, features, allow_chromatic)
-        compute_moved_and_duplicated(
-          compute_core_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic),
-          moved,
-          duplicated)
-      end
-
-      def compute_moved_and_duplicated(notes, moved, duplicated)
-        moved&.each do |position, octave|
-          notes[position][0] = notes[position][0].octave(octave)
-        end
-
-        duplicated&.each do |position, octave|
-          octave.arrayfy.each do |octave|
-            notes[position] << notes[position][0].octave(octave)
-          end
-        end
-
-        notes
-      end
-
-      def compute_core_notes(name, root_pitch, scale, notes, pitches, features, allow_chromatic)
-        if name && root_pitch && scale && !(notes || pitches || features)
+        if name
+          raise ArgumentError, "Received name parameter with value #{name}: features parameter is not allowed" if features.any?
 
           chord_definition = ChordDefinition[name]
 
-          raise ArgumentError, "Unrecognized #{name} chord" unless chord_definition
+        elsif features.any?
+          chord_definition = Helper.find_definition_by_features(root.pitch, features, scale, allow_chromatic: allow_chromatic)
 
+        else
+          raise ArgumentError, "Don't know how to find a chord definition without name or features parameters"
+        end
+
+        unless chord_definition
+          raise ArgumentError,
+                "Unable to find chord definition for root #{root}" \
+                "#{" with name #{name}" if name}" \
+                "#{" with features #{features}" if features.any?}"
+        end
+
+        source_notes_map = Helper.compute_source_notes_map(root, chord_definition, scale)
+
+        Chord.new(root, scale, chord_definition, move, duplicate, source_notes_map)
+      end
+
+      class Helper
+        def self.compute_source_notes_map(root, chord_definition, scale)
           chord_definition.pitch_offsets.transform_values do |offset|
-            pitch = root_pitch + offset
+            pitch = root.pitch + offset
             [scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)]
-          end
+          end.tap { |_| _.values.each(&:freeze) }.freeze
+        end
 
-        elsif root_pitch && features && scale && !(name || notes || pitches)
-
-          chord_definitions = ChordDefinition.find_by_features(**features)
+        def self.find_definition_by_features(root_pitch, features, scale, allow_chromatic:)
+          featured_chord_definitions = ChordDefinition.find_by_features(**features)
 
           unless allow_chromatic
-            chord_definitions.reject! do |chord_definition|
+            featured_chord_definitions.reject! do |chord_definition|
               chord_definition.pitches(root_pitch).find { |chord_pitch| scale.note_of_pitch(chord_pitch).nil? }
             end
           end
 
-          selected = chord_definitions.first
-
-          unless selected
-            raise ArgumentError, "Don't know how to create a chord with root pitch #{root_pitch}"\
-            " and features #{features} based on scale #{scale.kind.class} with root on #{scale.root}: "\
-            " no suitable definition found (allow_chromatic is #{allow_chromatic})"
-          end
-
-          selected.pitch_offsets.transform_values do |offset|
-            pitch = root_pitch + offset
-            [scale.note_of_pitch(pitch) || scale.chromatic.note_of_pitch(pitch)]
-          end
-
-        elsif (notes || pitches && scale) && !(name || root_pitch || features)
-
-          notes ||= []
-
-          notes += pitches.collect { |p| scale.note_of_pitch(p) } if pitches
-
-          chord_definition = ChordDefinition.find_by_pitches(notes.collect(&:pitch))
-
-          raise "Can't find a chord definition for pitches #{pitches} on scale #{scale.kind.id} based on #{scale.root}" unless chord_definition
-
-          chord_definition.named_pitches(notes, &:pitch)
-        else
-          pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
-          raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
+          featured_chord_definitions.first
         end
       end
 
-      def compute_notes_from_source(source, name, root_pitch, scale, notes, pitches, moved, duplicated, features, allow_chromatic)
-        compute_moved_and_duplicated(compute_core_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic),
-                                     moved,
-                                     duplicated)
-      end
+      private_constant :Helper
 
-      def compute_core_notes_from_source(source, name, root_pitch, scale, notes, pitches, features, allow_chromatic)
-        if !(name || root_pitch || scale || notes || pitches || features)
-          source.notes.dup.tap { |notes| notes.transform_values!(&:dup) }
+      ChordGradeNote = Struct.new(:grade, :note, keyword_init: true)
 
-        elsif features && !(name || root_pitch || scale || notes || pitches)
-          compute_notes(nil, source.root.first.pitch, source.root.first.scale, nil, nil, source.moved, source.duplicated, features, allow_chromatic)
+      private_constant :ChordGradeNote
 
-        else
-          pattern = { name: name, root: root_pitch, scale: scale, notes: notes, pitches: pitches, features: features, allow_chromatic: allow_chromatic }
-          raise ArgumentError, "Can't understand chord definition pattern #{pattern}"
+      private def initialize(root, scale, chord_definition, move, duplicate, source_notes_map)
+        @root = root
+        @scale = scale
+        @chord_definition = chord_definition
+        @move = move.dup.freeze || {}
+        # TODO: ojo esto implica que sólo se puede duplicar una vez cada grado! permitir múltiples?
+        @duplicate = duplicate.dup.freeze || {}
+        @source_notes_map = source_notes_map.dup.freeze
+        @notes_map = compute_moved_and_duplicated(source_notes_map, move, duplicate)
+
+        # Calculate sorted notes: from lower to higher notes
+        #
+        @sorted_notes = []
+        @notes_map.each_pair do |name, array_of_notes|
+          array_of_notes.each do |note|
+            @sorted_notes << ChordGradeNote.new(grade: name, note: note).freeze
+          end
+        end
+
+        @sorted_notes.sort_by! { |chord_grade_note| chord_grade_note.note.pitch }
+        @sorted_notes.freeze
+
+        # Add getters for grades
+        #
+        @notes_map.each_key do |chord_grade_name|
+          define_singleton_method chord_grade_name do |all: false|
+            if all
+              @notes_map[chord_grade_name]
+            else
+              @notes_map[chord_grade_name].first
+            end
+          end
+        end
+
+        # Add getters for the features values
+        #
+        @chord_definition.features.each_key do |feature_name|
+          define_singleton_method feature_name do
+            @chord_definition.features[feature_name]
+          end
+        end
+
+        # Add navigation methods to other chords based on changing a feature
+        #
+        ChordDefinition.feature_keys.each do |feature_name|
+          define_singleton_method "with_#{feature_name}".to_sym do |feature_value, allow_chromatic: true|
+            featuring(allow_chromatic: allow_chromatic, **{ feature_name => feature_value })
+          end
         end
       end
 
+      attr_reader :scale, :chord_definition, :move, :duplicate
+
+      def notes
+        @sorted_notes
+      end
+
+      def pitches(*grades)
+        grades = @notes_map.keys if grades.empty?
+        @sorted_notes.select { |_| grades.include?(_.grade) }.collect { |_| _.note.pitch }
+      end
+
+      def features
+        @chord_definition.features
+      end
+
+      def featuring(*values, allow_chromatic: false, **hash)
+        # create a new list of features based on current features but
+        # replacing the values for the new ones and adding the new features
+        #
+        features = @chord_definition.features.dup
+        ChordDefinition.features_from(values, hash).each { |k, v| features[k] = v }
+
+        chord_definition = Helper.find_definition_by_features(@root.pitch, features, @scale, allow_chromatic: allow_chromatic)
+
+        raise ArgumentError, "Unable to find a chord definition for #{features}" unless chord_definition
+
+        source_notes_map = Helper.compute_source_notes_map(@root, chord_definition, @scale)
+
+        Chord.new(@root,
+                  (@scale if chord_definition.in_scale?(@scale, chord_root_pitch: @root.pitch)),
+                  chord_definition,
+                  @move, @duplicate,
+                  source_notes_map)
+      end
+
+      def octave(octave)
+        source_notes_map = @source_notes_map.transform_values do |notes|
+          notes.collect { |note| note.octave(octave) }.freeze
+        end.freeze
+
+        Chord.new(@root.octave(octave), @scale, chord_definition, @move, @duplicate, source_notes_map)
+      end
+
+      def move(**octaves)
+        Chord.new(@root, @scale, @chord_definition, @move.merge(octaves), @duplicate, @source_notes_map)
+      end
+
+      def duplicate(**octaves)
+        Chord.new(@root, @scale, @chord_definition, @move, @duplicate.merge(octaves), @source_notes_map)
+      end
+
+      def ==(other)
+        self.class == other.class &&
+          @sorted_notes == other.notes &&
+          @chord_definition == other.chord_definition
+      end
+
+      def inspect
+        "<Chord #{@name} root #{@root} notes #{@sorted_notes.collect { |_| "#{_.grade}=#{_.note.grade}|#{_.note.pitch} "} }>"
+      end
+
+      alias to_s inspect
+
+      private def compute_moved_and_duplicated(notes_map, moved, duplicated)
+        notes_map = notes_map.transform_values(&:dup)
+
+        moved&.each do |position, octave|
+          notes_map[position][0] = notes_map[position][0].octave(octave)
+        end
+
+        duplicated&.each do |position, octave|
+          octave.arrayfy.each do |octave|
+            notes_map[position] << notes_map[position][0].octave(octave)
+          end
+        end
+
+        notes_map.tap { |_| _.values.each(&:freeze) }.freeze
+      end
     end
   end
 end
+

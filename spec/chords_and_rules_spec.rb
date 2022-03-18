@@ -12,16 +12,16 @@ RSpec.describe Musa::Rules do
       grow 'generate inversions' do |chord|
         branch chord
         branch chord.move root: 1
-        branch chord.move({ root: 1, third: 1 })
-        branch chord.move({ root: 1, third: 1, fifth: 1 })
-        branch chord.move({ root: 1, third: 1, fifth: 1, seventh: 1 }) if chord[:seventh]
-        branch chord.move({ root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1 }) if chord[:ninth]
-        branch chord.move({ root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1, eleventh: 1 }) if chord[:eleventh]
+        branch chord.move(root: 1, third: 1)
+        branch chord.move(root: 1, third: 1, fifth: 1)
+        branch chord.move(root: 1, third: 1, fifth: 1, seventh: 1) if chord.features[:size] == :seventh
+        branch chord.move(root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1) if chord.features[:size] == :ninth
+        branch chord.move(root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1, eleventh: 1) if chord.features[:size] == :eleventh
       end
 
       grow 'generate 4 voices duplicating one of them if needed' do |chord|
         if chord.pitches.size == 3
-          branch chord.duplicate({ chord.sorted_notes[0].keys.first => 1 })
+          branch chord.duplicate({ chord.notes[0].grade => 1 })
         end
       end
 

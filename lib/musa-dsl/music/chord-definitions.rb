@@ -18,3 +18,6 @@ Musa::Chords::ChordDefinition.register :dom9, quality: :dominant, size: :ninth, 
 
 Musa::Chords::ChordDefinition.register :maj11, quality: :major, size: :eleventh, offsets: { root: 0, third: 4, fifth: 7, seventh: 11, ninth: 14, eleventh: 17 }
 Musa::Chords::ChordDefinition.register :min11, quality: :minor, size: :eleventh, offsets: { root: 0, third: 3, fifth: 7, seventh: 11, ninth: 14, eleventh: 17 }
+
+Musa::Chords::ChordDefinition.register :maj13, quality: :major, size: :eleventh, offsets: { root: 0, third: 4, fifth: 7, seventh: 11, ninth: 14, eleventh: 17 }
+Musa::Chords::ChordDefinition.register :min13, quality: :minor, size: :eleventh, offsets: { root: 0, third: 3, fifth: 7, seventh: 11, ninth: 14, eleventh: 17 }

@@ -194,6 +194,10 @@ module Musa
         @scales[root_pitch]
       end
 
+      def default_root
+        self[60]
+      end
+
       def absolut
         self[0]
       end
@@ -407,10 +411,6 @@ module Musa
         @kind.tuning.offset_of_interval(interval_name)
       end
 
-      def chord_of(*grades_or_symbols)
-        Musa::Chords::Chord.new(notes: grades_or_symbols.collect { |g| self[g] })
-      end
-
       def ==(other)
         self.class == other.class &&
             @kind == other.kind &&
@@ -561,8 +561,6 @@ module Musa
 
       def chord(*feature_values,
                 allow_chromatic: nil,
-                inversion: nil, state: nil,
-                position: nil,
                 move: nil,
                 duplicate: nil,
                 **features_hash)
@@ -570,13 +568,11 @@ module Musa
         features = { size: :triad } if feature_values.empty? && features_hash.empty?
         features ||= Musa::Chords::ChordDefinition.features_from(feature_values, features_hash)
 
-        Musa::Chords::Chord.new(root: self,
-                                allow_chromatic: allow_chromatic,
-                                inversion: inversion, state: state,
-                                position: position,
-                                move: move,
-                                duplicate: duplicate,
-                                features: features)
+        Musa::Chords::Chord.with_root(self,
+                                      allow_chromatic: allow_chromatic,
+                                      move: move,
+                                      duplicate: duplicate,
+                                      **features)
       end
 
       def ==(other)
