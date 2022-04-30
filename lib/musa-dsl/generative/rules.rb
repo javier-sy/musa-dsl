@@ -127,8 +127,6 @@ module Musa
             context = GrowRuleEvalContext.new
             context.with object, history, **parameters, &@block
 
-            puts "grow #{@name} for #{object}\ngenerates #{context._branches}" if context._branches.any?
-
             context._branches
           end
 
@@ -166,8 +164,6 @@ module Musa
             context.with object, history, **parameters, &@block
 
             reasons = context._secondary_reasons.collect { |_| ("#{@reason} (#{_})" if _) || @reason }
-
-            puts "cut #{@reason} for #{object}\ncuts because #{reasons}" if reasons.any?
 
             reasons.empty? ? nil : reasons
           end

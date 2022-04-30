@@ -6,6 +6,7 @@ RSpec.describe Musa::Rules do
   context 'Rules grow/prune generation (without parameters)' do
     rules = Musa::Rules::Rules.new do
       grow 'generate 1 octave down' do |chord|
+        branch chord
         branch chord.octave(-1)
       end
 
