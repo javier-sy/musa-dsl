@@ -45,7 +45,7 @@ module Musa::Datasets
 
     NaturalKeys = (NaturalKeys +
                    [:duration, # duration of the process (note reproduction, dynamics evolution, etc)
-                    :note_duration, # duration of the note (a staccato note is effectvely shorter than elapsed duration until next note)
+                    :note_duration, # duration of the note (a staccato note is effectively shorter than elapsed duration until next note)
                     :forward_duration # duration to wait until next event (if 0 means the next event should be executed at the same time than this one)
                    ]).freeze
 

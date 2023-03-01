@@ -109,7 +109,7 @@ module Musa::Datasets
       r
     end
 
-    def normalize_to_scale(scale, grade, sharps)
+    private def normalize_to_scale(scale, grade, sharps)
       note = scale[grade].sharp(sharps)
       background = note.background_note
 
