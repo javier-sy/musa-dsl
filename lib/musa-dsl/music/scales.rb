@@ -284,7 +284,7 @@ module Musa
         freeze
       end
 
-      def_delegators :@kind, :a_tuning
+      def_delegators :@kind, :tuning
 
       attr_reader :kind, :root_pitch
 
