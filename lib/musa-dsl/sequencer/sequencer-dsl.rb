@@ -2,8 +2,6 @@ require 'forwardable'
 
 require_relative '../core-ext/with'
 
-module TEMP; end
-
 module Musa
   module Sequencer
     class Sequencer

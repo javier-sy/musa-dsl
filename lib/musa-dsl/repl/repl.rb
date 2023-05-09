@@ -6,14 +6,14 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      def initialize(bind = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: nil)
+      def initialize(bind = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: true)
 
         self.bind = bind
 
         port ||= 1327
 
         @logger = logger || Musa::Logger::Logger.new
-        @highlight_exception = highlight_exception || false
+        @highlight_exception = highlight_exception
 
         @block_source = nil
 
