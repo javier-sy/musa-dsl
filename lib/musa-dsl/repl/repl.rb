@@ -6,14 +6,14 @@ module Musa
     class REPL
       @@repl_mutex = Mutex.new
 
-      def initialize(bind = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: true)
+      def initialize(bind = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: nil)
 
         self.bind = bind
 
         port ||= 1327
 
         @logger = logger || Musa::Logger::Logger.new
-        @highlight_exception = highlight_exception
+        @highlight_exception = highlight_exception || false
 
         @block_source = nil
 
@@ -119,7 +119,9 @@ module Musa
             send output: @connection, content: message&.to_s
           end
         else
-          @logger.warn('REPL') { "trying to print a message in Atom client but the client is not connected. Ignoring message \'#{message} \'." }
+          @logger.warn('REPL') do
+            "trying to print a message in MusaLCE but the client is not connected. Ignoring message \'#{message} \'."
+          end
         end
       end
 
