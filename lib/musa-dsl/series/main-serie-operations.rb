@@ -278,7 +278,8 @@ module Musa
           init
         end
 
-        private def _restart
+        private :_restart
+        def _restart
           @source.restart
           if @sources.is_a? Array
             @sources.each(&:restart)
@@ -287,7 +288,8 @@ module Musa
           end
         end
 
-        private def _next_value
+        private :_next_value
+        def _next_value
           value = nil
 
           index_or_key = @source.next_value

@@ -48,6 +48,8 @@ module Musa::Sequencer
           # duplicating parameters as direct object value (operation[:current_parameter])
           # and key_passed parameters (**operation[:current_parameter])
           #
+          puts "BaseSequencer._play: operation == :block.\n\toperation = #{operation}\n\tcontrol = #{control}"
+
           __play_eval.block_procedure_binder.call operation[:current_parameter],
                                                   **operation[:current_parameter],
                                                   control: control

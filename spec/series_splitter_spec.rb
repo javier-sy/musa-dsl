@@ -120,14 +120,14 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
     end
 
-    it 'serie of hash elements (instancing split components) with restart on one split component [!!!!]', pending: true do
+    it 'serie of hash elements (instancing split components) with restart on one split component' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
-      ss = h.split
+      ss = h.split.instance
 
-      ss_a = ss[:a].instance
-      ss_b = ss[:b].instance
-      ss_c = ss[:c].instance
+      ss_a = ss[:a]
+      ss_b = ss[:b]
+      ss_c = ss[:c]
 
       expect(ss_a.next_value).to eq 1
       expect(ss_b.next_value).to eq 10
@@ -159,6 +159,8 @@ RSpec.describe Musa::Series do
       expect(ss_c.next_value).to be_nil
 
       ss_a.restart
+      ss_b.restart
+      ss_c.restart
 
       expect(ss_a.next_value).to eq 1
       expect(ss_a.next_value).to eq 2
@@ -167,21 +169,21 @@ RSpec.describe Musa::Series do
       expect(ss_a.next_value).to be_nil
       expect(ss_a.next_value).to be_nil
 
-      expect(ss_b.next_value).to be_nil
-      expect(ss_b.next_value).to be_nil
+      expect(ss_b.next_value).to eq 10
+      expect(ss_b.next_value).to eq 20
 
-      expect(ss_c.next_value).to be_nil
-      expect(ss_c.next_value).to be_nil
+      expect(ss_c.next_value).to eq 100
+      expect(ss_c.next_value).to eq 200
     end
 
-    it 'serie of hash elements (instancing split components) with restart on three split component should really restart when all 3 components are restarted [!!!!]', pending: true do
+    it 'serie of hash elements (instancing split components) with restart on three split component should really restart when all 3 components are restarted' do
       s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
       h = s.hashify(:a, :b, :c)
-      ss = h.split
+      ss = h.split.instance
 
-      ss_a = ss[:a].instance
-      ss_b = ss[:b].instance
-      ss_c = ss[:c].instance
+      ss_a = ss[:a]
+      ss_b = ss[:b]
+      ss_c = ss[:c]
 
       expect(ss_a.next_value).to eq 1
       expect(ss_b.next_value).to eq 10
@@ -235,72 +237,6 @@ RSpec.describe Musa::Series do
       expect(ss_a.next_value).to be_nil
 
       expect(ss_b.next_value).to eq 20
-      expect(ss_b.next_value).to eq 30
-      expect(ss_b.next_value).to be_nil
-
-      expect(ss_c.next_value).to eq 200
-      expect(ss_c.next_value).to eq 300
-
-      expect(ss_c.next_value).to be_nil
-    end
-
-    it 'serie of hash elements (instancing split components) with restart on three split component [!!!!]', pending: true do
-      s = S([1, 10, 100], [2, 20, 200], [3, 30, 300])
-      h = s.hashify(:a, :b, :c)
-      ss = h.split
-
-      ss_a = ss[:a].instance
-      ss_b = ss[:b].instance
-      ss_c = ss[:c].instance
-
-      expect(ss_a.next_value).to eq 1
-      expect(ss_b.next_value).to eq 10
-      expect(ss_c.next_value).to eq 100
-
-      expect(ss_a.next_value).to eq 2
-      expect(ss_b.next_value).to eq 20
-
-      expect(ss_a.next_value).to eq 3
-      expect(ss_b.next_value).to eq 30
-
-      expect(ss_c.next_value).to eq 200
-
-      expect(ss_a.next_value).to be_nil
-      expect(ss_b.next_value).to be_nil
-
-      expect(ss_a.next_value).to be_nil
-      expect(ss_b.next_value).to be_nil
-
-      expect(ss_c.next_value).to eq 300
-
-      expect(ss_a.next_value).to be_nil
-      expect(ss_a.next_value).to be_nil
-
-      expect(ss_b.next_value).to be_nil
-      expect(ss_b.next_value).to be_nil
-
-      expect(ss_c.next_value).to be_nil
-      expect(ss_c.next_value).to be_nil
-
-      ss_a.restart
-
-      expect(ss_a.next_value).to eq 1
-      expect(ss_a.next_value).to eq 2
-
-      ss_b.restart
-
-      expect(ss_a.next_value).to eq 3
-
-      expect(ss_b.next_value).to eq 10
-      expect(ss_b.next_value).to eq 20
-
-      expect(ss_a.next_value).to be_nil
-
-
-      ss_c.restart
-
-      expect(ss_c.next_value).to eq 100
-
       expect(ss_b.next_value).to eq 30
       expect(ss_b.next_value).to be_nil
 

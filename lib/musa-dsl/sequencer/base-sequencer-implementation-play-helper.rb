@@ -66,6 +66,7 @@ module Musa
 
         def initialize(block_procedure_binder)
           @block_procedure_binder = block_procedure_binder
+          super()
         end
 
         def run_operation(element)
@@ -127,6 +128,8 @@ module Musa
           @nl_context = nl_context
 
           @nl_context ||= Object.new
+
+          super()
         end
 
         def subcontext

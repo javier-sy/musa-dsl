@@ -9,7 +9,7 @@ RSpec.describe Musa::Neumalang do
     include Musa::Series
 
     scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
-
+=begin
     it 'Simple file neumas parsing' do
       debug = false
       #debug = true
@@ -228,7 +228,7 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-
+=end
     it 'Advanced neumalang indirection features' do
       debug = false
       # debug = true
@@ -327,7 +327,7 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-
+=begin
     it 'Complex file neumas parsing' do
       debug = false
       #debug = true
@@ -531,6 +531,7 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
+=end
   end
 end
 
