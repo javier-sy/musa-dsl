@@ -29,36 +29,36 @@ module Musa
           @block.parameters
         end
 
-        def call(*value_parameters, **key_parameters)
-          _call value_parameters, key_parameters
+        def call(*value_parameters, **key_parameters, &block)
+          _call value_parameters, key_parameters, block
         end
 
-        def _call(value_parameters, key_parameters = {})
+        def _call(value_parameters, key_parameters = {}, block = nil)
           if @on_rescue
             begin
-              __call value_parameters, key_parameters
+              __call value_parameters, key_parameters, block
             rescue StandardError, ScriptError => e
               @on_rescue.call e
             end
           else
-            __call value_parameters, key_parameters
+            __call value_parameters, key_parameters, block
           end
         end
 
-        private def __call(value_parameters, key_parameters = {})
+        private def __call(value_parameters, key_parameters = {}, block = nil)
           effective_value_parameters, effective_key_parameters = apply(*value_parameters, **key_parameters)
 
           if effective_key_parameters.empty?
             if effective_value_parameters.empty?
-              @block.call
+              @block.call(&block)
             else
-              @block.call *effective_value_parameters
+              @block.call(*effective_value_parameters, &block)
             end
           else
             if effective_value_parameters.empty?
-              @block.call **effective_key_parameters
+              @block.call(**effective_key_parameters, &block)
             else
-              @block.call *effective_value_parameters, **effective_key_parameters
+              @block.call(*effective_value_parameters, **effective_key_parameters, &block)
             end
           end
         end

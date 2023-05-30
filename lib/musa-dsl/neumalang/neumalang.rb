@@ -33,10 +33,10 @@ module Musa
           end
         end
 
-        module ReferenceExpression
+        module ReferencedBracedCommand
           def value
-            { kind: :reference,
-              reference: capture(:expression).value }.extend Musa::Neumas::Neuma
+            { kind: :command_reference,
+              command: capture(:braced_command).value }.extend Musa::Neumas::Neuma
           end
         end
 
@@ -74,7 +74,18 @@ module Musa
             {}.tap do |_|
               _[:value_parameters] = value_parameters unless value_parameters.empty?
               _[:key_parameters] = key_value_parameters unless key_value_parameters.empty?
+
+              _[:proc_parameter] = capture(:codeblock).value if capture(:codeblock)
             end
+          end
+        end
+
+        module Codeblock
+          def value
+            { codeblock:
+                capture(:braced_command)&.value ||
+                  capture(:referenced_braced_command)&.value ||
+                  capture(:use_variable)&.value }
           end
         end
 

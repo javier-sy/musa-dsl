@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
   s.version     = '0.26.8'
-  s.date        = '2023-05-09'
+  s.date        = '2023-05-30'
   s.summary     = 'A simple Ruby DSL for making complex music'
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
   s.authors     = ['Javier Sánchez Yeste']
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '~> 2.7'
 
-  # TODO
+  # TODO para sistema de paquetes de MusaDSL
   #s.metadata    = {
     # "source_code_uri" => "https://",
     # "homepage_uri" => "",

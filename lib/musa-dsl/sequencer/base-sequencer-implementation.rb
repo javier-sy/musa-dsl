@@ -18,13 +18,13 @@ module Musa::Sequencer
             @event_handlers.push command[:parent_control]
 
             @tick_mutex.synchronize do
-              command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
+              command[:block]&.call *command[:value_parameters], **command[:key_parameters]
             end
 
             @event_handlers.pop
           else
             @tick_mutex.synchronize do
-              command[:block].call *command[:value_parameters], **command[:key_parameters] if command[:block]
+              command[:block]&.call *command[:value_parameters], **command[:key_parameters]
             end
           end
         end
@@ -72,7 +72,7 @@ module Musa::Sequencer
       key_parameters[:control] = control if block_key_parameters_binder.key?(:control)
 
       if at_position == @position
-        @on_debug_at.each { |c| c.call } if @logger.sev_threshold >= ::Logger::Severity::DEBUG
+        @on_debug_at.each(&:call) if @logger.sev_threshold >= ::Logger::Severity::DEBUG
 
         begin
           locked = @tick_mutex.try_lock
@@ -169,24 +169,24 @@ module Musa::Sequencer
         @handlers[event][name] = { block: Musa::Extension::SmartProcBinder::SmartProcBinder.new(block), only_once: only_once }
       end
 
-      def launch(event, *value_parameters, **key_parameters)
-        _launch event, value_parameters, key_parameters
+      def launch(event, *value_parameters, **key_parameters, &proc_parameter)
+        _launch event, value_parameters, key_parameters, proc_parameter
       end
 
-      def _launch(event, value_parameters = nil, key_parameters = nil)
+      def _launch(event, value_parameters = nil, key_parameters = nil, proc_parameter = nil)
         value_parameters ||= []
         key_parameters ||= {}
         processed = false
 
         if @handlers.key? event
           @handlers[event].each do |name, handler|
-            handler[:block].call *value_parameters, **key_parameters
+            handler[:block].call *value_parameters, **key_parameters, &proc_parameter
             @handlers[event].delete name if handler[:only_once]
             processed = true
           end
         end
 
-        @parent._launch event, value_parameters, key_parameters if @parent && !processed
+        @parent._launch event, value_parameters, key_parameters, proc_parameter if @parent && !processed
       end
 
       def inspect

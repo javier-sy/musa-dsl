@@ -1,0 +1,36 @@
+@s = [(I) (II) (III)]
+@m = &{ |a| a ? a.tap { |x| x[:velocity] += 10 } : 99999 }
+
+[(I) (II) (III)].reverse
+@s.reverse
+
+[(IV) (V) (VI)].eval()&({|x| x.tap { |y| y[:velocity] += 20 }})
+
+@s.eval()&({ |x| x.tap {|y| y[:velocity] += 30 } })
+
+::evento(1000, cosa: 100)&({ 12345 })
+
+
+
+[(I) (II) (III)].eval()&(&{|x| x.tap { |y| y[:velocity] += 40 }})
+
+@s.eval()&(&{ |x| x.tap {|y| y[:velocity] += 50 }})
+
+::evento(2000, cosa: 200)&(&{ 54321 })
+
+
+
+[(I) (II) (III)].eval()&(@m)
+
+@s.eval()&(@m)
+
+::evento(3000, cosa: 300)&(@m)
+
+/*
+DEBEN FALLAR PORQUE REQUIERE EL USO DE () EN LOS PARAMETROS PARA QUE PARSEE EL BLOCK:
+
+@s.eval&({ |x| x })
+::evento&({ puts "hola" })
+@s.eval&(@m)
+::evento&(@m)
+*/

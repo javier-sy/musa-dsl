@@ -291,12 +291,12 @@ RSpec.describe Musa::Datasets::Score do
       expect(s.duration).to eq 7r
     end
 
-    it 'manages Queryable (unfinished test case)', pending: true do
-      raise NotImplementedError, "test case pending implementation"
+    it 'manages Queryable (unfinished test case)', pending: 'not implemented test case, needed to think how to implement' do
+      raise NotImplementedError, 'test case pending implementation'
     end
     
-    it 'manages QueryableByDataset (unfinished test case)', pending: true do
-      raise NotImplementedError, "test case pending implementation"
+    it 'manages QueryableByDataset (unfinished test case)', pending: 'not implemented test case, needed to think how to implement' do
+      raise NotImplementedError, 'test case pending implementation'
     end
   end
 end

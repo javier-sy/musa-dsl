@@ -35,6 +35,7 @@ module Musa
       class AtModePlayEval < PlayEval
         def initialize(block_procedure_binder)
           @block_procedure_binder = block_procedure_binder
+          super()
         end
 
         def run_operation(element)
@@ -42,20 +43,22 @@ module Musa
 
           if element.is_a? Hash
             value = {
-                current_operation: :block,
-                current_block: @block_procedure_binder,
-                current_parameter: element,
-                continue_operation: :at,
-                continue_parameter: element[:at]
+              current_operation: :block,
+              current_block: @block_procedure_binder,
+              current_parameter: element,
+              continue_operation: :at,
+              continue_parameter: element[:at]
             }
           end
 
           value ||= {
-              current_operation: @block_procedure_binder,
-              current_parameter: element,
-              continue_operation: :at,
-              continue_parameter: position
+            current_operation: @block_procedure_binder,
+            current_parameter: element,
+            continue_operation: :at,
+            continue_parameter: position
           }
+
+          value
         end
       end
 
@@ -77,30 +80,30 @@ module Musa
               element = AbsD.to_AbsD(element)
 
               value = {
-                  current_operation: :block,
-                  current_block: @block_procedure_binder,
-                  current_parameter: element,
-                  continue_operation: :wait,
-                  continue_parameter: element.forward_duration
+                current_operation: :block,
+                current_block: @block_procedure_binder,
+                current_parameter: element,
+                continue_operation: :wait,
+                continue_parameter: element.forward_duration
               }
             end
 
             if element.key? :wait_event
               value = {
-                  current_operation: :block,
-                  current_block: @block_procedure_binder,
-                  current_parameter: element,
-                  continue_operation: :on,
-                  continue_parameter: element[:wait_event]
+                current_operation: :block,
+                current_block: @block_procedure_binder,
+                current_parameter: element,
+                continue_operation: :on,
+                continue_parameter: element[:wait_event]
               }
             end
           end
 
           value ||= {
-              current_operation: :block,
-              current_block: @block_procedure_binder,
-              current_parameter: element,
-              continue_operation: :now
+            current_operation: :block,
+            current_block: @block_procedure_binder,
+            current_parameter: element,
+            continue_operation: :now
           }
 
           value
@@ -116,8 +119,8 @@ module Musa
 
         @@id = 0
 
-        attr_reader :neumalang_context
-        attr_reader :block_procedure_binder
+        attr_reader :neumalang_context,
+                    :block_procedure_binder
 
         def initialize(block_procedure_binder, decoder, nl_context, parent: nil)
           @id = @@id += 1
@@ -141,17 +144,17 @@ module Musa
             AbsD.to_AbsD(element)
           else
             case element[:kind]
-            when :serie         then eval_serie element[:serie]
-            when :parallel      then eval_parallel element[:parallel]
-            when :assign_to     then eval_assign_to element[:assign_to], element[:assign_value]
-            when :use_variable  then eval_use_variable element[:use_variable]
-            when :command       then eval_command element[:command], element[:value_parameters], element[:key_parameters]
-            when :value         then eval_value element[:value]
-            when :gdvd          then eval_gdvd element[:gdvd]
-            when :p             then eval_p element[:p]
-            when :call_methods  then eval_call_methods element[:on], element[:call_methods]
-            when :reference     then eval_reference element[:reference]
-            when :event         then element
+            when :serie             then eval_serie element[:serie]
+            when :parallel          then eval_parallel element[:parallel]
+            when :assign_to         then eval_assign_to element[:assign_to], element[:assign_value]
+            when :use_variable      then eval_use_variable element[:use_variable]
+            when :command           then eval_command element[:command], element[:value_parameters], element[:key_parameters]
+            when :value             then eval_value element[:value]
+            when :gdvd              then eval_gdvd element[:gdvd]
+            when :p                 then eval_p element[:p]
+            when :call_methods      then eval_call_methods element[:on], element[:call_methods]
+            when :command_reference then eval_command_reference element[:command]
+            when :event             then element
             else
               raise ArgumentError, "eval_element: don't know how to process #{element}"
             end
@@ -200,10 +203,10 @@ module Musa
 
         def eval_command(block, value_parameters, key_parameters)
           _value_parameters = value_parameters ? value_parameters.collect { |e| subcontext.eval_element(e) } : []
-          _key_parameters = key_parameters ? key_parameters.collect { |k, e| [k, subcontext.eval_element(e)] }.to_h : {}
+          _key_parameters = key_parameters ? key_parameters.transform_values { |e| subcontext.eval_element(e) } : {}
 
-          # used instance_exec because the code on block comes from a neumalang source, so the correct execution context is the neumalang context
-          # (no other context has any sense)
+          # used instance_exec because the code on block comes from a neumalang source, so the correct
+          # execution context is the neumalang context (no other context has any sense)
           #
           @nl_context.instance_exec *_value_parameters, **_key_parameters, &block
         end
@@ -214,38 +217,43 @@ module Musa
           value = play_eval.eval_element on
 
           if value.is_a? Parallel
-            value.collect do |_value|
-              call_methods.each do |methd|
-                value_parameters = methd[:value_parameters] ? methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } : []
-                key_parameters = methd[:key_parameters] ? methd[:key_parameters].collect { |k, e| [k, play_eval.subcontext.eval_element(e)] }.to_h : {}
-
-                _value = _value.send methd[:method], *value_parameters, **key_parameters
-              end
-
-              _value
-            end.extend Parallel
+            value.collect { |_value| eval_methods(play_eval, _value, call_methods) }.extend Parallel
           else
-            call_methods.each do |methd|
-              value_parameters = methd[:value_parameters] ? methd[:value_parameters].collect { |e| play_eval.subcontext.eval_element(e) } : []
-              key_parameters = methd[:key_parameters] ? methd[:key_parameters].collect { |k, e| [k, play_eval.subcontext.eval_element(e)] }.to_h : {}
-
-              value = value.send methd[:method], *value_parameters, **key_parameters
-            end
-
-            value
+            eval_methods(play_eval, value, call_methods)
           end
         end
 
-        def eval_reference(element)
-          if element.is_a?(Hash) && element.key?(:kind)
+        def eval_methods(play_eval, value, methods)
+          methods.each do |methd|
+            value_parameters = methd[:value_parameters]&.collect { |e| play_eval.subcontext.eval_element(e) } || []
+            key_parameters = methd[:key_parameters]&.transform_values { |e| play_eval.subcontext.eval_element(e) } || {}
+            proc_parameter = eval_proc_parameter(methd[:proc_parameter][:codeblock]) if methd[:proc_parameter]
+
+            value = value.send methd[:method], *value_parameters, **key_parameters, &proc_parameter
+          end
+
+          value
+        end
+
+        def eval_command_reference(element)
+          element[:command]
+        end
+
+        def eval_proc_parameter(element)
+          case element
+          when Proc
+            element
+          when nil
+            nil
+          else
             case element[:kind]
+            when :use_variable
+              eval_proc_parameter(eval_use_variable(element[:use_variable]))
+            when :command_reference
+              eval_proc_parameter(element[:command])
             when :command
               element[:command]
-            else
-              raise ArgumentError, "eval_reference(&): don't know how to process element #{element}"
             end
-          else
-            raise ArgumentError, "eval_reference(&): don't know how to process element #{element}"
           end
         end
 
@@ -267,7 +275,7 @@ module Musa
 
           when Parallel
             { current_operation: :parallel_play,
-              current_parameter: element.instance.tap { |e| e.each(&:restart) } }
+              current_parameter: element.tap { |e| e.each(&:restart) } }
 
           when Array
             { current_operation: :no_eval_play,
@@ -325,18 +333,15 @@ module Musa
               run_operation eval_use_variable(element[:use_variable])
 
             when :event
-              value_parameters = element[:value_parameters] ?
-                                     element[:value_parameters].collect { |e| subcontext.eval_element(e) } :
-                                     []
-
-              key_parameters = element[:key_parameters] ?
-                                   element[:key_parameters].collect { |k, e| [k, subcontext.eval_element(e)] }.to_h :
-                                   {}
+              value_parameters = element[:value_parameters]&.collect { |e| subcontext.eval_element(e) } || []
+              key_parameters = element[:key_parameters]&.transform_values { |e| subcontext.eval_element(e) } || {}
+              proc_parameter = eval_proc_parameter(element[:proc_parameter][:codeblock]) if element[:proc_parameter]
 
               { current_operation: :event,
                 current_event: element[:event],
                 current_value_parameters: value_parameters,
                 current_key_parameters: key_parameters,
+                current_proc_parameter: proc_parameter,
                 continue_operation: :now }
 
             when :command
@@ -346,7 +351,7 @@ module Musa
               run_operation eval_call_methods(element[:on], element[:call_methods])
 
             when :reference
-              run_operation eval_reference(element[:reference])
+              run_operation eval_command_reference(element[:reference])
 
             else
               raise ArgumentError, "run_operation: don't know how to process #{element}"

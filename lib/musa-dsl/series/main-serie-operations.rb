@@ -148,7 +148,12 @@ module Musa
           self.source = serie
           self.with_sources = with_series || []
           self.on_restart = on_restart
-          self.proc = block if block
+
+          if block
+            self.proc = block
+          elsif !with_series
+            proc { |_| _ }
+          end
 
           @isolate_values = isolate_values
 

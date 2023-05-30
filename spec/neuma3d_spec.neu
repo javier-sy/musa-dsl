@@ -21,13 +21,4 @@
 { |c| puts "Con paso de parámetros: @c = #{c}" if @debug}(@c)
 { |cc| puts "Con paso de parámetros: @cc = #{cc}" if @debug}(@cc)
 
-{ puts if @debug }
-
-
-/* lo siguiente debería transformarse a: @s.eval() &{ |e| e[:duration] = 3; e }
- (o algo así)
- este problema se ha introducido en 2021-09-07 al eliminar el primer parámetro block de .with */
-
-[(I) (II) (III)].eval( &{ |e| e[:duration] = 2 * e.base_duration; e } )
-
-@s.eval( &{ |e| e[:duration] = 3; e } )
+{ puts "..." if @debug }

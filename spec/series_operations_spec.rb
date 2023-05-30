@@ -464,6 +464,15 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to eq nil
     end
 
+    it '.with without proc' do
+      s = S(1, 2, 3).with.i
+
+      expect(s.next_value).to eq(1)
+      expect(s.next_value).to eq(2)
+      expect(s.next_value).to eq(3)
+      expect(s.next_value).to be_nil
+    end
+
     it '.with (I)' do
       s = S(1, 2, 3).with(
         b: S(100, 200, 300, 400),

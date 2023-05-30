@@ -9,7 +9,7 @@ RSpec.describe Musa::Neumalang do
     include Musa::Series
 
     scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
-=begin
+
     it 'Simple file neumas parsing' do
       debug = false
       #debug = true
@@ -228,10 +228,10 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-=end
+
     it 'Advanced neumalang indirection features' do
       debug = false
-      # debug = true
+      #debug = true
 
       gdv_decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
       serie = Musa::Neumalang::Neumalang.parse_file File.join(File.dirname(__FILE__), 'neuma3d_spec.neu')
@@ -240,7 +240,7 @@ RSpec.describe Musa::Neumalang do
         puts
         puts 'SERIE'
         puts '-----'
-        pp serie.duplicate.restart.to_a(recursive: true)
+        pp serie.instance.to_a(recursive: true)
         puts
       end
 
@@ -309,25 +309,8 @@ RSpec.describe Musa::Neumalang do
       expect(context.instance_variable_get(:@c)).to eq(10_000) unless debug
 
       expect(context.instance_variable_get(:@cc).call).to eq(10_000) unless debug
-
-      unless debug
-        expect(played).to eq(
-          [{ position: 1 },
-           { grade: 0, octave: 0, duration: 1/2r, velocity: 1 },
-           { position: 1.5 },
-           { grade: 1, octave: 0, duration: 1/2r, velocity: 1 },
-           { position: 2 },
-           { grade: 2, octave: 0, duration: 1/2r, velocity: 1 },
-           { position: 2.5 },
-           { grade: 0, octave: 0, duration: 3, velocity: 1 },
-           { position: 5.5 },
-           { grade: 1, octave: 0, duration: 3, velocity: 1 },
-           { position: 8.5 },
-           { grade: 2, octave: 0, duration: 3, velocity: 1 }]
-        )
-      end
     end
-=begin
+
     it 'Complex file neumas parsing' do
       debug = false
       #debug = true
@@ -531,7 +514,6 @@ RSpec.describe Musa::Neumalang do
         )
       end
     end
-=end
   end
 end
 

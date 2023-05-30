@@ -15,7 +15,7 @@ grammar Musa::Neumalang::Neumalang::Parser::Grammar::Grammar
 
 	rule object_expression
 		braced_command |
-        reference_expression |
+		referenced_braced_command |
         bracketed_expression |
         use_variable |
         constant |
@@ -26,8 +26,8 @@ grammar Musa::Neumalang::Neumalang::Parser::Grammar::Grammar
         vector
 	end
 
-	rule reference_expression
-		(ampersand optional_separation expression) <Musa::Neumalang::Neumalang::Parser::ReferenceExpression>
+	rule referenced_braced_command
+		(ampersand optional_separation braced_command) <Musa::Neumalang::Neumalang::Parser::ReferencedBracedCommand>
 	end
 
 	rule variable_assign
@@ -67,7 +67,13 @@ grammar Musa::Neumalang::Neumalang::Parser::Grammar::Grammar
 	end
 
 	rule parameters
-	    (lpar parameter (comma parameter)* optional_separation rpar) <Musa::Neumalang::Neumalang::Parser::Parameters>
+	    (lpar parameter? (comma parameter)* optional_separation rpar codeblock?)
+	        <Musa::Neumalang::Neumalang::Parser::Parameters>
+	end
+
+	rule codeblock
+	    (ampersand lpar (braced_command | referenced_braced_command | use_variable) rpar)
+	        <Musa::Neumalang::Neumalang::Parser::Codeblock>
 	end
 
     rule parameter

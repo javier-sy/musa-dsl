@@ -44,12 +44,11 @@ module Musa::Sequencer
 
         case operation[:current_operation]
         when :none
+          # do nothing
         when :block
           # duplicating parameters as direct object value (operation[:current_parameter])
           # and key_passed parameters (**operation[:current_parameter])
           #
-          puts "BaseSequencer._play: operation == :block.\n\toperation = #{operation}\n\tcontrol = #{control}"
-
           __play_eval.block_procedure_binder.call operation[:current_parameter],
                                                   **operation[:current_parameter],
                                                   control: control
@@ -57,7 +56,8 @@ module Musa::Sequencer
         when :event
           control._launch operation[:current_event],
                           operation[:current_value_parameters],
-                          operation[:current_key_parameters]
+                          operation[:current_key_parameters],
+                          operation[:current_proc_parameter]
 
         when :play
           control2 = PlayControl.new control
@@ -104,7 +104,7 @@ module Musa::Sequencer
 
           control2.on :sync do
             counter -= 1
-            _play serie, control, __play_eval: __play_eval, **mode_args if counter == 0
+            _play serie, control, __play_eval: __play_eval, **mode_args if counter.zero?
           end
         end
 
@@ -158,18 +158,18 @@ module Musa::Sequencer
       def store_continuation(sequencer:, serie:, neumalang_context:, mode:, decoder:, play_eval:, mode_args:)
         @continuation_sequencer = sequencer
         @continuation_parameters = {
-            serie: serie,
-            control: self,
-            neumalang_context: neumalang_context,
-            mode: mode,
-            decoder: decoder,
-            play_eval: play_eval,
-            mode_args: mode_args }
+          serie: serie,
+          control: self,
+          neumalang_context: neumalang_context,
+          mode: mode,
+          decoder: decoder,
+          play_eval: play_eval,
+          mode_args: mode_args }
       end
 
       def continue
         super
-        @continuation_sequencer.continuation_play(@continuation_parameters) if @continuation_sequencer
+        @continuation_sequencer&.continuation_play(@continuation_parameters)
       end
 
       def after(bars = nil, &block)

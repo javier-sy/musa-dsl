@@ -27,14 +27,17 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
 
       # File.open(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml"), 'w') { |f| f.write(mxml.to_xml.string) }
 
-      expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "score_tomxml_1_spec.musicxml")).strip
+      expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), 'score_tomxml_1_spec.musicxml')).strip
     end
 
-    it 'manages nested scores (unfinished test case)', pending: true do
-      expect(1).to eq 0 # TODO unfinished test case
+    it 'manages nested scores (unfinished test case)',
+       pending: 'nested scores is an advanced feature not yet fulyy implemented' do
+
+      raise NotImplementedError, 'test case pending implementation'
     end
 
-    it 'manages irregular durations (unfinished test case)', pending: true do
+    it 'manages irregular durations (unfinished test case)',
+       pending: 'irregular durations, when combined, are difficult to handle to generate a nice output, need more thinking' do
       score = Musa::Datasets::Score.new
 
       # score.at 1, add: { pitch: 60, duration: 5/16r }.extend(PDV)
@@ -56,7 +59,7 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
 
       # expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "score_tomxml_2_spec.musicxml")).strip
 
-      expect(1).to eq 0 # TODO unfinished test case
+      raise NotImplementedError, 'test case pending implementation'
     end
 
     it 'bugfix for score render to_xml not producing output when there is only one part' do
@@ -82,7 +85,7 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
       # f = File.join(File.dirname(__FILE__), "score_tomxml_3_spec.musicxml")
       # File.open(f, 'w') { |f| f.write(mxml.to_xml.string) }
 
-      expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "score_tomxml_3_spec.musicxml")).strip
+      expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), 'score_tomxml_3_spec.musicxml')).strip
     end
   end
 end
