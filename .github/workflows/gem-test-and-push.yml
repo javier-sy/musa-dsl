@@ -36,7 +36,7 @@ jobs:
     - name: Set up Ruby 2.7.8
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: ${{ matrix.ruby-version }}
+        ruby-version: 2.7.8
 
     - name: Publish to RubyGems
       run: |
