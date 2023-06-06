@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
   s.authors     = ['Javier Sánchez Yeste']
   s.email       = 'javier.sy@gmail.com'
-  s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples)/}) }
+  s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples|\.github)/}) }
   s.homepage    = 'https://github.com/javier-sy/musa-dsl'
   s.license     = 'LGPL-3.0'
 
