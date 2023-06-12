@@ -123,6 +123,8 @@ module Musa
             "trying to print a message in MusaLCE but the client is not connected. Ignoring message \'#{message} \'."
           end
         end
+
+        nil
       end
 
       private

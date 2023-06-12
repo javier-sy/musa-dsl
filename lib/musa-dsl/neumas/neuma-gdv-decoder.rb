@@ -6,7 +6,7 @@ module Musa::Neumas
       def initialize(scale, base_duration: nil, transcriptor: nil, base: nil)
         @base_duration = base_duration
         @base_duration ||= base[:duration] if base
-        @base_duration ||= Rational(1,4)
+        @base_duration ||= Rational(1, 4)
 
         base ||= { grade: 0, octave: 0, duration: @base_duration, velocity: 1 }
 

@@ -202,8 +202,8 @@ module Musa
         end
 
         def eval_command(block, value_parameters, key_parameters)
-          _value_parameters = value_parameters ? value_parameters.collect { |e| subcontext.eval_element(e) } : []
-          _key_parameters = key_parameters ? key_parameters.transform_values { |e| subcontext.eval_element(e) } : {}
+          _value_parameters = value_parameters&.collect { |e| subcontext.eval_element(e) } || []
+          _key_parameters = key_parameters&.transform_values { |e| subcontext.eval_element(e) } || {}
 
           # used instance_exec because the code on block comes from a neumalang source, so the correct
           # execution context is the neumalang context (no other context has any sense)

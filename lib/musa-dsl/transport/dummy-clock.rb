@@ -39,7 +39,7 @@ module Musa
       def eval_condition
         if @ticks
           @ticks -= 1
-          @ticks > 0
+          @ticks.positive?
         else
           @block.call
         end

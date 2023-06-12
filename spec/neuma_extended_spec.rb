@@ -128,6 +128,5 @@ RSpec.describe Musa::Neumalang do
       expect(neumas2.join ' ').to eq neumas_ok
 
     end
-
   end
 end

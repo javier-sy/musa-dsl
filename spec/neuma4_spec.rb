@@ -10,7 +10,7 @@ RSpec.describe Musa::Neumalang do
 
     scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
 
-    it 'Simple file neumas parsing' do
+    it 'Calling methods and events' do
       debug = false
       #debug = true
 
