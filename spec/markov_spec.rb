@@ -42,6 +42,18 @@ RSpec.describe Musa::Markov do
         make_expects m.to_a.join
       end
     end
+
+    it 'ejemplo para el doctorado' do
+      m = Musa::Markov::Markov.new(
+        start: :a,
+        finish: :x,
+        transitions:
+          { a: { b: 0.2, c: 0.8 },
+            b: { a: 0.3, c: 0.7 },
+            c: [:a, :b, :x] })
+
+      puts m.i.to_a.join
+    end
   end
 
   def make_expects(result)
