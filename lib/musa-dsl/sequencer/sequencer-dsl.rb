@@ -9,6 +9,7 @@ module Musa
 
       def_delegators :@sequencer,
                      :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration,
+                     :offset,
                      :size, :empty?,
                      :on_debug_at, :on_error, :on_fast_forward, :before_tick,
                      :raw_at,
@@ -25,6 +26,7 @@ module Musa
 
       def initialize(beats_per_bar = nil,
                      ticks_per_beat = nil,
+                     offset: nil,
                      sequencer: nil,
                      logger: nil,
                      do_log: nil, do_error_log: nil, log_position_format: nil,
@@ -34,6 +36,7 @@ module Musa
 
         @sequencer = sequencer
         @sequencer ||= BaseSequencer.new beats_per_bar, ticks_per_beat,
+                                         offset: offset,
                                          logger: logger,
                                          do_log: do_log,
                                          do_error_log: do_error_log,

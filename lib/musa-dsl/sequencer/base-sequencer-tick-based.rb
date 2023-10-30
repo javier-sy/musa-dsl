@@ -37,7 +37,7 @@ module Musa
         end
 
         private def _reset_timing
-          @position = @position_mutex.synchronize { 1r - @tick_duration }
+          @position = @position_mutex.synchronize { 1r + @offset - @tick_duration }
         end
 
         private def _quantize_position(position, warn: true)

@@ -13,11 +13,13 @@ module Musa
   module Sequencer
     class BaseSequencer
       attr_reader :beats_per_bar, :ticks_per_beat
+      attr_reader :offset
       attr_reader :running_position
       attr_reader :everying, :playing, :moving
       attr_reader :logger
 
       def initialize(beats_per_bar = nil, ticks_per_beat = nil,
+                     offset: nil,
                      logger: nil,
                      do_log: nil, do_error_log: nil, log_position_format: nil)
 
@@ -34,6 +36,8 @@ module Musa
           @logger.error! if do_error_log || do_error_log.nil?
           @logger.debug! if do_log
         end
+
+        @offset = offset || 0r
 
         if beats_per_bar && ticks_per_beat
           @beats_per_bar = Rational(beats_per_bar)

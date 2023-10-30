@@ -12,6 +12,7 @@ module Musa
       def initialize(clock,
                      beats_per_bar = nil,
                      ticks_per_beat = nil,
+                     offset: nil,
                      sequencer: nil,
                      before_begin: nil,
                      on_start: nil,
@@ -22,6 +23,8 @@ module Musa
 
         beats_per_bar ||= 4
         ticks_per_beat ||= 24
+        offset ||= 0r
+
         do_log ||= false
 
         @clock = clock
@@ -41,7 +44,7 @@ module Musa
         @do_log = do_log
 
         @sequencer = sequencer
-        @sequencer ||= Musa::Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, logger: logger, do_log: @do_log
+        @sequencer ||= Musa::Sequencer::Sequencer.new beats_per_bar, ticks_per_beat, offset: offset, logger: logger, do_log: @do_log
 
         @clock.on_start do
           do_on_start
