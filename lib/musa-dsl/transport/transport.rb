@@ -94,6 +94,7 @@ module Musa
         position += Rational(midi_beats, 4 * @sequencer.beats_per_bar) if midi_beats
         position += Rational(beats, @sequencer.beats_per_bar) if beats
 
+        position += @sequencer.offset
         position -= @sequencer.tick_duration
 
         raise ArgumentError, "undefined new position" unless position
