@@ -7,7 +7,7 @@ module Musa
       module DeepCopy
         extend self
 
-        def deep_copy(object, method: :dup, freeze: true)
+        def deep_copy(object, method: :dup, freeze: nil)
           raise ArgumentError, "deep_copy method can only be :dup or :clone" unless method == :dup || method == :clone
           register = {}
 
@@ -182,7 +182,7 @@ module Musa
           end
         end
 
-        def clone(freeze: true, deep: false)
+        def clone(freeze: nil, deep: false)
           if deep
             Musa::Extension::DeepCopy::DeepCopy.deep_copy(self, method: :clone, freeze: freeze)
           else

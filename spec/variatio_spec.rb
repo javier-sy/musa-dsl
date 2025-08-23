@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 require 'musa-dsl'
-require 'benchmark'
 
 RSpec.describe Musa::Variatio do
   context 'Create several kind of variations' do
