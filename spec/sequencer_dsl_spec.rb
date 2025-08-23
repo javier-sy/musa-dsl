@@ -277,7 +277,6 @@ RSpec.describe Musa::Sequencer do
 
         at 4.5r do
           h.stop
-          puts "stop"
         end
       end
 

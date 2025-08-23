@@ -140,34 +140,4 @@ RSpec.describe Musa::Rules do
        [[-1, 0, 12, 11], [-1, 1, 12, 111], [-1, 2, 14, 213]]]
     end
   end
-
-  it 'Ejemplo para el doctorado' do
-
-    debug = false
-
-    rules = Musa::Rules::Rules.new do
-      grow 'crea una rama' do |thing|
-        puts "grow #{thing}" if debug
-        rand(1..3).times do
-          branch x = [thing, rand(5)].flatten
-          puts "x = #{x}" if debug
-        end
-        branch x = [thing, :final].flatten
-        puts "x = #{x}" if debug
-      end
-
-      cut 'cortar las finales' do |thing|
-        puts "cut #{thing}" if debug
-        prune if thing.last == :final
-      end
-
-      ended_when do |thing|
-        puts "ended_when #{thing}" if debug
-        thing.size == 4
-      end
-    end
-
-    puts "#{rules.apply(0).combinations}" if debug
-  end
-
 end

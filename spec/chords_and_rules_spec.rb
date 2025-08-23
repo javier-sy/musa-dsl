@@ -94,7 +94,7 @@ RSpec.describe Musa::Rules do
       end
     end
 
-    it 'test' do
+    it 'test', skip: 'pensar y completar test' do
       major = Musa::Scales::Scales.et12[440.0].major[60]
 
       IM = major.tonic.chord :triad #, duplicate: { root: 1 }

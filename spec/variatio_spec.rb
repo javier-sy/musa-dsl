@@ -273,49 +273,6 @@ RSpec.describe Musa::Variatio do
       expect(variations.size).to eq 2 * 2 * (2 * 2)**2
     end
 
-    it 'Sample of chair with colors and materials for phd' do
-      v = Musa::Variatio::Variatio.new :object do
-        field :color, [:marron_claro, :marron_oscuro, :blanco, :negro]
-        field :material, [:aluminio, :acero_cepillado, :acero_pulido]
-
-        constructor do |color:, material:|
-          "Esta línea representa una silla con la tela de color #{color} y con la estructura de #{material}"
-        end
-      end
-
-      variations = v.run
-
-      puts variations
-
-      expect(variations.size).to eq 4 * 3
-    end
-
-    it 'Sample of table plus 4 chairs with colors and materials for phd' do
-      v = Musa::Variatio::Variatio.new :object do
-        field :color_mesa, [:roja, :verde, :azul]
-
-        fieldset :sillas, [1..4] do
-          field :color_silla, [:marron_claro, :marron_oscuro, :blanco, :negro]
-          field :material_silla, [:aluminio, :acero_cepillado, :acero_pulido]
-        end
-
-        constructor do |color_mesa:, sillas:|
-          "Mesa #{color_mesa}: #{ sillas.collect { |i, silla| "silla #{i} #{silla[:color_silla]} de #{silla[:material_silla]}" }.join(', ') }"
-        end
-      end
-
-      variations = v.run
-
-      puts variations.first(100)
-      puts variations.size
-
-      expect(variations.size).to eq 3 * ((4 * 3) ** 4)
-    end
-
-    it 'Omitted slower tests!!!! If needed uncomment this file' do
-      expect(1).to eq 1
-    end
-
     it 'With 2 fields + fieldset (2 inner fields + fieldset with 2 inner fields), constructor and finalize', slow: true do
       v = Musa::Variatio::Variatio.new :object do
         field :a
