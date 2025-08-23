@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.email       = 'javier.sy@gmail.com'
   s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples|\.github)/}) }
   s.homepage    = 'https://github.com/javier-sy/musa-dsl'
-  s.license     = 'LGPL-3.0'
+  s.license     = 'LGPL-3.0-or-later'
 
   s.required_ruby_version = '~> 3.4'
 
@@ -20,9 +20,9 @@ Gem::Specification.new do |s|
     # "changelog_uri" => ""
   #}
 
-  s.add_runtime_dependency 'prime'
-  s.add_runtime_dependency 'matrix'
-  s.add_runtime_dependency 'sorted_set'
+  s.add_runtime_dependency 'prime', '~> 0.1'
+  s.add_runtime_dependency 'matrix', '~> 0.4'
+  s.add_runtime_dependency 'sorted_set', '~> 1.0'
   
   s.add_runtime_dependency 'logger', '~> 1.4', '>= 1.4.3'
 
@@ -32,5 +32,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'midi-parser', '~> 0.4'
 
   s.add_development_dependency 'descriptive-statistics', '~> 2.2'
-  s.add_development_dependency 'rspec', '~> 3.0'
+  s.add_development_dependency 'rspec', '~> 3'
 end
