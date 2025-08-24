@@ -1,5 +1,6 @@
 require 'socket'
 require 'pathname'
+require 'stringio'
 
 module Musa
   module REPL
