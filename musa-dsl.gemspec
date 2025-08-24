@@ -1,6 +1,8 @@
+require_relative 'lib/musa-dsl/version'
+
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
-  s.version     = '0.30.0'
+  s.version     = Musa::VERSION
   s.date        = '2025-08-23'
   s.summary     = 'A simple Ruby DSL for making complex music'
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
