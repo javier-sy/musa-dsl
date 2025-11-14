@@ -25,8 +25,8 @@ lib/musa-dsl/music/chords.rb aedbbb260ceafddc5f952e307c6c09cc8cc692c7
 lib/musa-dsl/music/scales.rb f77588219f6ee7a9d95f1b44222ecab560f49335
 lib/musa-dsl/core-ext/with.rb d333ff8851eec6fdf664834a0d73ccec10e98e02
 lib/musa-dsl/datasets/gdvd.rb e04e3dfad3c2b9f0a797550720f857b588ceabfe
-lib/musa-dsl/logger/logger.rb 992597e45e74b526c65a3731305ae7194b6e2268
-lib/musa-dsl/matrix/matrix.rb 38f2ce22a2d83173afb01aebe1f146a76d3c8e8f
+lib/musa-dsl/logger/logger.rb 30f605766759f54385cfad7d01d397cc9f2fe9d7
+lib/musa-dsl/matrix/matrix.rb de1a9fe8a2991b1f51781b4f044c567b202a14ca
 lib/musa-dsl/neumas/neumas.rb ab5dfd8bbbd6f38c42db612d116739099b451970
 lib/musa-dsl/series/series.rb 81dbcc1cb8355b9aaa2fe9308cfb287f21cd65e1
 lib/musa-dsl/transcription.rb fab2983a7ea955897ac68dd5e119aec9354bb340
@@ -39,7 +39,7 @@ lib/musa-dsl/core-ext/hashify.rb 89fd2d1094745a05a337e0e13cdb1ce7d5c8671b
 lib/musa-dsl/datasets/dataset.rb 707695a5af5582de39fe00eca9598c21596c4aa7
 lib/musa-dsl/datasets/delta-d.rb 34001d412dc7ba3e7afcf5e970fe1ad6df8fe702
 lib/musa-dsl/generative/rules.rb f4b3c08ddabc4422e1ad29b1b199a3fcd62c5814
-lib/musa-dsl/midi/midi-voices.rb d61d2a430e78a5dd21ae52a650a0ed5de5d42709
+lib/musa-dsl/midi/midi-voices.rb f624e0687ec9a3b99dfa6681acb210f648c31c13
 lib/musa-dsl/datasets/packed-v.rb 98f19053a6c032efeedd8a64b7d20538263d4f27
 lib/musa-dsl/generative/darwin.rb d46d81c49d9a7008e6b11a7970a1c0dfe31174c8
 lib/musa-dsl/generative/markov.rb cc2a94e5d7c6fe975557ef2cdecf083c0290518f
