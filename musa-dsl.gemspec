@@ -35,4 +35,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'descriptive-statistics', '~> 2.2'
   s.add_development_dependency 'rspec', '~> 3'
+  s.add_development_dependency 'yard', '~> 0.9'
+  s.add_development_dependency 'webrick', '~> 1.8'
+  s.add_development_dependency 'rack', '~> 2.2'
 end

@@ -9,4 +9,4 @@ Gemfile.lock
 bin
 *.mindnode
 test.musicxml
-
+doc

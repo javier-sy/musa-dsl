@@ -1,0 +1,6 @@
+--markup markdown
+--readme README.md
+--title "Musa-DSL API"
+
+lib/**/*.rb
+README.md
