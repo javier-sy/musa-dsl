@@ -1,5 +1,56 @@
+# Buffered series allowing multiple independent iterations over same source.
+#
+# Provides buffering mechanism enabling multiple "readers" to independently
+# iterate over the same serie source without interfering with each other.
+#
+# ## Buffering Modes
+#
+# - **Async (default)**: Buffers fill independently, each progresses at own pace
+# - **Sync**: All buffers synchronized, restart affects all
+#
+# ## Use Cases
+#
+# - Multiple voices reading same melodic sequence at different speeds
+# - Polyphonic playback from single source
+# - Canonic structures (rounds, fugues)
+# - Independent transformations of same base material
+#
+# ## Memory Management
+#
+# History is automatically cleaned when all buffers have progressed past
+# old values, preventing unbounded memory growth.
+#
+# @example Multiple independent readers
+#   source = S(1, 2, 3, 4).buffered
+#   reader1 = source.buffer.i
+#   reader2 = source.buffer.i
+#
+#   reader1.next_value  # => 1
+#   reader2.next_value  # => 1 (independent)
+#   reader1.next_value  # => 2
+#   reader2.next_value  # => 2
+#
+# @example Canon structure
+#   melody = S(60, 64, 67, 72).buffered
+#   voice1 = melody.buffer
+#   voice2 = melody.buffer
+#   # Play voice2 delayed by N beats
+#
+# @api public
 module Musa
   module Series::Operations
+    # Creates buffered serie allowing multiple independent iterations.
+    #
+    # @param sync [Boolean] synchronized mode (default: false)
+    #
+    # @return [BufferSerie, SyncBufferSerie] buffered serie
+    #
+    # @example Create buffered serie
+    #   buffered = S(1, 2, 3, 4).buffered
+    #   reader1 = buffered.buffer.i
+    #   reader2 = buffered.buffer.i
+    #
+    # @api public
     def buffered(sync: false)
       if sync
         SyncBufferSerie.new(self)

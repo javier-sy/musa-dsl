@@ -3,10 +3,59 @@
 
 module Musa
   module Extension
+    # Module providing deep copy functionality for complex object graphs.
+    #
+    # DeepCopy implements recursive copying of objects, handling circular references,
+    # instance variables, singleton class modules, and various Ruby data structures.
+    #
+    # ## Features
+    #
+    # - Handles circular references via object registry
+    # - Preserves singleton class modules (dataset extensions)
+    # - Supports both :dup and :clone methods
+    # - Special handling for Arrays, Hashes, Ranges, Structs, Procs
+    # - Recursively copies instance variables
+    # - Optional freeze control for :clone method
+    #
+    # ## Use Cases
+    #
+    # - Deep copying musical event structures with complex nesting
+    # - Duplicating series configurations without shared state
+    # - Preserving dataset module extensions during copy operations
+    # - Safe duplication of mutable default values
+    #
+    # @example Basic deep copy
+    #   using Musa::Extension::DeepCopy
+    #
+    #   original = { items: [1, 2, 3] }
+    #   copy = original.dup(deep: true)
+    #   copy[:items] << 4
+    #   original[:items]  # => [1, 2, 3] (unchanged)
+    #
+    # @example Preserving modules
+    #   event = { pitch: 60 }.extend(Musa::Datasets::AbsI)
+    #   copy = event.dup(deep: true)
+    #   copy.is_a?(Musa::Datasets::AbsI)  # => true
+    #
+    # @see Arrayfy Uses deep_copy for preserving modules
+    # @see Hashify Uses deep_copy for preserving modules
     module DeepCopy
+      # Main deep copy module providing class methods.
       module DeepCopy
         extend self
 
+        # Creates a deep copy of an object, recursively copying nested structures.
+        #
+        # Uses an object registry to handle circular references, ensuring each
+        # object is copied only once and all references point to the same copy.
+        #
+        # @param object [Object] object to copy.
+        # @param method [Symbol] :dup or :clone.
+        # @param freeze [Boolean, nil] for :clone, whether to freeze the copy.
+        #
+        # @return [Object] deep copy of the object.
+        #
+        # @raise [ArgumentError] if method is not :dup or :clone.
         def deep_copy(object, method: :dup, freeze: nil)
           raise ArgumentError, "deep_copy method can only be :dup or :clone" unless method == :dup || method == :clone
           register = {}
@@ -14,6 +63,22 @@ module Musa
           _deep_copy(register, object, method, freeze)
         end
 
+        # Copies singleton class modules from source to target.
+        #
+        # This is essential for preserving dataset extensions (P, V, AbsI, etc.)
+        # when copying musical data structures. Without this, copied objects
+        # would lose their dataset behaviors.
+        #
+        # @param source [Object] object whose singleton modules to copy.
+        # @param target [Object] object to receive the modules.
+        #
+        # @return [Object] target with modules applied.
+        #
+        # @example
+        #   source = [60, 100].extend(Musa::Datasets::V)
+        #   target = [60, 100]
+        #   DeepCopy.copy_singleton_class_modules(source, target)
+        #   target.is_a?(Musa::Datasets::V)  # => true
         def copy_singleton_class_modules(source, target)
           source.singleton_class.included_modules.each do |m|
             target.extend m unless target.is_a?(m)
@@ -24,6 +89,8 @@ module Musa
 
         protected
 
+        # Retrieves a previously registered copy from the registry.
+        # @api private
         def registered(object, register)
           register[object.__id__]
         end
@@ -173,7 +240,28 @@ module Musa
         end
       end
 
+      # Refinement adding deep copy support to Object#dup and Object#clone.
+      #
+      # Adds a `deep:` keyword parameter to both methods, enabling easy deep copying
+      # without explicit calls to DeepCopy.deep_copy.
       refine Object do
+        # Enhanced dup with optional deep copy.
+        #
+        # @param deep [Boolean] if true, performs deep copy; if false, standard dup.
+        #
+        # @return [Object] duplicated object (shallow or deep).
+        #
+        # @example Shallow dup (default)
+        #   arr = [[1, 2]]
+        #   copy = arr.dup
+        #   copy[0] << 3
+        #   arr  # => [[1, 2, 3]] (inner array shared)
+        #
+        # @example Deep dup
+        #   arr = [[1, 2]]
+        #   copy = arr.dup(deep: true)
+        #   copy[0] << 3
+        #   arr  # => [[1, 2]] (inner array independent)
         def dup(deep: false)
           if deep
             Musa::Extension::DeepCopy::DeepCopy.deep_copy(self, method: :dup)
@@ -182,6 +270,18 @@ module Musa
           end
         end
 
+        # Enhanced clone with optional deep copy.
+        #
+        # @param freeze [Boolean, nil] whether to freeze the clone.
+        # @param deep [Boolean] if true, performs deep copy; if false, standard clone.
+        #
+        # @return [Object] cloned object (shallow or deep).
+        #
+        # @example Deep clone with freeze control
+        #   hash = { nested: { value: 1 } }
+        #   copy = hash.clone(deep: true, freeze: true)
+        #   copy.frozen?  # => true
+        #   copy[:nested].frozen?  # => true (deep freeze)
         def clone(freeze: nil, deep: false)
           if deep
             Musa::Extension::DeepCopy::DeepCopy.deep_copy(self, method: :clone, freeze: freeze)

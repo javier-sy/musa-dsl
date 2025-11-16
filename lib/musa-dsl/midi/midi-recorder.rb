@@ -7,7 +7,7 @@ module Musa
     # an external controller that is clocked by the sequencer timeline.
     #
     # @example Complete usage
-    #   sequencer = Musa::Sequencer::Sequencer.new(...)
+    #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
     #
     #   # During recording:

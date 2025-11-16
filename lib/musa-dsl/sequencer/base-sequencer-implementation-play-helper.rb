@@ -1,7 +1,48 @@
+# Play evaluation modes for interpreting series elements.
+#
+# PlayEval and its subclasses implement different strategies for interpreting
+# series elements during play operations. Each mode determines:
+# - What operation to perform (call block, launch event, nested play, etc.)
+# - When to continue (now, at position, after wait, on event)
+#
+# ## Available Modes
+#
+# - **:at**: Elements specify absolute positions via :at key
+# - **:wait**: Elements with duration specify wait time
+# - **:neumalang**: Full Neumalang DSL with variables, commands, series, etc.
+#
+# ## Operation Hash Format
+#
+# run_operation returns hash with:
+#
+# - current_operation: :none, :block, :event, :play, :parallel_play, :no_eval_play
+# - current_parameter: data for current operation
+# - continue_operation: :now, :at, :wait, :on
+# - continue_parameter: data for continue operation
+#
+# @api private
 module Musa
   module Sequencer
     class BaseSequencer
+      # Base class for play evaluation strategies.
+      #
+      # Defines interface for evaluating series elements and determining
+      # operations. Subclasses implement specific interpretation modes.
+      #
+      # @api private
       class PlayEval
+        # Factory method creating appropriate evaluator for mode.
+        #
+        # @param mode [Symbol, nil] evaluation mode
+        # @param block_procedure_binder [SmartProcBinder] user block binder
+        # @param decoder [Object, nil] decoder for GDVD elements
+        # @param nl_context [Object, nil] Neumalang execution context
+        #
+        # @return [PlayEval] evaluator instance
+        #
+        # @raise [ArgumentError] if mode unknown
+        #
+        # @api private
         def self.create(mode, block_procedure_binder, decoder, nl_context)
           case mode
           when :at
@@ -15,16 +56,44 @@ module Musa
           end
         end
 
+        # @return [SmartProcBinder] user block binder
         attr_reader :block_procedure_binder
 
+        # Creates subcontext for nested plays.
+        #
+        # Default returns self. Neumalang mode creates new isolated context.
+        #
+        # @return [PlayEval] subcontext evaluator
+        #
+        # @api private
         def subcontext
           self
         end
 
+        # Evaluates element (mode-dependent).
+        #
+        # @param _element [Object] element to evaluate
+        #
+        # @return [Object] evaluated result
+        #
+        # @raise [NotImplementedError] must be implemented by subclass
+        #
+        # @api private
         def eval_element(_element)
           raise NotImplementedError
         end
 
+        # Determines operations from element.
+        #
+        # Returns hash specifying current and continue operations.
+        #
+        # @param _element [Object] element to process
+        #
+        # @return [Hash] operation specification
+        #
+        # @raise [NotImplementedError] must be implemented by subclass
+        #
+        # @api private
         def run_operation(_element)
           raise NotImplementedError
         end
@@ -32,12 +101,57 @@ module Musa
 
       private_constant :PlayEval
 
+      # At-mode evaluator for absolute position scheduling.
+      #
+      # Interprets elements as data with optional :at key specifying absolute
+      # position. If :at present, schedules at that position. Otherwise uses
+      # current position.
+      #
+      # @example At-mode usage
+      #   require 'musa-dsl'
+      #
+      #   clock = Musa::Clock::TimerClock.new bpm: 120
+      #   transport = Musa::Transport::Transport.new clock
+      #   output = MIDICommunications::Output.all.first
+      #   voices = Musa::MIDIVoices::MIDIVoices.new(
+      #     sequencer: transport.sequencer,
+      #     output: output,
+      #     channels: [0]
+      #   )
+      #   voice = voices.voices.first
+      #   sequencer = transport.sequencer
+      #
+      #   series = Musa::Series.from_array([
+      #     { pitch: 60, at: 0r },
+      #     { pitch: 62, at: 1r },
+      #     { pitch: 64, at: 2r }
+      #   ])
+      #   sequencer.play(series, mode: :at) do |element|
+      #     voice.note pitch: element[:pitch], duration: 0.5r
+      #   end
+      #
+      # @api private
       class AtModePlayEval < PlayEval
+        # Creates at-mode evaluator.
+        #
+        # @param block_procedure_binder [SmartProcBinder] user block binder
+        #
+        # @api private
         def initialize(block_procedure_binder)
           @block_procedure_binder = block_procedure_binder
           super()
         end
 
+        # Determines operation from element.
+        #
+        # Hash elements with :at key schedule at absolute position.
+        # Other elements use current position.
+        #
+        # @param element [Hash, Object] element to process
+        #
+        # @return [Hash] operation hash
+        #
+        # @api private
         def run_operation(element)
           value = nil
 
@@ -64,14 +178,64 @@ module Musa
 
       private_constant :AtModePlayEval
 
+      # Wait-mode evaluator for duration-based scheduling.
+      #
+      # Interprets elements as data with duration (AbsD compatible) specifying
+      # wait time before next element. Supports :wait_event for event-driven
+      # continuation.
+      #
+      # @example Wait-mode with duration
+      #   require 'musa-dsl'
+      #
+      #   clock = Musa::Clock::TimerClock.new bpm: 120
+      #   transport = Musa::Transport::Transport.new clock
+      #   output = MIDICommunications::Output.all.first
+      #   voices = Musa::MIDIVoices::MIDIVoices.new(
+      #     sequencer: transport.sequencer,
+      #     output: output,
+      #     channels: [0]
+      #   )
+      #   voice = voices.voices.first
+      #   sequencer = transport.sequencer
+      #
+      #   series = Musa::Series.from_array([
+      #     { pitch: 60, duration: 1r },
+      #     { pitch: 62, duration: 0.5r },
+      #     { pitch: 64, duration: 1.5r }
+      #   ])
+      #   sequencer.play(series, mode: :wait) do |element|
+      #     voice.note pitch: element[:pitch], duration: element[:duration]
+      #   end
+      #
+      # @example Wait-mode with event
+      #   # Elements can also use :wait_event for event-driven continuation
+      #   # Example: { pitch: 60, wait_event: :next }
+      #
+      # @api private
       class WaitModePlayEval < PlayEval
         include Musa::Datasets
 
+        # Creates wait-mode evaluator.
+        #
+        # @param block_procedure_binder [SmartProcBinder] user block binder
+        #
+        # @api private
         def initialize(block_procedure_binder)
           @block_procedure_binder = block_procedure_binder
           super()
         end
 
+        # Determines operation from element.
+        #
+        # AbsD-compatible elements wait by duration.
+        # Elements with :wait_event continue on event.
+        # Other elements continue immediately.
+        #
+        # @param element [Hash, Object] element to process
+        #
+        # @return [Hash] operation hash
+        #
+        # @api private
         def run_operation(element)
           value = nil
 
@@ -112,16 +276,87 @@ module Musa
 
       private_constant :WaitModePlayEval
 
+      # Neumalang-mode evaluator for full DSL support.
+      #
+      # Implements complete Neumalang DSL evaluation including:
+      # - Variables (assign, use)
+      # - Commands (code blocks with parameters)
+      # - Series (nested plays)
+      # - Parallel execution
+      # - GDVD decoding
+      # - P (pattern) sequences
+      # - Event launching
+      # - Method chaining
+      #
+      # ## Neumalang Elements
+      #
+      # Elements have :kind specifying type:
+      # - :value - Simple value
+      # - :gdvd - Generative Diatonic Value/Duration
+      # - :p - Pattern sequence
+      # - :serie - Nested series
+      # - :parallel - Parallel series
+      # - :assign_to - Variable assignment
+      # - :use_variable - Variable reference
+      # - :command - Code block execution
+      # - :event - Event launch
+      # - :call_methods - Method chain
+      #
+      # ## Context Isolation
+      #
+      # Each nested play gets isolated subcontext with:
+      # - Shared neumalang context (variables persist)
+      # - Fresh decoder subcontext
+      # - Hierarchical ID for debugging
+      #
+      # @example Neumalang mode
+      #   require 'musa-dsl'
+      #
+      #   clock = Musa::Clock::TimerClock.new bpm: 120
+      #   transport = Musa::Transport::Transport.new clock
+      #   output = MIDICommunications::Output.all.first
+      #   voices = Musa::MIDIVoices::MIDIVoices.new(
+      #     sequencer: transport.sequencer,
+      #     output: output,
+      #     channels: [0]
+      #   )
+      #   voice = voices.voices.first
+      #   sequencer = transport.sequencer
+      #
+      #   scale = Musa::Scales::Scales.et12[440.0].major[60]
+      #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
+      #
+      #   using Musa::Extension::Neumas
+      #   neumalang_series = "0 +2 +2 -1 0".to_neumas
+      #
+      #   sequencer.play(neumalang_series, mode: :neumalang, decoder: decoder) do |gdv|
+      #     voice.note pitch: gdv[:pitch], duration: gdv[:duration], velocity: gdv[:velocity]
+      #   end
+      #
+      # @api private
       class NeumalangModePlayEval < PlayEval
         include Musa::Datasets
 
+        # Marker module for parallel series.
+        #
+        # @api private
         module Parallel end
 
         @@id = 0
 
+        # @return [Object] Neumalang execution context
+        # @return [SmartProcBinder] user block binder
         attr_reader :neumalang_context,
                     :block_procedure_binder
 
+        # Creates Neumalang-mode evaluator.
+        #
+        # @param block_procedure_binder [SmartProcBinder] user block binder
+        # @param decoder [Object] GDVD decoder
+        # @param nl_context [Object, nil] Neumalang context (creates if nil)
+        # @param parent [NeumalangModePlayEval, nil] parent evaluator
+        #
+        # @api private
         def initialize(block_procedure_binder, decoder, nl_context, parent: nil)
           @id = @@id += 1
           @parent = parent
@@ -135,10 +370,29 @@ module Musa
           super()
         end
 
+        # Creates isolated subcontext for nested plays.
+        #
+        # Shares neumalang context but creates fresh decoder subcontext.
+        #
+        # @return [NeumalangModePlayEval] subcontext evaluator
+        #
+        # @api private
         def subcontext
           NeumalangModePlayEval.new @block_procedure_binder, @decoder.subcontext, @nl_context, parent: self
         end
 
+        # Evaluates Neumalang element by kind.
+        #
+        # Dispatches to appropriate eval_* method based on element :kind.
+        # AbsD-compatible elements converted directly.
+        #
+        # @param element [Hash, Object] element to evaluate
+        #
+        # @return [Object] evaluated result
+        #
+        # @raise [ArgumentError] if element kind unknown
+        #
+        # @api private
         def eval_element(element)
           if AbsD.is_compatible?(element)
             AbsD.to_AbsD(element)
@@ -161,28 +415,55 @@ module Musa
           end
         end
 
+        # @api private
         def eval_value(value)
           value
         end
 
+        # Decodes GDVD (Generative Diatonic Value/Duration) element.
+        #
+        # @param gdvd [Object] GDVD element
+        # @return [Object] decoded value
+        # @api private
         def eval_gdvd(gdvd)
           @decoder.decode(gdvd)
         end
 
+        # Converts P (pattern) to series.
+        #
+        # @param p [Object] pattern object
+        # @return [Series] pattern series instance
+        # @api private
         def eval_p(p)
           p.to_ps_serie(base_duration: @decoder.base_duration).instance
         end
 
+        # Evaluates series with subcontext.
+        #
+        # @param serie [Object] series definition
+        # @return [Series] evaluated series instance
+        # @api private
         def eval_serie(serie)
           context = subcontext
           serie.instance.eval(on_restart: proc { context = subcontext }) { |e| context.eval_element e }
         end
 
+        # Evaluates parallel series.
+        #
+        # @param series [Array] array of series definitions
+        # @return [Array] array of series instances (with Parallel marker)
+        # @api private
         def eval_parallel(series)
           context = subcontext
           series.collect { |s| context.eval_serie s[:serie] }.extend Parallel
         end
 
+        # Assigns value to variable(s) in neumalang context.
+        #
+        # @param variable_names [Array<Symbol>] variable names
+        # @param value [Object] value to assign
+        # @return [Object] assigned value
+        # @api private
         def eval_assign_to(variable_names, value)
           _value = nil
 
@@ -193,6 +474,12 @@ module Musa
           _value
         end
 
+        # Retrieves variable value from neumalang context.
+        #
+        # @param variable_name [Symbol] variable name
+        # @return [Object] variable value
+        # @raise [NameError] if variable not defined
+        # @api private
         def eval_use_variable(variable_name)
           if @nl_context.instance_variable_defined?(variable_name)
             @nl_context.instance_variable_get(variable_name)
@@ -201,6 +488,15 @@ module Musa
           end
         end
 
+        # Executes command block in neumalang context.
+        #
+        # Evaluates parameters then executes block via instance_exec.
+        #
+        # @param block [Proc] command block
+        # @param value_parameters [Array, nil] positional parameters
+        # @param key_parameters [Hash, nil] keyword parameters
+        # @return [Object] command result
+        # @api private
         def eval_command(block, value_parameters, key_parameters)
           _value_parameters = value_parameters&.collect { |e| subcontext.eval_element(e) } || []
           _key_parameters = key_parameters&.transform_values { |e| subcontext.eval_element(e) } || {}
@@ -211,6 +507,7 @@ module Musa
           @nl_context.instance_exec *_value_parameters, **_key_parameters, &block
         end
 
+        # @api private
         def eval_call_methods(on, call_methods)
           play_eval = subcontext
 
@@ -223,6 +520,7 @@ module Musa
           end
         end
 
+        # @api private
         def eval_methods(play_eval, value, methods)
           methods.each do |methd|
             value_parameters = methd[:value_parameters]&.collect { |e| play_eval.subcontext.eval_element(e) } || []
@@ -235,10 +533,12 @@ module Musa
           value
         end
 
+        # @api private
         def eval_command_reference(element)
           element[:command]
         end
 
+        # @api private
         def eval_proc_parameter(element)
           case element
           when Proc
@@ -257,6 +557,21 @@ module Musa
           end
         end
 
+        # Determines operation from Neumalang element.
+        #
+        # Dispatches based on element type and :kind, returning operation hash
+        # specifying current and continue operations.
+        #
+        # Handles all Neumalang element types including values, series, parallel
+        # plays, variables, commands, and events.
+        #
+        # @param element [Object] element to process
+        #
+        # @return [Hash] operation hash
+        #
+        # @raise [ArgumentError] if element kind unknown
+        #
+        # @api private
         def run_operation(element)
           case element
           when nil

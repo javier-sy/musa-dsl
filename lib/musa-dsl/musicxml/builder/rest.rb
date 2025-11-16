@@ -4,7 +4,81 @@ module Musa
   module MusicXML
     module Builder
       module Internal
+        # Rest (silence) with specified duration or full measure.
+        #
+        # Rest represents musical silence. It extends {Note} with rest-specific
+        # features, particularly the measure rest attribute for whole-measure silences.
+        #
+        # ## Types of Rests
+        #
+        # ### Regular Rests
+        # Rests with explicit duration and type (whole, half, quarter, eighth, etc.):
+        #
+        #     Rest.new(duration: 4, type: 'half')
+        #     Rest.new(duration: 1, type: 'sixteenth', dots: 1)
+        #
+        # ### Measure Rests
+        # Full-measure rests that automatically fill the entire measure regardless
+        # of time signature:
+        #
+        #     Rest.new(duration: 8, type: 'whole', measure: true)
+        #
+        # The `measure: true` attribute tells notation software to center the rest
+        # and adjust its appearance based on the time signature.
+        #
+        # ## Dotted Rests
+        #
+        # Like notes, rests can have augmentation dots:
+        #
+        #     Rest.new(duration: 3, type: 'quarter', dots: 1)  # Dotted quarter
+        #     Rest.new(duration: 7, type: 'half', dots: 2)     # Double-dotted half
+        #
+        # ## Multi-Voice Rests
+        #
+        # In polyphonic music, rests can be assigned to specific voices:
+        #
+        #     Rest.new(duration: 2, type: 'quarter', voice: 2)
+        #
+        # ## Usage
+        #
+        # Created via {Measure#add_rest} or {Measure#rest}:
+        #
+        #     measure.rest duration: 4, type: 'half'
+        #     measure.add_rest duration: 8, type: 'whole', measure: true
+        #
+        # @example Quarter rest
+        #   Rest.new(duration: 2, type: 'quarter')
+        #
+        # @example Measure rest (whole measure)
+        #   Rest.new(duration: 8, type: 'whole', measure: true)
+        #
+        # @example Dotted eighth rest
+        #   Rest.new(duration: 3, type: 'eighth', dots: 1)
+        #
+        # @example Rest in specific voice
+        #   Rest.new(duration: 4, type: 'half', voice: 2)
+        #
+        # @example Rest with fermata
+        #   Rest.new(duration: 8, type: 'whole', fermata: true)
+        #
+        # @see Note Base class with all notation attributes
+        # @see PitchedNote Pitched notes
+        # @see UnpitchedNote Unpitched percussion
+        # @see Measure Container for adding rests
         class Rest < Note
+          # Creates a rest.
+          #
+          # @param measure [Boolean, nil] measure rest (fills entire measure)
+          # @param (see Note#initialize) All Note parameters are supported
+          #
+          # @example Quarter rest
+          #   Rest.new(duration: 2, type: 'quarter')
+          #
+          # @example Whole measure rest
+          #   Rest.new(duration: 8, type: 'whole', measure: true)
+          #
+          # @example Dotted eighth rest in voice 2
+          #   Rest.new(duration: 3, type: 'eighth', dots: 1, voice: 2)
           def initialize(pizzicato: nil, # true
                          measure: nil, # true
                          grace: nil, # true
@@ -102,10 +176,27 @@ module Musa
             super
           end
 
+          # Measure rest builder/setter.
+          #
+          # Indicates whether this is a full-measure rest.
+          #
+          # @overload measure(value)
+          #   Sets measure rest via DSL
+          #   @param value [Boolean] true for measure rest
+          # @overload measure=(value)
+          #   Sets measure rest via assignment
+          #   @param value [Boolean] true for measure rest
           attr_simple_builder :measure
 
           private
 
+          # Outputs the rest XML element.
+          #
+          # @param io [IO] output stream
+          # @param indent [Integer] indentation level
+          # @return [void]
+          #
+          # @api private
           def specific_to_xml(io, indent:)
             tabs = "\t" * indent
             io.puts "#{tabs}<rest #{"measure=\"yes\"" if @measure}/>"

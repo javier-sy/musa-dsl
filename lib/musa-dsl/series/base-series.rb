@@ -1,14 +1,241 @@
+# Core Serie infrastructure providing prototype/instance system and base implementation.
+#
+# This file defines the fundamental architecture for all Series in Musa DSL:
+#
+# ## Core Concepts
+#
+# ### Prototype/Instance Pattern
+#
+# Series use a **prototype/instance pattern** to enable reusable series definitions:
+#
+# - **Prototype**: Template/blueprint for series (cannot be consumed)
+# - **Instance**: Cloned copy ready for consumption (can call next_value)
+# - **Undefined**: Series with unresolved dependencies
+#
+# ### Serie States
+#
+# Every serie exists in one of three states:
+#
+# - **:prototype** - Template state, cannot consume, can create instances
+# - **:instance** - Active state, can consume values, has independent state
+# - **:undefined** - Unresolved state, cannot use until dependencies resolve
+#
+# ### Why Prototype/Instance?
+#
+# Enables **reusable series definitions** without re-evaluating constructors:
+#
+# ```ruby
+# # Define once (prototype)
+# melody = S(60, 64, 67, 72)
+#
+# # Use multiple times (instances)
+# voice1 = melody.instance  # Independent playback
+# voice2 = melody.instance  # Separate playback
+# ```
+#
+# ## Module Architecture
+#
+# ### Serie Module
+#
+# Factory module providing:
+# - **Serie.base**: Base module without source/sources
+# - **Serie.with**: Configurable module with source/sources/block
+#
+# ### Prototyping Module
+#
+# Implements prototype/instance lifecycle:
+# - State management (:prototype, :instance, :undefined)
+# - Cloning (prototype -> instance)
+# - State resolution from sources
+# - Validation and permissions
+#
+# ### SerieImplementation Module
+#
+# Core iteration protocol:
+# - **init**: Initialize instance state
+# - **restart**: Reset to beginning
+# - **next_value**: Consume next element
+# - **peek_next_value**: Look ahead without consuming
+# - **current_value**: Last consumed value
+#
+# ## Serie Protocol
+#
+# All series must implement:
+#
+# ```ruby
+# def _next_value
+#   # Return next value or nil when finished
+# end
+#
+# def _init
+#   # Initialize instance state (optional)
+# end
+#
+# def _restart
+#   # Reset to beginning (optional)
+# end
+# ```
+#
+# ## Usage Patterns
+#
+# ### Basic Prototype/Instance
+#
+# ```ruby
+# # Create prototype
+# proto = S(1, 2, 3)
+# proto.prototype?  # => true
+#
+# # Create instance
+# inst = proto.instance  # or proto.i
+# inst.instance?  # => true
+#
+# # Consume values
+# inst.next_value  # => 1
+# inst.next_value  # => 2
+# ```
+#
+# ### Multiple Instances
+#
+# ```ruby
+# proto = S(1, 2, 3)
+#
+# a = proto.i
+# b = proto.i  # Independent instance
+#
+# a.next_value  # => 1
+# b.next_value  # => 1 (independent)
+# ```
+#
+# ### State Resolution
+#
+# ```ruby
+# proxy = PROXY()  # Undefined - no source yet
+# proxy.undefined?  # => true
+#
+# proxy.source = S(1, 2, 3)  # Becomes prototype
+# proxy.prototype?  # => true
+# ```
+#
+# ## Technical Details
+#
+# ### Peek Mechanism
+#
+# `peek_next_value` uses internal buffering to look ahead without state change:
+#
+# ```ruby
+# s = S(1, 2, 3).i
+# s.peek_next_value  # => 1 (buffered)
+# s.peek_next_value  # => 1 (same)
+# s.next_value       # => 1 (consumes buffered)
+# ```
+#
+# ### Source/Sources Pattern
+#
+# Series can depend on:
+#
+# - **source**: Single upstream serie
+# - **sources**: Multiple upstream series (Array or Hash)
+#
+# State automatically resolves based on dependencies:
+#
+# - All sources :prototype → :prototype
+# - All sources :instance → :instance
+# - Mixed or undefined → :undefined
+#
+# ### Deep Copy Support
+#
+# Uses Musa::Extension::DeepCopy for proper cloning including nested structures.
+#
+# ## Musical Applications
+#
+# - Reusable melodic/harmonic patterns
+# - Multiple voices from single definition
+# - Lazy evaluation of algorithmic sequences
+# - Composable transformations
+# - Memory-efficient sequence playback
+#
+# @see Musa::Series::Constructors Serie constructor methods
+# @see Musa::Series::Operations Serie transformation operations
+#
 require_relative '../core-ext/deep-copy'
 require_relative '../generative/generative-grammar'
 
 module Musa
+  # Series system for lazy evaluation of musical sequences.
+  #
+  # Provides prototype/instance pattern, core iteration protocol, and
+  # composable transformations for musical data streams.
+  #
+  # @api public
   module Series
+    # Serie constructor methods.
+    #
+    # Extended in main-serie-constructors.rb with S, E, RND, etc.
+    #
+    # @api public
     module Constructors; extend self; end
+
+    # Serie transformation operations.
+    #
+    # Extended in main-serie-operations.rb with map, select, etc.
+    #
+    # @api public
     module Operations; end
 
     include Constructors
 
+    # Serie module factory providing configurable serie modules.
+    #
+    # Creates modules dynamically based on requirements:
+    #
+    # - **Serie.base**: Minimal module without dependencies
+    # - **Serie.with**: Configured module with source/sources/block
+    #
+    # ## Factory Pattern
+    #
+    # Serie.with generates modules at runtime with specific features:
+    #
+    # ```ruby
+    # # Generate module with source support
+    # include Serie.with(source: true, source_as: :upstream)
+    #
+    # # Now has @source, #upstream, #upstream= methods
+    # ```
+    #
+    # ## Configuration Options
+    #
+    # - **source**: Single upstream serie dependency
+    # - **sources**: Multiple upstream serie dependencies
+    # - **block**: Block/proc attribute
+    # - **smart_block**: SmartProcBinder-wrapped block
+    #
+    # ## Musical Applications
+    #
+    # Used internally by serie implementations to declare dependencies
+    # and automatically handle prototype/instance propagation.
+    #
+    # @see SerieImplementation Core serie protocol
+    # @see Prototyping Prototype/instance state management
+    #
+    # @api private
     module Serie
+      # Creates base serie module without dependencies.
+      #
+      # Minimal module for series that generate values without upstream
+      # sources (e.g., array-backed series, value generators).
+      #
+      # @return [Module] base module with SerieImplementation
+      #
+      # @example Base serie
+      #   class SimpleSerie
+      #     include Serie.base
+      #
+      #     def _next_value
+      #       # Generate value
+      #     end
+      #   end
+      #
+      # @api private
       def self.base
         Module.new do
           include SerieImplementation
@@ -21,6 +248,78 @@ module Musa
         end
       end
 
+      # Creates configurable serie module with specified features.
+      #
+      # Factory method generating modules with:
+      #
+      # - Single source dependency (source: true)
+      # - Multiple sources dependency (sources: true)
+      # - Block attribute (block: true, smart_block: true)
+      #
+      # ## Source Support
+      #
+      # **source: true** adds:
+      #
+      # - `@source` instance variable
+      # - `#source` getter (or custom name via source_as:)
+      # - `#source=` setter with state validation
+      # - Automatic prototype/instance propagation
+      #
+      # ## Sources Support
+      #
+      # **sources: true** adds:
+      #
+      # - `@sources` instance variable (Hash or Array)
+      # - `#sources` getter/setter
+      # - Automatic state resolution from all sources
+      #
+      # ## Block Support
+      #
+      # **block: true** - Simple proc attribute
+      # **smart_block: true** - SmartProcBinder-wrapped block
+      #
+      # ## State Propagation
+      #
+      # Sources automatically propagate state:
+      #
+      # - Setting source to :prototype → marks self as :prototype
+      # - Setting source to :instance → marks self as :instance
+      # - Cloning propagates through source/sources
+      #
+      # @param source [Boolean] add single source dependency
+      # @param source_as [Symbol, nil] custom name for source attribute
+      # @param private_source [Boolean, nil] make source methods private
+      # @param mandatory_source [Boolean, nil] require source to be set
+      # @param sources [Boolean] add multiple sources dependency
+      # @param sources_as [Symbol, nil] custom name for sources attribute
+      # @param private_sources [Boolean, nil] make sources methods private
+      # @param mandatory_sources [Boolean, nil] require sources to be set
+      # @param smart_block [Boolean] add SmartProcBinder block support
+      # @param block [Boolean] add simple block support
+      # @param block_as [Symbol, nil] custom name for block attribute
+      #
+      # @return [Module] configured module with SerieImplementation
+      #
+      # @example Serie with single source
+      #   class ReverseSerie
+      #     include Serie.with(source: true)
+      #
+      #     def _next_value
+      #       # Process source.next_value
+      #     end
+      #   end
+      #
+      # @example Serie with block
+      #   class MapSerie
+      #     include Serie.with(source: true, smart_block: true)
+      #
+      #     def _next_value
+      #       value = source.next_value
+      #       value ? @block.call(value) : nil
+      #     end
+      #   end
+      #
+      # @api private
       def self.with(source: false,
                     source_as: nil,
                     private_source: nil,
@@ -130,31 +429,148 @@ module Musa
         end
       end
 
+      # Prototype/instance state management for Series.
+      #
+      # Implements the prototype/instance pattern enabling reusable serie
+      # definitions. Every serie exists in one of three states:
+      #
+      # ## States
+      #
+      # - **:prototype** - Template state, cannot consume, can create instances
+      # - **:instance** - Active state, can consume values, has independent state
+      # - **:undefined** - Unresolved state, dependencies not yet resolved
+      #
+      # ## State Queries
+      #
+      # ```ruby
+      # serie.state        # => :prototype | :instance | :undefined
+      # serie.prototype?   # => true if prototype
+      # serie.instance?    # => true if instance
+      # serie.undefined?   # => true if undefined
+      # ```
+      #
+      # ## State Transitions
+      #
+      # ### Prototype Creation
+      #
+      # Created by constructors (S, E, RND, etc.):
+      #
+      # ```ruby
+      # proto = S(1, 2, 3)
+      # proto.prototype?  # => true
+      # ```
+      #
+      # ### Instance Creation
+      #
+      # Via `.instance` (or `.i` alias):
+      #
+      # ```ruby
+      # inst = proto.instance
+      # inst.instance?  # => true
+      # ```
+      #
+      # ### State Resolution
+      #
+      # Undefined series resolve state from sources:
+      #
+      # ```ruby
+      # proxy = PROXY()  # Undefined
+      # proxy.source = S(1, 2, 3)  # Becomes prototype
+      # ```
+      #
+      # ## Cloning Behavior
+      #
+      # Creating instance clones the serie and all dependencies:
+      #
+      # ```ruby
+      # proto = S(1, 2, 3).map { |x| x * 2 }
+      # inst = proto.instance  # Clones both map and S
+      # ```
+      #
+      # ## Validation
+      #
+      # Operations check state permissions:
+      # - `next_value`, `restart` require :instance
+      # - `infinite?`, `to_a` allow :prototype
+      # - Undefined state raises PrototypingError
+      #
+      # ## Musical Applications
+      #
+      # - Reusable melodic patterns
+      # - Multiple independent playbacks
+      # - Lazy definition of transformations
+      # - Memory-efficient pattern libraries
+      #
+      # @api private
       module Prototyping
+        # Returns current state of serie.
+        #
+        # Attempts to resolve undefined state from sources before returning.
+        # State is one of: :prototype, :instance, or :undefined.
+        #
+        # @return [Symbol] current state (:prototype, :instance, :undefined)
+        #
+        # @api public
         def state
           try_to_resolve_undefined_state_if_needed
           @state || :undefined
         end
 
+        # Checks if serie is in prototype state.
+        #
+        # @return [Boolean] true if prototype, false otherwise
+        #
+        # @api public
         def prototype?
           try_to_resolve_undefined_state_if_needed
           @state&.==(:prototype)
         end
 
+        # Checks if serie is in instance state.
+        #
+        # @return [Boolean] true if instance, false otherwise
+        #
+        # @api public
         def instance?
           try_to_resolve_undefined_state_if_needed
           @state&.==(:instance)
         end
 
+        # Checks if serie is in undefined state.
+        #
+        # @return [Boolean] true if undefined, false otherwise
+        #
+        # @api public
         def undefined?
           try_to_resolve_undefined_state_if_needed
           @state.nil? || @state == :undefined
         end
 
+        # Checks if serie state is defined (not undefined).
+        #
+        # @return [Boolean] true if prototype or instance, false if undefined
+        #
+        # @api public
         def defined?
           !undefined?
         end
 
+        # Returns prototype of serie.
+        #
+        # - If already prototype, returns self
+        # - If instance, returns original prototype (if available)
+        # - If undefined, raises PrototypingError
+        #
+        # @return [Serie] prototype serie
+        #
+        # @raise [PrototypingError] if serie is undefined
+        #
+        # @example Get prototype
+        #   proto = S(1, 2, 3)
+        #   inst = proto.instance
+        #   inst.prototype  # => proto
+        #
+        # @api public
         def prototype
           try_to_resolve_undefined_state_if_needed
 
@@ -170,8 +586,41 @@ module Musa
           end
         end
 
+        # Short alias for {#prototype}.
+        #
+        # @return [Serie] prototype serie
+        #
+        # @api public
         alias_method :p, :prototype
 
+        # Creates or returns instance of serie.
+        #
+        # - If already instance, returns self
+        # - If prototype, creates new instance by cloning
+        # - If undefined, raises PrototypingError
+        #
+        # ## Cloning Process
+        #
+        # 1. Clones serie structure
+        # 2. Marks clone as :instance
+        # 3. Propagates instance creation to sources
+        # 4. Calls init if defined
+        #
+        # Each call creates independent instance with separate state.
+        #
+        # @return [Serie] instance serie
+        #
+        # @raise [PrototypingError] if serie is undefined
+        #
+        # @example Create instances
+        #   proto = S(1, 2, 3)
+        #   a = proto.instance
+        #   b = proto.instance  # Different instance
+        #
+        #   a.next_value  # => 1
+        #   b.next_value  # => 1 (independent)
+        #
+        # @api public
         def instance
           try_to_resolve_undefined_state_if_needed
 
@@ -190,14 +639,27 @@ module Musa
           end
         end
 
+        # Short alias for {#instance}.
+        #
+        # @return [Serie] instance serie
+        #
+        # @api public
         alias_method :i, :instance
 
-        # By default, if there is a @source attribute that contains the source of the serie, SeriePrototyping will
-        # handle prototyping/instancing automatically.
-        # If there is a @sources attribute with the eventual several sources, SeriePrototyping will handle them by
-        # default.
-        # If needed the subclasses can override this behaviour to accommodate to real subclass specificities.
+        # Converts serie and dependencies to prototype state.
         #
+        # Called automatically during cloning. By default, handles @source and
+        # @sources attributes automatically. Subclasses can override to add
+        # custom prototyping logic.
+        #
+        # ## Default Behavior
+        #
+        # - Calls `.prototype` on @source if present
+        # - Calls `.prototype` on all @sources elements (Array or Hash)
+        #
+        # @return [void]
+        #
+        # @api private
         protected def _prototype!
           @source = @source.prototype if @source
 
@@ -209,6 +671,20 @@ module Musa
           end
         end
 
+        # Converts serie and dependencies to instance state.
+        #
+        # Called automatically during instance creation. By default, handles
+        # @source and @sources attributes automatically. Subclasses can
+        # override to add custom instancing logic.
+        #
+        # ## Default Behavior
+        #
+        # - Calls `.instance` on @source if present
+        # - Calls `.instance` on all @sources elements (Array or Hash)
+        #
+        # @return [void]
+        #
+        # @api private
         protected def _instance!
           @source = @source.instance if @source
 
@@ -220,6 +696,15 @@ module Musa
           end
         end
 
+        # Marks serie with specified state.
+        #
+        # @param state [Symbol, nil] desired state (:prototype, :instance, :undefined, nil)
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] if state is not recognized
+        #
+        # @api private
         protected def mark_as!(state)
           case state
           when nil, :undefined
@@ -233,6 +718,18 @@ module Musa
           end
         end
 
+        # Marks serie state based on source state.
+        #
+        # Propagates state from source:
+        # - Source nil/undefined → mark as undefined
+        # - Source prototype → mark as prototype
+        # - Source instance → mark as instance
+        #
+        # @param source [Serie, nil] source serie
+        #
+        # @return [void]
+        #
+        # @api private
         protected def mark_regarding!(source)
           if source.nil? || source.undefined?
             mark_as_undefined!
@@ -243,11 +740,23 @@ module Musa
           end
         end
 
+        # Marks serie as undefined.
+        #
+        # @return [Serie] self
+        #
+        # @api private
         protected def mark_as_undefined!
           @state = :undefined
           self
         end
 
+        # Marks serie as prototype.
+        #
+        # Calls _sources_resolved if state changed.
+        #
+        # @return [Serie] self
+        #
+        # @api private
         protected def mark_as_prototype!
           notify = @state != :prototype
 
@@ -257,6 +766,15 @@ module Musa
           self
         end
 
+        # Marks serie as instance.
+        #
+        # Calls _sources_resolved if state changed.
+        #
+        # @param prototype [Serie, nil] original prototype
+        #
+        # @return [Serie] self
+        #
+        # @api private
         protected def mark_as_instance!(prototype = nil)
           notify = @state != :instance
 
@@ -267,8 +785,28 @@ module Musa
           self
         end
 
+        # Hook called when sources are resolved to defined state.
+        #
+        # Subclasses can override to perform actions when state becomes
+        # defined (e.g., validate configuration, initialize caches).
+        #
+        # @return [void]
+        #
+        # @api private
         protected def _sources_resolved; end
 
+        # Attempts to resolve undefined state from sources.
+        #
+        # Called automatically before state queries. Resolves state based on
+        # @source and @sources dependencies:
+        #
+        # - All sources :prototype → :prototype
+        # - All sources :instance → :instance
+        # - Mixed or any undefined → :undefined
+        #
+        # @return [void]
+        #
+        # @api private
         private def try_to_resolve_undefined_state_if_needed
 
           return unless @state.nil? || @state == :undefined
@@ -323,7 +861,36 @@ module Musa
           mark_as!(new_state)
         end
 
+        # Error raised when serie is used in wrong state.
+        #
+        # Raised when attempting to consume a prototype serie or perform
+        # operations on undefined serie.
+        #
+        # ## Common Scenarios
+        #
+        # - Calling `next_value` on prototype
+        # - Calling `restart` on prototype
+        # - Using undefined serie
+        #
+        # ## Solution
+        #
+        # Call `.instance` (or `.i`) to create consumable instance:
+        #
+        # ```ruby
+        # proto = S(1, 2, 3)
+        # proto.next_value  # => PrototypingError
+        #
+        # inst = proto.instance
+        # inst.next_value  # => 1
+        # ```
+        #
+        # @api public
         class PrototypingError < RuntimeError
+          # Creates prototyping error with message.
+          #
+          # @param message [String, nil] custom error message
+          #
+          # @api public
           def initialize(message = nil)
             message ||= 'This serie is a prototype serie: cannot be consumed. To consume the serie use an instance serie via .instance method'
             super message
@@ -331,6 +898,65 @@ module Musa
         end
       end
 
+      # Core serie implementation providing iteration protocol.
+      #
+      # Includes all serie functionality:
+      # - Serie module (marker interface)
+      # - Prototyping (prototype/instance pattern)
+      # - Operations (transformations)
+      #
+      # ## Iteration Protocol
+      #
+      # Implements standard protocol for all series:
+      #
+      # ```ruby
+      # serie.init          # Initialize/reset state
+      # serie.restart       # Reset to beginning
+      # serie.next_value    # Get next value
+      # serie.peek_next_value  # Look ahead
+      # serie.current_value    # Last value
+      # ```
+      #
+      # ## Subclass Requirements
+      #
+      # Subclasses must implement:
+      #
+      # ```ruby
+      # def _next_value
+      #   # Return next value or nil when finished
+      # end
+      # ```
+      #
+      # Optional hooks:
+      #
+      # ```ruby
+      # def _init
+      #   # Initialize instance state
+      # end
+      #
+      # def _restart
+      #   # Reset to beginning
+      # end
+      # ```
+      #
+      # ## Peek Buffering
+      #
+      # `peek_next_value` buffers one value ahead without advancing state:
+      #
+      # - First peek: calls _next_value and buffers result
+      # - Subsequent peeks: returns buffered value
+      # - Next next_value: consumes buffered value
+      #
+      # ## Musical Applications
+      #
+      # Foundation for all musical sequence types:
+      # - Melodic sequences
+      # - Rhythmic patterns
+      # - Harmonic progressions
+      # - Control automation
+      # - Algorithmic composition
+      #
+      # @api private
       module SerieImplementation
         include Serie
         include Prototyping
@@ -338,6 +964,19 @@ module Musa
 
         using Musa::Extension::DeepCopy
 
+        # Initializes instance state.
+        #
+        # Called automatically when creating instance. Resets:
+        # - Peek buffer
+        # - Current value cache
+        # - Calls subclass _init hook
+        #
+        # @return [Serie] self
+        #
+        # @example Automatic initialization
+        #   inst = S(1, 2, 3).instance  # init called
+        #
+        # @api public
         def init
           @_have_peeked_next_value = false
           @_peeked_next_value = nil
@@ -349,8 +988,33 @@ module Musa
           self
         end
 
+        # Subclass hook for custom initialization.
+        #
+        # Override to initialize instance-specific state (e.g., counters,
+        # buffers, internal series).
+        #
+        # @return [void]
+        #
+        # @api private
         private def _init; end
 
+        # Restarts serie to beginning.
+        #
+        # Resets serie to initial state as if freshly created. Calls init
+        # and subclass _restart hook.
+        #
+        # @return [Serie] self
+        #
+        # @raise [PrototypingError] if serie is not instance
+        #
+        # @example Restart series
+        #   s = S(1, 2, 3).i
+        #   s.next_value  # => 1
+        #   s.next_value  # => 2
+        #   s.restart
+        #   s.next_value  # => 1
+        #
+        # @api public
         def restart(...)
           check_state_permissions
           init
@@ -359,8 +1023,38 @@ module Musa
           self
         end
 
+        # Subclass hook for custom restart logic.
+        #
+        # Override to reset subclass-specific state beyond what init handles.
+        #
+        # @return [void]
+        #
+        # @api private
         private def _restart; end
 
+        # Gets next value from serie.
+        #
+        # Advances serie to next element and returns it. Returns nil when
+        # serie is exhausted. Once nil is returned, subsequent calls continue
+        # returning nil.
+        #
+        # ## Peek Integration
+        #
+        # If peek_next_value was called, consumes peeked value instead of
+        # calling _next_value again.
+        #
+        # @return [Object, nil] next value or nil if exhausted
+        #
+        # @raise [PrototypingError] if serie is not instance
+        #
+        # @example Basic iteration
+        #   s = S(1, 2, 3).i
+        #   s.next_value  # => 1
+        #   s.next_value  # => 2
+        #   s.next_value  # => 3
+        #   s.next_value  # => nil
+        #
+        # @api public
         def next_value
           check_state_permissions
 
@@ -376,10 +1070,41 @@ module Musa
           @_current_value
         end
 
+        # Subclass implementation of value generation.
+        #
+        # Must be implemented by subclasses. Should return next value or nil
+        # when serie is exhausted.
+        #
+        # @return [Object, nil] next value or nil if finished
+        #
+        # @api private
         private def _next_value; end
 
+        # Short alias for {#next_value}.
+        #
+        # @return [Object, nil] next value
+        #
+        # @api public
         alias_method :v, :next_value
 
+        # Peeks at next value without consuming it.
+        #
+        # Looks ahead to see what next_value will return, but doesn't advance
+        # serie state. Multiple peeks return same value. Next next_value call
+        # will consume peeked value.
+        #
+        # @return [Object, nil] next value that will be returned
+        #
+        # @raise [PrototypingError] if serie is not instance
+        #
+        # @example Peek ahead
+        #   s = S(1, 2, 3).i
+        #   s.peek_next_value  # => 1
+        #   s.peek_next_value  # => 1 (same)
+        #   s.next_value       # => 1
+        #   s.peek_next_value  # => 2
+        #
+        # @api public
         def peek_next_value
           check_state_permissions
 
@@ -391,17 +1116,76 @@ module Musa
           @_peeked_next_value
         end
 
+        # Returns last consumed value.
+        #
+        # Returns value from most recent next_value call, or nil if
+        # next_value hasn't been called yet.
+        #
+        # @return [Object, nil] last consumed value
+        #
+        # @raise [PrototypingError] if serie is not instance
+        #
+        # @example Track current
+        #   s = S(1, 2, 3).i
+        #   s.current_value  # => nil
+        #   s.next_value     # => 1
+        #   s.current_value  # => 1
+        #
+        # @api public
         def current_value
           check_state_permissions
 
           @_current_value
         end
 
+        # Checks if serie is infinite.
+        #
+        # Returns true if serie never exhausts (e.g., generators, cycles).
+        # Prototypes allowed for this query.
+        #
+        # @return [Boolean] true if infinite, false if finite
+        #
+        # @api public
         def infinite?
           check_state_permissions(allows_prototype: true)
           @source&.infinite? || false
         end
 
+        # Converts serie to array by consuming all values.
+        #
+        # Creates instance, optionally duplicates/restarts it, consumes all
+        # values, and returns them as array. Raises error if serie is infinite.
+        #
+        # ## Options
+        #
+        # - **duplicate**: Clone serie before consuming (default: based on dr)
+        # - **recursive**: Convert nested Series to arrays (default: false)
+        # - **restart**: Restart before consuming (default: based on dr)
+        # - **dr**: Shorthand for duplicate+restart (default: true if instance)
+        #
+        # @param duplicate [Boolean, nil] clone before consuming
+        # @param recursive [Boolean, nil] convert nested Series
+        # @param restart [Boolean, nil] restart before consuming
+        # @param dr [Boolean, nil] duplicate and restart shorthand
+        #
+        # @return [Array] array of all values
+        #
+        # @raise [RuntimeError] if serie is infinite
+        # @raise [PrototypingError] if prototype and allows_prototype: false
+        #
+        # @example Basic conversion
+        #   proto = S(1, 2, 3)
+        #   proto.to_a  # => [1, 2, 3]
+        #
+        # @example Preserve instance
+        #   inst = S(1, 2, 3).i
+        #   inst.to_a(duplicate: true)  # Consumes copy, inst unchanged
+        #
+        # @example Recursive conversion
+        #   s = S(S(1, 2), S(3, 4))
+        #   s.to_a(recursive: true)  # => [[1, 2], [3, 4]]
+        #
+        # @api public
         def to_a(duplicate: nil, recursive: nil, restart: nil, dr: nil)
           check_state_permissions(allows_prototype: true)
           raise 'Cannot convert to array an infinite serie' if infinite?
@@ -431,8 +1215,23 @@ module Musa
           array
         end
 
+        # Short alias for {#to_a}.
+        #
+        # @return [Array] array of all values
+        #
+        # @api public
         alias_method :a, :to_a
 
+        # Recursively converts series in value to arrays.
+        #
+        # Helper for to_a with recursive: true. Converts Serie values to
+        # arrays and recursively processes Arrays and Hashes.
+        #
+        # @param value [Object] value to process
+        #
+        # @return [Object] processed value with Series converted to arrays
+        #
+        # @api private
         private def process_for_to_a(value)
           case value
           when Serie
@@ -448,12 +1247,43 @@ module Musa
           end
         end
 
+        # Converts serie to generative grammar node.
+        #
+        # Creates Node wrapper for use in generative grammar system. Nodes
+        # can be used in generative rules and substitutions.
+        #
+        # @param attributes [Hash] additional node attributes
+        #
+        # @return [Node] generative grammar node wrapping serie
+        #
+        # @see Musa::GenerativeGrammar
+        #
+        # @api public
         def to_node(**attributes)
           Nodificator.to_node(self, **attributes)
         end
 
+        # Short alias for {#to_node}.
+        #
+        # @return [Node] generative grammar node
+        #
+        # @api public
         alias_method :node, :to_node
 
+        # Validates serie state before operation.
+        #
+        # Checks if serie is in valid state for requested operation. Raises
+        # PrototypingError if:
+        # - Serie is undefined
+        # - Serie is prototype and allows_prototype is false
+        #
+        # @param allows_prototype [Boolean, nil] allow prototype state
+        #
+        # @return [void]
+        #
+        # @raise [PrototypingError] if state is invalid for operation
+        #
+        # @api private
         private def check_state_permissions(allows_prototype: nil)
           try_to_resolve_undefined_state_if_needed
 
@@ -464,9 +1294,23 @@ module Musa
           end
         end
 
+        # Helper class for converting Series to generative grammar nodes.
+        #
+        # Extends GenerativeGrammar to provide N() constructor for creating
+        # nodes from series.
+        #
+        # @api private
         class Nodificator
           extend Musa::GenerativeGrammar
 
+          # Converts serie to node using GenerativeGrammar#N.
+          #
+          # @param serie [Serie] serie to wrap
+          # @param attributes [Hash] node attributes
+          #
+          # @return [Node] generative grammar node
+          #
+          # @api private
           def self.to_node(serie, **attributes)
             N(serie, **attributes)
           end

@@ -1,5 +1,6 @@
 require 'matrix'
 
+require_relative '../datasets/v'
 require_relative '../datasets/p'
 require_relative '../sequencer'
 
@@ -285,6 +286,22 @@ module Musa
         #   decompose(points, 0)
         #   # => [[[1, 20], [0.5, 15], [0, 10]], [[0, 10], [0.5, 15], [1, 20], [2, 30]]]
         #   # Two segments: one going backward in time, one forward
+        #
+        # @todo POTENTIAL LOGIC INCONSISTENCY: Review the direction logic in backward and forward scans.
+        #   - Line 300 comment: "Scan backward... while time is non-decreasing"
+        #   - Line 306 code: `while i >= 0 && array[i][time_dimension] >= xx`
+        #   - Line 316 comment: "Scan forward... while time is non-decreasing"
+        #   - Line 322 code: `while i < array.size && array[i][time_dimension] >= xx`
+        #   Both scans use `>= xx`, which seems contradictory. When scanning backward
+        #   (decreasing indices), for "non-decreasing time" we might expect `<= xx`
+        #   (times getting smaller or equal as we go back in indices). Currently both
+        #   directions use the same comparison operator.
+        #   IMPLEMENT TESTS to verify expected behavior with various input patterns and
+        #   confirm whether this is intentional or a bug. Test cases should include:
+        #   - Forward-only monotonic sequences
+        #   - Backward-only monotonic sequences
+        #   - Mixed direction sequences
+        #   - The example documented above
         private def decompose(array, time_dimension)
           x_dim = array.collect { |v| v[time_dimension] }
           x_dim_values_indexes = x_dim.indexes_of_values

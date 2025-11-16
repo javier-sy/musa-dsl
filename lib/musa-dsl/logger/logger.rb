@@ -31,7 +31,7 @@ module Musa
   #
   # @example Complete workflow
   #   # Setup
-  #   sequencer = Musa::Sequencer::Sequencer.new(...)
+  #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
   #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
   #   logger.level = Logger::INFO
   #
@@ -45,8 +45,8 @@ module Musa
   #   end
   #
   #   # Output:
-  #   #   0.000: [INFO] Composition started
-  #   #   4.000: [INFO] First phrase complete
+  #   #  0.000: [INFO] Composition started
+  #   #  4.000: [INFO] First phrase complete
   #
   # @see Musa::Logger::Logger
   # @see Musa::Sequencer::Sequencer
@@ -84,7 +84,7 @@ module Musa
     #   # Output: [WARN] Something happened
     #
     # @example With sequencer integration
-    #   sequencer = Musa::Sequencer::Sequencer.new(...)
+    #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
     #
     #   # At sequencer position 4.5:
@@ -100,14 +100,14 @@ module Musa
     #
     #   # At position 123.456:
     #   logger.debug "Debugging info"
-    #   # Output: 123.46: Debugging info
+    #   # Output:  123.46: Debugging info
     #
     # @example With program name
     #   logger.info('MIDIVoice') { "Playing note 60" }
     #   # Output:  4.500: [INFO] [MIDIVoice] Playing note 60
     #
     # @example Real-world scenario with multiple components
-    #   sequencer = Musa::Sequencer::Sequencer.new(...)
+    #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
     #   logger.level = Logger::DEBUG
     #
@@ -125,9 +125,9 @@ module Musa
     #   end
     #
     #   # Output:
-    #   #   0.000: [INFO] [Transport] Starting playback
-    #   #   1.500: [Series] Evaluating next value
-    #   #   2.250: [WARN] [MIDIVoice] Note overflow detected
+    #   #  0.000: [INFO] [Transport] Starting playback
+    #   #  1.500: [Series] Evaluating next value
+    #   #  2.250: [WARN] [MIDIVoice] Note overflow detected
     #
     # @example Changing log level dynamically
     #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
@@ -214,7 +214,7 @@ module Musa
 
                          # Format position: total width includes digits + decimal point + ': '
                          # Right-aligned to keep positions visually aligned in logs
-                         "%#{integer_digits + decimal_digits + 1}s: " % ("%.#{decimal_digits}f" % sequencer.position.to_f)
+                         "%#{integer_digits + decimal_digits + 1}s: " % ("%.#{decimal_digits}f" % @sequencer.position.to_f)
                        end
 
             # Wrap progname in brackets if provided

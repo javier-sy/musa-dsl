@@ -1,8 +1,84 @@
 require 'prime'
 
+# PDV event processing for MusicXML export.
+#
+# Converts {PDV} (Pitch/Duration/Velocity) events to MusicXML notes and rests.
+# Handles pitch mapping, duration decomposition, ties, articulations, and
+# ornaments.
+#
+# ## Processing Steps
+#
+# 1. Extract pitch, octave, and accidentals from MIDI pitch
+# 2. Calculate effective duration within measure (may span bars)
+# 3. Decompose duration into MusicXML-compatible note values
+# 4. Add backup/forward if needed for voice positioning
+# 5. Create MusicXML note/rest elements with all attributes
+#
+# ## Articulations & Ornaments Supported
+#
+# - **:st** → staccato / staccatissimo (1 or > 1)
+# - **:tr** → trill
+# - **:mor** → mordent (:down/:low) or inverted mordent (:up/true)
+# - **:turn** → turn (:up/true) or inverted turn (:down/:low)
+# - **:grace** → grace note (with slur)
+# - **:graced** → note receiving grace note (with slur)
+# - **:voice** → voice number for polyphony
+#
+# ## Ties Across Measures
+#
+# Notes spanning bar lines are automatically tied. Duration is decomposed
+# and tie start/stop/continue markers added appropriately.
+#
+# @api private
 module Musa::Datasets::Score::ToMXML
   using Musa::Extension::InspectNice
 
+  # Processes PDV event to MusicXML note or rest.
+  #
+  # Converts a single PDV event to one or more MusicXML note/rest elements.
+  # Handles duration decomposition, ties, backup/forward for polyphony,
+  # and all articulations/ornaments.
+  #
+  # @param measure [Musa::MusicXML::Builder::Measure] target measure
+  # @param bar [Integer] bar number (1-based)
+  # @param divisions_per_bar [Integer] total divisions in bar
+  # @param element [Hash] event hash from score query
+  #   Contains :start, :finish, :dataset keys
+  # @param pointer [Rational] current position in bar (0-1)
+  # @param logger [Musa::Logger::Logger] logger for debugging
+  # @param do_log [Boolean] enable logging
+  #
+  # @return [Rational] updated pointer position
+  #
+  # @raise [NotImplementedError] if tuplet ratios found (not yet supported)
+  #
+  # @example Simple quarter note
+  #   element = {
+  #     start: 1r,
+  #     finish: 2r,
+  #     dataset: { pitch: 60, duration: 1r }.extend(Musa::Datasets::PDV)
+  #   }
+  #   pointer = process_pdv(measure, 1, 96, element, 0r, logger, false)
+  #   # Adds C4 quarter note, returns 1r
+  #
+  # @example Rest
+  #   element = {
+  #     start: 1r,
+  #     finish: 2r,
+  #     dataset: { pitch: :silence, duration: 1r }.extend(Musa::Datasets::PDV)
+  #   }
+  #   pointer = process_pdv(measure, 1, 96, element, 0r, logger, false)
+  #   # Adds quarter rest, returns 1r
+  #
+  # @example Note with articulation
+  #   dataset = { pitch: 64, duration: 1/2r, st: true }.extend(Musa::Datasets::PDV)
+  #   # Adds staccato eighth note
+  #
+  # @example Tied note across bar
+  #   element = { start: 1r, finish: 3r, dataset: { pitch: 60, duration: 2r } }
+  #   # Automatically tied: tie-start in bar 1, tie-stop in bar 2
+  #
+  # @api private
   private def process_pdv(measure, bar, divisions_per_bar, element, pointer, logger, do_log)
 
     pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
@@ -127,6 +203,34 @@ module Musa::Datasets::Score::ToMXML
     pointer
   end
 
+  # Converts MIDI pitch to note name, octave, and accidental.
+  #
+  # Maps MIDI pitch number (0-127) to MusicXML pitch representation.
+  # Middle C (MIDI 60) = C4 in scientific pitch notation.
+  #
+  # @param pdv [Hash] PDV dataset with :pitch key
+  #
+  # @return [Array(String, Integer, Integer), Array(Symbol, nil, nil)]
+  #   - For pitches: [note_name, octave, sharps]
+  #   - For silence: [:silence, nil, nil]
+  #
+  # @example Middle C
+  #   pitch_and_octave_and_sharps({ pitch: 60 })
+  #   # => ["C", 4, 0]
+  #
+  # @example C#4
+  #   pitch_and_octave_and_sharps({ pitch: 61 })
+  #   # => ["C", 4, 1]
+  #
+  # @example A4 (440Hz)
+  #   pitch_and_octave_and_sharps({ pitch: 69 })
+  #   # => ["A", 4, 0]
+  #
+  # @example Rest
+  #   pitch_and_octave_and_sharps({ pitch: :silence })
+  #   # => [:silence, nil, nil]
+  #
+  # @api private
   private def pitch_and_octave_and_sharps(pdv)
     if pdv[:pitch] == :silence
       [:silence, nil, nil]
@@ -145,16 +249,49 @@ module Musa::Datasets::Score::ToMXML
     end
   end
 
+  # Converts MIDI velocity to dynamics index.
+  #
+  # Maps MIDI velocity (0-127) to dynamics marking index (0-10).
+  # Used for determining dynamics from velocity values.
+  #
+  # @param midi_velocity [Integer, nil] MIDI velocity value
+  #
+  # @return [Integer, nil] dynamics index (0-10), or nil if no velocity
+  #
+  # @example Pianissimo
+  #   dynamics_index_of(16)  # => 3 (ppp)
+  #
+  # @example Mezzo-forte
+  #   dynamics_index_of(64)  # => 6 (mf)
+  #
+  # @example Fortissimo
+  #   dynamics_index_of(100) # => 9 (ff)
+  #
+  # @api private
   private def dynamics_index_of(midi_velocity)
     return nil unless midi_velocity
 
     # ppp = midi 16 ... fff = midi 127
     # mp = dynamics index 6; dynamics = 0..10
     # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
-    [0..0, 1..1, 2..8, 9..16, 17..33, 34..49, 49..64, 65..80, 81..96, 97..112, 113..127]
+    [0..0, 1..1, 2..8, 9..16, 17..33, 34..48, 49..64, 65..80, 81..96, 97..112, 113..127]
        .index { |r| r.cover? midi_velocity.round.to_i }
   end
 
+  # Converts dynamics index to MusicXML dynamics string.
+  #
+  # Maps dynamics index (0-10) to standard dynamics marking string.
+  #
+  # @param dynamics_index [Integer, nil] dynamics index
+  #
+  # @return [String, nil] dynamics marking string, or nil if no index
+  #
+  # @example
+  #   dynamics_to_string(3)  # => "ppp"
+  #   dynamics_to_string(6)  # => "mp"
+  #   dynamics_to_string(9)  # => "ff"
+  #
+  # @api private
   private def dynamics_to_string(dynamics_index)
     return nil unless dynamics_index
     ['pppppp', 'ppppp', 'pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'][dynamics_index.round.to_i]

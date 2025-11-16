@@ -3,10 +3,142 @@ require_relative 'chord-definition'
 
 module Musa
   module Chords
+    # Instantiated chord with specific root and scale context.
+    #
+    # Chord represents an actual chord instance with a root note, scale context,
+    # and chord definition. It provides access to chord tones, voicing modifications,
+    # and navigation between related chords.
+    #
+    # ## Creation
+    #
+    # Chords are typically created from scale notes rather than directly:
+    #
+    #     scale = Scales::Scales.default_system.default_tuning.major[60]
+    #     chord = scale.tonic.chord              # C major triad
+    #     chord = scale.tonic.chord :seventh     # C major seventh
+    #     chord = scale.dominant.chord :ninth    # G ninth chord
+    #
+    # ## Accessing Chord Tones
+    #
+    # Chord tones are accessed by their position name (root, third, fifth, etc.):
+    #
+    #     chord.root      # Returns NoteInScale for root
+    #     chord.third     # Returns NoteInScale for third
+    #     chord.fifth     # Returns NoteInScale for fifth
+    #     chord.seventh   # Returns NoteInScale for seventh (if exists)
+    #
+    # When notes are duplicated, use `all: true` to get all instances:
+    #
+    #     chord.root(all: true)  # Returns array of all root notes
+    #
+    # ## Features and Navigation
+    #
+    # Chords have features (quality, size) and can navigate to related chords:
+    #
+    #     chord.features          # => { quality: :major, size: :triad }
+    #     chord.quality           # => :major (dynamic method)
+    #     chord.size              # => :triad (dynamic method)
+    #
+    #     chord.with_quality(:minor)     # Change to minor
+    #     chord.with_size(:seventh)      # Add seventh
+    #     chord.featuring(size: :ninth)  # Change multiple features
+    #
+    # ## Voicing Modifications
+    #
+    # ### Move - Relocate specific chord tones to different octaves:
+    #
+    #     chord.move(root: -1, seventh: 1)
+    #     # Root down one octave, seventh up one octave
+    #
+    # ### Duplicate - Add copies of chord tones in other octaves:
+    #
+    #     chord.duplicate(root: -2, third: [-1, 1])
+    #     # Add root 2 octaves down, third 1 octave down and 1 up
+    #
+    # ### Octave - Transpose entire chord:
+    #
+    #     chord.octave(-1)  # Move entire chord down one octave
+    #
+    # ## Pitch Extraction
+    #
+    #     chord.pitches                    # All pitches sorted by pitch
+    #     chord.pitches(:root, :third)     # Only specified chord tones
+    #     chord.notes                      # Sorted ChordGradeNote structs
+    #
+    # ## Scale Context
+    #
+    # Chords maintain their scale context. When navigating to chords with
+    # non-diatonic notes (e.g., major to minor), the scale may become nil:
+    #
+    #     major_chord = c_major.tonic.chord
+    #     major_chord.scale  # => C major scale
+    #
+    #     minor_chord = major_chord.with_quality(:minor)
+    #     minor_chord.scale  # => nil (Eb not in C major)
+    #
+    # @example Basic triad creation
+    #   scale = Scales::Scales.default_system.default_tuning.major[60]
+    #   chord = scale.tonic.chord
+    #   chord.root.pitch   # => 60 (C)
+    #   chord.third.pitch  # => 64 (E)
+    #   chord.fifth.pitch  # => 67 (G)
+    #
+    # @example Seventh chord
+    #   chord = scale.tonic.chord :seventh
+    #   chord.seventh.pitch  # => 71 (B)
+    #
+    # @example Voicing with move and duplicate
+    #   scale = Scales::Scales.default_system.default_tuning.major[60]
+    #   chord = scale.dominant.chord(:seventh)
+    #     .move(root: -1, third: -1)
+    #     .duplicate(fifth: [0, 1])
+    #
+    # @example Feature navigation
+    #   scale = Scales::Scales.default_system.default_tuning.major[60]
+    #   maj_triad = scale.tonic.chord
+    #   min_triad = maj_triad.with_quality(:minor)
+    #   maj_seventh = maj_triad.with_size(:seventh)
+    #
+    # @see ChordDefinition Chord template/definition
+    # @see NoteInScale Note within scale
+    # @see chord-definitions.rb Standard chord types
     class Chord
 
       using Musa::Extension::Arrayfy
 
+      # Creates a chord with specified root.
+      #
+      # Factory method for creating chords by specifying the root note and either
+      # a chord definition name or features. The root can be a NoteInScale, pitch
+      # number, or scale degree symbol.
+      #
+      # @param root_note_or_pitch_or_symbol [NoteInScale, Integer, Symbol] chord root
+      #   - NoteInScale: use note directly
+      #   - Integer (MIDI pitch): find note in scale, or create C major if no scale
+      #   - Symbol (scale degree): requires scale parameter (e.g., :tonic, :dominant)
+      # @param scale [Scale, nil] scale context for finding notes
+      # @param allow_chromatic [Boolean] allow non-diatonic notes
+      # @param name [Symbol, nil] chord definition name (:maj, :min7, etc.)
+      # @param move [Hash{Symbol => Integer}, nil] initial octave moves (e.g., {root: -1})
+      # @param duplicate [Hash{Symbol => Integer, Array<Integer>}, nil] initial duplications
+      # @param features [Hash] chord features if not using name (quality:, size:, etc.)
+      # @return [Chord] new chord instance
+      #
+      # @example With note from scale
+      #   Chord.with_root(scale.tonic, name: :maj7)
+      #
+      # @example With MIDI pitch and scale
+      #   Chord.with_root(60, scale: c_major, name: :min)
+      #
+      # @example With scale degree
+      #   Chord.with_root(:dominant, scale: c_major, quality: :dominant, size: :seventh)
+      #
+      # @example With features instead of name
+      #   Chord.with_root(60, scale: c_major, quality: :major, size: :triad)
+      #
+      # @example With voicing parameters
+      #   Chord.with_root(60, scale: c_major, name: :maj7,
+      #                   move: {root: -1}, duplicate: {fifth: 1})
       def self.with_root(root_note_or_pitch_or_symbol, scale: nil, allow_chromatic: false, name: nil, move: nil, duplicate: nil, **features)
         root =
           case root_note_or_pitch_or_symbol
@@ -53,7 +185,21 @@ module Musa
         Chord.new(root, scale, chord_definition, move, duplicate, source_notes_map)
       end
 
+      # Internal helper methods for chord construction.
+      #
+      # @api private
       class Helper
+        # Computes the source notes map for a chord.
+        #
+        # Maps each chord position (root, third, fifth, etc.) to its corresponding
+        # note in the scale or chromatic scale.
+        #
+        # @param root [NoteInScale] chord root note
+        # @param chord_definition [ChordDefinition] chord structure
+        # @param scale [Scale] scale context
+        # @return [Hash{Symbol => Array<NoteInScale>}] position to notes mapping
+        #
+        # @api private
         def self.compute_source_notes_map(root, chord_definition, scale)
           chord_definition.pitch_offsets.transform_values do |offset|
             pitch = root.pitch + offset
@@ -61,6 +207,18 @@ module Musa
           end.tap { |_| _.values.each(&:freeze) }.freeze
         end
 
+        # Finds a chord definition matching features and scale constraints.
+        #
+        # Searches for chord definitions with specified features, filtering out
+        # those that don't fit in the scale unless allow_chromatic is true.
+        #
+        # @param root_pitch [Integer] MIDI pitch of chord root
+        # @param features [Hash] desired chord features (quality:, size:, etc.)
+        # @param scale [Scale] scale context for diatonic filtering
+        # @param allow_chromatic [Boolean] allow non-diatonic chords
+        # @return [ChordDefinition, nil] matching definition or nil
+        #
+        # @api private
         def self.find_definition_by_features(root_pitch, features, scale, allow_chromatic:)
           featured_chord_definitions = ChordDefinition.find_by_features(**features)
 
@@ -76,10 +234,33 @@ module Musa
 
       private_constant :Helper
 
+      # Container for chord tone with its position name.
+      #
+      # Associates a chord position (grade) with its corresponding note.
+      # Used internally for sorting and organizing chord notes.
+      #
+      # @!attribute grade
+      #   @return [Symbol] position name (:root, :third, :fifth, etc.)
+      # @!attribute note
+      #   @return [NoteInScale] the note at this position
+      #
+      # @api private
       ChordGradeNote = Struct.new(:grade, :note, keyword_init: true)
 
       private_constant :ChordGradeNote
 
+      # Creates a chord (private constructor).
+      #
+      # Use {with_root} or create chords from scale notes instead.
+      #
+      # @param root [NoteInScale] chord root note
+      # @param scale [Scale, nil] scale context (nil if chromatic notes present)
+      # @param chord_definition [ChordDefinition] chord structure
+      # @param move [Hash, nil] octave moves for positions
+      # @param duplicate [Hash, nil] octave duplications for positions
+      # @param source_notes_map [Hash] position to notes mapping
+      #
+      # @api private
       private def initialize(root, scale, chord_definition, move, duplicate, source_notes_map)
         @root = root
         @scale = scale
@@ -131,21 +312,82 @@ module Musa
         end
       end
 
-      attr_reader :scale, :chord_definition, :move, :duplicate
+      # Scale context (nil if chord contains non-diatonic notes).
+      # @return [Scale, nil]
+      attr_reader :scale
 
+      # Chord definition template.
+      # @return [ChordDefinition]
+      attr_reader :chord_definition
+
+      # Octave moves applied to positions.
+      # @return [Hash{Symbol => Integer}]
+      attr_reader :move
+
+      # Octave duplications applied to positions.
+      # @return [Hash{Symbol => Integer, Array<Integer>}]
+      attr_reader :duplicate
+
+      # Returns chord notes sorted by pitch.
+      #
+      # @return [Array<ChordGradeNote>] sorted array of grade-note pairs
+      #
+      # @example
+      #   chord.notes.each do |chord_grade_note|
+      #     puts "#{chord_grade_note.grade}: #{chord_grade_note.note.pitch}"
+      #   end
       def notes
         @sorted_notes
       end
 
+      # Returns MIDI pitches of chord notes.
+      #
+      # Without arguments, returns all pitches sorted from low to high.
+      # With grade arguments, returns only pitches for those positions.
+      #
+      # @param grades [Array<Symbol>] optional position names to filter
+      # @return [Array<Integer>] MIDI pitches sorted by pitch
+      #
+      # @example All pitches
+      #   chord.pitches  # => [60, 64, 67]
+      #
+      # @example Specific positions
+      #   chord.pitches(:root, :third)  # => [60, 64]
       def pitches(*grades)
         grades = @notes_map.keys if grades.empty?
         @sorted_notes.select { |_| grades.include?(_.grade) }.collect { |_| _.note.pitch }
       end
 
+      # Returns chord features.
+      #
+      # @return [Hash{Symbol => Symbol}] features hash (quality:, size:, etc.)
+      #
+      # @example
+      #   chord.features  # => { quality: :major, size: :triad }
       def features
         @chord_definition.features
       end
 
+      # Creates new chord with modified features.
+      #
+      # Returns a new chord with the same root but different features.
+      # Features can be specified as values (converted to feature hash) or
+      # as keyword arguments.
+      #
+      # @param values [Array<Symbol>] feature values to change
+      # @param allow_chromatic [Boolean] allow non-diatonic result
+      # @param hash [Hash] feature key-value pairs to change
+      # @return [Chord] new chord with modified features
+      # @raise [ArgumentError] if no matching chord definition found
+      #
+      # @example Change size
+      #   chord.featuring(size: :seventh)
+      #
+      # @example Change quality
+      #   chord.featuring(quality: :minor)
+      #
+      # @example Change multiple features
+      #   chord.featuring(quality: :dominant, size: :ninth)
       def featuring(*values, allow_chromatic: false, **hash)
         # create a new list of features based on current features but
         # replacing the values for the new ones and adding the new features
@@ -166,6 +408,19 @@ module Musa
                   source_notes_map)
       end
 
+      # Transposes entire chord to a different octave.
+      #
+      # Moves all chord notes by the specified octave offset, preserving
+      # internal voicing structure (moves and duplications).
+      #
+      # @param octave [Integer] octave offset (positive = up, negative = down)
+      # @return [Chord] new chord in different octave
+      #
+      # @example Move chord down one octave
+      #   chord.octave(-1)
+      #
+      # @example Move chord up two octaves
+      #   chord.octave(2)
       def octave(octave)
         source_notes_map = @source_notes_map.transform_values do |notes|
           notes.collect { |note| note.octave(octave) }.freeze
@@ -174,26 +429,77 @@ module Musa
         Chord.new(@root.octave(octave), @scale, chord_definition, @move, @duplicate, source_notes_map)
       end
 
+      # Creates new chord with positions moved to different octaves.
+      #
+      # Relocates specific chord positions to different octaves while keeping
+      # other positions unchanged. Multiple positions can be moved at once.
+      # Merges with existing moves.
+      #
+      # @param octaves [Hash{Symbol => Integer}] position to octave offset mapping
+      # @return [Chord] new chord with moved positions
+      #
+      # @example Move root down, seventh up
+      #   chord.move(root: -1, seventh: 1)
+      #
+      # @example Drop voicing (move third and seventh down)
+      #   chord.move(third: -1, seventh: -1)
       def move(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move.merge(octaves), @duplicate, @source_notes_map)
       end
 
+      # Creates new chord with positions duplicated in other octaves.
+      #
+      # Adds copies of specific chord positions in different octaves.
+      # Original positions remain at their current octave.
+      # Merges with existing duplications.
+      #
+      # @param octaves [Hash{Symbol => Integer, Array<Integer>}] position to octave(s)
+      # @return [Chord] new chord with duplicated positions
+      #
+      # @example Duplicate root two octaves down
+      #   chord.duplicate(root: -2)
+      #
+      # @example Duplicate third in multiple octaves
+      #   chord.duplicate(third: [-1, 1])
+      #
+      # @example Duplicate multiple positions
+      #   chord.duplicate(root: -1, fifth: 1)
       def duplicate(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move, @duplicate.merge(octaves), @source_notes_map)
       end
 
+      # Checks chord equality.
+      #
+      # Chords are equal if they have the same notes and chord definition.
+      #
+      # @param other [Chord] chord to compare
+      # @return [Boolean] true if chords are equal
       def ==(other)
         self.class == other.class &&
           @sorted_notes == other.notes &&
           @chord_definition == other.chord_definition
       end
 
+      # Returns string representation.
+      #
+      # @return [String]
       def inspect
         "<Chord #{@name} root #{@root} notes #{@sorted_notes.collect { |_| "#{_.grade}=#{_.note.grade}|#{_.note.pitch} "} }>"
       end
 
       alias to_s inspect
 
+      # Applies move and duplicate operations to notes map.
+      #
+      # Computes the final notes map after applying octave moves and duplications
+      # to the source notes.
+      #
+      # @param notes_map [Hash] source notes map
+      # @param moved [Hash, nil] octave moves for positions
+      # @param duplicated [Hash, nil] octave duplications for positions
+      # @return [Hash{Symbol => Array<NoteInScale>}] final notes map
+      #
+      # @api private
       private def compute_moved_and_duplicated(notes_map, moved, duplicated)
         notes_map = notes_map.transform_values(&:dup)
 

@@ -1,3 +1,80 @@
+# Serie constructor methods for creating series from various sources.
+#
+# Provides factory methods for common serie types:
+#
+# ## Basic Constructors
+#
+# - **UNDEFINED** - Undefined serie (unresolved state)
+# - **NIL** - Serie that always returns nil
+# - **S** - Serie from array of values
+# - **E** - Serie from evaluation block
+#
+# ## Collection Constructors
+#
+# - **H/HC** - Hash of series (hash/combined mode)
+# - **A/AC** - Array of series (array/combined mode)
+# - **MERGE** - Sequential merge of multiple series
+#
+# ## Numeric Generators
+#
+# - **FOR** - For-loop style numeric sequence
+# - **RND** - Random values (from array or range)
+# - **RND1** - Single random value
+# - **SIN** - Sine wave function
+# - **FIBO** - Fibonacci sequence
+#
+# ## Musical Generators
+#
+# - **HARMO** - Harmonic note series
+#
+# ## Usage Patterns
+#
+# ### Array Serie
+#
+# ```ruby
+# notes = S(60, 64, 67, 72)
+# notes.i.next_value  # => 60
+# ```
+#
+# ### Evaluation Block
+#
+# ```ruby
+# counter = E(1) { |v, last_value:| last_value + 1 unless last_value == 10 }
+# counter.i.to_a  # => [1, 2, 3, ..., 10]
+# ```
+#
+# ### Random Values
+#
+# ```ruby
+# dice = RND(1, 2, 3, 4, 5, 6)
+# dice.i.next_value  # => random 1-6
+# ```
+#
+# ### Numeric Sequences
+#
+# ```ruby
+# sequence = FOR(from: 0, to: 10, step: 2)
+# sequence.i.to_a  # => [0, 2, 4, 6, 8, 10]
+# ```
+#
+# ### Combining Series
+#
+# ```ruby
+# melody = MERGE(S(60, 64), S(67, 72))
+# melody.i.to_a  # => [60, 64, 67, 72]
+# ```
+#
+# ## Musical Applications
+#
+# - Melodic sequences
+# - Rhythmic patterns
+# - Harmonic progressions
+# - Random variations
+# - Algorithmic composition
+# - Control parameter automation
+#
+# @see Musa::Series::Operations Serie transformation operations
+#
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/smart-proc-binder'
 
@@ -6,47 +83,247 @@ require_relative 'base-series'
 # TODO: añadir en for: steps: (nº de pasos en los que repartir el incremento)
 
 module Musa
+  # Serie constructor methods.
+  #
+  # Extended into Series module to provide factory methods for creating series.
+  #
+  # @api public
   module Series::Constructors
     using Musa::Extension::ExplodeRanges
 
+    # Creates undefined serie.
+    #
+    # Returns serie in undefined state. Useful as placeholder that will
+    # be resolved later (e.g., in PROXY).
+    #
+    # @return [UndefinedSerie] serie in undefined state
+    #
+    # @example Undefined placeholder
+    #   proxy = PROXY()  # Uses UNDEFINED internally
+    #   proxy.undefined?  # => true
+    #
+    # @api public
     def UNDEFINED
       UndefinedSerie.new
     end
 
+    # Creates serie that always returns nil.
+    #
+    # Returns nil on every next_value call. Useful for padding or as
+    # placeholder in composite structures.
+    #
+    # @return [NilSerie] serie returning nil
+    #
+    # @example Nil serie
+    #   s = NIL().i
+    #   s.next_value  # => nil
+    #   s.next_value  # => nil
+    #
+    # @api public
     def NIL
       NilSerie.new
     end
 
+    # Creates serie from array of values.
+    #
+    # Most common constructor. Values can include ranges which will be
+    # expanded automatically via ExplodeRanges extension.
+    #
+    # @param values [Array] values to iterate (supports ranges)
+    #
+    # @return [FromArray] serie from array
+    #
+    # @example Basic array
+    #   notes = S(60, 64, 67, 72)
+    #   notes.i.to_a  # => [60, 64, 67, 72]
+    #
+    # @example With ranges
+    #   scale = S(60..67)
+    #   scale.i.to_a  # => [60, 61, 62, 63, 64, 65, 66, 67]
+    #
+    # @api public
     def S(*values)
       FromArray.new values.explode_ranges
     end
 
+    # Creates hash-mode serie from hash of series.
+    #
+    # Combines multiple series into hash-structured values. Returns hash
+    # with same keys, values from respective series. Stops when first
+    # serie exhausts.
+    #
+    # @param series_hash [Hash] hash of series (key => serie)
+    #
+    # @return [FromHashOfSeries] combined hash serie
+    #
+    # @example Hash of series
+    #   h = H(pitch: S(60, 64, 67), velocity: S(96, 80, 64))
+    #   h.i.next_value  # => {pitch: 60, velocity: 96}
+    #   h.i.next_value  # => {pitch: 64, velocity: 80}
+    #
+    # @api public
     def H(**series_hash)
       FromHashOfSeries.new series_hash, false
     end
 
+    # Creates hash-mode combined serie from hash of series.
+    #
+    # Like H but continues until ALL series exhaust. Nil values used for
+    # exhausted series.
+    #
+    # @param series_hash [Hash] hash of series (key => serie)
+    #
+    # @return [FromHashOfSeries] combined hash serie
+    #
+    # @example Combined until all finish
+    #   hc = HC(a: S(1, 2), b: S(10, 20, 30))
+    #   hc.i.to_a  # => [{a:1, b:10}, {a:2, b:20}, {a:nil, b:30}]
+    #
+    # @api public
     def HC(**series_hash)
       FromHashOfSeries.new series_hash, true
     end
 
+    # Creates array-mode serie from array of series.
+    #
+    # Combines multiple series into array-structured values. Returns array
+    # of values from respective series. Stops when first serie exhausts.
+    #
+    # @param series [Array] array of series
+    #
+    # @return [FromArrayOfSeries] combined array serie
+    #
+    # @example Array of series
+    #   a = A(S(1, 2, 3), S(10, 20, 30))
+    #   a.i.next_value  # => [1, 10]
+    #   a.i.next_value  # => [2, 20]
+    #
+    # @api public
     def A(*series)
       FromArrayOfSeries.new series, false
     end
 
+    # Creates array-mode combined serie from array of series.
+    #
+    # Like A but continues until ALL series exhaust. Nil values used for
+    # exhausted series.
+    #
+    # @param series [Array] array of series
+    #
+    # @return [FromArrayOfSeries] combined array serie
+    #
+    # @example Combined until all finish
+    #   ac = AC(S(1, 2), S(10, 20, 30))
+    #   ac.i.to_a  # => [[1, 10], [2, 20], [nil, 30]]
+    #
+    # @api public
     def AC(*series)
       FromArrayOfSeries.new series, true
     end
 
+    # Creates serie from evaluation block.
+    #
+    # Calls block repeatedly with parameters and last_value. Block returns
+    # next value or nil to stop. Enables stateful generators and algorithms.
+    #
+    # ## Block Parameters
+    #
+    # - **value_args**: Initial positional parameters
+    # - **last_value**: Previous return value (nil on first call)
+    # - **caller**: Serie instance (access to parameters attribute)
+    # - **key_args**: Initial keyword parameters
+    #
+    # @param value_args [Array] initial positional parameters
+    # @param key_args [Hash] initial keyword parameters
+    # @yield block called for each value
+    # @yieldparam value_args [Array] current positional parameters
+    # @yieldparam last_value [Object, nil] previous return value
+    # @yieldparam caller [FromEvalBlockWithParameters] serie instance
+    # @yieldparam key_args [Hash] current keyword parameters
+    # @yieldreturn [Object, nil] next value or nil to stop
+    #
+    # @return [FromEvalBlockWithParameters] evaluation-based serie
+    #
+    # @example Counter
+    #   counter = E(1) { |v, last_value:| last_value + 1 unless last_value == 5 }
+    #   counter.i.to_a  # => [1, 2, 3, 4, 5]
+    #
+    # @example Fibonacci
+    #   fib = E { |last_value:, caller:|
+    #     a, b = caller.parameters
+    #     caller.parameters = [b, a + b]
+    #     a
+    #   }
+    #   fib.parameters = [0, 1]
+    #   fib.i.to_a(limit: 10)  # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+    #
+    # @api public
     def E(*value_args, **key_args, &block)
       FromEvalBlockWithParameters.new *value_args, **key_args, &block
     end
 
+    # Creates for-loop style numeric sequence.
+    #
+    # Generates sequence from `from` to `to` (inclusive) with `step` increment.
+    # Automatically adjusts step sign based on from/to relationship.
+    #
+    # @param from [Numeric, nil] starting value (default: 0)
+    # @param to [Numeric, nil] ending value (nil for infinite)
+    # @param step [Numeric, nil] increment (default: 1, sign auto-adjusted)
+    #
+    # @return [ForLoop] numeric sequence serie
+    #
+    # @example Ascending sequence
+    #   s = FOR(from: 0, to: 10, step: 2)
+    #   s.i.to_a  # => [0, 2, 4, 6, 8, 10]
+    #
+    # @example Descending sequence
+    #   s = FOR(from: 10, to: 0, step: 2)
+    #   s.i.to_a  # => [10, 8, 6, 4, 2, 0]
+    #
+    # @example Infinite sequence
+    #   s = FOR(from: 0, step: 1)  # to: nil
+    #   s.infinite?  # => true
+    #
+    # @api public
     def FOR(from: nil, to: nil, step: nil)
       from ||= 0
       step ||= 1
       ForLoop.new from, to, step
     end
 
+    # Creates random value serie from array or range.
+    #
+    # Two modes:
+    # - **Array mode**: Random values from provided array
+    # - **Range mode**: Random numbers from range (from, to, step)
+    #
+    # Infinite serie - never exhausts.
+    #
+    # @param _values [Array] values to choose from (positional)
+    # @param values [Array, nil] values to choose from (named)
+    # @param from [Numeric, nil] range start (range mode)
+    # @param to [Numeric, nil] range end (range mode, required)
+    # @param step [Numeric, nil] range step (default: 1)
+    # @param random [Random, Integer, nil] Random instance or seed
+    #
+    # @return [RandomValuesFromArray, RandomNumbersFromRange] random serie
+    #
+    # @raise [ArgumentError] if using both positional and named values
+    # @raise [ArgumentError] if mixing array and range parameters
+    #
+    # @example Random from array
+    #   dice = RND(1, 2, 3, 4, 5, 6)
+    #   dice.i.next_value  # => random 1-6
+    #
+    # @example Random from range
+    #   rand = RND(from: 0, to: 100, step: 10)
+    #   rand.i.next_value  # => random 0, 10, 20, ..., 100
+    #
+    # @example With seed
+    #   rnd = RND(1, 2, 3, random: 42)  # Reproducible
+    #
+    # @api public
     def RND(*_values, values: nil, from: nil, to: nil, step: nil, random: nil)
       raise ArgumentError, "Can't use both direct values #{_values} and values named parameter #{values} at the same time." if values && !_values.empty?
 
@@ -66,10 +343,55 @@ module Musa
       end
     end
 
+    # Merges multiple series sequentially.
+    #
+    # Plays series in sequence: first serie until exhausted, then second,
+    # etc. Restarts each serie (except first) before playing.
+    #
+    # @param series [Array<Serie>] series to merge sequentially
+    #
+    # @return [Sequence] sequential merge serie
+    #
+    # @example Merge sequences
+    #   merged = MERGE(S(1, 2, 3), S(10, 20, 30))
+    #   merged.i.to_a  # => [1, 2, 3, 10, 20, 30]
+    #
+    # @example Melodic phrases
+    #   phrase1 = S(60, 64, 67)
+    #   phrase2 = S(72, 69, 65)
+    #   melody = MERGE(phrase1, phrase2)
+    #
+    # @api public
     def MERGE(*series)
       Sequence.new(series)
     end
 
+    # Creates single random value serie from array or range.
+    #
+    # Like RND but returns only one random value then exhausts.
+    # Two modes: array mode and range mode.
+    #
+    # @param _values [Array] values to choose from (positional)
+    # @param values [Array, nil] values to choose from (named)
+    # @param from [Numeric, nil] range start (range mode)
+    # @param to [Numeric, nil] range end (range mode, required)
+    # @param step [Numeric, nil] range step (default: 1)
+    # @param random [Random, Integer, nil] Random instance or seed
+    #
+    # @return [RandomValueFromArray, RandomNumberFromRange] single random value serie
+    #
+    # @raise [ArgumentError] if using both positional and named values
+    # @raise [ArgumentError] if mixing array and range parameters
+    #
+    # @example Single random value
+    #   rnd = RND1(1, 2, 3, 4, 5)
+    #   rnd.i.next_value  # => random 1-5
+    #   rnd.i.next_value  # => nil (exhausted)
+    #
+    # @example Random seed selection
+    #   seed = RND1(10, 20, 30, random: 42)
+    #
+    # @api public
     def RND1(*_values, values: nil, from: nil, to: nil, step: nil, random: nil)
       raise ArgumentError, "Can't use both direct values #{_values} and values named parameter #{values} at the same time." if values && !_values.empty?
 
@@ -89,6 +411,36 @@ module Musa
       end
     end
 
+    # Creates sine wave function serie.
+    #
+    # Generates values following sine curve. Useful for smooth oscillations,
+    # LFO-style modulation, and periodic variations.
+    #
+    # ## Wave Parameters
+    #
+    # - **start_value**: Initial value (default: center)
+    # - **steps**: Period in steps (nil for continuous)
+    # - **amplitude**: Wave amplitude (default: 1.0)
+    # - **center**: Center/offset value (default: 0.0)
+    #
+    # Wave equation: `center + amplitude * sin(progress)`
+    #
+    # @param start_value [Numeric, nil] initial value
+    # @param steps [Numeric, nil] full period in steps
+    # @param amplitude [Numeric, nil] wave amplitude (default: 1.0)
+    # @param center [Numeric, nil] center offset (default: 0.0)
+    #
+    # @return [SinFunction] sine wave serie
+    #
+    # @example Basic sine wave
+    #   wave = SIN(steps: 8, amplitude: 10, center: 50)
+    #   wave.i.to_a  # => oscillates around 50 ± 10
+    #
+    # @example LFO modulation
+    #   lfo = SIN(steps: 16, amplitude: 0.5, center: 0.5)
+    #   # Use for amplitude modulation
+    #
+    # @api public
     def SIN(start_value: nil, steps: nil, amplitude: nil, center: nil)
       amplitude ||= 1.0
       center ||= 0.0
@@ -96,10 +448,53 @@ module Musa
       SinFunction.new start_value, steps, amplitude, center
     end
 
+    # Creates Fibonacci sequence serie.
+    #
+    # Generates classic Fibonacci sequence: 0, 1, 1, 2, 3, 5, 8, 13, 21, ...
+    # Infinite serie.
+    #
+    # @return [Fibonacci] Fibonacci sequence serie
+    #
+    # @example Fibonacci numbers
+    #   fib = FIBO()
+    #   fib.infinite?  # => true
+    #   inst = fib.i
+    #   10.times.map { inst.next_value }
+    #   # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+    #
+    # @example Rhythmic proportions
+    #   durations = FIBO().i.map { |n| Rational(n, 16) }
+    #
+    # @api public
     def FIBO()
       Fibonacci.new
     end
 
+    # Creates harmonic notes serie from fundamental.
+    #
+    # Generates MIDI note numbers for harmonic series based on listened
+    # fundamental. Approximates harmonics to nearest semitone within error
+    # tolerance.
+    #
+    # ## Parameters
+    #
+    # - **error**: Maximum cents deviation to accept harmonic (default: 0.5)
+    # - **extended**: Include extended harmonics beyond audible range
+    #
+    # @param error [Numeric, nil] maximum deviation in semitones (default: 0.5)
+    # @param extended [Boolean, nil] include extended harmonics (default: false)
+    #
+    # @return [HarmonicNotes] harmonic series serie
+    #
+    # @example Harmonic series
+    #   # Listen to fundamental, serie returns harmonic notes
+    #   harmonics = HARMO(error: 0.5)
+    #   harmonics.i  # Waits for fundamental input
+    #
+    # @example Extended harmonics
+    #   harm = HARMO(error: 0.3, extended: true)
+    #
+    # @api public
     def HARMO(error: nil, extended: nil)
       error ||= 0.5
       extended ||= false

@@ -7,6 +7,69 @@ module Musa
       module Internal
         using Musa::Extension::Arrayfy
 
+        # Musical direction container.
+        #
+        # Direction represents performance instructions and expressive markings that
+        # affect interpretation but aren't part of the note structure. Directions
+        # include tempo, dynamics, pedaling, text instructions, and other musical
+        # indications.
+        #
+        # ## Direction Types
+        #
+        # Directions can contain multiple direction-type elements:
+        #
+        # ### Tempo and Metronome
+        # - **Metronome**: Tempo markings (♩ = 120, etc.)
+        # - **Words**: Textual tempo indications ("Allegro", "Adagio")
+        #
+        # ### Dynamics
+        # - **Dynamics**: Dynamic levels (pp, p, mp, mf, f, ff, etc.)
+        # - **Wedge**: Crescendo/diminuendo hairpins
+        #
+        # ### Pedaling
+        # - **Pedal**: Piano pedal markings (start, stop, change)
+        #
+        # ### Text and Symbols
+        # - **Words**: General text directions
+        # - **Bracket**: Analytical brackets
+        # - **Dashes**: Dashed extension lines
+        #
+        # ### Transposition
+        # - **OctaveShift**: 8va/8vb markings
+        #
+        # ## Placement
+        #
+        # Directions can be placed above or below the staff:
+        # - **above**: Above staff (typical for tempo, dynamics)
+        # - **below**: Below staff (typical for pedal markings)
+        #
+        # ## Voice and Staff
+        #
+        # For multi-voice or multi-staff contexts, directions can be associated with
+        # specific voices or staves.
+        #
+        # ## Offset
+        #
+        # Directions can have timing offsets for precise positioning relative to notes.
+        #
+        # @example Tempo marking
+        #   Direction.new(placement: 'above') do
+        #     metronome beat_unit: 'quarter', per_minute: '120'
+        #     words 'Allegro'
+        #   end
+        #
+        # @example Dynamic marking
+        #   Direction.new(placement: 'below', dynamics: 'f')
+        #
+        # @example Crescendo hairpin
+        #   Direction.new(placement: 'below') do
+        #     wedge 'crescendo'
+        #   end
+        #
+        # @example Pedal down
+        #   Direction.new(placement: 'below', pedal: 'start')
+        #
+        # @see Measure Container for directions
         class Direction
           extend Musa::Extension::AttributeBuilder
           include Musa::Extension::With
@@ -14,6 +77,28 @@ module Musa
           include Helper
           include ToXML
 
+          # Creates a direction.
+          #
+          # @param placement [String, nil] 'above' or 'below' staff
+          # @param voice [Integer, nil] voice number
+          # @param staff [Integer, nil] staff number
+          # @param offset [Numeric, nil] timing offset in divisions
+          # @param directions [Hash] direction types as keyword arguments
+          # @yield Optional DSL block for adding direction types
+          #
+          # @example Tempo with metronome
+          #   Direction.new(placement: 'above') do
+          #     metronome beat_unit: 'quarter', per_minute: '120'
+          #   end
+          #
+          # @example Forte dynamic
+          #   Direction.new(placement: 'below', dynamics: 'f')
+          #
+          # @example Multiple directions
+          #   Direction.new(placement: 'above') do
+          #     words 'Allegro con brio'
+          #     metronome beat_unit: 'quarter', per_minute: '132'
+          #   end
           def initialize(placement: nil, # above / below
                          voice: nil, # number
                          staff: nil,  # number
@@ -35,20 +120,62 @@ module Musa
             with &block if block_given?
           end
 
+          # Voice builder/setter.
+          # @return [Integer, nil]
           attr_simple_builder :voice
+
+          # Staff builder/setter.
+          # @return [Integer, nil]
           attr_simple_builder :staff
+
+          # Offset builder/setter.
+          # @return [Numeric, nil]
           attr_simple_builder :offset
+
+          # Placement builder/setter ('above' or 'below').
+          # @return [String, nil]
           attr_simple_builder :placement
 
+          # Adds a metronome marking.
+          # @see Metronome
           attr_complex_adder_to_custom(:metronome) { |*p, **kp, &b| Metronome.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds a wedge (crescendo/diminuendo hairpin).
+          # @see Wedge
           attr_complex_adder_to_custom(:wedge) { |*p, **kp, &b| Wedge.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds dynamics marking.
+          # @see Dynamics
           attr_complex_adder_to_custom(:dynamics) { |*p, **kp, &b| Dynamics.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds pedal marking.
+          # @see Pedal
           attr_complex_adder_to_custom(:pedal) { |*p, **kp, &b| Pedal.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds bracket.
+          # @see Bracket
           attr_complex_adder_to_custom(:bracket) { |*p, **kp, &b| Bracket.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds dashes.
+          # @see Dashes
           attr_complex_adder_to_custom(:dashes) { |*p, **kp, &b| Dashes.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds text words.
+          # @see Words
           attr_complex_adder_to_custom(:words) { |*p, **kp, &b| Words.new(*p, **kp, &b).tap { |t| @types << t } }
+
+          # Adds octave shift (8va/8vb).
+          # @see OctaveShift
           attr_complex_adder_to_custom(:octave_shift) { |*p, **kp, &b| OctaveShift.new(*p, **kp, &b).tap { |t| @types << t } }
 
+          # Generates the direction XML element.
+          #
+          # @param io [IO] output stream
+          # @param indent [Integer] indentation level
+          # @param tabs [String] tab string
+          # @return [void]
+          #
+          # @api private
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<direction#{ decode_bool_or_string_attribute(@placement, 'placement') }>"
 

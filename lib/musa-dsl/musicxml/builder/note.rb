@@ -7,9 +7,26 @@ module Musa
   module MusicXML
     module Builder
       module Internal
+        # Notation element helper.
+        #
+        # Private helper class for creating MusicXML notation elements with
+        # type attributes and optional content. Used internally for elements
+        # like slurs, which can be simple (type: 'start'/'stop') or complex
+        # (with additional attributes like placement, bezier curves, etc.).
+        #
+        # @api private
         class Notation
           include Helper::ToXML
 
+          # Creates a Notation from various input formats.
+          #
+          # @param tag [String] XML element tag name
+          # @param value_or_attributes [Symbol, String, Hash, nil] type value or hash of attributes
+          # @param true_value [String, nil] value to use when type is true
+          # @param false_value [String, nil] value to use when type is false
+          # @return [Notation, nil]
+          #
+          # @api private
           def self.create(tag, value_or_attributes, true_value = nil, false_value = nil)
             case value_or_attributes
             when Hash
@@ -28,6 +45,16 @@ module Musa
             end
           end
 
+          # Creates a notation element.
+          #
+          # @param tag [String] XML element tag name
+          # @param type [Symbol, String, Boolean] type attribute value
+          # @param content [String, nil] element text content
+          # @param true_value [String, nil] value to use when type is true
+          # @param false_value [String, nil] value to use when type is false
+          # @param attributes [Hash] additional XML attributes
+          #
+          # @api private
           def initialize(tag, type, content = nil, true_value = nil, false_value = nil, **attributes)
             @tag = tag
 
@@ -43,6 +70,14 @@ module Musa
             @attributes = attributes
           end
 
+          # Generates the notation XML element.
+          #
+          # @param io [IO] output stream
+          # @param indent [Integer] indentation level
+          # @param tabs [String] tab string
+          # @return [void]
+          #
+          # @api private
           def _to_xml(io, indent:, tabs:)
             io.print "#{tabs}\t<#{ @tag } "
 
@@ -62,6 +97,108 @@ module Musa
 
         private_constant :Notation
 
+        # Abstract base class for all note types.
+        #
+        # Note is the foundation for pitched notes, rests, and unpitched percussion notes.
+        # It provides comprehensive support for musical notation including:
+        #
+        # ## Core Note Properties
+        # - **Duration and Type**: Timing (duration in divisions, type: whole/half/quarter/etc.)
+        # - **Voice and Staff**: Multi-voice and multi-staff support
+        # - **Dots**: Dotted and double-dotted notes
+        # - **Grace Notes**: Ornamental notes without duration
+        # - **Cue Notes**: Smaller notes for reference
+        # - **Chords**: Notes that sound simultaneously
+        #
+        # ## Notations
+        # The `<notations>` element groups musical symbols attached to notes:
+        #
+        # ### Basic Notations
+        # - **Ties/Tied**: Visual ties connecting notes (tie) vs sustained sound (tied)
+        # - **Slurs**: Phrase markings
+        # - **Tuplets**: Irregular rhythmic groupings (triplets, quintuplets, etc.)
+        # - **Dynamics**: Volume markings (pp, p, mp, mf, f, ff, etc.)
+        # - **Fermata**: Pause/hold symbols
+        # - **Accidental Marks**: Sharp, flat, natural annotations
+        # - **Arpeggiate**: Rolled chord indication
+        # - **Glissando/Slide**: Pitch glide
+        #
+        # ### Articulations
+        # Attack and release characteristics:
+        # - **accent**: Emphasis (>)
+        # - **staccato**: Short, detached (•)
+        # - **tenuto**: Full value (−)
+        # - **staccatissimo**: Very short (▼)
+        # - **spiccato**: Bouncing bow
+        # - **strong_accent**: Forceful (^)
+        # - **detached_legato**: Portato
+        # - **breath_mark**: Breath pause
+        # - **caesura**: Railroad tracks (caesura)
+        # - Plus: doit, falloff, plop, scoop, stress, unstress
+        #
+        # ### Ornaments
+        # Melodic decorations:
+        # - **trill_mark**: Rapid alternation with upper neighbor
+        # - **mordent**: Single alternation with lower neighbor
+        # - **inverted_mordent**: Single alternation with upper neighbor
+        # - **turn**: Four-note figure around main note
+        # - **inverted_turn**: Inverted turn figure
+        # - **delayed_turn**: Turn after main note
+        # - **shake**: Extended trill
+        # - **tremolo**: Rapid repetition (single) or alternation (start/stop)
+        # - **schleifer**: Slide ornament
+        # - **wavy_line**: Trill extension
+        #
+        # ### Technical Markings
+        # Performance technique indicators:
+        #
+        # **String Instruments**:
+        # - **fingering**: Finger numbers
+        # - **up_bow/down_bow**: Bowing direction (↑/↓)
+        # - **harmonic**: Natural or artificial harmonics
+        # - **open_string**: Open string indication (○)
+        # - **stopped**: Stopped note (+)
+        # - **snap_pizzicato**: Bartók pizzicato
+        # - **thumb_position**: Cello thumb position
+        # - **string**: String number
+        # - **hammer_on/pull_off**: Legato technique
+        #
+        # **Wind Instruments**:
+        # - **double_tongue/triple_tongue**: Tonguing technique
+        # - **fingernails**: Use fingernails
+        # - **hole**: Woodwind fingering holes
+        #
+        # **Guitar/Fretted**:
+        # - **fret**: Fret number
+        # - **bend**: String bend
+        # - **tap**: Tapping technique
+        # - **pluck**: Plucking style
+        #
+        # **Other**:
+        # - **arrow**: Directional arrow
+        # - **handbell**: Handbell technique (damp, echo, gyro, etc.)
+        # - **heel/toe**: Organ pedal technique
+        #
+        # ## Hierarchy
+        #
+        # Note is an abstract base class with three concrete subclasses:
+        # - {PitchedNote}: Notes with specific pitch (step, octave, alteration)
+        # - {Rest}: Silences with duration
+        # - {UnpitchedNote}: Percussion notes without specific pitch
+        #
+        # ## Usage
+        #
+        # Note is not used directly—use {PitchedNote}, {Rest}, or {UnpitchedNote}.
+        # Notes are typically added via {Measure} convenience methods:
+        # - {Measure#add_pitch} / {Measure#pitch}
+        # - {Measure#add_rest} / {Measure#rest}
+        # - {Measure#add_unpitched} / {Measure#unpitched}
+        #
+        # @abstract Subclass and override {#specific_to_xml} to implement.
+        # @see PitchedNote Pitched notes with step/octave
+        # @see Rest Rests and measure rests
+        # @see UnpitchedNote Unpitched percussion
+        # @see Measure Container for notes
         class Note
           extend Musa::Extension::AttributeBuilder
           include Musa::Extension::With
@@ -69,6 +206,125 @@ module Musa
           include Helper
           include ToXML
 
+          # Creates a note (abstract base constructor).
+          #
+          # This constructor is called by subclasses ({PitchedNote}, {Rest}, {UnpitchedNote}).
+          # The extensive parameter list supports all MusicXML notation features.
+          #
+          # ## Parameter Categories
+          #
+          # ### Core Note Properties
+          # @param grace [Boolean, nil] grace note (ornamental, no time value)
+          # @param cue [Boolean, nil] cue note (smaller, reference indication)
+          # @param chord [Boolean, nil] note is part of a chord (sounds with previous note)
+          # @param duration [Integer, nil] duration in division units
+          # @param type [String, nil] note type: 'whole', 'half', 'quarter', 'eighth', '16th', etc.
+          # @param dots [Integer, nil] number of augmentation dots (1 or 2)
+          # @param voice [Integer, nil] voice number for polyphonic music
+          # @param staff [Integer, nil] staff number for multi-staff instruments
+          # @param tie_start [Boolean, nil] start a tie to next note
+          # @param tie_stop [Boolean, nil] stop a tie from previous note
+          # @param accidental [String, nil] visual accidental: 'sharp', 'flat', 'natural', etc.
+          # @param stem [String, nil] stem direction: 'up', 'down', 'double', 'none'
+          # @param pizzicato [Boolean, nil] pizzicato attribute on note element
+          #
+          # ### Rhythm Modification
+          # @param time_modification [TimeModification, Hash, nil] tuplet ratio (e.g., 3:2 for triplets)
+          # @param notehead [Notehead, Hash, nil] notehead style and properties
+          #
+          # ### Basic Notations
+          # @param tied [String, nil] tied notation: 'start', 'stop', 'continue'
+          # @param tuplet [Tuplet, Hash, nil] tuplet bracket/number notation
+          # @param slur [String, Hash, nil] slur: 'start', 'stop', 'continue' or hash with attributes
+          # @param dynamics [String, Array<String>, nil] dynamics: 'pp', 'p', 'mp', 'mf', 'f', 'ff', etc.
+          # @param fermata [Boolean, String, nil] fermata: true, 'upright', 'inverted'
+          # @param accidental_mark [String, nil] accidental in notations: 'sharp', 'flat', 'natural'
+          # @param arpeggiate [Boolean, String, nil] arpeggio: true, 'up', 'down'
+          # @param non_arpeggiate [String, nil] non-arpeggio: 'top', 'bottom'
+          # @param glissando [String, nil] glissando: 'start', 'stop'
+          # @param slide [String, nil] slide: 'start', 'stop'
+          #
+          # ### Articulations
+          # @param accent [Boolean, nil] accent mark (>)
+          # @param staccato [Boolean, nil] staccato (•)
+          # @param tenuto [Boolean, nil] tenuto (−)
+          # @param staccatissimo [Boolean, nil] staccatissimo (▼)
+          # @param spiccato [Boolean, nil] spiccato
+          # @param strong_accent [Boolean, String, nil] strong accent (^): true, 'up', 'down'
+          # @param detached_legato [Boolean, nil] detached legato (portato)
+          # @param breath_mark [Boolean, String, nil] breath mark: true, 'comma', 'tick'
+          # @param caesura [Boolean, nil] caesura (railroad tracks)
+          # @param doit [Boolean, nil] doit
+          # @param falloff [Boolean, nil] falloff
+          # @param plop [Boolean, nil] plop
+          # @param scoop [Boolean, nil] scoop
+          # @param stress [Boolean, nil] stress
+          # @param unstress [Boolean, nil] unstress
+          # @param other_articulation [String, nil] custom articulation text
+          #
+          # ### Ornaments
+          # @param trill_mark [Boolean, nil] trill
+          # @param mordent [Boolean, nil] mordent (lower neighbor)
+          # @param inverted_mordent [Boolean, nil] inverted mordent (upper neighbor)
+          # @param turn [Boolean, nil] turn
+          # @param inverted_turn [Boolean, nil] inverted turn
+          # @param delayed_turn [Boolean, nil] delayed turn
+          # @param delayed_inverted_turn [Boolean, nil] delayed inverted turn
+          # @param shake [Boolean, nil] shake
+          # @param tremolo [String, nil] tremolo: 'single', 'start', 'stop'
+          # @param schleifer [Boolean, nil] schleifer
+          # @param wavy_line [Boolean, nil] wavy line (trill extension)
+          # @param vertical_turn [Boolean, nil] vertical turn
+          # @param other_ornament [Boolean, nil] custom ornament
+          # @param ornament_accidental_mark [String, nil] ornament accidental: 'sharp', 'flat', 'natural'
+          #
+          # ### String Technique
+          # @param fingering [Fingering, Hash, nil] fingering indication
+          # @param up_bow [Boolean, nil] up bow (↑)
+          # @param down_bow [Boolean, nil] down bow (↓)
+          # @param harmonic [Harmonic, Hash, nil] harmonic
+          # @param open_string [Boolean, nil] open string (○)
+          # @param stopped [Boolean, nil] stopped note (+)
+          # @param snap_pizzicato [Boolean, nil] Bartók pizzicato
+          # @param thumb_position [Boolean, nil] cello thumb position
+          # @param string [Integer, nil] string number
+          # @param hammer_on [String, nil] hammer-on: 'start', 'stop'
+          # @param pull_off [String, nil] pull-off: 'start', 'stop'
+          #
+          # ### Wind Technique
+          # @param double_tongue [Boolean, nil] double tonguing
+          # @param triple_tongue [Boolean, nil] triple tonguing
+          # @param fingernails [Boolean, nil] use fingernails
+          # @param hole [Hole, Hash, nil] woodwind fingering hole
+          #
+          # ### Fretted Instrument Technique
+          # @param fret [Integer, nil] fret number
+          # @param bend [Bend, Hash, nil] string bend
+          # @param tap [String, nil] tapping
+          # @param pluck [String, nil] plucking technique
+          #
+          # ### Other Technical
+          # @param arrow [Arrow, Hash, nil] arrow indication
+          # @param handbell [String, nil] handbell technique: 'damp', 'echo', 'gyro', etc.
+          # @param heel [Boolean, nil] heel (organ pedal)
+          # @param toe [Boolean, nil] toe (organ pedal)
+          # @param other_technical [String, nil] custom technical text
+          #
+          # @yield Optional DSL block for setting properties
+          #
+          # @example Basic quarter note with staccato
+          #   PitchedNote.new('C', octave: 4, duration: 2, type: 'quarter', staccato: true)
+          #
+          # @example Dotted eighth with slur start
+          #   PitchedNote.new('D', octave: 5, duration: 3, type: 'eighth', dots: 1, slur: 'start')
+          #
+          # @example Grace note with accent
+          #   PitchedNote.new('E', octave: 5, grace: true, type: 'eighth', accent: true)
+          #
+          # @example Multi-voice with fermata
+          #   PitchedNote.new('G', octave: 4, duration: 4, type: 'half', voice: 2, fermata: true)
+          #
+          # @api private (called by subclasses)
           def initialize(*_rest,
                          pizzicato: nil,  # true
                          # main content
@@ -351,6 +607,18 @@ module Musa
           attr_simple_builder :triple_tongue
           attr_simple_builder :up_bow
 
+          # Generates the note XML element.
+          #
+          # Outputs a complete `<note>` element with all sub-elements in MusicXML order:
+          # grace, cue, chord, pitch/rest/unpitched, duration, tie, voice, type, dots,
+          # accidental, time_modification, stem, notehead, staff, notations.
+          #
+          # @param io [IO] output stream
+          # @param indent [Integer] indentation level
+          # @param tabs [String] tab string
+          # @return [void]
+          #
+          # @api private
           def _to_xml(io, indent:, tabs:)
             io.puts "#{tabs}<note#{" pizzicato=\"yes\"" if @pizzicato}>"
 
@@ -488,8 +756,23 @@ module Musa
 
           private
 
+          # Outputs note-type-specific XML content.
+          #
+          # Abstract method overridden by subclasses to output pitch, rest, or unpitched elements.
+          # Called during XML generation between chord and duration elements.
+          #
+          # @param io [IO] output stream
+          # @param indent [Integer] indentation level
+          # @return [void]
+          #
+          # @abstract Subclasses must implement this method
+          # @api private
           def specific_to_xml(io, indent:); end
 
+          # Checks if any notation elements are present.
+          #
+          # @return [Boolean] true if any notations should be output
+          # @api private
           def _notations
             @accidental_mark ||
                 @arpeggiate ||

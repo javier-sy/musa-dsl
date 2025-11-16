@@ -1,3 +1,41 @@
+# Serie quantizer for time-value quantization and interpolation.
+#
+# Quantizes continuous time-value pairs to discrete steps, useful for:
+#
+# ## Quantization Modes
+#
+# - **Raw**: Rounds values to nearest step, interpolates between points
+# - **Predictive**: Predicts crossings of quantization boundaries
+#
+# ## Parameters
+#
+# - **reference**: Quantization reference point (default: 0)
+# - **step**: Quantization step size (default: 1)
+# - **value_attribute**: Attribute to quantize in hash mode (default: :value)
+# - **stops**: Include stop points for value changes
+# - **predictive**: Use predictive quantization
+# - **left_open/right_open**: Boundary inclusion (raw mode only)
+#
+# ## Musical Applications
+#
+# - Quantize MIDI controller data to discrete values
+# - Convert continuous pitch bends to semitones
+# - Snap timing to grid
+# - Generate stepped automation curves
+# - Convert analog input to digital steps
+#
+# @example Basic quantization
+#   # Quantize to semitones (12 steps per octave)
+#   pitch_bend = S({time: 0r, value: 60.3}, {time: 1r, value: 61.8})
+#   quantized = pitch_bend.quantize(step: 1)
+#   quantized.i.to_a  # => [{time: 0, value: 60, duration: 1}, ...]
+#
+# @example Predictive quantization
+#   continuous = S({time: 0r, value: 0}, {time: 4r, value: 10})
+#   pred = continuous.quantize(step: 2, predictive: true)
+#   # Generates crossing points at values 0, 2, 4, 6, 8, 10
+#
+# @api public
 require_relative '../datasets/e'
 require_relative '../core-ext/inspect-nice'
 
@@ -6,6 +44,22 @@ require_relative 'base-series'
 # TODO remove debugging puts, intermediate hash comments on :info and InspectNice
 module Musa
   module Series::Operations
+    # Quantizes time-value serie to discrete steps.
+    #
+    # @param reference [Numeric, nil] quantization reference (default: 0)
+    # @param step [Numeric, nil] step size (default: 1)
+    # @param value_attribute [Symbol, nil] attribute to quantize (default: :value)
+    # @param stops [Boolean, nil] include stop points (default: false)
+    # @param predictive [Boolean, nil] use predictive mode (default: false)
+    # @param left_open [Boolean, nil] left boundary open (raw mode)
+    # @param right_open [Boolean, nil] right boundary open (raw mode)
+    #
+    # @return [RawQuantizer, PredictiveQuantizer] quantized serie
+    #
+    # @example Quantize to integers
+    #   serie.quantize(step: 1)
+    #
+    # @api public
     def quantize(reference: nil, step: nil,
                  value_attribute: nil,
                  stops: nil,

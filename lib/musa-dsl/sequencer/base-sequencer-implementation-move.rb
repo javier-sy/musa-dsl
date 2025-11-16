@@ -1,11 +1,142 @@
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/inspect-nice'
 
+# Move implementation for animating values over time.
+#
+# Implements the `move` method that smoothly transitions value(s) from starting
+# point(s) to target(s) over time. Supports single values, arrays, and hashes
+# with flexible parameter combinations for controlling timing and interpolation.
+#
+# ## Value Modes
+#
+# - **Single value**: `from: 0, to: 100`
+# - **Array**: `from: [60, 0.5], to: [72, 1.0]` - multiple values
+# - **Hash**: `from: {pitch: 60}, to: {pitch: 72}` - named values
+#
+# ## Parameter Combinations
+#
+# Move requires enough information to calculate both step size and iteration
+# interval. Valid combinations:
+#
+# - `from, to, step, every` - All explicit
+# - `from, to, step, duration/till` - Calculates every from steps needed
+# - `from, to, every, duration/till` - Calculates step from duration
+# - `from, step, every, duration/till` - Open-ended with time limit
+#
+# ## Interpolation
+#
+# - **Linear** (default): `function: proc { |ratio| ratio }`
+# - **Ease-in**: `function: proc { |ratio| ratio ** 2 }`
+# - **Ease-out**: `function: proc { |ratio| 1 - (1 - ratio) ** 2 }`
+# - **Custom**: Any proc mapping [0..1] to [0..1]
+#
+# ## Musical Applications
+#
+# - Pitch bends and glissandi
+# - Volume fades and swells
+# - Filter sweeps and modulation
+# - Tempo changes and rubato
+# - Multi-parameter automation
+#
+# @example Simple pitch glide
+#   require 'musa-dsl'
+#
+#   clock = Musa::Clock::TimerClock.new bpm: 120
+#   transport = Musa::Transport::Transport.new clock
+#   output = MIDICommunications::Output.all.first
+#   voices = Musa::MIDIVoices::MIDIVoices.new(
+#     sequencer: transport.sequencer,
+#     output: output,
+#     channels: [0]
+#   )
+#   voice = voices.voices.first
+#   sequencer = transport.sequencer
+#
+#   sequencer.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |pitch|
+#     voice.note pitch: pitch.round, duration: 1/8r, velocity: 80
+#   end
+#
+# @example Multi-parameter fade
+#   require 'musa-dsl'
+#
+#   clock = Musa::Clock::TimerClock.new bpm: 120
+#   transport = Musa::Transport::Transport.new clock
+#   output = MIDICommunications::Output.all.first
+#   voices = Musa::MIDIVoices::MIDIVoices.new(
+#     sequencer: transport.sequencer,
+#     output: output,
+#     channels: [0]
+#   )
+#   voice = voices.voices.first
+#   sequencer = transport.sequencer
+#
+#   sequencer.move(
+#     from: {volume: 0, brightness: 0},
+#     to: {volume: 127, brightness: 127},
+#     duration: 8r,
+#     every: 1/8r
+#   ) do |params|
+#     voice.controller[:volume] = params[:volume].round
+#     voice.controller[:expression] = params[:brightness].round
+#   end
+#
+# @example Non-linear interpolation
+#   sequencer.move(
+#     from: 0, to: 100,
+#     duration: 4r, every: 1/16r,
+#     function: proc { |ratio| ratio ** 2 }  # Ease-in
+#   ) { |value| puts value }
+#
+# @api private
 module Musa::Sequencer
   class BaseSequencer
     using Musa::Extension::Arrayfy
     using Musa::Extension::InspectNice
 
+    # Animates value(s) over time with flexible parameter control.
+    #
+    # Implements smooth value transitions supporting single values, arrays,
+    # and hashes. Handles complex parameter calculation to derive missing
+    # timing or step information. Uses _every for iteration scheduling.
+    #
+    # ## Yield Block Parameters
+    #
+    # Block receives current value(s), next value(s), and metadata:
+    # - In single mode: `|value, next_value, control:, duration:, ...|`
+    # - In array mode: `|values, next_values, control:, duration:, ...|`
+    # - In hash mode: `|values_hash, next_values_hash, control:, ...|`
+    #
+    # Optional parameters: control, duration, quantized_duration,
+    # position_jitter, duration_jitter, started_ago, right_open
+    #
+    # ## Implementation Details
+    #
+    # 1. Validates and normalizes parameters
+    # 2. Calculates missing parameters (step or every) from others
+    # 3. Creates MoveControl wrapping EveryControl
+    # 4. Uses _every with common interval (GCD of all intervals)
+    # 5. Calculates values, applies function, checks stop conditions
+    # 6. Yields to user block with values and metadata
+    #
+    # @param every [Rational, Array, Hash, nil] interval(s) between iterations
+    # @param from [Numeric, Array, Hash] starting value(s)
+    # @param to [Numeric, Array, Hash, nil] target value(s)
+    # @param step [Numeric, Array, Hash, nil] increment(s) per iteration
+    # @param duration [Rational, nil] total duration in bars
+    # @param till [Rational, nil] absolute end position
+    # @param function [Proc, Array<Proc>, nil] interpolation function(s)
+    # @param right_open [Boolean, Array, Hash, nil] exclude final value
+    # @param on_stop [Proc, nil] callback when movement stops
+    # @param after_bars [Rational, nil] delay for after callback
+    # @param after [Proc, nil] callback after movement completes
+    # @yield block to execute at each iteration with current/next values
+    #
+    # @return [MoveControl] control object for managing movement
+    #
+    # @raise [ArgumentError] if incompatible parameters used together
+    # @raise [ArgumentError] if insufficient parameters to calculate movement
+    #
+    # @api private
     private def _move(every: nil,
                       from:, to: nil,
                       step: nil,
@@ -356,6 +487,18 @@ module Musa::Sequencer
       control
     end
 
+    # Calculates time elapsed since each value last changed.
+    #
+    # Returns array where each element is position delta since that value
+    # was last updated, or nil if value is being updated this iteration.
+    #
+    # @param last_positions [Array<Rational, nil>] positions of last updates
+    # @param position [Rational] current position
+    # @param affected_indexes [Array<Integer>] indexes being updated now
+    #
+    # @return [Array<Rational, nil>] deltas or nils
+    #
+    # @api private
     private def _started_ago(last_positions, position, affected_indexes)
       Array.new(last_positions.size).tap do |a|
         last_positions.each_index do |i|
@@ -366,6 +509,16 @@ module Musa::Sequencer
       end
     end
 
+    # Calculates duration for each value based on interval grouping.
+    #
+    # Returns array of durations, one per value, based on its interval group.
+    #
+    # @param every_groups [Hash{Rational => Array<Integer>}] interval groups
+    # @param largest_duration [Rational] fallback duration
+    #
+    # @return [Array<Rational>] durations per value
+    #
+    # @api private
     private def _durations(every_groups, largest_duration)
       [].tap do |a|
         if every_groups.any?
@@ -380,10 +533,28 @@ module Musa::Sequencer
       end
     end
 
+    # Reconstructs hash from separate key and value arrays.
+    #
+    # @param keys [Array<Symbol>] hash keys
+    # @param values [Array] hash values
+    #
+    # @return [Hash] reconstructed hash
+    #
+    # @api private
     private def _hash_from_keys_and_values(keys, values)
       {}.tap { |h| keys.each_index { |i| h[keys[i]] = values[i] } }
     end
 
+    # Calculates greatest common divisor of intervals for scheduling.
+    #
+    # Computes GCD of all intervals to find common iteration frequency
+    # that hits all interval positions. Uses rational arithmetic.
+    #
+    # @param intervals [Array<Rational>] intervals to find GCD of
+    #
+    # @return [Rational, nil] common interval or nil if empty
+    #
+    # @api private
     private def _common_interval(intervals)
       intervals = intervals.compact
       return nil if intervals.empty?
@@ -397,9 +568,49 @@ module Musa::Sequencer
       Rational(gcd_numerators, lcm_denominators)
     end
 
+    # Control object for move operations.
+    #
+    # Wraps EveryControl to provide move-specific lifecycle management.
+    # Delegates timing control to EveryControl while adding move-specific
+    # callbacks and state.
+    #
+    # ## Delegation Pattern
+    #
+    # MoveControl delegates to EveryControl for:
+    # - Duration and till timing control
+    # - Iteration scheduling
+    # - Stop conditions
+    #
+    # Adds move-specific features:
+    # - on_stop callbacks when movement completes
+    # - after callbacks with delays
+    # - Stopped state synchronization
+    #
+    # @example Basic move control
+    #   control = sequencer.move(from: 0, to: 100, duration: 4r, every: 1/4r) { |v| }
+    #   control.on_stop { puts "Movement finished!" }
+    #   control.after(2r) { puts "2 bars after finish" }
+    #   control.stop  # Manually halt movement
+    #
+    # @api private
     class MoveControl < EventHandler
-      attr_reader :every_control, :do_on_stop, :do_after
+      # @return [EveryControl] underlying every control for timing
+      attr_reader :every_control
+      # @return [Array<Proc>] stop callbacks
+      attr_reader :do_on_stop
+      # @return [Array<Hash>] after callbacks with delays
+      attr_reader :do_after
 
+      # Creates move control with timing parameters.
+      #
+      # @param parent [EventHandler] parent event handler
+      # @param duration [Rational, nil] maximum duration in bars
+      # @param till [Rational, nil] absolute stop position
+      # @param on_stop [Proc, nil] stop callback
+      # @param after_bars [Rational, nil] delay for after callback
+      # @param after [Proc, nil] after callback block
+      #
+      # @api private
       def initialize(parent, duration: nil, till: nil, on_stop: nil, after_bars: nil, after: nil)
         super parent
 
@@ -417,19 +628,47 @@ module Musa::Sequencer
         end
       end
 
+      # Registers callback for when movement stops.
+      #
+      # @yield stop callback block
+      #
+      # @return [void]
+      #
+      # @api private
       def on_stop(&block)
         @do_on_stop << block
       end
 
+      # Registers callback to execute after movement stops.
+      #
+      # @param bars [Numeric, nil] delay in bars after stop (default: 0)
+      # @yield after callback block
+      #
+      # @return [void]
+      #
+      # @example Delayed callback
+      #   control.after(2r) { puts "2 bars after movement ends" }
+      #
+      # @api private
       def after(bars = nil, &block)
         bars ||= 0
         @do_after << { bars: bars.rationalize, block: block }
       end
 
+      # Stops movement by delegating to every_control.
+      #
+      # @return [void]
+      #
+      # @api private
       def stop
         @every_control.stop
       end
 
+      # Checks if movement is stopped.
+      #
+      # @return [Boolean] true if stopped
+      #
+      # @api private
       def stopped?
         @stop
       end

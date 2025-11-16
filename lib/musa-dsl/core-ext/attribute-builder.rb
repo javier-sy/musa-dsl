@@ -1,10 +1,50 @@
 module Musa
   module Extension
+    # Module providing metaprogramming methods for creating DSL builder patterns.
+    #
+    # AttributeBuilder defines class methods that generate instance methods for
+    # creating and managing collections of objects in a DSL-friendly way. It's
+    # heavily used throughout Musa DSL to create fluent, expressive APIs.
+    #
+    # ## Method Categories
+    #
+    # - **Adders to Hash**: Create methods that build hash-based collections
+    # - **Adders to Array**: Create methods that build array-based collections
+    # - **Builders**: Create single-object getter/setter DSL methods
+    #
+    # ## Naming Conventions
+    #
+    # - `add_item` / `item`: singular form adds one object
+    # - `items`: plural form adds multiple or retrieves collection
+    # - Automatic pluralization (item → items) unless specified
+    #
+    # @example Using in a class
+    #   class Score
+    #     extend Musa::Extension::AttributeBuilder
+    #
+    #     def initialize
+    #       @tracks = {}
+    #     end
+    #
+    #     attr_tuple_adder_to_hash :track, Track
+    #   end
+    #
+    #   score = Score.new
+    #   score.add_track :piano, params
+    #   score.tracks  # => { piano: Track(...) }
+    #
+    # @see Musa::Datasets Score classes use these extensively
     module AttributeBuilder
-      # add_thing id, parameter
-      # things id1: parameter1, id2: parameter2 -> { id1: Thing(id1, parameter1), id2: Thing(id2, parameter2) }
-      # things -> { id1: Thing(id1, parameter1), id2: Thing(id2, parameter2) }
+      # Creates methods for adding id/value tuples to a hash collection.
       #
+      # Generates:
+      # - `add_#{name}(id, parameter)` → creates instance and adds to hash
+      # - `#{plural}(**parameters)` → batch add or retrieve hash
+      #
+      # @param name [Symbol] singular name for the item.
+      # @param klass [Class] class to instantiate (receives id, parameter).
+      # @param plural [Symbol, nil] plural name (defaults to name + 's').
+      # @param variable [Symbol, nil] instance variable name (defaults to '@' + plural).
       def attr_tuple_adder_to_hash(name, klass, plural: nil, variable: nil)
 
         plural ||= name.to_s + 's'
@@ -26,10 +66,15 @@ module Musa
         end
       end
 
-      # add_thing id, parameter
-      # things id1: parameter1, id2: parameter2 -> [ Thing(id1, parameter1), Thing(id2, parameter2) ]
-      # things -> [ Thing(id1, parameter1), Thing(id2, parameter2) ]
-
+      # Creates methods for adding id/value tuples to an array collection.
+      #
+      # Similar to attr_tuple_adder_to_hash but stores items in an array instead of hash.
+      # Useful when order matters or duplicates are allowed.
+      #
+      # @param name [Symbol] singular name for the item.
+      # @param klass [Class] class to instantiate.
+      # @param plural [Symbol, nil] plural name.
+      # @param variable [Symbol, nil] instance variable name.
       def attr_tuple_adder_to_array(name, klass, plural: nil, variable: nil)
 
         plural ||= name.to_s + 's'
@@ -51,10 +96,14 @@ module Musa
         end
       end
 
-      # add_thing param1, param2, key1: parameter1, key2: parameter2 -> Thing(...)
-      # thing param1, param2, key1: parameter1, key2: parameter2 -> Thing(...)
-      # things -> (collection)
-
+      # Creates methods for adding complex objects (with multiple parameters) to an array.
+      #
+      # Supports both positional and keyword arguments when creating instances.
+      #
+      # @param name [Symbol] singular name.
+      # @param klass [Class] class to instantiate.
+      # @param plural [Symbol, nil] plural name.
+      # @param variable [Symbol, nil] instance variable name.
       def attr_complex_adder_to_array(name, klass, plural: nil, variable: nil)
 
         plural ||= name.to_s + 's'
@@ -86,10 +135,14 @@ module Musa
       end
 
 
-      # add_thing param1, param2, key1: parameter1, key2: parameter2 -> Thing(...)
-      # thing param1, param2, key1: parameter1, key2: parameter2 -> Thing(...)
-      # things -> (collection)
-
+      # Creates methods for adding complex objects with custom construction logic.
+      #
+      # The block receives parameters and should construct and add the object.
+      #
+      # @param name [Symbol] singular name.
+      # @param plural [Symbol, nil] plural name.
+      # @param variable [Symbol, nil] instance variable name.
+      # @yield Constructor block executed in instance context.
       def attr_complex_adder_to_custom(name, plural: nil, variable: nil, &constructor_and_adder)
 
         plural ||= name.to_s + 's'
@@ -121,9 +174,11 @@ module Musa
         end
       end
 
-      # thing value -> crea Thing(value)
-      # thing -> Thing(value)
-
+      # Creates a simple getter/setter DSL method for a single value.
+      #
+      # @param name [Symbol] attribute name.
+      # @param klass [Class, nil] class to instantiate (nil = use value as-is).
+      # @param variable [Symbol, nil] instance variable name.
       def attr_simple_builder(name, klass = nil, variable: nil)
         variable ||= ('@' + name.to_s).to_sym
 
@@ -140,34 +195,38 @@ module Musa
         attr_writer name
       end
 
-      # thing id: value -> crea Thing(id, value)
-      # thing -> Thing(id, value)
-
+      # Creates a getter/setter DSL method for a single id/value tuple.
+      #
+      # @param name [Symbol] attribute name.
+      # @param klass [Class] class to instantiate.
+      # @param variable [Symbol, nil] instance variable name.
       def attr_tuple_builder(name, klass, variable: nil)
         variable ||= ('@' + name.to_s).to_sym
 
         define_method name do |**parameters, &block|
-          raise ArgumentError, "Method #{name} can only create instances with one id: value arguments pattern" unless parameters.size == 1
-
           if parameters.empty?
             instance_variable_get variable
-          else
+          elsif parameters.size == 1
             parameter = parameters.first
             klass.new(*parameter, &block).tap do |object|
               instance_variable_set variable, object
             end
+          else
+            raise ArgumentError, "Method #{name} can only create instances with one id: value arguments pattern"
           end
         end
 
         attr_writer name
       end
 
-      # thing value1, value2, key1: value3, key2: value4 -> crea Thing(value1, value2, key1: value3, key2: value3)
-      # thing -> Thing(value1, value2, key1: value3, key2: value4)
-      # y también...
-      # thing value1, value2, key1: value3, key2: value4 -> crea Thing(first_parameter, value1, value2, key1: value3, key2: value3)
-      # thing -> Thing(first_parameter, value1, value2, key1: value3, key2: value4)
-
+      # Creates a getter/setter DSL method for complex objects with multiple parameters.
+      #
+      # Supports optional first_parameter that's automatically prepended when constructing.
+      #
+      # @param name [Symbol] attribute name.
+      # @param klass [Class] class to instantiate.
+      # @param variable [Symbol, nil] instance variable name.
+      # @param first_parameter [Object, nil] parameter automatically prepended to constructor.
       def attr_complex_builder(name, klass, variable: nil, first_parameter: nil)
         variable ||= ('@' + name.to_s).to_sym
 

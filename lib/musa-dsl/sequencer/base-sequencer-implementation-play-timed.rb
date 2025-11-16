@@ -1,9 +1,102 @@
 require_relative '../core-ext/inspect-nice'
 
+# Play-timed implementation for series with explicit timing.
+#
+# Implements `play_timed` method for series where each element specifies its
+# own timing via `:time` attribute. Unlike regular `play` which derives timing
+# from evaluation mode, play_timed uses explicit times from series data.
+#
+# ## Timed Series Format
+#
+# Each element must have:
+#
+# - **:time**: Rational time offset from start
+# - **:value**: Actual value(s) - Hash or Array
+# - Optional extra attributes (passed to block)
+#
+# ## Value Modes
+#
+# - **Hash mode**: `{ time: 0r, value: {pitch: 60, velocity: 96} }`
+# - **Array mode**: `{ time: 0r, value: [60, 96] }`
+#
+# Mode is detected from first element and applied to entire series.
+#
+# ## Component Tracking
+#
+# Tracks last update time per component (hash key or array index) to
+# calculate `started_ago` - how long since each component changed.
+#
+# ## Musical Applications
+#
+# - Playback of recorded performances
+# - Multi-track synchronization
+# - Complex polyphonic structures
+# - MIDI file playback
+# - Audio/control automation
+#
+# @example Hash mode timed series
+#   require 'musa-dsl'
+#
+#   clock = Musa::Clock::TimerClock.new bpm: 120
+#   transport = Musa::Transport::Transport.new clock
+#   output = MIDICommunications::Output.all.first
+#   voices = Musa::MIDIVoices::MIDIVoices.new(
+#     sequencer: transport.sequencer,
+#     output: output,
+#     channels: [0]
+#   )
+#   voice = voices.voices.first
+#   sequencer = transport.sequencer
+#
+#   timed_notes = [
+#     { time: 0r, value: {pitch: 60, velocity: 96} },
+#     { time: 1r, value: {pitch: 64, velocity: 80} },
+#     { time: 2r, value: {pitch: 67, velocity: 64} }
+#   ]
+#   sequencer.play_timed(timed_notes) do |values|
+#     voice.note pitch: values[:pitch], velocity: values[:velocity], duration: 0.5r
+#   end
+#
+# @example Array mode with extra attributes
+#   require 'musa-dsl'
+#
+#   clock = Musa::Clock::TimerClock.new bpm: 120
+#   transport = Musa::Transport::Transport.new clock
+#   output = MIDICommunications::Output.all.first
+#   voices = Musa::MIDIVoices::MIDIVoices.new(
+#     sequencer: transport.sequencer,
+#     output: output,
+#     channels: [0, 1]
+#   )
+#   sequencer = transport.sequencer
+#
+#   timed = [
+#     { time: 0r, value: [60, 96], channel: 0 },
+#     { time: 1r, value: [64, 80], channel: 1 }
+#   ]
+#   sequencer.play_timed(timed) do |values, channel:|
+#     voices.voices[channel].note pitch: values[0], velocity: values[1], duration: 0.5r
+#   end
+#
+# @api private
 module Musa::Sequencer
   class BaseSequencer
     using Musa::Extension::InspectNice
 
+    # Initializes timed series playback.
+    #
+    # Peeks first element to determine mode (hash/array), extract component
+    # IDs and extra attribute names. Then delegates to _play_timed_step for
+    # recursive processing.
+    #
+    # @param timed_serie [Series] timed series with :time and :value
+    # @param start_position [Rational] position offset for all times
+    # @param control [PlayTimedControl] control object
+    # @yield block to call for each element with values and metadata
+    #
+    # @return [void]
+    #
+    # @api private
     private def _play_timed(timed_serie, start_position, control, &block)
 
       if first_value_sample = timed_serie.peek_next_value
@@ -28,6 +121,38 @@ module Musa::Sequencer
                        start_position, last_positions, binder, control)
     end
 
+    # Recursively processes timed series elements.
+    #
+    # Gets next element, extracts values for affected components, calculates
+    # started_ago for unchanged components, schedules user block at element's
+    # time, and recursively calls itself for next element.
+    #
+    # ## Component Processing
+    #
+    # Only processes components with non-nil values in current element.
+    # Tracks last update position per component to calculate started_ago.
+    #
+    # ## Block Parameters
+    #
+    # Calls user block with:
+    # - values (hash or array of current values)
+    # - extra_attributes (hash per attribute name, or array)
+    # - time: absolute position (start_position + element time)
+    # - started_ago: hash/array of deltas since last update per component
+    # - control: control object
+    #
+    # @param hash_mode [Boolean] true if hash mode, false if array mode
+    # @param component_ids [Array] component identifiers (keys or indices)
+    # @param extra_attribute_names [Set] names of extra attributes
+    # @param timed_serie [Series] series being played
+    # @param start_position [Rational] position offset
+    # @param last_positions [Hash, Array] last update positions per component
+    # @param binder [SmartProcBinder] user block binder
+    # @param control [PlayTimedControl] control object
+    #
+    # @return [void]
+    #
+    # @api private
     private def _play_timed_step(hash_mode,
                                  component_ids, extra_attribute_names,
                                  timed_serie,
@@ -87,9 +212,31 @@ module Musa::Sequencer
       end
     end
 
+    # Control object for play_timed operations.
+    #
+    # Manages lifecycle of timed series playback with callbacks.
+    # Simpler than PlayControl - no pause/continue support.
+    #
+    # @example Basic play_timed control
+    #   control = sequencer.play_timed(timed_series) { |values| ... }
+    #   control.on_stop { puts "Playback finished!" }
+    #   control.after(2r) { puts "2 bars after end" }
+    #
+    # @api private
     class PlayTimedControl < EventHandler
-      attr_reader :do_on_stop, :do_after
+      # @return [Array<Proc>] stop callbacks
+      attr_reader :do_on_stop
+      # @return [Array<Hash>] after callbacks with delays
+      attr_reader :do_after
 
+      # Creates play_timed control with callbacks.
+      #
+      # @param parent [EventHandler] parent event handler
+      # @param on_stop [Proc, nil] stop callback
+      # @param after_bars [Rational, nil] delay for after callback
+      # @param after [Proc, nil] after callback block
+      #
+      # @api private
       def initialize(parent, on_stop: nil, after_bars: nil, after: nil)
         super parent
         @do_on_stop = []
@@ -99,10 +246,28 @@ module Musa::Sequencer
         self.after after_bars, &after if after
       end
 
+      # Registers callback for when playback stops.
+      #
+      # @yield stop callback block
+      #
+      # @return [void]
+      #
+      # @api private
       def on_stop(&block)
         @do_on_stop << block
       end
 
+      # Registers callback to execute after playback completes.
+      #
+      # @param bars [Numeric, nil] delay in bars after completion (default: 0)
+      # @yield after callback block
+      #
+      # @return [void]
+      #
+      # @example Delayed callback
+      #   control.after(4r) { puts "4 bars after playback ends" }
+      #
+      # @api private
       def after(bars = nil, &block)
         bars ||= 0
         @do_after << { bars: bars.rationalize, block: block }
