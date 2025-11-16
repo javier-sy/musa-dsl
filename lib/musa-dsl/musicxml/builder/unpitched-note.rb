@@ -42,7 +42,7 @@ module Musa
         #
         # ## Usage
         #
-        # Created via {Measure#add_unpitched} or {Measure#unpitched}:
+        # Created via Measure#add_unpitched or Measure#unpitched:
         #
         #     measure.unpitched duration: 2, type: 'quarter'
         #     measure.add_unpitched duration: 1, type: 'eighth', accent: true
@@ -79,6 +79,8 @@ module Musa
           #
           # @example Dotted half with forte
           #   UnpitchedNote.new(duration: 6, type: 'half', dots: 1, dynamics: 'f')
+          #
+          # For detailed parameter documentation, see {Note#initialize}
           def initialize( pizzicato: nil, # true
                           grace: nil, # true
                           cue: nil, # true

@@ -629,7 +629,7 @@ module Musa
     #
     # ## Integration with DynamicProxy
     #
-    # Typically used with {DynamicProxy}:
+    # Typically used with `Musa::Extension::DynamicProxy::DynamicProxy`:
     #
     #     class MyDSL
     #       include CustomizableDSLContext

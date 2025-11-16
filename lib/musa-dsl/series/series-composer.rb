@@ -67,6 +67,25 @@ module Musa
         ComposerAsOperationSerie.new(self, &block)
       end
 
+      # Wrapper that exposes Composer as a serie operation.
+      #
+      # Allows {Composer::Composer} pipelines to be used as standard serie
+      # operations. The composer takes input from the source serie, processes
+      # it through the configured pipeline, and outputs transformed values.
+      #
+      # This enables complex multi-input/output serie transformations to
+      # be used in serie operation chains.
+      #
+      # @example Using composer as operation
+      #   serie = FromArray.new([1, 2, 3, 4])
+      #   transformed = serie.composer do
+      #     # Composer pipeline configuration
+      #     pipeline { |v| v * 2 }
+      #   end
+      #   transformed.next_value  # => 2
+      #
+      # @see Composer::Composer Full composer implementation
+      # @api private
       class ComposerAsOperationSerie
         include Musa::Series::Serie.with(source: true)
 
@@ -94,7 +113,48 @@ module Musa
       end
     end
 
+    # Series composition and transformation pipeline system.
+    #
+    # Provides infrastructure for building complex multi-input/output
+    # transformation pipelines with named routes, intermediate stages,
+    # and declarative DSL syntax.
+    #
+    # The Composer system enables modular, synthesis-style routing of
+    # serie transformations with explicit input/output management.
+    #
+    # @see Composer::Composer Main composer implementation
+    # @see ComposerAsOperationSerie Composer as serie operation
     module Composer
+      # Multi-input/output serie transformation pipeline.
+      #
+      # Manages complex transformation pipelines with multiple named inputs,
+      # outputs, and intermediate processing stages. Supports declarative
+      # pipeline definition with DSL syntax and automatic finalization.
+      #
+      # Inputs are automatically proxied and buffered for multiple consumption.
+      # Pipelines can be dynamically created and routed using the `>>` operator.
+      #
+      # @example Basic pipeline
+      #   composer = Composer.new(input: S(1, 2, 3)) do
+      #     input.map { |x| x * 2 } >> :output
+      #   end
+      #   composer.output.i.to_a  # => [2, 4, 6]
+      #
+      # @example Multiple outputs
+      #   composer = Composer.new(input: S(1, 2, 3)) do
+      #     input.map { |x| x * 2 } >> :doubled
+      #     input.map { |x| x + 10 } >> :offset
+      #   end
+      #   composer.output(:doubled).i.to_a  # => [2, 4, 6]
+      #   composer.output(:offset).i.to_a  # => [11, 12, 13]
+      #
+      # @example Multiple inputs
+      #   composer = Composer.new(
+      #     inputs: { a: S(1, 2), b: S(10, 20) }
+      #   ) do
+      #     a.zip(b).map { |x, y| x + y } >> :output
+      #   end
+      #   composer.output.i.to_a  # => [11, 22]
       class Composer
         using Musa::Extension::Arrayfy
 

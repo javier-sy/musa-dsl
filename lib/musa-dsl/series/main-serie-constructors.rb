@@ -528,6 +528,20 @@ module Musa
 
     private_constant :NilSerie
 
+    # Serie constructor that creates a serie from an array of values.
+    #
+    # Iterates through array elements, returning nil when exhausted.
+    # Supports optional module extensions for enhanced functionality.
+    #
+    # @example Basic array serie
+    #   serie = FromArray.new([1, 2, 3, 4, 5])
+    #   serie.next_value  # => 1
+    #   serie.next_value  # => 2
+    #
+    # @example With extensions
+    #   serie = FromArray.new([60, 62, 64], [SomeExtension])
+    #
+    # @api private
     class FromArray
       include Series::Serie.base
 

@@ -11,7 +11,7 @@ module Musa::Datasets
   #
   # Score organizes musical events along a timeline, storing them at specific
   # time points and providing efficient queries for time intervals.
-  # Implements {Enumerable} for iteration over time slots.
+  # Implements `Enumerable` for iteration over time slots.
   #
   # ## Purpose
   #
@@ -241,7 +241,7 @@ module Musa::Datasets
     # Iterates over time slots in order.
     #
     # Yields [time, events] pairs sorted by time.
-    # Implements {Enumerable}.
+    # Implements `Enumerable`.
     #
     # @yieldparam time [Rational] time position
     # @yieldparam events [Array<Abs>] events at that time

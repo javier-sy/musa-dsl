@@ -1124,6 +1124,29 @@ module Musa
 
       private_constant :MergeSerieOfSeries
 
+      # Serie operation that processes/transforms values using a block.
+      #
+      # Applies transformation function to each value from source serie.
+      # The block can return single values or arrays (which are flattened
+      # into the output stream).
+      #
+      # Uses smart block binding for flexible parameter handling.
+      #
+      # @example Simple transformation
+      #   serie = FromArray.new([1, 2, 3])
+      #   processor = Processor.new(serie, {}) { |v| v * 2 }
+      #   processor.next_value  # => 2
+      #   processor.next_value  # => 4
+      #
+      # @example Transformation with parameters
+      #   processor = Processor.new(serie, multiplier: 3) { |v, multiplier:| v * multiplier }
+      #
+      # @example Returning arrays (flattened)
+      #   processor = Processor.new(serie, {}) { |v| [v, v + 1] }
+      #   processor.next_value  # => 1
+      #   processor.next_value  # => 2
+      #
+      # @api private
       class Processor
         include Serie.with(source: true, smart_block: true)
 

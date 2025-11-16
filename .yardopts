@@ -1,6 +1,8 @@
 --markup markdown
 --readme README.md
 --title "Musa-DSL API"
+--tag source:"Source Serie"
+--tag sources:"Source Series"
 
 lib/**/*.rb
 README.md

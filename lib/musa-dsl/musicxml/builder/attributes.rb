@@ -543,10 +543,9 @@ module Musa
           # Multiple keys can be added for multi-staff parts where each staff
           # has a different key signature.
           #
-          # @param number [Integer, nil] staff number
-          # @param cancel [Integer, nil] accidentals to cancel
-          # @param fifths [Integer] circle of fifths position (-7 to +7)
-          # @param mode [String, nil] 'major' or 'minor'
+          # @option cancel [Integer, nil] accidentals to cancel
+          # @option fifths [Integer] circle of fifths position (-7 to +7)
+          # @option mode [String, nil] 'major' or 'minor'
           # @yield Optional DSL block for configuring the key
           # @return [Key] the created key signature
           #
@@ -563,10 +562,9 @@ module Musa
           # Multiple time signatures can be added for multi-staff parts where
           # each staff has a different meter (polyrhythm).
           #
-          # @param number [Integer, nil] staff number
-          # @param senza_misura [Boolean, nil] unmeasured time
-          # @param beats [Integer, nil] time signature numerator
-          # @param beat_type [Integer, nil] time signature denominator
+          # @option senza_misura [Boolean, nil] unmeasured time
+          # @option beats [Integer, nil] time signature numerator
+          # @option beat_type [Integer, nil] time signature denominator
           # @yield Optional DSL block for configuring the time signature
           # @return [Time] the created time signature
           #
@@ -582,10 +580,9 @@ module Musa
           #
           # Multiple clefs are needed for multi-staff parts (piano, organ, harp).
           #
-          # @param number [Integer, nil] staff number
-          # @param sign [String] clef sign ('G', 'F', 'C', 'percussion', 'TAB')
-          # @param line [Integer] staff line (1-5)
-          # @param octave_change [Integer, nil] octave transposition
+          # @option sign [String] clef sign ('G', 'F', 'C', 'percussion', 'TAB')
+          # @option line [Integer] staff line (1-5)
+          # @option octave_change [Integer, nil] octave transposition
           # @yield Optional DSL block for configuring the clef
           # @return [Clef] the created clef
           #

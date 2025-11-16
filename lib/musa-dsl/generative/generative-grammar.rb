@@ -87,6 +87,16 @@
 # @see https://en.wikipedia.org/wiki/Context-free_grammar Context-free grammar (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Generative_grammar Generative grammar (Wikipedia)
 module Musa
+  # Formal grammar system for combinatorial generation.
+  #
+  # Provides DSL for defining grammars with terminal/block nodes, operators
+  # (|, +), repetition, and constraints. Generates all valid combinations
+  # matching grammar rules via Cartesian product.
+  #
+  # Include this module to access {N} and {PN} node creation methods.
+  #
+  # @see N Method to create terminal/block nodes
+  # @see PN Method to create proxy nodes for recursion
   module GenerativeGrammar
     # TODO: refactor & reorganize regarding use of include Musa::GenerativeGrammar problems as default consumption mode (it forces the consumer to have new public methods -P, PN- and class names -OptionElement-)
 

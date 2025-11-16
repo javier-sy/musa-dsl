@@ -41,7 +41,7 @@ module Musa
         #
         # ## Usage
         #
-        # Created via {Measure#add_rest} or {Measure#rest}:
+        # Created via Measure#add_rest or Measure#rest:
         #
         #     measure.rest duration: 4, type: 'half'
         #     measure.add_rest duration: 8, type: 'whole', measure: true
@@ -79,6 +79,8 @@ module Musa
           #
           # @example Dotted eighth rest in voice 2
           #   Rest.new(duration: 3, type: 'eighth', dots: 1, voice: 2)
+          #
+          # For detailed parameter documentation, see {Note#initialize}
           def initialize(pizzicato: nil, # true
                          measure: nil, # true
                          grace: nil, # true

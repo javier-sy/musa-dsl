@@ -1,6 +1,6 @@
 # Musa-DSL
 
-[![Ruby Version](https://img.shields.io/badge/ruby-~%3E%203.4-red.svg)](https://www.ruby-lang.org/)
+[![Ruby Version](https://img.shields.io/badge/ruby-3.4.7-red.svg)](https://www.ruby-lang.org/)
 [![License](https://img.shields.io/badge/license-LGPL--3.0--or--later-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0.html)
 
 A Ruby framework and DSL for algorithmic sound and musical thinking and composition.
@@ -10,6 +10,7 @@ A Ruby framework and DSL for algorithmic sound and musical thinking and composit
 Musa-DSL is a programming language DSL (Domain-Specific Language) based on Ruby designed for sonic and musical composition. It emphasizes the creation of complex temporal structures independently of the audio rendering engine, providing composers and developers with powerful tools for algorithmic composition, generative music, and musical notation.
 
 **Who is it for?**
+
 - Composers exploring algorithmic composition
 - Musicians interested in generative music systems
 - Developers building music applications

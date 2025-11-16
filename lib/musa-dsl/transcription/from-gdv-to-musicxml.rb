@@ -55,6 +55,31 @@ require_relative 'from-gdv'
 
 module Musa::Transcriptors
   module FromGDV
+    # MusicXML-specific GDV transcriptors for music notation output.
+    #
+    # Transcribes GDV events to MusicXML format, preserving ornaments and
+    # articulations as notation metadata rather than expanding them to note
+    # sequences. This differs from MIDI transcription which expands ornaments
+    # for playback.
+    #
+    # ## Supported Features
+    #
+    # - **Appogiatura**: Grace notes marked with `:grace` attribute
+    # - **Base/Rest**: Zero-duration structural markers
+    #
+    # ## Usage
+    #
+    # Use {transcription_set} to get pre-configured transcriptor chain:
+    # ```ruby
+    # transcriptor = Musa::Transcription::Transcriptor.new(
+    #   Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set,
+    #   base_duration: 1/4r,
+    #   tick_duration: 1/96r
+    # )
+    # ```
+    #
+    # @see ToMIDI Playback-oriented transcription
+    # @see Musa::MusicXML MusicXML output system
     module ToMusicXML
       # Returns standard transcription set for MusicXML output.
       #

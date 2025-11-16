@@ -113,6 +113,13 @@ require_relative '../core-ext/with'
 # # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
 module Musa
+  # Combinatorial variation generator using Cartesian product.
+  #
+  # Contains the {Variatio} class for generating all possible combinations
+  # of parameter values across defined fields and fieldsets. Creates objects
+  # from each combination, applies attributes, and optionally finalizes.
+  #
+  # @see Variatio Main combinatorial variation generator class
   module Variatio
     using Musa::Extension::Arrayfy
     using Musa::Extension::ExplodeRanges
@@ -369,6 +376,12 @@ module Musa
 
       private_constant :A2
 
+      # Internal tree node for attribute application phase.
+      #
+      # Manages execution of `with_attributes` blocks during variation generation.
+      # Coordinates attribute application across field hierarchy.
+      #
+      # @api private
       class B
         attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner
 

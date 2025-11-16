@@ -130,6 +130,41 @@
 #
 # @api public
 module Musa
+  # Event transcription system for converting GDV musical events to output formats.
+  #
+  # Provides infrastructure for transcribing GDV (Grade-Duration-Velocity) events
+  # into various output formats (MIDI, MusicXML) through configurable pipelines of
+  # feature processors. The system handles musical ornaments, articulations, and
+  # notation-specific transformations.
+  #
+  # ## Core Components
+  #
+  # - {Transcriptor} - Main orchestrator chaining feature processors
+  # - {FeatureTranscriptor} - Base class for individual processors
+  # - {Musa::Transcriptors::FromGDV::ToMIDI} - MIDI transcription set
+  # - {Musa::Transcriptors::FromGDV::ToMusicXML} - MusicXML transcription set
+  #
+  # ## Usage
+  #
+  # ```ruby
+  # # MIDI transcription
+  # transcriptor = Musa::Transcription::Transcriptor.new(
+  #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
+  #   base_duration: 1/4r
+  # )
+  # midi_events = transcriptor.transcript(gdv_event)
+  #
+  # # MusicXML transcription
+  # transcriptor = Musa::Transcription::Transcriptor.new(
+  #   Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set,
+  #   base_duration: 1/4r
+  # )
+  # musicxml_events = transcriptor.transcript(gdv_event)
+  # ```
+  #
+  # @see Transcriptor Main transcription orchestrator
+  # @see Musa::Transcriptors::FromGDV::ToMIDI MIDI transcriptors
+  # @see Musa::Transcriptors::FromGDV::ToMusicXML MusicXML transcriptors
   module Transcription
     # Main transcription orchestrator.
     #

@@ -57,6 +57,27 @@ module Musa
       ProxySerie.new(serie)
     end
 
+    # Proxy/wrapper serie that delegates to another serie.
+    #
+    # Acts as transparent proxy forwarding all method calls to the wrapped
+    # serie. Useful for lazy evaluation, conditional serie switching, or
+    # adding indirection layer.
+    #
+    # The proxy can be reassigned to a different serie dynamically by
+    # changing the `proxy_source` attribute.
+    #
+    # @example Basic proxy
+    #   original = FromArray.new([1, 2, 3])
+    #   proxy = ProxySerie.new(original)
+    #   proxy.next_value  # => 1 (delegates to original)
+    #
+    # @example Dynamic serie switching
+    #   proxy = ProxySerie.new(serie_a)
+    #   proxy.next_value  # Uses serie_a
+    #   proxy.proxy_source = serie_b
+    #   proxy.next_value  # Now uses serie_b
+    #
+    # @api private
     class ProxySerie
       include Series::Serie.with(source: true, source_as: :proxy_source)
 

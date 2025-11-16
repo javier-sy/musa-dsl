@@ -1,6 +1,30 @@
 require 'midi-parser'
 
 module Musa
+  # MIDI event recording and transcription utilities.
+  #
+  # Provides tools for capturing raw MIDI bytes alongside sequencer position
+  # timestamps and converting them into structured note events. Useful for
+  # recording phrases from external MIDI controllers synchronized with the
+  # sequencer timeline.
+  #
+  # The captured events can be transcribed into hashes suitable for Musa's
+  # transcription pipelines, including note on/off pairing, duration calculation,
+  # and silence detection.
+  #
+  # @example Basic recording workflow
+  #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+  #   recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
+  #
+  #   # Capture MIDI from controller
+  #   midi_controller.on_message { |bytes| recorder.record(bytes) }
+  #
+  #   # After recording, get structured notes
+  #   notes = recorder.transcription
+  #   notes.each { |n| puts "#{n[:pitch]} at #{n[:position]} for #{n[:duration]}" }
+  #
+  # @see MIDIRecorder Main recorder class
+  # @see Musa::Sequencer::Sequencer Sequencer providing timeline context
   module MIDIRecorder
     # Collects raw MIDI bytes alongside the sequencer position and transforms
     # them into note events. It is especially useful when capturing phrases from

@@ -127,6 +127,13 @@ require_relative '../core-ext/with'
 # TODO: optimizar la llamada a .with que internamente genera cada vez un SmartProcBinder; podría generarse sólo una vez por cada &block
 
 module Musa
+  # Rule-based production system with growth and pruning.
+  #
+  # Contains the {Rules} class for generating tree structures through
+  # sequential application of grow rules (expansion) and cut rules (pruning).
+  # Produces all valid combination paths satisfying defined constraints.
+  #
+  # @see Rules Main rule-based generator class
   module Rules
     using Musa::Extension::Arrayfy
 

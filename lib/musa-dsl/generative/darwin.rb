@@ -85,6 +85,12 @@ require_relative '../core-ext/with'
 # @see https://en.wikipedia.org/wiki/Fitness_function Fitness function (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Natural_selection Natural selection (Wikipedia)
 module Musa
+  # Evolutionary selection and optimization algorithms.
+  #
+  # Contains the {Darwin} class for population-based evolutionary selection
+  # using fitness evaluation with features, dimensions, and weights.
+  #
+  # @see Darwin Main evolutionary selector class
   module Darwin
     # Evolutionary selector for population-based optimization.
     #

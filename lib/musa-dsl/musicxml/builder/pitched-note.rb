@@ -43,7 +43,7 @@ module Musa
         #
         # ## Usage
         #
-        # Created via {Measure#add_pitch} or {Measure#pitch}:
+        # Created via Measure#add_pitch or Measure#pitch:
         #
         #     measure.pitch 'C', octave: 5, duration: 4, type: 'quarter'
         #     measure.add_pitch step: 'F', alter: 1, octave: 4, duration: 2, type: 'eighth'
@@ -97,6 +97,8 @@ module Musa
           # @example B flat with keyword syntax
           #   PitchedNote.new(step: 'B', alter: -1, octave: 4, duration: 4,
           #                   type: 'quarter', accidental: 'flat')
+          #
+          # For detailed parameter documentation, see {Note#initialize}
           def initialize(_step = nil, step: nil, alter: nil, octave:,
                          pizzicato: nil, # true
                          grace: nil, # true

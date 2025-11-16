@@ -39,6 +39,8 @@ module Musa::Datasets::Score::ToMXML
     # @param bar [Integer] bar number (1-based)
     # @param bar_size [Rational] bar duration (default: 1r)
     #
+    # @note This method is experimental and currently unused. See TODO comment.
+    #
     # @api private
     def initialize(element, bar, bar_size = 1r) # TODO remove (unused because of bad strategy to time groups)
       @continue_from_previous_bar = element[:start] < bar
@@ -92,6 +94,8 @@ module Musa::Datasets::Score::ToMXML
   # @param bar_size [Rational] bar duration
   #
   # @return [nil] incomplete implementation
+  #
+  # @note This method is experimental and currently unused. See TODO comment.
   #
   # @api private
   # @todo Complete or remove this experimental method

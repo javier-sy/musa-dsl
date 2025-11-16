@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/javier-sy/musa-dsl'
   s.license     = 'LGPL-3.0-or-later'
 
-  s.required_ruby_version = '~> 3.4'
+  s.required_ruby_version = '>= 3.4.7'
 
   # TODO para sistema de paquetes de MusaDSL
   #s.metadata    = {

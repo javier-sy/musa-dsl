@@ -43,6 +43,22 @@
 require_relative 'transcription'
 
 module Musa::Transcriptors
+  # Base GDV (Grade-Duration-Velocity) transcriptor utilities.
+  #
+  # Provides foundational transcriptors for processing GDV musical events.
+  # GDV is Musa-DSL's internal representation for musical notes with grade
+  # (pitch), duration, and velocity attributes.
+  #
+  # This module contains the base transcriptor (`Base`) for handling base/rest
+  # markers in GDV events, converting them to zero-duration structural markers.
+  #
+  # Format-specific transcriptors are in submodules:
+  # - {ToMIDI} - MIDI playback transcription (expands ornaments)
+  # - {ToMusicXML} - MusicXML notation transcription (preserves ornaments)
+  #
+  # @see ToMIDI MIDI-specific transcriptors
+  # @see ToMusicXML MusicXML-specific transcriptors
+  # @see Musa::Transcription::Transcriptor Main transcription orchestrator
   module FromGDV
     # Base transcriptor for processing `.base` or `.b` attributes.
     #

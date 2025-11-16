@@ -5,6 +5,32 @@ require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/array-explode-ranges'
 
 module Musa
+  # High-level MIDI channel management synchronized with sequencer timeline.
+  #
+  # Provides voice abstraction for controlling MIDI channels with sequencer-aware
+  # note scheduling, duration tracking, sustain pedal management, and fast-forward
+  # support for silent timeline catch-up.
+  #
+  # Each voice represents the state of a MIDI channel (active notes, controllers,
+  # sustain pedal) and ties all musical events to the sequencer clock. This ensures
+  # correct timing even when running in fast-forward mode or with quantization.
+  #
+  # @example Basic voice setup
+  #   clock = Musa::Clock::TimerClock.new bpm: 120
+  #   transport = Musa::Transport::Transport.new clock
+  #   output = MIDICommunications::Output.all.first
+  #
+  #   voices = Musa::MIDIVoices::MIDIVoices.new(
+  #     sequencer: transport.sequencer,
+  #     output: output,
+  #     channels: 0..3
+  #   )
+  #
+  #   voice = voices.voices.first
+  #   voice.note pitch: 60, velocity: 90, duration: 1r/4
+  #
+  # @see MIDIVoices Voice collection manager
+  # @see Musa::Sequencer::Sequencer Timeline and scheduling
   module MIDIVoices
     using Musa::Extension::Arrayfy
     using Musa::Extension::ExplodeRanges
@@ -59,7 +85,7 @@ module Musa
       # Builds the voice container for one or many MIDI channels.
       #
       # @param sequencer [Musa::Sequencer::Sequencer] sequencer that schedules waits and callbacks.
-      # @param output [#puts, nil] anything responding to `puts` that accepts {MIDIEvents::Event}s (typically a MIDICommunications output).
+      # @param output [#puts, nil] anything responding to `puts` that accepts `MIDIEvents::Event`s (typically a MIDICommunications output).
       # @param channels [Array<Numeric>, Range, Numeric] list of MIDI channels to control. Ranges are expanded automatically.
       # @param do_log [Boolean] enables info level logs per emitted message.
       def initialize(sequencer:, output:, channels:, do_log: nil)
@@ -105,6 +131,34 @@ module Musa
 
     private
 
+    # Individual MIDI channel voice with sequencer-synchronized note management.
+    #
+    # Manages the state of a single MIDI channel including active notes, controller
+    # values, and sustain pedal. All note scheduling is tied to the sequencer clock,
+    # ensuring proper timing in fast-forward mode or during quantized playback.
+    #
+    # Supports indefinite notes (manual note-off), automatic note-off scheduling,
+    # callbacks on note stop, and fast-forward mode for silent state updates.
+    #
+    # @example Playing notes
+    #   voice = voices.voices.first
+    #   voice.note pitch: 60, velocity: 90, duration: 1r/4
+    #   voice.note pitch: [60, 64, 67], velocity: 100, duration: 1r  # chord
+    #
+    # @example Indefinite notes with manual control
+    #   note_ctrl = voice.note pitch: 60, duration: nil
+    #   note_ctrl.on_stop { puts "Note ended!" }
+    #   # ... later:
+    #   note_ctrl.note_off
+    #
+    # @example Controller and sustain pedal
+    #   voice.controller[:mod_wheel] = 64
+    #   voice.sustain_pedal = 127
+    #   voice.controller[:expression] = 100
+    #
+    # @see MIDIVoices Parent voice collection
+    # @see NoteControl Note lifecycle controller
+    # @api private
     class MIDIVoice
       # @return [String, nil] optional name used in log messages.
       attr_accessor :name

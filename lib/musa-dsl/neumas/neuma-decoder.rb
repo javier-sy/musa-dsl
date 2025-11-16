@@ -70,6 +70,35 @@
 require_relative 'neumas'
 
 module Musa::Neumas
+  # Neuma decoder implementations for converting neuma notation to musical events.
+  #
+  # Provides decoder classes that transform neuma notation (differential/relative
+  # musical notation) into absolute musical events (GDV/GDVD format). Different
+  # decoder types handle different output formats and conversion strategies.
+  #
+  # ## Decoder Types
+  #
+  # - **ProtoDecoder**: Base abstract decoder interface
+  # - **DifferentialDecoder**: Base for differential conversion
+  # - **NeumaDifferentialDecoder**: Converts to differential GDVD (from gdvd-decoder.rb)
+  # - **NeumaDecoder**: Converts to absolute GDV (from gdv-decoder.rb)
+  #
+  # ## Decoding Process
+  #
+  # Decoders maintain state for relative/differential notation and convert
+  # neuma elements to musical events with proper scale interpretation.
+  # Subcontexts allow independent state for nested structures.
+  #
+  # @example Using GDV decoder
+  #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
+  #     scale: Musa::Scales::Major.new(:c),
+  #     base_duration: 1/4r
+  #   )
+  #   gdv_event = decoder.decode(neuma_element)
+  #
+  # @see Musa::Neumas Neuma notation system
+  # @see Musa::Datasets::GDV Absolute GDV format
+  # @see Musa::Datasets::GDVd Differential GDVD format
   module Decoders
     # Abstract base decoder class.
     #

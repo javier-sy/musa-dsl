@@ -162,16 +162,16 @@ module Musa
           # Attributes define key signature, time signature, clef, and timing divisions.
           # Typically appear at the start of the first measure or when they change.
           #
-          # @param divisions [Integer, nil] divisions per quarter note
-          # @param key_cancel [Integer, nil] key to cancel
-          # @param key_fifths [Integer, nil] key signature (-7 to +7)
-          # @param key_mode [String, nil] 'major' or 'minor'
-          # @param time_senza_misura [Boolean, nil] unmeasured time
-          # @param time_beats [Integer, nil] time signature numerator
-          # @param time_beat_type [Integer, nil] time signature denominator
-          # @param clef_sign [String, nil] 'G', 'F', or 'C'
-          # @param clef_line [Integer, nil] clef line
-          # @param clef_octave_change [Integer, nil] octave transposition
+          # @option divisions [Integer, nil] divisions per quarter note
+          # @option key_cancel [Integer, nil] key to cancel
+          # @option key_fifths [Integer, nil] key signature (-7 to +7)
+          # @option key_mode [String, nil] 'major' or 'minor'
+          # @option time_senza_misura [Boolean, nil] unmeasured time
+          # @option time_beats [Integer, nil] time signature numerator
+          # @option time_beat_type [Integer, nil] time signature denominator
+          # @option clef_sign [String, nil] 'G', 'F', or 'C'
+          # @option clef_line [Integer, nil] clef line
+          # @option clef_octave_change [Integer, nil] octave transposition
           # @yield Optional DSL block for adding keys, times, clefs
           # @return [Attributes] the created attributes object
           #
@@ -202,8 +202,6 @@ module Musa
 
           # Adds a pitched note.
           #
-          # @param parameters [Array] positional parameters (first param can be step)
-          # @param key_parameters [Hash] note attributes (octave, duration, type, etc.)
           # @return [PitchedNote] the created note
           #
           # @example
@@ -217,8 +215,6 @@ module Musa
 
           # Adds a rest.
           #
-          # @param parameters [Array] positional parameters
-          # @param key_parameters [Hash] rest attributes (duration, type, voice, staff, etc.)
           # @return [Rest] the created rest
           #
           # @example
@@ -232,8 +228,6 @@ module Musa
 
           # Adds an unpitched note (for percussion).
           #
-          # @param parameters [Array] positional parameters
-          # @param key_parameters [Hash] note attributes
           # @return [UnpitchedNote] the created unpitched note
           #
           # @see UnpitchedNote For details
@@ -246,7 +240,6 @@ module Musa
           # Backup moves the current time position backward by the specified duration,
           # allowing multiple voices or staves to be layered in the same time span.
           #
-          # @param duration [Integer] duration to rewind (in divisions)
           # @return [Backup] the created backup element
           #
           # @example Piano grand staff
@@ -266,9 +259,6 @@ module Musa
           # Forward moves the current time position forward without sounding,
           # creating rests or gaps in the timeline.
           #
-          # @param duration [Integer] duration to advance (in divisions)
-          # @param voice [Integer, nil] voice number
-          # @param staff [Integer, nil] staff number
           # @return [Forward] the created forward element
           #
           # @example Skip to beat 3
@@ -286,8 +276,6 @@ module Musa
           # Directions contain non-note musical instructions like dynamics (p, f),
           # tempo markings, wedges (crescendo/diminuendo), pedal marks, etc.
           #
-          # @param parameters [Array] positional parameters
-          # @param key_parameters [Hash] direction attributes (placement, voice, staff, offset)
           # @yield Optional DSL block for direction content
           # @return [Direction] the created direction
           #
@@ -310,10 +298,10 @@ module Musa
 
           # Adds a metronome (tempo) marking.
           #
-          # @param p [Array] positional params
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
-          # @param kp [Hash] metronome params (beat_unit, per_minute, etc.)
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
+          # @option beat_unit [String] note value ('quarter', 'half', etc.)
+          # @option per_minute [Numeric] tempo in BPM
           # @yield Optional block
           # @return [Direction] direction containing metronome
           #
@@ -325,10 +313,9 @@ module Musa
 
           # Adds a wedge (crescendo/diminuendo).
           #
-          # @param p [Array] positional params (type: 'crescendo'/'diminuendo'/'stop')
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
-          # @param kp [Hash] wedge params (niente, etc.)
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
+          # @option niente [Boolean, nil] niente attribute
           # @return [Direction] direction containing wedge
           #
           # @example
@@ -339,9 +326,8 @@ module Musa
 
           # Adds dynamics (p, pp, f, ff, etc.).
           #
-          # @param p [Array] dynamics value(s) (can be array)
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
           # @return [Direction] direction containing dynamics
           #
           # @example
@@ -353,10 +339,9 @@ module Musa
 
           # Adds pedal marking.
           #
-          # @param p [Array] type: 'start'/'stop'/'change'/'continue'
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
-          # @param kp [Hash] pedal params (line, etc.)
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
+          # @option line [Boolean, nil] show pedal line
           # @return [Direction] direction containing pedal
           #
           # @example
@@ -367,9 +352,9 @@ module Musa
 
           # Adds bracket notation.
           #
-          # @param p [Array] type and line_end
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
+          # @option line_end [String, nil] line end type
           # @return [Direction] direction containing bracket
           attr_complex_adder_to_custom(:bracket) {
             |*p, placement: nil, offset: nil, **kp, &b|
@@ -377,9 +362,8 @@ module Musa
 
           # Adds dashed line.
           #
-          # @param p [Array] type: 'start'/'stop'/'continue'
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
           # @return [Direction] direction containing dashes
           attr_complex_adder_to_custom(:dashes) {
             |*p, placement: nil, offset: nil, **kp, &b|
@@ -387,9 +371,8 @@ module Musa
 
           # Adds text annotation.
           #
-          # @param p [Array] text string(s)
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
           # @return [Direction] direction containing words
           #
           # @example
@@ -400,10 +383,9 @@ module Musa
 
           # Adds octave shift (8va/8vb).
           #
-          # @param p [Array] type: 'up'/'down'/'stop'/'continue'
-          # @param placement [String, nil] 'above' or 'below'
-          # @param offset [Numeric, nil] offset in divisions
-          # @param kp [Hash] octave shift params (size, etc.)
+          # @option placement [String, nil] 'above' or 'below'
+          # @option offset [Numeric, nil] offset in divisions
+          # @option size [Integer, nil] octave shift size (8 or 15)
           # @return [Direction] direction containing octave_shift
           #
           # @example

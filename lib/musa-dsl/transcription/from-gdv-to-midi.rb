@@ -68,6 +68,33 @@ require_relative 'from-gdv'
 
 module Musa::Transcriptors
   module FromGDV
+    # MIDI-specific GDV transcriptors for playback output.
+    #
+    # Transcribes GDV events to MIDI playback format by expanding ornaments
+    # and articulations into explicit note sequences. This differs from MusicXML
+    # transcription which preserves ornaments as notation symbols.
+    #
+    # ## Supported Features
+    #
+    # - **Appogiatura**: Grace notes expanded to explicit notes
+    # - **Mordent** (`.mor`): Quick alternation expanded
+    # - **Turn** (`.turn`): Four-note figure expanded
+    # - **Trill** (`.tr`): Rapid alternation expanded
+    # - **Staccato** (`.st`): Shortened note duration
+    #
+    # ## Usage
+    #
+    # Use {transcription_set} to get pre-configured transcriptor chain:
+    # ```ruby
+    # transcriptor = Musa::Transcription::Transcriptor.new(
+    #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(duration_factor: 1/4r),
+    #   base_duration: 1/4r,
+    #   tick_duration: 1/96r
+    # )
+    # ```
+    #
+    # @see ToMusicXML Notation-preserving transcription
+    # @see Musa::MIDI MIDI output system
     module ToMIDI
       # Returns standard transcription set for MIDI output.
       #

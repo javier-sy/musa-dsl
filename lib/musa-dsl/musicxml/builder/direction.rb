@@ -214,6 +214,16 @@ module Musa
 
         private_constant :DirectionType
 
+        # Metronome tempo marking direction type.
+        #
+        # Represents tempo markings with beat unit and metronome value (e.g., ♩ = 120).
+        # Supports dotted beat units.
+        #
+        # @example Quarter note = 120 BPM
+        #   metronome beat_unit: 'quarter', per_minute: '120'
+        #
+        # @example Dotted eighth = 90
+        #   metronome beat_unit: 'eighth', beat_unit_dots: 1, per_minute: '90'
         class Metronome < DirectionType
           include Helper
 
@@ -248,6 +258,19 @@ module Musa
           end
         end
 
+        # Wedge hairpin direction type for crescendo/diminuendo.
+        #
+        # Represents dynamic hairpins (crescendo <, diminuendo >).
+        # Supports niente (to/from nothing) hairpins.
+        #
+        # @example Crescendo
+        #   wedge 'crescendo'
+        #
+        # @example Diminuendo to nothing
+        #   wedge 'diminuendo', niente: true
+        #
+        # @example Stop wedge
+        #   wedge 'stop'
         class Wedge < DirectionType
           include Helper
 
@@ -268,6 +291,16 @@ module Musa
           end
         end
 
+        # Dynamic marking direction type.
+        #
+        # Represents dynamic levels (pp, p, mp, mf, f, ff, fff, etc.).
+        # Can specify multiple dynamics for compound markings.
+        #
+        # @example Single dynamic
+        #   dynamics 'f'
+        #
+        # @example Multiple dynamics (sforzando-forte)
+        #   dynamics ['sf', 'f']
         class Dynamics < DirectionType
           def initialize(value, # pp / ppp / ... or array of
                          &block)
@@ -288,6 +321,19 @@ module Musa
           end
         end
 
+        # Piano sustain pedal marking direction type.
+        #
+        # Represents pedal down/up markings. Supports start, stop, change,
+        # and continue types with optional line display.
+        #
+        # @example Pedal down
+        #   pedal 'start', line: true
+        #
+        # @example Pedal up
+        #   pedal 'stop'
+        #
+        # @example Pedal change
+        #   pedal 'change'
         class Pedal < DirectionType
           include Helper
 
@@ -309,6 +355,16 @@ module Musa
           end
         end
 
+        # Bracket direction type for analytical markings.
+        #
+        # Represents brackets used for grouping or analytical notation.
+        # Supports different line types and end styles.
+        #
+        # @example Start bracket
+        #   bracket 'start', line_end: 'down', line_type: 'solid'
+        #
+        # @example Stop bracket
+        #   bracket 'stop', line_end: 'up'
         class Bracket < DirectionType
           include Helper
 
@@ -333,6 +389,15 @@ module Musa
           end
         end
 
+        # Dashed line direction type.
+        #
+        # Represents dashed extension lines for text or other markings.
+        #
+        # @example Start dashed line
+        #   dashes 'start'
+        #
+        # @example Stop dashed line
+        #   dashes 'stop'
         class Dashes < DirectionType
           def initialize(type, # start / stop / continue
                          &block)
@@ -349,6 +414,16 @@ module Musa
           end
         end
 
+        # Text words direction type.
+        #
+        # Represents textual performance instructions or expressions.
+        # Can contain multiple text strings.
+        #
+        # @example Single text
+        #   words 'Allegro'
+        #
+        # @example Multiple texts
+        #   words ['con', 'brio']
         class Words < DirectionType
           def initialize(value, # string | Array of string
                          &block)
@@ -367,6 +442,19 @@ module Musa
           end
         end
 
+        # Octave shift direction type for 8va/8vb markings.
+        #
+        # Represents octave transposition markings (8va, 8vb, 15ma, 15mb).
+        # Type indicates up/down/stop/continue, size indicates octaves (8 or 15).
+        #
+        # @example Start 8va
+        #   octave_shift 'up', size: 8
+        #
+        # @example Start 8vb
+        #   octave_shift 'down', size: 8
+        #
+        # @example Stop octave shift
+        #   octave_shift 'stop'
         class OctaveShift < DirectionType
           include Helper
 
@@ -388,58 +476,86 @@ module Musa
           end
         end
 
+        # Accordion registration direction type (not implemented).
+        # @api private
         class AccordionRegistration < DirectionType
           include Helper::NotImplemented
         end
 
+        # Coda symbol direction type (not implemented).
+        # @api private
         class Coda < DirectionType
           include Helper::NotImplemented
         end
 
+        # Damp (mute) marking direction type (not implemented).
+        # @api private
         class Damp < DirectionType
           include Helper::NotImplemented
         end
 
+        # Damp all strings marking direction type (not implemented).
+        # @api private
         class DampAll < DirectionType
           include Helper::NotImplemented
         end
 
+        # Eye glasses symbol direction type (not implemented).
+        # @api private
         class EyeGlasses < DirectionType
           include Helper::NotImplemented
         end
 
+        # Harp pedals diagram direction type (not implemented).
+        # @api private
         class HarpPedals < DirectionType
           include Helper::NotImplemented
         end
 
+        # Embedded image direction type (not implemented).
+        # @api private
         class Image < DirectionType
           include Helper::NotImplemented
         end
 
+        # Custom/other direction type (not implemented).
+        # @api private
         class OtherDirection < DirectionType
           include Helper::NotImplemented
         end
 
+        # Percussion notation direction type (not implemented).
+        # @api private
         class Percussion < DirectionType
           include Helper::NotImplemented
         end
 
+        # Principal voice marking direction type (not implemented).
+        # @api private
         class PrincipalVoice < DirectionType
           include Helper::NotImplemented
         end
 
+        # Rehearsal mark direction type (not implemented).
+        # @api private
         class Rehearsal < DirectionType
           include Helper::NotImplemented
         end
 
+        # Scordatura (altered tuning) direction type (not implemented).
+        # @api private
         class Scordatura < DirectionType
           include Helper::NotImplemented
         end
 
+        # Segno symbol direction type (not implemented).
+        # @api private
         class Segno < DirectionType
           include Helper::NotImplemented
         end
 
+        # String mute marking direction type (not implemented).
+        # @api private
         class StringMute < DirectionType
           include Helper::NotImplemented
         end

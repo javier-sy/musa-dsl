@@ -50,6 +50,30 @@ module Musa
       QueueSerie.new(series)
     end
 
+    # Serie that processes multiple source series in queue/sequence fashion.
+    #
+    # Combines multiple series by playing them sequentially - when one
+    # series exhausts, moves to the next. New series can be added dynamically
+    # with `<<` operator.
+    #
+    # All queued series must be instances (not prototypes). The queue can
+    # be cleared with `clear` method.
+    #
+    # @example Sequential series playback
+    #   serie_a = FromArray.new([1, 2, 3]).instance
+    #   serie_b = FromArray.new([4, 5, 6]).instance
+    #   queue = QueueSerie.new([serie_a, serie_b])
+    #   queue.next_value  # => 1
+    #   queue.next_value  # => 2
+    #   queue.next_value  # => 3
+    #   queue.next_value  # => 4 (switches to serie_b)
+    #
+    # @example Dynamic queueing
+    #   queue = QueueSerie.new([serie_a]).instance
+    #   queue << serie_b  # Add series on the fly
+    #   queue.clear       # Empty the queue
+    #
+    # @api private
     class QueueSerie
       include Series::Serie.with(sources: true)
 

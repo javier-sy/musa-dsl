@@ -264,9 +264,8 @@ module Musa
         # Parts represent individual instruments or voices in the score. Each part
         # contains measures with musical content.
         #
-        # @param id [Symbol, String] unique part identifier (used in part references)
-        # @param name [String] full part name (displayed in score)
-        # @param abbreviation [String, nil] abbreviated name (for subsequent systems)
+        # @option name [String] full part name (displayed in score)
+        # @option abbreviation [String, nil] abbreviated name (for subsequent systems)
         # @yield Optional DSL block for defining measures
         # @return [Internal::Part] the created part
         #
@@ -293,13 +292,12 @@ module Musa
         # Part groups bracket multiple parts together (e.g., string section, choir).
         # Groups are defined by matching start/stop pairs with the same number.
         #
-        # @param number [Integer, nil] group number (for matching start/stop)
-        # @param type [String] 'start' or 'stop'
-        # @param name [String, nil] group name (displayed on bracket)
-        # @param abbreviation [String, nil] abbreviated group name
-        # @param symbol [String, nil] bracket symbol (e.g., 'bracket', 'brace')
-        # @param group_barline [Boolean, String, nil] whether barlines connect across group
-        # @param group_time [Boolean, String, nil] whether time signatures are shared
+        # @option type [String] 'start' or 'stop'
+        # @option name [String, nil] group name (displayed on bracket)
+        # @option abbreviation [String, nil] abbreviated group name
+        # @option symbol [String, nil] bracket symbol (e.g., 'bracket', 'brace')
+        # @option group_barline [Boolean, String, nil] whether barlines connect across group
+        # @option group_time [Boolean, String, nil] whether time signatures are shared
         # @return [Internal::PartGroup] the created group
         #
         # @example Bracketing string section

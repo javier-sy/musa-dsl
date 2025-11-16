@@ -324,6 +324,8 @@ module Musa
           # @example Multi-voice with fermata
           #   PitchedNote.new('G', octave: 4, duration: 4, type: 'half', voice: 2, fermata: true)
           #
+          # For detailed parameter documentation, see {NoteComplexities::PARAMETERS}
+          #
           # @api private (called by subclasses)
           def initialize(*_rest,
                          pizzicato: nil,  # true

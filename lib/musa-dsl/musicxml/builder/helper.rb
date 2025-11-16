@@ -99,7 +99,7 @@ module Musa
           # Mixin for classes not yet implemented.
           #
           # Used as a placeholder for MusicXML elements that are planned but not
-          # yet implemented. Raises {NotImplementedError} when attempting to use.
+          # yet implemented. Raises `NotImplementedError` when attempting to use.
           #
           # @api private
           module NotImplemented

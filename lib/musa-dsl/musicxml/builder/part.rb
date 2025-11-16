@@ -22,7 +22,7 @@ module Musa
         #
         # ## Usage
         #
-        # Parts are typically created via {ScorePartwise#part} or {ScorePartwise#add_part}.
+        # Parts are typically created via {Musa::MusicXML::Builder::ScorePartwise#part} or {Musa::MusicXML::Builder::ScorePartwise#add_part}.
         # Measures are added sequentially, automatically numbered starting from 1.
         #
         # @example Creating a part with measures
@@ -126,16 +126,16 @@ module Musa
           # Measures are automatically numbered sequentially starting from 1.
           # The first measure typically contains attributes (key, time, clef, divisions).
           #
-          # @param divisions [Integer, nil] divisions per quarter note (timing resolution)
-          # @param key_cancel [Integer, nil] key cancellation
-          # @param key_fifths [Integer, nil] key signature (circle of fifths: -7 to +7)
-          # @param key_mode [String, nil] mode (major/minor)
-          # @param time_senza_misura [Boolean, nil] unmeasured time
-          # @param time_beats [Integer, nil] time signature numerator
-          # @param time_beat_type [Integer, nil] time signature denominator
-          # @param clef_sign [String, nil] clef sign (G/F/C)
-          # @param clef_line [Integer, nil] clef line number
-          # @param clef_octave_change [Integer, nil] octave transposition
+          # @option divisions [Integer, nil] divisions per quarter note (timing resolution)
+          # @option key_cancel [Integer, nil] key cancellation
+          # @option key_fifths [Integer, nil] key signature (circle of fifths: -7 to +7)
+          # @option key_mode [String, nil] mode (major/minor)
+          # @option time_senza_misura [Boolean, nil] unmeasured time
+          # @option time_beats [Integer, nil] time signature numerator
+          # @option time_beat_type [Integer, nil] time signature denominator
+          # @option clef_sign [String, nil] clef sign (G/F/C)
+          # @option clef_line [Integer, nil] clef line number
+          # @option clef_octave_change [Integer, nil] octave transposition
           # @yield Optional DSL block for measure content
           # @return [Measure] the created measure
           #

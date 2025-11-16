@@ -119,7 +119,7 @@ module Musa
       # @param scale [Scale, nil] scale context for finding notes
       # @param allow_chromatic [Boolean] allow non-diatonic notes
       # @param name [Symbol, nil] chord definition name (:maj, :min7, etc.)
-      # @param move [Hash{Symbol => Integer}, nil] initial octave moves (e.g., {root: -1})
+      # @param move [Hash{Symbol => Integer}, nil] initial octave moves (e.g., `{root: -1}`)
       # @param duplicate [Hash{Symbol => Integer, Array<Integer>}, nil] initial duplications
       # @param features [Hash] chord features if not using name (quality:, size:, etc.)
       # @return [Chord] new chord instance
