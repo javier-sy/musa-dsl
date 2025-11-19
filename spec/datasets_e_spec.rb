@@ -30,7 +30,7 @@ RSpec.describe Musa::Datasets do
 
     it 'GDV neumas to PDV and back to neumas via GDV::NeumaDecoder' do
       gdv_abs_neumas_1 = '(0 o0 1 p) (0 o1 2 p) (3# o1 2 p) (0 o-1 3 p) (2_ o0 3 fff) (1 o0 2 fff) (5 o1 1/2 ppp) (silence 1/2 ppp)'
-      gdv_abs_neumas_2 = '(0 o0 1 p) (0 o1 2 p) (3# o1 2 p) (0 o-1 3 p) (1# o0 3 fff) (1 o0 2 fff) (5 o1 1/2 ppp) (silence 1/2 ppp)'
+      gdv_abs_neumas_2 = '(0 o0 1 mp) (0 o1 2 mp) (3# o1 2 mp) (0 o-1 3 mp) (1# o0 3 fff) (1 o0 2 fff) (5 o1 1/2 ppp) (silence 1/2 ppp)'
 
       scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
 

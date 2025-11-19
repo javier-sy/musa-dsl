@@ -109,7 +109,7 @@ RSpec.describe Musa::Neumalang do
 
       neumas    = '(0)   (1 2 ppp)   (2 tr)   (3 tr(100))  (4 tr(100, 200))   (5 tr("hola") st(1,2,3) xy(1,2,3))   (6 tr(up)) (+1) (+1 +o1 +2 +ff)'
 
-      neumas_ok = '(0 1 mf) (+1 +1 -ffff) (+1 tr) (+1 tr(100)) (+1 tr(100, 200)) (+1 tr("hola") st(1, 2, 3) xy(1, 2, 3)) (+1 tr(up)) (+1) (+8 +2 +ff)'
+      neumas_ok = '(0 1 mf) (+1 +1 -ffff) (+1 tr) (+1 tr(100)) (+1 tr(100, 200)) (+1 tr("hola") st(1, 2, 3) xy(1, 2, 3)) (+1 tr(up)) (+1) (+8 +2 +fff)'
 
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new scale
 

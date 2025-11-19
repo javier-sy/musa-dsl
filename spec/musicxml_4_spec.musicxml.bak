@@ -23,9 +23,11 @@
 				<divisions>16</divisions>
 				<key number="1">
 					<fifths>2</fifths>
+					<mode></mode>
 				</key>
 				<key number="2">
 					<fifths>2</fifths>
+					<mode></mode>
 				</key>
 				<time number="1">
 					<beats>4</beats>
