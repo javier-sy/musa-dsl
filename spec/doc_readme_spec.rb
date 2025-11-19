@@ -7,28 +7,35 @@ using Musa::Extension::Matrix
 
 RSpec.describe 'README.md Documentation Examples' do
   context 'Quick Start' do
-    it 'creates melody using neuma notation and decodes to GDV events (CORRECTED FROM README)' do
-      # NOTE: README syntax is simplified; real syntax requires parentheses
-      # README shows: "0 +2 +2 -1 0"
-      # Real syntax:  "(0) (+2) (+2) (-1) (0)"
+    include Musa::All
 
+    # Aliases needed for RSpec lexical scoping
+    Scales = Musa::Scales::Scales
+    Neumalang = Musa::Neumalang::Neumalang
+    Decoders = Musa::Neumas::Decoders
+
+    it 'creates melody using neuma notation, decodes to GDV events, and schedules with sequencer' do
       # Create a decoder with a major scale
-      scale = Musa::Scales::Scales.et12[440.0].major[60]
-      decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
+      scale = Scales.et12[440.0].major[60]
+      decoder = Decoders::NeumaDecoder.new(
         scale,
-        base_duration: 1/4r
+        base_duration: 1r  # Base duration for explicit duration values
       )
 
-      melody = "(0) (+2) (+2) (-1) (0) (+4) (+5) (+7) (+5) (+4) (+2) (0)"
+      # Define melody with duration and velocity
+      melody = "(0 1/4 p) (+2 1/4 mp) (+2 1/4 mf) (-1 1/2 f) " \
+               "(0 1/4 mf) (+4 1/4 mp) (+5 1/2 f) (+7 1/4 ff) " \
+               "(+5 1/4 f) (+4 1/4 mf) (+2 1/4 mp) (0 1 p)"
 
       # Decode to GDV (Grade-Duration-Velocity) events
-      notes = Musa::Neumalang::Neumalang.parse(melody, decode_with: decoder).to_a(recursive: true)
+      gdv_notes = Neumalang.parse(melody, decode_with: decoder)
 
-      # Verify notes are GDV hashes with expected keys
-      expect(notes).to be_an(Array)
-      expect(notes.size).to eq(12)
+      # Verify GDV notes structure
+      gdv_array = gdv_notes.to_a(recursive: true)
+      expect(gdv_array).to be_an(Array)
+      expect(gdv_array.size).to eq(12)
 
-      notes.each do |note|
+      gdv_array.each do |note|
         expect(note).to be_a(Hash)
         expect(note).to include(:grade, :duration, :velocity)
         expect(note[:grade]).to be_an(Integer)
@@ -36,9 +43,81 @@ RSpec.describe 'README.md Documentation Examples' do
         expect(note[:velocity]).to be_a(Float).or be_a(Integer)
       end
 
-      # Verify first note
-      expect(notes[0][:grade]).to eq(0)
-      expect(notes[0][:duration]).to eq(1/4r)
+      # Verify first note has specified duration and velocity
+      expect(gdv_array[0][:grade]).to eq(0)
+      expect(gdv_array[0][:duration]).to eq(1/4r)
+      expect(gdv_array[0][:velocity]).to eq(-1)  # p = piano = -1
+
+      # Verify fourth note has different duration (half note)
+      expect(gdv_array[3][:duration]).to eq(1/2r)
+
+      # Verify last note has longer duration (whole note)
+      expect(gdv_array[11][:duration]).to eq(1r)
+
+      # Convert GDV to PDV (Pitch-Duration-Velocity) for playback
+      pdv_notes = gdv_notes.map { |note| note.to_pdv(scale) }
+
+      # Verify PDV conversion
+      pdv_array = pdv_notes.to_a(recursive: true)
+      expect(pdv_array).to be_an(Array)
+      expect(pdv_array.size).to eq(12)
+
+      pdv_array.each do |note|
+        expect(note).to be_a(Hash)
+        expect(note).to include(:pitch, :duration)
+        expect(note[:pitch]).to be_an(Integer)
+        expect(note[:duration]).to be_a(Rational)
+      end
+
+      # Verify first PDV note preserves duration from GDV
+      expect(pdv_array[0][:pitch]).to eq(60)  # C4 (grade 0 in C major scale)
+      expect(pdv_array[0][:duration]).to eq(1/4r)
+      # PDV velocity is converted to MIDI scale (0-127), different from GDV scale
+      expect(pdv_array[0][:velocity]).to be_a(Numeric)
+      expect(pdv_array[0][:velocity]).to be > 0
+
+      # Verify different durations are preserved
+      expect(pdv_array[3][:duration]).to eq(1/2r)  # Half note
+      expect(pdv_array[11][:duration]).to eq(1r)   # Whole note
+
+      # Verify velocity increases from p (piano) to ff (fortissimo)
+      expect(pdv_array[7][:velocity]).to be > pdv_array[0][:velocity]
+
+      # Verify sequencer.play API compatibility
+      sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+      expect(sequencer).to be_a(Musa::Sequencer::BaseSequencer)
+
+      # Test that sequencer.play can be called with PDV series
+      played_notes = []
+      sequencer.play(pdv_notes) do |note|
+        played_notes << { pitch: note[:pitch], duration: note[:duration], velocity: note[:velocity] }
+        # In real usage: voice.note pitch: note[:pitch], velocity: note[:velocity], duration: note[:duration]
+      end
+
+      # Execute sequencer to process scheduled events
+      sequencer.run
+
+      # Verify all notes were played
+      expect(played_notes.size).to eq(12)
+
+      # Verify first note (C4, quarter, piano)
+      expect(played_notes[0][:pitch]).to eq(60)  # Grade 0 = C
+      expect(played_notes[0][:duration]).to eq(1/4r)
+      expect(played_notes[0][:velocity]).to be_a(Numeric)
+
+      # Verify second note (E4, quarter, mezzo-piano) - +2 from grade 0
+      expect(played_notes[1][:pitch]).to eq(64)  # Grade 2 = E
+      expect(played_notes[1][:duration]).to eq(1/4r)
+
+      # Verify fourth note has half duration (forte)
+      expect(played_notes[3][:duration]).to eq(1/2r)
+
+      # Verify last note (C4, whole, piano)
+      expect(played_notes[11][:pitch]).to eq(60)
+      expect(played_notes[11][:duration]).to eq(1r)
+
+      # Verify velocity dynamics: ff (fortissimo) is louder than p (piano)
+      expect(played_notes[7][:velocity]).to be > played_notes[0][:velocity]
     end
   end
 

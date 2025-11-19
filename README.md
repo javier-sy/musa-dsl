@@ -52,78 +52,143 @@ Here's a simple example to get you started:
 
 ```ruby
 require 'musa-dsl'
+require 'midi-communications'
+
+# Include all Musa DSL components
+include Musa::All
 
 using Musa::Extension::Neumas
 
 # Create a decoder with a major scale
-scale = Musa::Scales::Scales.et12[440.0].major[60]
-decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
+scale = Scales.et12[440.0].major[60]
+decoder = Decoders::NeumaDecoder.new(
   scale,
-  base_duration: 1/4r
+  base_duration: 1r  # Base duration for explicit duration values
 )
 
-# Define a melody using neuma notation (requires parentheses for each neuma)
-melody = "(0) (+2) (+2) (-1) (0) (+4) (+5) (+7) (+5) (+4) (+2) (0)"
+# Define a melody using neuma notation with duration and velocity
+# Format: (grade duration velocity)
+# Durations: 1/4 = quarter, 1/2 = half, 1 = whole
+# Velocities: pp, p, mp, mf, f, ff
+melody = "(0 1/4 p) (+2 1/4 mp) (+2 1/4 mf) (-1 1/2 f) " \
+         "(0 1/4 mf) (+4 1/4 mp) (+5 1/2 f) (+7 1/4 ff) " \
+         "(+5 1/4 f) (+4 1/4 mf) (+2 1/4 mp) (0 1 p)"
 
 # Decode to GDV (Grade-Duration-Velocity) events
-notes = Musa::Neumalang::Neumalang.parse(melody, decode_with: decoder).to_a(recursive: true)
+gdv_notes = Neumalang.parse(melody, decode_with: decoder)
 
-# Notes are now ready to play
-# Each note is a hash with: { grade: Integer, duration: Rational, velocity: Float }
+# Convert GDV to PDV (Pitch-Duration-Velocity) for playback
+pdv_notes = gdv_notes.map { |note| note.to_pdv(scale) }
 
-# Setup MIDI output using midi-communications gem
-require 'midi-communications'
+# Setup MIDI output and sequencer
 output = MIDICommunications::Output.gets  # Interactively select output
 
-notes.each do |note|
-  pitch = scale.grade(note[:grade]).pitch
-  velocity = (note[:velocity] * 127).to_i
+# Create clock and transport with sequencer
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)
 
-  output.puts(0x90, pitch, velocity)  # Note on
-  sleep(note[:duration])
-  output.puts(0x80, pitch, velocity)  # Note off
+# Setup MIDI voices for output
+voices = MIDIVoices.new(
+  sequencer: transport.sequencer,
+  output: output,
+  channels: [0]
+)
+voice = voices.voices.first
+
+# Play notes using sequencer (automatically manages timing)
+sequencer = transport.sequencer
+sequencer.play(pdv_notes) do |note|
+  voice.note pitch: note[:pitch], velocity: note[:velocity], duration: note[:duration]
 end
+
+# Start playback
+transport.start
 ```
 
 ## System Architecture
 
-Musa-DSL is organized into modular subsystems that work together:
+MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) and associated projects for communication, development, and integration.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Musa-DSL Framework                    │
-├─────────────────────────────────────────────────────────┤
-│  Notation Layer                                          │
-│  ┌──────────────┐  ┌──────────────┐                    │
-│  │ Neumas       │  │ Neumalang    │                    │
-│  │ (Text Nota.) │  │ (Parser)     │                    │
-│  └──────────────┘  └──────────────┘                    │
-├─────────────────────────────────────────────────────────┤
-│  Generation Layer                                        │
-│  ┌──────┐ ┌──────┐ ┌────────┐ ┌──────┐ ┌────────┐   │
-│  │Series│ │Markov│ │Variatio│ │Rules │ │Grammar │   │
-│  └──────┘ └──────┘ └────────┘ └──────┘ └────────┘   │
-│                                         ┌──────┐       │
-│                                         │Darwin│       │
-│                                         └──────┘       │
-├─────────────────────────────────────────────────────────┤
-│  Musical Knowledge                                       │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐             │
-│  │ Scales   │  │ Chords   │  │ Datasets │             │
-│  └──────────┘  └──────────┘  └──────────┘             │
-├─────────────────────────────────────────────────────────┤
-│  Temporal Layer                                          │
-│  ┌──────────────┐  ┌──────────────┐                    │
-│  │ Sequencer    │  │ Transport    │                    │
-│  └──────────────┘  └──────────────┘                    │
-├─────────────────────────────────────────────────────────┤
-│  Output Layer                                            │
-│  ┌──────────────┐  ┌──────────────┐                    │
-│  │ Transcription│  │ MusicXML     │                    │
-│  │ (MIDI)       │  │ Builder      │                    │
-│  └──────────────┘  └──────────────┘                    │
-└─────────────────────────────────────────────────────────┘
-```
+### MusaDSL Ecosystem
+
+**Core Framework:**
+- **musa-dsl** - Main DSL framework for algorithmic composition and musical thinking
+
+**MIDI Communication Stack:**
+- **midi-events** - Low-level MIDI event definitions and protocols
+- **midi-parser** - MIDI file parsing and analysis
+- **midi-communications** - Cross-platform MIDI I/O abstraction layer
+- **midi-communications-macos** - macOS-specific MIDI native implementation
+
+**Live Coding Environment (MusaLCE):**
+- **musalce-server** - Live coding evaluation server with hot-reload capabilities
+- **MusaLCEClientForVSCode** - Visual Studio Code extension for live coding
+- **MusaLCEClientForAtom** - Atom editor plugin for live coding
+- **MusaLCEforBitwig** - Bitwig Studio integration for live performance
+- **MusaLCEforLive** - Ableton Live integration for interactive composition
+
+### musa-dsl Internal Architecture
+
+The musa-dsl framework is organized in modular layers:
+
+#### 1. Foundation Layer
+- **core-ext** - Ruby core extensions (refinements for enhanced syntax)
+- **logger** - Structured logging system with severity levels
+
+#### 2. Temporal & Scheduling Layer
+- **sequencer** - Event scheduling engine with microsecond precision
+  - Tick-based (quantized) and tickless (continuous) timing modes
+  - Series playback with automatic duration management
+  - Support for polyrhythms and polytemporal structures
+- **transport** - High-level playback control with clock synchronization
+  - BPM management and tempo changes
+  - Start/stop/pause/continue controls
+  - Multiple clock source support (internal, MIDI, external)
+
+#### 3. Notation & Parsing Layer
+- **neumas** - Text-based musical notation system
+- **neumalang** - Parser and interpreter for neuma notation with DSL support
+
+#### 4. Generation & Transformation Layer
+- **series** - Lazy sequence generators with functional operations
+  - Map, filter, transpose, repeat, and combination operations
+  - Infinite and finite series support
+- **generative** - Algorithmic composition tools
+  - **Markov chains**: Probabilistic sequence generation
+  - **Variatio**: Cartesian product parameter variations
+  - **Rules**: L-system-like production systems with growth/pruning
+  - **GenerativeGrammar**: Formal grammar-based generation
+  - **Darwin**: Genetic algorithms for evolutionary composition
+- **matrix** - Matrix operations for musical gestures
+  - Matrix-to-P (point sequence) conversion
+  - Gesture condensation and transformation
+
+#### 5. Output & Communication Layer
+- **transcription** - Musical event transformation system
+  - Ornament expansion (trills, mordents, turns)
+  - GDV to MIDI/MusicXML conversion
+  - Dynamic articulation rendering
+- **musicxml** - MusicXML score generation
+  - Multi-part score creation
+  - Notation directives (dynamics, tempo, articulations)
+  - Standard MusicXML 3.0 output
+- **midi** - MIDI voice management
+  - Polyphonic voice allocation
+  - Channel management
+  - Note-on/note-off scheduling
+
+#### 6. Musical Knowledge Layer
+- **music** - Scales, tuning systems, intervals, and chord structures
+  - Equal temperament and just intonation support
+  - Modal scales (major, minor, chromatic, etc.)
+  - Chord definitions and harmonic analysis
+- **datasets** - Musical data structures (GDV, PDV, Score)
+  - GDV (Grade-Duration-Velocity): Scale-relative representation
+  - PDV (Pitch-Duration-Velocity): Absolute pitch representation
+  - Score: Timeline-based multi-track composition structure
+
+#### 7. Development & Interaction Layer
+- **repl** - Interactive Read-Eval-Print Loop for live composition
 
 ## Core Subsystems
 
@@ -184,17 +249,17 @@ sequencer = transport.sequencer
 
 # Schedule events at specific times
 sequencer.at 0 do
-  voice.note pitch: scale.grade(0).pitch, duration: 1/4r
+  voice.note pitch: scale[0].pitch, duration: 1/4r
 end
 
 sequencer.at 1/4r do
-  voice.note pitch: scale.grade(2).pitch, duration: 1/4r
+  voice.note pitch: scale[2].pitch, duration: 1/4r
 end
 
 # Play series with timing
 melody = Musa::Series::Constructors.S(0, 2, 4, 5, 7)
 sequencer.play melody do |grade|
-  voice.note pitch: scale.grade(grade).pitch, duration: 1/4r
+  voice.note pitch: scale[grade].pitch, duration: 1/4r
 end
 
 # Repeat every beat
@@ -277,7 +342,7 @@ output = MIDICommunications::Output.gets  # Select MIDI output
 
 scale = Musa::Scales::Scales.et12[440.0].major[60]
 expanded_events.each do |event|
-  pitch = scale.grade(event[:grade]).octave(event[:octave]).pitch
+  pitch = scale[event[:grade]].octave(event[:octave]).pitch
   velocity = (event[:velocity] * 127).to_i
 
   output.puts(0x90, pitch, velocity)  # Note on
