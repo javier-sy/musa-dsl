@@ -55,9 +55,6 @@ require 'musa-dsl'
 
 using Musa::Extension::Neumas
 
-# Define a melody using neuma notation
-melody = "0 +2 +2 -1 0 +4 +5 +7 +5 +4 +2 0".to_neumas
-
 # Create a decoder with a major scale
 scale = Musa::Scales::Scales.et12[440.0].major[60]
 decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
@@ -65,8 +62,11 @@ decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
   base_duration: 1/4r
 )
 
+# Define a melody using neuma notation (requires parentheses for each neuma)
+melody = "(0) (+2) (+2) (-1) (0) (+4) (+5) (+7) (+5) (+4) (+2) (0)"
+
 # Decode to GDV (Grade-Duration-Velocity) events
-notes = melody.map { |neuma| decoder.decode(neuma) }
+notes = Musa::Neumalang::Neumalang.parse(melody, decode_with: decoder).to_a(recursive: true)
 
 # Notes are now ready to play
 # Each note is a hash with: { grade: Integer, duration: Rational, velocity: Float }
@@ -76,7 +76,7 @@ require 'midi-communications'
 output = MIDICommunications::Output.gets  # Interactively select output
 
 notes.each do |note|
-  pitch = scale.pitch_of(grade: note[:grade], octave: note[:octave])
+  pitch = scale.grade(note[:grade]).pitch
   velocity = (note[:velocity] * 127).to_i
 
   output.puts(0x90, pitch, velocity)  # Note on
@@ -134,19 +134,19 @@ Series are the fundamental building blocks for generating musical sequences. The
 ```ruby
 require 'musa-dsl'
 
+include Musa::Series
+
 # Create a melodic series using operations
 melody = S(0, 2, 4, 5, 7)
   .repeat(2)
-  .transpose(12)
-  .retrograde
 
-# Infinite generative series
-fibonacci = S(1, 1).extend { |prev, prev_prev| prev + prev_prev }
+result = melody.to_a
+# => [0, 2, 4, 5, 7, 0, 2, 4, 5, 7]
 
-# Combine multiple series
-rhythm = S(1/4r, 1/8r, 1/8r, 1/4r).cycle
-pitches = S(60, 62, 64, 65, 67)
-dynamics = S(0.5, 0.7, 0.9, 0.7, 0.5)
+# Combine multiple parameters using arrays
+rhythm = [1/4r, 1/8r, 1/8r, 1/4r]
+pitches = [60, 62, 64, 65]
+dynamics = [0.5, 0.7, 0.9, 0.7]
 
 notes = pitches.zip(rhythm, dynamics).map do |p, r, d|
   { pitch: p, duration: r, velocity: d }
@@ -184,17 +184,17 @@ sequencer = transport.sequencer
 
 # Schedule events at specific times
 sequencer.at 0 do
-  voice.note pitch: scale.pitch_of(grade: 0), duration: 1/4r
+  voice.note pitch: scale.grade(0).pitch, duration: 1/4r
 end
 
 sequencer.at 1/4r do
-  voice.note pitch: scale.pitch_of(grade: 2), duration: 1/4r
+  voice.note pitch: scale.grade(2).pitch, duration: 1/4r
 end
 
 # Play series with timing
 melody = Musa::Series::Constructors.S(0, 2, 4, 5, 7)
 sequencer.play melody do |grade|
-  voice.note pitch: scale.pitch_of(grade: grade), duration: 1/4r
+  voice.note pitch: scale.grade(grade).pitch, duration: 1/4r
 end
 
 # Repeat every beat
@@ -216,36 +216,35 @@ require 'musa-dsl'
 
 using Musa::Extension::Neumas
 
-# Simple notation
-melody = "0 +2 +2 -1 0".n  # .n is shorthand for .to_neumas
+# Neuma notation requires parentheses around each neuma element
+# Parsed using Musa::Neumalang::Neumalang.parse()
+
+# Simple notation (absolute and relative grades)
+melody = "(0) (+2) (+2) (-1) (0)"
 
 # With durations
-rhythm = "+2_ +2_2 +1_/2 +2_".n
+rhythm = "(+2 _) (+2 _2) (+1 _/2) (+2 _)"
 
 # With ornaments
-ornate = "+2.tr +3.mor -1.st".n
+ornate = "(+2 .tr) (+3 .mor) (-1 .st)"
 
-# With grace notes (appogiatura)
-graceful = "(+1_/4)+2_ +2_ +3_".n
+# With grace notes (appogiatura) - nested parentheses
+graceful = "((+1 _/4) +2 _) (+2 _) (+3 _)"
 
-# Parallel voices (polyphony)
-harmony = "0 +2 +4 +5" | "+7 +5 +7 +9"
-
-# Array composition
+# Parallel voices (using array composition)
 song = [
-  "0 +2 +4 +5",    # Verse
-  "+7 +5 +7",      # Chorus
-  "0 +2 +4 +5"     # Verse repeat
+  "(0) (+2) (+4) (+5)",    # Voice 1
+  "(+7) (+5) (+7) (+9)"    # Voice 2
 ].to_neumas
 ```
 
 **Notation syntax:**
-- `0`, `+2`, `-1` - Absolute/relative pitch steps
-- `^2`, `v1` - Octave shifts
+- `(0)`, `(+2)`, `(-1)` - Absolute/relative pitch steps (in parentheses)
+- `o0`, `o1`, `o-1` - Octave specification
 - `_`, `_2`, `_/2` - Duration (base, double, half)
 - `.tr`, `.mor`, `.turn`, `.st` - Ornaments
-- `(grace)main` - Grace notes
-- `|` - Parallel voices
+- `((grace) main)` - Grace notes (nested parentheses)
+- Arrays - Multiple voices
 
 **Documentation:** See `lib/neumas/` and `lib/neumalang/`
 
@@ -278,7 +277,7 @@ output = MIDICommunications::Output.gets  # Select MIDI output
 
 scale = Musa::Scales::Scales.et12[440.0].major[60]
 expanded_events.each do |event|
-  pitch = scale.pitch_of(grade: event[:grade], octave: event[:octave])
+  pitch = scale.grade(event[:grade]).octave(event[:octave]).pitch
   velocity = (event[:velocity] * 127).to_i
 
   output.puts(0x90, pitch, velocity)  # Note on
@@ -309,13 +308,24 @@ Tools for generative and algorithmic music composition.
 require 'musa-dsl'
 
 # 1. Markov chains - Probabilistic sequence generation
-markov = Musa::Generative::Markov.new do
-  from 0, to: { 2 => 0.5, 4 => 0.3, 7 => 0.2 }
-  from 2, to: { 0 => 0.3, 4 => 0.5, 5 => 0.2 }
-  from 4, to: { 2 => 0.4, 5 => 0.4, 7 => 0.2 }
-end
+markov = Musa::Markov::Markov.new(
+  start: 0,
+  finish: :end,
+  transitions: {
+    0 => { 2 => 0.5, 4 => 0.3, 7 => 0.2 },
+    2 => { 0 => 0.3, 4 => 0.5, 5 => 0.2 },
+    4 => { 2 => 0.4, 5 => 0.4, 7 => 0.2 },
+    5 => { 0 => 0.5, :end => 0.5 },
+    7 => { 0 => 0.6, :end => 0.4 }
+  }
+).i
 
-melody = markov.series(starting: 0).take(16)
+melody = []
+16.times do
+  value = markov.next_value
+  break unless value
+  melody << value
+end
 
 # 2. Variatio - Cartesian product of parameter variations
 #    Generates ALL combinations of field values
@@ -351,7 +361,7 @@ rules = Musa::Rules::Rules.new do
 
   # Pruning rules - eliminate invalid paths
   cut 'avoid repetition' do |chord, history|
-    prune if history.last == chord
+    prune if history.size > 0 && history.last == chord
   end
 
   # End condition
@@ -413,20 +423,20 @@ require 'musa-dsl'
 # et12[reference_frequency].scale_mode[tonic_pitch]
 major = Musa::Scales::Scales.et12[440.0].major[60]      # C major
 minor = Musa::Scales::Scales.et12[440.0].minor[62]      # D minor
-dorian = Musa::Scales::Scales.et12[440.0].dorian[60]    # C dorian
 
 # Use scales to convert grades to pitches
-pitch = major.pitch_of(grade: 2, octave: 0)  # => 64 (E)
+pitch = major.grade(2).pitch  # => 64 (E)
 
-# Chromatic operations
-transposed = major.chromatic_of(grade: 2, sharp: 1)  # E#
+# Access scale notes with octave
+note = major.grade(2).octave(1)  # E in octave 1
+pitch_with_octave = note.pitch   # => 76
 
-# Chord definitions
-c_major = Musa::Chords.get(:major, root: 60)
-d_minor7 = Musa::Chords.get(:minor7, root: 62)
+# Chord definitions from scale
+c_major = major.tonic.chord
+d_minor = major.grade(1).chord
 
-# Get chord notes
-notes = c_major.notes  # => [60, 64, 67] (C, E, G)
+# Get chord note pitches
+notes = c_major.notes.map { |n| n.note.pitch }  # => [60, 64, 67] (C, E, G)
 ```
 
 **Documentation:** See `lib/music/`
@@ -440,12 +450,14 @@ require 'musa-dsl'
 
 # Create a score
 score = Musa::MusicXML::Builder::ScorePartwise.new(
-  title: "My Composition",
-  composer: "Your Name"
+  work_title: "My Composition"
 )
 
+# Add creator information
+score.creators type: "composer", name: "Your Name"
+
 # Add a part
-part = score.part(id: "P1", name: "Piano")
+part = score.part "P1", name: "Piano"
 
 # Add measures with notes
 measure = part.measure(number: 1)
@@ -462,7 +474,7 @@ measure.note do
 end
 
 # Export to file
-File.write("score.musicxml", score.to_xml)
+File.write("score.musicxml", score.to_xml.string)
 ```
 
 **Documentation:** See `lib/musicxml/builder/`
@@ -560,30 +572,54 @@ pdv = { pitch: 64, duration: 1/4r, velocity: 100 }
 
 # Score - Timed event sequences
 score = Musa::Datasets::Score.new
-score.add(time: 0, value: { pitch: 60, duration: 1/4r })
-score.add(time: 1/4r, value: { pitch: 64, duration: 1/4r })
+score << { start: 0, duration: 1/4r, value: { pitch: 60 } }
+score << { start: 1/4r, duration: 1/4r, value: { pitch: 64 } }
 ```
 
 **Documentation:** See `lib/datasets/`
 
-### Matrix - Mathematical Transformations
+### Matrix - Musical Gesture Conversion
 
-Matrix operations for musical transformations.
+Musa::Matrix provides refinements to convert matrix representations to P (point sequences) for sequencer playback. Musical gestures can be represented as matrices where rows are time steps and columns are musical parameters.
 
 ```ruby
 require 'musa-dsl'
 
-# Create transformation matrix
-matrix = Musa::Matrix[
-  [1, 0, 2],
-  [0, 1, 3],
-  [0, 0, 1]
-]
+using Musa::Extension::Matrix
 
-# Apply to musical coordinates
-point = [60, 64, 1]  # [pitch1, pitch2, homogeneous]
-transformed = matrix * point
+# Matrix representing a melodic gesture: [time, pitch]
+# Time progresses: 0 -> 1 -> 2
+# Pitch changes: 60 -> 62 -> 64
+melody_matrix = Matrix[[0, 60], [1, 62], [2, 64]]
+
+# Convert to P format for sequencer playback
+# time_dimension: 0 means first column is time
+# Time dimension removed, used only for duration calculation
+p_sequence = melody_matrix.to_p(time_dimension: 0)
+
+# Result: [[[60], 1, [62], 1, [64]]]
+# Format: [[pitch1], duration1, [pitch2], duration2, [pitch3]]
+# Each value [60], [62], [64] is extended with V module
+
+# Multi-parameter example: [time, pitch, velocity]
+gesture = Matrix[[0, 60, 100], [0.5, 62, 110], [1, 64, 120]]
+p_with_velocity = gesture.to_p(time_dimension: 0)
+# Result: [[[60, 100], 0.5, [62, 110], 0.5, [64, 120]]]
+
+# Condensing connected gestures
+phrase1 = Matrix[[0, 60], [1, 62]]
+phrase2 = Matrix[[1, 62], [2, 64], [3, 65]]
+
+# Matrices that share endpoints are automatically merged
+merged = [phrase1, phrase2].to_p(time_dimension: 0)
+# Result: [[[60], 1, [62], 1, [64], 1, [65]]]
+# Both phrases merged into continuous sequence
 ```
+
+**Use cases:**
+- Converting recorded MIDI data to playable sequences
+- Transforming algorithmic compositions from matrix form to time-based sequences
+- Merging fragmented musical gestures
 
 **Documentation:** See `lib/matrix/`
 
