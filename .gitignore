@@ -10,4 +10,5 @@ bin
 *.mindnode
 test.musicxml
 doc
+.yardoc
 
