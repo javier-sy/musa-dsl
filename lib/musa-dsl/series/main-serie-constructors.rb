@@ -168,16 +168,17 @@ module Musa
 
     # Creates hash-mode combined serie from hash of series.
     #
-    # Like H but continues until ALL series exhaust. Nil values used for
-    # exhausted series.
+    # Like H but cycles all series. When a serie exhausts, it restarts from
+    # the beginning, continuing until all series complete their cycles.
     #
     # @param series_hash [Hash] hash of series (key => serie)
     #
-    # @return [FromHashOfSeries] combined hash serie
+    # @return [FromHashOfSeries] combined hash serie that cycles all series
     #
-    # @example Combined until all finish
+    # @example Combined cycling all series
     #   hc = HC(a: S(1, 2), b: S(10, 20, 30))
-    #   hc.i.to_a  # => [{a:1, b:10}, {a:2, b:20}, {a:nil, b:30}]
+    #   hc.max_size(6).i.to_a  # => [{a:1, b:10}, {a:2, b:20}, {a:1, b:30},
+    #                           #     {a:2, b:10}, {a:1, b:20}, {a:2, b:30}]
     #
     # @api public
     def HC(**series_hash)
@@ -205,16 +206,17 @@ module Musa
 
     # Creates array-mode combined serie from array of series.
     #
-    # Like A but continues until ALL series exhaust. Nil values used for
-    # exhausted series.
+    # Like A but cycles all series. When a serie exhausts, it restarts from
+    # the beginning, continuing until all series complete their cycles.
     #
     # @param series [Array] array of series
     #
-    # @return [FromArrayOfSeries] combined array serie
+    # @return [FromArrayOfSeries] combined array serie that cycles all series
     #
-    # @example Combined until all finish
+    # @example Combined cycling all series
     #   ac = AC(S(1, 2), S(10, 20, 30))
-    #   ac.i.to_a  # => [[1, 10], [2, 20], [nil, 30]]
+    #   ac.max_size(6).i.to_a  # => [[1, 10], [2, 20], [1, 30],
+    #                           #     [2, 10], [1, 20], [2, 30]]
     #
     # @api public
     def AC(*series)

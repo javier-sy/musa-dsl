@@ -1,8 +1,8 @@
 # Neuma notation system for text-based musical representation.
 #
-# Neumas provide a compact, human-readable text format for musical notation,
-# inspired by medieval neume notation. The system combines parsing, differential
-# decoding, and integration with Musa-DSL's series and transcription systems.
+# Neumas provide a compact, human-readable text format for musical notation.
+# The system combines parsing, differential decoding, and integration with
+# Musa-DSL's series and transcription systems.
 #
 # ## Architecture Overview
 #

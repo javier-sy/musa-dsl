@@ -48,7 +48,101 @@ gem install musa-dsl
 
 ## Quick Start
 
-Here's a simple example to get you started:
+Here's a complete example showcasing the sequencer DSL with multiple melodic lines that interact with each other:
+
+```ruby
+require 'musa-dsl'
+require 'midi-communications'
+
+# Include all Musa DSL components
+include Musa::All
+
+# Setup MIDI output
+output = MIDICommunications::Output.gets  # Interactively select output
+
+# Create clock and transport with sequencer
+# 4 beats per bar, 24 ticks per beat
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)
+
+# Create scale for our composition
+scale = Scales.et12[440.0].major[60]  # C major starting at middle C
+
+# Setup three MIDI voices on different channels
+voices = MIDIVoices.new(
+  sequencer: transport.sequencer,
+  output: output,
+  channels: [0, 1, 2]  # Channels for beat, melody, and harmony
+)
+beat_voice = voices.voices[0]
+melody_voice = voices.voices[1]
+harmony_voice = voices.voices[2]
+
+# Shared state: current melody note (so harmony can follow)
+current_melody_note = nil
+
+# Program the sequencer using DSL
+transport.sequencer.with do
+  # Line 1: Beat every 4 bars (for 32 bars total)
+  at 1 do
+    every 4, duration: 32 do
+      beat_voice.note pitch: 36, velocity: 100, duration: 1/8r  # Kick drum
+    end
+  end
+
+  # Line 2: Ascending melody (bars 1-16) then descending (bars 17-32)
+  at 1 do
+    # Ascending: move from grade 0 to grade 14 over 16 bars
+    move(from: 0, to: 14, duration: 16, every: 1/4r) do |grade|
+      pitch = scale[grade.round].pitch
+      current_melody_note = grade.round  # Share with harmony line
+      melody_voice.note pitch: pitch, velocity: 80, duration: 1/8r
+    end
+  end
+
+  at 17 do
+    # Descending: move from grade 14 to grade 0 over 16 bars
+    move(from: 14, to: 0, duration: 16, every: 1/4r) do |grade|
+      pitch = scale[grade.round].pitch
+      current_melody_note = grade.round  # Share with harmony line
+      melody_voice.note pitch: pitch, velocity: 80, duration: 1/8r
+    end
+  end
+
+  # Line 3: Harmony playing 3rd or 5th every 2 bars (for 32 bars total)
+  at 1 do
+    use_third = true  # Alternate between 3rd and 5th
+
+    every 2, duration: 32 do
+      if current_melody_note
+        # Calculate harmony: 3rd is +2 grades, 5th is +4 grades
+        harmony_grade = current_melody_note + (use_third ? 2 : 4)
+        harmony_pitch = scale[harmony_grade].pitch
+
+        # Play long note (whole note duration)
+        harmony_voice.note pitch: harmony_pitch, velocity: 70, duration: 1
+
+        # Alternate for next time
+        use_third = !use_third
+      end
+    end
+  end
+end
+
+# Start playback
+transport.start
+```
+
+This example demonstrates:
+- **Multiple independent voice lines** scheduled in the sequencer
+- **`move` function** to smoothly animate pitch values over time
+- **`every` for repeating events** at regular intervals
+- **Shared state between voices** (harmony follows melody)
+- **Precise timing control** with bars and beats
+
+## Not So Quick Start
+
+Here's a more detailed example showing the Neuma notation system:
 
 ```ruby
 require 'musa-dsl'
@@ -112,20 +206,20 @@ MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) a
 ### MusaDSL Ecosystem
 
 **Core Framework:**
-- **musa-dsl** - Main DSL framework for algorithmic composition and musical thinking
+- [**musa-dsl**](https://github.com/javier-sy/musa-dsl) - Main DSL framework for algorithmic composition and musical thinking
 
 **MIDI Communication Stack:**
-- **midi-events** - Low-level MIDI event definitions and protocols
-- **midi-parser** - MIDI file parsing and analysis
-- **midi-communications** - Cross-platform MIDI I/O abstraction layer
-- **midi-communications-macos** - macOS-specific MIDI native implementation
+- [**midi-events**](https://github.com/javier-sy/midi-events) - Low-level MIDI event definitions and protocols
+- [**midi-parser**](https://github.com/javier-sy/midi-parser) - MIDI file parsing and analysis
+- [**midi-communications**](https://github.com/javier-sy/midi-communications) - Cross-platform MIDI I/O abstraction layer
+- [**midi-communications-macos**](https://github.com/javier-sy/midi-communications-macos) - macOS-specific MIDI native implementation
 
 **Live Coding Environment (MusaLCE):**
-- **musalce-server** - Live coding evaluation server with hot-reload capabilities
-- **MusaLCEClientForVSCode** - Visual Studio Code extension for live coding
-- **MusaLCEClientForAtom** - Atom editor plugin for live coding
-- **MusaLCEforBitwig** - Bitwig Studio integration for live performance
-- **MusaLCEforLive** - Ableton Live integration for interactive composition
+- [**musalce-server**](https://github.com/javier-sy/musalce-server) - Live coding evaluation server with hot-reload capabilities
+- [**MusaLCEClientForVSCode**](https://github.com/javier-sy/MusaLCEClientForVSCode) - Visual Studio Code extension for live coding
+- [**MusaLCEClientForAtom**](https://github.com/javier-sy/MusaLCEClientForAtom) - Atom editor plugin for live coding
+- [**MusaLCEforBitwig**](https://github.com/javier-sy/MusaLCEforBitwig) - Bitwig Studio integration for live performance
+- [**MusaLCEforLive**](https://github.com/javier-sy/MusaLCEforLive) - Ableton Live integration for interactive composition
 
 ### musa-dsl Internal Architecture
 
@@ -194,31 +288,181 @@ The musa-dsl framework is organized in modular layers:
 
 ### Series - Sequence Generators
 
-Series are the fundamental building blocks for generating musical sequences. They can represent pitches, rhythms, dynamics, or any musical parameter.
+Series are the fundamental building blocks for generating musical sequences. They provide functional operations for transforming pitches, rhythms, dynamics, and any musical parameter.
+
+#### Basic Series Operations
 
 ```ruby
 require 'musa-dsl'
-
 include Musa::Series
 
-# Create a melodic series using operations
-melody = S(0, 2, 4, 5, 7)
-  .repeat(2)
+# S constructor: Create series from values
+melody = S(0, 2, 4, 5, 7).repeat(2)
+melody.i.to_a  # => [0, 2, 4, 5, 7, 0, 2, 4, 5, 7]
 
-result = melody.to_a
-# => [0, 2, 4, 5, 7, 0, 2, 4, 5, 7]
+# Transform with map
+transposed = S(60, 64, 67).map { |n| n + 12 }
+transposed.i.to_a  # => [72, 76, 79]
 
-# Combine multiple parameters using arrays
-rhythm = [1/4r, 1/8r, 1/8r, 1/4r]
-pitches = [60, 62, 64, 65]
-dynamics = [0.5, 0.7, 0.9, 0.7]
-
-notes = pitches.zip(rhythm, dynamics).map do |p, r, d|
-  { pitch: p, duration: r, velocity: d }
-end
+# Filter with select
+evens = S(1, 2, 3, 4, 5, 6).select { |n| n.even? }
+evens.i.to_a  # => [2, 4, 6]
 ```
 
-**Documentation:** See `lib/series/`
+#### Combining Multiple Parameters
+
+Use `.with` to combine pitches, durations, and velocities:
+
+```ruby
+# Combine pitch, duration, and velocity
+pitches = S(60, 64, 67, 72)
+durations = S(1r, 1/2r, 1/2r, 1r)
+velocities = S(96, 80, 90, 100)
+
+notes = pitches.with(dur: durations, vel: velocities) do |p, dur:, vel:|
+  { pitch: p, duration: dur, velocity: vel }
+end
+
+notes.i.to_a
+# => [{pitch: 60, duration: 1, velocity: 96},
+#     {pitch: 64, duration: 1/2, velocity: 80},
+#     {pitch: 67, duration: 1/2, velocity: 90},
+#     {pitch: 72, duration: 1, velocity: 100}]
+```
+
+**Creating PDV with `H()` and `HC()`:**
+
+When series have different lengths, use `H` (stops at shortest) or `HC` (cycles all series):
+
+```ruby
+# Create PDV from series of different sizes
+pitches = S(60, 62, 64, 65, 67)      # 5 notes
+durations = S(1r, 1/2r, 1/4r)        # 3 durations
+velocities = S(96, 80, 90, 100)      # 4 velocities
+
+# H: Stop when shortest series exhausts (3 notes - limited by durations)
+notes = H(pitch: pitches, duration: durations, velocity: velocities)
+
+notes.i.to_a
+# => [{pitch: 60, duration: 1, velocity: 96},
+#     {pitch: 62, duration: 1/2, velocity: 80},
+#     {pitch: 64, duration: 1/4, velocity: 90}]
+
+# HC: Continue cycling all series (cycles until common multiple)
+notes_cycling = HC(pitch: pitches, duration: durations, velocity: velocities)
+  .max_size(7)  # Limit output for readability
+
+notes_cycling.i.to_a
+# => [{pitch: 60, duration: 1, velocity: 96},
+#     {pitch: 62, duration: 1/2, velocity: 80},
+#     {pitch: 64, duration: 1/4, velocity: 90},
+#     {pitch: 65, duration: 1, velocity: 100},
+#     {pitch: 67, duration: 1/2, velocity: 96},
+#     {pitch: 60, duration: 1/4, velocity: 80},
+#     {pitch: 62, duration: 1, velocity: 90}]
+```
+
+#### Merging Melodic Phrases
+
+Use `MERGE` to concatenate multiple series:
+
+```ruby
+# Build melody from phrases
+phrase1 = S(60, 64, 67)        # C major triad ascending
+phrase2 = S(72, 69, 65)        # Descending from octave
+phrase3 = S(60, 62, 64)        # Scale fragment
+
+melody = MERGE(phrase1, phrase2, phrase3)
+melody.i.to_a  # => [60, 64, 67, 72, 69, 65, 60, 62, 64]
+
+# Repeat merged structure
+section = MERGE(S(1, 2, 3), S(4, 5, 6)).repeat(2)
+section.i.to_a  # => [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6]
+```
+
+#### Numeric Generators
+
+```ruby
+# FOR: Numeric ranges
+ascending = FOR(from: 0, to: 7, step: 1)
+ascending.i.to_a  # => [0, 1, 2, 3, 4, 5, 6, 7]
+
+descending = FOR(from: 10, to: 0, step: 2)
+descending.i.to_a  # => [10, 8, 6, 4, 2, 0]
+
+# FIBO: Fibonacci rhythmic proportions
+rhythm = FIBO().max_size(8).map { |n| Rational(n, 16) }
+rhythm.i.to_a
+# => [1/16, 1/16, 1/8, 3/16, 5/16, 1/2, 13/16, 21/16]
+
+# RND: Random melody with constraints
+melody = RND(60, 62, 64, 65, 67, 69, 71, 72)
+  .max_size(16)
+  .remove { |note, history| note == history.last }  # No consecutive repeats
+
+# HARMO: Harmonic series (overtones)
+harmonics = HARMO(error: 0.5).max_size(10)
+harmonics.i.to_a  # => [0, 12, 19, 24, 28, 31, 34, 36, 38, 40]
+```
+
+#### Structural Transformations
+
+```ruby
+# Reverse: Retrograde motion
+melody = S(60, 64, 67, 72)
+retrograde = melody.reverse
+retrograde.i.to_a  # => [72, 67, 64, 60]
+
+# merge operation: Flatten serie of series
+chunks = S(1, 2, 3, 4, 5, 6).cut(2)  # Split into pairs (serie of series)
+
+# Each chunk is a serie, use .merge to flatten
+reconstructed = chunks.merge
+reconstructed.i.to_a  # => [1, 2, 3, 4, 5, 6]
+
+# Chaining operations
+result = S(60, 62, 64, 65, 67, 69, 71, 72)
+  .select { |n| n.even? }     # Keep even pitches: [60, 62, 64, 72]
+  .map { |n| n + 12 }         # Transpose up octave: [72, 74, 76, 84]
+  .reverse                     # Retrograde: [84, 76, 74, 72]
+  .repeat(2)                   # Repeat twice
+
+result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
+```
+
+**Serie Constructors:**
+- `S(...)` - Array serie
+- `E(&block)` - Serie from evaluation block
+- `H(k1: s1, k2: s2, ...)` - Hash serie from series (stops at shortest)
+- `HC(k1: s1, k2: s2, ...)` - Hash combined (cycles all series)
+- `A(s1, s2, ...)` - Array of series (stops at shortest)
+- `AC(s1, s2, ...)` - Array combined (cycles all series)
+- `FOR(from:, to:, step:)` - Numeric range generator
+- `MERGE(s1, s2, ...)` - Concatenate series sequentially
+- `RND(...)` - Random values (infinite)
+- `RND1(...)` - Random single value (exhausts after one)
+- `SIN(steps:, amplitude:, center:)` - Sinusoidal waveform
+- `FIBO()` - Fibonacci sequence
+- `HARMO(error:, extended:)` - Harmonic series (overtones)
+
+**Serie Operations:**
+- `.map(&block)` - Transform each value
+- `.select(&block)`, `.remove(&block)` - Filter values
+- `.with(*series, &block)` - Combine multiple series
+- `.hashify(*keys)` - Convert array values to hash
+- `.repeat(times)`, `.autorestart` - Repetition control
+- `.reverse` - Reverse order
+- `.randomize(random:)` - Randomize order
+- `.merge`, `.flatten` - Flatten nested series
+- `.cut(length)` - Split into chunks
+- `.max_size(n)`, `.skip(n)` - Limit/offset control
+- `.shift(n)` - Shift values by offset
+- `.after(*series)` - Concatenate series
+- `.switch(*series)`, `.multiplex(*series)` - Switch between series
+- `.lock` - Lock/freeze values
+- `.anticipate(&block)`, `.lazy(&block)` - Advanced evaluation
+
+**Documentation:** See `lib/musa-dsl/series/`
 
 ### Sequencer - Temporal Engine
 
@@ -226,47 +470,87 @@ The Sequencer manages time-based event scheduling with microsecond precision, su
 
 ```ruby
 require 'musa-dsl'
-require 'midi-communications'
+include Musa::All
 
-# Create MIDI output
-output = MIDICommunications::Output.gets  # Select MIDI output
-scale = Musa::Scales::Scales.et12[440.0].major[60]
+# Setup: Create clock and transport (for real-time execution)
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)  # 4 beats per bar, 24 ticks per beat
 
-# Create clock and transport
-clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
-transport = Musa::Transport::Transport.new(clock, 4, 24)
+# Define series outside DSL block (Series constructors not available in DSL context)
+melody = S({ note: 60, duration: 1/2r }, { note: 62, duration: 1/2r },
+            { note: 64, duration: 1/2r }, { note: 65, duration: 1/2r },
+            { note: 67, duration: 1/2r }, { note: 65, duration: 1/2r },
+            { note: 64, duration: 1/2r }, { note: 62, duration: 1/2r })
 
-# Setup MIDI voices
-voices = Musa::MIDIVoices::MIDIVoices.new(
-  sequencer: transport.sequencer,
-  output: output,
-  channels: [0]
-)
-voice = voices.voices.first
+# Program sequencer using DSL
+transport.sequencer.with do
+  # Custom event handlers (on/launch)
+  on :section_change do |name|
+    puts "Section: #{name}"
+  end
 
-# Get the sequencer from transport
-sequencer = transport.sequencer
+  # Immediate event (now)
+  now do
+    launch :section_change, "Start"
+  end
 
-# Schedule events at specific times
-sequencer.at 0 do
-  voice.note pitch: scale[0].pitch, duration: 1/4r
+  # Absolute positioning (at): event at bar 1
+  at 1 do
+    puts "Bar 1: position #{position}"
+  end
+
+  # Relative positioning (wait): event 2 bars later
+  wait 2 do
+    puts "Bar 3: position #{position}"
+  end
+
+  # Play series (play): reproduces series with automatic timing
+  at 5 do
+    play melody do |note:, duration:, control:|
+      puts "Playing note: #{note}, duration: #{duration}"
+    end
+  end
+
+  # Recurring event (every) with stop control
+  beat_loop = nil
+  at 10 do
+    # Store control object to stop it later
+    beat_loop = every 2, duration: 10 do
+      puts "Beat at position #{position}"
+    end
+  end
+
+  # Stop the beat loop at bar 18
+  at 18 do
+    beat_loop.stop if beat_loop
+    puts "Beat loop stopped"
+  end
+
+  # Animated value (move) from 0 to 10 over 4 bars
+  at 20 do
+    move from: 0, to: 10, duration: 4, every: 1/2r do |value|
+      puts "Value: #{value.round(2)}"
+    end
+  end
+
+  # Multi-parameter animation (move with hash)
+  at 25 do
+    move from: { pitch: 60, vel: 60 },
+         to: { pitch: 72, vel: 100 },
+         duration: 2,
+         every: 1/4r do |values|
+      puts "Pitch: #{values[:pitch].round}, Velocity: #{values[:vel].round}"
+    end
+  end
+
+  # Final event
+  at 30 do
+    launch :section_change, "End"
+    puts "Finished at position #{position}"
+  end
 end
 
-sequencer.at 1/4r do
-  voice.note pitch: scale[2].pitch, duration: 1/4r
-end
-
-# Play series with timing
-melody = Musa::Series::Constructors.S(0, 2, 4, 5, 7)
-sequencer.play melody do |grade|
-  voice.note pitch: scale[grade].pitch, duration: 1/4r
-end
-
-# Repeat every beat
-sequencer.every 1r do
-  voice.note pitch: 36, duration: 1/8r  # Bass drum
-end
-
+# Start real-time playback
 transport.start
 ```
 
@@ -274,42 +558,65 @@ transport.start
 
 ### Neumas & Neumalang - Musical Notation
 
-Neumas provide a compact text-based notation system inspired by medieval neumes. Neumalang is the parser that converts this notation to structured musical data.
+Neumas provide a compact text-based notation system for musical composition. Neumalang is the parser that converts this notation to structured musical data.
 
 ```ruby
 require 'musa-dsl'
+require 'midi-communications'
+
+# To play the song, decode neumas to GDV and convert to PDV
+include Musa::All
 
 using Musa::Extension::Neumas
 
 # Neuma notation requires parentheses around each neuma element
 # Parsed using Musa::Neumalang::Neumalang.parse()
 
-# Simple notation (absolute and relative grades)
-melody = "(0) (+2) (+2) (-1) (0)"
+# Complete example with durations and dynamics (parallel voices using |)
+song = "(0 1 mf) (+2 1 mp) (+4 2 p) (+5 1/2 mf) (+7 1 f)" |      # Voice 1: melody with varied dynamics
+       "(+7 2 p) (+5 1 mp) (+7 1 mf) (+9 1/2 f) (+12 2 ff)"      # Voice 2: harmony with crescendo
 
-# With durations
-rhythm = "(+2 _) (+2 _2) (+1 _/2) (+2 _)"
+# Wrap parallel structure in serie
+song_serie = S(song)
 
-# With ornaments
-ornate = "(+2 .tr) (+3 .mor) (-1 .st)"
+# Create decoder with a scale
+scale = Scales.et12[440.0].major[60]
+decoder = Decoders::NeumaDecoder.new(scale, base_duration: 1r)
 
-# With grace notes (appogiatura) - nested parentheses
-graceful = "((+1 _/4) +2 _) (+2 _) (+3 _)"
+# Setup sequencer with clock and transport
+output = MIDICommunications::Output.gets
 
-# Parallel voices (using array composition)
-song = [
-  "(0) (+2) (+4) (+5)",    # Voice 1
-  "(+7) (+5) (+7) (+9)"    # Voice 2
-].to_neumas
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)
+
+voices = MIDIVoices.new(sequencer: transport.sequencer, output: output, channels: [0, 1])
+
+# Play both voices simultaneously - sequencer handles parallel structure automatically
+transport.sequencer.with do
+  at 1 do
+    play song_serie, decoder: decoder, mode: :neumalang do |gdv|
+      # Convert GDV to PDV for MIDI output
+      pdv = gdv.to_pdv(scale)
+
+      # Use voice based on channel assignment (sequencer maintains voice separation)
+      voice_index = gdv[:channel] || 0
+      voices.voices[voice_index].note pitch: pdv[:pitch],
+                                      velocity: pdv[:velocity],
+                                      duration: pdv[:duration]
+    end
+  end
+end
+
+transport.start
 ```
 
 **Notation syntax:**
 - `(0)`, `(+2)`, `(-1)` - Absolute/relative pitch steps (in parentheses)
 - `o0`, `o1`, `o-1` - Octave specification
-- `_`, `_2`, `_/2` - Duration (base, double, half)
-- `.tr`, `.mor`, `.turn`, `.st` - Ornaments
-- `((grace) main)` - Grace notes (nested parentheses)
-- Arrays - Multiple voices
+- `1`, `2`, `1/2`, `1/4` - Duration (whole, double, half, quarter)
+- `ppp`, `pp`, `p`, `mp`, `mf`, `f`, `ff`, `fff` - Dynamics (velocity)
+- `+f`, `+ff`, `-p`, `-pp` - Relative dynamics (louder/softer)
+- `|` operator - Parallel voices (polyphonic structure)
 
 **Documentation:** See `lib/neumas/` and `lib/neumalang/`
 
