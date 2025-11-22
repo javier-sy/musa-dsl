@@ -11,4 +11,4 @@ bin
 test.musicxml
 doc
 .yardoc
-
+*.backup
