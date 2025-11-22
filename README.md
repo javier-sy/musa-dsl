@@ -819,6 +819,124 @@ result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
 
 **Documentation:** See `lib/musa-dsl/series/`
 
+#### Specialized Series Types
+
+Beyond basic operations, Series provides specialized types for advanced transformations and musical applications.
+
+**BufferSerie** - Multiple Independent Readers:
+
+Enables multiple "readers" to independently iterate over the same series source without interfering with each other. Essential for canonic structures (rounds, fugues), polyphonic playback from a single source, and multi-voice compositions.
+
+```ruby
+require 'musa-dsl'
+include Musa::Series
+
+# Create buffered melody for canon
+melody = S(60, 64, 67, 72, 76).buffered
+
+# Create independent readers (voices)
+voice1 = melody.buffer.i
+voice2 = melody.buffer.i
+voice3 = melody.buffer.i
+
+# Each voice progresses independently
+voice1.next_value  # => 60
+voice1.next_value  # => 64
+
+voice2.next_value  # => 60 (independent of voice1)
+voice3.next_value  # => 60 (independent of others)
+
+voice1.next_value  # => 67
+voice2.next_value  # => 64
+
+# Use in canon: play voice2 delayed by 2 beats, voice3 delayed by 4 beats
+# Each voice reads the same melodic material at its own pace
+```
+
+**QuantizerSerie** - Value Quantization:
+
+Quantizes continuous time-value pairs to discrete steps. Useful for converting MIDI controller data to discrete values, snapping pitch bends to semitones, or generating stepped automation curves.
+
+Two quantization modes:
+- **Raw mode**: Rounds values to nearest step with configurable boundary inclusion
+- **Predictive mode**: Predicts crossings of quantization boundaries for smooth transitions
+
+```ruby
+require 'musa-dsl'
+include Musa::Series
+
+# Example 1: Quantize continuous pitch bend to semitones
+pitch_bend = S({ time: 0r, value: 60.3 },
+               { time: 1r, value: 61.8 },
+               { time: 2r, value: 63.1 })
+
+quantized = pitch_bend.quantize(step: 1)  # Quantize to integer semitones
+
+quantized.i.to_a
+# => [{ time: 0r, value: 60, duration: 1r },
+#     { time: 1r, value: 62, duration: 1r }]
+
+# Example 2: Predictive quantization for smooth crossings
+continuous = S({ time: 0r, value: 0 }, { time: 4r, value: 10 })
+
+predicted = continuous.quantize(step: 2, predictive: true)
+
+predicted.i.to_a
+# Generates crossing points at values 0, 2, 4, 6, 8, 10
+# with precise timing for each boundary crossing
+```
+
+**TimedSerie Operations** - Time-Based Merging:
+
+Operations for series with explicit `:time` attributes. Enables multi-track MIDI sequencing, polyphonic event streams, and synchronized parameter automation.
+
+```ruby
+require 'musa-dsl'
+include Musa::Series
+
+# Create independent melodic lines with timing
+melody = S({ time: 0r, value: 60 },
+           { time: 1r, value: 64 },
+           { time: 2r, value: 67 })
+
+bass = S({ time: 0r, value: 36 },
+         { time: 2r, value: 38 },
+         { time: 4r, value: 41 })
+
+harmony = S({ time: 0r, value: 64 },
+            { time: 2r, value: 67 })
+
+# Merge by time using TIMED_UNION (hash mode)
+combined = TIMED_UNION(melody: melody, bass: bass, harmony: harmony)
+
+combined.i.to_a
+# => [{ time: 0r, value: { melody: 60, bass: 36, harmony: 64 } },
+#     { time: 1r, value: { melody: 64, bass: nil, harmony: nil } },
+#     { time: 2r, value: { melody: 67, bass: 38, harmony: 67 } },
+#     { time: 4r, value: { melody: nil, bass: 41, harmony: nil } }]
+
+# Array mode for unnamed voices
+voice1 = S({ time: 0r, value: 60 }, { time: 1r, value: 64 })
+voice2 = S({ time: 0r, value: 48 }, { time: 1r, value: 52 })
+
+merged = TIMED_UNION(voice1, voice2)
+
+merged.i.to_a
+# => [{ time: 0r, value: [60, 48] },
+#     { time: 1r, value: [64, 52] }]
+
+# Flatten timed values
+multi = S({ time: 0r, value: { soprano: 60, alto: 64 } })
+flat = multi.flatten_timed.i.next_value
+# => { soprano: { time: 0r, value: 60 },
+#      alto: { time: 0r, value: 64 } }
+
+# Compact removes nil values
+sparse = S({ time: 0r, value: [60, nil, 67] })
+compact = sparse.compact_timed.i.to_a
+# Removes entries where all values are nil
+```
+
 
 ### Neumas & Neumalang - Musical Notation
 
@@ -1200,6 +1318,149 @@ events_in_range = score.between(1r, 3r)
 ```
 
 **Documentation:** See `lib/datasets/`
+
+#### Score - Advanced Queries & Filtering
+
+Score provides powerful query and filtering capabilities beyond basic event storage. These methods enable temporal analysis, event filtering, and subset extraction.
+
+**Interval Queries** - `between(start, finish)`:
+
+Retrieves all events that overlap a given time interval. Returns events with their effective start/finish times within the query range.
+
+```ruby
+include Musa::Datasets
+
+score = Score.new
+
+# Add events with durations
+score.at(1r, add: { pitch: 60, duration: 2r }.extend(PDV))  # 1-3
+score.at(2r, add: { pitch: 64, duration: 1r }.extend(PDV))  # 2-3
+score.at(3r, add: { pitch: 67, duration: 2r }.extend(PDV))  # 3-5
+
+# Query events overlapping interval [2, 4)
+events = score.between(2r, 4r)
+
+events.each do |event|
+  puts "Pitch #{event[:dataset][:pitch]}"
+  puts "  Original: #{event[:start]} - #{event[:finish]}"
+  puts "  In interval: #{event[:start_in_interval]} - #{event[:finish_in_interval]}"
+end
+
+# => Pitch 60 (started at 1, overlaps 2-4)
+#    Original: 1r - 3r
+#    In interval: 2r - 3r
+#
+# => Pitch 64 (completely within 2-4)
+#    Original: 2r - 3r
+#    In interval: 2r - 3r
+#
+# => Pitch 67 (started at 3, overlaps 2-4)
+#    Original: 3r - 5r
+#    In interval: 3r - 4r
+```
+
+**Timeline Changes** - `changes_between(start, finish)`:
+
+Returns a timeline of note-on/note-off style events. Useful for real-time rendering, event-based processing, or analyzing harmonic density over time.
+
+```ruby
+include Musa::Datasets
+
+score = Score.new
+
+score.at(1r, add: { pitch: 60, duration: 2r }.extend(PDV))
+score.at(2r, add: { pitch: 64, duration: 1r }.extend(PDV))
+score.at(3r, add: { pitch: 67, duration: 1r }.extend(PDV))
+
+# Get all start/finish events in bar
+changes = score.changes_between(0r, 4r)
+
+changes.each do |change|
+  case change[:change]
+  when :start
+    puts "#{change[:time]}: Note ON  - pitch #{change[:dataset][:pitch]}"
+  when :finish
+    puts "#{change[:time]}: Note OFF - pitch #{change[:dataset][:pitch]}"
+  end
+end
+
+# => 1r: Note ON  - pitch 60
+#    2r: Note ON  - pitch 64
+#    3r: Note OFF - pitch 60
+#    3r: Note OFF - pitch 64
+#    3r: Note ON  - pitch 67
+#    4r: Note OFF - pitch 67
+```
+
+**Attribute Collection** - `values_of(attribute)`:
+
+Extracts all unique values for a specific attribute across all events. Useful for analysis, validation, or generating material from existing compositions.
+
+```ruby
+include Musa::Datasets
+
+score = Score.new
+
+score.at(1r, add: { pitch: 60, duration: 1r }.extend(PDV))
+score.at(2r, add: { pitch: 64, duration: 1r }.extend(PDV))
+score.at(3r, add: { pitch: 67, duration: 1r }.extend(PDV))
+score.at(4r, add: { pitch: 64, duration: 1r }.extend(PDV))  # Repeated
+
+# Get all unique pitches used
+pitches = score.values_of(:pitch)
+# => #<Set: {60, 64, 67}>
+
+# Analyze durations
+durations = score.values_of(:duration)
+# => #<Set: {1r}>
+
+# Check velocities
+velocities = score.values_of(:velocity)
+# => #<Set: {64}>  (default velocity from PDV)
+```
+
+**Filtering** - `subset { |event| condition }`:
+
+Creates a new Score containing only events matching a condition. Preserves timing and all event attributes.
+
+```ruby
+include Musa::Datasets
+
+score = Score.new
+
+score.at(1r, add: { pitch: 60, velocity: 80, duration: 1r }.extend(PDV))
+score.at(2r, add: { pitch: 72, velocity: 100, duration: 1r }.extend(PDV))
+score.at(3r, add: { pitch: 64, velocity: 60, duration: 1r }.extend(PDV))
+score.at(4r, add: { pitch: 79, velocity: 90, duration: 1r }.extend(PDV))
+
+# Filter by pitch range
+high_notes = score.subset { |event| event[:pitch] >= 70 }
+
+high_notes.at(2r).first[:pitch]  # => 72
+high_notes.at(4r).first[:pitch]  # => 79
+
+# Filter by velocity
+loud_notes = score.subset { |event| event[:velocity] >= 85 }
+
+# Filter by custom attribute
+scale = Musa::Scales::Scales.et12[440.0].major[60]
+
+score_gdv = Score.new
+score_gdv.at(1r, add: { grade: 0, duration: 1r }.extend(GDV))
+score_gdv.at(2r, add: { grade: 2, duration: 1r }.extend(GDV))
+score_gdv.at(3r, add: { grade: 4, duration: 1r }.extend(GDV))
+
+# Extract tonic notes only
+tonic_notes = score_gdv.subset { |event| event[:grade] == 0 }
+```
+
+**Use Cases:**
+
+- **Score Analysis**: Extract patterns, identify harmonic structures, analyze voice leading
+- **Partial Rendering**: Render only specific time ranges or event types
+- **Material Generation**: Extract pitches, rhythms, or other parameters for reuse
+- **Real-time Processing**: Convert to timeline format for event-based playback
+- **Filtering**: Create variations by extracting subsets (high notes, loud notes, specific scales)
 
 
 ### Matrix - Sonic Gesture Conversion
@@ -2170,6 +2431,398 @@ File.open("etude.musicxml", 'w') { |f| score.to_xml(f) }
 ```
 
 **Documentation:** See `lib/musicxml/builder/`
+
+
+### REPL - Live Coding Infrastructure
+
+The REPL (Read-Eval-Print Loop) provides a TCP-based server for live coding, enabling real-time code evaluation and interactive composition. It acts as a bridge between code editors (via MusaLCE clients) and the running Musa DSL environment.
+
+**Architecture:**
+```
+Editor → MusaLCE Client → TCP (port 1327) → REPL Server → DSL Context
+                                                   ↓
+                                             Results/Errors
+```
+
+**Available MusaLCE Clients:**
+- **MusaLCEClientForVSCode**: Visual Studio Code extension
+- **MusaLCEClientForAtom**: Atom editor plugin
+- **MusaLCEforBitwig**: Bitwig Studio integration
+- **MusaLCEforLive**: Ableton Live integration
+
+#### Communication Protocol
+
+The REPL uses a line-based protocol over TCP (default port: 1327).
+
+**Client to Server:**
+- `#path` - Start path block (optional, to inject file path context)
+- *file path* - Path to the user's file being edited
+- `#begin` - Start code block
+- *code lines* - Ruby code to execute
+- `#end` - Execute accumulated code block
+
+**Server to Client:**
+- `//echo` - Start echo block (code about to be executed)
+- `//error` - Start error block
+- `//backtrace` - Start backtrace section within error block
+- `//end` - End current block
+- *regular lines* - Output from code execution (puts, etc.)
+
+**Example Session:**
+```
+Client → Server:
+  #path
+  /Users/me/composition.rb
+  #begin
+  puts "Starting composition..."
+  at 1 do
+    note pitch: 60, duration: 1r
+  end
+  #end
+
+Server → Client:
+  //echo
+  puts "Starting composition..."
+  at 1 do
+    note pitch: 60, duration: 1r
+  end
+  //end
+  Starting composition...
+```
+
+#### Server Setup
+
+**Basic REPL Server:**
+
+```ruby
+require 'musa-dsl'
+include Musa::All
+
+# Create sequencer and transport
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)
+
+# Start REPL server bound to sequencer context
+# The REPL will execute code in the sequencer's DSL context
+transport.sequencer.with do
+  # DSL methods available in REPL
+  def note(pitch:, duration:)
+    puts "Playing pitch #{pitch} for #{duration} bars"
+  end
+
+  # Create REPL server (port 1327 by default)
+  @repl = Musa::REPL::REPL.new(binding)
+end
+
+# Start playback (REPL runs in background thread)
+transport.start
+```
+
+**File Path Injection:**
+
+When a client sends a file path via `#path`, the REPL injects it as `@user_pathname` (Pathname object). This enables relative requires based on the editor's current file location:
+
+```ruby
+# In REPL context, clients can use:
+require_relative @user_pathname.dirname / 'my_helpers'
+```
+
+#### Integration with Sequencer
+
+The REPL automatically hooks into sequencer error handling to report async errors during playback:
+
+```ruby
+require 'musa-dsl'
+include Musa::All
+
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)
+
+transport.sequencer.with do
+  # If an error occurs during sequencer execution,
+  # REPL clients receive formatted error messages
+
+  at 1 do
+    raise "This error will be sent to REPL client"
+  end
+
+  @repl = Musa::REPL::REPL.new(binding)
+end
+
+transport.start
+```
+
+#### Use Cases
+
+- **Live coding performances**: Real-time code evaluation during performances
+- **Interactive composition**: Develop compositions interactively with immediate feedback
+- **DAW synchronization**: Control Musa DSL from within Bitwig or Ableton Live
+- **Remote composition control**: Send commands to running compositions over network
+- **Educational workshops**: Live demonstrations with instant code execution
+
+**Documentation:** See `lib/repl/`
+
+
+### Core Extensions - Advanced Metaprogramming
+
+**Note for Advanced Users:** This section covers low-level Ruby refinements and metaprogramming utilities that form the foundation of MusaDSL's flexible syntax. These tools are primarily intended for users who want to extend the DSL, create custom builders, or integrate Musa DSL deeply into their own frameworks.
+
+Core Extensions provide Ruby refinements and metaprogramming utilities that enable MusaDSL's flexible DSL syntax. These are the building blocks used throughout the framework.
+
+#### Ruby Refinements & Metaprogramming
+
+**Arrayfy & Hashify** - Parameter Normalization:
+
+Convert any object to array or hash with specified keys. Essential for flexible DSL method signatures.
+
+```ruby
+require 'musa-dsl'
+
+using Musa::Extension::Arrayfy
+using Musa::Extension::Hashify
+
+# Arrayfy: ensure parameter is array
+value = 42
+value.arrayfy  # => [42]
+
+array = [1, 2, 3]
+array.arrayfy  # => [1, 2, 3] (already array, unchanged)
+
+# Hashify: convert to hash with specified keys
+data = [60, 1r, 80]
+data.hashify(:pitch, :duration, :velocity)
+# => { pitch: 60, duration: 1r, velocity: 80 }
+
+# Works with hashes (validates keys)
+existing = { pitch: 64, duration: 1r }
+existing.hashify(:pitch, :duration, :velocity)
+# => { pitch: 64, duration: 1r, velocity: nil }
+```
+
+**ExplodeRanges** - Range Expansion:
+
+Expand Range objects within arrays, useful for parameter generation.
+
+```ruby
+require 'musa-dsl'
+
+using Musa::Extension::ExplodeRanges
+
+# Expand ranges in arrays
+[0, 2..4, 7].explode_ranges
+# => [0, 2, 3, 4, 7]
+
+# Works with nested structures
+[1, 3..5, [10, 12..14]].explode_ranges
+# => [1, 3, 4, 5, [10, 12, 13, 14]]
+
+# Useful for pitch collections
+chord = [60, 64..67, 72].explode_ranges
+# => [60, 64, 65, 66, 67, 72]
+```
+
+**DeepCopy** - Deep Object Cloning:
+
+Create deep copies of objects with circular reference handling and singleton module preservation.
+
+```ruby
+require 'musa-dsl'
+
+using Musa::Extension::DeepCopy
+
+original = { pitch: 60, envelope: { attack: 0.1, decay: 0.2 } }
+copy = original.deep_copy
+
+copy[:envelope][:attack] = 0.5
+
+original[:envelope][:attack]  # => 0.1 (unchanged)
+copy[:envelope][:attack]       # => 0.5 (modified)
+
+# Preserves singleton modules (dataset types)
+gdv = { grade: 0, duration: 1r }.extend(Musa::Datasets::GDV)
+gdv_copy = gdv.deep_copy
+
+gdv_copy.is_a?(Musa::Datasets::GDV)  # => true (module preserved)
+```
+
+**SmartProcBinder** - Intelligent Parameter Binding:
+
+Automatically match Proc parameters with available values, enabling flexible block signatures in DSL methods.
+
+```ruby
+require 'musa-dsl'
+
+# SmartProcBinder is used internally by Series operations
+# to match block parameters flexibly
+
+using Musa::Extension::SmartProcBinder
+
+# Example: .with operation uses SmartProcBinder
+pitches = S(60, 64, 67)
+durations = S(1r, 1/2r, 1/4r)
+
+# Block can request any combination of parameters
+notes = pitches.with(dur: durations) do |p, dur:|
+  { pitch: p, duration: dur }
+end
+
+# SmartProcBinder matches 'p' to pitch value, 'dur:' to duration value
+# regardless of parameter order or naming
+```
+
+**DynamicProxy** - Lazy Initialization Pattern:
+
+Forward method calls to a lazily-initialized target. Used for deferred object creation.
+
+```ruby
+require 'musa-dsl'
+
+# DynamicProxy is used internally for lazy series evaluation
+# and deferred resource allocation
+
+# Example: Proxy pattern for expensive resource
+class ExpensiveResource
+  def initialize
+    puts "Initializing expensive resource..."
+    @data = (1..1000000).to_a
+  end
+
+  def process
+    puts "Processing..."
+  end
+end
+
+# Create proxy (doesn't initialize resource yet)
+proxy = Musa::Extension::DynamicProxy::DynamicProxy.new(ExpensiveResource)
+
+# Resource is created only when first method is called
+proxy.process  # Outputs: "Initializing expensive resource..." then "Processing..."
+proxy.process  # Only outputs: "Processing..." (resource already initialized)
+```
+
+**With** - Flexible Block Execution:
+
+Execute blocks with flexible context switching (instance_eval vs call with self). Core utility for DSL builders.
+
+```ruby
+require 'musa-dsl'
+
+using Musa::Extension::With
+
+# Used internally by DSL builders to execute configuration blocks
+# Can switch between instance_eval (DSL style) and block.call (parameter style)
+
+class Builder
+  def initialize(&block)
+    @items = []
+    # Execute block in builder context using With
+    self.with &block
+  end
+
+  def item(name)
+    @items << name
+  end
+
+  def items
+    @items
+  end
+end
+
+# DSL-style block (instance_eval)
+builder = Builder.new do
+  item "first"
+  item "second"
+end
+
+builder.items  # => ["first", "second"]
+```
+
+**AttributeBuilder** - DSL Builder Macros:
+
+Metaprogramming macros for creating DSL builder patterns. Automatically generates setter and getter methods.
+
+```ruby
+require 'musa-dsl'
+
+# AttributeBuilder is used internally by MusicXML Builder and other DSL components
+
+class SynthConfig
+  include Musa::Extension::AttributeBuilder
+
+  # Define DSL attributes
+  attribute :waveform
+  attribute :frequency
+  attribute :amplitude
+
+  def initialize(&block)
+    self.with &block if block
+  end
+end
+
+# Use DSL to configure
+synth = SynthConfig.new do
+  waveform :sine
+  frequency 440
+  amplitude 0.8
+end
+
+synth.waveform   # => :sine
+synth.frequency  # => 440
+synth.amplitude  # => 0.8
+```
+
+#### Logger - Sequencer-Aware Logging
+
+Specialized logger that displays sequencer position alongside log messages. Essential for debugging temporal issues in compositions.
+
+**Features:**
+- Automatic sequencer position formatting
+- Configurable position precision (integer and decimal digits)
+- Integration with InspectNice for readable Rational display
+- Standard Ruby Logger levels (DEBUG, INFO, WARN, ERROR, FATAL)
+
+```ruby
+require 'musa-dsl'
+
+# Create sequencer-aware logger
+sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+
+logger = Musa::Logger.new(
+  sequencer: sequencer,
+  level: :debug,
+  position_format_integer_digits: 3,    # Position: "  4" instead of "4"
+  position_format_decimal_digits: 3     # Position: "4.500" instead of "4.5"
+)
+
+# Use logger in sequencer context
+sequencer.at 1 do
+  logger.info "Starting melody at bar 1"
+end
+
+sequencer.at 4.5r do
+  logger.debug "Halfway through bar 5"
+end
+
+sequencer.at 10 do
+  logger.warn "Approaching ending"
+end
+
+# Run sequencer to see logged output
+sequencer.run
+
+# Output:
+#   001.000: [INFO] Starting melody at bar 1
+#   004.500: [DEBUG] Halfway through bar 5
+#   010.000: [WARN] Approaching ending
+```
+
+**Use Cases:**
+- **Temporal Debugging**: Track down timing issues by seeing exact musical position
+- **MIDI Event Monitoring**: Log MIDI note-on/note-off with positions
+- **Composition Development**: Monitor sequencer flow during development
+- **Performance Analysis**: Identify bottlenecks by logging with timestamps
+
+**Documentation:** See `lib/core-ext/` and `lib/logger/`
 
 
 ## Documentation
