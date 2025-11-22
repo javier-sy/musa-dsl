@@ -770,10 +770,20 @@ puts mxml.to_xml.string
 
 Tools for generative and algorithmic music composition.
 
+#### Markov Chains
+
+Probabilistic sequence generation using transition matrices. Markov chains generate sequences where each value depends only on the current state and transition probabilities.
+
+Parameters:
+- `start:` - Initial state value
+- `finish:` - End state symbol (transitions to this value terminate the sequence)
+- `transitions:` - Hash mapping each state to possible next states with probabilities
+  - Format: `state => { next_state => probability, ... }`
+  - Probabilities for each state should sum to 1.0
+
 ```ruby
 require 'musa-dsl'
 
-# 1. Markov chains - Probabilistic sequence generation
 markov = Musa::Markov::Markov.new(
   start: 0,
   finish: :end,
@@ -786,15 +796,32 @@ markov = Musa::Markov::Markov.new(
   }
 ).i
 
-melody = []
-16.times do
-  value = markov.next_value
-  break unless value
-  melody << value
-end
+# Generate melody pitches (Markov is a Serie, so we can use .to_a)
+melody_pitches = markov.to_a
+```
 
-# 2. Variatio - Cartesian product of parameter variations
-#    Generates ALL combinations of field values
+#### Variatio
+
+Generates all combinations of parameter variations using Cartesian product. Useful for creating comprehensive parameter sweeps, exploring all possibilities of a musical motif, or generating exhaustive harmonic permutations.
+
+**Constructor parameters:**
+- `instance_name` (Symbol) - Name for the object parameter in blocks (e.g., `:chord`, `:note`, `:synth`)
+- `&block` - DSL block defining fields, constructor, and optional attributes/finalize
+
+**DSL methods:**
+- `field(name, options)` - Define a parameter field with possible values (Array or Range)
+- `fieldset(name, options, &block)` - Define nested field group with its own fields
+- `constructor(&block)` - Define how to construct each variation object (required)
+- `with_attributes(&block)` - Modify objects with field/fieldset values (optional)
+- `finalize(&block)` - Post-process completed objects (optional)
+
+**Execution methods:**
+- `run` - Generate all variations with default field values
+- `on(**values)` - Generate variations with runtime field value overrides
+
+```ruby
+require 'musa-dsl'
+
 variatio = Musa::Variatio::Variatio.new :chord do
   field :root, [60, 64, 67]     # C, E, G
   field :type, [:major, :minor]
@@ -812,241 +839,1286 @@ all_chords = variatio.run
 # ]
 # 3 roots × 2 types = 6 variations
 
-# 3. Rules - Production system with growth and pruning
-#    Similar to L-systems, generates tree of valid possibilities
+# Override field values at runtime
+limited_chords = variatio.on(root: [60, 64])
+# => 2 roots × 2 types = 4 variations
+```
+
+#### Rules
+
+Production system with growth and pruning rules (similar to L-systems). Generates tree structures by applying sequential growth rules to create branches and validation rules to prune invalid paths. Useful for harmonic progressions with voice leading rules, melodic variations with contour constraints, or rhythmic patterns following metric rules.
+
+**Constructor parameters:**
+- `&block` - DSL block defining grow rules, cut rules, and end condition
+
+**DSL methods:**
+- `grow(name, &block)` - Define growth rule that generates new branches
+  - Block receives: `|object, history, **params|`
+  - Use `branch(new_object)` to create new possibilities
+- `cut(reason, &block)` - Define pruning rule to eliminate invalid paths
+  - Block receives: `|object, history, **params|`
+  - Use `prune` to reject current branch
+- `ended_when(&block)` - Define end condition to mark complete branches
+  - Block receives: `|object, history, **params|`
+  - Return `true` to mark branch as complete
+
+**Execution methods:**
+- `apply(seed_or_seeds, **params)` - Apply rules to initial object(s), returns tree Node
+  - Accepts single object or array of objects
+  - Optional parameters passed to all rule blocks
+
+**Tree Node methods:**
+- `combinations` - Returns array of all valid complete paths through tree
+- `fish` - Returns array of all valid endpoint objects
+
+```ruby
+require 'musa-dsl'
+
+# Build chord voicings by adding notes sequentially
 rules = Musa::Rules::Rules.new do
-  # Growth rules - generate possibilities
-  grow 'next chord' do |chord, history|
-    case chord
-    when :I   then branch(:ii); branch(:IV); branch(:V)
-    when :ii  then branch(:V)
-    when :IV  then branch(:I); branch(:V)
-    when :V   then branch(:I)
+  # Step 1: Choose root note
+  grow 'add root' do |seed|
+    [60, 64, 67].each { |root| branch [root] }  # C, E, G
+  end
+
+  # Step 2: Add third (major or minor)
+  grow 'add third' do |chord|
+    branch chord + [chord[0] + 4]  # Major third
+    branch chord + [chord[0] + 3]  # Minor third
+  end
+
+  # Step 3: Add fifth
+  grow 'add fifth' do |chord|
+    branch chord + [chord[0] + 7]
+  end
+
+  # Pruning rule: avoid wide intervals
+  cut 'no wide spacing' do |chord|
+    if chord.size >= 2
+      prune if (chord[-1] - chord[-2]) > 12  # Max octave between adjacent notes
     end
   end
 
-  # Pruning rules - eliminate invalid paths
-  cut 'avoid repetition' do |chord, history|
-    prune if history.size > 0 && history.last == chord
-  end
-
-  # End condition
-  ended_when do |chord, history|
-    history.size == 4  # 4-chord progression
+  # End after three notes
+  ended_when do |chord|
+    chord.size == 3
   end
 end
 
-tree = rules.apply([:I])
-progressions = tree.combinations
-# => [[:I, :ii, :V, :I], [:I, :IV, :V, :I], [:I, :IV, :I], ...]
+tree = rules.apply(0)  # seed value (triggers generation)
+combinations = tree.combinations
 
-# 4. Generative Grammar - Formal grammars with combinatorial generation
-#    Defines grammars using operators | (or), + (sequence), repeat, limit
+# Extract final voicings from each path
+voicings = combinations.map { |path| path.last }
+# => [[60, 64, 67], [60, 63, 67], [64, 68, 71], [64, 67, 71], [67, 71, 74], [67, 70, 74]]
+# 3 roots × 2 thirds × 1 fifth = 6 voicings
+
+# With parameters
+tree_with_params = rules.apply(0, max_interval: 7)
+```
+
+#### Generative Grammar
+
+Formal grammars with combinatorial generation using operators. Useful for generating melodic patterns with rhythmic constraints, harmonic progressions, or variations of musical motifs.
+
+**Constructors:**
+- `N(content, **attributes)` - Create terminal node with fixed content and attributes
+- `N(**attributes, &block)` - Create block node with dynamic content generation
+- `PN()` - Create proxy node for recursive grammar definitions
+
+**Combination operators:**
+- `|` (or) - Alternative/choice between nodes (e.g., `a | b`)
+- `+` (next) - Concatenation/sequence of nodes (e.g., `a + b`)
+- `repeat(exactly:)` or `repeat(min:, max:)` - Repeat node multiple times
+- `limit(&block)` - Filter options by condition
+
+**Result methods:**
+- `options(content: :join)` - Generate all combinations as joined strings
+- `options(content: :itself)` - Generate all combinations as arrays (default)
+- `options(raw: true)` - Generate raw OptionElement objects with attributes
+- `options(&condition)` - Generate filtered combinations
+
+```ruby
+require 'musa-dsl'
+
 include Musa::GenerativeGrammar
 
 a = N('a', size: 1)
 b = N('b', size: 1)
 c = N('c', size: 1)
+d = b | c  # d can be either b or c
 
-# Grammar: (a or b) repeated 3 times, then c
-grammar = (a | b).repeat(3) + c
+# Grammar: (a or d) repeated 3 times, then c
+grammar = (a | d).repeat(3) + c
 
 # Generate all possibilities
 grammar.options(content: :join)
-# => ["aaac", "aabc", "abac", "abbc", "baac", "babc", "bbac", "bbbc"]
-# 2^3 × 1 = 8 combinations
+# => ["aaac", "aabc", "aacc", "abac", "abbc", "abcc", "acac", "acbc", "accc",
+#     "baac", "babc", "bacc", "bbac", "bbbc", "bbcc", "bcac", "bcbc", "bccc",
+#     "caac", "cabc", "cacc", "cbac", "cbbc", "cbcc", "ccac", "ccbc", "cccc"]
+# 3^3 × 1 = 27 combinations
 
-# With constraints
-grammar_limited = (a | b).repeat.limit { |o|
-  o.collect { |e| e.attributes[:size] }.sum == 3
+# With constraints - filter by attribute
+grammar_with_limit = (a | d).repeat(min: 1, max: 4).limit { |o|
+  o.collect { |e| e.attributes[:size] }.sum <= 3
 }
 
-grammar_limited.options(content: :join)
-# => ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
-
-# 5. Darwin - Genetic algorithms
-darwin = Musa::Generative::Darwin.new(
-  population_size: 100,
-  genome_length: 16
-) do |genome|
-  # Fitness function
-  evaluate_melody_fitness(genome)
-end
-
-best_melody = darwin.evolve(generations: 50)
+result_limited = grammar_with_limit.options(content: :join)
+# Includes: ["a", "b", "c", "aa", "ab", "ac", "ba", "bb", "bc", "ca", "cb", "cc", "aaa", "aab", "aac", ...]
+# Only combinations where total size <= 3
 ```
 
-**Documentation:** See `lib/generative/`
+#### Darwin
 
-### Music - Scales & Chords
+Evolutionary selection algorithm based on fitness evaluation. Darwin doesn't generate populations - it selects and ranks existing candidates using user-defined measures (features and dimensions) and weights. Each object is evaluated, normalized across the population, scored, and sorted by fitness.
 
-Comprehensive support for musical scales, tuning systems, and chord structures.
+**How it works:**
+1. Define measures (features & dimensions) to evaluate each candidate
+2. Define weights for each measure
+3. Darwin evaluates all candidates, normalizes dimensions, applies weights
+4. Returns population sorted by fitness (best first)
+
+**Constructor:**
+- `&block` - DSL block defining measures and weights
+
+**DSL methods:**
+- `measures(&block)` - Define evaluation block for each object
+  - Block receives each object to evaluate
+  - Inside block use: `feature(name)`, `dimension(name, value)`, `die`
+- `weight(**weights)` - Assign weights to features/dimensions
+  - Positive weights favor the measure
+  - Negative weights penalize the measure
+
+**Measures methods (inside measures block):**
+- `feature(name)` - Mark object as having a boolean feature
+- `dimension(name, value)` - Record numeric measurement (will be normalized 0-1)
+- `die` - Mark object as non-viable (will be excluded from results)
+
+**Execution methods:**
+- `select(population)` - Evaluate and rank population, returns sorted array (best first)
 
 ```ruby
 require 'musa-dsl'
 
-# Get scales from equal temperament 12-tone system
-# et12[reference_frequency].scale_mode[tonic_pitch]
-major = Musa::Scales::Scales.et12[440.0].major[60]      # C major
-minor = Musa::Scales::Scales.et12[440.0].minor[62]      # D minor
+# Generate candidate melodies using Variatio
+variatio = Musa::Variatio::Variatio.new :melody do
+  field :interval, 1..7        # Intervals in semitones
+  field :contour, [:up, :down, :repeat]
+  field :duration, [1/4r, 1/2r, 1r]
 
-# Use scales to convert grades to pitches
-pitch = major.grade(2).pitch  # => 64 (E)
+  constructor do |interval:, contour:, duration:|
+    { interval: interval, contour: contour, duration: duration }
+  end
+end
 
-# Access scale notes with octave
-note = major.grade(2).octave(1)  # E in octave 1
-pitch_with_octave = note.pitch   # => 76
+candidates = variatio.run  # Generate all combinations
 
-# Chord definitions from scale
-c_major = major.tonic.chord
-d_minor = major.grade(1).chord
+# Create Darwin selector with musical criteria
+darwin = Musa::Darwin::Darwin.new do
+  measures do |melody|
+    # Eliminate melodies with unwanted characteristics
+    die if melody[:interval] > 5  # No large leaps
 
-# Get chord note pitches
-notes = c_major.notes.map { |n| n.note.pitch }  # => [60, 64, 67] (C, E, G)
+    # Binary features (present/absent)
+    feature :stepwise if melody[:interval] <= 2        # Stepwise motion
+    feature :has_quarter_notes if melody[:duration] == 1/4r
+
+    # Numeric dimensions (will be normalized across population)
+    # Use negative values to prefer lower numbers
+    dimension :interval_size, -melody[:interval].to_f
+    dimension :duration_value, melody[:duration].to_f
+  end
+
+  # Weight each measure's contribution to fitness
+  weight interval_size: 2.0,      # Strongly prefer smaller intervals
+         stepwise: 1.5,            # Prefer stepwise motion
+         has_quarter_notes: 1.0,   # Slightly prefer quarter notes
+         duration_value: -0.5      # Slightly penalize longer durations
+end
+
+# Select and rank melodies by fitness
+ranked = darwin.select(candidates)
+
+best_melody = ranked.first       # Highest fitness
+top_10 = ranked.first(10)        # Top 10 melodies
+worst = ranked.last              # Lowest fitness (but still viable)
+```
+
+### Music - Scales & Chords
+
+Comprehensive framework for working with musical scales, tuning systems, and chord structures. The system resolves two main domains:
+
+#### Scales System
+
+The **Scales** module provides hierarchical access to musical scales with multiple tuning systems and scale types:
+
+**Architecture:**
+- **ScaleSystem** (`Musa::Scales::ScaleSystem`): Defines tuning systems (e.g., 12-tone equal temperament)
+- **ScaleSystemTuning** (`Musa::Scales::ScaleSystemTuning`): A scale system with specific reference frequency (e.g., A=440Hz)
+- **ScaleKind** (`Musa::Scales::ScaleKind`): Scale types (major, minor, chromatic, etc.)
+- **Scale** (`Musa::Scales::Scale`): A scale kind rooted on a specific pitch (e.g., C major)
+- **NoteInScale** (`Musa::Scales::NoteInScale`): A specific note within a scale
+
+**Registry:**
+- **Scales::Scales** (`Musa::Scales::Scales`): Central registry for accessing scale systems by ID or method name
+
+**Available scale systems:**
+- `:et12` (EquallyTempered12ToneScaleSystem): 12-tone equal temperament (default)
+
+**Available scale kinds in et12:**
+- `:major` - Major scale (Ionian mode)
+- `:minor` - Natural minor scale (Aeolian mode)
+- `:minor_harmonic` - Harmonic minor scale (raised 7th degree)
+- `:chromatic` - Chromatic scale (all 12 semitones)
+
+#### Chords System
+
+The **Chords** module provides chord structures with scale context:
+
+**Architecture:**
+- **Chord** (`Musa::Chords::Chord`): Instantiated chord with root note and scale context
+- **ChordDefinition** (`Musa::Chords::ChordDefinition`): Abstract chord structure definition (quality, size, intervals)
+
+**Features:**
+- Access chord tones by name (root, third, fifth, seventh, etc.)
+- Voicing modifications (move, duplicate, octave)
+- Navigate between related chords (change quality, add extensions)
+- Extract pitches and notes
+
+**Usage examples:**
+
+```ruby
+require 'musa-dsl'
+
+include Musa::Scales
+include Musa::Chords
+
+# Access default system and tuning
+tuning = Scales.default_system.default_tuning  # A=440Hz
+
+# Create scales using available scale kinds
+c_major = tuning.major[60]           # C major (tonic pitch 60)
+d_minor = tuning.minor[62]           # D minor (natural)
+e_harmonic = tuning.minor_harmonic[64]  # E harmonic minor
+chromatic = tuning.chromatic[60]     # C chromatic
+
+# Alternative access methods
+c_major = Scales.et12[440.0].major[60]  # Explicit system and frequency
+
+# Access notes by grade (0-based) or function
+tonic = c_major[0]      # => C (grade 0)
+mediant = c_major[2]    # => E (grade 2)
+dominant = c_major[4]   # => G (grade 4)
+
+# Access by function name
+tonic = c_major.tonic         # => C
+supertonic = c_major.supertonic  # => D
+mediant = c_major.mediant     # => E
+subdominant = c_major.subdominant  # => F
+dominant = c_major.dominant   # => G
+
+# Access by Roman numeral or symbol
+c_major[:I]    # => Tonic (C)
+c_major[:V]    # => Dominant (G)
+
+# Get pitch values from notes
+pitch = c_major.tonic.pitch   # => 60
+
+# Navigate with octaves
+note = c_major[2].octave(1)  # E in octave 1
+pitch_with_octave = note.pitch     # => 76
+
+# Chromatic operations - sharp and flat
+c_sharp = c_major.tonic.sharp   # => C# (chromatic, +1 semitone)
+c_flat = c_major.tonic.flat     # => Cb (chromatic, -1 semitone)
+
+# Navigate by semitones
+fifth_up = c_major.tonic.sharp(7)  # => G (+7 semitones = perfect fifth)
+third_up = c_major.tonic.sharp(4)  # => E (+4 semitones = major third)
+
+# Frequency calculation
+frequency = c_major.tonic.frequency  # => 261.63 Hz (middle C at A=440)
+
+# Create chords from scale degrees
+i_chord = c_major.tonic.chord        # C major triad [C, E, G]
+ii_chord = c_major.supertonic.chord  # D minor triad [D, F, A]
+v_chord = c_major.dominant.chord     # G major triad [G, B, D]
+
+# Create extended chords
+i_seventh = c_major.tonic.chord :seventh  # C major 7th [C, E, G, B]
+v_ninth = c_major.dominant.chord :ninth   # G 9th chord
+
+# Access chord tones by name
+root = i_chord.root      # => C (NoteInScale)
+third = i_chord.third    # => E (NoteInScale)
+fifth = i_chord.fifth    # => G (NoteInScale)
+
+# Get chord pitches
+pitches = i_chord.pitches  # => [60, 64, 67] (C, E, G)
+notes = i_chord.notes      # Array of ChordGradeNote structs
+
+# Chord features
+i_chord.quality  # => :major
+i_chord.size     # => :triad
+
+# Navigate between chord qualities
+minor_chord = i_chord.with_quality(:minor)      # C minor [C, Eb, G]
+diminished = i_chord.with_quality(:diminished)  # C diminished [C, Eb, Gb]
+
+# Change chord extensions
+seventh_chord = i_chord.with_size(:seventh)  # C major 7th
+ninth_chord = i_chord.with_size(:ninth)      # C major 9th
+
+# Voicing modifications - move specific tones to different octaves
+voiced = i_chord.move(root: -1, fifth: 1)  # Root down, fifth up
+
+# Duplicate tones in other octaves
+doubled = i_chord.duplicate(root: -2, third: [-1, 1])  # Root 2 down, third 1 down and 1 up
+
+# Transpose entire chord
+lower = i_chord.octave(-1)  # Move chord down one octave
+```
+
+#### Defining Custom Scale Systems, Scale Kinds, and Chord Definitions
+
+The framework is extensible, allowing users to define custom tuning systems, scale types, and chord structures:
+
+**Custom Scale Systems:**
+
+Users can create custom tuning systems by subclassing `Musa::Scales::ScaleSystem` and implementing:
+- `.id` - Unique symbol identifier
+- `.notes_in_octave` - Number of notes per octave
+- `.part_of_tone_size` - Size of smallest pitch unit
+- `.intervals` - Hash mapping interval names to semitone offsets
+- `.frequency_of_pitch(pitch, root_pitch, a_frequency)` - Pitch to frequency conversion
+
+After defining, register with `Musa::Scales::Scales.register(CustomScaleSystem, default: false)`
+
+**Custom Scale Kinds:**
+
+Users can define new scale types by subclassing `Musa::Scales::ScaleKind` and implementing:
+- `.id` - Unique symbol identifier (e.g., `:dorian`, `:pentatonic`)
+- `.pitches` - Array defining scale structure with functions and pitch offsets
+- `.chromatic?` - Whether this is the chromatic scale (optional, default: false)
+- `.grades` - Number of grades per octave (optional, default: pitches.length)
+
+After defining, register with `YourScaleSystem.register(CustomScaleKind)`
+
+**Custom Chord Definitions:**
+
+Users can register new chord types using `Musa::Chords::ChordDefinition.register`:
+- `name` - Symbol identifier (e.g., `:sus4`, `:add9`)
+- `offsets:` - Hash defining semitone intervals from root (e.g., `{ root: 0, fourth: 5, fifth: 7 }`)
+- `**features` - Chord characteristics like `quality:` and `size:`
+
+**Examples of custom definitions:**
+
+```ruby
+require 'musa-dsl'
+
+include Musa::Scales
+include Musa::Chords
+
+# Example 1: Define a custom pentatonic scale kind for the 12-tone system
+class PentatonicMajorScaleKind < ScaleKind
+  class << self
+    def id
+      :pentatonic_major
+    end
+
+    def pitches
+      [{ functions: [:I, :_1, :tonic], pitch: 0 },
+       { functions: [:II, :_2], pitch: 2 },
+       { functions: [:III, :_3], pitch: 4 },
+       { functions: [:V, :_5], pitch: 7 },
+       { functions: [:VI, :_6], pitch: 9 }]
+    end
+
+    def grades
+      5  # 5 notes per octave
+    end
+  end
+end
+
+# Register the new scale kind with the 12-tone system
+Scales.et12.register(PentatonicMajorScaleKind)
+
+# Use the new scale kind
+tuning = Scales.default_system.default_tuning
+c_pentatonic = tuning[:pentatonic_major][60]  # C pentatonic major
+puts c_pentatonic[0].pitch  # => 60 (C)
+puts c_pentatonic[1].pitch  # => 62 (D)
+puts c_pentatonic[2].pitch  # => 64 (E)
+
+# Example 2: Register a custom chord definition (sus4)
+Musa::Chords::ChordDefinition.register :sus4,
+  quality: :suspended,
+  size: :triad,
+  offsets: { root: 0, fourth: 5, fifth: 7 }
+
+# Use the custom chord definition
+c_major = tuning.major[60]
+# To use custom chords, access via NoteInScale#chord with the definition name
+# or create manually using the definition
+
+# Example 3: Register a custom chord definition (add9)
+Musa::Chords::ChordDefinition.register :add9,
+  quality: :major,
+  size: :extended,
+  offsets: { root: 0, third: 4, fifth: 7, ninth: 14 }
 ```
 
 **Documentation:** See `lib/music/`
 
 ### MusicXML Builder - Music Notation Export
 
-Generate MusicXML files for notation software (Finale, Sibelius, MuseScore, etc.).
+Comprehensive builder for generating MusicXML 3.0 files compatible with music notation software (Finale, Sibelius, MuseScore, Dorico, etc.). MusicXML is the standard open format for exchanging digital sheet music between applications.
+
+#### Root Class: ScorePartwise
+
+The entry point for creating MusicXML documents is `Musa::MusicXML::Builder::ScorePartwise`, which represents the `<score-partwise>` root element. It organizes music by parts (instruments/voices) and measures.
+
+**Structure:**
+- **Metadata**: work info, movement info, creators, rights, encoding date
+- **Part List**: part definitions with names and abbreviations
+- **Parts**: musical content organized by measures
+
+#### Key Features
+
+**Multiple staves:**
+Use `staff:` parameter to specify which staff (1, 2, etc.) for grand staff notation (piano, harp, organ, etc.).
+```ruby
+pitch 'C', octave: 3, staff: 2  # Note in staff 2 (bass clef)
+```
+
+**Multiple voices:**
+Use `voice:` parameter for polyphonic notation within a single staff (independent melodic lines).
+```ruby
+pitch 'C', octave: 4, voice: 1  # Voice 1
+pitch 'E', octave: 3, voice: 2  # Voice 2 (simultaneous)
+```
+
+**Backup/Forward:**
+Navigate timeline within measures to layer voices. `backup(duration)` returns to an earlier point, `forward(duration)` skips ahead.
+```ruby
+pitch 'C', octave: 4, duration: 4
+backup 4  # Return to beginning
+pitch 'E', octave: 3, duration: 4  # Play simultaneously
+```
+
+**Divisions:**
+Set rhythmic precision as divisions per quarter note in measure attributes. Higher values allow smaller note values.
+```ruby
+attributes do
+  divisions 4  # 4 divisions per quarter (allows 16th notes)
+end
+```
+
+**Alterations:**
+Use `alter:` parameter for accidentals: `-1` for flat, `1` for sharp, `2` for double sharp, etc.
+```ruby
+pitch 'F', octave: 4, alter: 1  # F# (sharp)
+pitch 'B', octave: 4, alter: -1  # Bb (flat)
+```
+
+**Articulations:**
+Add slurs, dots, and other articulations via parameters.
+```ruby
+pitch 'C', octave: 4, slur: 'start'  # Begin slur
+pitch 'D', octave: 4, slur: 'stop'   # End slur
+pitch 'E', octave: 4, dots: 1        # Dotted note
+```
+
+**Dynamics:**
+Add dynamic markings using `direction` blocks with `dynamics` method. Supported: `pp`, `p`, `mp`, `mf`, `f`, `ff`, `fff`, etc.
+```ruby
+direction do
+  dynamics 'f'  # Forte
+end
+```
+
+**Wedges:**
+Add crescendo/diminuendo markings with `wedge` in direction blocks.
+```ruby
+direction do
+  wedge 'crescendo'  # Start crescendo
+end
+# ... notes ...
+direction wedge: 'stop'  # End crescendo
+```
+
+**Metronome:**
+Add tempo markings with `metronome` in measures.
+```ruby
+metronome beat_unit: 'quarter', per_minute: 120
+```
+
+**Rests:**
+Use `rest` method instead of `pitch` for rest notation.
+```ruby
+rest duration: 2, type: 'quarter'
+```
+
+#### Two Usage Modes
+
+**Constructor Style (Method Calls):**
+
+Use constructor parameters and `add_*` methods for programmatic building:
 
 ```ruby
 require 'musa-dsl'
 
-# Create a score
+# Create score with metadata
 score = Musa::MusicXML::Builder::ScorePartwise.new(
-  work_title: "My Composition"
+  work_title: "Piano Piece",
+  creators: { composer: "Your Name" },
+  encoding_date: DateTime.new(2024, 1, 1)
 )
 
-# Add creator information
-score.creators type: "composer", name: "Your Name"
+# Add parts using add_* methods
+part = score.add_part(:p1, name: "Piano", abbreviation: "Pno.")
 
-# Add a part
-part = score.part "P1", name: "Piano"
+# Add measures and attributes
+measure = part.add_measure(divisions: 4)
 
-# Add measures with notes
-measure = part.measure(number: 1)
-measure.attributes do
-  time 4, 4
-  key 0  # C major
-  clef :treble
-end
+# Add attributes (key, time, clef, etc.)
+measure.attributes.last.add_key(1, fifths: 0)        # C major
+measure.attributes.last.add_time(1, beats: 4, beat_type: 4)
+measure.attributes.last.add_clef(1, sign: 'G', line: 2)
 
-measure.note do
-  pitch :C, 4
-  duration 1
-  type :quarter
-end
+# Add notes
+measure.add_pitch(step: 'C', octave: 4, duration: 4, type: 'quarter')
+measure.add_pitch(step: 'E', octave: 4, duration: 4, type: 'quarter')
+measure.add_pitch(step: 'G', octave: 4, duration: 4, type: 'quarter')
+measure.add_pitch(step: 'C', octave: 5, duration: 4, type: 'quarter')
 
 # Export to file
 File.write("score.musicxml", score.to_xml.string)
 ```
 
-**Documentation:** See `lib/musicxml/builder/`
+**DSL Style (Blocks):**
 
-### MIDI - MIDI Recording & Voice Management
-
-Tools for working with MIDI input/output.
+Use blocks with method names as setters/builders for more readable, declarative code:
 
 ```ruby
 require 'musa-dsl'
 
-# MIDI voice management for polyphonic playback
+score = Musa::MusicXML::Builder::ScorePartwise.new do
+  work_title "Piano Piece"
+  creators composer: "Your Name"
+  encoding_date DateTime.new(2024, 1, 1)
+
+  part :p1, name: "Piano", abbreviation: "Pno." do
+    measure do
+      attributes do
+        divisions 4
+        key 1, fifths: 0        # C major
+        time 1, beats: 4, beat_type: 4
+        clef 1, sign: 'G', line: 2
+      end
+
+      pitch 'C', octave: 4, duration: 4, type: 'quarter'
+      pitch 'E', octave: 4, duration: 4, type: 'quarter'
+      pitch 'G', octave: 4, duration: 4, type: 'quarter'
+      pitch 'C', octave: 5, duration: 4, type: 'quarter'
+    end
+  end
+end
+
+File.write("score.musicxml", score.to_xml.string)
+```
+
+**Sophisticated Example - Piano Score with Multiple Features:**
+
+```ruby
+require 'musa-dsl'
+
+score = Musa::MusicXML::Builder::ScorePartwise.new do
+  work_title "Étude in D Major"
+  work_number 1
+  creators composer: "Example Composer"
+  encoding_date DateTime.now
+
+  part :p1, name: "Piano" do
+    # Measure 1 - Setup and opening with two staves
+    measure do
+      attributes do
+        divisions 2  # 2 divisions per quarter note
+
+        # Treble clef (staff 1)
+        key 1, fifths: 2        # D major (2 sharps)
+        clef 1, sign: 'G', line: 2
+        time 1, beats: 4, beat_type: 4
+
+        # Bass clef (staff 2)
+        key 2, fifths: 2
+        clef 2, sign: 'F', line: 4
+        time 2, beats: 4, beat_type: 4
+      end
+
+      # Tempo marking
+      metronome beat_unit: 'quarter', per_minute: 120
+
+      # Right hand melody (staff 1)
+      pitch 'D', octave: 4, duration: 4, type: 'half', slur: 'start'
+      pitch 'E', octave: 4, duration: 4, type: 'half', slur: 'stop'
+
+      # Return to beginning for left hand (staff 2)
+      backup 8
+
+      # Left hand accompaniment (staff 2)
+      pitch 'D', octave: 3, duration: 8, type: 'whole', staff: 2
+    end
+
+    # Measure 2 - Two voices in treble clef
+    measure do
+      # Voice 1
+      pitch 'F#', octave: 4, duration: 2, type: 'quarter', alter: 1, voice: 1
+      pitch 'G', octave: 4, duration: 2, type: 'quarter', voice: 1
+      pitch 'A', octave: 4, duration: 2, type: 'quarter', voice: 1
+      pitch 'B', octave: 4, duration: 2, type: 'quarter', voice: 1
+
+      # Return to beginning for voice 2
+      backup 8
+
+      # Voice 2 (inner voice)
+      pitch 'A', octave: 3, duration: 3, type: 'quarter', dots: 1, voice: 2
+      pitch 'B', octave: 3, duration: 1, type: 'eighth', voice: 2
+      pitch 'C#', octave: 4, duration: 3, type: 'quarter', dots: 1, alter: 1, voice: 2
+      pitch 'D', octave: 4, duration: 1, type: 'eighth', voice: 2
+
+      # Return for left hand
+      backup 8
+
+      # Left hand (staff 2)
+      pitch 'A', octave: 2, duration: 8, type: 'whole', staff: 2
+    end
+
+    # Measure 3 - Dynamics and articulations
+    measure do
+      # Dynamic marking
+      direction do
+        dynamics 'pp'
+        wedge 'crescendo'
+      end
+
+      # Notes with crescendo
+      pitch 'C#', octave: 5, duration: 1, type: 'eighth', alter: 1
+      pitch 'D', octave: 5, duration: 1, type: 'eighth'
+      pitch 'E', octave: 5, duration: 1, type: 'eighth'
+      pitch 'F#', octave: 5, duration: 1, type: 'eighth', alter: 1
+
+      pitch 'G', octave: 5, duration: 1, type: 'eighth'
+      pitch 'A', octave: 5, duration: 1, type: 'eighth'
+      pitch 'B', octave: 5, duration: 1, type: 'eighth'
+      pitch 'C#', octave: 6, duration: 1, type: 'eighth', alter: 1
+
+      # End of crescendo, forte
+      direction wedge: 'stop', dynamics: 'f'
+    end
+  end
+end
+
+# Export to file
+File.write("etude.musicxml", score.to_xml.string)
+
+# Or write directly to IO
+File.open("etude.musicxml", 'w') { |f| score.to_xml(f) }
+```
+
+**Documentation:** See `lib/musicxml/builder/`
+
+### MIDI - Voice Management & Recording
+
+High-level MIDI tools for sequencer-synchronized playback and recording. These utilities integrate MIDI I/O with the sequencer timeline, ensuring correct timing even during fast-forward or quantization.
+
+#### MIDIVoices - Polyphonic Voice Management
+
+**MIDIVoices** manages MIDI channels as voices synchronized with the sequencer clock. Each voice maintains state (active notes, controllers, sustain pedal) and schedules all events on the musical timeline.
+
+**Key features:**
+- Voice abstraction for MIDI channels with automatic note scheduling
+- Duration tracking and note-off scheduling
+- Sustain pedal management
+- Fast-forward support for silent timeline catch-up
+- Polyphonic playback with chord support
+
+```ruby
+require 'musa-dsl'
 require 'midi-communications'
 
-output = MIDICommunications::Output.gets
+# Setup sequencer and MIDI output
+output = MIDICommunications::Output.gets  # Select MIDI output interactively
 sequencer = Musa::Sequencer::Sequencer.new(4, 24)
 
+# Create voice manager
 voices = Musa::MIDIVoices::MIDIVoices.new(
   sequencer: sequencer,
   output: output,
-  channels: [0],
-  polyphony: 8
+  channels: [0, 1, 2]  # Use MIDI channels 0, 1, and 2
 )
 
-# Use voices for playback
+# Get a voice and play notes
 voice = voices.voices.first
-voice.note pitch: 60, duration: 1/4r, velocity: 100
 
-# MIDI recording
-recorder = Musa::MIDIRecorder::MIDIRecorder.new(
-  sequencer: sequencer,
-  output: output,
-  channel: 0
-)
+# Play single notes with automatic note-off
+voice.note pitch: 60, velocity: 100, duration: 1/4r  # Quarter note
 
-recorder.start
-# Recording captures MIDI events with timing
-recorder.stop
+# Play chords
+voice.note pitch: [60, 64, 67], velocity: 90, duration: 1r  # C major chord, whole note
+
+# Control notes manually
+note_ctrl = voice.note pitch: 64, velocity: 80, duration: nil  # Indefinite duration
+note_ctrl.on_stop { puts "Note ended!" }
+# ... later:
+note_ctrl.note_off  # Manually stop the note
+
+# Use fast-forward for silent catch-up (useful for seeking)
+voices.fast_forward = true
+# ... replay past events silently ...
+voices.fast_forward = false  # Resume audible output
 ```
+
+#### MIDIRecorder - MIDI Event Recording
+
+**MIDIRecorder** captures raw MIDI bytes alongside sequencer position timestamps and converts them into structured note events. Useful for recording phrases from external MIDI controllers synchronized with the sequencer timeline.
+
+**Key features:**
+- Records MIDI events with sequencer position timestamps
+- Transcribes raw MIDI into structured note hashes
+- Pairs note-on/note-off events automatically
+- Calculates durations and detects silences
+- Output format compatible with Musa transcription pipelines
+
+```ruby
+require 'musa-dsl'
+require 'midi-communications'
+
+# Setup sequencer and MIDI input
+input = MIDICommunications::Input.gets  # Select MIDI input interactively
+sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+
+# Create recorder
+recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
+
+# Capture MIDI from controller during playback
+input.on_message { |bytes| recorder.record(bytes) }
+
+# Start sequencer and play/record...
+# (MIDI events from controller are captured with timing)
+
+# After recording, get structured notes
+notes = recorder.transcription
+
+# The transcription returns an array of note hashes:
+# [
+#   { position: 1r, channel: 0, pitch: 60, velocity: 100, duration: 1/4r, velocity_off: 64 },
+#   { position: 5/4r, channel: 0, pitch: :silence, duration: 1/8r },
+#   { position: 11/8r, channel: 0, pitch: 62, velocity: 90, duration: 1/4r, velocity_off: 64 }
+# ]
+
+notes.each do |note|
+  if note[:pitch] == :silence
+    puts "Silence at #{note[:position]} for #{note[:duration]} bars"
+  else
+    puts "Note #{note[:pitch]} at #{note[:position]} for #{note[:duration]} bars (vel: #{note[:velocity]})"
+  end
+end
+
+# Access raw recorded messages if needed
+raw_messages = recorder.raw  # Array of timestamped MIDI events
+
+# Clear for next recording
+recorder.clear
+```
+
+**Transcription output format:**
+
+Each note hash contains:
+- `:position` - Sequencer position (Rational) when note started
+- `:channel` - MIDI channel (0-15)
+- `:pitch` - MIDI note number (0-127) or `:silence` for gaps
+- `:velocity` - Note-on velocity (0-127)
+- `:duration` - Note duration in bars (Rational)
+- `:velocity_off` - Note-off velocity (0-127)
 
 **Documentation:** See `lib/midi/`
 
 ### Transport - Timing & Clocks
 
-Precise timing control with multiple clock sources.
+Comprehensive timing infrastructure connecting clock sources to the sequencer. The transport system manages musical playback lifecycle, timing synchronization, and position control.
+
+**Architecture:**
+```
+Clock --ticks--> Transport --tick()--> Sequencer --events--> Music
+```
+
+The system provides precise timing control with support for internal timers, MIDI clock synchronization, and manual control for testing and integration.
+
+#### Clock - Timing Sources
+
+**Clock** is the abstract base class for timing sources. All clocks generate regular ticks that drive the sequencer forward. Multiple clock implementations are available for different use cases.
+
+**Available clock types:**
+
+**TimerClock** - Internal high-precision timer-based clock:
+- Standalone compositions with internal timing
+- Configurable BPM (tempo) and ticks per beat
+- Can dynamically change tempo during playback
+
+**InputMidiClock** - Synchronized to external MIDI Clock messages:
+- DAW-synchronized playback
+- Automatically follows external MIDI Clock Start/Stop/Continue
+- Locked to external timing source
+
+**ExternalTickClock** - Manually triggered ticks:
+- Testing and debugging
+- Integration with external systems
+- Frame-by-frame control
+
+**DummyClock** - Simplified clock for testing:
+- Fast playback without real-time constraints
+- Useful for test suites or batch generation
 
 ```ruby
 require 'musa-dsl'
 
-# Internal timer-based clock
-clock = Musa::Clock::TimerClock.new(
-  bpm: 120,
-  ticks_per_beat: 24
+# TimerClock - Internal timer-based timing
+timer_clock = Musa::Clock::TimerClock.new(
+  bpm: 120,              # Beats per minute
+  ticks_per_beat: 24     # Resolution
 )
 
-# Create transport connecting clock to sequencer
-transport = Musa::Transport::Transport.new(
-  clock,
-  4,   # beats_per_bar
-  24   # ticks_per_beat
-)
-
-# MIDI-based clock (synchronized to external MIDI Clock messages)
+# InputMidiClock - Synchronized to external MIDI Clock
 require 'midi-communications'
-midi_input = MIDICommunications::Input.gets  # Select MIDI input interactively
+midi_input = MIDICommunications::Input.gets  # Select MIDI input
 
 midi_clock = Musa::Clock::InputMidiClock.new(midi_input)
-midi_transport = Musa::Transport::Transport.new(midi_clock, 4, 24)
 
-# External tick-based clock (for manual control)
+# ExternalTickClock - Manual tick control
 external_clock = Musa::Clock::ExternalTickClock.new
-external_transport = Musa::Transport::Transport.new(external_clock, 4, 24)
+
+# DummyClock - For testing (100 ticks)
+dummy_clock = Musa::Clock::DummyClock.new(100)
+```
+
+#### Transport - Playback Lifecycle Manager
+
+**Transport** connects a clock to a sequencer and manages the playback lifecycle. It provides methods for starting/stopping playback, seeking to different positions, and registering callbacks for lifecycle events.
+
+**Lifecycle phases:**
+1. **before_begin** - Run once before first start (initialization)
+2. **on_start** - Run each time transport starts
+3. **Running** - Clock generates ticks → sequencer processes events
+4. **on_change_position** - Run when position jumps/seeks
+5. **after_stop** - Run when transport stops
+
+**Key methods:**
+- `start` - Start playback (blocks while running)
+- `stop` - Stop playback
+- `change_position_to(bars: n)` - Seek to position (in bars)
+
+```ruby
+require 'musa-dsl'
+
+# Create clock
+clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
+
+# Create transport
+transport = Musa::Transport::Transport.new(
+  clock,
+  4,   # beats_per_bar (time signature numerator)
+  24   # ticks_per_beat (resolution)
+)
 
 # Access sequencer through transport
 sequencer = transport.sequencer
+
+# Schedule events
+sequencer.at 1 do
+  puts "Starting at bar 1!"
+end
+
+sequencer.at 4 do
+  puts "Reached bar 4"
+  transport.stop
+end
+
+# Register lifecycle callbacks
+transport.before_begin do
+  puts "Initializing (runs once)..."
+end
+
+transport.on_start do
+  puts "Transport started!"
+end
+
+transport.after_stop do
+  puts "Transport stopped, cleaning up..."
+end
+
+# Start playback (blocks until stopped)
+transport.start
+
+# Seeking example (in separate context)
+# transport.change_position_to(bars: 2)  # Jump to bar 2
+```
+
+**Complete example with MIDI Clock synchronization:**
+
+```ruby
+require 'musa-dsl'
+require 'midi-communications'
+
+# Setup MIDI-synchronized clock
+midi_input = MIDICommunications::Input.gets
+clock = Musa::Clock::InputMidiClock.new(midi_input)
+
+# Create transport
+transport = Musa::Transport::Transport.new(clock, 4, 24)
+
+# Schedule events
+transport.sequencer.at 1 do
+  puts "Synchronized start at bar 1!"
+end
+
+# Start and wait for MIDI Clock Start message
+transport.start
 ```
 
 **Documentation:** See `lib/transport/`
 
-### Datasets - Musical Data Structures
+### Datasets - Sonic Data Structures
 
-Specialized data structures for musical events.
+Comprehensive framework for representing and transforming sonic events and processes. Datasets are flexible, extensible hash structures that support multiple representations (MIDI, score notation, delta encoding) with rich conversion capabilities.
+
+**Key characteristics:**
+
+- **Flexible and extensible**: All datasets are hashes that can include any custom parameters beyond their natural keys
+- **Event vs Process abstractions**: Distinguish between instantaneous events and time-spanning processes
+- **Bidirectional conversions**: Transform between MIDI (PDV), score notation (GDV), delta encoding (GDVd), and other formats
+- **Integration**: Used throughout MusaDSL components (sequencer, series, neumas, transcription, matrix)
+
+#### Dataset Hierarchy
+
+**Event Type Modules (E)** - Define absolute vs delta encoding:
+
+```
+E (base event)
+├── Abs (absolute values)
+│   ├── AbsI (array-indexed)       → used by V
+│   ├── AbsTimed (with :time)      → used by P conversions
+│   └── AbsD (with :duration)      → used by PDV, GDV
+└── Delta (incremental values)
+    ├── DeltaI (array-indexed delta)
+    └── DeltaD (delta with duration) → used by GDVd
+```
+
+**Data Structure Modules** - Basic containers:
+
+- **V**: Value arrays - ordered values in array form
+- **PackedV**: Packed values - key-value hash pairs
+- **P**: Point series - sequential points in time with durations [point, duration, point, duration, ...]
+
+**Dataset Modules** - Domain-specific representations:
+
+**Musical datasets** (scale-based and MIDI):
+- **PDV**: Pitch/Duration/Velocity - MIDI-style absolute pitches (0-127)
+- **GDV**: Grade/Duration/Velocity - Score-style scale degrees with dynamics
+- **GDVd**: Grade/Duration/Velocity delta - Incremental encoding for compression
+
+**Sonic datasets** (continuous parameters and events):
+- **PS**: Parameter Segments - Continuous changes between multidimensional points (from/to/duration for glissandi, sweeps, modulations)
+- **Score**: Time-indexed container for organizing sonic events
+
+#### Event Categories
+
+**Instantaneous Sound Events** - Occur at a point in time:
+- Events without duration (triggers, markers)
+- AbsTimed events (time-stamped values)
+
+**Sound Processes** - Span duration over time:
+- Notes with duration (AbsD, PDV, GDV)
+- Glissandi and parameter sweeps (PS)
+- Dynamics changes and other evolving parameters
+
+#### Extensibility
+
+All datasets support custom parameters beyond their natural keys:
 
 ```ruby
 require 'musa-dsl'
+include Musa::Datasets
 
-# GDV - Grade, Duration, Velocity (absolute)
-gdv = { grade: 2, duration: 1/4r, velocity: 0.7 }
+# GDV with standard parameters
+gdv = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
 
-# GDVd - Grade, Duration, Velocity (differential)
-gdvd = { grade_diff: +2, duration_factor: 2, velocity_factor: 1.2 }
+# Extended with custom parameters for your composition
+gdv_extended = {
+  grade: 0,
+  duration: 1r,
+  velocity: 0,
+  # Custom parameters
+  articulation: :staccato,
+  timbre: :bright,
+  reverb_send: 0.3,
+  custom_control: 42
+}.extend(GDV)
 
-# PDV - Pitch, Duration, Velocity
-pdv = { pitch: 64, duration: 1/4r, velocity: 100 }
+# Custom parameters preserved through conversions
+scale = Musa::Scales::Scales.et12[440.0].major[60]
+pdv = gdv_extended.to_pdv(scale)
+# => { pitch: 60, duration: 1r, velocity: 64,
+#      articulation: :staccato, timbre: :bright, ... }
+```
 
-# Score - Timed event sequences
-score = Musa::Datasets::Score.new
-score << { start: 0, duration: 1/4r, value: { pitch: 60 } }
-score << { start: 1/4r, duration: 1/4r, value: { pitch: 64 } }
+#### Dataset Validation
+
+Check dataset validity and type:
+
+```ruby
+include Musa::Datasets
+
+# Create dataset
+gdv = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
+
+# Validation methods
+gdv.valid?      # => true - check if valid
+gdv.validate!   # Raises if invalid, returns if valid
+
+# Type checking
+gdv.is_a?(GDV)   # => true
+gdv.is_a?(Abs)   # => true (GDV includes Abs)
+gdv.is_a?(AbsD)  # => true (GDV includes AbsD for duration)
+```
+
+#### Dataset Conversions
+
+Datasets provide rich conversion capabilities for transforming between different representations, each optimized for specific compositional tasks:
+
+- **GDV ↔ PDV** (Score ↔ MIDI): Bidirectional conversion between symbolic information (scale degrees) and absolute pitches for (i.e.) MIDI output
+- **GDV ↔ GDVd** (Absolute ↔ Delta): Generation and analysis of melodic patterns using incremental encoding
+- **V ↔ PackedV** (Array ↔ Hash): Compact representation that expands to verbose structures with semantic labels
+- **P → PS** (Points → Segments): Creation of glissandi and continuous interpolations between sequentially timed points
+- **P → AbsTimed** (Relative → Absolute time): Conversion from relative temporal expressions to absolute time coordinates for (i.e.) scheduling and motif replication at different temporal positions
+- **GDV → Neuma**: Export to Neumalang notation strings for human-readable scores
+
+**Score ↔ MIDI (GDV ↔ PDV)**:
+
+```ruby
+include Musa::Datasets
+
+scale = Musa::Scales::Scales.et12[440.0].major[60]
+
+# Score to MIDI
+gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
+pdv = gdv.to_pdv(scale)
+# => { pitch: 60, duration: 1r, velocity: 64 }
+
+# MIDI to Score
+pdv = { pitch: 64, duration: 1r, velocity: 80 }.extend(PDV)
+gdv = pdv.to_gdv(scale)
+# => { grade: 2, octave: 0, duration: 1r, velocity: 1 }
+```
+
+**Absolute ↔ Delta Encoding (GDV ↔ GDVd)**:
+
+```ruby
+include Musa::Datasets
+
+scale = Musa::Scales::Scales.et12[440.0].major[60]
+
+# First note (absolute)
+gdv1 = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
+gdvd1 = gdv1.to_gdvd(scale)
+# => { abs_grade: 0, abs_duration: 1r, abs_velocity: 0 }
+
+# Second note (delta from previous)
+gdv2 = { grade: 2, duration: 1r, velocity: 1 }.extend(GDV)
+gdvd2 = gdv2.to_gdvd(scale, previous: gdv1)
+# => { delta_grade: 2, delta_velocity: 1 }
+# duration unchanged, omitted for compression
+```
+
+**Array ↔ Hash (V ↔ PackedV)**:
+
+```ruby
+include Musa::Datasets
+
+# Array to hash
+v = [60, 1r, 64].extend(V)
+pv = v.to_packed_V([:pitch, :duration, :velocity])
+# => { pitch: 60, duration: 1r, velocity: 64 }
+
+# Hash to array
+pv = { pitch: 60, duration: 1r, velocity: 64 }.extend(PackedV)
+v = pv.to_V([:pitch, :duration, :velocity])
+# => [60, 1r, 64]
+
+# With default values (compression)
+v = [60, 1r, 64].extend(V)
+pv = v.to_packed_V({ pitch: 60, duration: 1r, velocity: 64 })
+# => {}  (all values match defaults, fully compressed)
+```
+
+**Series ↔ Segments (P → PS)**:
+
+```ruby
+include Musa::Datasets
+
+# Point series to parameter segments
+p = [60, 4, 64, 8, 67].extend(P)
+p.base_duration = 1/4r
+
+ps_serie = p.to_ps_serie
+ps1 = ps_serie.next_value
+# => { from: 60, to: 64, duration: 1r, right_open: true }
+
+ps2 = ps_serie.next_value
+# => { from: 64, to: 67, duration: 2r, right_open: false }
+```
+
+**Series → Timed Events (P → AbsTimed)**:
+
+```ruby
+include Musa::Datasets
+
+p = [60, 4, 64, 8, 67].extend(P)
+
+timed_serie = p.to_timed_serie(base_duration: 1/4r, time_start: 0)
+timed_serie.next_value  # => { time: 0r, value: 60 }
+timed_serie.next_value  # => { time: 1r, value: 64 }
+timed_serie.next_value  # => { time: 3r, value: 67 }
+```
+
+**Score Notation → String (GDV → Neuma)**:
+
+```ruby
+include Musa::Datasets
+
+gdv = { grade: 0, octave: 1, duration: 1r, velocity: 2 }.extend(GDV)
+gdv.base_duration = 1/4r
+
+neuma = gdv.to_neuma
+# => "(0 o1 4 f)"
+# Format: (grade octave duration_in_quarters dynamics)
+```
+
+#### Integration with Other Components
+
+**Sequencer** - Accepts extended datasets:
+
+```ruby
+require 'musa-dsl'
+include Musa::All
+
+sequencer = Sequencer.new(4, 24)
+
+# Use GDV datasets directly
+sequencer.at 1 do
+  event = { grade: 0, duration: 1r, velocity: 0, articulation: :legato }.extend(GDV)
+  # Process event...
+end
+```
+
+**Series** - Work with any dataset type:
+
+```ruby
+include Musa::All
+
+# Series of GDV events
+gdv_serie = S(
+  { grade: 0, duration: 1r }.extend(GDV),
+  { grade: 2, duration: 1r }.extend(GDV),
+  { grade: 4, duration: 1r }.extend(GDV)
+)
+
+# Transform while preserving dataset type
+scale = Scales.et12[440.0].major[60]
+pdv_serie = gdv_serie.map { |gdv| gdv.to_pdv(scale) }
+```
+
+**Matrix** - Generates P series:
+
+```ruby
+require 'musa-dsl'
+using Musa::Extension::Matrix
+
+# Matrix to P format
+gesture = Matrix[[0, 60], [1, 62], [2, 64]]
+p_sequences = gesture.to_p(time_dimension: 0)
+# => [[[60], 1, [62], 1, [64]]]
+# P format: alternating values and durations
+```
+
+**Neumas** - Parse to GDV:
+
+```ruby
+include Musa::All
+
+# Neuma strings parse to GDV datasets
+neuma = "(0 4 mf) (2 4 f) (4 4 ff)"
+gdv_serie = Neumas(neuma, scale: Scales.default_system.default_tuning.major[60])
+
+gdv_serie.each do |gdv|
+  puts gdv.inspect  # Each is a GDV hash
+  # => { grade: 0, duration: 1r, velocity: 0 }
+  # => { grade: 2, duration: 1r, velocity: 1 }
+  # => { grade: 4, duration: 1r, velocity: 2 }
+end
+```
+
+**Transcription** - Converts between representations:
+
+```ruby
+include Musa::All
+
+scale = Scales.et12[440.0].major[60]
+
+# GDV to PDV for MIDI output
+gdv_events = [
+  { grade: 0, duration: 1r, velocity: 0 }.extend(GDV),
+  { grade: 2, duration: 1r, velocity: 1 }.extend(GDV)
+]
+
+midi_events = gdv_events.map { |gdv| gdv.to_pdv(scale) }
+# Send to MIDI output...
+```
+
+**Score Container** - Organize events in time:
+
+```ruby
+include Musa::Datasets
+
+score = Score.new
+
+# Add events at specific times
+score.at(1r, add: { grade: 0, duration: 1r }.extend(GDV))
+score.at(2r, add: { grade: 2, duration: 1r }.extend(GDV))
+score.at(3r, add: { grade: 4, duration: 1r }.extend(GDV))
+
+# Query events
+events_at_2 = score.at(2r)
+events_in_range = score.between(1r, 3r)
 ```
 
 **Documentation:** See `lib/datasets/`
 
-### Matrix - Musical Gesture Conversion
+### Matrix - Sonic Gesture Conversion
 
-Musa::Matrix provides refinements to convert matrix representations to P (point sequences) for sequencer playback. Musical gestures can be represented as matrices where rows are time steps and columns are musical parameters.
+Musa::Matrix provides refinements to convert matrix representations to P (point sequences) for sequencer playback. Sonic gestures can be represented as matrices where rows are time steps and columns are sonic parameters.
+
+This opens a world of compositional possibilities by treating sonic gestures as **geometric objects in multidimensional spaces**. Each dimension of the matrix can represent a different sonic parameter (pitch, velocity, timbre, pan, filter cutoff, etc.), allowing you to:
+
+- **Apply mathematical transformations**: Use standard matrix operations (rotation, scaling, translation, shearing) to transform sonic gestures geometrically. A rotation matrix can morph a melodic contour into a completely different shape while maintaining its gestural coherence.
+
+- **Compose in geometric space**: Design sonic trajectories as paths through multidimensional parameter spaces. A straight line in pitch-velocity space becomes a linear glissando with proportional dynamic changes.
+
+- **Interpolate and morph**: Create smooth transitions between sonic states by interpolating matrix points, generating continuous parameter sweeps that move through complex multidimensional spaces.
+
+- **Decompose and recompose**: Extract individual parameter dimensions for independent processing, then recombine them into new sonic configurations.
+
+The conversion to P format preserves the temporal relationships (durations calculated from time differences) while making the data suitable for sequencer playback, enabling you to realize complex geometric transformations as actual sonic events.
 
 ```ruby
 require 'musa-dsl'
@@ -1085,13 +2157,13 @@ merged = [phrase1, phrase2].to_p(time_dimension: 0)
 **Use cases:**
 - Converting recorded MIDI data to playable sequences
 - Transforming algorithmic compositions from matrix form to time-based sequences
-- Merging fragmented musical gestures
+- Merging fragmented sonic gestures
 
 **Documentation:** See `lib/matrix/`
 
 ## Documentation
 
-Full API documentation is available in YARD format. All 114+ Ruby files in the project are comprehensively documented with:
+Full API documentation is available in YARD format. All files in the project are comprehensively documented with:
 
 - Architecture overviews
 - Usage examples
@@ -1130,9 +2202,9 @@ Musa-DSL is released under the [LGPL-3.0-or-later](https://www.gnu.org/licenses/
 ## Acknowledgments
 
 - **Author:** Javier Sánchez Yeste ([yeste.studio](https://yeste.studio))
-- **Email:** javier.sy@gmail.com
+- **Email:** javier (at) yeste.studio
 
-Special thanks to [JetBrains](https://www.jetbrains.com/?from=Musa-DSL) for providing an Open Source project license for RubyMine IDE. Your support is greatly appreciated!
+Special thanks to [JetBrains](https://www.jetbrains.com/?from=Musa-DSL) for providing an Open Source project license for RubyMine IDE during several years. 
 
 ---
 

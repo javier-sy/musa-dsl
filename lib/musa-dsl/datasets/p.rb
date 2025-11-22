@@ -5,20 +5,20 @@ require_relative '../series'
 require_relative '../sequencer'
 
 module Musa::Datasets
-  # Pitch series: alternating values and durations.
+  # Point series: sequential points in time with durations.
   #
-  # P (Pitch series) represents musical sequences as arrays with alternating
-  # structure: [value, duration, value, duration, value, ...].
+  # P (Point series) represents sequential points in time as arrays with alternating
+  # structure: [point, duration, point, duration, point, ...].
   #
   # ## Structure
   #
-  # The array alternates between values and durations:
+  # The array alternates between points and durations:
   #
-  #     [value₀, duration₀, value₁, duration₁, value₂]
+  #     [point₀, duration₀, point₁, duration₁, point₂]
   #
-  # - **Values** (odd positions): Musical data (pitches, hashes, etc.)
-  # - **Durations** (even positions): Time between values (numbers)
-  # - **Last value**: Final value has no duration (sequence end)
+  # - **Points** (odd positions): Any data (numbers, hashes, complex structures, etc.)
+  # - **Durations** (even positions): Time between points (numbers)
+  # - **Last point**: Final point has no duration (sequence end)
   #
   # This compact format efficiently represents timed sequences without
   # repeating time information.
@@ -39,10 +39,10 @@ module Musa::Datasets
   #     # { time: 1.0, value: 64 }  (4 * base_duration = 1.0)
   #     # { time: 3.0, value: 67 }  (8 * base_duration = 2.0)
   #
-  # ### 2. Pitch Segment Series (to_ps_serie)
+  # ### 2. Parameter Segment Series (to_ps_serie)
   #
-  # Converts to series of {PS} (Pitch Segment) objects representing
-  # glissandi or continuous changes between consecutive values.
+  # Converts to series of {PS} (Parameter Segment) objects representing
+  # continuous changes between consecutive points.
   #
   #     p = [60, 4, 64, 8, 67].extend(P)
   #     serie = p.to_ps_serie
@@ -50,21 +50,21 @@ module Musa::Datasets
   #     # { from: 60, to: 64, duration: 1.0, right_open: true }
   #     # { from: 64, to: 67, duration: 2.0, right_open: false }
   #
-  # ## Value Transformation
+  # ## Point Transformation
   #
-  # The {#map} method transforms values while preserving durations:
+  # The {#map} method transforms points while preserving durations:
   #
   #     p = [60, 4, 64, 8, 67].extend(P)
-  #     p2 = p.map { |pitch| pitch + 12 }
+  #     p2 = p.map { |point| point + 12 }
   #     # => [72, 4, 76, 8, 79]
-  #     # Durations unchanged, pitches transposed
+  #     # Durations unchanged, points transformed
   #
-  # @example Basic pitch series
+  # @example Basic point series (MIDI pitches)
   #   # MIDI pitches with durations in quarter notes
   #   p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
   #   # 60 (C4) for 4 quarters → 64 (E4) for 8 quarters → 67 (G4)
   #
-  # @example Hash values (chords or complex data)
+  # @example Hash points (complex data structures)
   #   p = [
   #     { pitch: 60, velocity: 64 }, 4,
   #     { pitch: 64, velocity: 80 }, 8,
@@ -83,31 +83,31 @@ module Musa::Datasets
   # @example Start time from component
   #   p = [{ time: 100, pitch: 60 }, 4, { time: 200, pitch: 64 }].extend(P)
   #   serie = p.to_timed_serie(time_start_component: :time)
-  #   # First event at time 100 (from first value's :time)
+  #   # First event at time 100 (from first point's :time)
   #
-  # @example Transform values
+  # @example Transform points
   #   p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
-  #   p2 = p.map { |pitch| pitch + 12 }
-  #   # Transpose up one octave
+  #   p2 = p.map { |point| point + 12 }
+  #   # Transform each point (e.g., transpose pitches up one octave)
   #
-  # @see PS Pitch segments (glissandi)
+  # @see PS Parameter segments
   # @see AbsTimed Timed events
   # @see Dataset Parent dataset module
   module P
     include Dataset
 
-    # Converts to series of pitch segments (glissandi).
+    # Converts to series of parameter segments.
     #
-    # Creates {PS} objects representing continuous changes from each value
+    # Creates {PS} objects representing continuous changes from each point
     # to the next. Useful for glissandi, parameter sweeps, or any continuous
-    # interpolation between values.
+    # interpolation between points.
     #
     # @param base_duration [Rational] duration unit multiplier (default: 1/4r)
     #   Durations in P are multiplied by this to get actual time
     #
-    # @return [Musa::Series::Serie<PS>] series of pitch segments
+    # @return [Musa::Series::Serie<PS>] series of parameter segments
     #
-    # @example Create glissando segments
+    # @example Create parameter segments
     #   p = [60, 4, 64, 8, 67].extend(P)
     #   serie = p.to_ps_serie
     #   segment1 = serie.next_value
@@ -162,30 +162,30 @@ module Musa::Datasets
       PtoTimedSerie.new(self, base_duration, time_start)
     end
 
-    # Maps over values, preserving durations.
+    # Maps over points, preserving durations.
     #
-    # Transforms each value (odd positions) using the block while
+    # Transforms each point (odd positions) using the block while
     # keeping durations (even positions) unchanged.
     #
-    # @yieldparam value [Object] each value in the series
-    # @yieldreturn [Object] transformed value
+    # @yieldparam point [Object] each point in the series
+    # @yieldreturn [Object] transformed point
     #
-    # @return [P] new P with transformed values
+    # @return [P] new P with transformed points
     #
-    # @example Transpose pitches
+    # @example Transform points (e.g., transpose pitches)
     #   p = [60, 4, 64, 8, 67].extend(P)
-    #   p.map { |pitch| pitch + 12 }
+    #   p.map { |point| point + 12 }
     #   # => [72, 4, 76, 8, 79]
     #
-    # @example Transform hash values
+    # @example Transform hash points
     #   p = [{ pitch: 60 }, 4, { pitch: 64 }].extend(P)
-    #   p.map { |v| v.merge(velocity: 80) }
-    #   # Adds velocity to each value
+    #   p.map { |point| point.merge(velocity: 80) }
+    #   # Adds velocity to each point
     def map(&block)
       i = 0
       clone.map! do |element|
-        # Process with block only the values (values are the alternating elements because P
-        # structure is <value> <duration> <value> <duration> <value>)
+        # Process with block only the points (points are the alternating elements because P
+        # structure is <point> <duration> <point> <duration> <point>)
         #
         if (i += 1) % 2 == 1
           block.call(element)
@@ -197,8 +197,8 @@ module Musa::Datasets
 
     # Series adapter for P to AbsTimed conversion.
     #
-    # PtoTimedSerie is a {Musa::Series::Serie} that converts a {P} (pitch series)
-    # into a series of {AbsTimed} events. It reads the alternating value/duration
+    # PtoTimedSerie is a {Musa::Series::Serie} that converts a {P} (point series)
+    # into a series of {AbsTimed} events. It reads the alternating point/duration
     # structure and emits timed events.
     #
     # This class is created by {P#to_timed_serie} and should not be instantiated
@@ -210,7 +210,7 @@ module Musa::Datasets
 
       # Creates new timed serie adapter.
       #
-      # @param origin [P] source pitch series
+      # @param origin [P] source point series
       # @param base_duration [Rational] duration unit multiplier
       # @param time_start [Numeric] starting time offset
       #
@@ -225,7 +225,7 @@ module Musa::Datasets
         mark_as_prototype!
       end
 
-      # Source pitch series.
+      # Source point series.
       # @return [P]
       attr_accessor :origin
 

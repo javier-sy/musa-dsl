@@ -4,17 +4,17 @@ require_relative 'score'
 require_relative '../sequencer'
 
 module Musa::Datasets
-  # Pitch segments for glissandi and continuous changes.
+  # Parameter segments for continuous changes between multidimensional points.
   #
-  # PS (Pitch Segment/Series) represents a continuous change from one value
+  # PS (Parameter Segment) represents a continuous change from one point
   # to another over a duration. Extends {AbsD} for duration support.
   #
   # ## Purpose
   #
   # PS is used to represent:
   # - **Glissandi**: Continuous pitch slides (portamento)
-  # - **Parameter sweeps**: Gradual changes in any parameter
-  # - **Interpolations**: Smooth transitions between states
+  # - **Parameter sweeps**: Gradual changes in any sonic parameter
+  # - **Interpolations**: Smooth transitions between multidimensional states
   #
   # Unlike discrete events that jump from one value to another, PS represents
   # the continuous path between values.
@@ -58,19 +58,19 @@ module Musa::Datasets
   # This is important for consecutive segments where you don't want
   # discontinuities at the boundaries.
   #
-  # @example Basic pitch glissando
+  # @example Basic parameter segment (pitch glissando)
   #   ps = { from: 60, to: 72, duration: 2.0 }.extend(Musa::Datasets::PS)
   #   # Continuous slide from C4 to C5 over 2 beats
   #
-  # @example Parallel interpolation
+  # @example Parallel interpolation (multidimensional)
   #   ps = {
   #     from: [60, 64],  # C4 and E4
   #     to: [72, 76],    # C5 and E5
   #     duration: 1.0
   #   }.extend(PS)
-  #   # Both pitches glissando in parallel
+  #   # Both parameters move in parallel
   #
-  # @example Multiple parameters
+  # @example Multiple parameters (sonic gesture)
   #   ps = {
   #     from: { pitch: 60, velocity: 64, pan: -1.0 },
   #     to: { pitch: 72, velocity: 80, pan: 1.0 },
@@ -83,14 +83,14 @@ module Musa::Datasets
   #   ps2 = { from: 64, to: 67, duration: 1.0, right_open: false }.extend(PS)
   #   # ps1 stops just before 64, ps2 starts at 64 - no discontinuity
   #
-  # @example Created from P pitch series
+  # @example Created from P point series
   #   p = [60, 4, 64, 8, 67].extend(P)
   #   serie = p.to_ps_serie
   #   ps1 = serie.next_value
   #   # => { from: 60, to: 64, duration: 1.0, right_open: true }
   #
   # @see AbsD Parent absolute duration module
-  # @see P Pitch series (source of PS)
+  # @see P Point series (source of PS)
   # @see Helper String formatting utilities
   module PS
     include AbsD
