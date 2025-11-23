@@ -81,6 +81,7 @@ require_relative '../core-ext/with'
 #   candidates = generate_progressions()
 #   best = darwin.select(candidates).first(10)  # Top 10 progressions
 #
+# @see Musa::Extension::With DSL context management for evaluation blocks
 # @see https://en.wikipedia.org/wiki/Evolutionary_algorithm Evolutionary algorithm (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Fitness_function Fitness function (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Natural_selection Natural selection (Wikipedia)
@@ -168,7 +169,8 @@ module Musa
 
           measure.dimensions.each do |dimension_name, value|
             limit = limits[dimension_name]
-            measure.normalized_dimensions[dimension_name] = (value - limit[:min]) / limit[:range]
+            measure.normalized_dimensions[dimension_name] =
+              limit[:range].zero? ? 0.5 : (value - limit[:min]) / limit[:range]
           end
 
           # warn "Darwin.select: #{measured_object[:object]} #{measured_object[:measure]} weight=#{measured_object[:measure].evaluate_weight(@weights).round(2)}"

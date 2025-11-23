@@ -131,12 +131,61 @@ module Musa
       # Evaluates block in DSL context.
       #
       # Provides `with` method for evaluating blocks with DSL context access.
+      # The block is executed in the DSL context, giving it direct access to
+      # sequencer methods like at, wait, play, every, move without needing to
+      # reference the sequencer object.
       #
       # @param value_parameters [Array] positional parameters
       # @param key_parameters [Hash] keyword parameters
       # @yield block to evaluate in DSL context
       #
       # @return [Object] block return value
+      #
+      # @example Evaluating blocks in DSL context
+      #   seq = Musa::Sequencer::Sequencer.new(4, 96)
+      #
+      #   executed = []
+      #
+      #   # Use 'with' to evaluate block in DSL context
+      #   seq.with do
+      #     # Inside this block, we have direct access to DSL methods
+      #     at(1) { executed << "bar 1" }
+      #     at(2) { executed << "bar 2" }
+      #
+      #     every(1, duration: 4) do
+      #       executed << "beat at #{position}"
+      #     end
+      #   end
+      #
+      #   seq.run
+      #
+      #   # executed contains ["bar 1", "beat at 1", "bar 2", "beat at 2", ...]
+      #
+      # @example Passing parameters to with block
+      #   seq = Musa::Sequencer::Sequencer.new(4, 96)
+      #
+      #   notes = []
+      #
+      #   seq.with(60, 64, 67) do |c, e, g|
+      #     at(1) { notes << c }  # Uses parameter c = 60
+      #     at(2) { notes << e }  # Uses parameter e = 64
+      #     at(3) { notes << g }  # Uses parameter g = 67
+      #   end
+      #
+      #   seq.run
+      #
+      #   # notes contains [60, 64, 67]
+      #
+      # @example Comparison: with DSL context vs external context
+      #   seq = Musa::Sequencer::Sequencer.new(4, 96)
+      #
+      #   # Without 'with': need to reference seq explicitly
+      #   seq.at(1) { seq.at(2) { puts "nested" } }
+      #
+      #   # With 'with': DSL methods available directly
+      #   seq.with do
+      #     at(1) { at(2) { puts "nested" } }  # Cleaner syntax
+      #   end
       #
       # @api public
       def with(*value_parameters, **key_parameters, &block)

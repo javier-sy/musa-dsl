@@ -200,6 +200,20 @@ module Musa
           return values_result, hash_result
         end
 
+        # Returns a string representation of the SmartProcBinder for debugging.
+        #
+        # Shows the wrapped Proc's parameter signature and internal state, making
+        # it easy to understand what parameters the binder expects and how it will
+        # match arguments.
+        #
+        # @return [String] formatted string showing parameters and configuration.
+        #
+        # @example Inspecting binder state
+        #   block = proc { |a, b, c:, **rest| }
+        #   binder = SmartProcBinder.new(block)
+        #   puts binder.inspect
+        #   # => "SmartProcBinder: parameters = [[:req, :a], [:req, :b], [:key, :c], [:keyrest, :rest]]
+        #   #     key_parameters = {:c=>nil} has_rest = true"
         def inspect
           "SmartProcBinder: parameters = #{parameters} key_parameters = #{@key_parameters} has_rest = #{@has_key_rest}"
         end

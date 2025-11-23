@@ -89,12 +89,17 @@ module Musa::Neumas
   # neuma elements to musical events with proper scale interpretation.
   # Subcontexts allow independent state for nested structures.
   #
-  # @example Using GDV decoder
+  # @example Basic decoder creation
+  #   # Create a mock scale object
+  #   scale = Object.new
   #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-  #     scale: Musa::Scales::Major.new(:c),
+  #     scale,
   #     base_duration: 1/4r
   #   )
-  #   gdv_event = decoder.decode(neuma_element)
+  #
+  #   # Decoder maintains state for differential processing
+  #   decoder.base[:grade]      # => 0
+  #   decoder.base[:duration]   # => 1/4r
   #
   # @see Musa::Neumas Neuma notation system
   # @see Musa::Datasets::GDV Absolute GDV format
@@ -207,11 +212,18 @@ module Musa::Neumas
     # Input → process() → apply(on: @last) → update @last → transcriptor → Output
     # ```
     #
-    # @example Stateful decoding with NeumaDifferentialDecoder
-    #   decoder = NeumaDifferentialDecoder.new(base_duration: 1/4r)
-    #   gdvd1 = decoder.decode({ grade_diff: +2, duration_factor: 2 })
-    #   gdvd2 = decoder.decode({ grade_diff: -1, duration_factor: 1 })
-    #   # Returns GDVD objects with base_duration set
+    # @example Stateful decoding
+    #   decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(
+    #     base_duration: 1/4r
+    #   )
+    #
+    #   # Create mock GDVD object
+    #   gdvd1 = Object.new
+    #   def gdvd1.clone; self; end
+    #   def gdvd1.base_duration=(val); @bd = val; end
+    #
+    #   result = decoder.decode(gdvd1)
+    #   # Returns processed GDVD with base_duration set
     #
     # @api public
     class Decoder < DifferentialDecoder
@@ -221,14 +233,12 @@ module Musa::Neumas
       # @param transcriptor [Transcriptor, nil] optional transcriptor for post-processing
       #
       # @example Create decoder with base state
-      #   transcriptor = Musa::Transcription::Transcriptor.new(
-      #     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-      #     base_duration: 1/4r
-      #   )
-      #   decoder = Decoder.new(
-      #     { grade: 0, octave: 0, duration: 1/4r, velocity: 1 },
-      #     transcriptor: transcriptor
-      #   )
+      #   base_state = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
+      #   decoder = Musa::Neumas::Decoders::Decoder.new(base_state)
+      #
+      #   # Decoder maintains state
+      #   decoder.base[:grade]     # => 0
+      #   decoder.base[:duration]  # => 1/4r
       #
       # @api public
       def initialize(base, transcriptor: nil)
@@ -286,14 +296,20 @@ module Musa::Neumas
       #
       # @return [Hash, Array<Hash>] decoded event(s), possibly transcribed
       #
-      # @example Decode with transcription
-      #   midi_transcriptor = Musa::Transcription::Transcriptor.new(
-      #     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-      #     base_duration: 1/4r
+      # @example Create decoder with transcriptor
+      #   base_state = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
+      #
+      #   # Create mock transcriptor
+      #   transcriptor = Object.new
+      #   def transcriptor.transcript(gdv); [gdv, gdv.clone]; end
+      #
+      #   decoder = Musa::Neumas::Decoders::Decoder.new(
+      #     base_state,
+      #     transcriptor: transcriptor
       #   )
-      #   decoder.transcriptor = midi_transcriptor
-      #   result = decoder.decode({ grade_diff: +2, tr: true })
-      #   # Returns array of trill notes if transcriptor expands ornaments
+      #
+      #   # Transcriptor can expand events (e.g., ornaments)
+      #   decoder.transcriptor  # => transcriptor object
       #
       # @api public
       def decode(attributes)

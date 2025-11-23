@@ -16,6 +16,9 @@ module Musa
   # correct timing even when running in fast-forward mode or with quantization.
   #
   # @example Basic voice setup
+  #   require 'musa-dsl'
+  #   require 'midi-communications'
+  #
   #   clock = Musa::Clock::TimerClock.new bpm: 120
   #   transport = Musa::Transport::Transport.new clock
   #   output = MIDICommunications::Output.all.first
@@ -31,6 +34,8 @@ module Musa
   #
   # @see MIDIVoices Voice collection manager
   # @see Musa::Sequencer::Sequencer Timeline and scheduling
+  # @see https://github.com/arirusso/midi-communications midi-communications gem
+  # @see https://github.com/javier-sy/midi-events midi-events gem
   module MIDIVoices
     using Musa::Extension::Arrayfy
     using Musa::Extension::ExplodeRanges
@@ -45,7 +50,10 @@ module Musa
     #
     # Typical usage:
     #
-    # @example Basic setup
+    # @example Basic setup and playback
+    #   require 'musa-dsl'
+    #   require 'midi-communications'
+    #
     #   clock     = Musa::Clock::TimerClock.new bpm: 120
     #   transport = Musa::Transport::Transport.new clock
     #   output    = MIDICommunications::Output.all.first
@@ -62,7 +70,7 @@ module Musa
     #   voice = voices.voices.first
     #   voice.note pitch: [60, 64, 67], velocity: 90, duration: 1r
     #
-    # @example Using note controls
+    # @example Using note controls with callbacks
     #   voice = voices.voices.first
     #   note_ctrl = voice.note pitch: 60, duration: nil  # indefinite
     #   note_ctrl.on_stop { puts "Note ended!" }
@@ -75,7 +83,8 @@ module Musa
     #   voices.fast_forward = false  # resumes audible output
     #
     # @see Musa::Sequencer::Sequencer
-    # @see MIDICommunications::Output
+    # @see https://github.com/arirusso/midi-communications MIDICommunications documentation
+    # @see https://github.com/javier-sy/midi-events MIDIEvents documentation
     # @note All durations are expressed as Rational numbers representing bars.
     # @note MIDI channels are zero-indexed (0-15), not 1-16.
     class MIDIVoices
@@ -101,6 +110,8 @@ module Musa
 
       # Resets the collection recreating every {MIDIVoice}. Useful when the MIDI
       # output has changed or after a panic.
+      #
+      # @return [void]
       def reset
         @voices = @channels.collect { |channel| MIDIVoice.new(sequencer: @sequencer, output: @output, channel: channel, do_log: @do_log) }.freeze
       end
@@ -113,6 +124,9 @@ module Musa
       # When enabled, notes are registered internally but their MIDI messages are
       # not emitted, allowing the sequencer to catch up silently (e.g. when
       # loading a snapshot).
+      #
+      # @param enabled [Boolean] true to enable fast-forward, false to disable.
+      # @return [void]
       def fast_forward=(enabled)
         @voices.each { |voice| voice.fast_forward = enabled }
       end
@@ -120,6 +134,7 @@ module Musa
       # Sends all-notes-off on every channel and (optionally) a MIDI reset.
       #
       # @param reset [Boolean] whether to emit an FF SystemRealtime (panic) message.
+      # @return [void]
       def panic(reset: nil)
         reset ||= false
 
@@ -210,6 +225,9 @@ module Musa
       #
       # When disabling it, pending notes that were held silently are sent again
       # so the synth is in sync with the sequencer state.
+      #
+      # @param enabled [Boolean] true to enable fast-forward, false to disable.
+      # @return [void]
       def fast_forward=(enabled)
         if @fast_forward && !enabled
           (0..127).each do |pitch|
@@ -278,6 +296,9 @@ module Musa
       end
 
       # Logs a message tagging the current voice.
+      #
+      # @param msg [String] the message to log.
+      # @return [void]
       def log(msg)
         @sequencer.logger.info('MIDIVoice') { "voice #{name || @channel}: #{msg}" } if @do_log
       end
@@ -300,10 +321,19 @@ module Musa
       # Provides a simple hash-like interface mapping controller numbers or
       # symbolic names to values. All values are clamped to 0-127 automatically.
       #
-      # @example
-      #   controller[:mod_wheel] = 64
-      #   controller[7] = 100  # volume
-      #   current = controller[:expression]
+      # @example Using symbolic controller names
+      #   voice = voices.voices.first
+      #   voice.controller[:mod_wheel] = 64        # Set modulation wheel
+      #   voice.controller[:volume] = 100          # Set volume (CC 7)
+      #   voice.controller[:expression] = 90       # Set expression (CC 11)
+      #   current = voice.controller[:mod_wheel]   # Get current value
+      #
+      # @example Using numeric controller numbers
+      #   voice.controller[1] = 64    # Modulation wheel (CC 1)
+      #   voice.controller[7] = 100   # Volume (CC 7)
+      #   voice.controller[11] = 90   # Expression (CC 11)
+      #
+      # @see #sustain_pedal= Dedicated sustain pedal helper
       class ControllersControl
         # @param output [#puts] MIDI output.
         # @param channel [Integer] MIDI channel number.
@@ -453,6 +483,7 @@ module Musa
         # Stops the note, sending the proper NoteOffs and executing registered callbacks.
         #
         # @param velocity [Numeric, Array<Numeric>] optional override for the release velocity.
+        # @return [void]
         def note_off(velocity: nil)
           velocity ||= @velocity_off
 
@@ -493,7 +524,9 @@ module Musa
 
         # Registers a block to be executed when the note stops.
         #
+        # @yield Block to execute when note-off occurs
         # @yieldparam sequencer [Musa::Sequencer::Sequencer]
+        # @return [void]
         def on_stop(&block)
           @do_on_stop << block
           nil

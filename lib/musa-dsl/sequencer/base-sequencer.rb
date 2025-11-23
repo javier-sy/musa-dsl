@@ -78,55 +78,36 @@ require_relative 'base-sequencer-tickless-based'
 #   seq.tick(1.5)  # Jumps to position 1.5
 #
 # @example Playing series
-#   require 'musa-dsl'
-#
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0]
-#   )
-#   voice = voices.voices.first
-#   seq = transport.sequencer
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
 #   pitches = Musa::Series::S(60, 62, 64, 65, 67)
 #   durations = Musa::Series::S(1, 1, 0.5, 0.5, 2)
+#   played_notes = []
 #
 #   seq.play(pitches.zip(durations)) do |pitch, duration|
-#     voice.note pitch: pitch, duration: duration
+#     played_notes << { pitch: pitch, duration: duration, position: seq.position }
 #   end
 #
-#   transport.start_transport
-#   sleep 10
-#   transport.stop_transport
+#   seq.run
+#   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
 #
 # @example Every and move
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0]
-#   )
-#   voice = voices.voices.first
-#   seq = transport.sequencer
+#   tick_positions = []
+#   volume_values = []
 #
 #   # Execute every beat
-#   seq.every(1, till: 8) { puts "Tick at position: #{seq.position}" }
+#   seq.every(1, till: 8) { tick_positions << seq.position }
 #
 #   # Animate value from 0 to 127 over 4 beats
 #   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
-#     voice.controller[:volume] = value.round
+#     volume_values << value.round
 #   end
 #
-#   transport.start_transport
-#   sleep 10
-#   transport.stop_transport
+#   seq.run
+#   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
+#   # Result: volume_values = [0, 8, 16, ..., 119, 127]
 #
 # @see https://en.wikipedia.org/wiki/Music_sequencer Music sequencer (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Scheduling_(computing) Scheduling (Wikipedia)
@@ -252,6 +233,24 @@ module Musa
       # Resets timing to start position.
       #
       # @return [void]
+      #
+      # @example Resetting sequencer state
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   # Schedule some events
+      #   seq.at(1) { puts "Event 1" }
+      #   seq.at(2) { puts "Event 2" }
+      #   seq.every(1, till: 8) { puts "Repeating" }
+      #
+      #   puts seq.size  # => 2 (scheduled events)
+      #   puts seq.empty?  # => false
+      #
+      #   # Reset clears everything
+      #   seq.reset
+      #
+      #   puts seq.size  # => 0
+      #   puts seq.empty?  # => true
+      #   puts seq.position  # => 0
       def reset
         @timeslots.clear
         @everying.clear
@@ -313,51 +312,215 @@ module Musa
 
       # Registers debug callback for scheduled events.
       #
-      # @yield [event_info] debug information
+      # Callback is invoked when debug logging is enabled (see do_log parameter in
+      # initialize). Called before executing each scheduled event, allowing inspection
+      # of sequencer state at event execution time.
+      #
+      # @yield debug callback (receives no parameters)
       # @return [void]
+      #
+      # @example Monitoring event execution
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_log: true)
+      #
+      #   debug_calls = []
+      #
+      #   seq.on_debug_at do
+      #     debug_calls << { position: seq.position, time: Time.now }
+      #   end
+      #
+      #   seq.at(1) { puts "Event 1" }
+      #   seq.at(2) { puts "Event 2" }
+      #
+      #   seq.run
+      #
+      #   # debug_calls now contains [{position: 1, time: ...}, {position: 2, time: ...}]
       def on_debug_at(&block)
         @on_debug_at << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       # Registers error callback.
       #
-      # @yield [error] error information
+      # Callback is invoked when an error occurs during event execution. The error
+      # is logged and passed to all registered error handlers. Handlers receive the
+      # exception object and can process or report it.
+      #
+      # @yield [error] error callback receiving the exception object
+      # @yieldparam error [StandardError, ScriptError] the exception that occurred
       # @return [void]
+      #
+      # @example Handling errors in scheduled events
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_error_log: false)
+      #
+      #   errors = []
+      #
+      #   seq.on_error do |error|
+      #     errors << { message: error.message, position: seq.position }
+      #   end
+      #
+      #   seq.at(1) { puts "Normal event" }
+      #   seq.at(2) { raise "Something went wrong!" }
+      #   seq.at(3) { puts "This still executes" }
+      #
+      #   seq.run
+      #
+      #   # errors now contains [{message: "Something went wrong!", position: 2}]
+      #   # All events execute despite the error at position 2
       def on_error(&block)
         @on_error << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       # Registers fast-forward callback (when jumping over events).
       #
-      # @yield [skipped_events] information about skipped events
+      # Callback is invoked when position is changed directly (via position=), causing
+      # the sequencer to skip ahead. Called twice: once with true when fast-forward
+      # begins, and once with false when it completes. Events between old and new
+      # positions are executed during fast-forward.
+      #
+      # @yield [is_starting] callback receiving fast-forward state
+      # @yieldparam is_starting [Boolean] true when fast-forward begins, false when it ends
       # @return [void]
+      #
+      # @example Tracking fast-forward operations
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   ff_state = []
+      #
+      #   seq.on_fast_forward do |is_starting|
+      #     if is_starting
+      #       ff_state << "Fast-forward started from position #{seq.position}"
+      #     else
+      #       ff_state << "Fast-forward ended at position #{seq.position}"
+      #     end
+      #   end
+      #
+      #   seq.at(1) { puts "Event 1" }
+      #   seq.at(5) { puts "Event 5" }
+      #
+      #   # Jump to position 10 (executes events at 1 and 5 during fast-forward)
+      #   seq.position = 10
+      #
+      #   # ff_state contains ["Fast-forward started from position 0", "Fast-forward ended at position 10"]
       def on_fast_forward(&block)
         @on_fast_forward << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       # Registers callback executed before each tick.
       #
-      # @yield [position] current position before tick
+      # Callback is invoked before processing events at each position. Useful for
+      # logging, metrics collection, or performing pre-tick setup. Receives the
+      # position about to be executed.
+      #
+      # @yield [position] callback receiving the upcoming position
+      # @yieldparam position [Rational] the position about to be processed
       # @return [void]
+      #
+      # @example Logging tick positions
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   tick_log = []
+      #
+      #   seq.before_tick do |position|
+      #     tick_log << position
+      #   end
+      #
+      #   seq.at(1) { puts "Event" }
+      #   seq.at(2) { puts "Event" }
+      #
+      #   seq.tick  # Executes position 1
+      #   seq.tick  # Advances position
+      #   seq.tick  # Executes position 2
+      #
+      #   # tick_log contains [1, 1 + 1/96r, 2, ...]
+      #
+      # @example Conditional event scheduling
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   seq.before_tick do |position|
+      #     # Schedule event only on whole beats
+      #     if position == position.to_i
+      #       seq.now { puts "Beat #{position}" }
+      #     end
+      #   end
+      #
+      #   seq.at(5) { puts "Trigger" }  # Start the sequencer
+      #   seq.run
       def before_tick(&block)
         @before_tick << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
 
       # Subscribes to custom event.
       #
+      # Registers a handler for custom events in the sequencer's pub/sub system.
+      # Events can be launched from scheduled blocks and handled at the sequencer
+      # level or at specific control levels. Supports hierarchical event delegation.
+      #
       # @param event [Symbol] event name
       # @yield [*args] event handler receiving event parameters
       # @return [void]
+      #
+      # @example Basic event pub/sub
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   received_values = []
+      #
+      #   # Subscribe to custom event
+      #   seq.on(:note_played) do |pitch, velocity|
+      #     received_values << { pitch: pitch, velocity: velocity }
+      #   end
+      #
+      #   # Launch event from scheduled block
+      #   seq.at(1) do
+      #     seq.launch(:note_played, 60, 100)
+      #   end
+      #
+      #   seq.at(2) do
+      #     seq.launch(:note_played, 64, 80)
+      #   end
+      #
+      #   seq.run
+      #
+      #   # received_values contains [{pitch: 60, velocity: 100}, {pitch: 64, velocity: 80}]
+      #
+      # @example Hierarchical event handling with control
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   global_events = []
+      #   local_events = []
+      #
+      #   # Global handler (sequencer level)
+      #   seq.on(:finished) do |name|
+      #     global_events << name
+      #   end
+      #
+      #   # Local handler (control level)
+      #   control = seq.at(1) do |control:|
+      #     control.launch(:finished, "local task")
+      #   end
+      #
+      #   control.on(:finished) do |name|
+      #     local_events << name
+      #   end
+      #
+      #   seq.run
+      #
+      #   # local_events contains ["local task"]
+      #   # global_events is empty (event handled locally, doesn't bubble up)
       def on(event, &block)
         @event_handlers.last.on event, &block
       end
 
       # Launches custom event.
       #
+      # Publishes a custom event to registered handlers. Events bubble up through
+      # the handler hierarchy if not handled locally. Supports both positional and
+      # keyword parameters.
+      #
       # @param event [Symbol] event name
       # @param value_parameters [Array] positional parameters
       # @param key_parameters [Hash] keyword parameters
       # @return [void]
+      #
+      # @see #on
       def launch(event, *value_parameters, **key_parameters)
         @event_handlers.last.launch event, *value_parameters, **key_parameters
       end
@@ -469,23 +632,18 @@ module Musa
       # @yield [value] block executed for each serie value
       # @return [PlayControl] control object
       #
-      # @example
-      #   require 'musa-dsl'
+      # @example Playing notes from a series
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   clock = Musa::Clock::TimerClock.new bpm: 120
-      #   transport = Musa::Transport::Transport.new clock
-      #   output = MIDICommunications::Output.all.first
-      #   voices = Musa::MIDIVoices::MIDIVoices.new(
-      #     sequencer: transport.sequencer,
-      #     output: output,
-      #     channels: [0]
-      #   )
-      #   voice = voices.voices.first
-      #   seq = transport.sequencer
+      #   notes = Musa::Series::S(60, 62, 64).zip(Musa::Series::S(1, 1, 2))
+      #   played_notes = []
       #
-      #   seq.play(Musa::Series::S(60, 62, 64).zip(Musa::Series::S(1, 1, 2))) do |pitch, dur|
-      #     voice.note pitch: pitch, duration: dur
+      #   seq.play(notes) do |pitch, duration|
+      #     played_notes << { pitch: pitch, duration: duration, position: seq.position }
       #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
       def play(serie,
                mode: nil,
                parameter: nil,
@@ -631,22 +789,16 @@ module Musa
       # @return [MoveControl] control object
       #
       # @example Linear fade
-      #   require 'musa-dsl'
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   clock = Musa::Clock::TimerClock.new bpm: 120
-      #   transport = Musa::Transport::Transport.new clock
-      #   output = MIDICommunications::Output.all.first
-      #   voices = Musa::MIDIVoices::MIDIVoices.new(
-      #     sequencer: transport.sequencer,
-      #     output: output,
-      #     channels: [0]
-      #   )
-      #   voice = voices.voices.first
-      #   seq = transport.sequencer
+      #   volume_values = []
       #
-      #   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |val|
-      #     voice.controller[:volume] = val.round
+      #   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
+      #     volume_values << value.round
       #   end
+      #
+      #   seq.run
+      #   # Result: volume_values contains [0, 8, 16, 24, ..., 119, 127]
       def move(every: nil,
                from: nil, to: nil, step: nil,
                duration: nil, till: nil,

@@ -142,9 +142,14 @@ module Musa
     # - **Datasets**: GDVd, V, PackedV, P extensions for musical data
     # - **Decoders**: Optional decode_with parameter for immediate GDV conversion
     #
-    # @example Basic parsing
-    #   neumas = Musa::Neumalang::Neumalang.parse("0 +2 +2 -1 0")
+    # @example Basic parsing (simple melody)
+    #   neumas = Musa::Neumalang::Neumalang.parse("(0) (+2) (+2) (-1) (0)")
     #   # Returns serie of GDVD neuma objects
+    #
+    #   # Access the series
+    #   neumas.i.to_a.size  # => 5
+    #   neumas.i.to_a[0][:gdvd][:abs_grade]  # => 0
+    #   neumas.i.to_a[1][:gdvd][:delta_grade]  # => 2
     #
     # @example With decoder
     #   scale = Musa::Scales::Scales.et12[440.0].major[60]
@@ -154,24 +159,24 @@ module Musa
     #   )
     #
     #   gdvs = Musa::Neumalang::Neumalang.parse(
-    #     "0 +2 +2 -1 0",
+    #     "(0) (+2) (+2) (-1) (0)",
     #     decode_with: decoder
     #   )
     #   # Returns serie of GDV events
     #
     # @example Complex notation
     #   neumas = Musa::Neumalang::Neumalang.parse(
-    #     "0 +2.tr +4_ +5_2 (^1_/4)+7_ +5 +4 +2 0"
+    #     "(0) (+2 .tr) (+4 _) (+5 _2) ((^1 _/4) +7 _) (+5) (+4) (+2) (0)"
     #   )
     #
     # @example Parallel voices
     #   neumas = Musa::Neumalang::Neumalang.parse(
-    #     "[0 +2 +4 | +7 +5 +7]"
+    #     "[(0) (+2) (+4) | (+7) (+5) (+7)]"
     #   )
     #
     # @example With variables and commands
     #   neumas = Musa::Neumalang::Neumalang.parse(
-    #     "@melody = 0 +2 +2 -1 0
+    #     "@melody = (0) (+2) (+2) (-1) (0)
     #      @melody { |gdv| gdv[:duration] *= 2 }"
     #   )
     #
@@ -930,7 +935,7 @@ module Musa
       # @raise [Citrus::ParseError] if notation has syntax errors
       #
       # @example Parse simple notation
-      #   neumas = Musa::Neumalang::Neumalang.parse("0 +2 +2 -1 0")
+      #   neumas = Musa::Neumalang::Neumalang.parse("(0) (+2) (+2) (-1) (0)")
       #   # => Serie of GDVD neuma objects
       #
       # @example Parse with decoder (immediate GDV conversion)
@@ -941,7 +946,7 @@ module Musa
       #   )
       #
       #   gdvs = Musa::Neumalang::Neumalang.parse(
-      #     "0 +2 +2 -1 0",
+      #     "(0) (+2) (+2) (-1) (0)",
       #     decode_with: decoder
       #   )
       #   # => Serie of GDV events ready for playback
@@ -952,14 +957,14 @@ module Musa
       #
       # @example Debug parsing
       #   neumas = Musa::Neumalang::Neumalang.parse(
-      #     "0 +2 +2",
+      #     "(0) (+2) (+2)",
       #     debug: true
       #   )
       #   # Prints parse tree to stdout
       #
       # @example Complex notation
       #   neumas = Musa::Neumalang::Neumalang.parse(
-      #     "[0 +2.tr +4_ | +7 +5.mor +7_] +9_2"
+      #     "[(0) (+2 .tr) (+4 _) | (+7) (+5 .mor) (+7 _)] (+9 _2)"
       #   )
       #   # Parallel voices followed by longer note
       #

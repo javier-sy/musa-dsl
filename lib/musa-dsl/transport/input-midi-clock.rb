@@ -10,11 +10,22 @@ module Musa
     # messages from an external source (typically a DAW or hardware sequencer) and
     # generates ticks synchronized to that source.
     #
+    # ## Activation Model
+    #
+    # **IMPORTANT**: InputMidiClock requires external MIDI activation. After calling
+    # `transport.start` (which blocks), the clock waits for MIDI "Start" (0xFA)
+    # message from the external source to begin generating ticks.
+    #
+    # This activation model is appropriate for:
+    # - **DAW synchronization**: DAW controls start/stop via MIDI Clock
+    # - **Hardware sequencer sync**: External device controls timing
+    # - **Multi-device setups**: One master device controls all slaves
+    #
     # ## MIDI Clock Protocol
     #
-    # - **Clock (0xF8)**: Sent 24 times per quarter note
-    # - **Start (0xFA)**: Begin playing from start
-    # - **Stop (0xFC)**: Stop playing
+    # - **Clock (0xF8)**: Sent 24 times per quarter note (generates ticks when started)
+    # - **Start (0xFA)**: Begin playing from start (activates tick generation)
+    # - **Stop (0xFC)**: Stop playing (halts tick generation)
     # - **Continue (0xFB)**: Resume from current position
     # - **Song Position Pointer (0xF2)**: Jump to specific position
     #
@@ -36,11 +47,13 @@ module Musa
     # The time_table tracks processing time per tick in milliseconds, useful
     # for detecting performance issues.
     #
-    # @example Basic setup
+    # @example Basic setup with DAW synchronization
     #   input = MIDICommunications::Input.all.first
     #   clock = InputMidiClock.new(input, logger: logger)
     #   transport = Transport.new(clock)
-    #   transport.start  # Waits for MIDI Clock Start
+    #
+    #   # Start transport (blocks waiting for MIDI Start message)
+    #   transport.start  # Waits until DAW sends MIDI Start (0xFA)
     #
     # @example Dynamic input assignment
     #   clock = InputMidiClock.new  # No input yet
@@ -56,6 +69,8 @@ module Musa
     #
     # @see Transport Connects clock to sequencer
     # @see MIDICommunications::Input MIDI input ports
+    # @see TimerClock For internal timing without MIDI
+    # @see DummyClock For automatic activation (testing/batch)
     class InputMidiClock < Clock
       # Creates a new MIDI Clock synchronized clock.
       #

@@ -30,6 +30,8 @@ module Musa
   # - Performance analysis and timing verification
   #
   # @example Complete workflow
+  #   require 'musa-dsl'
+  #
   #   # Setup
   #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
   #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
@@ -43,6 +45,8 @@ module Musa
   #   sequencer.at 4 do
   #     logger.info "First phrase complete"
   #   end
+  #
+  #   sequencer.run
   #
   #   # Output:
   #   #  0.000: [INFO] Composition started
@@ -79,34 +83,65 @@ module Musa
     # - `message` is the actual log message
     #
     # @example Basic usage without sequencer
+    #   require 'musa-dsl'
+    #
     #   logger = Musa::Logger::Logger.new
     #   logger.warn "Something happened"
     #   # Output: [WARN] Something happened
     #
     # @example With sequencer integration
+    #   require 'musa-dsl'
+    #
     #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
     #
-    #   # At sequencer position 4.5:
-    #   logger.info "Note played"
+    #   sequencer.at 4.5r do
+    #     logger.info "Note played"
+    #   end
+    #
+    #   sequencer.run
+    #
     #   # Output:  4.500: [INFO] Note played
     #
     # @example With custom position format
+    #   require 'musa-dsl'
+    #
+    #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+    #
     #   # 5 integer digits, 2 decimal places
     #   logger = Musa::Logger::Logger.new(
     #     sequencer: sequencer,
     #     position_format: 5.2
     #   )
+    #   logger.level = Logger::DEBUG
     #
     #   # At position 123.456:
-    #   logger.debug "Debugging info"
+    #   sequencer.at 123.456r do
+    #     logger.debug "Debugging info"
+    #   end
+    #
+    #   sequencer.run
+    #
     #   # Output:  123.46: Debugging info
     #
     # @example With program name
-    #   logger.info('MIDIVoice') { "Playing note 60" }
+    #   require 'musa-dsl'
+    #
+    #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+    #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
+    #   logger.level = Logger::INFO
+    #
+    #   sequencer.at 4.5r do
+    #     logger.info('MIDIVoice') { "Playing note 60" }
+    #   end
+    #
+    #   sequencer.run
+    #
     #   # Output:  4.500: [INFO] [MIDIVoice] Playing note 60
     #
     # @example Real-world scenario with multiple components
+    #   require 'musa-dsl'
+    #
     #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
     #   logger.level = Logger::DEBUG
@@ -124,12 +159,17 @@ module Musa
     #     logger.warn('MIDIVoice') { "Note overflow detected" }
     #   end
     #
+    #   sequencer.run
+    #
     #   # Output:
     #   #  0.000: [INFO] [Transport] Starting playback
     #   #  1.500: [Series] Evaluating next value
     #   #  2.250: [WARN] [MIDIVoice] Note overflow detected
     #
     # @example Changing log level dynamically
+    #   require 'musa-dsl'
+    #
+    #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   logger = Musa::Logger::Logger.new(sequencer: sequencer)
     #   logger.level = Logger::DEBUG  # Show all messages
     #
@@ -154,10 +194,18 @@ module Musa
       #   Defaults to 3.3 (3 integer digits, 3 decimal places).
       #
       # @example Position format examples
-      #   # 3.3 => "  4.500" (3 digits, 3 decimals)
+      #   require 'musa-dsl'
+      #
+      #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+      #
+      #   # Different formats for position display:
+      #   # 3.3 => "  4.500" (3 digits, 3 decimals) - default
       #   # 5.2 => "  123.46" (5 digits, 2 decimals)
       #   # 2.0 => "  4" (2 digits, no decimals)
       #   # 4.4 => "   4.5000" (4 digits, 4 decimals)
+      #
+      #   logger_compact = Musa::Logger::Logger.new(sequencer: sequencer, position_format: 2.0)
+      #   logger_precise = Musa::Logger::Logger.new(sequencer: sequencer, position_format: 4.4)
       #
       # @note The logger outputs to STDERR by default with level set to WARN.
       # @note Uses InspectNice refinements for better formatting of Rationals and Hashes.
@@ -227,6 +275,23 @@ module Musa
             "\n"
           end
         end
+      end
+
+      # Override level getter to handle encoding compatibility issues.
+      #
+      # Ruby's Logger (>= 1.7.0) has an encoding bug in level_override that causes
+      # Encoding::CompatibilityError when mixing UTF-8 strings from Musa with
+      # Logger's BINARY (ASCII-8BIT) internal strings.
+      #
+      # This override catches the encoding error and returns the level directly
+      # from the instance variable, bypassing the buggy level_override method.
+      #
+      # @return [Integer] current log level (DEBUG=0, INFO=1, WARN=2, ERROR=3, FATAL=4)
+      def level
+        super
+      rescue Encoding::CompatibilityError
+        # Bypass level_override and return raw level
+        @level
       end
     end
   end

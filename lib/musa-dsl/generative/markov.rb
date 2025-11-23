@@ -82,6 +82,8 @@ require_relative '../series'
 #     }
 #   ).i.max_size(16).to_a
 #
+# @see Musa::Series::Serie Series interface for chaining operations
+# @see Musa::Extension::SmartProcBinder Smart procedure binding for history-based transitions
 # @see https://en.wikipedia.org/wiki/Markov_chain Markov chain (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Stochastic_process Stochastic process (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Markov_chain#Music Markov chains in music (Wikipedia)

@@ -108,27 +108,22 @@ module Musa
       # current position.
       #
       # @example At-mode usage
-      #   require 'musa-dsl'
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   clock = Musa::Clock::TimerClock.new bpm: 120
-      #   transport = Musa::Transport::Transport.new clock
-      #   output = MIDICommunications::Output.all.first
-      #   voices = Musa::MIDIVoices::MIDIVoices.new(
-      #     sequencer: transport.sequencer,
-      #     output: output,
-      #     channels: [0]
-      #   )
-      #   voice = voices.voices.first
-      #   sequencer = transport.sequencer
-      #
-      #   series = Musa::Series.from_array([
+      #   series = Musa::Series::S(
       #     { pitch: 60, at: 0r },
       #     { pitch: 62, at: 1r },
       #     { pitch: 64, at: 2r }
-      #   ])
-      #   sequencer.play(series, mode: :at) do |element|
-      #     voice.note pitch: element[:pitch], duration: 0.5r
+      #   )
+      #
+      #   played_notes = []
+      #
+      #   seq.play(series, mode: :at) do |element|
+      #     played_notes << { pitch: element[:pitch], position: seq.position }
       #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains [{pitch: 60, position: 0r}, {pitch: 62, position: 1r}, ...]
       #
       # @api private
       class AtModePlayEval < PlayEval
@@ -185,27 +180,22 @@ module Musa
       # continuation.
       #
       # @example Wait-mode with duration
-      #   require 'musa-dsl'
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   clock = Musa::Clock::TimerClock.new bpm: 120
-      #   transport = Musa::Transport::Transport.new clock
-      #   output = MIDICommunications::Output.all.first
-      #   voices = Musa::MIDIVoices::MIDIVoices.new(
-      #     sequencer: transport.sequencer,
-      #     output: output,
-      #     channels: [0]
-      #   )
-      #   voice = voices.voices.first
-      #   sequencer = transport.sequencer
-      #
-      #   series = Musa::Series.from_array([
+      #   series = Musa::Series::S(
       #     { pitch: 60, duration: 1r },
       #     { pitch: 62, duration: 0.5r },
       #     { pitch: 64, duration: 1.5r }
-      #   ])
-      #   sequencer.play(series, mode: :wait) do |element|
-      #     voice.note pitch: element[:pitch], duration: element[:duration]
+      #   )
+      #
+      #   played_notes = []
+      #
+      #   seq.play(series, mode: :wait) do |element|
+      #     played_notes << { pitch: element[:pitch], duration: element[:duration], position: seq.position }
       #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains [{pitch: 60, duration: 1r, position: 0}, ...]
       #
       # @example Wait-mode with event
       #   # Elements can also use :wait_event for event-driven continuation
@@ -310,18 +300,7 @@ module Musa
       # - Hierarchical ID for debugging
       #
       # @example Neumalang mode
-      #   require 'musa-dsl'
-      #
-      #   clock = Musa::Clock::TimerClock.new bpm: 120
-      #   transport = Musa::Transport::Transport.new clock
-      #   output = MIDICommunications::Output.all.first
-      #   voices = Musa::MIDIVoices::MIDIVoices.new(
-      #     sequencer: transport.sequencer,
-      #     output: output,
-      #     channels: [0]
-      #   )
-      #   voice = voices.voices.first
-      #   sequencer = transport.sequencer
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
       #   scale = Musa::Scales::Scales.et12[440.0].major[60]
       #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
@@ -329,9 +308,14 @@ module Musa
       #   using Musa::Extension::Neumas
       #   neumalang_series = "0 +2 +2 -1 0".to_neumas
       #
-      #   sequencer.play(neumalang_series, mode: :neumalang, decoder: decoder) do |gdv|
-      #     voice.note pitch: gdv[:pitch], duration: gdv[:duration], velocity: gdv[:velocity]
+      #   played_notes = []
+      #
+      #   seq.play(neumalang_series, mode: :neumalang, decoder: decoder) do |gdv|
+      #     played_notes << { pitch: gdv[:pitch], duration: gdv[:duration], velocity: gdv[:velocity] }
       #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains decoded GDVD values with pitch, duration, velocity
       #
       # @api private
       class NeumalangModePlayEval < PlayEval

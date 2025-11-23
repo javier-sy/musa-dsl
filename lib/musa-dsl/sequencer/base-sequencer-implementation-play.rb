@@ -54,42 +54,32 @@ using Musa::Extension::InspectNice
 # - Event-driven composition
 #
 # @example Basic series playback
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0]
-#   )
-#   voice = voices.voices.first
-#   sequencer = transport.sequencer
+#   notes = Musa::Series::S({pitch: 60, duration: 1r}, {pitch: 64, duration: 1r}, {pitch: 67, duration: 1r})
+#   played_notes = []
 #
-#   notes = Musa::Series.from_array([{pitch: 60, duration: 1r}, {pitch: 64, duration: 1r}])
-#   sequencer.play(notes) { |note| voice.note pitch: note[:pitch], duration: note[:duration] }
+#   seq.play(notes) do |pitch:, duration:, control:|
+#     played_notes << { pitch: pitch, duration: duration, position: seq.position }
+#   end
+#
+#   seq.run
+#   # Result: played_notes contains [{pitch: 60, duration: 1r, position: 0}, ...]
 #
 # @example Parallel plays
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0, 1]
-#   )
-#   sequencer = transport.sequencer
+#   melody = Musa::Series::S(60, 62, 64)
+#   harmony = Musa::Series::S(48, 52, 55)
+#   played_notes = []
 #
-#   melody = Musa::Series.from_array([60, 62, 64])
-#   harmony = Musa::Series.from_array([48, 52, 55])
-#   sequencer.play([melody, harmony]) do |pitch|
+#   seq.play([melody, harmony]) do |pitch|
 #     # pitch will be array [melody_pitch, harmony_pitch]
-#     voices.voices[0].note pitch: pitch[0], duration: 1r
-#     voices.voices[1].note pitch: pitch[1], duration: 1r
+#     played_notes << { melody: pitch[0], harmony: pitch[1], position: seq.position }
 #   end
+#
+#   seq.run
+#   # Result: played_notes contains [{melody: 60, harmony: 48, position: 0}, ...]
 #
 # @api private
 module Musa::Sequencer
@@ -277,25 +267,21 @@ module Musa::Sequencer
     # Executed after play completes, with optional delay in bars.
     #
     # @example Basic play control
-    #   require 'musa-dsl'
-    #
-    #   clock = Musa::Clock::TimerClock.new bpm: 120
-    #   transport = Musa::Transport::Transport.new clock
-    #   output = MIDICommunications::Output.all.first
-    #   voices = Musa::MIDIVoices::MIDIVoices.new(
-    #     sequencer: transport.sequencer,
-    #     output: output,
-    #     channels: [0]
-    #   )
-    #   voice = voices.voices.first
-    #   sequencer = transport.sequencer
+    #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
     #
     #   series = Musa::Series::S(60, 62, 64, 65, 67)
-    #   control = sequencer.play(series) { |note| voice.note pitch: note, duration: 1r }
-    #   control.after(2r) { puts "2 bars after play ends" }
-    #   control.pause  # Pause playback
-    #   control.continue  # Resume from pause
-    #   control.stop  # Stop playback
+    #   played_notes = []
+    #   after_executed = []
+    #
+    #   control = seq.play(series) do |note|
+    #     played_notes << { pitch: note, position: seq.position }
+    #   end
+    #
+    #   control.after(2r) { after_executed << seq.position }
+    #
+    #   seq.run
+    #   # Result: played_notes contains all 5 notes
+    #   # Result: after_executed contains position 2 bars after play completes
     #
     # @api private
     class PlayControl < EventHandler

@@ -13,26 +13,46 @@ The system provides precise timing control with support for internal timers, MID
 
 **Clock** is the abstract base class for timing sources. All clocks generate regular ticks that drive the sequencer forward. Multiple clock implementations are available for different use cases.
 
-**Available clock types:**
+### Clock Activation Models
 
-**TimerClock** - Internal high-precision timer-based clock:
+Clocks use two different activation models:
+
+**Automatic Activation** (DummyClock):
+- Begins generating ticks immediately when `transport.start` is called
+- No external activation required
+- Appropriate for testing, batch processing, simulations
+
+**External Activation** (TimerClock, InputMidiClock, ExternalTickClock):
+- Requires external signal/control to begin generating ticks
+- `transport.start` blocks waiting for activation
+- Appropriate for live coding, DAW sync, external control
+
+### Available Clock Types
+
+**DummyClock** - Simplified clock for testing (automatic activation):
+- Fast playback without real-time constraints
+- Immediately begins generating ticks
+- Useful for test suites or batch generation
+- No external dependencies
+
+**TimerClock** - Internal high-precision timer-based clock (external activation):
 - Standalone compositions with internal timing
+- Requires calling `clock.start()` from another thread
 - Configurable BPM (tempo) and ticks per beat
 - Can dynamically change tempo during playback
+- Appropriate for live coding clients
 
-**InputMidiClock** - Synchronized to external MIDI Clock messages:
+**InputMidiClock** - Synchronized to external MIDI Clock messages (external activation):
 - DAW-synchronized playback
+- Waits for MIDI "Start" (0xFA) message to begin ticks
 - Automatically follows external MIDI Clock Start/Stop/Continue
 - Locked to external timing source
 
-**ExternalTickClock** - Manually triggered ticks:
-- Testing and debugging
-- Integration with external systems
+**ExternalTickClock** - Manually triggered ticks (external activation):
+- Testing and debugging with precise control
+- Integration with external systems (game engines, etc.)
+- Call `clock.tick()` manually to generate each tick
 - Frame-by-frame control
-
-**DummyClock** - Simplified clock for testing:
-- Fast playback without real-time constraints
-- Useful for test suites or batch generation
 
 ```ruby
 require 'musa-dsl'
@@ -111,8 +131,16 @@ transport.after_stop do
   puts "Transport stopped, cleaning up..."
 end
 
-# Start playback (blocks until stopped)
-transport.start
+# IMPORTANT: TimerClock requires external activation
+# Start transport in background thread (it will block waiting)
+thread = Thread.new { transport.start }
+sleep 0.1  # Let transport initialize
+
+# Activate clock from external control (e.g., live coding client)
+clock.start  # NOW ticks begin generating
+
+# Wait for completion
+thread.join
 
 # Seeking example (in separate context)
 # transport.change_position_to(bars: 2)  # Jump to bar 2

@@ -35,48 +35,39 @@ require_relative '../core-ext/inspect-nice'
 # - Audio/control automation
 #
 # @example Hash mode timed series
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0]
-#   )
-#   voice = voices.voices.first
-#   sequencer = transport.sequencer
-#
-#   timed_notes = [
+#   timed_notes = Musa::Series::S(
 #     { time: 0r, value: {pitch: 60, velocity: 96} },
 #     { time: 1r, value: {pitch: 64, velocity: 80} },
 #     { time: 2r, value: {pitch: 67, velocity: 64} }
-#   ]
-#   sequencer.play_timed(timed_notes) do |values|
-#     voice.note pitch: values[:pitch], velocity: values[:velocity], duration: 0.5r
+#   )
+#
+#   played_notes = []
+#
+#   seq.play_timed(timed_notes) do |values, time:, started_ago:, control:|
+#     played_notes << { pitch: values[:pitch], velocity: values[:velocity], time: time }
 #   end
+#
+#   seq.run
+#   # Result: played_notes contains [{pitch: 60, velocity: 96, time: 0r}, ...]
 #
 # @example Array mode with extra attributes
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0, 1]
-#   )
-#   sequencer = transport.sequencer
-#
-#   timed = [
+#   timed = Musa::Series::S(
 #     { time: 0r, value: [60, 96], channel: 0 },
 #     { time: 1r, value: [64, 80], channel: 1 }
-#   ]
-#   sequencer.play_timed(timed) do |values, channel:|
-#     voices.voices[channel].note pitch: values[0], velocity: values[1], duration: 0.5r
+#   )
+#
+#   played_notes = []
+#
+#   seq.play_timed(timed) do |values, channel:, time:, started_ago:, control:|
+#     played_notes << { pitch: values[0], velocity: values[1], channel: channel, time: time }
 #   end
+#
+#   seq.run
+#   # Result: played_notes contains [{pitch: 60, velocity: 96, channel: 0, time: 0r}, ...]
 #
 # @api private
 module Musa::Sequencer

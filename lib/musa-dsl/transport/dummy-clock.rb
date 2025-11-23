@@ -4,39 +4,54 @@ module Musa
   module Clock
     # Simple clock for testing with fixed tick count or custom condition.
     #
-    # DummyClock is designed for testing and simulations where you want to:
-    # - Generate a specific number of ticks
-    # - Control ticking via a custom condition block
-    # - Avoid real-time delays (uses Thread.pass, not sleep)
+    # DummyClock is designed for testing and batch processing where automatic
+    # execution without external dependencies is desired.
+    #
+    # ## Activation Model
+    #
+    # **IMPORTANT**: Unlike TimerClock, InputMidiClock, and ExternalTickClock,
+    # DummyClock **activates automatically** when `transport.start` is called.
+    # It immediately begins generating ticks without waiting for external signals.
+    #
+    # This activation model is appropriate for:
+    # - **Unit testing**: No external dependencies, deterministic execution
+    # - **Batch processing**: Generate music as fast as possible
+    # - **Fast-forward simulations**: Skip real-time delays
+    # - **Deterministic debugging**: Predictable tick counts
     #
     # ## Modes of Operation
     #
     # 1. **Fixed tick count**: Runs for exactly N ticks then stops
     # 2. **Custom condition**: Runs while a block returns true
     #
-    # ## Use Cases
+    # ## Differences from Other Clocks
     #
-    # - Unit testing sequencer logic
-    # - Simulations with known tick counts
-    # - Fast-forward testing without real-time delays
-    # - Debugging specific tick sequences
+    # DummyClock is the only clock that starts generating ticks immediately
+    # upon `transport.start`. It uses Thread.pass instead of sleep, making
+    # execution as fast as possible without real-time constraints.
     #
-    # @example Fixed tick count
+    # @example Fixed tick count (automatic activation)
     #   clock = DummyClock.new(100)  # Exactly 100 ticks
     #   transport = Transport.new(clock)
-    #   transport.start  # Runs 100 ticks, then stops
+    #   transport.start  # Immediately runs 100 ticks, then stops
     #
-    # @example Custom condition
-    #   clock = DummyClock.new { continue_running? }
+    # @example Custom condition (automatic activation)
+    #   continue = true
+    #   clock = DummyClock.new { continue }
     #   transport = Transport.new(clock)
-    #   transport.start  # Runs while continue_running? is true
+    #
+    #   transport.sequencer.at(10) { continue = false }
+    #   transport.start  # Immediately begins, stops at tick 10
     #
     # @example Testing specific sequences
     #   ticks = 0
     #   clock = DummyClock.new { ticks < 50 || some_condition }
-    #   # Runs minimum 50 ticks, then checks some_condition
+    #   transport.sequencer.every(1) { ticks += 1 }
+    #   transport.start  # Immediately runs minimum 50 ticks
     #
-    # @see TimerClock For real-time operation
+    # @see TimerClock For real-time operation with external activation
+    # @see InputMidiClock For MIDI-synchronized operation
+    # @see ExternalTickClock For manual tick control
     class DummyClock < Clock
       # Creates a new dummy clock with tick limit or condition.
       #

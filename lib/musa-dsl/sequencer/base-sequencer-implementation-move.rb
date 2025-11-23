@@ -39,46 +39,37 @@ require_relative '../core-ext/inspect-nice'
 # - Multi-parameter automation
 #
 # @example Simple pitch glide
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0]
-#   )
-#   voice = voices.voices.first
-#   sequencer = transport.sequencer
+#   pitch_values = []
 #
-#   sequencer.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |pitch|
-#     voice.note pitch: pitch.round, duration: 1/8r, velocity: 80
+#   seq.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |pitch|
+#     pitch_values << { pitch: pitch.round, position: seq.position }
 #   end
 #
+#   seq.run
+#   # Result: pitch_values contains [{pitch: 60, position: 0}, {pitch: 61, position: 0.25}, ...]
+#
 # @example Multi-parameter fade
-#   require 'musa-dsl'
+#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 #
-#   clock = Musa::Clock::TimerClock.new bpm: 120
-#   transport = Musa::Transport::Transport.new clock
-#   output = MIDICommunications::Output.all.first
-#   voices = Musa::MIDIVoices::MIDIVoices.new(
-#     sequencer: transport.sequencer,
-#     output: output,
-#     channels: [0]
-#   )
-#   voice = voices.voices.first
-#   sequencer = transport.sequencer
+#   controller_values = []
 #
-#   sequencer.move(
+#   seq.move(
 #     from: {volume: 0, brightness: 0},
 #     to: {volume: 127, brightness: 127},
 #     duration: 8r,
 #     every: 1/8r
 #   ) do |params|
-#     voice.controller[:volume] = params[:volume].round
-#     voice.controller[:expression] = params[:brightness].round
+#     controller_values << {
+#       volume: params[:volume].round,
+#       brightness: params[:brightness].round,
+#       position: seq.position
+#     }
 #   end
+#
+#   seq.run
+#   # Result: controller_values contains [{volume: 0, brightness: 0, position: 0}, ...]
 #
 # @example Non-linear interpolation
 #   sequencer.move(

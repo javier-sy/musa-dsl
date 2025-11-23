@@ -83,6 +83,7 @@
 #   grammar.options
 #   # => [["hola", "hola"], ["hola", "adios"], ["adios", "hola"], ["adios", "adios"]]
 #
+# @see Musa::Series::Serie Series conversion for grammar options
 # @see https://en.wikipedia.org/wiki/Formal_grammar Formal grammar (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Context-free_grammar Context-free grammar (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Generative_grammar Generative grammar (Wikipedia)

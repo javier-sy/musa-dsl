@@ -61,7 +61,7 @@
 #   # ]
 #
 # @see Musa::Transcriptors::FromGDV::ToMusicXML
-# @see Musa::MIDI
+# @see Musa::MIDIVoices
 #
 # @api public
 require_relative 'from-gdv'
@@ -94,7 +94,7 @@ module Musa::Transcriptors
     # ```
     #
     # @see ToMusicXML Notation-preserving transcription
-    # @see Musa::MIDI MIDI output system
+    # @see Musa::MIDIVoices MIDI output system
     module ToMIDI
       # Returns standard transcription set for MIDI output.
       #

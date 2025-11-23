@@ -13,11 +13,15 @@ module Musa
   # and silence detection.
   #
   # @example Basic recording workflow
+  #   require 'musa-dsl'
+  #   require 'midi-communications'
+  #
   #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
   #   recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
   #
   #   # Capture MIDI from controller
-  #   midi_controller.on_message { |bytes| recorder.record(bytes) }
+  #   input = MIDICommunications::Input.gets
+  #   input.on_message { |bytes| recorder.record(bytes) }
   #
   #   # After recording, get structured notes
   #   notes = recorder.transcription
@@ -25,26 +29,54 @@ module Musa
   #
   # @see MIDIRecorder Main recorder class
   # @see Musa::Sequencer::Sequencer Sequencer providing timeline context
+  # @see https://github.com/arirusso/midi-communications midi-communications gem
+  # @see https://github.com/javier-sy/midi-parser midi-parser gem
+  # @see https://github.com/javier-sy/midi-events midi-events gem
   module MIDIRecorder
     # Collects raw MIDI bytes alongside the sequencer position and transforms
     # them into note events. It is especially useful when capturing phrases from
     # an external controller that is clocked by the sequencer timeline.
     #
-    # @example Complete usage
+    # The recorder uses the midi-parser gem to parse raw MIDI bytes into
+    # MIDIEvents objects, then pairs note-on/note-off events to calculate
+    # durations and detect silences.
+    #
+    # @example Complete recording and transcription workflow
+    #   require 'musa-dsl'
+    #   require 'midi-communications'
+    #
     #   sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     #   recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
     #
-    #   # During recording:
-    #   recorder.record(midi_bytes_from_controller)
+    #   # Connect to MIDI input
+    #   input = MIDICommunications::Input.gets
+    #   input.on_message { |bytes| recorder.record(bytes) }
     #
-    #   # After recording:
+    #   # Start sequencer and record...
+    #   # (play notes on MIDI controller)
+    #
+    #   # After recording, get transcription:
     #   notes = recorder.transcription
-    #   notes.each { |n| puts "Note: #{n}" }
+    #   # => [
+    #   #   { position: 1r, channel: 0, pitch: 60, velocity: 100, duration: 1/4r, velocity_off: 64 },
+    #   #   { position: 5/4r, channel: 0, pitch: :silence, duration: 1/8r },
+    #   #   { position: 11/8r, channel: 0, pitch: 62, velocity: 90, duration: 1/4r, velocity_off: 64 }
+    #   # ]
+    #
+    #   notes.each do |note|
+    #     if note[:pitch] == :silence
+    #       puts "Rest at #{note[:position]} for #{note[:duration]} bars"
+    #     else
+    #       puts "Note #{note[:pitch]} at #{note[:position]} for #{note[:duration]} bars"
+    #     end
+    #   end
     #
     #   # Clear for next recording:
     #   recorder.clear
     #
     # @see Musa::Sequencer::Sequencer
+    # @see https://github.com/javier-sy/midi-parser MIDIParser documentation
+    # @see https://github.com/javier-sy/midi-events MIDIEvents documentation
     class MIDIRecorder
       # @param sequencer [Musa::Sequencer::Sequencer] provides the musical position for each recorded message.
       def initialize(sequencer)

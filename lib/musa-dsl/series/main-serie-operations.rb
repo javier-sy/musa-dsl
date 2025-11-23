@@ -237,17 +237,34 @@ module Musa
         HashFromSeriesArray.new self, keys
       end
 
-      # Shifts numeric values by offset.
+      # Rotates serie elements circularly.
       #
-      # Adds constant offset to each value.
+      # Performs circular rotation of elements:
+      # - Negative values rotate left (first elements move to end)
+      # - Positive values rotate right (last elements move to beginning)
+      # - Zero performs no rotation
       #
-      # @param shift [Numeric] offset to add
+      # Note: Right rotation (positive values) requires finite series as the
+      # entire serie must be loaded into memory for rotation.
       #
-      # @return [Shifter] shifted serie
+      # @param shift [Integer] rotation amount
+      #   - Negative: rotate left by N positions
+      #   - Positive: rotate right by N positions
+      #   - Zero: no rotation
       #
-      # @example Transpose notes
-      #   s = S(60, 64, 67).shift(12)  # Up one octave
-      #   s.i.to_a  # => [72, 76, 79]
+      # @return [Shifter] rotated serie
+      #
+      # @example Rotate left (negative shift)
+      #   s = S(60, 64, 67).shift(-1)  # First element moves to end
+      #   s.i.to_a  # => [64, 67, 60]
+      #
+      # @example Rotate right (positive shift)
+      #   s = S(1, 2, 3, 4, 5).shift(2)  # Last 2 elements move to beginning
+      #   s.i.to_a  # => [4, 5, 1, 2, 3]
+      #
+      # @example No rotation
+      #   s = S(1, 2, 3).shift(0)
+      #   s.i.to_a  # => [1, 2, 3]
       #
       # @api public
       def shift(shift)
@@ -1417,8 +1434,8 @@ module Musa
         include Serie.with(source: true)
 
         def initialize(serie, shift)
-          self.source = serie
           self.shift = shift
+          self.source = serie
 
           init
         end
@@ -1434,13 +1451,14 @@ module Musa
 
         def shift=(value)
           raise ArgumentError, "cannot shift to right an infinite serie" if value > 0 && @source&.infinite?
-          raise NotImplementedError, 'cannot shift to right: function not yet implemented' if value > 0
 
           @shift = value
         end
 
         private def _init
           @shifted = []
+          @buffer = []
+          @buffer_index = 0
           @first = true
         end
 
@@ -1450,14 +1468,39 @@ module Musa
 
         private def _next_value
           if @first
-            @shift.abs.times { @shifted << @source.next_value } if @shift < 0
+            if @shift < 0
+              # Shift left: guardar primeros N elementos para moverlos al final
+              @shift.abs.times { @shifted << @source.next_value }
+            elsif @shift > 0
+              # Shift right: leer toda la serie y rotarla
+              while (value = @source.next_value)
+                @buffer << value
+              end
+
+              # Rotar: tomar últimos N elementos y ponerlos al principio
+              if @buffer.size >= @shift
+                last_elements = @buffer.pop(@shift)
+                @buffer = last_elements + @buffer
+              end
+            end
+
             @first = false
           end
 
-          value = @source.next_value
-          return value unless value.nil?
+          # Retornar valores según el tipo de shift
+          if @shift > 0
+            # Shift derecho: devolver del buffer pre-cargado
+            return nil if @buffer_index >= @buffer.size
+            value = @buffer[@buffer_index]
+            @buffer_index += 1
+            value
+          else
+            # Shift izquierdo o sin shift: lógica original
+            value = @source.next_value
+            return value unless value.nil?
 
-          @shifted.shift
+            @shifted.shift
+          end
         end
       end
 

@@ -97,20 +97,16 @@ module Musa
       # @param logger [Logger, nil] logger instance
       # @param do_log [Boolean, nil] enable logging
       #
-      # @yield [transport] Optional block for configuration via DSL
-      # @yieldparam transport [Transport] self for callback registration
-      #
-      # @example With parameters
+      # @example With callback parameters
       #   Transport.new(clock, 4, 24,
       #     on_start: -> (seq) { puts "Started at #{seq.position}" }
       #   )
       #
-      # @example With block
-      #   Transport.new(clock, 4, 24) do |t|
-      #     t.before_begin { setup_instruments }
-      #     t.on_start { start_recording }
-      #     t.after_stop { save_recording }
-      #   end
+      # @example With callback methods
+      #   transport = Transport.new(clock, 4, 24)
+      #   transport.before_begin { setup_instruments }
+      #   transport.on_start { start_recording }
+      #   transport.after_stop { save_recording }
       def initialize(clock,
                      beats_per_bar = nil,
                      ticks_per_beat = nil,
@@ -159,6 +155,27 @@ module Musa
         @clock.on_change_position do |bars: nil, beats: nil, midi_beats: nil|
           change_position_to bars: bars, beats: beats, midi_beats: midi_beats
         end
+
+        # TODO: Consider adding block/DSL support for cleaner initialization syntax.
+        #
+        # Future enhancement could yield a DSL context that provides direct access to
+        # transport methods without requiring the transport variable. This would enable:
+        #
+        #   Transport.new(clock, 4, 24) do
+        #     before_begin { setup_instruments }
+        #     on_start { start_recording }
+        #     after_stop { save_recording }
+        #   end
+        #
+        # Instead of current approach:
+        #
+        #   transport = Transport.new(clock, 4, 24)
+        #   transport.before_begin { setup_instruments }
+        #   transport.on_start { start_recording }
+        #   transport.after_stop { save_recording }
+        #
+        # Implementation would require a DSL context object that delegates methods to
+        # the transport instance, similar to the sequencer DSL pattern.
       end
 
       # Registers a callback to run once before the first start.
@@ -234,12 +251,65 @@ module Musa
 
       # Starts the transport and begins playback.
       #
-      # Runs before_begin (if first start or after stop), then starts the clock.
-      # The clock will begin generating ticks, advancing the sequencer.
+      # Runs before_begin (if first start or after stop), then starts the clock's
+      # run loop. **Behavior depends on the clock type**:
+      #
+      # ## Clock Activation by Type
+      #
+      # **DummyClock** (automatic activation):
+      # - Starts generating ticks immediately
+      # - Blocks until tick count/condition completes
+      # - No external activation needed
+      #
+      # **TimerClock** (external activation required):
+      # - Blocks but remains paused until `clock.start` is called
+      # - Must call `clock.start()` from another thread to begin ticks
+      # - Typical pattern: `Thread.new { transport.start }` then `clock.start`
+      #
+      # **InputMidiClock** (MIDI activation required):
+      # - Blocks waiting for MIDI "Start" (0xFA) message
+      # - External DAW/device controls when ticks begin
+      # - Automatically starts when MIDI Start received
+      #
+      # **ExternalTickClock** (manual tick control):
+      # - Returns immediately (doesn't block)
+      # - Call `clock.tick()` manually to generate each tick
+      # - Complete control over timing from external system
       #
       # @return [void]
       #
-      # @note This method blocks until the clock's run loop starts
+      # @note Blocking behavior varies by clock type (see above)
+      # @note For TimerClock, must call clock.start from separate thread
+      #
+      # @example With DummyClock (automatic)
+      #   clock = DummyClock.new(100)
+      #   transport = Transport.new(clock, 4, 24)
+      #   transport.start  # Runs 100 ticks automatically, then returns
+      #
+      # @example With TimerClock (external activation)
+      #   clock = TimerClock.new(bpm: 120)
+      #   transport = Transport.new(clock, 4, 24)
+      #
+      #   thread = Thread.new { transport.start }  # Blocks waiting
+      #   sleep 0.1
+      #   clock.start  # Activate from external control
+      #   thread.join
+      #
+      # @example With InputMidiClock (MIDI activation)
+      #   input = MIDICommunications::Input.all.first
+      #   clock = InputMidiClock.new(input)
+      #   transport = Transport.new(clock, 4, 24)
+      #   transport.start  # Blocks until MIDI Start received from DAW
+      #
+      # @example With ExternalTickClock (manual control)
+      #   clock = ExternalTickClock.new
+      #   transport = Transport.new(clock, 4, 24)
+      #
+      #   thread = Thread.new { transport.start }  # Returns immediately
+      #   sleep 0.1
+      #   100.times { clock.tick }  # Generate ticks manually
+      #   transport.stop
+      #   thread.join
       def start
         do_before_begin unless @before_begin_already_done
 
@@ -252,7 +322,32 @@ module Musa
       # Changes the playback position (seek/jump).
       #
       # Handles position changes from various sources, converting between formats.
-      # If seeking backward, stops and restarts to re-initialize state.
+      # **IMPORTANT**: Position changes trigger fast-forward, which executes all
+      # intermediate events between current and target positions.
+      #
+      # ## Fast-Forward Behavior
+      #
+      # When changing position forward:
+      # 1. Calls `sequencer.on_fast_forward` callbacks with `true` (entering fast-forward)
+      # 2. Ticks through all intermediate positions, **executing all scheduled events**
+      # 3. Calls `sequencer.on_fast_forward` callbacks with `false` (exiting fast-forward)
+      # 4. Calls `on_change_position` callbacks at the new position
+      #
+      # When changing position backward (requires stop):
+      # 1. Stops the transport (calls `after_stop` callbacks)
+      # 2. Resets the sequencer to initial state
+      # 3. Sets position to target
+      # 4. Restarts (calls `on_start` callbacks)
+      #
+      # ## Handling Intermediate Events
+      #
+      # During fast-forward, all scheduled events execute. To prevent unwanted sound
+      # output (e.g., MIDI notes), use `on_fast_forward` callbacks:
+      #
+      # - **MIDIVoices integration**: Set `midi_voices.fast_forward = true` during
+      #   fast-forward to register note state internally without emitting MIDI messages
+      # - **Custom handlers**: Check fast-forward state in event handlers to skip
+      #   audio/visual output during position jumps
       #
       # @param bars [Numeric, nil] target position in bars
       # @param beats [Numeric, nil] offset in beats to add
@@ -263,13 +358,22 @@ module Musa
       # @raise [ArgumentError] if no valid position specified
       #
       # @note Backward seeks trigger stop/restart cycle
-      # @note Calls on_change_position callbacks
+      # @note Calls on_change_position callbacks at new position
+      # @note Calls sequencer.on_fast_forward callbacks during forward seek
       #
-      # @example Jump to bar 8
+      # @example Jump to bar 8 (fast-forwards through bars 1-7)
       #   transport.change_position_to(bars: 8)
       #
       # @example MIDI Song Position Pointer
       #   transport.change_position_to(midi_beats: 96)  # Bar 4 in 4/4
+      #
+      # @example Preventing sound during fast-forward with MIDIVoices
+      #   transport.sequencer.on_fast_forward do |is_starting|
+      #     midi_voices.fast_forward = is_starting
+      #   end
+      #
+      #   # Now position changes won't produce audible MIDI output
+      #   transport.change_position_to(bars: 10)
       def change_position_to(bars: nil, beats: nil, midi_beats: nil)
         logger.debug('Transport') do
           "asked to change position to #{"#{bars} bars " if bars}#{"#{beats} beats " if beats}" \

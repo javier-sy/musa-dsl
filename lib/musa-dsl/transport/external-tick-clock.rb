@@ -5,60 +5,68 @@ module Musa
     # Clock driven by external tick() calls for integration and testing.
     #
     # ExternalTickClock doesn't generate its own ticks. Instead, ticks are
-    # triggered manually by calling the {#tick} method. This is useful for:
-    # - Testing with precise control over timing
-    # - Integration with external systems that provide timing
-    # - Step-by-step debugging of sequencer logic
-    # - Synchronization with non-realtime processes
+    # triggered manually by calling the {#tick} method.
+    #
+    # ## Activation Model
+    #
+    # **IMPORTANT**: ExternalTickClock requires manual tick generation. After calling
+    # `transport.start` (which returns immediately, doesn't block), you must call
+    # `clock.tick()` repeatedly from your external system to generate ticks.
+    #
+    # This activation model is appropriate for:
+    # - **Testing**: Precise control over timing for step-by-step debugging
+    # - **Game engine integration**: Game loop controls tick timing
+    # - **Frame-based systems**: One tick per frame or custom logic
+    # - **Offline rendering**: Generate ticks as fast as needed
     #
     # ## Operation
     #
-    # 1. Call {#run} to initialize (doesn't block)
-    # 2. Call {#tick} repeatedly to generate ticks
+    # 1. Call {#run} to initialize (doesn't block, returns immediately)
+    # 2. Call {#tick} repeatedly to generate ticks manually
     # 3. Call {#terminate} when done
     #
-    # ## Use Cases
+    # ## Differences from Other Clocks
     #
-    # - Testing sequencer behavior step-by-step
-    # - Integration with game engines or other event loops
-    # - Offline rendering without realtime constraints
-    # - Precise control for debugging
+    # Unlike TimerClock and InputMidiClock, ExternalTickClock's `run` method
+    # **does not block** - it returns immediately. This allows your external
+    # system to control the timing loop.
     #
-    # @example Manual stepping
-    #   clock = ExternalTickClock.new
-    #   transport = Transport.new(clock)
-    #   transport.start
-    #
-    #   # Later, from external source:
-    #   clock.tick  # Advances one tick
-    #   clock.tick  # Another tick
-    #   # ... etc
-    #
-    # @example Integration with game loop
-    #   clock = ExternalTickClock.new
-    #   transport = Transport.new(clock)
-    #   transport.start
-    #
-    #   # In game update loop:
-    #   def update(delta_time)
-    #     if should_tick?(delta_time)
-    #       clock.tick
-    #     end
-    #   end
-    #
-    # @example Testing
+    # @example Manual stepping for testing
     #   clock = ExternalTickClock.new
     #   transport = Transport.new(clock)
     #
     #   # Schedule some events
-    #   transport.sequencer.at 0 { puts "Tick 0" }
     #   transport.sequencer.at 1 { puts "Tick 1" }
+    #   transport.sequencer.at 2 { puts "Tick 2" }
     #
-    #   transport.start
-    #   clock.tick  # => "Tick 0"
+    #   # Start in background (non-blocking for ExternalTickClock)
+    #   thread = Thread.new { transport.start }
+    #   sleep 0.1  # Let transport initialize
+    #
+    #   # Generate ticks manually
+    #   clock.tick  # => (nothing, position 0)
     #   clock.tick  # => "Tick 1"
+    #   clock.tick  # => "Tick 2"
+    #
+    #   transport.stop
+    #   thread.join
+    #
+    # @example Integration with game loop
+    #   clock = ExternalTickClock.new
+    #   transport = Transport.new(clock)
+    #   thread = Thread.new { transport.start }
+    #   sleep 0.1
+    #
+    #   # In game update loop:
+    #   def update(delta_time)
+    #     if should_tick?(delta_time)
+    #       clock.tick  # Advance sequencer by one tick
+    #     end
+    #   end
     #
     # @see DummyClock For automatic testing with fixed tick counts
+    # @see TimerClock For internal timer-based timing
+    # @see InputMidiClock For MIDI-synchronized timing
     class ExternalTickClock < Clock
       # Creates a new externally-controlled clock.
       #

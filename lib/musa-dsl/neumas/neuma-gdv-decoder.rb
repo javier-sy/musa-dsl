@@ -36,31 +36,33 @@
 #
 # Both the grace note and main note are converted from GDVD to GDV.
 #
-# @example Basic neuma decoding
-#   scale = Musa::Scales::Scales.et12[440.0].major[60]
+# @example Create decoder with mock scale
+#   # Create a simple mock scale object
+#   scale = Object.new
 #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
 #     scale,
 #     base_duration: 1/4r
 #   )
 #
-#   gdv = decoder.decode({ grade_diff: +2, duration_factor: 2 })
-#   # => { grade: 2, octave: 0, duration: 1/2r, velocity: 1 }
+#   # Decoder properties
+#   decoder.scale           # => scale object
+#   decoder.base_duration   # => 1/4r
 #
-# @example With transcription
-#   scale = Musa::Scales::Scales.et12[440.0].major[60]
-#   transcriptor = Musa::Transcription::Transcriptor.new(
-#     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-#     base_duration: 1/4r
-#   )
+# @example Using with transcriptor
+#   scale = Object.new
+#
+#   # Create mock transcriptor
+#   transcriptor = Object.new
+#   def transcriptor.transcript(gdv); [gdv]; end
+#
 #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
 #     scale,
 #     base_duration: 1/4r,
 #     transcriptor: transcriptor
 #   )
 #
-#   # Ornaments expanded by transcriptor
-#   events = decoder.decode({ grade_diff: +2, tr: true })
-#   # => [trill_note1, trill_note2, ...]
+#   # Transcriptor will process decoded events
+#   decoder.transcriptor  # => transcriptor object
 #
 # @see Musa::Neumas::Decoders::Decoder
 # @see Musa::Scales
@@ -102,24 +104,27 @@ module Musa::Neumas
       # @param transcriptor [Transcriptor, nil] optional transcriptor for ornaments
       # @param base [Hash, nil] initial state (auto-created if nil)
       #
-      # @example Create decoder with major scale
-      #   scale = Musa::Scales::Scales.et12[440.0].major[60]
-      #   transcriptor = Musa::Transcription::Transcriptor.new(
-      #     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
+      # @example Create decoder with scale
+      #   scale = Object.new
+      #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
+      #     scale,
       #     base_duration: 1/4r
       #   )
-      #   decoder = NeumaDecoder.new(
-      #     scale,
-      #     base_duration: 1/4r,
-      #     transcriptor: transcriptor
-      #   )
+      #
+      #   # Check initial state
+      #   decoder.base[:grade]      # => 0
+      #   decoder.base[:duration]   # => 1/4r
       #
       # @example Custom initial state
-      #   scale = Musa::Scales::Scales.et12[440.0].major[60]
-      #   decoder = NeumaDecoder.new(
+      #   scale = Object.new
+      #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
       #     scale,
       #     base: { grade: 2, octave: 1, duration: 1/8r, velocity: 0.8 }
       #   )
+      #
+      #   # Verify custom state
+      #   decoder.base[:grade]   # => 2
+      #   decoder.base[:octave]  # => 1
       #
       # @api public
       def initialize(scale, base_duration: nil, transcriptor: nil, base: nil)

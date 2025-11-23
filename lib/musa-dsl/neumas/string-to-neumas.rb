@@ -65,14 +65,16 @@
 #
 # ## Integration with Decoders
 #
-# Parsed neumas are typically decoded to GDV:
+# Parsed neumas contain GDVD (differential) data:
 # ```ruby
 # using Musa::Extension::Neumas
 #
 # neumas = "0 +2 +2 -1 0".to_neumas
-# scale = Musa::Scales::Scales.et12[440.0].major[60]
-# decoder = NeumaDecoder.new(scale, base_duration: 1/4r)
-# gdvs = neumas.map { |neuma| decoder.decode(neuma) }
+#
+# # Access parsed differential values
+# neumas.i.each do |neuma|
+#   puts "GDVD: #{neuma[:gdvd].inspect}"
+# end
 # ```
 #
 # @example Basic parsing
@@ -133,9 +135,9 @@ module Musa
         #   neumas = "0 +2 +2 -1 0".to_neumas
         #
         # @example Parse with immediate decoding
-        #   scale = Musa::Scales::Scales.et12[440.0].major[60]
-        #   decoder = NeumaDecoder.new(scale)
-        #   gdvs = "0 +2 +2 -1 0".to_neumas(decode_with: decoder)
+        #   # Create a simple decoder
+        #   decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
+        #   result = "0 +2 +2 -1 0".to_neumas(decode_with: decoder)
         #
         # @example Parse with debug
         #   neumas = "0 +2 +2".to_neumas(debug: true)

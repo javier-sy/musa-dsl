@@ -118,6 +118,11 @@ module Musa
         #
         # @return [Array<Musa::Datasets::P>] array of P sequences, one per condensed matrix.
         #
+        # @example Converting array of matrices
+        #   matrices = [Matrix[[0, 60], [1, 62]], Matrix[[2, 64], [3, 65]]]
+        #   result = matrices.to_p(time_dimension: 0)
+        #   # Returns array of P sequences, one per matrix (or merged if they connect)
+        #
         # @see #condensed_matrices
         # @see ::Matrix#to_p
         def to_p(time_dimension:, keep_time: nil)

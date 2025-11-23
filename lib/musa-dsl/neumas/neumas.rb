@@ -89,7 +89,7 @@
 #   { grade: 2, octave: 0, duration: 1/2r, velocity: 1 }  # Ready for playback
 #   ```
 #
-# ## Usage
+# ## Basic Usage
 #
 # ```ruby
 # using Musa::Extension::Neumas
@@ -97,25 +97,18 @@
 # # 1. Parse neuma notation
 # neumas = "0 +2 +2 -1 0".to_neumas  # or .n for short
 #
-# # 2. Create decoder with scale
-# scale = Musa::Scales::Scales.et12[440.0].major[60]
-# transcriptor = Musa::Transcription::Transcriptor.new(
-#   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-#   base_duration: 1/4r
-# )
-# decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-#   scale,
-#   base_duration: 1/4r,
-#   transcriptor: transcriptor  # Optional: for ornament expansion
-# )
-#
-# # 3. Decode to GDV events
-# gdvs = neumas.map { |neuma| decoder.decode(neuma) }.flatten
-#
-# # 4. Use GDV events (with sequencer, MIDI output, etc.)
-# gdvs.each do |gdv|
-#   puts "Grade: #{gdv[:grade]}, Duration: #{gdv[:duration]}, Velocity: #{gdv[:velocity]}"
+# # 2. Access parsed GDVD (differential) values
+# neumas.i.each do |neuma|
+#   gdvd = neuma[:gdvd]
+#   puts "Grade diff: #{gdvd[:delta_grade]}"
+#   puts "Duration: #{gdvd[:abs_duration]}"
 # end
+#
+# # 3. Create decoder for absolute values (requires scale)
+# # decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
+#
+# # 4. Decode to GDV events (absolute values)
+# # gdvs = neumas.map { |neuma| decoder.decode(neuma) }.flatten
 # ```
 #
 # ## Neuma Structures
@@ -148,52 +141,59 @@
 # - **Live coding**: Real-time pattern manipulation
 # - **Score representation**: Text-based music storage
 #
-# @example Complete workflow
+# @example Basic neuma parsing
 #   using Musa::Extension::Neumas
 #
-#   # Define neuma notation
-#   melody = "0 +2 +2 -1 0 +4.tr +5_ +7_2 +5_ +4_ +2_ +1_ 0_2"
+#   # Parse simple melody notation
+#   melody = "0 +2 +2 -1 0".to_neumas
 #
-#   # Setup decoder
-#   scale = Musa::Scales::Scales.et12[440.0].major[60]
-#   transcriptor = Musa::Transcription::Transcriptor.new(
-#     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-#     base_duration: 1/4r
-#   )
-#   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-#     scale,
-#     base_duration: 1/4r,
-#     transcriptor: transcriptor
-#   )
-#
-#   # Parse and decode
-#   neumas = melody.to_neumas
-#   gdvs = neumas.map { |neuma| decoder.decode(neuma) }.flatten
-#
-#   # Use the decoded GDV events
-#   gdvs.each do |gdv|
-#     puts "Play: grade=#{gdv[:grade]} duration=#{gdv[:duration]} velocity=#{gdv[:velocity]}"
+#   # Iterate through parsed neumas
+#   melody.i.each do |neuma|
+#     puts "GDVD: #{neuma.inspect}"
 #   end
 #
-# @example Parallel voices
+# @example Parse with duration and ornaments
 #   using Musa::Extension::Neumas
 #
+#   # Neuma with varied durations and ornaments
+#   notation = "+2_ +2_2 +1_/2 +2_.tr"
+#   neumas = notation.to_neumas
+#
+#   # Access differential values
+#   neumas.i.first.tap do |first_neuma|
+#     puts "Grade diff: #{first_neuma[:gdvd][:delta_grade]}"
+#     puts "Duration: #{first_neuma[:gdvd][:abs_duration]}"
+#   end
+#
+# @example Create parallel voices
+#   using Musa::Extension::Neumas
+#
+#   # Define individual voice lines
 #   soprano = "0 +2 +4 +5 +7"
 #   alto = "-2 0 +2 +3 +5"
 #   tenor = "-5 -3 -1 0 +2"
 #   bass = "-9 -7 -5 -4 -2"
 #
-#   # Combine voices
+#   # Combine into parallel (polyphonic) structure
 #   satb = soprano | alto | tenor | bass
 #
-# @example Array composition
+#   # Verify structure
+#   satb[:kind]             # => :parallel
+#   satb[:parallel].size    # => 4 voices
+#
+# @example Compose sections from arrays
 #   using Musa::Extension::Neumas
 #
+#   # Define musical sections
 #   verse = "0 +2 +2 -1 0"
 #   chorus = "+7 +5 +7 +5 +4"
 #   bridge = "+2 +4 +5 +4 +2"
 #
+#   # Create song structure (verse-chorus-verse-chorus-bridge-chorus)
 #   song = [verse, chorus, verse, chorus, bridge, chorus].to_neumas
+#
+#   # Count total neumas
+#   song.i.to_a.size   # => Combined count from all sections
 #
 # @see Musa::Neumalang
 # @see Musa::Neumas::Decoders

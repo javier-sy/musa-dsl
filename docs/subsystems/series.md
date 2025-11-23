@@ -168,7 +168,7 @@ result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
 - `.merge`, `.flatten` - Flatten nested series
 - `.cut(length)` - Split into chunks
 - `.max_size(n)`, `.skip(n)` - Limit/offset control
-- `.shift(n)` - Shift values by offset
+- `.shift(n)` - Circular rotation (negative: rotate left, positive: rotate right)
 - `.after(*series)` - Concatenate series
 - `.switch(*series)`, `.multiplex(*series)` - Switch between series
 - `.lock` - Lock/freeze values

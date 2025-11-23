@@ -36,23 +36,22 @@
 #   # => { grade_diff: +2, duration_factor: 2, base_duration: 1/4r }
 #   # Still differential, not converted to absolute
 #
-# @example Intermediate processing
-#   # Process neumas, transform, then convert to GDV
+# @example Intermediate processing workflow
+#   # Process neumas in differential format before final conversion
 #   using Musa::Extension::Neumas
 #
 #   neumas = "0 +2 +2 -1 0".to_neumas
-#   differential_decoder = NeumaDifferentialDecoder.new
-#   gdvds = neumas.map { |n| differential_decoder.decode(n) }
+#   differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
 #
-#   # Transform differential values (e.g., transpose up an octave)
-#   transformed = gdvds.map do |gdvd|
-#     gdvd.clone.tap { |g| g[:delta_octave] = (g[:delta_octave] || 0) + 1 }
+#   # Process each neuma (keeping differential format)
+#   gdvds = []
+#   neumas.i.each do |neuma|
+#     gdvd = differential_decoder.decode(neuma[:gdvd])
+#     gdvds << gdvd
 #   end
 #
-#   # Then convert to absolute GDV
-#   scale = Musa::Scales::Scales.et12[440.0].major[60]
-#   gdv_decoder = NeumaDecoder.new(scale)
-#   gdvs = transformed.map { |gdvd| gdv_decoder.decode(gdvd) }
+#   # GDVD objects still have differential values
+#   # Can transform them before converting to absolute GDV
 #
 # @see Musa::Neumas::Decoders::NeumaDecoder
 # @see Musa::Neumas::Decoders::DifferentialDecoder

@@ -107,6 +107,9 @@ require_relative '../core-ext/with'
 #     end
 #   end
 #
+# @see Musa::Extension::SmartProcBinder Smart procedure binding for constructor/finalize blocks
+# @see Musa::Extension::Arrayfy Array conversion utilities for field options
+# @see Musa::Extension::With DSL context management for field definitions
 # @see https://en.wikipedia.org/wiki/Cartesian_product Cartesian product (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Variation_(mathematics) Variation in mathematics (Wikipedia)
 #

@@ -81,7 +81,7 @@ module Musa
   #
   # @see REPL Main REPL server class
   # @see CustomizableDSLContext Mixin for DSL contexts
-  # @see musalce-server Production server integrating REPL with DAWs
+  # @see https://github.com/javier-sy/musa-dsl-examples/tree/master/musalce-server Production server integrating REPL with DAWs
   module REPL
     # TCP-based REPL server for live coding.
     #
@@ -156,7 +156,8 @@ module Musa
     #   )
     #
     # @see CustomizableDSLContext For binding DSL contexts with DynamicProxy
-    # @see musalce-server Production example using direct binding
+    # @see Musa::Extension::DynamicProxy::DynamicProxy Proxy wrapper for DSL contexts
+    # @see https://github.com/javier-sy/musa-dsl-examples/tree/master/musalce-server Production example using direct binding
     class REPL
       # Class-level mutex for serializing code execution.
       #
@@ -683,7 +684,7 @@ module Musa
     #   # Executes in LiveCodingEnvironment instance context
     #
     # @see REPL The REPL server that uses this interface
-    # @see DynamicProxy Wraps contexts for transparent method access
+    # @see Musa::Extension::DynamicProxy::DynamicProxy Wraps contexts for transparent method access
     module CustomizableDSLContext
       # Returns the binding for code execution.
       #

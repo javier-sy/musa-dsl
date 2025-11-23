@@ -5,8 +5,20 @@ module Musa
     # Internal timer-based clock for standalone operation.
     #
     # TimerClock uses a high-precision Timer to generate ticks at a configurable
-    # rate. It's the standard clock for compositions that don't need external
-    # synchronization.
+    # rate. Unlike DummyClock, TimerClock requires external activation and is
+    # designed for scenarios where timing control comes from outside (e.g., live
+    # coding clients, interactive systems).
+    #
+    # ## Activation Model
+    #
+    # **IMPORTANT**: TimerClock starts in a paused state. After calling
+    # `transport.start` (which blocks), you must call `clock.start()` from
+    # another thread to begin generating ticks.
+    #
+    # This activation model is appropriate for:
+    # - **Live coding**: Client controls when to start/stop
+    # - **Interactive systems**: External controller manages playback
+    # - **Testing with control**: Precise control over when ticks begin
     #
     # ## Configuration Methods
     #
@@ -28,16 +40,21 @@ module Musa
     # - **Started**: Clock running, generating ticks
     # - **Paused**: Clock started but temporarily stopped
     #
-    # ## Use Cases
-    #
-    # - Standalone compositions without external sync
-    # - Testing with precise, reproducible timing
-    # - Live coding with internal timing
-    #
-    # @example Basic setup with BPM
+    # @example Complete setup with external activation (live coding pattern)
     #   clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
     #   transport = Transport.new(clock, beats_per_bar: 4)
-    #   transport.start
+    #
+    #   # Schedule events
+    #   transport.sequencer.at(4) { transport.stop }
+    #
+    #   # Start transport in background (it blocks)
+    #   thread = Thread.new { transport.start }
+    #   sleep 0.1  # Let transport initialize
+    #
+    #   # Activate clock from external control (e.g., live coding client)
+    #   clock.start  # Now ticks begin generating
+    #
+    #   thread.join  # Wait for completion
     #
     # @example With timing correction
     #   # Correction compensates for system-specific timing offsets
@@ -50,6 +67,7 @@ module Musa
     #
     # @see Timer Internal precision timer
     # @see Transport Connects clock to sequencer
+    # @see DummyClock For automatic activation (testing/batch)
     class TimerClock < Clock
       # Creates a new timer-based clock.
       #

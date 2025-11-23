@@ -118,6 +118,9 @@ require_relative '../core-ext/with'
 #   tree = rules.apply([], remaining: 1r)  # One bar
 #   rhythms = tree.combinations
 #
+# @see Musa::Extension::SmartProcBinder Smart procedure binding for rule evaluation
+# @see Musa::Extension::Arrayfy Array conversion for seed objects
+# @see Musa::Extension::With DSL context management for rule definitions
 # @see https://en.wikipedia.org/wiki/Production_system_(computer_science) Production systems (Wikipedia)
 # @see https://en.wikipedia.org/wiki/L-system L-systems (Wikipedia)
 # @see https://en.wikipedia.org/wiki/Expert_system Expert systems (Wikipedia)
