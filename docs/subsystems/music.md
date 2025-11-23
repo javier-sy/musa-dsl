@@ -222,6 +222,12 @@ Musa::Chords::ChordDefinition.register :add9,
   offsets: { root: 0, third: 4, fifth: 7, ninth: 14 }
 ```
 
-**Documentation:** See `lib/music/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Scales](https://rubydoc.info/gems/musa-dsl/Musa/Scales) - Scale systems and tuning
+- [Musa::Chords](https://rubydoc.info/gems/musa-dsl/Musa/Chords) - Chord structures and navigation
+
+**Source code:** `lib/music/`
 
 

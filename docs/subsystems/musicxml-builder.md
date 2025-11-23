@@ -254,6 +254,11 @@ File.write("etude.musicxml", score.to_xml.string)
 File.open("etude.musicxml", 'w') { |f| score.to_xml(f) }
 ```
 
-**Documentation:** See `lib/musicxml/builder/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::MusicXML::Builder](https://rubydoc.info/gems/musa-dsl/Musa/MusicXML/Builder) - MusicXML score generation
+
+**Source code:** `lib/musicxml/builder/`
 
 

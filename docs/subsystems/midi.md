@@ -112,6 +112,12 @@ Each note hash contains:
 - `:duration` - Note duration in bars (Rational)
 - `:velocity_off` - Note-off velocity (0-127)
 
-**Documentation:** See `lib/midi/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::MIDIVoices](https://rubydoc.info/gems/musa-dsl/Musa/MIDIVoices) - Voice management and polyphonic playback
+- [Musa::MIDIRecorder](https://rubydoc.info/gems/musa-dsl/Musa/MIDIRecorder) - MIDI input recording and transcription
+
+**Source code:** `lib/midi/`
 
 

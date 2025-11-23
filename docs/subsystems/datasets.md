@@ -312,7 +312,12 @@ events_at_2 = score.at(2r)
 events_in_range = score.between(1r, 3r)
 ```
 
-**Documentation:** See `lib/datasets/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Datasets](https://rubydoc.info/gems/musa-dsl/Musa/Datasets) - Musical data structures (GDV, PDV, Score)
+
+**Source code:** `lib/datasets/`
 
 ## Score - Advanced Queries & Filtering
 

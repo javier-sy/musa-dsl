@@ -174,7 +174,12 @@ result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
 - `.lock` - Lock/freeze values
 - `.anticipate(&block)`, `.lazy(&block)` - Advanced evaluation
 
-**Documentation:** See `lib/musa-dsl/series/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Series](https://rubydoc.info/gems/musa-dsl/Musa/Series) - Sequence generators and operations
+
+**Source code:** `lib/musa-dsl/series/`
 
 ## Specialized Series Types
 

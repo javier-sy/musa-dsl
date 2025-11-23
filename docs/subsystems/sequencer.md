@@ -88,6 +88,11 @@ end
 transport.start
 ```
 
-**Documentation:** See `lib/sequencer/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Sequencer](https://rubydoc.info/gems/musa-dsl/Musa/Sequencer) - Main sequencer class and DSL
+
+**Source code:** `lib/sequencer/`
 
 

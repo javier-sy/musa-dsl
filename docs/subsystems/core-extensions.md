@@ -257,7 +257,13 @@ sequencer.run
 - **Composition Development**: Monitor sequencer flow during development
 - **Performance Analysis**: Identify bottlenecks by logging with timestamps
 
-**Documentation:** See `lib/core-ext/` and `lib/logger/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Extension](https://rubydoc.info/gems/musa-dsl/Musa/Extension) - Ruby refinements and metaprogramming utilities
+- [Musa::Logger](https://rubydoc.info/gems/musa-dsl/Musa/Logger) - Structured logging system
+
+**Source code:** `lib/core-ext/` and `lib/logger/`
 
 
 ## Documentation

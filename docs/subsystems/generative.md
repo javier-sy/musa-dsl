@@ -276,4 +276,15 @@ top_10 = ranked.first(10)        # Top 10 melodies
 worst = ranked.last              # Lowest fitness (but still viable)
 ```
 
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Generative::Markov](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Markov) - Probabilistic sequence generation
+- [Musa::Generative::Variatio](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Variatio) - Cartesian product variations
+- [Musa::Generative::Rules](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Rules) - L-system production rules
+- [Musa::Generative::GenerativeGrammar](https://rubydoc.info/gems/musa-dsl/Musa/Generative/GenerativeGrammar) - Formal grammar generation
+- [Musa::Generative::Darwin](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Darwin) - Genetic algorithms
+
+**Source code:** `lib/generative/`
+
 

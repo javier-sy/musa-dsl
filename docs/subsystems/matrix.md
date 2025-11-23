@@ -53,6 +53,11 @@ merged = [phrase1, phrase2].to_p(time_dimension: 0)
 - Transforming algorithmic compositions from matrix form to time-based sequences
 - Merging fragmented sonic gestures
 
-**Documentation:** See `lib/matrix/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Matrix](https://rubydoc.info/gems/musa-dsl/Musa/Matrix) - Matrix to point sequence conversion
+
+**Source code:** `lib/matrix/`
 
 

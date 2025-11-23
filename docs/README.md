@@ -68,8 +68,8 @@ For users extending the DSL or integrating deeply:
 ## 📖 Additional Resources
 
 - **Main README**: [../README.md](../README.md)
+- **API Reference**: [api-reference.md](api-reference.md) - Complete class/method documentation (RubyDoc.info)
 - **Examples**: See examples/ directory in repository
-- **API Documentation**: Generated via YARD (run `yard doc`)
 - **Source Code**: lib/musa-dsl/
 
 ## 🔗 External Links

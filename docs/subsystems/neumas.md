@@ -60,6 +60,12 @@ transport.start
 - `+f`, `+ff`, `-p`, `-pp` - Relative dynamics (louder/softer)
 - `|` operator - Parallel voices (polyphonic structure)
 
-**Documentation:** See `lib/neumas/` and `lib/neumalang/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Neumas](https://rubydoc.info/gems/musa-dsl/Musa/Neumas) - Musical notation data structures
+- [Musa::Neumalang](https://rubydoc.info/gems/musa-dsl/Musa/Neumalang) - Notation parser and interpreter
+
+**Source code:** `lib/neumas/` and `lib/neumalang/`
 
 

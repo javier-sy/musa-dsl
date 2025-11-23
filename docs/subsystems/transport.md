@@ -140,4 +140,10 @@ end
 transport.start
 ```
 
-**Documentation:** See `lib/transport/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::Transport](https://rubydoc.info/gems/musa-dsl/Musa/Transport) - Playback lifecycle management
+- [Musa::Clock](https://rubydoc.info/gems/musa-dsl/Musa/Clock) - Timing sources and clock implementations
+
+**Source code:** `lib/transport/`

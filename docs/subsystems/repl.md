@@ -125,6 +125,11 @@ transport.start
 - **Remote composition control**: Send commands to running compositions over network
 - **Educational workshops**: Live demonstrations with instant code execution
 
-**Documentation:** See `lib/repl/`
+## API Reference
+
+**Complete API documentation:**
+- [Musa::REPL](https://rubydoc.info/gems/musa-dsl/Musa/REPL) - Live coding server and protocol
+
+**Source code:** `lib/repl/`
 
 
