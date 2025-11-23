@@ -1,143 +1,135 @@
 require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/with'
 
-# Rule-based production system with growth and pruning.
-#
-# Rules implements a production system that generates tree structures
-# by applying growth rules to produce branches and pruning rules to
-# eliminate invalid paths. Similar to L-systems and production systems
-# in formal grammars, but with validation and constraint satisfaction.
-#
-# ## Core Concepts
-#
-# - **Grow Rules**: Transform objects into new possibilities (branches)
-# - **Cut Rules**: Prune branches that violate constraints
-# - **End Condition**: Mark branches as complete
-# - **Tree**: Hierarchical structure of all valid possibilities
-# - **History**: Path from root to current node
-# - **Combinations**: All valid complete paths through tree
-#
-# ## Generation Process
-#
-# 1. **Seed**: Start with initial object(s)
-# 2. **Grow**: Apply grow rules sequentially to create branches
-# 3. **Validate**: Apply cut rules to prune invalid branches
-# 4. **Check End**: Mark branches meeting end condition
-# 5. **Recurse**: Continue growing non-ended branches
-# 6. **Collect**: Gather all valid complete paths
-#
-# ## Rule Application
-#
-# Rules are applied in definition order. Each grow rule can produce
-# multiple branches via `branch`. Cut rules can prune with `prune`.
-# The system tracks history (path to current node) for context-aware
-# rule application.
-#
-# ## Musical Applications
-#
-# - Generate harmonic progressions with voice leading rules
-# - Create melodic variations with contour constraints
-# - Produce rhythmic patterns following metric rules
-# - Build counterpoint with species rules
-# - Generate chord voicings with spacing constraints
-#
-# @example Basic chord progression rules
-#   rules = Musa::Rules::Rules.new do
-#     # Generate possible next chords
-#     grow 'next chord' do |chord, history|
-#       case chord
-#       when :I   then branch(:ii); branch(:IV); branch(:V)
-#       when :ii  then branch(:V); branch(:vii)
-#       when :IV  then branch(:I); branch(:V)
-#       when :V   then branch(:I); branch(:vi)
-#       when :vi  then branch(:ii); branch(:IV)
-#       when :vii then branch(:I)
-#       end
-#     end
-#
-#     # Avoid parallel fifths
-#     cut 'parallel fifths' do |chord, history|
-#       prune if has_parallel_fifths?(history + [chord])
-#     end
-#
-#     # End after 4 chords
-#     ended_when do |chord, history|
-#       history.size == 4
-#     end
-#   end
-#
-#   tree = rules.apply([:I])
-#   progressions = tree.combinations
-#   # => [[:I, :ii, :V, :I], [:I, :IV, :V, :I], ...]
-#
-# @example Melodic contour rules with parameters
-#   rules = Musa::Rules::Rules.new do
-#     grow 'next note' do |pitch, history, max_interval:|
-#       # Try intervals within max_interval
-#       (-max_interval..max_interval).each do |interval|
-#         branch pitch + interval unless interval.zero?
-#       end
-#     end
-#
-#     cut 'range limit' do |pitch, history|
-#       prune if pitch < 60 || pitch > 84  # C4 to C6
-#     end
-#
-#     cut 'no large leaps' do |pitch, history|
-#       prune if history.last && (pitch - history.last).abs > 7
-#     end
-#
-#     ended_when do |pitch, history|
-#       history.size == 8  # 8-note melody
-#     end
-#   end
-#
-#   tree = rules.apply([60], max_interval: 3)
-#   melodies = tree.combinations
-#
-# @example Rhythm pattern generation
-#   rules = Musa::Rules::Rules.new do
-#     grow 'add duration' do |pattern, history, remaining:|
-#       [1/4r, 1/8r, 1/16r].each do |dur|
-#         if dur <= remaining
-#           branch pattern + [dur]
-#         end
-#       end
-#     end
-#
-#     cut 'too many sixteenths' do |pattern, history|
-#       sixteenths = pattern.count { |d| d == 1/16r }
-#       prune if sixteenths > 4
-#     end
-#
-#     ended_when do |pattern, history, remaining:|
-#       pattern.sum >= remaining
-#     end
-#   end
-#
-#   tree = rules.apply([], remaining: 1r)  # One bar
-#   rhythms = tree.combinations
-#
-# @see Musa::Extension::SmartProcBinder Smart procedure binding for rule evaluation
-# @see Musa::Extension::Arrayfy Array conversion for seed objects
-# @see Musa::Extension::With DSL context management for rule definitions
-# @see https://en.wikipedia.org/wiki/Production_system_(computer_science) Production systems (Wikipedia)
-# @see https://en.wikipedia.org/wiki/L-system L-systems (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Expert_system Expert systems (Wikipedia)
-#
-# # TODO: hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
-# TODO: esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
-# TODO: optimizar la llamada a .with que internamente genera cada vez un SmartProcBinder; podría generarse sólo una vez por cada &block
-
 module Musa
   # Rule-based production system with growth and pruning.
   #
-  # Contains the {Rules} class for generating tree structures through
-  # sequential application of grow rules (expansion) and cut rules (pruning).
-  # Produces all valid combination paths satisfying defined constraints.
+  # Rules implements a production system that generates tree structures
+  # by applying growth rules to produce branches and pruning rules to
+  # eliminate invalid paths. Similar to L-systems and production systems
+  # in formal grammars, but with validation and constraint satisfaction.
+  #
+  # ## Core Concepts
+  #
+  # - **Grow Rules**: Transform objects into new possibilities (branches)
+  # - **Cut Rules**: Prune branches that violate constraints
+  # - **End Condition**: Mark branches as complete
+  # - **Tree**: Hierarchical structure of all valid possibilities
+  # - **History**: Path from root to current node
+  # - **Combinations**: All valid complete paths through tree
+  #
+  # ## Generation Process
+  #
+  # 1. **Seed**: Start with initial object(s)
+  # 2. **Grow**: Apply grow rules sequentially to create branches
+  # 3. **Validate**: Apply cut rules to prune invalid branches
+  # 4. **Check End**: Mark branches meeting end condition
+  # 5. **Recurse**: Continue growing non-ended branches
+  # 6. **Collect**: Gather all valid complete paths
+  #
+  # ## Rule Application
+  #
+  # Rules are applied in definition order. Each grow rule can produce
+  # multiple branches via `branch`. Cut rules can prune with `prune`.
+  # The system tracks history (path to current node) for context-aware
+  # rule application.
+  #
+  # ## Musical Applications
+  #
+  # - Generate harmonic progressions with voice leading rules
+  # - Create melodic variations with contour constraints
+  # - Produce rhythmic patterns following metric rules
+  # - Build counterpoint with species rules
+  # - Generate chord voicings with spacing constraints
+  #
+  # @example Basic chord progression rules
+  #   rules = Musa::Rules::Rules.new do
+  #     # Generate possible next chords
+  #     grow 'next chord' do |chord, history|
+  #       case chord
+  #       when :I   then branch(:ii); branch(:IV); branch(:V)
+  #       when :ii  then branch(:V); branch(:vii)
+  #       when :IV  then branch(:I); branch(:V)
+  #       when :V   then branch(:I); branch(:vi)
+  #       when :vi  then branch(:ii); branch(:IV)
+  #       when :vii then branch(:I)
+  #       end
+  #     end
+  #
+  #     # Avoid parallel fifths
+  #     cut 'parallel fifths' do |chord, history|
+  #       prune if has_parallel_fifths?(history + [chord])
+  #     end
+  #
+  #     # End after 4 chords
+  #     ended_when do |chord, history|
+  #       history.size == 4
+  #     end
+  #   end
+  #
+  #   tree = rules.apply([:I])
+  #   progressions = tree.combinations
+  #   # => [[:I, :ii, :V, :I], [:I, :IV, :V, :I], ...]
+  #
+  # @example Melodic contour rules with parameters
+  #   rules = Musa::Rules::Rules.new do
+  #     grow 'next note' do |pitch, history, max_interval:|
+  #       # Try intervals within max_interval
+  #       (-max_interval..max_interval).each do |interval|
+  #         branch pitch + interval unless interval.zero?
+  #       end
+  #     end
+  #
+  #     cut 'range limit' do |pitch, history|
+  #       prune if pitch < 60 || pitch > 84  # C4 to C6
+  #     end
+  #
+  #     cut 'no large leaps' do |pitch, history|
+  #       prune if history.last && (pitch - history.last).abs > 7
+  #     end
+  #
+  #     ended_when do |pitch, history|
+  #       history.size == 8  # 8-note melody
+  #     end
+  #   end
+  #
+  #   tree = rules.apply([60], max_interval: 3)
+  #   melodies = tree.combinations
+  #
+  # @example Rhythm pattern generation
+  #   rules = Musa::Rules::Rules.new do
+  #     grow 'add duration' do |pattern, history, remaining:|
+  #       [1/4r, 1/8r, 1/16r].each do |dur|
+  #         if dur <= remaining
+  #           branch pattern + [dur]
+  #         end
+  #       end
+  #     end
+  #
+  #     cut 'too many sixteenths' do |pattern, history|
+  #       sixteenths = pattern.count { |d| d == 1/16r }
+  #       prune if sixteenths > 4
+  #     end
+  #
+  #     ended_when do |pattern, history, remaining:|
+  #       pattern.sum >= remaining
+  #     end
+  #   end
+  #
+  #   tree = rules.apply([], remaining: 1r)  # One bar
+  #   rhythms = tree.combinations
   #
   # @see Rules Main rule-based generator class
+  # @see Musa::Extension::SmartProcBinder Smart procedure binding for rule evaluation
+  # @see Musa::Extension::Arrayfy Array conversion for seed objects
+  # @see Musa::Extension::With DSL context management for rule definitions
+  # @see https://en.wikipedia.org/wiki/Production_system_(computer_science) Production systems (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/L-system L-systems (Wikipedia)
   module Rules
+    # TODO: hacer que pueda funcionar en tiempo real? le vas suministrando seeds y le vas diciendo qué opción has elegido (p.ej. para hacer un armonizador en tiempo real)
+    # TODO: esto mismo sería aplicable en otros generadores? variatio/darwin? generative-grammar? markov?
+    # TODO: optimizar la llamada a .with que internamente genera cada vez un SmartProcBinder; podría generarse sólo una vez por cada &block
+    
     using Musa::Extension::Arrayfy
 
     # Rule-based generator with growth and pruning.

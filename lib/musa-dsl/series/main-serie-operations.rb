@@ -1,103 +1,99 @@
-# Serie transformation operations for composing and modifying series.
-#
-# Provides methods for transforming, combining, and controlling series flow.
-# All operations return new series (functional/immutable style).
-#
-# ## Categories
-#
-# ### Mapping & Transformation
-# - **map** - Transform values via block
-# - **with** - Combine multiple series for mapping
-# - **process_with** - Generic processor with parameters
-# - **hashify** - Convert array values to hash
-# - **shift** - Shift values by offset
-#
-# ### Filtering & Selection
-# - **select** - Keep values matching condition
-# - **remove** - Remove values matching condition
-# - **skip** - Skip first N values
-# - **max_size** - Limit to N values
-# - **cut** - Cut into chunks
-#
-# ### Flow Control
-# - **repeat** - Repeat series N times or conditionally
-# - **autorestart** - Auto-restart when exhausted
-# - **flatten** - Flatten nested series
-# - **merge** - Merge serie of series
-# - **after** / **+** - Append series sequentially
-#
-# ### Switching & Multiplexing
-# - **switch** - Switch between series based on selector
-# - **multiplex** - Multiplex series based on selector
-# - **switch_serie** - Switch to different series entirely
-#
-# ### Structural Operations
-# - **reverse** - Reverse values
-# - **randomize** - Shuffle values randomly
-# - **lock** - Lock serie (prevent changes)
-# - **flatten** - Flatten nested series
-#
-# ### Timing Operations
-# - **anticipate** - Evaluate block one step ahead
-# - **lazy** - Delay evaluation to next step
-#
-# ## Usage Patterns
-#
-# ### Mapping
-#
-# ```ruby
-# notes = S(60, 64, 67).map { |n| n + 12 }  # Transpose octave
-# notes.i.to_a  # => [72, 76, 79]
-# ```
-#
-# ### Filtering
-#
-# ```ruby
-# evens = S(1, 2, 3, 4, 5, 6).select { |n| n.even? }
-# evens.i.to_a  # => [2, 4, 6]
-# ```
-#
-# ### Combining
-#
-# ```ruby
-# pitches = S(60, 64, 67)
-# velocities = S(96, 80, 64)
-# notes = pitches.with(velocities) { |p, v| {pitch: p, velocity: v} }
-# ```
-#
-# ### Repeating
-#
-# ```ruby
-# pattern = S(1, 2, 3).repeat(3)
-# pattern.i.to_a  # => [1, 2, 3, 1, 2, 3, 1, 2, 3]
-# ```
-#
-# ### Chaining Operations
-#
-# ```ruby
-# result = S(1, 2, 3, 4, 5)
-#   .select { |n| n.even? }
-#   .map { |n| n * 10 }
-#   .repeat(2)
-# result.i.to_a  # => [20, 40, 20, 40]
-# ```
-#
-# ## Musical Applications
-#
-# - Melodic transformations (transpose, invert, retrograde)
-# - Rhythmic patterns and variations
-# - Dynamic mapping and modulation
-# - Multi-voice composition
-# - Algorithmic composition techniques
-# - Pattern sequencing and repetition
-#
-# @see Musa::Series::Constructors Serie creation methods
-#
 module Musa
   module Series
-    # Serie transformation and composition operations.
+    # Serie transformation operations for composing and modifying series.
     #
-    # Mixed into all series via SerieImplementation.
+    # Provides methods for transforming, combining, and controlling series flow.
+    # All operations return new series (functional/immutable style).
+    #
+    # ## Categories
+    #
+    # ### Mapping & Transformation
+    # - **map** - Transform values via block
+    # - **with** - Combine multiple series for mapping
+    # - **process_with** - Generic processor with parameters
+    # - **hashify** - Convert array values to hash
+    # - **shift** - Shift values by offset
+    #
+    # ### Filtering & Selection
+    # - **select** - Keep values matching condition
+    # - **remove** - Remove values matching condition
+    # - **skip** - Skip first N values
+    # - **max_size** - Limit to N values
+    # - **cut** - Cut into chunks
+    #
+    # ### Flow Control
+    # - **repeat** - Repeat series N times or conditionally
+    # - **autorestart** - Auto-restart when exhausted
+    # - **flatten** - Flatten nested series
+    # - **merge** - Merge serie of series
+    # - **after** / **+** - Append series sequentially
+    #
+    # ### Switching & Multiplexing
+    # - **switch** - Switch between series based on selector
+    # - **multiplex** - Multiplex series based on selector
+    # - **switch_serie** - Switch to different series entirely
+    #
+    # ### Structural Operations
+    # - **reverse** - Reverse values
+    # - **randomize** - Shuffle values randomly
+    # - **lock** - Lock serie (prevent changes)
+    # - **flatten** - Flatten nested series
+    #
+    # ### Timing Operations
+    # - **anticipate** - Evaluate block one step ahead
+    # - **lazy** - Delay evaluation to next step
+    #
+    # ## Usage Patterns
+    #
+    # ### Mapping
+    #
+    # ```ruby
+    # notes = S(60, 64, 67).map { |n| n + 12 }  # Transpose octave
+    # notes.i.to_a  # => [72, 76, 79]
+    # ```
+    #
+    # ### Filtering
+    #
+    # ```ruby
+    # evens = S(1, 2, 3, 4, 5, 6).select { |n| n.even? }
+    # evens.i.to_a  # => [2, 4, 6]
+    # ```
+    #
+    # ### Combining
+    #
+    # ```ruby
+    # pitches = S(60, 64, 67)
+    # velocities = S(96, 80, 64)
+    # notes = pitches.with(velocities) { |p, v| {pitch: p, velocity: v} }
+    # ```
+    #
+    # ### Repeating
+    #
+    # ```ruby
+    # pattern = S(1, 2, 3).repeat(3)
+    # pattern.i.to_a  # => [1, 2, 3, 1, 2, 3, 1, 2, 3]
+    # ```
+    #
+    # ### Chaining Operations
+    #
+    # ```ruby
+    # result = S(1, 2, 3, 4, 5)
+    #   .select { |n| n.even? }
+    #   .map { |n| n * 10 }
+    #   .repeat(2)
+    # result.i.to_a  # => [20, 40, 20, 40]
+    # ```
+    #
+    # ## Musical Applications
+    #
+    # - Melodic transformations (transpose, invert, retrograde)
+    # - Rhythmic patterns and variations
+    # - Dynamic mapping and modulation
+    # - Multi-voice composition
+    # - Algorithmic composition techniques
+    # - Pattern sequencing and repetition
+    #
+    # @see Musa::Series::Constructors Serie creation methods
     #
     # @api public
     module Operations

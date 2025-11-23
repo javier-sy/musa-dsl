@@ -9,109 +9,108 @@ require_relative 'timeslots'
 require_relative 'base-sequencer-tick-based'
 require_relative 'base-sequencer-tickless-based'
 
-# Musical sequencer and scheduler system.
-#
-# Sequencer provides precise timing and scheduling for musical events,
-# supporting both tick-based (quantized) and tickless (continuous) timing
-# modes. Events are scheduled with musical time units (bars, beats, ticks)
-# and executed sequentially.
-#
-# ## Core Concepts
-#
-# - **Position**: Current playback position in beats
-# - **Timeslots**: Scheduled events indexed by time
-# - **Timing Modes**:
-#
-#   - **Tick-based**: Quantized to beats_per_bar × ticks_per_beat grid
-#   - **Tickless**: Continuous rational time (no quantization)
-#
-# - **Scheduling Methods**:
-#
-#   - `at`: Schedule block at absolute position
-#   - `wait`: Schedule relative to current position
-#   - `play`: Play series over time
-#   - `every`: Repeat at intervals
-#   - `move`: Animate value over time
-#
-# - **Event Handlers**: Hierarchical event pub/sub system
-# - **Controls**: Objects returned by scheduling methods for lifecycle management
-#
-# ## Tick-based vs Tickless
-#
-# **Tick-based** (beats_per_bar and ticks_per_beat specified):
-#
-# - Positions quantized to tick grid
-# - `tick` method advances by one tick
-# - Suitable for MIDI-like discrete timing
-# - Example: `BaseSequencer.new(4, 24)` → 4/4 time, 24 ticks per beat
-#
-# **Tickless** (no timing parameters):
-#
-# - Continuous rational time
-# - `tick(position)` jumps to arbitrary position
-# - Suitable for score-like continuous timing
-# - Example: `BaseSequencer.new` → tickless mode
-#
-# ## Musical Time Units
-#
-# - **Bar**: Musical measure (defaults to 1.0 in value)
-# - **Beat**: Subdivision of bar (e.g., quarter note in 4/4)
-# - **Tick**: Smallest time quantum in tick-based mode
-# - All times are Rational for precision
-#
-# @example Basic tick-based sequencer
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)  # 4/4, 24 ticks/beat
-#
-#   seq.at(1) { puts "Beat 1" }
-#   seq.at(2) { puts "Beat 2" }
-#   seq.at(3.5) { puts "Beat 3.5" }
-#
-#   seq.run  # Executes all scheduled events
-#
-# @example Tickless sequencer
-#   seq = Musa::Sequencer::BaseSequencer.new  # Tickless mode
-#
-#   seq.at(1) { puts "Position 1" }
-#   seq.at(1.5) { puts "Position 1.5" }
-#
-#   seq.tick(1)    # Jumps to position 1
-#   seq.tick(1.5)  # Jumps to position 1.5
-#
-# @example Playing series
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-#
-#   pitches = Musa::Series::S(60, 62, 64, 65, 67)
-#   durations = Musa::Series::S(1, 1, 0.5, 0.5, 2)
-#   played_notes = []
-#
-#   seq.play(pitches.zip(durations)) do |pitch, duration|
-#     played_notes << { pitch: pitch, duration: duration, position: seq.position }
-#   end
-#
-#   seq.run
-#   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
-#
-# @example Every and move
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-#
-#   tick_positions = []
-#   volume_values = []
-#
-#   # Execute every beat
-#   seq.every(1, till: 8) { tick_positions << seq.position }
-#
-#   # Animate value from 0 to 127 over 4 beats
-#   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
-#     volume_values << value.round
-#   end
-#
-#   seq.run
-#   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
-#   # Result: volume_values = [0, 8, 16, ..., 119, 127]
-#
-# @see https://en.wikipedia.org/wiki/Music_sequencer Music sequencer (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Scheduling_(computing) Scheduling (Wikipedia)
 module Musa
+  # Musical sequencer and scheduler system.
+  #
+  # Sequencer provides precise timing and scheduling for musical events,
+  # supporting both tick-based (quantized) and tickless (continuous) timing
+  # modes. Events are scheduled with musical time units (bars, beats, ticks)
+  # and executed sequentially.
+  #
+  # ## Core Concepts
+  #
+  # - **Position**: Current playback position in beats
+  # - **Timeslots**: Scheduled events indexed by time
+  # - **Timing Modes**:
+  #
+  #   - **Tick-based**: Quantized to beats_per_bar × ticks_per_beat grid
+  #   - **Tickless**: Continuous rational time (no quantization)
+  #
+  # - **Scheduling Methods**:
+  #
+  #   - `at`: Schedule block at absolute position
+  #   - `wait`: Schedule relative to current position
+  #   - `play`: Play series over time
+  #   - `every`: Repeat at intervals
+  #   - `move`: Animate value over time
+  #
+  # - **Event Handlers**: Hierarchical event pub/sub system
+  # - **Controls**: Objects returned by scheduling methods for lifecycle management
+  #
+  # ## Tick-based vs Tickless
+  #
+  # **Tick-based** (beats_per_bar and ticks_per_beat specified):
+  #
+  # - Positions quantized to tick grid
+  # - `tick` method advances by one tick
+  # - Suitable for MIDI-like discrete timing
+  # - Example: `BaseSequencer.new(4, 24)` → 4/4 time, 24 ticks per beat
+  #
+  # **Tickless** (no timing parameters):
+  #
+  # - Continuous rational time
+  # - `tick(position)` jumps to arbitrary position
+  # - Suitable for score-like continuous timing
+  # - Example: `BaseSequencer.new` → tickless mode
+  #
+  # ## Musical Time Units
+  #
+  # - **Bar**: Musical measure (defaults to 1.0 in value)
+  # - **Beat**: Subdivision of bar (e.g., quarter note in 4/4)
+  # - **Tick**: Smallest time quantum in tick-based mode
+  # - All times are Rational for precision
+  #
+  # @example Basic tick-based sequencer
+  #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)  # 4/4, 24 ticks/beat
+  #
+  #   seq.at(1) { puts "Beat 1" }
+  #   seq.at(2) { puts "Beat 2" }
+  #   seq.at(3.5) { puts "Beat 3.5" }
+  #
+  #   seq.run  # Executes all scheduled events
+  #
+  # @example Tickless sequencer
+  #   seq = Musa::Sequencer::BaseSequencer.new  # Tickless mode
+  #
+  #   seq.at(1) { puts "Position 1" }
+  #   seq.at(1.5) { puts "Position 1.5" }
+  #
+  #   seq.tick(1)    # Jumps to position 1
+  #   seq.tick(1.5)  # Jumps to position 1.5
+  #
+  # @example Playing series
+  #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+  #
+  #   pitches = Musa::Series::S(60, 62, 64, 65, 67)
+  #   durations = Musa::Series::S(1, 1, 0.5, 0.5, 2)
+  #   played_notes = []
+  #
+  #   seq.play(pitches.zip(durations)) do |pitch, duration|
+  #     played_notes << { pitch: pitch, duration: duration, position: seq.position }
+  #   end
+  #
+  #   seq.run
+  #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
+  #
+  # @example Every and move
+  #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+  #
+  #   tick_positions = []
+  #   volume_values = []
+  #
+  #   # Execute every beat
+  #   seq.every(1, till: 8) { tick_positions << seq.position }
+  #
+  #   # Animate value from 0 to 127 over 4 beats
+  #   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
+  #     volume_values << value.round
+  #   end
+  #
+  #   seq.run
+  #   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
+  #   # Result: volume_values = [0, 8, 16, ..., 119, 127]
+  #
+  # @api public
   module Sequencer
     # Core sequencer for musical event scheduling and playback.
     #

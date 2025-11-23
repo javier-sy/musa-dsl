@@ -1,103 +1,95 @@
-# Generative grammar system for creating formal grammars with combinatorial generation.
-#
-# GenerativeGrammar provides a DSL for defining formal grammars that can generate
-# all possible combinations of terminal and non-terminal symbols according to
-# production rules. Similar to context-free grammars in formal language theory.
-#
-# ## Core Concepts
-#
-# - **Nodes (N)**: Terminal or block nodes with content and attributes
-# - **Proxy Nodes (PN)**: Placeholder nodes for recursive grammar definitions
-# - **Operators**: Combine nodes to form production rules
-#   - `|` (or): Alternative/choice between nodes
-#   - `+` (next): Concatenation/sequence of nodes
-# - **Modifiers**:
-#   - `repeat(min:, max:)`: Repeat node multiple times
-#   - `limit(&block)`: Filter options by condition
-# - **Options**: Generate all valid combinations matching the grammar
-#
-# ## Grammar Definition Process
-#
-# 1. Define terminal nodes with N(content, **attributes)
-# 2. Combine nodes using operators (|, +)
-# 3. Add repetition and limits as needed
-# 4. Use PN() for recursive grammars
-# 5. Call .options to generate all valid combinations
-#
-# ## Musical Applications
-#
-# - Generate melodic patterns with rhythmic constraints
-# - Create harmonic progressions with voice leading rules
-# - Produce variations of musical motifs
-# - Build algorithmic composition structures
-#
-# @example Simple sequence with alternatives
-#   include Musa::GenerativeGrammar
-#
-#   a = N('a', size: 1)
-#   b = N('b', size: 1)
-#   c = N('c', size: 1)
-#
-#   # Grammar: (a or b) repeated 3 times, then c
-#   grammar = (a | b).repeat(3) + c
-#
-#   # Generate all possibilities
-#   grammar.options(content: :join)
-#   # => ["aaac", "aabc", "abac", "abbc", "baac", "babc", "bbac", "bbbc"]
-#
-# @example Grammar with constraints
-#   a = N('a', size: 1)
-#   b = N('b', size: 1)
-#
-#   # Limit: total size must equal 3
-#   grammar = (a | b).repeat.limit { |o| o.collect { |_| _.attributes[:size] }.sum == 3 }
-#
-#   # Filter options where size <= 4
-#   grammar.options(content: :join) { |o| o.collect { |e| e.attributes[:size] }.sum <= 4 }
-#   # => ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
-#
-# @example Recursive grammar using proxy nodes
-#   a = N('a', size: 1)
-#   b = N('b', size: 1)
-#   c = N('c', size: 1)
-#
-#   # Create proxy for recursion
-#   dp = PN()
-#
-#   # Grammar: (c + dp) or (a or b), limit size to 3
-#   d = (c + dp | (a | b)).repeat.limit(:size, :sum, :==, 3)
-#
-#   # Assign recursive reference
-#   dp.node = d
-#
-#   d.options(:size, :sum, :<=, 4, content: :join)
-#   # => ["cca", "ccb", "caa", "cab", "cba", "cbb", "aca", "acb", ...]
-#
-# @example Block nodes for dynamic content
-#   a = N(color: :blue) { |parent| 'hola' }
-#   b = N(color: :red) { |parent, attributes|
-#     OptionElement.new('adios', final: true, **attributes)
-#   }
-#
-#   grammar = (a | b).repeat(2)
-#   grammar.options
-#   # => [["hola", "hola"], ["hola", "adios"], ["adios", "hola"], ["adios", "adios"]]
-#
-# @see Musa::Series::Serie Series conversion for grammar options
-# @see https://en.wikipedia.org/wiki/Formal_grammar Formal grammar (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Context-free_grammar Context-free grammar (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Generative_grammar Generative grammar (Wikipedia)
 module Musa
-  # Formal grammar system for combinatorial generation.
+  # Generative grammar system for creating formal grammars with combinatorial generation.
   #
-  # Provides DSL for defining grammars with terminal/block nodes, operators
-  # (|, +), repetition, and constraints. Generates all valid combinations
-  # matching grammar rules via Cartesian product.
+  # GenerativeGrammar provides a DSL for defining formal grammars that can generate
+  # all possible combinations of terminal and non-terminal symbols according to
+  # production rules. Similar to context-free grammars in formal language theory.
   #
-  # Include this module to access {N} and {PN} node creation methods.
+  # ## Core Concepts
+  #
+  # - **Nodes (N)**: Terminal or block nodes with content and attributes
+  # - **Proxy Nodes (PN)**: Placeholder nodes for recursive grammar definitions
+  # - **Operators**: Combine nodes to form production rules
+  #   - `|` (or): Alternative/choice between nodes
+  #   - `+` (next): Concatenation/sequence of nodes
+  # - **Modifiers**:
+  #   - `repeat(min:, max:)`: Repeat node multiple times
+  #   - `limit(&block)`: Filter options by condition
+  # - **Options**: Generate all valid combinations matching the grammar
+  #
+  # ## Grammar Definition Process
+  #
+  # 1. Define terminal nodes with N(content, **attributes)
+  # 2. Combine nodes using operators (|, +)
+  # 3. Add repetition and limits as needed
+  # 4. Use PN() for recursive grammars
+  # 5. Call .options to generate all valid combinations
+  #
+  # ## Musical Applications
+  #
+  # - Generate melodic patterns with rhythmic constraints
+  # - Create harmonic progressions with voice leading rules
+  # - Produce variations of musical motifs
+  # - Build algorithmic composition structures
+  #
+  # @example Simple sequence with alternatives
+  #   include Musa::GenerativeGrammar
+  #
+  #   a = N('a', size: 1)
+  #   b = N('b', size: 1)
+  #   c = N('c', size: 1)
+  #
+  #   # Grammar: (a or b) repeated 3 times, then c
+  #   grammar = (a | b).repeat(3) + c
+  #
+  #   # Generate all possibilities
+  #   grammar.options(content: :join)
+  #   # => ["aaac", "aabc", "abac", "abbc", "baac", "babc", "bbac", "bbbc"]
+  #
+  # @example Grammar with constraints
+  #   a = N('a', size: 1)
+  #   b = N('b', size: 1)
+  #
+  #   # Limit: total size must equal 3
+  #   grammar = (a | b).repeat.limit { |o| o.collect { |_| _.attributes[:size] }.sum == 3 }
+  #
+  #   # Filter options where size <= 4
+  #   grammar.options(content: :join) { |o| o.collect { |e| e.attributes[:size] }.sum <= 4 }
+  #   # => ["aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb"]
+  #
+  # @example Recursive grammar using proxy nodes
+  #   a = N('a', size: 1)
+  #   b = N('b', size: 1)
+  #   c = N('c', size: 1)
+  #
+  #   # Create proxy for recursion
+  #   dp = PN()
+  #
+  #   # Grammar: (c + dp) or (a or b), limit size to 3
+  #   d = (c + dp | (a | b)).repeat.limit(:size, :sum, :==, 3)
+  #
+  #   # Assign recursive reference
+  #   dp.node = d
+  #
+  #   d.options(:size, :sum, :<=, 4, content: :join)
+  #   # => ["cca", "ccb", "caa", "cab", "cba", "cbb", "aca", "acb", ...]
+  #
+  # @example Block nodes for dynamic content
+  #   a = N(color: :blue) { |parent| 'hola' }
+  #   b = N(color: :red) { |parent, attributes|
+  #     OptionElement.new('adios', final: true, **attributes)
+  #   }
+  #
+  #   grammar = (a | b).repeat(2)
+  #   grammar.options
+  #   # => [["hola", "hola"], ["hola", "adios"], ["adios", "hola"], ["adios", "adios"]]
   #
   # @see N Method to create terminal/block nodes
   # @see PN Method to create proxy nodes for recursion
+  # @see Musa::Series::Serie Series conversion for grammar options
+  # @see https://en.wikipedia.org/wiki/Formal_grammar Formal grammar (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Context-free_grammar Context-free grammar (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Generative_grammar Generative grammar (Wikipedia)
   module GenerativeGrammar
     # TODO: refactor & reorganize regarding use of include Musa::GenerativeGrammar problems as default consumption mode (it forces the consumer to have new public methods -P, PN- and class names -OptionElement-)
 

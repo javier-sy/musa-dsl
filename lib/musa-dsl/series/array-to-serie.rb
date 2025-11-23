@@ -1,4 +1,4 @@
-# Array extension adding Serie conversion methods.
+# Array extension adding Series conversion methods.
 #
 # Extends Ruby's Array class with `to_serie` method for convenient
 # conversion to Musa::Series::Serie objects.
@@ -6,7 +6,7 @@
 # ## Conversion Modes
 #
 # - **Basic**: Simple array to serie conversion
-# - **of_series**: Each element becomes a serie (array of arrays → serie of series)
+# - **of_series**: Each element of the array becomes a serie (array of arrays → serie of series)
 # - **recursive**: Nested arrays recursively converted to nested series
 #
 # ## Usage
@@ -31,13 +31,6 @@
 # # => S(S(1, S(2, 3)), S(4, 5))
 # ```
 #
-# ## Musical Applications
-#
-# - Quick serie creation from literals
-# - Converting algorithmic arrays to series
-# - Nested musical structures (phrases, sections)
-# - Data-driven composition
-#
 # @see Musa::Series::Constructors#S Basic serie constructor
 #
 require_relative '../series'
@@ -51,11 +44,12 @@ class Array
   # Converts array to Serie.
   #
   # Three conversion modes:
+  #
   # - **Basic**: Direct conversion to serie
-  # - **of_series**: Each element becomes serie (for array of arrays)
+  # - **of_series**: Each element of the array becomes a new serie (for array of arrays)
   # - **recursive**: Recursive conversion of nested arrays
   #
-  # @param of_series [Boolean, nil] convert each element to serie (default: false)
+  # @param of_series [Boolean, nil] convert each element to a serie (default: false)
   # @param recursive [Boolean, nil] recursively convert nested arrays (default: false)
   #
   # @return [Serie] converted serie

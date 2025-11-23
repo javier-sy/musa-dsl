@@ -1,48 +1,5 @@
 require_relative 'scales'
 
-# Equal temperament 12-tone scale system and scale kinds.
-#
-# This file implements the equal temperament 12-tone (12-TET) scale system,
-# the standard tuning system in Western music. It divides the octave into
-# 12 equal semitones and provides common scale kinds (major, minor, chromatic).
-#
-# ## Scale System Hierarchy
-#
-# - **TwelveSemitonesScaleSystem**: Abstract base for 12-semitone systems
-# - **EquallyTempered12ToneScaleSystem**: Concrete equal temperament implementation
-#
-# ## Scale Kinds
-#
-# - **ChromaticScaleKind**: All 12 semitones
-# - **MajorScaleKind**: Major scale (Ionian mode)
-# - **MinorNaturalScaleKind**: Natural minor (Aeolian mode)
-# - **MinorHarmonicScaleKind**: Harmonic minor (raised 7th)
-#
-# ## Equal Temperament Tuning
-#
-# Equal temperament divides the octave into 12 logarithmically equal parts.
-# Each semitone has a frequency ratio of 2^(1/12) ≈ 1.059463.
-#
-# Formula: frequency = 440 × 2^((pitch - 69) / 12)
-# - MIDI pitch 69 = A4 = 440 Hz (concert pitch)
-# - MIDI pitch 60 = C4 (middle C)
-#
-# ## Intervals
-#
-# Standard interval notation used:
-# - **P0**: Perfect unison (0 semitones)
-# - **m2/M2**: Minor/major second (1/2 semitones)
-# - **m3/M3**: Minor/major third (3/4 semitones)
-# - **P4**: Perfect fourth (5 semitones)
-# - **TT**: Tritone (6 semitones)
-# - **P5**: Perfect fifth (7 semitones)
-# - **m6/M6**: Minor/major sixth (8/9 semitones)
-# - **m7/M7**: Minor/major seventh (10/11 semitones)
-# - **P8**: Perfect octave (12 semitones)
-#
-# @see ScaleSystem Abstract scale system base
-# @see ScaleKind Abstract scale kind base
-# @see scales.rb Scale system framework
 module Musa
   module Scales
     # Base class for 12-semitone scale systems.
@@ -52,6 +9,7 @@ module Musa
     # doesn't specify tuning (frequency calculation).
     #
     # Concrete subclasses must implement frequency calculation:
+    #
     # - {EquallyTempered12ToneScaleSystem}: Equal temperament (12-TET)
     # - Other temperaments could be added (e.g., meantone, just intonation)
     #
@@ -112,12 +70,14 @@ module Musa
     #     frequency = a_frequency × 2^((pitch - 69) / 12)
     #
     # Where:
+    #
     # - **a_frequency**: Reference A frequency (typically 440 Hz)
     # - **pitch**: MIDI pitch number (69 = A4)
     #
     # ## Historical Pitch Standards
     #
     # Different A frequencies represent different historical standards:
+    #
     # - **440 Hz**: Modern concert pitch (ISO 16)
     # - **442 Hz**: Used by some orchestras (brighter sound)
     # - **415 Hz**: Baroque pitch (approximately A=415)
@@ -180,6 +140,7 @@ module Musa
     # ## Pitch Structure
     #
     # Contains 12 pitch classes, one for each semitone:
+    #
     # - Degrees: _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12
     # - Pitches: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 (semitones from root)
     #
@@ -248,6 +209,7 @@ module Musa
     # 7 diatonic degrees plus extended harmony (8th-13th):
     #
     # **Scale Degrees** (Roman numerals, uppercase for major):
+    #
     # - **I** (tonic): Root (0 semitones)
     # - **II** (supertonic): Major second (2 semitones)
     # - **III** (mediant): Major third (4 semitones)
@@ -257,11 +219,13 @@ module Musa
     # - **VII** (leading): Major seventh (11 semitones)
     #
     # **Extended degrees** (for extended harmony):
+    #
     # - VIII-XIII: Compound intervals (8th, 9th, 10th, 11th, 12th, 13th)
     #
     # ## Function Aliases
     #
     # Each degree has multiple function names:
+    #
     # - **Numeric**: _1, _2, _3, _4, _5, _6, _7 (ordinal)
     # - **Roman**: I, II, III, IV, V, VI, VII (harmonic analysis)
     # - **Function**: tonic, supertonic, mediant, subdominant, dominant,
@@ -343,6 +307,7 @@ module Musa
     # 7 diatonic degrees plus extended harmony (8th-13th):
     #
     # **Scale Degrees** (Roman numerals, lowercase for minor):
+    #
     # - **i** (tonic): Root (0 semitones)
     # - **ii** (supertonic): Major second (2 semitones)
     # - **iii** (mediant): Minor third (3 semitones, relative major)
@@ -356,6 +321,7 @@ module Musa
     # ## Differences from Major
     #
     # Compared to major scale (same tonic):
+    #
     # - **iii**: Flatted third (minor third instead of major)
     # - **vi**: Flatted sixth (minor sixth instead of major)
     # - **vii**: Flatted seventh (minor seventh instead of major)
@@ -364,12 +330,14 @@ module Musa
     #
     # The **iii** degree is the root of the relative major scale (shares same
     # notes but different tonic). For example:
+    #
     # - A minor (natural) relative major: C major
     # - C major relative minor: A minor
     #
     # ## Function Aliases
     #
     # Similar to major but with lowercase Roman numerals:
+    #
     # - **Numeric**: _1, _2, _3, _4, _5, _6, _7
     # - **Roman**: i, ii, iii, iv, v, vi, vii
     # - **Function**: tonic, supertonic, mediant, subdominant, dominant, submediant
@@ -451,6 +419,7 @@ module Musa
     # 7 diatonic degrees plus extended harmony (8th-13th):
     #
     # **Scale Degrees** (Roman numerals, lowercase for minor):
+    #
     # - **i** (tonic): Root (0 semitones)
     # - **ii** (supertonic): Major second (2 semitones)
     # - **iii** (mediant): Minor third (3 semitones, relative major)
@@ -465,6 +434,7 @@ module Musa
     #
     # The **vii** degree is raised from 10 semitones (minor seventh) to
     # 11 semitones (major seventh), creating:
+    #
     # - A **leading tone** that resolves strongly upward to the tonic
     # - An **augmented second** interval between vi and vii (3 semitones)
     # - A **dominant seventh chord** (v7) with strong resolution to i
@@ -472,6 +442,7 @@ module Musa
     # ## Musical Character
     #
     # The harmonic minor scale:
+    #
     # - Maintains minor quality (minor third)
     # - Provides strong dominant-to-tonic resolution
     # - Creates exotic sound due to augmented second (vi-vii)
@@ -480,6 +451,7 @@ module Musa
     # ## Function Aliases
     #
     # Same as natural minor:
+    #
     # - **Numeric**: _1, _2, _3, _4, _5, _6, _7
     # - **Roman**: i, ii, iii, iv, v, vi, vii
     # - **Function**: tonic, supertonic, mediant, subdominant, dominant,

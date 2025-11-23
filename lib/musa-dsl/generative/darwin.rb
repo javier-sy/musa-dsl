@@ -1,97 +1,92 @@
 require_relative '../core-ext/with'
 
-# Evolutionary selection algorithm based on fitness evaluation.
-#
-# Darwin implements a selection algorithm inspired by natural selection,
-# evaluating and ranking a population of objects based on defined measures
-# (features and dimensions) and weights. Objects are measured, scored, and
-# sorted by fitness for evolutionary algorithms or optimization.
-#
-# ## Core Concepts
-#
-# - **Population**: Collection of objects to evaluate
-# - **Measures**: Evaluation criteria for each object
-#   - **Features**: Boolean flags (present/absent)
-#   - **Dimensions**: Numeric values (continuous)
-#   - **Die**: Mark object as non-viable (eliminated)
-# - **Weights**: Importance multipliers for features/dimensions
-# - **Fitness**: Calculated score from normalized dimensions and features
-# - **Selection**: Population sorted by fitness (highest first)
-#
-# ## Evaluation Process
-#
-# 1. **Measure**: Evaluate each object with measures block
-# 2. **Normalize**: Scale dimension values to 0-1 range
-# 3. **Weight**: Apply weights to dimensions and features
-# 4. **Score**: Calculate total fitness for each object
-# 5. **Sort**: Order population by fitness (descending)
-#
-# ## Musical Applications
-#
-# - Select best harmonic progressions from generated candidates
-# - Rank melodic variations by aesthetic criteria
-# - Optimize rhythmic patterns for complexity/simplicity
-# - Evolve musical structures through iterative selection
-#
-# @example Basic selection with features and dimensions
-#   darwin = Musa::Darwin::Darwin.new do
-#     measures do |object|
-#       # Kill objects with unwanted property
-#       die if object[:bad_property]
-#
-#       # Binary features
-#       feature :has_alpha if object[:type] == :alpha
-#       feature :has_beta if object[:type] == :beta
-#
-#       # Numeric dimension (negative to prefer lower values)
-#       dimension :complexity, -object[:complexity].to_f
-#     end
-#
-#     # Weight contributions to fitness
-#     weight complexity: 2.0, has_alpha: 1.0, has_beta: -0.5
-#   end
-#
-#   population = generate_candidates()
-#   selected = darwin.select(population)
-#   # Returns population sorted by fitness (best first)
-#
-# @example Musical chord progression selection
-#   darwin = Musa::Darwin::Darwin.new do
-#     measures do |progression|
-#       # Eliminate progressions with parallel fifths
-#       die if has_parallel_fifths?(progression)
-#
-#       # Prefer smooth voice leading
-#       dimension :voice_leading, -total_voice_leading_distance(progression)
-#
-#       # Prefer certain cadences
-#       feature :authentic_cadence if ends_with_V_I?(progression)
-#       feature :plagal_cadence if ends_with_IV_I?(progression)
-#
-#       # Penalize excessive chromaticism
-#       dimension :chromaticism, -count_chromatic_notes(progression)
-#     end
-#
-#     weight voice_leading: 3.0,
-#            authentic_cadence: 2.0,
-#            plagal_cadence: 1.0,
-#            chromaticism: 1.5
-#   end
-#
-#   candidates = generate_progressions()
-#   best = darwin.select(candidates).first(10)  # Top 10 progressions
-#
-# @see Musa::Extension::With DSL context management for evaluation blocks
-# @see https://en.wikipedia.org/wiki/Evolutionary_algorithm Evolutionary algorithm (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Fitness_function Fitness function (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Natural_selection Natural selection (Wikipedia)
 module Musa
-  # Evolutionary selection and optimization algorithms.
+  # Evolutionary selection algorithm based on fitness evaluation.
   #
-  # Contains the {Darwin} class for population-based evolutionary selection
-  # using fitness evaluation with features, dimensions, and weights.
+  # Darwin implements a selection algorithm inspired by natural selection,
+  # evaluating and ranking a population of objects based on defined measures
+  # (features and dimensions) and weights. Objects are measured, scored, and
+  # sorted by fitness for evolutionary algorithms or optimization.
+  #
+  # ## Core Concepts
+  #
+  # - **Population**: Collection of objects to evaluate
+  # - **Measures**: Evaluation criteria for each object
+  #   - **Features**: Boolean flags (present/absent)
+  #   - **Dimensions**: Numeric values (continuous)
+  #   - **Die**: Mark object as non-viable (eliminated)
+  # - **Weights**: Importance multipliers for features/dimensions
+  # - **Fitness**: Calculated score from normalized dimensions and features
+  # - **Selection**: Population sorted by fitness (highest first)
+  #
+  # ## Evaluation Process
+  #
+  # 1. **Measure**: Evaluate each object with measures block
+  # 2. **Normalize**: Scale dimension values to 0-1 range
+  # 3. **Weight**: Apply weights to dimensions and features
+  # 4. **Score**: Calculate total fitness for each object
+  # 5. **Sort**: Order population by fitness (descending)
+  #
+  # ## Musical Applications
+  #
+  # - Select best harmonic progressions from generated candidates
+  # - Rank melodic variations by aesthetic criteria
+  # - Optimize rhythmic patterns for complexity/simplicity
+  # - Evolve musical structures through iterative selection
+  #
+  # @example Basic selection with features and dimensions
+  #   darwin = Musa::Darwin::Darwin.new do
+  #     measures do |object|
+  #       # Kill objects with unwanted property
+  #       die if object[:bad_property]
+  #
+  #       # Binary features
+  #       feature :has_alpha if object[:type] == :alpha
+  #       feature :has_beta if object[:type] == :beta
+  #
+  #       # Numeric dimension (negative to prefer lower values)
+  #       dimension :complexity, -object[:complexity].to_f
+  #     end
+  #
+  #     # Weight contributions to fitness
+  #     weight complexity: 2.0, has_alpha: 1.0, has_beta: -0.5
+  #   end
+  #
+  #   population = generate_candidates()
+  #   selected = darwin.select(population)
+  #   # Returns population sorted by fitness (best first)
+  #
+  # @example Musical chord progression selection
+  #   darwin = Musa::Darwin::Darwin.new do
+  #     measures do |progression|
+  #       # Eliminate progressions with parallel fifths
+  #       die if has_parallel_fifths?(progression)
+  #
+  #       # Prefer smooth voice leading
+  #       dimension :voice_leading, -total_voice_leading_distance(progression)
+  #
+  #       # Prefer certain cadences
+  #       feature :authentic_cadence if ends_with_V_I?(progression)
+  #       feature :plagal_cadence if ends_with_IV_I?(progression)
+  #
+  #       # Penalize excessive chromaticism
+  #       dimension :chromaticism, -count_chromatic_notes(progression)
+  #     end
+  #
+  #     weight voice_leading: 3.0,
+  #            authentic_cadence: 2.0,
+  #            plagal_cadence: 1.0,
+  #            chromaticism: 1.5
+  #   end
+  #
+  #   candidates = generate_progressions()
+  #   best = darwin.select(candidates).first(10)  # Top 10 progressions
   #
   # @see Darwin Main evolutionary selector class
+  # @see Musa::Extension::With DSL context management for evaluation blocks
+  # @see https://en.wikipedia.org/wiki/Evolutionary_algorithm Evolutionary algorithm (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Fitness_function Fitness function (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Natural_selection Natural selection (Wikipedia)
   module Darwin
     # Evolutionary selector for population-based optimization.
     #

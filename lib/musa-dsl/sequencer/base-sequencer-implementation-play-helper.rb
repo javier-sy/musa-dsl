@@ -1,33 +1,27 @@
-# Play evaluation modes for interpreting series elements.
-#
-# PlayEval and its subclasses implement different strategies for interpreting
-# series elements during play operations. Each mode determines:
-# - What operation to perform (call block, launch event, nested play, etc.)
-# - When to continue (now, at position, after wait, on event)
-#
-# ## Available Modes
-#
-# - **:at**: Elements specify absolute positions via :at key
-# - **:wait**: Elements with duration specify wait time
-# - **:neumalang**: Full Neumalang DSL with variables, commands, series, etc.
-#
-# ## Operation Hash Format
-#
-# run_operation returns hash with:
-#
-# - current_operation: :none, :block, :event, :play, :parallel_play, :no_eval_play
-# - current_parameter: data for current operation
-# - continue_operation: :now, :at, :wait, :on
-# - continue_parameter: data for continue operation
-#
-# @api private
 module Musa
   module Sequencer
     class BaseSequencer
-      # Base class for play evaluation strategies.
+      # Play evaluation modes for interpreting series elements.
       #
-      # Defines interface for evaluating series elements and determining
-      # operations. Subclasses implement specific interpretation modes.
+      # PlayEval and its subclasses implement different strategies for interpreting
+      # series elements during play operations. Each mode determines:
+      # - What operation to perform (call block, launch event, nested play, etc.)
+      # - When to continue (now, at position, after wait, on event)
+      #
+      # ## Available Modes
+      #
+      # - **:at**: Elements specify absolute positions via :at key
+      # - **:wait**: Elements with duration specify wait time
+      # - **:neumalang**: Full Neumalang DSL with variables, commands, series, etc.
+      #
+      # ## Operation Hash Format
+      #
+      # run_operation returns hash with:
+      #
+      # - current_operation: :none, :block, :event, :play, :parallel_play, :no_eval_play
+      # - current_parameter: data for current operation
+      # - continue_operation: :now, :at, :wait, :on
+      # - continue_parameter: data for continue operation
       #
       # @api private
       class PlayEval

@@ -1,102 +1,102 @@
 require_relative '../series'
 
-# Markov chain generator for stochastic sequence generation.
-#
-# Implements Markov chains that generate sequences of states based on
-# probabilistic transition rules. Each state transitions to the next
-# based on defined probabilities, creating pseudo-random but structured
-# sequences.
-#
-# ## Theory
-#
-# A Markov chain is a stochastic model describing a sequence of possible
-# events where the probability of each event depends only on the state
-# attained in the previous event (memoryless property).
-#
-# ## Transition Types
-#
-# - **Array**: Equal probability between all options
-#   - `{ a: [:b, :c] }` → 50% chance of :b, 50% chance of :c
-#
-# - **Hash**: Weighted probabilities
-#   - `{ a: { b: 0.2, c: 0.8 } }` → 20% :b, 80% :c
-#   - Probabilities are normalized (don't need to sum to 1.0)
-#
-# - **Proc**: Algorithmic transitions based on history
-#   - `{ a: proc { |history| history.size.even? ? :b : :c } }`
-#   - Proc receives full history and returns next state
-#
-# ## Musical Applications
-#
-# - Generate melodic sequences with style-based transitions
-# - Create rhythmic patterns with probabilistic variation
-# - Produce chord progressions with weighted likelihood
-# - Build dynamic musical structures with emergent behavior
-#
-# @example Equal probability transitions
-#   markov = Musa::Markov::Markov.new(
-#     start: :a,
-#     finish: :x,
-#     transitions: {
-#       a: [:b, :c],      # 50/50 chance
-#       b: [:a, :c],
-#       c: [:a, :b, :x]
-#     }
-#   ).i
-#
-#   markov.to_a  # => [:a, :c, :b, :a, :b, :c, :x]
-#
-# @example Weighted probability transitions
-#   markov = Musa::Markov::Markov.new(
-#     start: :a,
-#     finish: :x,
-#     transitions: {
-#       a: { b: 0.2, c: 0.8 },  # 20% b, 80% c
-#       b: { a: 0.3, c: 0.7 },  # 30% a, 70% c
-#       c: [:a, :b, :x]         # Equal probability
-#     }
-#   ).i
-#
-# @example Algorithmic transitions with history
-#   markov = Musa::Markov::Markov.new(
-#     start: :a,
-#     finish: :x,
-#     transitions: {
-#       a: { b: 0.2, c: 0.8 },
-#       # Transition based on history length
-#       b: proc { |history| history.size.even? ? :a : :c },
-#       c: [:a, :b, :x]
-#     }
-#   ).i
-#
-# @example Musical pitch transitions
-#   # Create melodic sequence with style-based transitions
-#   melody = Musa::Markov::Markov.new(
-#     start: 60,  # Middle C
-#     finish: nil,  # Infinite
-#     transitions: {
-#       60 => { 62 => 0.4, 64 => 0.3, 59 => 0.3 },  # C → D/E/B
-#       62 => { 60 => 0.3, 64 => 0.4, 67 => 0.3 },  # D → C/E/G
-#       64 => [60, 62, 65, 67],                      # E → C/D/F/G
-#       # ... more transitions
-#     }
-#   ).i.max_size(16).to_a
-#
-# @see Musa::Series::Serie Series interface for chaining operations
-# @see Musa::Extension::SmartProcBinder Smart procedure binding for history-based transitions
-# @see https://en.wikipedia.org/wiki/Markov_chain Markov chain (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Stochastic_process Stochastic process (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Markov_chain#Music Markov chains in music (Wikipedia)
 module Musa
-
-  # TODO: adapt to series prototyping
-
+  
+  
+  # Markov chain generator for stochastic sequence generation.
+  #
+  # Implements Markov chains that generate sequences of states based on
+  # probabilistic transition rules. Each state transitions to the next
+  # based on defined probabilities, creating pseudo-random but structured
+  # sequences.
+  #
+  # ## Theory
+  #
+  # A Markov chain is a stochastic model describing a sequence of possible
+  # events where the probability of each event depends only on the state
+  # attained in the previous event (memoryless property).
+  #
+  # ## Transition Types
+  #
+  # - **Array**: Equal probability between all options
+  #   - `{ a: [:b, :c] }` → 50% chance of :b, 50% chance of :c
+  #
+  # - **Hash**: Weighted probabilities
+  #   - `{ a: { b: 0.2, c: 0.8 } }` → 20% :b, 80% :c
+  #   - Probabilities are normalized (don't need to sum to 1.0)
+  #
+  # - **Proc**: Algorithmic transitions based on history
+  #   - `{ a: proc { |history| history.size.even? ? :b : :c } }`
+  #   - Proc receives full history and returns next state
+  #
+  # ## Musical Applications
+  #
+  # - Generate melodic sequences with style-based transitions
+  # - Create rhythmic patterns with probabilistic variation
+  # - Produce chord progressions with weighted likelihood
+  # - Build dynamic musical structures with emergent behavior
+  #
+  # @example Equal probability transitions
+  #   markov = Musa::Markov::Markov.new(
+  #     start: :a,
+  #     finish: :x,
+  #     transitions: {
+  #       a: [:b, :c],      # 50/50 chance
+  #       b: [:a, :c],
+  #       c: [:a, :b, :x]
+  #     }
+  #   ).i
+  #
+  #   markov.to_a  # => [:a, :c, :b, :a, :b, :c, :x]
+  #
+  # @example Weighted probability transitions
+  #   markov = Musa::Markov::Markov.new(
+  #     start: :a,
+  #     finish: :x,
+  #     transitions: {
+  #       a: { b: 0.2, c: 0.8 },  # 20% b, 80% c
+  #       b: { a: 0.3, c: 0.7 },  # 30% a, 70% c
+  #       c: [:a, :b, :x]         # Equal probability
+  #     }
+  #   ).i
+  #
+  # @example Algorithmic transitions with history
+  #   markov = Musa::Markov::Markov.new(
+  #     start: :a,
+  #     finish: :x,
+  #     transitions: {
+  #       a: { b: 0.2, c: 0.8 },
+  #       # Transition based on history length
+  #       b: proc { |history| history.size.even? ? :a : :c },
+  #       c: [:a, :b, :x]
+  #     }
+  #   ).i
+  #
+  # @example Musical pitch transitions
+  #   # Create melodic sequence with style-based transitions
+  #   melody = Musa::Markov::Markov.new(
+  #     start: 60,  # Middle C
+  #     finish: nil,  # Infinite
+  #     transitions: {
+  #       60 => { 62 => 0.4, 64 => 0.3, 59 => 0.3 },  # C → D/E/B
+  #       62 => { 60 => 0.3, 64 => 0.4, 67 => 0.3 },  # D → C/E/G
+  #       64 => [60, 62, 65, 67],                      # E → C/D/F/G
+  #       # ... more transitions
+  #     }
+  #   ).i.max_size(16).to_a
+  #
+  # @see Musa::Series::Serie Series interface for chaining operations
+  # @see Musa::Extension::SmartProcBinder Smart procedure binding for history-based transitions
+  # @see https://en.wikipedia.org/wiki/Markov_chain Markov chain (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Stochastic_process Stochastic process (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Markov_chain#Music Markov chains in music (Wikipedia)
   module Markov
     # Markov chain serie generator.
     #
     # Generates sequences of states following probabilistic transition rules.
     # Implements {Musa::Series::Serie} interface for integration with series operations.
     class Markov
+      # TODO: adapt to series prototyping
       include Musa::Series::Serie.base
 
       # Creates Markov chain generator.

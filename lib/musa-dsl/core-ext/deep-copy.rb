@@ -1,5 +1,3 @@
-# Based on https://github.com/adamluzsi/duplicate.rb/blob/master/lib/duplicate.rb
-# Modifications by Javier Sánchez Yeste
 
 module Musa
   module Extension
@@ -39,6 +37,10 @@ module Musa
     #
     # @see Arrayfy Uses deep_copy for preserving modules
     # @see Hashify Uses deep_copy for preserving modules
+    #
+    # Based on https://github.com/adamluzsi/duplicate.rb/blob/master/lib/duplicate.rb
+    #
+    # Modifications by Javier Sánchez Yeste
     module DeepCopy
       # Main deep copy module providing class methods.
       module DeepCopy

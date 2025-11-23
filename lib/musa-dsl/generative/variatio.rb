@@ -2,130 +2,125 @@ require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/with'
 
-# Combinatorial variation generator with Cartesian product.
-#
-# Variatio generates all possible combinations of parameter values across
-# defined fields, creating comprehensive variation sets. Uses Cartesian
-# product to produce exhaustive parameter combinations, then constructs
-# objects and applies attribute modifications.
-#
-# ## Core Concepts
-#
-# - **Fields**: Named parameters with option sets
-# - **Fieldsets**: Nested field groups with their own options
-# - **Constructor**: Creates base objects from field values
-# - **with_attributes**: Modifies objects with field/fieldset values
-# - **Finalize**: Post-processes completed objects
-# - **Variations**: All Cartesian product combinations
-#
-# ## Generation Process
-#
-# 1. **Define**: Specify fields, fieldsets, constructor, attributes, finalize
-# 2. **Combine**: Calculate Cartesian product of all field options
-# 3. **Construct**: Create objects using constructor with each combination
-# 4. **Attribute**: Apply with_attributes blocks for each combination
-# 5. **Finalize**: Run finalize block on completed objects
-# 6. **Return**: Array of all generated variations
-#
-# ## Musical Applications
-#
-# - Generate all variations of a musical motif
-# - Create comprehensive parameter sweeps for synthesis
-# - Produce complete harmonic permutations
-# - Build exhaustive rhythm pattern combinations
-#
-# @example Basic field variations
-#   variatio = Musa::Variatio::Variatio.new :chord do
-#     field :root, [60, 64, 67]     # C, E, G
-#     field :type, [:major, :minor]
-#
-#     constructor do |root:, type:|
-#       { root: root, type: type }
-#     end
-#   end
-#
-#   variations = variatio.run
-#   # => [
-#   #   { root: 60, type: :major },
-#   #   { root: 60, type: :minor },
-#   #   { root: 64, type: :major },
-#   #   { root: 64, type: :minor },
-#   #   { root: 67, type: :major },
-#   #   { root: 67, type: :minor }
-#   # ]
-#   # 3 roots × 2 types = 6 variations
-#
-# @example Override field options at runtime
-#   variatio = Musa::Variatio::Variatio.new :object do
-#     field :a, 1..10
-#     field :b, [:alfa, :beta, :gamma]
-#
-#     constructor { |a:, b:| { a: a, b: b } }
-#   end
-#
-#   # Override :a to limit variations
-#   variatio.on(a: 1..3)
-#   # => 3 × 3 = 9 variations instead of 10 × 3 = 30
-#
-# @example Nested fieldsets with attributes
-#   variatio = Musa::Variatio::Variatio.new :synth do
-#     field :wave, [:saw, :square]
-#     field :cutoff, [500, 1000, 2000]
-#
-#     constructor do |wave:, cutoff:|
-#       { wave: wave, cutoff: cutoff, lfo: {} }
-#     end
-#
-#     # Nested fieldset for LFO parameters
-#     fieldset :lfo, [:vibrato, :tremolo] do
-#       field :rate, [4, 8]
-#       field :depth, [0.1, 0.5]
-#
-#       with_attributes do |synth:, lfo:, rate:, depth:|
-#         synth[:lfo][lfo] = { rate: rate, depth: depth }
-#       end
-#     end
-#   end
-#
-#   variations = variatio.run
-#   # => 2 waves × 3 cutoffs × 2 lfo types × 2 rates × 2 depths = 48 variations
-#
-# @example With finalize block
-#   variatio = Musa::Variatio::Variatio.new :note do
-#     field :pitch, [60, 62, 64]
-#     field :velocity, [64, 96, 127]
-#
-#     constructor { |pitch:, velocity:| { pitch: pitch, velocity: velocity } }
-#
-#     finalize do |note:|
-#       note[:loudness] = note[:velocity] / 127.0
-#       note[:dynamics] = case note[:velocity]
-#         when 0..48 then :pp
-#         when 49..80 then :mf
-#         else :ff
-#       end
-#     end
-#   end
-#
-# @see Musa::Extension::SmartProcBinder Smart procedure binding for constructor/finalize blocks
-# @see Musa::Extension::Arrayfy Array conversion utilities for field options
-# @see Musa::Extension::With DSL context management for field definitions
-# @see https://en.wikipedia.org/wiki/Cartesian_product Cartesian product (Wikipedia)
-# @see https://en.wikipedia.org/wiki/Variation_(mathematics) Variation in mathematics (Wikipedia)
-#
-# # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
-
 module Musa
-  # Combinatorial variation generator using Cartesian product.
+  # Combinatorial variation generator with Cartesian product.
   #
-  # Contains the {Variatio} class for generating all possible combinations
-  # of parameter values across defined fields and fieldsets. Creates objects
-  # from each combination, applies attributes, and optionally finalizes.
+  # Variatio generates all possible combinations of parameter values across
+  # defined fields, creating comprehensive variation sets. Uses Cartesian
+  # product to produce exhaustive parameter combinations, then constructs
+  # objects and applies attribute modifications.
+  #
+  # ## Core Concepts
+  #
+  # - **Fields**: Named parameters with option sets
+  # - **Fieldsets**: Nested field groups with their own options
+  # - **Constructor**: Creates base objects from field values
+  # - **with_attributes**: Modifies objects with field/fieldset values
+  # - **Finalize**: Post-processes completed objects
+  # - **Variations**: All Cartesian product combinations
+  #
+  # ## Generation Process
+  #
+  # 1. **Define**: Specify fields, fieldsets, constructor, attributes, finalize
+  # 2. **Combine**: Calculate Cartesian product of all field options
+  # 3. **Construct**: Create objects using constructor with each combination
+  # 4. **Attribute**: Apply with_attributes blocks for each combination
+  # 5. **Finalize**: Run finalize block on completed objects
+  # 6. **Return**: Array of all generated variations
+  #
+  # ## Musical Applications
+  #
+  # - Generate all variations of a musical motif
+  # - Create comprehensive parameter sweeps for synthesis
+  # - Produce complete harmonic permutations
+  # - Build exhaustive rhythm pattern combinations
+  #
+  # @example Basic field variations
+  #   variatio = Musa::Variatio::Variatio.new :chord do
+  #     field :root, [60, 64, 67]     # C, E, G
+  #     field :type, [:major, :minor]
+  #
+  #     constructor do |root:, type:|
+  #       { root: root, type: type }
+  #     end
+  #   end
+  #
+  #   variations = variatio.run
+  #   # => [
+  #   #   { root: 60, type: :major },
+  #   #   { root: 60, type: :minor },
+  #   #   { root: 64, type: :major },
+  #   #   { root: 64, type: :minor },
+  #   #   { root: 67, type: :major },
+  #   #   { root: 67, type: :minor }
+  #   # ]
+  #   # 3 roots × 2 types = 6 variations
+  #
+  # @example Override field options at runtime
+  #   variatio = Musa::Variatio::Variatio.new :object do
+  #     field :a, 1..10
+  #     field :b, [:alfa, :beta, :gamma]
+  #
+  #     constructor { |a:, b:| { a: a, b: b } }
+  #   end
+  #
+  #   # Override :a to limit variations
+  #   variatio.on(a: 1..3)
+  #   # => 3 × 3 = 9 variations instead of 10 × 3 = 30
+  #
+  # @example Nested fieldsets with attributes
+  #   variatio = Musa::Variatio::Variatio.new :synth do
+  #     field :wave, [:saw, :square]
+  #     field :cutoff, [500, 1000, 2000]
+  #
+  #     constructor do |wave:, cutoff:|
+  #       { wave: wave, cutoff: cutoff, lfo: {} }
+  #     end
+  #
+  #     # Nested fieldset for LFO parameters
+  #     fieldset :lfo, [:vibrato, :tremolo] do
+  #       field :rate, [4, 8]
+  #       field :depth, [0.1, 0.5]
+  #
+  #       with_attributes do |synth:, lfo:, rate:, depth:|
+  #         synth[:lfo][lfo] = { rate: rate, depth: depth }
+  #       end
+  #     end
+  #   end
+  #
+  #   variations = variatio.run
+  #   # => 2 waves × 3 cutoffs × 2 lfo types × 2 rates × 2 depths = 48 variations
+  #
+  # @example With finalize block
+  #   variatio = Musa::Variatio::Variatio.new :note do
+  #     field :pitch, [60, 62, 64]
+  #     field :velocity, [64, 96, 127]
+  #
+  #     constructor { |pitch:, velocity:| { pitch: pitch, velocity: velocity } }
+  #
+  #     finalize do |note:|
+  #       note[:loudness] = note[:velocity] / 127.0
+  #       note[:dynamics] = case note[:velocity]
+  #         when 0..48 then :pp
+  #         when 49..80 then :mf
+  #         else :ff
+  #       end
+  #     end
+  #   end
   #
   # @see Variatio Main combinatorial variation generator class
+  # @see Musa::Extension::SmartProcBinder Smart procedure binding for constructor/finalize blocks
+  # @see Musa::Extension::Arrayfy Array conversion utilities for field options
+  # @see Musa::Extension::With DSL context management for field definitions
+  # @see https://en.wikipedia.org/wiki/Cartesian_product Cartesian product (Wikipedia)
+  # @see https://en.wikipedia.org/wiki/Variation_(mathematics) Variation in mathematics (Wikipedia)
+  #
+  # @api public
   module Variatio
     using Musa::Extension::Arrayfy
     using Musa::Extension::ExplodeRanges
+
+    # TODO: permitir definir un variatio a través de llamadas a métodos y/o atributos, además de a través del block del constructor
 
     # Combinatorial variation generator.
     #

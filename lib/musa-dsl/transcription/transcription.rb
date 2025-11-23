@@ -1,160 +1,64 @@
-# Transcription framework for converting GDV musical events to output formats.
-#
-# Provides infrastructure for transcribing GDV (Grade-Duration-Velocity) events
-# into various output formats (MIDI, MusicXML) through a pipeline of feature
-# processors. The transcription system handles musical ornaments, articulations,
-# and notation-specific transformations.
-#
-# ## Architecture Overview
-#
-# ### Core Components
-#
-# 1. **Transcriptor** - Main orchestrator that chains feature processors
-# 2. **FeatureTranscriptor** - Base class for individual feature processors
-# 3. **Transcriptor Sets** - Pre-configured processor chains for specific formats
-#
-# ### Processing Pipeline
-#
-# ```ruby
-# GDV Event → [Transcriptor 1] → [Transcriptor 2] → ... → Output Format
-# ```
-#
-# Each transcriptor in the chain:
-#
-# - Extracts specific features (appogiatura, trill, staccato, etc.)
-# - Transforms/expands the event based on those features
-# - Passes result to next transcriptor in chain
-#
-# ## GDV Format
-#
-# GDV events are hashes representing musical notes/events:
-# ```ruby
-# {
-#   grade: 0,           # Scale degree (pitch)
-#   duration: 1r,       # Rational duration
-#   velocity: 0.8,      # Note velocity (0.0-1.0)
-#   # Plus optional ornament/articulation attributes:
-#   tr: true,           # Trill
-#   mor: :up,           # Mordent
-#   st: 2,              # Staccato
-#   appogiatura: {...}  # Grace note
-# }
-# ```
-#
-# ## Output Formats
-#
-# - **MIDI** (`FromGDV::ToMIDI`): Expands ornaments to note sequences for playback
-# - **MusicXML** (`FromGDV::ToMusicXML`): Preserves ornaments as notation symbols
-#
-# ## Usage
-#
-# ```ruby
-# # MIDI transcription (expands ornaments)
-# transcriptor = Musa::Transcription::Transcriptor.new(
-#   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(duration_factor: 1/4r),
-#   base_duration: 1/4r,
-#   tick_duration: 1/96r
-# )
-# midi_events = transcriptor.transcript(gdv_event)
-#
-# # MusicXML transcription (preserves ornaments as symbols)
-# transcriptor = Musa::Transcription::Transcriptor.new(
-#   Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set,
-#   base_duration: 1/4r
-# )
-# musicxml_events = transcriptor.transcript(gdv_event)
-# ```
-#
-# ## Supported Features
-#
-# ### Ornaments
-#
-# - **Appogiatura**: Grace notes
-# - **Mordent**: Quick alternation with adjacent note
-# - **Turn**: Four-note circling figure
-# - **Trill**: Rapid alternation with upper neighbor
-#
-# ### Articulations
-#
-# - **Staccato**: Shortened note duration
-# - **Base/Rest**: Zero-duration structural markers
-#
-# ## Creating Custom Transcriptors
-#
-# Extend `FeatureTranscriptor` and implement `transcript` method:
-# ```ruby
-# class MyOrnament < Musa::Transcription::FeatureTranscriptor
-#   def transcript(gdv, base_duration:, tick_duration:)
-#     if ornament = gdv.delete(:my_ornament)
-#       # Process ornament, return modified event(s)
-#       [event1, event2, ...]
-#     else
-#       super  # Pass through unchanged
-#     end
-#   end
-# end
-# ```
-#
-# ## Integration
-#
-# The transcription system integrates with:
-#
-# - **Sequencer**: Converting generative patterns to playable events
-# - **MIDI**: Real-time MIDI output with ornament expansion
-# - **MusicXML**: Score generation with notation symbols
-# - **Datasets**: Using AbsD (absolute duration) extensions
-#
-# @example Complete transcription workflow
-#   # 1. Generate GDV events
-#   gdv_events = [
-#     { grade: 0, duration: 1r, tr: true },
-#     { grade: 2, duration: 1r, mor: :up },
-#     { grade: 4, duration: 1/2r, st: true }
-#   ]
-#
-#   # 2. Create MIDI transcriptor
-#   transcriptor = Musa::Transcription::Transcriptor.new(
-#     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-#     base_duration: 1/4r
-#   )
-#
-#   # 3. Transcribe to MIDI events
-#   midi_events = gdv_events.collect { |gdv| transcriptor.transcript(gdv) }.flatten
-#
-#   # 4. Send to MIDI output
-#   midi_events.each { |event| midi_output.send_event(event) }
-#
-# @see Musa::Transcriptors::FromGDV::ToMIDI
-# @see Musa::Transcriptors::FromGDV::ToMusicXML
-# @see Musa::Sequencer
-#
-# @api public
 module Musa
-  # Event transcription system for converting GDV musical events to output formats.
+  # Transcription framework for converting GDV musical events to output formats.
   #
   # Provides infrastructure for transcribing GDV (Grade-Duration-Velocity) events
-  # into various output formats (MIDI, MusicXML) through configurable pipelines of
-  # feature processors. The system handles musical ornaments, articulations, and
-  # notation-specific transformations.
+  # into various output formats (MIDI, MusicXML) through a pipeline of feature
+  # processors. The transcription system handles musical ornaments, articulations,
+  # and notation-specific transformations.
   #
-  # ## Core Components
+  # ## Architecture Overview
   #
-  # - {Transcriptor} - Main orchestrator chaining feature processors
-  # - {FeatureTranscriptor} - Base class for individual processors
-  # - {Musa::Transcriptors::FromGDV::ToMIDI} - MIDI transcription set
-  # - {Musa::Transcriptors::FromGDV::ToMusicXML} - MusicXML transcription set
+  # ### Core Components
+  #
+  # 1. **Transcriptor** - Main orchestrator that chains feature processors
+  # 2. **FeatureTranscriptor** - Base class for individual feature processors
+  # 3. **Transcriptor Sets** - Pre-configured processor chains for specific formats
+  #
+  # ### Processing Pipeline
+  #
+  # ```ruby
+  # GDV Event → [Transcriptor 1] → [Transcriptor 2] → ... → Output Format
+  # ```
+  #
+  # Each transcriptor in the chain:
+  #
+  # - Extracts specific features (appogiatura, trill, staccato, etc.)
+  # - Transforms/expands the event based on those features
+  # - Passes result to next transcriptor in chain
+  #
+  # ## GDV Format
+  #
+  # GDV events are hashes representing musical notes/events:
+  # ```ruby
+  # {
+  #   grade: 0,           # Scale degree (pitch)
+  #   duration: 1r,       # Rational duration
+  #   velocity: 0.8,      # Note velocity (0.0-1.0)
+  #   # Plus optional ornament/articulation attributes:
+  #   tr: true,           # Trill
+  #   mor: :up,           # Mordent
+  #   st: 2,              # Staccato
+  #   appogiatura: {...}  # Grace note
+  # }
+  # ```
+  #
+  # ## Output Formats
+  #
+  # - **MIDI** (`FromGDV::ToMIDI`): Expands ornaments to note sequences for playback
+  # - **MusicXML** (`FromGDV::ToMusicXML`): Preserves ornaments as notation symbols
   #
   # ## Usage
   #
   # ```ruby
-  # # MIDI transcription
+  # # MIDI transcription (expands ornaments)
   # transcriptor = Musa::Transcription::Transcriptor.new(
-  #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
-  #   base_duration: 1/4r
+  #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(duration_factor: 1/4r),
+  #   base_duration: 1/4r,
+  #   tick_duration: 1/96r
   # )
   # midi_events = transcriptor.transcript(gdv_event)
   #
-  # # MusicXML transcription
+  # # MusicXML transcription (preserves ornaments as symbols)
   # transcriptor = Musa::Transcription::Transcriptor.new(
   #   Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set,
   #   base_duration: 1/4r
@@ -162,9 +66,70 @@ module Musa
   # musicxml_events = transcriptor.transcript(gdv_event)
   # ```
   #
-  # @see Transcriptor Main transcription orchestrator
-  # @see Musa::Transcriptors::FromGDV::ToMIDI MIDI transcriptors
-  # @see Musa::Transcriptors::FromGDV::ToMusicXML MusicXML transcriptors
+  # ## Supported Features
+  #
+  # ### Ornaments
+  #
+  # - **Appogiatura**: Grace notes
+  # - **Mordent**: Quick alternation with adjacent note
+  # - **Turn**: Four-note circling figure
+  # - **Trill**: Rapid alternation with upper neighbor
+  #
+  # ### Articulations
+  #
+  # - **Staccato**: Shortened note duration
+  # - **Base/Rest**: Zero-duration structural markers
+  #
+  # ## Creating Custom Transcriptors
+  #
+  # Extend `FeatureTranscriptor` and implement `transcript` method:
+  # ```ruby
+  # class MyOrnament < Musa::Transcription::FeatureTranscriptor
+  #   def transcript(gdv, base_duration:, tick_duration:)
+  #     if ornament = gdv.delete(:my_ornament)
+  #       # Process ornament, return modified event(s)
+  #       [event1, event2, ...]
+  #     else
+  #       super  # Pass through unchanged
+  #     end
+  #   end
+  # end
+  # ```
+  #
+  # ## Integration
+  #
+  # The transcription system integrates with:
+  #
+  # - **Sequencer**: Converting generative patterns to playable events
+  # - **MIDI**: Real-time MIDI output with ornament expansion
+  # - **MusicXML**: Score generation with notation symbols
+  # - **Datasets**: Using AbsD (absolute duration) extensions
+  #
+  # @example Complete transcription workflow
+  #   # 1. Generate GDV events
+  #   gdv_events = [
+  #     { grade: 0, duration: 1r, tr: true },
+  #     { grade: 2, duration: 1r, mor: :up },
+  #     { grade: 4, duration: 1/2r, st: true }
+  #   ]
+  #
+  #   # 2. Create MIDI transcriptor
+  #   transcriptor = Musa::Transcription::Transcriptor.new(
+  #     Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
+  #     base_duration: 1/4r
+  #   )
+  #
+  #   # 3. Transcribe to MIDI events
+  #   midi_events = gdv_events.collect { |gdv| transcriptor.transcript(gdv) }.flatten
+  #
+  #   # 4. Send to MIDI output
+  #   midi_events.each { |event| midi_output.send_event(event) }
+  #
+  # @see Musa::Transcriptors::FromGDV::ToMIDI
+  # @see Musa::Transcriptors::FromGDV::ToMusicXML
+  # @see Musa::Sequencer
+  #
+  # @api public
   module Transcription
     # Main transcription orchestrator.
     #

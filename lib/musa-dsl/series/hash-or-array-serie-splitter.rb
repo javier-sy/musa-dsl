@@ -1,53 +1,44 @@
-# Serie splitter for decomposing hash/array values into component series.
-#
-# Splits series of hash or array values into individual component series,
-# enabling independent access to each component.
-#
-# ## Splitting Modes
-#
-# - **Hash mode**: Split `{pitch: 60, velocity: 96}` into separate series
-#   for `:pitch` and `:velocity`
-# - **Array mode**: Split `[60, 96]` into separate series for indices 0, 1
-#
-# ## Component Access
-#
-# - **Hash**: `splitter[:pitch]`, `splitter[:velocity]`
-# - **Array**: `splitter[0]`, `splitter[1]`
-# - **Enumerable**: `splitter.each { |component| ... }`
-#
-# ## Use Cases
-#
-# - Separate polyphonic voices from single source
-# - Independent processing of musical parameters
-# - Extract specific components (pitch, duration, velocity, etc.)
-# - Multi-track decomposition
-#
-# @example Split hash values
-#   notes = S({pitch: 60, vel: 96}, {pitch: 64, vel: 80})
-#   splitter = notes.split.i
-#
-#   pitches = splitter[:pitch]
-#   velocities = splitter[:vel]
-#
-#   pitches.next_value  # => 60
-#   velocities.next_value  # => 96
-#
-# @example Split array values
-#   pairs = S([1, 10], [2, 20], [3, 30]).split.i
-#   first = pairs[0]
-#   second = pairs[1]
-#
-# @api public
 module Musa
   module Series::Operations
-    # Splits serie of hash/array values into component series.
+
+    # Serie splitter for decomposing hash/array values into component series.
     #
-    # @return [Splitter] splitter enabling component access
+    # Splits series of hash or array values into individual component series,
+    # enabling independent access to each component.
     #
-    # @example Split components
-    #   splitter = S({a: 1, b: 2}, {a: 3, b: 4}).split.i
-    #   splitter[:a].to_a  # => [1, 3]
-    #   splitter[:b].to_a  # => [2, 4]
+    # ## Splitting Modes
+    #
+    # - **Hash mode**: Split `{pitch: 60, velocity: 96}` into separate series
+    #   for `:pitch` and `:velocity`
+    # - **Array mode**: Split `[60, 96]` into separate series for indices 0, 1
+    #
+    # ## Component Access
+    #
+    # - **Hash**: `splitter[:pitch]`, `splitter[:velocity]`
+    # - **Array**: `splitter[0]`, `splitter[1]`
+    # - **Enumerable**: `splitter.each { |component| ... }`
+    #
+    # ## Use Cases
+    #
+    # - Separate polyphonic voices from single source
+    # - Independent processing of musical parameters
+    # - Extract specific components (pitch, duration, velocity, etc.)
+    # - Multi-track decomposition
+    #
+    # @example Split hash values
+    #   notes = S({pitch: 60, vel: 96}, {pitch: 64, vel: 80})
+    #   splitter = notes.split.i
+    #
+    #   pitches = splitter[:pitch]
+    #   velocities = splitter[:vel]
+    #
+    #   pitches.next_value  # => 60
+    #   velocities.next_value  # => 96
+    #
+    # @example Split array values
+    #   pairs = S([1, 10], [2, 20], [3, 30]).split.i
+    #   first = pairs[0]
+    #   second = pairs[1]
     #
     # @api public
     def split

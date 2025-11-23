@@ -1,91 +1,85 @@
-# Serie constructor methods for creating series from various sources.
-#
-# Provides factory methods for common serie types:
-#
-# ## Basic Constructors
-#
-# - **UNDEFINED** - Undefined serie (unresolved state)
-# - **NIL** - Serie that always returns nil
-# - **S** - Serie from array of values
-# - **E** - Serie from evaluation block
-#
-# ## Collection Constructors
-#
-# - **H/HC** - Hash of series (hash/combined mode)
-# - **A/AC** - Array of series (array/combined mode)
-# - **MERGE** - Sequential merge of multiple series
-#
-# ## Numeric Generators
-#
-# - **FOR** - For-loop style numeric sequence
-# - **RND** - Random values (from array or range)
-# - **RND1** - Single random value
-# - **SIN** - Sine wave function
-# - **FIBO** - Fibonacci sequence
-#
-# ## Musical Generators
-#
-# - **HARMO** - Harmonic note series
-#
-# ## Usage Patterns
-#
-# ### Array Serie
-#
-# ```ruby
-# notes = S(60, 64, 67, 72)
-# notes.i.next_value  # => 60
-# ```
-#
-# ### Evaluation Block
-#
-# ```ruby
-# counter = E(1) { |v, last_value:| last_value + 1 unless last_value == 10 }
-# counter.i.to_a  # => [1, 2, 3, ..., 10]
-# ```
-#
-# ### Random Values
-#
-# ```ruby
-# dice = RND(1, 2, 3, 4, 5, 6)
-# dice.i.next_value  # => random 1-6
-# ```
-#
-# ### Numeric Sequences
-#
-# ```ruby
-# sequence = FOR(from: 0, to: 10, step: 2)
-# sequence.i.to_a  # => [0, 2, 4, 6, 8, 10]
-# ```
-#
-# ### Combining Series
-#
-# ```ruby
-# melody = MERGE(S(60, 64), S(67, 72))
-# melody.i.to_a  # => [60, 64, 67, 72]
-# ```
-#
-# ## Musical Applications
-#
-# - Melodic sequences
-# - Rhythmic patterns
-# - Harmonic progressions
-# - Random variations
-# - Algorithmic composition
-# - Control parameter automation
-#
-# @see Musa::Series::Operations Serie transformation operations
-#
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/smart-proc-binder'
 
 require_relative 'base-series'
 
-# TODO: añadir en for: steps: (nº de pasos en los que repartir el incremento)
-
 module Musa
-  # Serie constructor methods.
+  # Serie constructor methods for creating series from various sources.
   #
-  # Extended into Series module to provide factory methods for creating series.
+  # Provides factory methods for common serie types:
+  #
+  # ## Basic Constructors
+  #
+  # - **UNDEFINED** - Undefined serie (unresolved state)
+  # - **NIL** - Serie that always returns nil
+  # - **S** - Serie from array of values
+  # - **E** - Serie from evaluation block
+  #
+  # ## Collection Constructors
+  #
+  # - **H/HC** - Hash of series (hash/combined mode)
+  # - **A/AC** - Array of series (array/combined mode)
+  # - **MERGE** - Sequential merge of multiple series
+  #
+  # ## Numeric Generators
+  #
+  # - **FOR** - For-loop style numeric sequence
+  # - **RND** - Random values (from array or range)
+  # - **RND1** - Single random value
+  # - **SIN** - Sine wave function
+  # - **FIBO** - Fibonacci sequence
+  #
+  # ## Musical Generators
+  #
+  # - **HARMO** - Harmonic note series
+  #
+  # ## Usage Patterns
+  #
+  # ### Array Serie
+  #
+  # ```ruby
+  # notes = S(60, 64, 67, 72)
+  # notes.i.next_value  # => 60
+  # ```
+  #
+  # ### Evaluation Block
+  #
+  # ```ruby
+  # counter = E(1) { |v, last_value:| last_value + 1 unless last_value == 10 }
+  # counter.i.to_a  # => [1, 2, 3, ..., 10]
+  # ```
+  #
+  # ### Random Values
+  #
+  # ```ruby
+  # dice = RND(1, 2, 3, 4, 5, 6)
+  # dice.i.next_value  # => random 1-6
+  # ```
+  #
+  # ### Numeric Sequences
+  #
+  # ```ruby
+  # sequence = FOR(from: 0, to: 10, step: 2)
+  # sequence.i.to_a  # => [0, 2, 4, 6, 8, 10]
+  # ```
+  #
+  # ### Combining Series
+  #
+  # ```ruby
+  # melody = MERGE(S(60, 64), S(67, 72))
+  # melody.i.to_a  # => [60, 64, 67, 72]
+  # ```
+  #
+  # ## Musical Applications
+  #
+  # - Melodic sequences
+  # - Rhythmic patterns
+  # - Harmonic progressions
+  # - Random variations
+  # - Algorithmic composition
+  # - Control parameter automation
+  #
+  # @see Musa::Series::Operations Serie transformation operations
   #
   # @api public
   module Series::Constructors
