@@ -16,6 +16,7 @@ module Musa
     # another thread to begin generating ticks.
     #
     # This activation model is appropriate for:
+    # 
     # - **Live coding**: Client controls when to start/stop
     # - **Interactive systems**: External controller manages playback
     # - **Testing with control**: Precise control over when ticks begin

@@ -4,7 +4,7 @@ require_relative '../core-ext/smart-proc-binder'
 require_relative 'base-series'
 
 module Musa
-  # Serie constructor methods for creating series from various sources.
+  # Series constructor methods for creating series from various sources.
   #
   # Provides factory methods for common serie types:
   #
@@ -69,15 +69,6 @@ module Musa
   # melody = MERGE(S(60, 64), S(67, 72))
   # melody.i.to_a  # => [60, 64, 67, 72]
   # ```
-  #
-  # ## Musical Applications
-  #
-  # - Melodic sequences
-  # - Rhythmic patterns
-  # - Harmonic progressions
-  # - Random variations
-  # - Algorithmic composition
-  # - Control parameter automation
   #
   # @see Musa::Series::Operations Serie transformation operations
   #

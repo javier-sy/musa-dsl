@@ -11,6 +11,7 @@
 # ### 1. Event Types ({E})
 #
 # Hierarchy of event types defining absolute vs. delta encoding:
+#
 # - **{E}**: Base event module
 # - **{Abs}**: Absolute values (actual pitch, duration, etc.)
 # - **{Delta}**: Delta values (incremental changes)
@@ -22,6 +23,7 @@
 # ### 2. Data Structures
 #
 # Basic container types:
+#
 # - **{V}**: Value array - simple ordered values
 # - **{PackedV}**: Packed value hash - named key-value pairs
 # - **{P}**: Pitch series - alternating values and durations
@@ -29,6 +31,7 @@
 # ### 3. Musical Datasets
 #
 # Domain-specific musical representations:
+#
 # - **{PS}**: Pitch series (from/to/duration for glissandi)
 # - **{PDV}**: Pitch/Duration/Velocity (MIDI-style representation)
 # - **{GDV}**: Grade/Duration/Velocity (score-style with scale degrees)
@@ -56,6 +59,7 @@
 # ## Conversion Patterns
 #
 # The framework supports rich conversions:
+#
 # - PackedV ↔ V (hash to array and vice versa)
 # - P → PS (pitch series to glissando segments)
 # - PDV ↔ GDV (MIDI to score notation)

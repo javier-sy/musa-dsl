@@ -1,99 +1,64 @@
-# GDV neuma decoder for converting neumas to Grade-Duration-Velocity events.
-#
-# Converts neuma notation (GDVD - differential format) to GDV (absolute format)
-# using scale information. This decoder is the primary way to transform text-based
-# neuma notation into playable musical events.
-#
-# ## GDVD vs GDV
-#
-# - **GDVD** (differential): Relative changes `+2 _2` (up 2 steps, double duration)
-# - **GDV** (absolute): Absolute values `{grade: 2, duration: 1/2r}` ready for playback
-#
-# ## Conversion Process
-#
-# ```ruby
-# Neuma String → Parser → GDVD → NeumaDecoder → GDV → Transcriptor → MIDI/MusicXML
-# "0 +2 +2 -1"              ↓                      ↓
-#                   {grade_diff: +2}    {grade: 2, duration: 1/4r}
-# ```
-#
-# ## Scale Integration
-#
-# The decoder uses a scale to interpret grade values:
-# ```ruby
-# scale = Musa::Scales::Scales.et12[440.0].major[60]
-# decoder = NeumaDecoder.new(scale)
-#
-# # Grade 2 in C major = E (C=0, D=1, E=2)
-# ```
-#
-# ## Appogiatura Handling
-#
-# Grace notes (appogiatura) are processed recursively:
-# ```ruby
-# "(+1_/4)+2_"  # Grace note +1 with duration 1/4, main note +2
-# ```
-#
-# Both the grace note and main note are converted from GDVD to GDV.
-#
-# @example Create decoder with mock scale
-#   # Create a simple mock scale object
-#   scale = Object.new
-#   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-#     scale,
-#     base_duration: 1/4r
-#   )
-#
-#   # Decoder properties
-#   decoder.scale           # => scale object
-#   decoder.base_duration   # => 1/4r
-#
-# @example Using with transcriptor
-#   scale = Object.new
-#
-#   # Create mock transcriptor
-#   transcriptor = Object.new
-#   def transcriptor.transcript(gdv); [gdv]; end
-#
-#   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-#     scale,
-#     base_duration: 1/4r,
-#     transcriptor: transcriptor
-#   )
-#
-#   # Transcriptor will process decoded events
-#   decoder.transcriptor  # => transcriptor object
-#
-# @see Musa::Neumas::Decoders::Decoder
-# @see Musa::Scales
-# @see Musa::Transcription
-#
-# @api public
 require_relative 'neuma-decoder'
 
 module Musa::Neumas
   module Decoders
-    # NeumaDecoder converts GDVD neumas to absolute GDV events.
+    # GDV neuma decoder for converting neumas to Grade-Duration-Velocity events.
     #
-    # Main decoder for transforming differential neuma notation to absolute
-    # musical events ready for playback or notation. Uses scale information
-    # to interpret grade (pitch) values.
+    # Converts neuma notation (GDVD - differential format) to GDV (absolute format)
+    # using scale information. This decoder is the primary way to transform text-based
+    # neuma notation into playable musical events.
     #
-    # ## State Management
+    # ## GDVD vs GDV
     #
-    # Maintains `@last` state for differential interpretation:
-    # - Each neuma is relative to previous event
-    # - After decoding, `@last` updated for next neuma
-    # - Subcontexts create independent state for nested structures
+    # - **GDVD** (differential): Relative changes `+2 _2` (up 2 steps, double duration)
+    # - **GDV** (absolute): Absolute values `{grade: 2, duration: 1/2r}` ready for playback
     #
-    # ## Processing Pipeline
+    # ## Conversion Process
     #
     # ```ruby
-    # GDVD → process() → apply() → GDV → transcriptor → Output
-    #   ↓       ↓          ↓
-    # Input   Set base   Convert to
-    #         duration   absolute
+    # Neuma String → Parser → GDVD → NeumaDecoder → GDV → Transcriptor → MIDI/MusicXML
+    # "0 +2 +2 -1"              ↓                      ↓
+    #                   {grade_diff: +2}    {grade: 2, duration: 1/4r}
     # ```
+    #
+    # ## Scale Integration
+    #
+    # The decoder uses a scale to interpret grade values:
+    # ```ruby
+    # scale = Musa::Scales::Scales.et12[440.0].major[60]
+    # decoder = NeumaDecoder.new(scale)
+    #
+    # # Grade 2 in C major = E (C=0, D=1, E=2)
+    # ```
+    #
+    # ## Appogiatura Handling
+    #
+    # Grace notes (appogiatura) are processed recursively:
+    # ```ruby
+    # "(+1_/4)+2_"  # Grace note +1 with duration 1/4, main note +2
+    # ```
+    #
+    # Both the grace note and main note are converted from GDVD to GDV.
+    #
+    # @example Using with transcriptor
+    #   scale = Musa::Scales::Scales.et12[440.0].major[60]
+    #
+    #   # Create mock transcriptor
+    #   transcriptor = Object.new
+    #   def transcriptor.transcript(gdv); [gdv]; end
+    #
+    #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
+    #     scale,
+    #     base_duration: 1/4r,
+    #     transcriptor: transcriptor
+    #   )
+    #
+    #   # Transcriptor will process decoded events
+    #   decoder.transcriptor  # => transcriptor object
+    #
+    # @see Musa::Neumas::Decoders::Decoder
+    # @see Musa::Scales
+    # @see Musa::Transcription
     #
     # @api public
     class NeumaDecoder < Decoder # to get a GDV

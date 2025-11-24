@@ -10,112 +10,108 @@ require_relative 'base-sequencer-tick-based'
 require_relative 'base-sequencer-tickless-based'
 
 module Musa
-  # Musical sequencer and scheduler system.
-  #
-  # Sequencer provides precise timing and scheduling for musical events,
-  # supporting both tick-based (quantized) and tickless (continuous) timing
-  # modes. Events are scheduled with musical time units (bars, beats, ticks)
-  # and executed sequentially.
-  #
-  # ## Core Concepts
-  #
-  # - **Position**: Current playback position in beats
-  # - **Timeslots**: Scheduled events indexed by time
-  # - **Timing Modes**:
-  #
-  #   - **Tick-based**: Quantized to beats_per_bar × ticks_per_beat grid
-  #   - **Tickless**: Continuous rational time (no quantization)
-  #
-  # - **Scheduling Methods**:
-  #
-  #   - `at`: Schedule block at absolute position
-  #   - `wait`: Schedule relative to current position
-  #   - `play`: Play series over time
-  #   - `every`: Repeat at intervals
-  #   - `move`: Animate value over time
-  #
-  # - **Event Handlers**: Hierarchical event pub/sub system
-  # - **Controls**: Objects returned by scheduling methods for lifecycle management
-  #
-  # ## Tick-based vs Tickless
-  #
-  # **Tick-based** (beats_per_bar and ticks_per_beat specified):
-  #
-  # - Positions quantized to tick grid
-  # - `tick` method advances by one tick
-  # - Suitable for MIDI-like discrete timing
-  # - Example: `BaseSequencer.new(4, 24)` → 4/4 time, 24 ticks per beat
-  #
-  # **Tickless** (no timing parameters):
-  #
-  # - Continuous rational time
-  # - `tick(position)` jumps to arbitrary position
-  # - Suitable for score-like continuous timing
-  # - Example: `BaseSequencer.new` → tickless mode
-  #
-  # ## Musical Time Units
-  #
-  # - **Bar**: Musical measure (defaults to 1.0 in value)
-  # - **Beat**: Subdivision of bar (e.g., quarter note in 4/4)
-  # - **Tick**: Smallest time quantum in tick-based mode
-  # - All times are Rational for precision
-  #
-  # @example Basic tick-based sequencer
-  #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)  # 4/4, 24 ticks/beat
-  #
-  #   seq.at(1) { puts "Beat 1" }
-  #   seq.at(2) { puts "Beat 2" }
-  #   seq.at(3.5) { puts "Beat 3.5" }
-  #
-  #   seq.run  # Executes all scheduled events
-  #
-  # @example Tickless sequencer
-  #   seq = Musa::Sequencer::BaseSequencer.new  # Tickless mode
-  #
-  #   seq.at(1) { puts "Position 1" }
-  #   seq.at(1.5) { puts "Position 1.5" }
-  #
-  #   seq.tick(1)    # Jumps to position 1
-  #   seq.tick(1.5)  # Jumps to position 1.5
-  #
-  # @example Playing series
-  #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-  #
-  #   pitches = Musa::Series::S(60, 62, 64, 65, 67)
-  #   durations = Musa::Series::S(1, 1, 0.5, 0.5, 2)
-  #   played_notes = []
-  #
-  #   seq.play(pitches.zip(durations)) do |pitch, duration|
-  #     played_notes << { pitch: pitch, duration: duration, position: seq.position }
-  #   end
-  #
-  #   seq.run
-  #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
-  #
-  # @example Every and move
-  #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-  #
-  #   tick_positions = []
-  #   volume_values = []
-  #
-  #   # Execute every beat
-  #   seq.every(1, till: 8) { tick_positions << seq.position }
-  #
-  #   # Animate value from 0 to 127 over 4 beats
-  #   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
-  #     volume_values << value.round
-  #   end
-  #
-  #   seq.run
-  #   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
-  #   # Result: volume_values = [0, 8, 16, ..., 119, 127]
-  #
-  # @api public
   module Sequencer
-    # Core sequencer for musical event scheduling and playback.
+    # Musical sequencer and scheduler system.
     #
-    # BaseSequencer manages event scheduling, timing, and execution in both
-    # tick-based (quantized) and tickless (continuous) modes.
+    # Sequencer provides precise timing and scheduling for musical events,
+    # supporting both tick-based (quantized) and tickless (continuous) timing
+    # modes. Events are scheduled with musical time units (bars, beats, ticks)
+    # and executed sequentially.
+    #
+    # ## Core Concepts
+    #
+    # - **Position**: Current playback position in beats
+    # - **Timeslots**: Scheduled events indexed by time
+    # - **Timing Modes**:
+    #
+    #   - **Tick-based**: Quantized to beats_per_bar × ticks_per_beat grid
+    #   - **Tickless**: Continuous rational time (no quantization)
+    #
+    # - **Scheduling Methods**:
+    #
+    #   - `at`: Schedule block at absolute position
+    #   - `wait`: Schedule relative to current position
+    #   - `play`: Play series over time
+    #   - `every`: Repeat at intervals
+    #   - `move`: Animate value over time
+    #
+    # - **Event Handlers**: Hierarchical event pub/sub system
+    # - **Controls**: Objects returned by scheduling methods for lifecycle management
+    #
+    # ## Tick-based vs Tickless
+    #
+    # **Tick-based** (beats_per_bar and ticks_per_beat specified):
+    #
+    # - Positions quantized to tick grid
+    # - `tick` method advances by one tick
+    # - Suitable for MIDI-like discrete timing
+    # - Example: `BaseSequencer.new(4, 24)` → 4/4 time, 24 ticks per beat
+    #
+    # **Tickless** (no timing parameters):
+    #
+    # - Continuous rational time
+    # - `tick(position)` jumps to arbitrary position
+    # - Suitable for score-like continuous timing
+    # - Example: `BaseSequencer.new` → tickless mode
+    #
+    # ## Musical Time Units
+    #
+    # - **Bar**: Musical measure (defaults to 1.0 in value)
+    # - **Beat**: Subdivision of bar (e.g., quarter note in 4/4)
+    # - **Tick**: Smallest time quantum in tick-based mode
+    # - All times are Rational for precision
+    #
+    # @example Basic tick-based sequencer
+    #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)  # 4/4, 24 ticks/beat
+    #
+    #   seq.at(1) { puts "Beat 1" }
+    #   seq.at(2) { puts "Beat 2" }
+    #   seq.at(3.5) { puts "Beat 3.5" }
+    #
+    #   seq.run  # Executes all scheduled events
+    #
+    # @example Tickless sequencer
+    #   seq = Musa::Sequencer::BaseSequencer.new  # Tickless mode
+    #
+    #   seq.at(1) { puts "Position 1" }
+    #   seq.at(1.5) { puts "Position 1.5" }
+    #
+    #   seq.tick(1)    # Jumps to position 1
+    #   seq.tick(1.5)  # Jumps to position 1.5
+    #
+    # @example Playing series
+    #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+    #
+    #   pitches = Musa::Series::S(60, 62, 64, 65, 67)
+    #   durations = Musa::Series::S(1, 1, 0.5, 0.5, 2)
+    #   played_notes = []
+    #
+    #   seq.play(pitches.zip(durations)) do |pitch, duration|
+    #     played_notes << { pitch: pitch, duration: duration, position: seq.position }
+    #   end
+    #
+    #   seq.run
+    #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
+    #
+    # @example Every and move
+    #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+    #
+    #   tick_positions = []
+    #   volume_values = []
+    #
+    #   # Execute every beat
+    #   seq.every(1, till: 8) { tick_positions << seq.position }
+    #
+    #   # Animate value from 0 to 127 over 4 beats
+    #   seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
+    #     volume_values << value.round
+    #   end
+    #
+    #   seq.run
+    #   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
+    #   # Result: volume_values = [0, 8, 16, ..., 119, 127]
+    #
+    # @api public
     class BaseSequencer
       # @return [Rational, nil] beats per bar (tick-based mode only)
       attr_reader :beats_per_bar
@@ -153,7 +149,7 @@ module Musa
       # **Tickless**: Omit beats_per_bar and ticks_per_beat
       #
       # - Continuous rational time
-      # - `tick(position)` jumps to position
+      # - `tick` advances to next scheduled position (without timing quantization)
       #
       # @param beats_per_bar [Numeric, nil] beats per bar (nil for tickless)
       # @param ticks_per_beat [Numeric, nil] ticks per beat (nil for tickless)
@@ -618,11 +614,13 @@ module Musa
 
       # Plays series over time.
       #
-      # Consumes series values sequentially, executing block for each value.
-      # Timing determined by mode (see base-sequencer-implementation-play.rb).
+      # Consumes series values sequentially, evaluating each element to determine
+      # operation and scheduling continuation. Supports pause/continue,
+      # nested plays, parallel plays, and event-driven continuation.
+      # Timing determined by mode.
       #
       # @param serie [Series] series to play
-      # @param mode [Symbol] timing mode (:wait, :measure, etc.)
+      # @param mode [Symbol] running mode (:at, :wait, :neumalang)
       # @param parameter [Symbol, nil] duration parameter name from serie values
       # @param after_bars [Numeric, nil] schedule block after play finishes
       # @param after [Proc, nil] block to execute after play finishes
@@ -630,6 +628,13 @@ module Musa
       # @param mode_args [Hash] additional mode-specific parameters
       # @yield [value] block executed for each serie value
       # @return [PlayControl] control object
+      #
+      # ## Available Running Modes
+      #
+      # - **:at**: Elements specify absolute positions via :at key
+      # - **:wait**: Elements with duration specify wait time
+      # - **:neumalang**: Full Neumalang DSL with variables, commands, series, etc.
+      #
       #
       # @example Playing notes from a series
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
@@ -643,6 +648,21 @@ module Musa
       #
       #   seq.run
       #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
+      #
+      # @example Parallel plays
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   melody = Musa::Series::S(60, 62, 64)
+      #   harmony = Musa::Series::S(48, 52, 55)
+      #   played_notes = []
+      #
+      #   seq.play([melody, harmony]) do |pitch|
+      #     # pitch will be array [melody_pitch, harmony_pitch]
+      #     played_notes << { melody: pitch[0], harmony: pitch[1], position: seq.position }
+      #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains [{melody: 60, harmony: 48, position: 0}, ...]
       def play(serie,
                mode: nil,
                parameter: nil,
@@ -666,24 +686,45 @@ module Musa
         control.after do
           @playing.delete control
         end
-
+        
         control
       end
-
+      
       def continuation_play(parameters)
         _play parameters[:serie],
-              parameters[:control],
-              parameters[:neumalang_context],
-              mode: parameters[:mode],
-              decoder: parameters[:decoder],
-              __play_eval: parameters[:play_eval],
-              **parameters[:mode_args]
+        parameters[:control],
+        parameters[:neumalang_context],
+        mode: parameters[:mode],
+        decoder: parameters[:decoder],
+        __play_eval: parameters[:play_eval],
+        **parameters[:mode_args]
       end
-
+      
       # Plays timed series (series with embedded timing information).
       #
-      # Similar to play but serie values include timing. See
-      # base-sequencer-implementation-play-timed.rb for details.
+      # Similar to play but serie values include timing: each element specifies its
+      # own timing via `:time` attribute. Unlike regular `play` which derives timing
+      # from evaluation mode, play_timed uses explicit times from series data.
+      #
+      # ## Timed Series Format
+      #
+      # Each element must have:
+      #
+      # - **:time**: Rational time offset from start
+      # - **:value**: Actual value(s) - Hash or Array
+      # - Optional extra attributes (passed to block)
+      #
+      # ## Value Modes
+      #
+      # - **Hash mode**: `{ time: 0r, value: {pitch: 60, velocity: 96} }`
+      # - **Array mode**: `{ time: 0r, value: [60, 96] }`
+      #
+      # Mode is detected from first element and applied to entire series.
+      #
+      # ## Component Tracking
+      #
+      # Tracks last update time per component (hash key or array index) to
+      # calculate `started_ago` - how long since each component changed.
       #
       # @param timed_serie [Series] timed series
       # @param at [Rational, nil] starting position
@@ -692,6 +733,42 @@ module Musa
       # @param after [Proc, nil] block after completion
       # @yield [value] block for each value
       # @return [PlayTimedControl] control object
+      #
+      # @example Hash mode timed series
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   timed_notes = Musa::Series::S(
+      #     { time: 0r, value: {pitch: 60, velocity: 96} },
+      #     { time: 1r, value: {pitch: 64, velocity: 80} },
+      #     { time: 2r, value: {pitch: 67, velocity: 64} }
+      #   )
+      #
+      #   played_notes = []
+      #
+      #   seq.play_timed(timed_notes) do |values, time:, started_ago:, control:|
+      #     played_notes << { pitch: values[:pitch], velocity: values[:velocity], time: time }
+      #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains [{pitch: 60, velocity: 96, time: 0r}, ...]
+      #
+      # @example Array mode with extra attributes
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   timed = Musa::Series::S(
+      #     { time: 0r, value: [60, 96], channel: 0 },
+      #     { time: 1r, value: [64, 80], channel: 1 }
+      #   )
+      #
+      #   played_notes = []
+      #
+      #   seq.play_timed(timed) do |values, channel:, time:, started_ago:, control:|
+      #     played_notes << { pitch: values[0], velocity: values[1], channel: channel, time: time }
+      #   end
+      #
+      #   seq.run
+      #   # Result: played_notes contains [{pitch: 60, velocity: 96, channel: 0, time: 0r}, ...]
+
       def play_timed(timed_serie,
                      at: nil,
                      on_stop: nil,
@@ -726,6 +803,27 @@ module Musa
 
       # Executes block repeatedly at regular intervals.
       #
+      # ## Execution Model
+      #
+      # Every loop schedules itself recursively:
+      # 1. Execute block at current position
+      # 2. Check stopping conditions
+      # 3. If not stopped, schedule next iteration at start + counter * interval
+      # 4. If stopped, call on_stop and after callbacks
+      #
+      # This ensures precise timing - iterations are scheduled relative to start
+      # position, not accumulated from previous iteration (avoiding drift).
+      #
+      # ## Stopping Conditions
+      #
+      # Loop stops when any of these conditions is met:
+      #
+      # - **manual stop**: `control.stop` called
+      # - **duration**: elapsed time >= duration (in bars)
+      # - **till**: current position >= till position
+      # - **condition**: condition block returns false
+      # - **nil interval**: immediate stop after first execution
+      #
       # @param interval [Numeric, nil] interval between executions (nil = once)
       # @param duration [Numeric, nil] total duration
       # @param till [Numeric, nil] end position
@@ -738,6 +836,20 @@ module Musa
       #
       # @example
       #   seq.every(1, till: 8) { |pos| puts "Beat #{pos}" }
+      #
+      # @example Every 4 beats for 16 bars
+      #   sequencer.every(1r, duration: 4r) { puts "tick" }
+      #   # Executes at 1r, 2r, 3r, 4r, 5r (5 times total)
+      #
+      # @example Every beat until position 10
+      #   sequencer.every(1r, till: 10r) { |control| puts control.position }
+      #
+      # @example Conditional loop
+      #   count = 0
+      #   sequencer.every(1r, condition: proc { count < 5 }) do
+      #     puts count
+      #     count += 1
+      #   end
       def every(interval,
                 duration: nil, till: nil,
                 condition: nil,
@@ -771,7 +883,40 @@ module Musa
         control
       end
 
-      # Animates value from start to end over time.
+      # Animates value from start to end over time. 
+      # Supports single values, arrays, and hashes
+      # with flexible parameter combinations for controlling timing and interpolation.
+      #
+      # ## Value Modes
+      #
+      # - **Single value**: `from: 0, to: 100`
+      # - **Array**: `from: [60, 0.5], to: [72, 1.0]` - multiple values
+      # - **Hash**: `from: {pitch: 60}, to: {pitch: 72}` - named values
+      #
+      # ## Parameter Combinations
+      #
+      # Move requires enough information to calculate both step size and iteration
+      # interval. Valid combinations:
+      #
+      # - `from, to, step, every` - All explicit
+      # - `from, to, step, duration/till` - Calculates every from steps needed
+      # - `from, to, every, duration/till` - Calculates step from duration
+      # - `from, step, every, duration/till` - Open-ended with time limit
+      #
+      # ## Interpolation
+      #
+      # - **Linear** (default): `function: proc { |ratio| ratio }`
+      # - **Ease-in**: `function: proc { |ratio| ratio ** 2 }`
+      # - **Ease-out**: `function: proc { |ratio| 1 - (1 - ratio) ** 2 }`
+      # - **Custom**: Any proc mapping [0..1] to [0..1]
+      #
+      # ## Applications
+      #
+      # - Pitch bends and glissandi
+      # - Volume fades and swells
+      # - Filter sweeps and modulation
+      # - Tempo changes and rubato
+      # - Multi-parameter automation
       #
       # @param every [Numeric] interval between updates
       # @param from [Numeric] starting value
@@ -786,6 +931,46 @@ module Musa
       # @param after [Proc, nil] block after completion
       # @yield [value] block executed with interpolated value
       # @return [MoveControl] control object
+      #
+      # @example Simple pitch glide
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   pitch_values = []
+      #
+      #   seq.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |pitch|
+      #     pitch_values << { pitch: pitch.round, position: seq.position }
+      #   end
+      #
+      #   seq.run
+      #   # Result: pitch_values contains [{pitch: 60, position: 0}, {pitch: 61, position: 0.25}, ...]
+      #
+      # @example Multi-parameter fade
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #
+      #   controller_values = []
+      #
+      #   seq.move(
+      #     from: {volume: 0, brightness: 0},
+      #     to: {volume: 127, brightness: 127},
+      #     duration: 8r,
+      #     every: 1/8r
+      #   ) do |params|
+      #     controller_values << {
+      #       volume: params[:volume].round,
+      #       brightness: params[:brightness].round,
+      #       position: seq.position
+      #     }
+      #   end
+      #
+      #   seq.run
+      #   # Result: controller_values contains [{volume: 0, brightness: 0, position: 0}, ...]
+      #
+      # @example Non-linear interpolation
+      #   sequencer.move(
+      #     from: 0, to: 100,
+      #     duration: 4r, every: 1/16r,
+      #     function: proc { |ratio| ratio ** 2 }  # Ease-in
+      #   ) { |value| puts value }
       #
       # @example Linear fade
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)

@@ -77,6 +77,7 @@ module Musa
     #     [position]: [LEVEL] [progname] message
     #
     # Where:
+    #
     # - `position` is the sequencer position (only if sequencer provided)
     # - `LEVEL` is the severity level (omitted for DEBUG)
     # - `progname` is the program/module name (optional)
@@ -230,16 +231,19 @@ module Musa
         #   [position]: [LEVEL] [progname] message
         #
         # Position calculation:
+        #
         # - Splits position_format into integer and decimal parts
         # - Example: 3.3 => 3 integer digits + 3 decimal digits
         # - Formats sequencer position with calculated precision
         # - Right-aligns position in the allocated width
         #
         # Severity handling:
+        #
         # - DEBUG level: severity not shown in output
         # - Other levels: shown as [WARN], [INFO], [ERROR], [FATAL]
         #
         # Spacing:
+        #
         # - Adds separator space only if position, level, or progname are present
         # - Empty messages output just a newline
         #

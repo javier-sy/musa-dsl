@@ -86,7 +86,6 @@ module Musa
   # @see Musa::Extension::With DSL context management for evaluation blocks
   # @see https://en.wikipedia.org/wiki/Evolutionary_algorithm Evolutionary algorithm (Wikipedia)
   # @see https://en.wikipedia.org/wiki/Fitness_function Fitness function (Wikipedia)
-  # @see https://en.wikipedia.org/wiki/Natural_selection Natural selection (Wikipedia)
   module Darwin
     # Evolutionary selector for population-based optimization.
     #

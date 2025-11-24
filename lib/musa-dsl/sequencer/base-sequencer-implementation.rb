@@ -1,16 +1,6 @@
 require_relative '../core-ext/smart-proc-binder'
 require_relative '../core-ext/inspect-nice'
 
-# Core scheduling implementation for BaseSequencer.
-#
-# This file implements the fundamental event scheduling and execution logic:
-# - Event queue processing at each position
-# - Immediate vs. future event scheduling
-# - Event handler hierarchy with parent delegation
-# - Error handling and recovery
-# - Thread-safe event execution
-#
-# @api private
 module Musa::Sequencer
   using Musa::Extension::InspectNice
 

@@ -1,41 +1,3 @@
-# Timed series operations for time-indexed musical events.
-#
-# Provides operations for series with explicit timing information.
-# Timed series have `:time` attribute indicating when events occur.
-#
-# ## Timed Series Format
-#
-# ```ruby
-# {time: 0r, value: 60, duration: 1r}.extend(Musa::Datasets::AbsTimed)
-# ```
-#
-# ## Operations
-#
-# - **TIMED_UNION**: Merge multiple timed series by time
-# - **flatten_timed**: Flatten nested timed values
-# - **compact_timed**: Remove nil values from timed series
-# - **union_timed**: Convenience method for TIMED_UNION
-#
-# ## Musical Applications
-#
-# - Multi-track MIDI sequencing
-# - Polyphonic event streams
-# - Complex rhythmic structures
-# - Synchronized parameter automation
-# - Multi-voice composition
-#
-# @example Timed union
-#   melody = S({time: 0r, value: 60}, {time: 1r, value: 64})
-#   bass = S({time: 0r, value: 36}, {time: 2r, value: 38})
-#   combined = TIMED_UNION(melody: melody, bass: bass)
-#   # Merges by time, outputs hash with :melody and :bass keys
-#
-# @example Flatten timed
-#   multi = S({time: 0r, value: {a: 60, b: 64}})
-#   flat = multi.flatten_timed
-#   # => {a: {time: 0r, value: 60}, b: {time: 0r, value: 64}}
-#
-# @api public
 require_relative '../datasets/e'
 
 require_relative 'base-series'
@@ -46,6 +8,20 @@ module Musa
     #
     # Combines series with `:time` attributes, synchronizing by time value.
     # Two modes: array mode and hash mode.
+    #
+    # ## Timed Series Format
+    #
+    # ```ruby
+    # {time: 0r, value: 60, duration: 1r}.extend(Musa::Datasets::AbsTimed)
+    # ```
+    #
+    # ## Applications
+    #
+    # - Multi-track MIDI sequencing
+    # - Polyphonic event streams
+    # - Complex rhythmic structures
+    # - Synchronized parameter automation
+    # - Multi-voice composition
     #
     # @param array_of_timed_series [Array<Serie>] timed series (array mode)
     # @param hash_of_timed_series [Hash] timed series by key (hash mode)
@@ -59,6 +35,17 @@ module Musa
     #
     # @example Array mode
     #   TIMED_UNION(s1, s2, s3)
+    #
+    # @example Timed union
+    #   melody = S({time: 0r, value: 60}, {time: 1r, value: 64})
+    #   bass = S({time: 0r, value: 36}, {time: 2r, value: 38})
+    #   combined = TIMED_UNION(melody: melody, bass: bass)
+    #   # Merges by time, outputs hash with :melody and :bass keys
+    #
+    # @example Flatten timed
+    #   multi = S({time: 0r, value: {a: 60, b: 64}})
+    #   flat = multi.flatten_timed
+    #   # => {a: {time: 0r, value: 60}, b: {time: 0r, value: 64}}
     #
     # @api public
     def TIMED_UNION(*array_of_timed_series, **hash_of_timed_series)

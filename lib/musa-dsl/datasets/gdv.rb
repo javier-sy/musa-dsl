@@ -13,6 +13,7 @@ module Musa::Datasets
   # ## Purpose
   #
   # GDV is the score representation layer of the dataset framework:
+  #
   # - Uses scale degrees (grade) instead of absolute pitches
   # - Uses dynamics markings (velocity -5 to +4) instead of MIDI velocity
   # - Human-readable and musically meaningful
@@ -33,11 +34,13 @@ module Musa::Datasets
   # ## Pitch Representation
   #
   # Pitches are specified as:
+  #
   # - **grade**: Position in scale (0 = first note, 1 = second note, etc.)
   # - **octave**: Octave offset (0 = base, 1 = up one octave, -1 = down one octave)
   # - **sharps**: Chromatic alteration (1 = sharp, -1 = flat, 2 = double sharp, etc.)
   #
   # Example in C major scale:
+  #
   # - C4 = { grade: 0, octave: 0 }
   # - D4 = { grade: 1, octave: 0 }
   # - C5 = { grade: 0, octave: 1 }

@@ -1,47 +1,5 @@
 require_relative 'chord-definition'
 
-# Standard chord definitions registry.
-#
-# This file registers common chord types used in Western music theory.
-# Each definition specifies:
-# - **Name**: Chord symbol (:maj, :min7, :dom9, etc.)
-# - **Quality**: Harmonic character (:major, :minor, :diminished, :augmented, :dominant)
-# - **Size**: Number of chord tones (:triad, :seventh, :ninth, :eleventh, :thirteenth)
-# - **Offsets**: Semitone intervals from root
-#
-# ## Triads
-#
-# Basic three-note chords:
-# - **:maj** - Major triad (1-3-5): root, major third, perfect fifth
-# - **:min** - Minor triad (1-♭3-5): root, minor third, perfect fifth
-# - **:dim** - Diminished triad (1-♭3-♭5): root, minor third, diminished fifth
-# - **:aug** - Augmented triad (1-3-♯5): root, major third, augmented fifth
-#
-# ## Seventh Chords
-#
-# Four-note chords with added seventh:
-# - **:maj7** - Major seventh (1-3-5-7): major triad + major seventh
-# - **:min7** - Minor seventh (1-♭3-5-♭7): minor triad + minor seventh
-# - **:dom7** - Dominant seventh (1-3-5-♭7): major triad + minor seventh
-#
-# ## Extended Chords
-#
-# Chords with ninths, elevenths, and thirteenths:
-# - **:maj9, :min9, :dom9** - Ninth chords
-# - **:maj11, :min11** - Eleventh chords
-# - **:maj13, :min13** - Thirteenth chords
-#
-# ## Usage
-#
-# Chord definitions are accessed automatically when creating chords:
-#
-#     scale = Scales::Scales.default_system.default_tuning.major[60]
-#     chord = scale.tonic.chord               # Uses :maj definition
-#     chord = scale.tonic.chord :seventh      # Finds seventh chord matching scale
-#
-# @see ChordDefinition Chord definition class
-# @see Chord Chord instantiation
-
 # TODO trasladar los acordes de https://en.wikipedia.org/wiki/Chord_notation
 
 # TRIADS
@@ -61,7 +19,7 @@ Musa::Chords::ChordDefinition.register :aug, quality: :augmented, size: :triad, 
 # Major seventh: C-E-G-B (0-4-7-11 semitones)
 Musa::Chords::ChordDefinition.register :maj7, quality: :major, size: :seventh, offsets: { root: 0, third: 4, fifth: 7, seventh: 11 }
 
-# Minor seventh: C-Eb-G-Bb (0-3-7-10 semitones) - NOTE: Changed from 11 to 10 for correct minor seventh
+# Minor seventh: C-Eb-G-Bb (0-3-7-10 semitones)
 Musa::Chords::ChordDefinition.register :min7, quality: :minor, size: :seventh, offsets: { root: 0, third: 3, fifth: 7, seventh: 10 }
 
 # Dominant seventh: C-E-G-Bb (0-4-7-10 semitones)

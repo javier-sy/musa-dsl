@@ -1,6 +1,6 @@
 module Musa
   module Series
-    # Serie transformation operations for composing and modifying series.
+    # Series transformation operations for composing and modifying series.
     #
     # Provides methods for transforming, combining, and controlling series flow.
     # All operations return new series (functional/immutable style).
@@ -8,6 +8,7 @@ module Musa
     # ## Categories
     #
     # ### Mapping & Transformation
+    #
     # - **map** - Transform values via block
     # - **with** - Combine multiple series for mapping
     # - **process_with** - Generic processor with parameters
@@ -15,6 +16,7 @@ module Musa
     # - **shift** - Shift values by offset
     #
     # ### Filtering & Selection
+    #
     # - **select** - Keep values matching condition
     # - **remove** - Remove values matching condition
     # - **skip** - Skip first N values
@@ -22,6 +24,7 @@ module Musa
     # - **cut** - Cut into chunks
     #
     # ### Flow Control
+    #
     # - **repeat** - Repeat series N times or conditionally
     # - **autorestart** - Auto-restart when exhausted
     # - **flatten** - Flatten nested series
@@ -29,17 +32,20 @@ module Musa
     # - **after** / **+** - Append series sequentially
     #
     # ### Switching & Multiplexing
+    #
     # - **switch** - Switch between series based on selector
     # - **multiplex** - Multiplex series based on selector
     # - **switch_serie** - Switch to different series entirely
     #
     # ### Structural Operations
+    #
     # - **reverse** - Reverse values
     # - **randomize** - Shuffle values randomly
     # - **lock** - Lock serie (prevent changes)
     # - **flatten** - Flatten nested series
     #
     # ### Timing Operations
+    #
     # - **anticipate** - Evaluate block one step ahead
     # - **lazy** - Delay evaluation to next step
     #
@@ -84,22 +90,13 @@ module Musa
     # result.i.to_a  # => [20, 40, 20, 40]
     # ```
     #
-    # ## Musical Applications
-    #
-    # - Melodic transformations (transpose, invert, retrograde)
-    # - Rhythmic patterns and variations
-    # - Dynamic mapping and modulation
-    # - Multi-voice composition
-    # - Algorithmic composition techniques
-    # - Pattern sequencing and repetition
-    #
     # @see Musa::Series::Constructors Serie creation methods
     #
     # @api public
     module Operations
       # Auto-restarts serie when exhausted.
       #
-      # Creates infinite serie that automatically restarts from beginning
+      # Creates an infinite serie from an original serie that automatically restarts from beginning
       # when it reaches the end.
       #
       # @return [Autorestart] auto-restarting serie

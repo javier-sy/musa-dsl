@@ -1,100 +1,73 @@
-# MIDI-specific GDV transcriptors for playback output.
-#
-# Transcribes GDV events to MIDI playback format by expanding ornaments and
-# articulations into explicit note sequences. Unlike MusicXML transcription,
-# MIDI transcription generates the actual notes to be played.
-#
-# ## MIDI vs MusicXML Approach
-#
-# MIDI transcription expands ornaments for playback:
-#
-# - **MIDI**: Ornaments become explicit note sequences with calculated durations
-# - **MusicXML**: Ornaments preserved as notation symbols
-#
-# ## Supported Ornaments & Articulations
-#
-# - **Appogiatura** (`:appogiatura`): Grace note before main note
-# - **Mordent** (`.mor`): Quick alternation with adjacent note
-# - **Turn** (`.turn`): Four-note figure circling main note
-# - **Trill** (`.tr`): Rapid alternation with upper note
-# - **Staccato** (`.st`): Shortened note duration
-#
-# ## Duration Factor
-#
-# Many ornaments use a configurable `duration_factor` (default 1/4) to determine
-# ornament note durations relative to `base_duration`:
-# ```ruby
-# ornament_duration = base_duration * duration_factor
-# ```
-#
-# ## Usage
-#
-# ```ruby
-# transcriptor = Musa::Transcription::Transcriptor.new(
-#   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(duration_factor: 1/8r),
-#   base_duration: 1/4r,
-#   tick_duration: 1/96r
-# )
-# result = transcriptor.transcript(gdv_event)
-# ```
-#
-# ## Transcription Set
-#
-# The `transcription_set` returns transcriptors applied in order:
-#
-# 1. `Appogiatura` - Expand appogiatura grace notes
-# 2. `Mordent` - Expand mordent ornaments
-# 3. `Turn` - Expand turn ornaments
-# 4. `Trill` - Expand trill ornaments
-# 5. `Staccato` - Apply staccato articulation
-# 6. `Base` - Process base/rest markers
-#
-# @example MIDI trill expansion
-#   gdv = { grade: 0, duration: 1r, tr: true }
-#   transcriptor = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new
-#   result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-#   # => [
-#   #   { grade: 1, duration: 1/16r },  # Upper neighbor
-#   #   { grade: 0, duration: 1/16r },  # Main note
-#   #   { grade: 1, duration: 1/16r },  # Upper neighbor
-#   #   ...
-#   # ]
-#
-# @see Musa::Transcriptors::FromGDV::ToMusicXML
-# @see Musa::MIDIVoices
-#
-# @api public
 require_relative 'from-gdv'
 
 module Musa::Transcriptors
   module FromGDV
     # MIDI-specific GDV transcriptors for playback output.
     #
-    # Transcribes GDV events to MIDI playback format by expanding ornaments
-    # and articulations into explicit note sequences. This differs from MusicXML
-    # transcription which preserves ornaments as notation symbols.
+    # Transcribes GDV events to MIDI playback format by expanding ornaments and
+    # articulations into explicit note sequences. Unlike MusicXML transcription,
+    # MIDI transcription generates the actual notes to be played.
     #
-    # ## Supported Features
+    # ## MIDI vs MusicXML Approach
     #
-    # - **Appogiatura**: Grace notes expanded to explicit notes
-    # - **Mordent** (`.mor`): Quick alternation expanded
-    # - **Turn** (`.turn`): Four-note figure expanded
-    # - **Trill** (`.tr`): Rapid alternation expanded
+    # MIDI transcription expands ornaments for playback:
+    #
+    # - **MIDI**: Ornaments become explicit note sequences with calculated durations
+    # - **MusicXML**: Ornaments preserved as notation symbols
+    #
+    # ## Supported Ornaments & Articulations
+    #
+    # - **Appogiatura** (`:appogiatura`): Grace note before main note
+    # - **Mordent** (`.mor`): Quick alternation with adjacent note
+    # - **Turn** (`.turn`): Four-note figure circling main note
+    # - **Trill** (`.tr`): Rapid alternation with upper note
     # - **Staccato** (`.st`): Shortened note duration
+    #
+    # ## Duration Factor
+    #
+    # Many ornaments use a configurable `duration_factor` (default 1/4) to determine
+    # ornament note durations relative to `base_duration`:
+    # ```ruby
+    # ornament_duration = base_duration * duration_factor
+    # ```
     #
     # ## Usage
     #
-    # Use {transcription_set} to get pre-configured transcriptor chain:
     # ```ruby
     # transcriptor = Musa::Transcription::Transcriptor.new(
-    #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(duration_factor: 1/4r),
+    #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(duration_factor: 1/8r),
     #   base_duration: 1/4r,
     #   tick_duration: 1/96r
     # )
+    # result = transcriptor.transcript(gdv_event)
     # ```
+    #
+    # ## Transcription Set
+    #
+    # The `transcription_set` returns transcriptors applied in order:
+    #
+    # 1. `Appogiatura` - Expand appogiatura grace notes
+    # 2. `Mordent` - Expand mordent ornaments
+    # 3. `Turn` - Expand turn ornaments
+    # 4. `Trill` - Expand trill ornaments
+    # 5. `Staccato` - Apply staccato articulation
+    # 6. `Base` - Process base/rest markers
+    #
+    # @example MIDI trill expansion
+    #   gdv = { grade: 0, duration: 1r, tr: true }
+    #   transcriptor = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new
+    #   result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
+    #   # => [
+    #   #   { grade: 1, duration: 1/16r },  # Upper neighbor
+    #   #   { grade: 0, duration: 1/16r },  # Main note
+    #   #   { grade: 1, duration: 1/16r },  # Upper neighbor
+    #   #   ...
+    #   # ]
     #
     # @see ToMusicXML Notation-preserving transcription
     # @see Musa::MIDIVoices MIDI output system
+    #
+    # @api public
     module ToMIDI
       # Returns standard transcription set for MIDI output.
       #

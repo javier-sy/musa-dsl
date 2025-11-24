@@ -1,183 +1,186 @@
-# Core Serie infrastructure providing prototype/instance system and base implementation.
-#
-# This file defines the fundamental architecture for all Series in Musa DSL:
-#
-# ## Core Concepts
-#
-# ### Prototype/Instance Pattern
-#
-# Series use a **prototype/instance pattern** to enable reusable series definitions:
-#
-# - **Prototype**: Template/blueprint for series (cannot be consumed)
-# - **Instance**: Cloned copy ready for consumption (can call next_value)
-# - **Undefined**: Series with unresolved dependencies
-#
-# ### Serie States
-#
-# Every serie exists in one of three states:
-#
-# - **:prototype** - Template state, cannot consume, can create instances
-# - **:instance** - Active state, can consume values, has independent state
-# - **:undefined** - Unresolved state, cannot use until dependencies resolve
-#
-# ### Why Prototype/Instance?
-#
-# Enables **reusable series definitions** without re-evaluating constructors:
-#
-# ```ruby
-# # Define once (prototype)
-# melody = S(60, 64, 67, 72)
-#
-# # Use multiple times (instances)
-# voice1 = melody.instance  # Independent playback
-# voice2 = melody.instance  # Separate playback
-# ```
-#
-# ## Module Architecture
-#
-# ### Serie Module
-#
-# Factory module providing:
-# - **Serie.base**: Base module without source/sources
-# - **Serie.with**: Configurable module with source/sources/block
-#
-# ### Prototyping Module
-#
-# Implements prototype/instance lifecycle:
-# - State management (:prototype, :instance, :undefined)
-# - Cloning (prototype -> instance)
-# - State resolution from sources
-# - Validation and permissions
-#
-# ### SerieImplementation Module
-#
-# Core iteration protocol:
-# - **init**: Initialize instance state
-# - **restart**: Reset to beginning
-# - **next_value**: Consume next element
-# - **peek_next_value**: Look ahead without consuming
-# - **current_value**: Last consumed value
-#
-# ## Serie Protocol
-#
-# All series must implement:
-#
-# ```ruby
-# def _next_value
-#   # Return next value or nil when finished
-# end
-#
-# def _init
-#   # Initialize instance state (optional)
-# end
-#
-# def _restart
-#   # Reset to beginning (optional)
-# end
-# ```
-#
-# ## Usage Patterns
-#
-# ### Basic Prototype/Instance
-#
-# ```ruby
-# # Create prototype
-# proto = S(1, 2, 3)
-# proto.prototype?  # => true
-#
-# # Create instance
-# inst = proto.instance  # or proto.i
-# inst.instance?  # => true
-#
-# # Consume values
-# inst.next_value  # => 1
-# inst.next_value  # => 2
-# ```
-#
-# ### Multiple Instances
-#
-# ```ruby
-# proto = S(1, 2, 3)
-#
-# a = proto.i
-# b = proto.i  # Independent instance
-#
-# a.next_value  # => 1
-# b.next_value  # => 1 (independent)
-# ```
-#
-# ### State Resolution
-#
-# ```ruby
-# proxy = PROXY()  # Undefined - no source yet
-# proxy.undefined?  # => true
-#
-# proxy.source = S(1, 2, 3)  # Becomes prototype
-# proxy.prototype?  # => true
-# ```
-#
-# ## Technical Details
-#
-# ### Peek Mechanism
-#
-# `peek_next_value` uses internal buffering to look ahead without state change:
-#
-# ```ruby
-# s = S(1, 2, 3).i
-# s.peek_next_value  # => 1 (buffered)
-# s.peek_next_value  # => 1 (same)
-# s.next_value       # => 1 (consumes buffered)
-# ```
-#
-# ### Source/Sources Pattern
-#
-# Series can depend on:
-#
-# - **source**: Single upstream serie
-# - **sources**: Multiple upstream series (Array or Hash)
-#
-# State automatically resolves based on dependencies:
-#
-# - All sources :prototype → :prototype
-# - All sources :instance → :instance
-# - Mixed or undefined → :undefined
-#
-# ### Deep Copy Support
-#
-# Uses Musa::Extension::DeepCopy for proper cloning including nested structures.
-#
-# ## Musical Applications
-#
-# - Reusable melodic/harmonic patterns
-# - Multiple voices from single definition
-# - Lazy evaluation of algorithmic sequences
-# - Composable transformations
-# - Memory-efficient sequence playback
-#
-# @see Musa::Series::Constructors Serie constructor methods
-# @see Musa::Series::Operations Serie transformation operations
-#
 require_relative '../core-ext/deep-copy'
 require_relative '../generative/generative-grammar'
 
 module Musa
-  # Series system for lazy evaluation of musical sequences.
+  # Core Serie infrastructure providing prototype/instance system and base implementation.
   #
-  # Provides prototype/instance pattern, core iteration protocol, and
-  # composable transformations for musical data streams.
+  # This module defines the fundamental architecture for all Series in Musa DSL:
+  #
+  # ## Core Concepts
+  #
+  # ### Prototype/Instance Pattern
+  #
+  # Series use a **prototype/instance pattern** to enable reusable series definitions:
+  #
+  # - **Prototype**: Template/blueprint for series (cannot be consumed)
+  # - **Instance**: Cloned copy ready for consumption (can call next_value)
+  # - **Undefined**: Series with unresolved dependencies
+  #
+  # ### Serie States
+  #
+  # Every serie exists in one of three states:
+  #
+  # - **:prototype** - Template state, cannot consume, can create instances
+  # - **:instance** - Active state, can consume values, has independent state
+  # - **:undefined** - Unresolved state, cannot use until dependencies resolve
+  #
+  # ### Why Prototype/Instance?
+  #
+  # Enables **reusable series definitions** without re-evaluating constructors:
+  #
+  # ```ruby
+  # # Define once (prototype)
+  # melody = S(60, 64, 67, 72)
+  #
+  # # Use multiple times (instances)
+  # voice1 = melody.instance  # Independent playback
+  # voice2 = melody.instance  # Separate playback
+  # ```
+  #
+  # ## Integration
+  #
+  # Series integrate with:
+  #
+  # - **Sequencer**: Play series over time via play() method
+  # - **Generative**: Use with generative grammars
+  # - **MIDI**: Generate MIDI events from series
+  # - **Datasets**: Use AbsTimed, AbsD for timing
+  #
+  # ## Module Architecture
+  #
+  # ### Serie Module
+  #
+  # Factory module providing:
+  #
+  # - **Serie.base**: Base module without source/sources
+  # - **Serie.with**: Configurable module with source/sources/block
+  #
+  # ### Prototyping Module
+  #
+  # Implements prototype/instance lifecycle:
+  #
+  # - State management (:prototype, :instance, :undefined)
+  # - Cloning (prototype -> instance)
+  # - State resolution from sources
+  # - Validation and permissions
+  #
+  # ### SerieImplementation Module
+  #
+  # Core iteration protocol:
+  #
+  # - **init**: Initialize instance state
+  # - **restart**: Reset to beginning
+  # - **next_value**: Consume next element
+  # - **peek_next_value**: Look ahead without consuming
+  # - **current_value**: Last consumed value
+  #
+  # ## Serie Protocol
+  #
+  # All series must implement:
+  #
+  # ```ruby
+  # def _next_value
+  #   # Return next value or nil when finished
+  # end
+  #
+  # def _init
+  #   # Initialize instance state (optional)
+  # end
+  #
+  # def _restart
+  #   # Reset to beginning (optional)
+  # end
+  # ```
+  #
+  # ## Usage Patterns
+  #
+  # ### Basic Prototype/Instance
+  #
+  # ```ruby
+  # # Create prototype
+  # proto = S(1, 2, 3)
+  # proto.prototype?  # => true
+  #
+  # # Create instance
+  # inst = proto.instance  # or proto.i
+  # inst.instance?  # => true
+  #
+  # # Consume values
+  # inst.next_value  # => 1
+  # inst.next_value  # => 2
+  # ```
+  #
+  # ### Multiple Instances
+  #
+  # ```ruby
+  # proto = S(1, 2, 3)
+  #
+  # a = proto.i
+  # b = proto.i  # Independent instance
+  #
+  # a.next_value  # => 1
+  # b.next_value  # => 1 (independent)
+  # ```
+  #
+  # ### State Resolution
+  #
+  # ```ruby
+  # proxy = PROXY()  # Undefined - no source yet
+  # proxy.undefined?  # => true
+  #
+  # proxy.source = S(1, 2, 3)  # Becomes prototype
+  # proxy.prototype?  # => true
+  # ```
+  #
+  # ## Technical Details
+  #
+  # ### Peek Mechanism
+  #
+  # `peek_next_value` uses internal buffering to look ahead without state change:
+  #
+  # ```ruby
+  # s = S(1, 2, 3).i
+  # s.peek_next_value  # => 1 (buffered)
+  # s.peek_next_value  # => 1 (same)
+  # s.next_value       # => 1 (consumes buffered)
+  # ```
+  #
+  # ### Source/Sources Pattern
+  #
+  # Series can depend on:
+  #
+  # - **source**: Single upstream serie
+  # - **sources**: Multiple upstream series (Array or Hash)
+  #
+  # State automatically resolves based on dependencies:
+  #
+  # - All sources :prototype → :prototype
+  # - All sources :instance → :instance
+  # - Mixed or undefined → :undefined
+  #
+  # ### Deep Copy Support
+  #
+  # Uses Musa::Extension::DeepCopy for proper cloning including nested structures.
+  #
+  # ## Applications
+  #
+  # - Reusable melodic/harmonic patterns
+  # - Multiple voices from single definition
+  # - Lazy evaluation of algorithmic sequences
+  # - Composable transformations
+  # - Memory-efficient sequence playback
+  #
+  # @see Musa::Series::Constructors Serie constructor methods
+  # @see Musa::Series::Operations Serie transformation operations
   #
   # @api public
   module Series
-    # Serie constructor methods.
-    #
-    # Extended in main-serie-constructors.rb with S, E, RND, etc.
+    # Series constructor methods.
     #
     # @api public
     module Constructors; extend self; end
 
     # Serie transformation operations.
-    #
-    # Extended in main-serie-operations.rb with map, select, etc.
     #
     # @api public
     module Operations; end
@@ -946,15 +949,6 @@ module Musa
       # - First peek: calls _next_value and buffers result
       # - Subsequent peeks: returns buffered value
       # - Next next_value: consumes buffered value
-      #
-      # ## Musical Applications
-      #
-      # Foundation for all musical sequence types:
-      # - Melodic sequences
-      # - Rhythmic patterns
-      # - Harmonic progressions
-      # - Control automation
-      # - Algorithmic composition
       #
       # @api private
       module SerieImplementation

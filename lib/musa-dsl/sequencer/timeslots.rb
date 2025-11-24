@@ -102,5 +102,7 @@ module Musa
         end
       end
     end
+
+    private_constant :Timeslots
   end
 end

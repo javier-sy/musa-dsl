@@ -14,6 +14,7 @@ module Musa
     # `clock.tick()` repeatedly from your external system to generate ticks.
     #
     # This activation model is appropriate for:
+    # 
     # - **Testing**: Precise control over timing for step-by-step debugging
     # - **Game engine integration**: Game loop controls tick timing
     # - **Frame-based systems**: One tick per frame or custom logic

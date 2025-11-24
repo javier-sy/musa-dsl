@@ -5,6 +5,7 @@ module Musa::Datasets
   # representations, particularly for the Neuma notation format.
   #
   # These methods handle:
+  #
   # - Sign formatting (+/-)
   # - Velocity to dynamics conversion
   # - Modifier parameter formatting

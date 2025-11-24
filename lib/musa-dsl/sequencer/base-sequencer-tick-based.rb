@@ -61,9 +61,6 @@ module Musa
       #   sequencer.at(1.5001r) { puts "event" }
       #   # WARN: rounding position 1.5001 to tick precision: 1.5
       #
-      # @see https://en.wikipedia.org/wiki/Music_sequencer Music sequencer (Wikipedia)
-      # @see https://en.wikipedia.org/wiki/Pulses_per_quarter_note PPQN (ticks per beat) (Wikipedia)
-      #
       # @api private
       module TickBasedTiming
         using Musa::Extension::InspectNice

@@ -14,6 +14,7 @@ module Musa
     # It immediately begins generating ticks without waiting for external signals.
     #
     # This activation model is appropriate for:
+    # 
     # - **Unit testing**: No external dependencies, deterministic execution
     # - **Batch processing**: Generate music as fast as possible
     # - **Fast-forward simulations**: Skip real-time delays

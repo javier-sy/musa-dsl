@@ -1,3 +1,5 @@
+require_relative 'extension'
+
 module Musa
   module Extension
     # Refinement that expands Range objects within arrays into their constituent elements.
@@ -34,27 +36,40 @@ module Musa
     #
     # @see Musa::MIDIVoices::MIDIVoices#initialize Uses this for channel expansion
     # @note This refinement must be activated with `using Musa::Extension::ExplodeRanges`
+    #
+    # ## Methods Added
+    #
+    # ### Array
+    # - {Array#explode_ranges} - Expands all Range objects in the array into their individual elements
     module ExplodeRanges
+      # @!method explode_ranges
+      #   Expands all Range objects in the array into their individual elements.
+      #
+      #   Iterates through the array and converts any Range objects to their
+      #   constituent elements via `to_a`, leaving non-Range elements unchanged.
+      #   The result is a new flat array.
+      #
+      #   @note This method is added to Array via refinement. Requires `using Musa::Extension::ExplodeRanges`.
+      #
+      #   @return [Array] new array with all ranges expanded.
+      #
+      #   @example Empty ranges
+      #     using Musa::Extension::ExplodeRanges
+      #     [1, (5..4), 8].explode_ranges  # (5..4) is empty
+      #     # => [1, 8]
+      #
+      #   @example Exclusive ranges
+      #     using Musa::Extension::ExplodeRanges
+      #     [1, (3...6), 9].explode_ranges
+      #     # => [1, 3, 4, 5, 9]
+      #
+      #   @example Nested arrays are NOT expanded recursively
+      #     using Musa::Extension::ExplodeRanges
+      #     [1, [2..4], 5].explode_ranges
+      #     # => [1, [2..4], 5]  # Inner range NOT expanded
+      class ::Array; end
+
       refine Array do
-        # Expands all Range objects in the array into their individual elements.
-        #
-        # Iterates through the array and converts any Range objects to their
-        # constituent elements via `to_a`, leaving non-Range elements unchanged.
-        # The result is a new flat array.
-        #
-        # @return [Array] new array with all ranges expanded.
-        #
-        # @example Empty ranges
-        #   [1, (5..4), 8].explode_ranges  # (5..4) is empty
-        #   # => [1, 8]
-        #
-        # @example Exclusive ranges
-        #   [1, (3...6), 9].explode_ranges
-        #   # => [1, 3, 4, 5, 9]
-        #
-        # @example Nested arrays are NOT expanded recursively
-        #   [1, [2..4], 5].explode_ranges
-        #   # => [1, [2..4], 5]  # Inner range NOT expanded
         def explode_ranges
           array = []
 

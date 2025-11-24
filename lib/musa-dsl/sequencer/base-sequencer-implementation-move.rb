@@ -1,84 +1,6 @@
 require_relative '../core-ext/arrayfy'
 require_relative '../core-ext/inspect-nice'
 
-# Move implementation for animating values over time.
-#
-# Implements the `move` method that smoothly transitions value(s) from starting
-# point(s) to target(s) over time. Supports single values, arrays, and hashes
-# with flexible parameter combinations for controlling timing and interpolation.
-#
-# ## Value Modes
-#
-# - **Single value**: `from: 0, to: 100`
-# - **Array**: `from: [60, 0.5], to: [72, 1.0]` - multiple values
-# - **Hash**: `from: {pitch: 60}, to: {pitch: 72}` - named values
-#
-# ## Parameter Combinations
-#
-# Move requires enough information to calculate both step size and iteration
-# interval. Valid combinations:
-#
-# - `from, to, step, every` - All explicit
-# - `from, to, step, duration/till` - Calculates every from steps needed
-# - `from, to, every, duration/till` - Calculates step from duration
-# - `from, step, every, duration/till` - Open-ended with time limit
-#
-# ## Interpolation
-#
-# - **Linear** (default): `function: proc { |ratio| ratio }`
-# - **Ease-in**: `function: proc { |ratio| ratio ** 2 }`
-# - **Ease-out**: `function: proc { |ratio| 1 - (1 - ratio) ** 2 }`
-# - **Custom**: Any proc mapping [0..1] to [0..1]
-#
-# ## Musical Applications
-#
-# - Pitch bends and glissandi
-# - Volume fades and swells
-# - Filter sweeps and modulation
-# - Tempo changes and rubato
-# - Multi-parameter automation
-#
-# @example Simple pitch glide
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-#
-#   pitch_values = []
-#
-#   seq.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |pitch|
-#     pitch_values << { pitch: pitch.round, position: seq.position }
-#   end
-#
-#   seq.run
-#   # Result: pitch_values contains [{pitch: 60, position: 0}, {pitch: 61, position: 0.25}, ...]
-#
-# @example Multi-parameter fade
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-#
-#   controller_values = []
-#
-#   seq.move(
-#     from: {volume: 0, brightness: 0},
-#     to: {volume: 127, brightness: 127},
-#     duration: 8r,
-#     every: 1/8r
-#   ) do |params|
-#     controller_values << {
-#       volume: params[:volume].round,
-#       brightness: params[:brightness].round,
-#       position: seq.position
-#     }
-#   end
-#
-#   seq.run
-#   # Result: controller_values contains [{volume: 0, brightness: 0, position: 0}, ...]
-#
-# @example Non-linear interpolation
-#   sequencer.move(
-#     from: 0, to: 100,
-#     duration: 4r, every: 1/16r,
-#     function: proc { |ratio| ratio ** 2 }  # Ease-in
-#   ) { |value| puts value }
-#
-# @api private
 module Musa::Sequencer
   class BaseSequencer
     using Musa::Extension::Arrayfy
@@ -583,7 +505,6 @@ module Musa::Sequencer
     #   control.after(2r) { puts "2 bars after finish" }
     #   control.stop  # Manually halt movement
     #
-    # @api private
     class MoveControl < EventHandler
       # @return [EveryControl] underlying every control for timing
       attr_reader :every_control
@@ -625,7 +546,6 @@ module Musa::Sequencer
       #
       # @return [void]
       #
-      # @api private
       def on_stop(&block)
         @do_on_stop << block
       end
@@ -640,17 +560,15 @@ module Musa::Sequencer
       # @example Delayed callback
       #   control.after(2r) { puts "2 bars after movement ends" }
       #
-      # @api private
       def after(bars = nil, &block)
         bars ||= 0
         @do_after << { bars: bars.rationalize, block: block }
       end
 
-      # Stops movement by delegating to every_control.
+      # Stops movement.
       #
       # @return [void]
       #
-      # @api private
       def stop
         @every_control.stop
       end
@@ -659,7 +577,6 @@ module Musa::Sequencer
       #
       # @return [Boolean] true if stopped
       #
-      # @api private
       def stopped?
         @stop
       end

@@ -71,9 +71,6 @@ module Musa
       #
       #   sequencer.run  # Events at exact rational positions
       #
-      # @see https://en.wikipedia.org/wiki/Music_sequencer Music sequencer (Wikipedia)
-      # @see https://en.wikipedia.org/wiki/Polyrhythm Polyrhythm (Wikipedia)
-      #
       # @api private
       module TicklessBasedTiming
 

@@ -112,6 +112,16 @@ module Musa
     #
     # Contains refinements for String and Array to support neuma notation.
     #
+    # ## Methods Added
+    #
+    # ### String
+    # - {String#to_neumas} - Parses neuma notation string to structured neumas
+    # - {String#to_neumas_to_node} - Parses neuma notation and converts to generative node
+    # - {String#|} - Creates parallel neuma structure
+    # - {String#neumas} - Alias for to_neumas
+    # - {String#n} - Short alias for to_neumas
+    # - {String#nn} - Short alias for to_neumas_to_node
+    #
     # @api public
     module Neumas
       # String refinement adding neuma parsing methods.
@@ -119,73 +129,121 @@ module Musa
       # Must be activated with `using Musa::Extension::Neumas`.
       #
       # @api public
+      #
+      # @!method to_neumas(decode_with: nil, debug: nil)
+      #   Parses neuma notation string to structured neumas.
+      #
+      #   Uses Neumalang parser to convert text notation into GDVD (differential)
+      #   neuma objects that can be decoded to GDV events.
+      #
+      #   @note This method is added to String via refinement. Requires `using Musa::Extension::Neumas`.
+      #
+      #   @param decode_with [Decoder, nil] optional decoder to apply immediately
+      #   @param debug [Boolean, nil] enable debug output from parser
+      #
+      #   @return [Serie, Array] parsed neuma series or array
+      #
+      #   @example Parse simple melody
+      #     using Musa::Extension::Neumas
+      #     neumas = "0 +2 +2 -1 0".to_neumas
+      #
+      #   @example Parse with immediate decoding
+      #     using Musa::Extension::Neumas
+      #     # Create a simple decoder
+      #     decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
+      #     result = "0 +2 +2 -1 0".to_neumas(decode_with: decoder)
+      #
+      #   @example Parse with debug
+      #     using Musa::Extension::Neumas
+      #     neumas = "0 +2 +2".to_neumas(debug: true)
+      #
+      #   @api public
+      class ::String; end
+
+      # @!method to_neumas_to_node(decode_with: nil, debug: nil)
+      #   Parses neuma notation and converts to generative node.
+      #
+      #   Combines parsing with node conversion for use in generative grammars.
+      #
+      #   @note This method is added to String via refinement. Requires `using Musa::Extension::Neumas`.
+      #
+      #   @param decode_with [Decoder, nil] optional decoder to apply
+      #   @param debug [Boolean, nil] enable debug output
+      #
+      #   @return [Node] generative node structure
+      #
+      #   @example Convert to node for generative grammar
+      #     using Musa::Extension::Neumas
+      #     node = "0 +2 +2 -1 0".to_neumas_to_node
+      #
+      #   @see Musa::Generative
+      #
+      #   @api public
+      class ::String; end
+
+      # @!method |(other)
+      #   Creates parallel neuma structure.
+      #
+      #   Combines two neuma strings into parallel (polyphonic) structure.
+      #   Both voices are parsed and wrapped in parallel container.
+      #
+      #   @note This method is added to String via refinement. Requires `using Musa::Extension::Neumas`.
+      #
+      #   @param other [String] second neuma string to parallelize
+      #
+      #   @return [Hash] parallel neuma structure with two series
+      #
+      #   @raise [ArgumentError] if other is not a String
+      #
+      #   @example Two-voice harmony
+      #     using Musa::Extension::Neumas
+      #
+      #     melody = "0 +2 +4 +5"
+      #     bass = "-7 -5 -3 -1"
+      #     harmony = melody | bass
+      #
+      #   @api public
+      class ::String; end
+
+      # @!method neumas(decode_with: nil, debug: nil)
+      #   Alias for `to_neumas`.
+      #
+      #   @note This method is added to String via refinement. Requires `using Musa::Extension::Neumas`.
+      #
+      #   @see String#to_neumas
+      #
+      #   @api public
+      class ::String; end
+
+      # @!method n(decode_with: nil, debug: nil)
+      #   Short alias for `to_neumas`.
+      #
+      #   @note This method is added to String via refinement. Requires `using Musa::Extension::Neumas`.
+      #
+      #   @see String#to_neumas
+      #
+      #   @api public
+      class ::String; end
+
+      # @!method nn(decode_with: nil, debug: nil)
+      #   Short alias for `to_neumas_to_node`.
+      #
+      #   @note This method is added to String via refinement. Requires `using Musa::Extension::Neumas`.
+      #
+      #   @see String#to_neumas_to_node
+      #
+      #   @api public
+      class ::String; end
+
       refine String do
-        # Parses neuma notation string to structured neumas.
-        #
-        # Uses Neumalang parser to convert text notation into GDVD (differential)
-        # neuma objects that can be decoded to GDV events.
-        #
-        # @param decode_with [Decoder, nil] optional decoder to apply immediately
-        # @param debug [Boolean, nil] enable debug output from parser
-        #
-        # @return [Serie, Array] parsed neuma series or array
-        #
-        # @example Parse simple melody
-        #   using Musa::Extension::Neumas
-        #   neumas = "0 +2 +2 -1 0".to_neumas
-        #
-        # @example Parse with immediate decoding
-        #   # Create a simple decoder
-        #   decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
-        #   result = "0 +2 +2 -1 0".to_neumas(decode_with: decoder)
-        #
-        # @example Parse with debug
-        #   neumas = "0 +2 +2".to_neumas(debug: true)
-        #
-        # @api public
         def to_neumas(decode_with: nil, debug: nil)
           Musa::Neumalang::Neumalang.parse(self, decode_with: decode_with, debug: debug)
         end
 
-        # Parses neuma notation and converts to generative node.
-        #
-        # Combines parsing with node conversion for use in generative grammars.
-        #
-        # @param decode_with [Decoder, nil] optional decoder to apply
-        # @param debug [Boolean, nil] enable debug output
-        #
-        # @return [Node] generative node structure
-        #
-        # @example Convert to node for generative grammar
-        #   using Musa::Extension::Neumas
-        #   node = "0 +2 +2 -1 0".to_neumas_to_node
-        #
-        # @see Musa::Generative
-        #
-        # @api public
         def to_neumas_to_node(decode_with: nil, debug: nil)
           to_neumas(decode_with: decode_with, debug: debug).to_node
         end
 
-        # Creates parallel neuma structure.
-        #
-        # Combines two neuma strings into parallel (polyphonic) structure.
-        # Both voices are parsed and wrapped in parallel container.
-        #
-        # @param other [String] second neuma string to parallelize
-        #
-        # @return [Hash] parallel neuma structure with two series
-        #
-        # @raise [ArgumentError] if other is not a String
-        #
-        # @example Two-voice harmony
-        #   using Musa::Extension::Neumas
-        #
-        #   melody = "0 +2 +4 +5"
-        #   bass = "-7 -5 -3 -1"
-        #   harmony = melody | bass
-        #
-        # @api public
         def |(other)
           case other
           when String
@@ -197,19 +255,10 @@ module Musa
           end
         end
 
-        # Alias for `to_neumas`.
-        #
-        # @api public
         alias_method :neumas, :to_neumas
 
-        # Short alias for `to_neumas`.
-        #
-        # @api public
         alias_method :n, :to_neumas
 
-        # Short alias for `to_neumas_to_node`.
-        #
-        # @api public
         alias_method :nn, :to_neumas_to_node
       end
     end

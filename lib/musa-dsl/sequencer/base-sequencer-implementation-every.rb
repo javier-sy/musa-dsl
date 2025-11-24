@@ -1,45 +1,3 @@
-# Every loop implementation for repeating events.
-#
-# Implements the `every` method that executes a block repeatedly at regular
-# intervals. Supports various stopping conditions (duration, till position,
-# condition proc, manual stop) and callbacks (on_stop, after).
-#
-# ## Execution Model
-#
-# Every loop schedules itself recursively:
-# 1. Execute block at current position
-# 2. Check stopping conditions
-# 3. If not stopped, schedule next iteration at start + counter * interval
-# 4. If stopped, call on_stop and after callbacks
-#
-# This ensures precise timing - iterations are scheduled relative to start
-# position, not accumulated from previous iteration (avoiding drift).
-#
-# ## Stopping Conditions
-#
-# Loop stops when any of these conditions is met:
-#
-# - **manual stop**: `control.stop` called
-# - **duration**: elapsed time >= duration (in bars)
-# - **till**: current position >= till position
-# - **condition**: condition block returns false
-# - **nil interval**: immediate stop after first execution
-#
-# @example Every 4 beats for 16 bars
-#   sequencer.every(1r, duration: 4r) { puts "tick" }
-#   # Executes at 1r, 2r, 3r, 4r, 5r (5 times total)
-#
-# @example Every beat until position 10
-#   sequencer.every(1r, till: 10r) { |control| puts control.position }
-#
-# @example Conditional loop
-#   count = 0
-#   sequencer.every(1r, condition: proc { count < 5 }) do
-#     puts count
-#     count += 1
-#   end
-#
-# @api private
 module Musa::Sequencer
   class BaseSequencer
     # Implements recurring event execution at regular intervals.
@@ -133,7 +91,6 @@ module Musa::Sequencer
     #   control.on_stop { puts "Finished!" }
     #   control.after(2r) { puts "2 bars after finish" }
     #
-    # @api private
     class EveryControl < EventHandler
       # @return [Rational, nil] maximum duration in bars
       attr_reader :duration_value

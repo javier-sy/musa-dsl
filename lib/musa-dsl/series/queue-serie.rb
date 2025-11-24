@@ -1,34 +1,5 @@
 # Queue serie for dynamic series concatenation.
 #
-# Queue allows adding series dynamically during playback, creating flexible
-# sequential playback with runtime modification.
-#
-# ## Features
-#
-# - **Dynamic addition**: Add series with `<<` during playback
-# - **Sequential playback**: Plays series in queue order
-# - **Method delegation**: Delegates methods to current serie
-# - **Clear**: Can clear queue and reset
-#
-# ## Use Cases
-#
-# - Interactive sequencing with user input
-# - Dynamic phrase assembly
-# - Playlist-style serie management
-# - Reactive composition systems
-# - Live coding pattern queuing
-#
-# @example Basic queue
-#   queue = QUEUE(S(1, 2, 3)).i
-#   queue.next_value  # => 1
-#   queue << S(4, 5, 6).i  # Add dynamically
-#   queue.to_a  # => [2, 3, 4, 5, 6]
-#
-# @example Dynamic playlist
-#   queue = QUEUE().i
-#   queue << melody1.i
-#   queue << melody2.i
-#   # Plays melody1 then melody2
 #
 # @api public
 require_relative 'base-series'
@@ -37,13 +8,39 @@ module Musa
   module Series::Constructors
     # Creates queue serie from initial series.
     #
+    # Queue allows adding series dynamically during playback, creating flexible
+    # sequential playback with runtime modification.
+    #
+    # ## Features
+    #
+    # - **Dynamic addition**: Add series with `<<` during playback
+    # - **Sequential playback**: Plays series in queue order
+    # - **Method delegation**: Delegates methods to current serie
+    # - **Clear**: Can clear queue and reset
+    #
+    # ## Use Cases
+    #
+    # - Interactive sequencing with user input
+    # - Dynamic phrase assembly
+    # - Playlist-style serie management
+    # - Reactive composition systems
+    # - Live coding pattern queuing
+    #
     # @param series [Array<Serie>] initial series in queue
     #
     # @return [QueueSerie] queue serie
     #
-    # @example Create queue
-    #   queue = QUEUE(S(1, 2), S(3, 4))
-    #   queue.i.to_a  # => [1, 2, 3, 4]
+    # @example Basic queue
+    #   queue = QUEUE(S(1, 2, 3)).i
+    #   queue.next_value  # => 1
+    #   queue << S(4, 5, 6).i  # Add dynamically
+    #   queue.to_a  # => [2, 3, 4, 5, 6]
+    #
+    # @example Dynamic playlist
+    #   queue = QUEUE().i
+    #   queue << melody1.i
+    #   queue << melody2.i
+    #   # Plays melody1 then melody2
     #
     # @api public
     def QUEUE(*series)

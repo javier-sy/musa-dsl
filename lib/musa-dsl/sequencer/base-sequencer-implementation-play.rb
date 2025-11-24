@@ -3,112 +3,79 @@ require_relative 'base-sequencer-implementation-play-helper'
 
 using Musa::Extension::InspectNice
 
-# Play implementation for series-based event scheduling.
-#
-# Implements the `play` method that consumes a Musa::Series and schedules
-# events based on series elements. Supports multiple evaluation modes for
-# interpreting series elements (e.g., as timing deltas, absolute positions,
-# or complex data structures).
-#
-# ## Execution Model
-#
-# Play iterates through series elements:
-# 1. Gets next element from series
-# 2. PlayEval evaluates element to determine operations
-# 3. Executes current operation (call block, launch event, nested play, etc.)
-# 4. Schedules continuation based on continue operation
-# 5. Recursively processes next element
-#
-# ## Operations
-#
-# Current operations (what to do now):
-#
-# - **:none**: Skip element
-# - **:block**: Call user block with element
-# - **:event**: Launch named event
-# - **:play**: Nested sequential play
-# - **:no_eval_play**: Nested play without evaluation
-# - **:parallel_play**: Multiple parallel plays
-#
-# Continue operations (when to continue):
-#
-# - **:now**: Immediately
-# - **:at**: At absolute position
-# - **:wait**: After time delta
-# - **:on**: When event fires
-#
-# ## Evaluation Modes
-#
-# Different modes interpret series elements differently:
-#
-# - **nil**: Default mode (varies by series type)
-# - **:neumalang**: Neumalang DSL syntax
-# - Custom modes via PlayEval subclasses
-#
-# ## Musical Applications
-#
-# - Play note sequences from series
-# - Schedule events from algorithmic generators
-# - Nested polyphonic structures
-# - Complex timing patterns
-# - Event-driven composition
-#
-# @example Basic series playback
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-#
-#   notes = Musa::Series::S({pitch: 60, duration: 1r}, {pitch: 64, duration: 1r}, {pitch: 67, duration: 1r})
-#   played_notes = []
-#
-#   seq.play(notes) do |pitch:, duration:, control:|
-#     played_notes << { pitch: pitch, duration: duration, position: seq.position }
-#   end
-#
-#   seq.run
-#   # Result: played_notes contains [{pitch: 60, duration: 1r, position: 0}, ...]
-#
-# @example Parallel plays
-#   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-#
-#   melody = Musa::Series::S(60, 62, 64)
-#   harmony = Musa::Series::S(48, 52, 55)
-#   played_notes = []
-#
-#   seq.play([melody, harmony]) do |pitch|
-#     # pitch will be array [melody_pitch, harmony_pitch]
-#     played_notes << { melody: pitch[0], harmony: pitch[1], position: seq.position }
-#   end
-#
-#   seq.run
-#   # Result: played_notes contains [{melody: 60, harmony: 48, position: 0}, ...]
-#
-# @api private
 module Musa::Sequencer
   class BaseSequencer
-    # Plays series by iterating elements and scheduling events.
+    # Play implementation for series-based event scheduling.
     #
-    # Recursively consumes series, evaluating each element to determine
-    # operation and scheduling continuation. Supports pause/continue,
-    # nested plays, parallel plays, and event-driven continuation.
+    # Implements the `play` method that consumes a Musa::Series and schedules
+    # events based on series elements. Supports multiple evaluation modes for
+    # interpreting series elements (e.g., as timing deltas, absolute positions,
+    # or complex data structures).
+    #
+    # ## Execution Model
+    #
+    # Play iterates through series elements:
+    # 1. Gets next element from series
+    # 2. PlayEval evaluates element to determine operations
+    # 3. Executes current operation (call block, launch event, nested play, etc.)
+    # 4. Schedules continuation based on continue operation
+    # 5. Recursively processes next element
     #
     # ## PlayEval System
     #
     # PlayEval.create builds appropriate evaluator based on mode parameter.
     # Evaluator's run_operation method returns hash with:
+    #
     # - current_operation: what to do now (:block, :event, :play, etc.)
     # - current_parameter: data for current operation
     # - continue_operation: when to continue (:now, :at, :wait, :on)
     # - continue_parameter: data for continue operation
     #
+    # ## Operations
+    #
+    # Current operations (what to do now):
+    #
+    # - **:none**: Skip element
+    # - **:block**: Call user block with element
+    # - **:event**: Launch named event
+    # - **:play**: Nested sequential play
+    # - **:no_eval_play**: Nested play without evaluation
+    # - **:parallel_play**: Multiple parallel plays
+    #
+    # Continue operations (when to continue):
+    #
+    # - **:now**: Immediately
+    # - **:at**: At absolute position
+    # - **:wait**: After time delta
+    # - **:on**: When event fires
+    #
+    # ## Running Modes
+    #
+    # Different modes interpret series elements differently:
+    #
+    # - **:at**: Elements specify absolute positions via :at key
+    # - **:wait**: Elements with duration specify wait time
+    # - **:neumalang**: Full Neumalang DSL with variables, commands, series, etc.
+    #
     # @param serie [Series] series to play
     # @param control [PlayControl] control object for lifecycle
     # @param neumalang_context [Object, nil] context for neumalang evaluation
-    # @param mode [Symbol, nil] evaluation mode
+    # @param mode [Symbol, nil] running mode
     # @param decoder [Object, nil] custom decoder
     # @param __play_eval [PlayEval, nil] evaluator (internal, created if nil)
     # @param mode_args [Hash] additional mode-specific arguments
     # @yield block to call for each element (mode-dependent)
     #
     # @return [nil]
+    #
+    #
+    # @api private
+
+    # Plays series by iterating elements and scheduling events.
+    #
+    # Recursively consumes series, 
+    #
+    #
     #
     # @api private
     private def _play(serie,

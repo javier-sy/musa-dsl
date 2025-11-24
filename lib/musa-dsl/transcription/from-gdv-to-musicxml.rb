@@ -1,85 +1,58 @@
-# MusicXML-specific GDV transcriptors for music notation output.
-#
-# Transcribes GDV events to MusicXML format, handling ornaments and articulations
-# as notation metadata rather than expanded note sequences. MusicXML is an XML-based
-# standard for representing Western music notation.
-#
-# ## MusicXML vs MIDI Approach
-#
-# MusicXML transcription differs from MIDI transcription:
-#
-# - **MusicXML**: Preserves ornaments as notation symbols (grace notes, trills, etc.)
-# - **MIDI**: Expands ornaments to explicit note sequences for playback
-#
-# ## Supported Features
-#
-# - **Appogiatura**: Grace note ornaments marked with `:grace` attribute
-#
-# ## Usage
-#
-# ```ruby
-# transcriptor = Musa::Transcription::Transcriptor.new(
-#   Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set,
-#   base_duration: 1/4r,
-#   tick_duration: 1/96r
-# )
-# result = transcriptor.transcript(gdv_event)
-# ```
-#
-# ## Transcription Set
-#
-# The `transcription_set` method returns an array of transcriptors applied
-# in order:
-#
-# 1. `Appogiatura` - Process appogiatura ornaments
-# 2. `Base` - Process base/rest markers
-#
-# @example MusicXML appogiatura
-#   gdv = {
-#     grade: 0,
-#     duration: 1r,
-#     appogiatura: { grade: -1, duration: 1/8r }
-#   }
-#   transcriptor = Musa::Transcriptors::FromGDV::ToMusicXML::Appogiatura.new
-#   result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-#   # => [
-#   #   { grade: -1, duration: 1/8r, grace: true },
-#   #   { grade: 0, duration: 1r, graced: true, graced_by: {...} }
-#   # ]
-#
-# @see Musa::Transcriptors::FromGDV::ToMIDI
-# @see Musa::MusicXML
-#
-# @api public
 require_relative 'from-gdv'
 
 module Musa::Transcriptors
   module FromGDV
     # MusicXML-specific GDV transcriptors for music notation output.
     #
-    # Transcribes GDV events to MusicXML format, preserving ornaments and
-    # articulations as notation metadata rather than expanding them to note
-    # sequences. This differs from MIDI transcription which expands ornaments
-    # for playback.
+    # Transcribes GDV events to MusicXML format, handling ornaments and articulations
+    # as notation metadata rather than expanded note sequences. MusicXML is an XML-based
+    # standard for representing Western music notation.
+    #
+    # ## MusicXML vs MIDI Approach
+    #
+    # MusicXML transcription differs from MIDI transcription:
+    #
+    # - **MusicXML**: Preserves ornaments as notation symbols (grace notes, trills, etc.)
+    # - **MIDI**: Expands ornaments to explicit note sequences for playback
     #
     # ## Supported Features
     #
-    # - **Appogiatura**: Grace notes marked with `:grace` attribute
-    # - **Base/Rest**: Zero-duration structural markers
+    # - **Appogiatura**: Grace note ornaments marked with `:grace` attribute
     #
     # ## Usage
     #
-    # Use {transcription_set} to get pre-configured transcriptor chain:
     # ```ruby
     # transcriptor = Musa::Transcription::Transcriptor.new(
     #   Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set,
     #   base_duration: 1/4r,
     #   tick_duration: 1/96r
     # )
+    # result = transcriptor.transcript(gdv_event)
     # ```
     #
-    # @see ToMIDI Playback-oriented transcription
+    # ## Transcription Set
+    #
+    # The `transcription_set` method returns an array of transcriptors applied
+    # in order:
+    #
+    # 1. `Appogiatura` - Process appogiatura ornaments
+    # 2. `Base` - Process base/rest markers
+    #
+    # @example MusicXML appogiatura
+    #   gdv = {
+    #     grade: 0,
+    #     duration: 1r,
+    #     appogiatura: { grade: -1, duration: 1/8r }
+    #   }
+    #   transcriptor = Musa::Transcriptors::FromGDV::ToMusicXML::Appogiatura.new
+    #   result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
+    #   # => [
+    #   #   { grade: -1, duration: 1/8r, grace: true },
+    #   #   { grade: 0, duration: 1r, graced: true, graced_by: {...} }
+    #   # ]
+    #
     # @see Musa::MusicXML MusicXML output system
+    # @see ToMIDI Playback-oriented transcription
     module ToMusicXML
       # Returns standard transcription set for MusicXML output.
       #

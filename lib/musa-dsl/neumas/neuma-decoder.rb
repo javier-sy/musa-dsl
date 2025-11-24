@@ -1,109 +1,79 @@
-# Neuma decoder infrastructure for converting neuma notation to musical events.
-#
-# Provides base classes for decoding neuma notation (a musical representation format)
-# into GDV (Grade-Duration-Velocity) events. The decoder system supports differential
-# decoding where each event is interpreted relative to the previous event.
-#
-# ## Architecture Overview
-#
-# ### Decoder Hierarchy
-#
-# ```
-# ProtoDecoder (abstract)
-#   └── DifferentialDecoder (abstract)
-#         └── Decoder (stateful base)
-#               ├── NeumaDecoder (GDV output)
-#               └── NeumaDifferentialDecoder (GDVD output)
-# ```
-#
-# ### Key Concepts
-#
-# 1. **Differential Decoding**: Each neuma is interpreted relative to previous state
-#    - Grade: `+2` means "2 steps up from last note"
-#    - Duration: `_2` means "double the base duration"
-#
-# 2. **Stateful Processing**: Decoders maintain `@last` state for differential interpretation
-#
-# 3. **Subcontexts**: Create independent decoder contexts for nested structures
-#
-# 4. **Transcription Integration**: Optional transcriptor for post-processing (ornaments, etc.)
-#
-# ## Processing Pipeline
-#
-# ```ruby
-# Neuma Input → process() → apply() → Transcriptor → GDV Output
-#                  ↓           ↓
-#              Prepare     Apply to
-#              attributes   last state
-# ```
-#
-# ## Neuma Notation
-#
-# Neumas are text-based musical notation:
-# ```ruby
-# "0 +2 +2 -1"        # Grade sequence (scale degrees)
-# "_ _2 _/2"          # Duration modifiers
-# ".st .tr .mor"      # Articulation/ornament modifiers
-# "(+1_/4)+2_"        # Appogiatura (grace note) + main note
-# ```
-#
-# ## Usage
-#
-# Decoders are used by the neuma parsing system:
-# ```ruby
-# decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-#   scale,
-#   base_duration: 1/4r,
-#   transcriptor: transcriptor
-# )
-#
-# # Parse and decode neuma string
-# neumas = "0 +2 +2 -1 0".to_neumas
-# neumas.each { |neuma| decoder.decode(neuma) }
-# ```
-#
-# @see Musa::Neumas::Decoders::NeumaDecoder
-# @see Musa::Neumas::Decoders::NeumaDifferentialDecoder
-# @see Musa::Transcription
-#
-# @api public
 require_relative 'neumas'
 
 module Musa::Neumas
-  # Neuma decoder implementations for converting neuma notation to musical events.
+  # Neuma decoder infrastructure for converting neuma notation to musical events.
   #
-  # Provides decoder classes that transform neuma notation (differential/relative
-  # musical notation) into absolute musical events (GDV/GDVD format). Different
-  # decoder types handle different output formats and conversion strategies.
+  # Provides base classes for decoding neuma notation (a musical representation format)
+  # into GDV (Grade-Duration-Velocity) events. The decoder system supports differential
+  # decoding where each event is interpreted relative to the previous event.
   #
-  # ## Decoder Types
+  # ## Architecture Overview
   #
-  # - **ProtoDecoder**: Base abstract decoder interface
-  # - **DifferentialDecoder**: Base for differential conversion
-  # - **NeumaDifferentialDecoder**: Converts to differential GDVD (from gdvd-decoder.rb)
-  # - **NeumaDecoder**: Converts to absolute GDV (from gdv-decoder.rb)
+  # ### Decoder Hierarchy
   #
-  # ## Decoding Process
+  # ```
+  # ProtoDecoder (abstract)
+  #   └── DifferentialDecoder (abstract)
+  #         └── Decoder (stateful base)
+  #               ├── NeumaDecoder (GDV output)
+  #               └── NeumaDifferentialDecoder (GDVD output)
+  # ```
   #
-  # Decoders maintain state for relative/differential notation and convert
-  # neuma elements to musical events with proper scale interpretation.
-  # Subcontexts allow independent state for nested structures.
+  # ### Key Concepts
   #
-  # @example Basic decoder creation
-  #   # Create a mock scale object
-  #   scale = Object.new
-  #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-  #     scale,
-  #     base_duration: 1/4r
-  #   )
+  # 1. **Differential Decoding**: Each neuma is interpreted relative to previous state
   #
-  #   # Decoder maintains state for differential processing
-  #   decoder.base[:grade]      # => 0
-  #   decoder.base[:duration]   # => 1/4r
+  #    - Grade: `+2` means "2 steps up from last note"
+  #    - Duration: `_2` means "double the base duration"
+  #
+  # 2. **Stateful Processing**: Decoders maintain `@last` state for differential interpretation
+  #
+  # 3. **Subcontexts**: Create independent decoder contexts for nested structures
+  #
+  # 4. **Transcription Integration**: Optional transcriptor for post-processing (ornaments, etc.)
+  #
+  # ## Processing Pipeline
+  #
+  # ```ruby
+  # Neuma Input → process() → apply() → Transcriptor → GDV Output
+  #                  ↓           ↓
+  #              Prepare     Apply to
+  #              attributes   last state
+  # ```
+  #
+  # ## Neuma Notation
+  #
+  # Neumas are text-based musical notation:
+  # ```ruby
+  # "0 +2 +2 -1"        # Grade sequence (scale degrees)
+  # "_ _2 _/2"          # Duration modifiers
+  # ".st .tr .mor"      # Articulation/ornament modifiers
+  # "(+1_/4)+2_"        # Appogiatura (grace note) + main note
+  # ```
+  #
+  # @example Basic usage
+  #
+  # Decoders are used by the neuma parsing system:
+  # ```ruby
+  # decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
+  #   scale,
+  #   base_duration: 1/4r,
+  #   transcriptor: transcriptor
+  # )
+  #
+  # # Parse and decode neuma string
+  # neumas = "0 +2 +2 -1 0".to_neumas
+  # neumas.each { |neuma| decoder.decode(neuma) }
+  # ```
   #
   # @see Musa::Neumas Neuma notation system
   # @see Musa::Datasets::GDV Absolute GDV format
   # @see Musa::Datasets::GDVd Differential GDVD format
+  # @see Musa::Neumas::Decoders::NeumaDecoder
+  # @see Musa::Neumas::Decoders::NeumaDifferentialDecoder
+  # @see Musa::Transcription
+  #
+  # @api public
   module Decoders
     # Abstract base decoder class.
     #

@@ -12,6 +12,7 @@ module Musa::Datasets
   # ## Purpose
   #
   # PDV is the MIDI representation layer of the dataset framework:
+  #
   # - Uses absolute MIDI pitch numbers (0-127)
   # - Uses MIDI velocity values (0-127)
   # - Direct mapping to MIDI messages

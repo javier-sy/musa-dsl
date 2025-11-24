@@ -1,53 +1,26 @@
-# GDV (Grade-Duration-Velocity) base transcriptor for processing fundamental features.
 #
-# Provides the foundational transcriptor for handling base/rest events in GDV notation.
-# GDV is Musa-DSL's internal representation for musical events with grade (pitch),
-# duration, and velocity information.
-#
-# ## GDV Format
-#
-# GDV events are hashes with musical attributes:
-# ```ruby
-# {
-#   grade: 0,          # Scale degree
-#   duration: 1r,      # Rational duration
-#   velocity: 0.8,     # Note velocity (0.0-1.0)
-#   base: true         # Mark as base/rest (zero duration)
-# }
-# ```
-#
-# ## Base/Rest Processing
-#
-# The `.base` (or `.b`) attribute marks an event as a base or rest, which is
-# converted to a zero-duration event. This is useful for representing rests
-# or structural markers in the musical timeline.
-#
-# ## Transcriptor Pattern
-#
-# All transcriptors follow the same pattern:
-#
-# 1. Extract specific features from GDV hash
-# 2. Process/transform the event based on those features
-# 3. Return modified event(s) or array of events
-#
-# @example Basic base event
-#   gdv = { grade: 0, duration: 1r, base: true }
-#   transcriptor = Musa::Transcriptors::FromGDV::Base.new
-#   result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-#   # => { duration: 0 } (marked as AbsD)
-#
-# @see Musa::Transcription::FeatureTranscriptor
-# @see Musa::Transcription::Transcriptor
 #
 # @api public
 require_relative 'transcription'
 
 module Musa::Transcriptors
-  # Base GDV (Grade-Duration-Velocity) transcriptor utilities.
+  # GDV (Grade-Duration-Velocity) base transcriptor for processing fundamental features.
   #
-  # Provides foundational transcriptors for processing GDV musical events.
-  # GDV is Musa-DSL's internal representation for musical notes with grade
-  # (pitch), duration, and velocity attributes.
+  # Provides the foundational transcriptor for handling base/rest events in GDV notation.
+  # GDV is Musa-DSL's internal representation for musical events with grade (pitch),
+  # duration, and velocity information.
+  #
+  # ## GDV Format
+  #
+  # GDV events are hashes with musical attributes:
+  # ```ruby
+  # {
+  #   grade: 0,          # Scale degree
+  #   duration: 1r,      # Rational duration
+  #   velocity: 0.8,     # Note velocity (0.0-1.0)
+  #   base: true         # Mark as base/rest (zero duration)
+  # }
+  # ```
   #
   # This module contains the base transcriptor (`Base`) for handling base/rest
   # markers in GDV events, converting them to zero-duration structural markers.
@@ -56,9 +29,30 @@ module Musa::Transcriptors
   # - {ToMIDI} - MIDI playback transcription (expands ornaments)
   # - {ToMusicXML} - MusicXML notation transcription (preserves ornaments)
   #
+  # ## Base/Rest Processing
+  #
+  # The `.base` (or `.b`) attribute marks an event as a base or rest, which is
+  # converted to a zero-duration event. This is useful for representing rests
+  # or structural markers in the musical timeline.
+  #
+  # ## Transcriptor Pattern
+  #
+  # All transcriptors follow the same pattern:
+  #
+  # 1. Extract specific features from GDV hash
+  # 2. Process/transform the event based on those features
+  # 3. Return modified event(s) or array of events
+  #
+  # @example Basic base event
+  #   gdv = { grade: 0, duration: 1r, base: true }
+  #   transcriptor = Musa::Transcriptors::FromGDV::Base.new
+  #   result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
+  #   # => { duration: 0 } (marked as AbsD)
+  #   
+  # @see Musa::Transcription::Transcriptor Main transcription orchestrator
+  # @see Musa::Transcription::FeatureTranscriptor
   # @see ToMIDI MIDI-specific transcriptors
   # @see ToMusicXML MusicXML-specific transcriptors
-  # @see Musa::Transcription::Transcriptor Main transcription orchestrator
   module FromGDV
     # Base transcriptor for processing `.base` or `.b` attributes.
     #

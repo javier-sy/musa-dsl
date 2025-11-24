@@ -12,6 +12,7 @@ module Musa::Datasets
   # ## Purpose
   #
   # PS is used to represent:
+  #
   # - **Glissandi**: Continuous pitch slides (portamento)
   # - **Parameter sweeps**: Gradual changes in any sonic parameter
   # - **Interpolations**: Smooth transitions between multidimensional states

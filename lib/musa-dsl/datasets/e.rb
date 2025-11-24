@@ -160,6 +160,7 @@ module Musa::Datasets
   # Defaults to duration if not specified.
   #
   # **forward_duration**: Time to wait before next event. Can be:
+  #
   # - Same as duration (default): next event starts when this one ends
   # - Less than duration: events overlap
   # - Zero: next event starts simultaneously

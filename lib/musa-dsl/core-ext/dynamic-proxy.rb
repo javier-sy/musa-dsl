@@ -1,3 +1,5 @@
+require_relative 'extension'
+
 module Musa
   module Extension
     # Module providing dynamic proxy pattern implementation.

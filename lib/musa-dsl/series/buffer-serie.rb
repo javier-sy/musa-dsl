@@ -1,6 +1,6 @@
 module Musa
   module Series::Operations
-    # Creates buffered serie allowing multiple independent iterations over same source.
+    # Creates a buffered serie allowing multiple independent iterations over same source.
     #
     # Provides buffering mechanism enabling multiple "readers" to independently
     # iterate over the same serie source without interfering with each other.

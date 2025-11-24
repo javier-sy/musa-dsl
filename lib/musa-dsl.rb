@@ -79,8 +79,6 @@ require_relative 'musa-dsl/generative'
 #   # Instead of Musa::All, you can include only what you need:
 #   include Musa::Series
 #   include Musa::Sequencer
-#
-# @see Musa The root namespace
 module Musa::All
   # Core
   #

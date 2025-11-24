@@ -11,7 +11,6 @@ module Musa
   #
   # - **ChordDefinition**: Template defining chord structure (intervals and features)
   # - **Chord**: Actual chord instance with specific root and scale context
-  # - **chord-definitions.rb**: Registry of standard chord types
   #
   # ## Basic Usage
   #
@@ -23,8 +22,36 @@ module Musa
   # ## Features
   #
   # Chords are defined by features:
+  #
   # - **quality**: :major, :minor, :diminished, :augmented, :dominant
   # - **size**: :triad, :seventh, :ninth, :eleventh, :thirteenth
+  #
+  # # Registered chord definitions.
+  #
+  # ## Triads
+  #
+  # Basic three-note chords:
+  #
+  # - **:maj** - Major triad (1-3-5): root, major third, perfect fifth
+  # - **:min** - Minor triad (1-♭3-5): root, minor third, perfect fifth
+  # - **:dim** - Diminished triad (1-♭3-♭5): root, minor third, diminished fifth
+  # - **:aug** - Augmented triad (1-3-♯5): root, major third, augmented fifth
+  #
+  # ## Seventh Chords
+  #
+  # Four-note chords with added seventh:
+  #
+  # - **:maj7** - Major seventh (1-3-5-7): major triad + major seventh
+  # - **:min7** - Minor seventh (1-♭3-5-♭7): minor triad + minor seventh
+  # - **:dom7** - Dominant seventh (1-3-5-♭7): major triad + minor seventh
+  #
+  # ## Extended Chords
+  #
+  # Chords with ninths, elevenths, and thirteenths:
+  #
+  # - **:maj9, :min9, :dom9** - Ninth chords
+  # - **:maj11, :min11** - Eleventh chords
+  # - **:maj13, :min13** - Thirteenth chords
   #
   # @see ChordDefinition Chord template/definition
   # @see Chord Instantiated chord

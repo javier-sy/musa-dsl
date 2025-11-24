@@ -16,6 +16,7 @@ module Musa::Datasets
   # ## Purpose
   #
   # Score provides:
+  #
   # - **Time-indexed storage**: Events organized by start time (Rational)
   # - **Interval queries**: Find events in time ranges ({#between}, {#changes_between})
   # - **Duration tracking**: Automatically tracks event durations
@@ -26,12 +27,14 @@ module Musa::Datasets
   # ## Structure
   #
   # Internally maintains two structures:
+  #
   # - **@score**: Hash mapping time → Array of events
   # - **@indexer**: Array of { start, finish, dataset } for interval queries
   #
   # ## Event Requirements
   #
   # Events must:
+  #
   # - Extend {Abs} (absolute values, not deltas)
   # - Have a :duration key (from {AbsD})
   #

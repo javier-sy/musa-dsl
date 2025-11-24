@@ -14,6 +14,7 @@ module Musa::Datasets
   # ## Purpose
   #
   # GDVd provides efficient delta encoding for musical sequences:
+  #
   # - **Compact storage**: Only changed values are stored
   # - **Efficient serialization**: Neuma format uses delta notation
   # - **Lossless compression**: Full reconstruction via {#to_gdv}
@@ -26,11 +27,13 @@ module Musa::Datasets
   # ### Pitch Encoding
   #
   # **Absolute**:
+  #
   # - **abs_grade**: Set grade to specific value
   # - **abs_sharps**: Set chromatic alteration
   # - **abs_octave**: Set octave to specific value
   #
   # **Delta**:
+  #
   # - **delta_grade**: Change grade by semitones
   # - **delta_sharps**: Change chromatic alteration
   # - **delta_interval**: Change by scale interval (with delta_interval_sign)

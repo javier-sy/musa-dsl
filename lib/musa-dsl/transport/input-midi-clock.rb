@@ -17,6 +17,7 @@ module Musa
     # message from the external source to begin generating ticks.
     #
     # This activation model is appropriate for:
+    # 
     # - **DAW synchronization**: DAW controls start/stop via MIDI Clock
     # - **Hardware sequencer sync**: External device controls timing
     # - **Multi-device setups**: One master device controls all slaves

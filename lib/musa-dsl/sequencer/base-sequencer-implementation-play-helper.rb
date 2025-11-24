@@ -263,6 +263,7 @@ module Musa
       # Neumalang-mode evaluator for full DSL support.
       #
       # Implements complete Neumalang DSL evaluation including:
+      #
       # - Variables (assign, use)
       # - Commands (code blocks with parameters)
       # - Series (nested plays)
@@ -275,6 +276,7 @@ module Musa
       # ## Neumalang Elements
       #
       # Elements have :kind specifying type:
+      #
       # - :value - Simple value
       # - :gdvd - Generative Diatonic Value/Duration
       # - :p - Pattern sequence
@@ -289,6 +291,7 @@ module Musa
       # ## Context Isolation
       #
       # Each nested play gets isolated subcontext with:
+      #
       # - Shared neumalang context (variables persist)
       # - Fresh decoder subcontext
       # - Hierarchical ID for debugging

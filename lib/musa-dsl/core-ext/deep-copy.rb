@@ -1,3 +1,4 @@
+require_relative 'extension'
 
 module Musa
   module Extension
@@ -246,24 +247,56 @@ module Musa
       #
       # Adds a `deep:` keyword parameter to both methods, enabling easy deep copying
       # without explicit calls to DeepCopy.deep_copy.
+      #
+      # ## Methods Added
+      #
+      # ### Object
+      # - {Object#dup} - Enhanced dup with optional deep copy
+      # - {Object#clone} - Enhanced clone with optional deep copy
+      #
+      # @!method dup(deep: false)
+      #   Enhanced dup with optional deep copy.
+      #
+      #   @note This method is added to Object via refinement. Requires `using Musa::Extension::DeepCopy`.
+      #
+      #   @param deep [Boolean] if true, performs deep copy; if false, standard dup.
+      #
+      #   @return [Object] duplicated object (shallow or deep).
+      #
+      #   @example Shallow dup (default)
+      #     using Musa::Extension::DeepCopy
+      #     arr = [[1, 2]]
+      #     copy = arr.dup
+      #     copy[0] << 3
+      #     arr  # => [[1, 2, 3]] (inner array shared)
+      #
+      #   @example Deep dup
+      #     using Musa::Extension::DeepCopy
+      #     arr = [[1, 2]]
+      #     copy = arr.dup(deep: true)
+      #     copy[0] << 3
+      #     arr  # => [[1, 2]] (inner array independent)
+      class ::Object; end
+
+      # @!method clone(freeze: nil, deep: false)
+      #   Enhanced clone with optional deep copy.
+      #
+      #   @note This method is added to Object via refinement. Requires `using Musa::Extension::DeepCopy`.
+      #
+      #   @param freeze [Boolean, nil] whether to freeze the clone.
+      #   @param deep [Boolean] if true, performs deep copy; if false, standard clone.
+      #
+      #   @return [Object] cloned object (shallow or deep).
+      #
+      #   @example Deep clone with freeze control
+      #     using Musa::Extension::DeepCopy
+      #     hash = { nested: { value: 1 } }
+      #     copy = hash.clone(deep: true, freeze: true)
+      #     copy.frozen?  # => true
+      #     copy[:nested].frozen?  # => true (deep freeze)
+      class ::Object; end
+
       refine Object do
-        # Enhanced dup with optional deep copy.
-        #
-        # @param deep [Boolean] if true, performs deep copy; if false, standard dup.
-        #
-        # @return [Object] duplicated object (shallow or deep).
-        #
-        # @example Shallow dup (default)
-        #   arr = [[1, 2]]
-        #   copy = arr.dup
-        #   copy[0] << 3
-        #   arr  # => [[1, 2, 3]] (inner array shared)
-        #
-        # @example Deep dup
-        #   arr = [[1, 2]]
-        #   copy = arr.dup(deep: true)
-        #   copy[0] << 3
-        #   arr  # => [[1, 2]] (inner array independent)
         def dup(deep: false)
           if deep
             Musa::Extension::DeepCopy::DeepCopy.deep_copy(self, method: :dup)
@@ -272,18 +305,6 @@ module Musa
           end
         end
 
-        # Enhanced clone with optional deep copy.
-        #
-        # @param freeze [Boolean, nil] whether to freeze the clone.
-        # @param deep [Boolean] if true, performs deep copy; if false, standard clone.
-        #
-        # @return [Object] cloned object (shallow or deep).
-        #
-        # @example Deep clone with freeze control
-        #   hash = { nested: { value: 1 } }
-        #   copy = hash.clone(deep: true, freeze: true)
-        #   copy.frozen?  # => true
-        #   copy[:nested].frozen?  # => true (deep freeze)
         def clone(freeze: nil, deep: false)
           if deep
             Musa::Extension::DeepCopy::DeepCopy.deep_copy(self, method: :clone, freeze: freeze)

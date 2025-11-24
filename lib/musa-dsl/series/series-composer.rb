@@ -1,48 +1,3 @@
-# Series composer for complex multi-stage transformations.
-#
-# Composer provides declarative DSL for building transformation pipelines
-# with multiple inputs, outputs, and intermediate processing stages.
-#
-# ## Composer Concepts
-#
-# - **Pipelines**: Named transformation chains
-# - **Inputs**: Named input series (proxied and buffered)
-# - **Outputs**: Named output series
-# - **Operations**: Transformation steps in pipeline
-# - **Auto-commit**: Automatic finalization of pipelines
-#
-# ## DSL Structure
-#
-# ```ruby
-# composer do
-#   input_name >> operation1 >> operation2 >> :output_name
-#   :other_input >> transform >> :other_output
-# end
-# ```
-#
-# ## Musical Applications
-#
-# - Complex multi-voice processing
-# - Effect chains and routing
-# - Algorithmic composition pipelines
-# - Multi-stage transformations
-# - Modular synthesis-style routing
-#
-# @example Basic composer
-#   s = S(1, 2, 3).composer do
-#     input.map { |x| x * 2 } >> :output
-#   end
-#   s.i.to_a  # => [2, 4, 6]
-#
-# @example Multi-pipeline
-#   composer = Composer.new(input: S(1, 2, 3)) do
-#     input.map { |x| x * 2 } >> :doubled
-#     input.map { |x| x * 3 } >> :tripled
-#   end
-#   composer.output(:doubled).i.to_a  # => [2, 4, 6]
-#   composer.output(:tripled).i.to_a  # => [3, 6, 9]
-#
-# @api public
 require_relative 'base-series'
 
 require_relative '../core-ext/with'
@@ -51,7 +6,49 @@ require_relative '../core-ext/arrayfy'
 module Musa
   module Series
     module Operations
-      # Creates composer transformation pipeline.
+      # Creates a composer transformation pipeline for complex multi-stage transformations.
+      #
+      # Composer provides declarative DSL for building transformation pipelines
+      # with multiple inputs, outputs, and intermediate processing stages.
+      #
+      # ## Composer Concepts
+      #
+      # - **Pipelines**: Named transformation chains
+      # - **Inputs**: Named input series (proxied and buffered)
+      # - **Outputs**: Named output series
+      # - **Operations**: Transformation steps in pipeline
+      # - **Auto-commit**: Automatic finalization of pipelines
+      #
+      # ## DSL Structure
+      #
+      # ```ruby
+      # composer do
+      #   input_name >> operation1 >> operation2 >> :output_name
+      #   :other_input >> transform >> :other_output
+      # end
+      # ```
+      #
+      # ## Musical Applications
+      #
+      # - Complex multi-voice processing
+      # - Effect chains and routing
+      # - Algorithmic composition pipelines
+      # - Multi-stage transformations
+      # - Modular synthesis-style routing
+      #
+      # @example Basic composer
+      #   s = S(1, 2, 3).composer do
+      #     input.map { |x| x * 2 } >> :output
+      #   end
+      #   s.i.to_a  # => [2, 4, 6]
+      #
+      # @example Multi-pipeline
+      #   composer = Composer.new(input: S(1, 2, 3)) do
+      #     input.map { |x| x * 2 } >> :doubled
+      #     input.map { |x| x * 3 } >> :tripled
+      #   end
+      #   composer.output(:doubled).i.to_a  # => [2, 4, 6]
+      #   composer.output(:tripled).i.to_a  # => [3, 6, 9]
       #
       # @yield composer DSL block
       #

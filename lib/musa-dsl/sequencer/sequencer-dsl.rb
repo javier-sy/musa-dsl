@@ -203,13 +203,11 @@ module Musa
       # - **keep_block_context: false** (default): Evaluate blocks in DSL context
       # - **keep_block_context: true**: Preserve block's original binding
       #
-      # @api private
       class DSLContext
         extend Forwardable
         include Musa::Extension::With
 
         # @return [BaseSequencer] underlying sequencer
-        # @api private
         attr_reader :sequencer
 
         # Delegates to BaseSequencer
@@ -235,7 +233,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute at current position
         # @return [void]
-        # @api private
         def now(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -252,7 +249,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute at position
         # @return [void]
-        # @api private
         def at(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -269,7 +265,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute after wait
         # @return [void]
-        # @api private
         def wait(*value_parameters, **key_parameters, &block)
           block ||= proc {}
           @sequencer.wait *value_parameters, **key_parameters do |*values, **key_values|
@@ -285,7 +280,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute for each element
         # @return [PlayControl] control object
-        # @api private
         def play(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -302,7 +296,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute for each element
         # @return [PlayTimedControl] control object
-        # @api private
         def play_timed(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -320,7 +313,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute each iteration
         # @return [EveryControl] control object
-        # @api private
         def every(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -338,7 +330,6 @@ module Musa
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute each iteration with current value
         # @return [MoveControl] control object
-        # @api private
         def move(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
