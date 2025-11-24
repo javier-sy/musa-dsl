@@ -82,8 +82,8 @@ module Musa
     # - {Array#condensed_matrices} - Condenses matrices that share common boundary rows
     #
     # ### Matrix
-    # - {Matrix#to_p} - Converts a matrix to P format (see examples in module documentation)
-    # - {Matrix#_rows} - Provides direct access to internal rows array (private API)
+    # - {::Matrix#to_p} - Converts a matrix to P format (see examples in module documentation)
+    # - {::Matrix#_rows} - Provides direct access to internal rows array (private API)
     module Matrix
       # @!method indexes_of_values
       #   Creates a hash mapping values to their indices in the array.
@@ -250,6 +250,8 @@ module Musa
       #
       #   @see Musa::Datasets::P
       #   @see Musa::Datasets::V
+      #   
+      #   @api public
       class ::Matrix; end
 
       # @!method _rows
