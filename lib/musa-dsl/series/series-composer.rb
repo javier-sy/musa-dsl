@@ -122,36 +122,165 @@ module Musa
     # @see Composer::Composer Main composer implementation
     # @see ComposerAsOperationSerie Composer as serie operation
     module Composer
-      # Multi-input/output serie transformation pipeline.
+      # Multi-input/output serie transformation pipeline system.
       #
-      # Manages complex transformation pipelines with multiple named inputs,
-      # outputs, and intermediate processing stages. Supports declarative
-      # pipeline definition with DSL syntax and automatic finalization.
+      # Composer enables building complex transformation graphs with multiple named
+      # inputs, outputs, and intermediate processing stages. It provides a declarative
+      # DSL for defining pipelines and routing data between them, similar to modular
+      # synthesis patch routing.
       #
-      # Inputs are automatically proxied and buffered for multiple consumption.
-      # Pipelines can be dynamically created and routed using the `>>` operator.
+      # ## Architecture
+      #
+      # The Composer system consists of:
+      #
+      # - **Pipelines**: Named transformation stages that process series
+      # - **Routes**: Connections between pipelines specifying data flow
+      # - **Inputs**: Named entry points (automatically proxied and buffered)
+      # - **Outputs**: Named exit points for consuming results
+      # - **DSL Context**: method_missing-based interface for pipeline definition
+      #
+      # ## Pipeline Definition
+      #
+      # Pipelines are defined using method calls in the DSL block. Each pipeline
+      # consists of:
+      #
+      # - **Constructor** (optional): Series constructor like `S`, `H`, etc.
+      # - **Operations** (one or more): Transformations like `reverse`, `skip`, etc.
+      #
+      # @example Pipeline with constructor
+      #   composer = Composer.new(inputs: nil) do
+      #     my_pipeline ({ S: [1, 2, 3] }), reverse, { skip: 1 }
+      #     route my_pipeline, to: output
+      #   end
+      #   composer.output.i.to_a  # => [2, 1]
+      #   # Creates: S([1,2,3]) → reverse → skip(1)
+      #
+      # @example Pipeline with operations only
+      #   composer = Composer.new(input: S(1, 2, 3)) do
+      #     my_pipeline reverse, { skip: 1 }
+      #     route input, to: my_pipeline
+      #     route my_pipeline, to: output
+      #   end
+      #   composer.output.i.to_a  # => [2, 1]
+      #   # Applies: input → reverse → skip(1)
+      #
+      # ## Routing System
+      #
+      # Routes connect pipelines using the `route` method:
+      #
+      # ```ruby
+      # route from_pipeline, to: to_pipeline, on: :source, as: :key
+      # ```
+      #
+      # **Routing modes:**
+      #
+      # 1. **Hash assignment** (when `as:` provided):
+      # 
+      #    - Data is assigned to: `to_pipeline.input[on][as] = from_pipeline.output`
+      #    - Used by operations accepting hash inputs (e.g., `H` constructor)
+      #    - Default `on` is `:sources` when `as` is provided
+      #
+      # 2. **Setter method** (when `as:` omitted):
+      # 
+      #    - Calls: `to_pipeline.input.source = from_pipeline.output`
+      #    - Used by operations with explicit source setters
+      #    - Default `on` is `:source` when `as` is omitted
+      #
+      # @example Hash routing
+      #   composer = Composer.new(inputs: [:a, :b], auto_commit: false) do
+      #     step1 reverse
+      #     step2 reverse
+      #     hash_merge ({ H: {} })
+      #
+      #     route a, to: step1
+      #     route b, to: step2
+      #     route step1, to: hash_merge, as: :x    # hash_merge.input[:sources][:x] = step1.output
+      #     route step2, to: hash_merge, as: :y    # hash_merge.input[:sources][:y] = step2.output
+      #     route hash_merge, to: output
+      #   end
+      #
+      #   composer.input(:a).proxy_source = S(1, 2, 3)
+      #   composer.input(:b).proxy_source = S(10, 20, 30)
+      #   composer.commit!
+      #   composer.output.i.to_a  # => [{x: 3, y: 30}, {x: 2, y: 20}, {x: 1, y: 10}]
+      #
+      # @example Setter routing
+      #   composer = Composer.new(input: S(1, 2, 3)) do
+      #     step1 reverse
+      #     route input, to: step1            # step1.input.source = input.output
+      #     route step1, to: output
+      #   end
+      #
+      #   composer.output.i.to_a  # => [3, 2, 1]
+      #
+      # ## Commit System
+      #
+      # Composer uses two-phase initialization:
+      #
+      # 1. **Definition phase**: Routes and pipelines are declared
+      # 2. **Commit phase**: All connections are resolved and finalized
+      #
+      # **Key behaviors:**
+      # - Routes can be defined in any order (order-independent)
+      # - Output access is blocked until `commit!` is called
+      # - Commit resolves all routes and sets up buffering
+      # - `auto_commit: true` (default) commits automatically after DSL block
+      #
+      # ## DSL Context
+      #
+      # The DSL uses `method_missing` to enable natural pipeline definition:
+      #
+      # - **Named access**: `input`, `output`, pipeline names return symbols
+      # - **Pipeline creation**: `name arg1, arg2, ...` creates pipeline
+      # - **Operation symbols**: Series operations return as symbols for parsing
+      # - **Constructor symbols**: Series constructors return as symbols for parsing
       #
       # @example Basic pipeline
       #   composer = Composer.new(input: S(1, 2, 3)) do
-      #     input.map { |x| x * 2 } >> :output
+      #     step1 reverse
+      #     route input, to: step1
+      #     route step1, to: output
       #   end
-      #   composer.output.i.to_a  # => [2, 4, 6]
+      #   composer.output.i.to_a  # => [3, 2, 1]
+      #
+      # @example Multiple inputs merging
+      #   composer = Composer.new(inputs: { a: S(1, 2), b: S(10, 20) }) do
+      #     hash_merge ({ H: {} })
+      #     route a, to: hash_merge, as: :x
+      #     route b, to: hash_merge, as: :y
+      #     route hash_merge, to: output
+      #   end
+      #   composer.output.i.to_a  # => [{x: 1, y: 10}, {x: 2, y: 20}]
       #
       # @example Multiple outputs
       #   composer = Composer.new(input: S(1, 2, 3)) do
-      #     input.map { |x| x * 2 } >> :doubled
-      #     input.map { |x| x + 10 } >> :offset
-      #   end
-      #   composer.output(:doubled).i.to_a  # => [2, 4, 6]
-      #   composer.output(:offset).i.to_a  # => [11, 12, 13]
+      #     doubled ({ eval: ->(v) { v * 2 } })
+      #     tripled ({ eval: ->(v) { v * 3 } })
       #
-      # @example Multiple inputs
-      #   composer = Composer.new(
-      #     inputs: { a: S(1, 2), b: S(10, 20) }
-      #   ) do
-      #     a.zip(b).map { |x, y| x + y } >> :output
+      #     route input, to: doubled
+      #     route input, to: tripled
+      #     route doubled, to: output
       #   end
-      #   composer.output.i.to_a  # => [11, 22]
+      #   composer.output.i.to_a  # => [2, 4, 6]
+      #
+      # @example Complex routing
+      #   composer = Composer.new(inputs: [:a, :b], auto_commit: false) do
+      #     step1 reverse
+      #     step2 ({ skip: 1 })
+      #     hash_merge ({ H: {} })
+      #
+      #     route a, to: step1
+      #     route b, to: step2
+      #     route step1, to: hash_merge, as: :x
+      #     route step2, to: hash_merge, as: :y
+      #     route hash_merge, to: output
+      #   end
+      #
+      #   composer.input(:a).proxy_source = S(1, 2, 3)
+      #   composer.input(:b).proxy_source = S(10, 20, 30)
+      #   composer.commit!
+      #
+      #   composer.output.i.to_a  # => [{x: 3, y: 20}, {x: 2, y: 30}]
       class Composer
         using Musa::Extension::Arrayfy
 
@@ -201,11 +330,52 @@ module Musa
           commit! if auto_commit
         end
 
+        # Accesses named input proxy for dynamic source assignment.
+        #
+        # Returns the proxy series for the specified input, allowing dynamic
+        # assignment of source series after composer creation. Used with
+        # `auto_commit: false` to set sources before manual commit.
+        #
+        # @param name [Symbol, nil] input name (defaults to :input)
+        #
+        # @return [ProxySerie] proxy series for source assignment
+        #
+        # @example Set input source dynamically
+        #   composer = Composer.new(auto_commit: false) do
+        #     step reverse
+        #     route input, to: step
+        #     route step, to: output
+        #   end
+        #
+        #   composer.input.proxy_source = S(1, 2, 3)
+        #   composer.commit!
+        #
+        # @api public
         def input(name = nil)
           name ||= :input
           @inputs[name].input
         end
 
+        # Accesses named output series for consumption.
+        #
+        # Returns the output series for the specified output. Can only be
+        # called after `commit!` has been invoked. Raises error if composer
+        # is not committed.
+        #
+        # @param name [Symbol, nil] output name (defaults to :output)
+        #
+        # @return [Serie] output series
+        #
+        # @raise [RuntimeError] if composer not yet committed
+        #
+        # @example Access output
+        #   composer.output.i.to_a  # => [3, 2, 1]
+        #
+        # @example Multiple outputs
+        #   composer.output(:doubled).i.to_a  # => [2, 4, 6]
+        #   composer.output(:tripled).i.to_a  # => [3, 6, 9]
+        #
+        # @api public
         def output(name = nil)
           raise "Can't access output if the Composer is uncommited. Call '.commit' first." unless @commited
 
@@ -213,18 +383,152 @@ module Musa
           @outputs[name].output
         end
 
+        # Defines routing connection between pipelines.
+        #
+        # Creates data flow route from source pipeline to destination pipeline.
+        # The routing behavior depends on whether `as:` parameter is provided.
+        #
+        # **With `as:` parameter (Hash routing):**
+        # - Assigns to hash: `to_pipeline.input[on][as] = from_pipeline.output`
+        # - Default `on` is `:sources`
+        # - Used by operations accepting hash inputs (e.g., `H` constructor)
+        #
+        # **Without `as:` parameter (Setter routing):**
+        # - Calls setter: `to_pipeline.input.source = from_pipeline.output`
+        # - Default `on` is `:source`
+        # - Used by operations with explicit source setter methods
+        #
+        # @param from [Symbol] source pipeline name
+        # @param to [Symbol] destination pipeline name
+        # @param on [Symbol, nil] attribute name (:source or :sources)
+        # @param as [Symbol, nil] hash key for assignment
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] if pipeline names not found
+        # @raise [ArgumentError] if route already exists
+        #
+        # @example Hash routing (inside DSL block)
+        #   composer = Composer.new(inputs: [:a, :b], auto_commit: false) do
+        #     step1 reverse
+        #     step2 reverse
+        #     hash_merge ({ H: {} })
+        #
+        #     route a, to: step1
+        #     route b, to: step2
+        #     route step1, to: hash_merge, as: :x    # hash_merge.input[:sources][:x] = step1
+        #     route step2, to: hash_merge, as: :y    # hash_merge.input[:sources][:y] = step2
+        #     route hash_merge, to: output
+        #   end
+        #
+        #   composer.input(:a).proxy_source = S(1, 2)
+        #   composer.input(:b).proxy_source = S(10, 20)
+        #   composer.commit!
+        #   composer.output.i.to_a  # => [{x: 2, y: 20}, {x: 1, y: 10}]
+        #
+        # @example Setter routing (inside DSL block)
+        #   composer = Composer.new(input: S(1, 2, 3)) do
+        #     step reverse
+        #     route input, to: step             # step.input.source = input
+        #     route step, to: output
+        #   end
+        #
+        #   composer.output.i.to_a  # => [3, 2, 1]
+        #
+        # @example Custom on parameter (inside DSL block)
+        #   composer = Composer.new(input: S(1, 2, 3), auto_commit: false) do
+        #     step reverse
+        #     hash_merge ({ H: {} })
+        #     route input, to: step
+        #     route step, to: hash_merge, on: :sources, as: :x
+        #     route hash_merge, to: output
+        #   end
+        #
+        #   composer.commit!
+        #   composer.output.i.to_a  # => [{x: 3}, {x: 2}, {x: 1}]
+        #
+        # @api public
         def route(from, to:, on: nil, as: nil)
           @dsl.route(from, to: to, on: on, as: as)
         end
 
+        # Defines named pipeline with transformation operations.
+        #
+        # Creates a pipeline from constructor and/or operations. This method
+        # is typically called implicitly through the DSL's method_missing, but
+        # can be called directly for dynamic pipeline creation.
+        #
+        # @param name [Symbol] pipeline name
+        # @param elements [Array] constructor and operations
+        #
+        # @return [void]
+        #
+        # @example Direct call (inside DSL block)
+        #   composer = Composer.new(inputs: nil) do
+        #     pipeline(:my_step, [{ S: [1, 2, 3] }, :reverse])
+        #     route my_step, to: output
+        #   end
+        #
+        #   composer.output.i.to_a  # => [3, 2, 1]
+        #
+        # @example DSL equivalent (method_missing)
+        #   composer = Composer.new(inputs: nil) do
+        #     my_step ({ S: [1, 2, 3] }), reverse
+        #     route my_step, to: output
+        #   end
+        #
+        #   composer.output.i.to_a  # => [3, 2, 1]
+        #
+        # @api public
         def pipeline(name, *elements)
           @dsl.pipeline(name, elements)
         end
 
+        # Updates composer with additional DSL block.
+        #
+        # Allows dynamic modification of composer after creation by executing
+        # additional DSL block in the composer's DSL context. Useful for
+        # progressive pipeline construction.
+        #
+        # @yield DSL block with additional pipeline definitions
+        #
+        # @return [void]
+        #
+        # @example Add routes dynamically
+        #   composer.update do
+        #     route step3, to: output
+        #   end
+        #
+        # @api public
         def update(&block)
           @dsl.with &block
         end
 
+        # Finalizes composer by resolving all routes and connections.
+        #
+        # Commits the composer, resolving all route connections and setting up
+        # buffering. Must be called before accessing outputs. Cannot be called
+        # twice on same composer instance.
+        #
+        # The commit process:
+        # 1. Recursively commits all output pipelines
+        # 2. Each pipeline commits its input routes
+        # 3. Connects all sources through buffers
+        # 4. Sets committed flag enabling output access
+        #
+        # @return [void]
+        #
+        # @raise [RuntimeError] if already committed
+        #
+        # @example Manual commit
+        #   composer = Composer.new(auto_commit: false) do
+        #     # ... pipeline definitions ...
+        #   end
+        #   composer.input.proxy_source = S(1, 2, 3)
+        #   composer.commit!
+        #   result = composer.output.i.to_a
+        #
+        # @api public
         def commit!
           raise 'Already commited' if @commited
 
@@ -235,7 +539,38 @@ module Musa
           @commited = true
         end
 
+        # Internal representation of a transformation pipeline stage.
+        #
+        # Pipeline encapsulates a single named stage in the composer graph,
+        # storing its input/output series, routes, and transformation logic.
+        #
+        # ## Pipeline Types
+        #
+        # - **Input pipelines**: Created from `inputs:` parameter, wrap proxy series
+        # - **Output pipelines**: Created from `outputs:` parameter, wrap proxy series
+        # - **Transformation pipelines**: Created by DSL, contain transformation logic
+        #
+        # ## Pipeline Components
+        #
+        # - `@first_proc`: Proc creating initial series from UNDEFINED (constructors)
+        # - `@chain_proc`: Proc applying operations to existing series
+        # - `@routes`: Hash of incoming route connections
+        # - `@input`: Input series (set during commit)
+        # - `@output`: Output series (set during commit)
+        #
+        # @api private
         class Pipeline
+          # Creates new pipeline stage.
+          #
+          # @param name [Symbol] pipeline name
+          # @param is_output [Boolean] whether this is an output pipeline
+          # @param input [Serie, nil] input series
+          # @param output [Serie, nil] output series
+          # @param first_proc [Proc, nil] constructor proc
+          # @param chain_proc [Proc, nil] operations proc
+          # @param pipelines [Hash] reference to all pipelines
+          #
+          # @api private
           def initialize(name, is_output: false, input: nil, output: nil, first_proc: nil, chain_proc: nil, pipelines:)
             @name = name
             @is_output = is_output
@@ -250,14 +585,46 @@ module Musa
           attr_reader :name, :is_output
           attr_accessor :input, :output, :proc
 
+          # Retrieves route at specified connection point.
+          #
+          # @param on [Symbol] connection attribute name
+          # @param as [Symbol, nil] hash key for assignment
+          #
+          # @return [Route, nil] route at connection point
+          #
+          # @api private
           def [](on, as)
             @routes[[on, as]]
           end
 
+          # Stores route at specified connection point.
+          #
+          # @param on [Symbol] connection attribute name
+          # @param as [Symbol, nil] hash key for assignment
+          # @param source [Pipeline] source pipeline
+          #
+          # @return [Route] created route
+          #
+          # @api private
           def []=(on, as, source)
             @routes[[on, as]] = Route.new(on, as, source)
           end
 
+          # Finalizes pipeline by resolving routes and connecting series.
+          #
+          # The commit process:
+          # 1. Calls `@first_proc` with UNDEFINED to create initial series (if present)
+          # 2. Recursively commits all source pipelines
+          # 3. Connects input routes:
+          #    - For output pipelines: assigns to proxy_source
+          #    - For hash routes (with `as`): assigns to input[on][as]
+          #    - For setter routes (without `as`): calls input.on=
+          # 4. Applies `@chain_proc` to transform input series (if present)
+          # 5. Sets output series (buffered)
+          #
+          # @return [self]
+          #
+          # @api private
           def commit!
             first_serie_operation = @first_proc&.call(Musa::Series::Constructors.UNDEFINED())
 
@@ -282,7 +649,20 @@ module Musa
           end
         end
 
+        # Route connection between two pipelines.
+        #
+        # Stores the metadata for a single route connection, including the
+        # connection point (on), hash key (as), and source pipeline.
+        #
+        # @api private
         class Route
+          # Creates new route.
+          #
+          # @param on [Symbol] connection attribute name
+          # @param as [Symbol, nil] hash key for assignment
+          # @param source [Pipeline] source pipeline
+          #
+          # @api private
           def initialize(on, as, source)
             @on = on
             @as = as
@@ -291,13 +671,56 @@ module Musa
           attr_accessor :on, :as, :source
         end
 
+        # DSL execution context for pipeline definition.
+        #
+        # DSLContext provides the execution environment for the composer DSL block.
+        # It uses `method_missing` to enable natural syntax for pipeline definition
+        # and routing operations.
+        #
+        # ## Method Resolution
+        #
+        # - **Series operations** (`reverse`, `skip`, etc.): Return symbol for parsing
+        # - **Series constructors** (`S`, `H`, etc.): Return symbol for parsing
+        # - **Pipeline names**: Return symbol for routing
+        # - **With arguments**: Create pipeline with those arguments
+        #
+        # ## Key Responsibilities
+        #
+        # - Parse pipeline definitions into first/chain procs
+        # - Validate and store route connections
+        # - Distinguish between constructors and operations
+        # - Handle dynamic parameter passing
+        #
+        # @api private
         class DSLContext
           include Musa::Extension::With
 
+          # Creates DSL context.
+          #
+          # @param pipelines [Hash] reference to all pipelines
+          #
+          # @api private
           def initialize(pipelines)
             @pipelines = pipelines
           end
 
+          # Defines route connection in DSL context.
+          #
+          # Validates pipeline existence, determines default `on` parameter,
+          # checks for duplicate routes, and stores route in destination pipeline.
+          #
+          # @param from [Symbol] source pipeline name
+          # @param to [Symbol] destination pipeline name
+          # @param on [Symbol, nil] connection attribute
+          # @param as [Symbol, nil] hash key
+          #
+          # @return [void]
+          #
+          # @raise [ArgumentError] if pipelines not found
+          # @raise [ArgumentError] if route already exists
+          # @raise [ArgumentError] if output pipeline with on/as parameters
+          #
+          # @api private
           def route(from, to:, on: nil, as: nil)
             from_pipeline = @pipelines[from]
             to_pipeline = @pipelines[to]
@@ -309,6 +732,7 @@ module Musa
               raise ArgumentError, "Output pipeline #{to_pipeline.name} only allows default routing"
             end
 
+            # Default on logic: :sources when as provided, :source otherwise
             on ||= (as ? :sources : :source)
 
             raise ArgumentError,
@@ -319,6 +743,17 @@ module Musa
             to_pipeline[on, as] = from_pipeline
           end
 
+          # Creates pipeline from elements in DSL context.
+          #
+          # Parses elements into first/chain procs, creates Pipeline instance,
+          # and defines DSL accessor method for pipeline name.
+          #
+          # @param name [Symbol] pipeline name
+          # @param elements [Array] constructor and/or operations
+          #
+          # @return [void]
+          #
+          # @api private
           def pipeline(name, elements)
             first, chain = parse(elements)
             @pipelines[name] = Pipeline.new(name, first_proc: first, chain_proc: chain, pipelines: @pipelines)
@@ -326,6 +761,41 @@ module Musa
             define_singleton_method(name) { name }
           end
 
+          # Parses pipeline elements into first/chain proc pair.
+          #
+          # The parser transforms DSL syntax into executable procs. It splits
+          # pipeline definition into:
+          # - `first`: Proc creating initial series from UNDEFINED (constructors)
+          # - `chain`: Proc applying operations to existing series
+          #
+          # **Parsing modes:**
+          #
+          # - **Array**: Sequence of operations/constructors
+          # - **Hash**: Single operation/constructor with parameters
+          # - **Symbol**: Operation/constructor name without parameters
+          # - **Proc**: Direct transformation function
+          #
+          # **First vs Chain logic:**
+          # - First element (if constructor) becomes `first`
+          # - Remaining elements compose into `chain`
+          # - Operations only: `first` is nil, all become `chain`
+          #
+          # @param thing [Array, Hash, Symbol, Proc, Object] element(s) to parse
+          #
+          # @return [Array(Proc, Proc), Proc, Object] [first, chain] pair or single proc
+          #
+          # @example Array with constructor + operations
+          #   parse([{ S: [1, 2, 3] }, :reverse, { skip: 1 }])
+          #   # => [first_proc, chain_proc]
+          #   # first_proc: creates S([1,2,3])
+          #   # chain_proc: applies reverse >> skip(1)
+          #
+          # @example Operations only
+          #   parse([:reverse, { skip: 1 }])
+          #   # => [nil, chain_proc]
+          #   # chain_proc: applies reverse >> skip(1)
+          #
+          # @api private
           private def parse(thing)
             case thing
             when Array
@@ -377,6 +847,18 @@ module Musa
             end
           end
 
+          # Wraps operation/constructor as chainable proc.
+          #
+          # Creates proc that accepts previous result (`last`) and applies
+          # operation/constructor with parameters. Distinguishes between
+          # constructors (create series) and operations (transform series).
+          #
+          # @param operation [Symbol] operation or constructor name
+          # @param parameter [Object, nil] operation parameters
+          #
+          # @return [Proc] chainable proc accepting `last` argument
+          #
+          # @api private
           private def operation_as_chained_proc(operation, parameter = nil)
             if is_a_series_constructor?(operation)
               proc do |last|
@@ -392,6 +874,31 @@ module Musa
             end
           end
 
+          # Calls series constructor based on previous result type.
+          #
+          # Handles different `last` types to enable flexible constructor usage:
+          #
+          # - **UndefinedSerie**: Normal constructor call (pipeline start)
+          # - **Array**: Pass array elements as arguments
+          # - **Hash**: Pass hash as keyword arguments
+          # - **nil**: Call with parameter
+          # - **Serie**: Error (cannot reconstruct from serie)
+          # - **Proc**: Evaluate proc first, then call constructor
+          #
+          # This enables patterns like:
+          # - `({ S: [1, 2, 3] })` - Direct constructor
+          # - `operation, :S` - Constructor from operation result
+          #
+          # @param last [Object] previous pipeline result
+          # @param constructor [Symbol] constructor name (e.g., :S, :H)
+          # @param parameter [Object] constructor parameters
+          #
+          # @return [Serie] constructed series
+          #
+          # @raise [RuntimeError] if last is Serie (invalid)
+          # @raise [RuntimeError] if parameter type unexpected
+          #
+          # @api private
           private def call_constructor_according_to_last_and_parameter(last, constructor, parameter)
             case last
             when Proc
@@ -432,6 +939,33 @@ module Musa
             end
           end
 
+          # Calls series operation with appropriate parameter handling.
+          #
+          # Handles different parameter types for operation calls:
+          #
+          # - **nil**: No parameter, simple call
+          # - **Symbol**: Chained call (e.g., `operation.parameter`)
+          # - **Proc**: Block parameter (e.g., `operation { |x| x }`)
+          # - **Array of 2 Procs**: Composed block (proc1 >> proc2)
+          # - **Other**: Direct parameter
+          #
+          # @param target [Object] object to call operation on
+          # @param operation [Symbol] operation name
+          # @param parameter [Object, nil] operation parameter
+          #
+          # @return [Object] operation result
+          #
+          # @raise [ArgumentError] if Array parameter invalid
+          #
+          # @example No parameter
+          #   call_operation_according_to_parameter(serie, :reverse, nil)
+          #   # => serie.reverse
+          #
+          # @example With block
+          #   call_operation_according_to_parameter(serie, :map, ->(x) { x * 2 })
+          #   # => serie.map { |x| x * 2 }
+          #
+          # @api private
           private def call_operation_according_to_parameter(target, operation, parameter)
             case parameter
             when nil
@@ -451,14 +985,59 @@ module Musa
             end
           end
 
+          # Checks if symbol is a series constructor.
+          #
+          # @param operation [Symbol] operation name
+          #
+          # @return [Boolean] true if constructor
+          #
+          # @api private
           private def is_a_series_constructor?(operation)
             Musa::Series::Constructors.instance_methods.include?(operation)
           end
 
+          # Checks if symbol is a series operation.
+          #
+          # @param operation [Symbol] operation name
+          #
+          # @return [Boolean] true if operation
+          #
+          # @api private
           private def is_a_series_operation?(operation)
             Musa::Series::Operations.instance_methods.include?(operation)
           end
 
+          # Enables DSL method syntax via method_missing.
+          #
+          # Implements the DSL's natural syntax by intercepting undefined methods:
+          #
+          # - **Series operations/constructors**: Return symbol for parsing
+          # - **With arguments/block**: Create pipeline with those elements
+          # - **Without arguments**: Return symbol for routing
+          #
+          # This allows expressions like:
+          #
+          # ```ruby
+          # composer = Composer.new(input: S(1, 2, 3)) do
+          #   # `reverse` → returns :reverse (operation symbol)
+          #   # `my_step reverse, { skip: 1 }` → creates pipeline named :my_step
+          #   # `route input, to: step1` → uses :step1 symbol for routing
+          #
+          #   my_step reverse, { skip: 1 }
+          #   route input, to: my_step
+          #   route my_step, to: output
+          # end
+          #
+          # composer.output.i.to_a  # => [2, 1]
+          # ```
+          #
+          # @param symbol [Symbol] method name called
+          # @param args [Array] method arguments
+          # @param block [Proc, nil] block passed to method
+          #
+          # @return [Symbol, void] symbol for parsing or creates pipeline
+          #
+          # @api private
           private def method_missing(symbol, *args, &block)
             if is_a_series_constructor?(symbol) || is_a_series_operation?(symbol)
               symbol
@@ -470,6 +1049,14 @@ module Musa
             end
           end
 
+          # Declares which methods respond_to for method_missing.
+          #
+          # @param method_name [Symbol] method to check
+          # @param include_private [Boolean] include private methods
+          #
+          # @return [Boolean] true if responds to method
+          #
+          # @api private
           private def respond_to_missing?(method_name, include_private = false)
             Musa::Series::Operations.instance_methods.include?(method_name) ||
             Musa::Series::Constructors.instance_methods.include?(method_name) ||

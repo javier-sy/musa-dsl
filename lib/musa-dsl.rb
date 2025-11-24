@@ -103,7 +103,8 @@ module Musa::All
   include Musa::Scales
   include Musa::Chords
 
-  include Musa::Matrix
+  # Note: Musa::Extension::Matrix is a refinement and cannot be included
+  # Use: using Musa::Extension::Matrix
 
   include Musa::Darwin
   include Musa::Markov
