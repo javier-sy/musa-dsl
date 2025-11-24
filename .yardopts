@@ -1,7 +1,7 @@
 --markup markdown
 --title "Musa-DSL API"
---tag source:"Source Serie"
---tag sources:"Source Series"
-
+--readme README.md
+--no-private
+--embed-mixins
 lib/**/*.rb
 
