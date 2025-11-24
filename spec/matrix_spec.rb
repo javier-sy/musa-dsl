@@ -4,7 +4,7 @@ require 'musa-dsl'
 
 using Musa::Extension::Matrix
 
-RSpec.describe Musa::Matrix do
+RSpec.describe Musa::Extension::Matrix do
   context 'Multidim matrix processing' do
     it 'Multidim matrix to set of P' do
       m = Matrix[[0,0], [2,2], [3,4], [4,3], [5,5], [7,6], [8,5], [9,6], [10,4], [12,2], [13,3], [14,2], [14,0]]

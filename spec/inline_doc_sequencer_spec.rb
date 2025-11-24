@@ -709,40 +709,9 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
     end
   end
 
-  context 'Timeslots (timeslots.rb)' do
-    it 'example from line 29 - Scheduling events in timeslots' do
-      timeslots = Musa::Sequencer::BaseSequencer::Timeslots.new
-
-      event1 = { block: proc { "event1" } }
-      event2 = { block: proc { "event2" } }
-      event3 = { block: proc { "event3" } }
-      event4 = { block: proc { "event4" } }
-      event5 = { block: proc { "event5" } }
-
-      timeslots[0r] = [event1, event2]    # Events at time 0
-      timeslots[1/2r] = [event3]          # Event at beat 0.5
-      timeslots[1r] = [event4, event5]    # Events at beat 1
-
-      expect(timeslots[0r].size).to eq(2)
-      expect(timeslots[1/2r].size).to eq(1)
-      expect(timeslots[1r].size).to eq(2)
-    end
-
-    it 'example from line 36 - Finding next event with first_after' do
-      timeslots = Musa::Sequencer::BaseSequencer::Timeslots.new
-
-      timeslots[1r] = [:event_a]
-      timeslots[2r] = [:event_b]
-      timeslots[3r] = [:event_c]
-
-      expect(timeslots.first_after(nil)).to eq(1r)
-      expect(timeslots.first_after(0r)).to eq(1r)
-      expect(timeslots.first_after(1r)).to eq(1r)
-      expect(timeslots.first_after(1.5r)).to eq(2r)
-      expect(timeslots.first_after(3r)).to eq(3r)
-      expect(timeslots.first_after(4r)).to be_nil
-    end
-  end
+  # Note: Timeslots is a private class (@api private) within BaseSequencer
+  # and should not have inline documentation examples accessible from public API.
+  # Tests for private classes should be in separate internal test files.
 
   context 'Additional edge cases and integration' do
     it 'handles series with play correctly scheduling events' do

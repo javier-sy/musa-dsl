@@ -26,13 +26,17 @@ module Musa
       # Times are Rational numbers representing musical beats/ticks.
       # Granularity depends on sequencer configuration (tick-based or tickless).
       #
-      # @example Scheduling events
+      # ## Internal Usage Examples
+      #
+      # Note: These are illustrative examples for internal implementation.
+      # Timeslots is private and cannot be instantiated from public API.
+      #
+      #   # Within BaseSequencer context:
       #   timeslots = Timeslots.new
       #   timeslots[0r] = [event1, event2]    # Events at time 0
       #   timeslots[1/2r] = [event3]          # Event at beat 0.5
       #   timeslots[1r] = [event4, event5]    # Events at beat 1
       #
-      # @example Finding next event
       #   next_time = timeslots.first_after(0.5)  # => 1r
       #   events = timeslots[next_time]           # => [event4, event5]
       #
@@ -76,11 +80,8 @@ module Musa
         #
         # Used by sequencer to find next event to execute during playback.
         #
-        # @param position [Rational, nil] search position (nil for first overall)
+        # Internal behavior (illustrative, not executable from public API):
         #
-        # @return [Rational, nil] next scheduled time, or nil if none
-        #
-        # @example
         #   timeslots[1r] = [:event_a]
         #   timeslots[2r] = [:event_b]
         #   timeslots[3r] = [:event_c]
@@ -91,6 +92,10 @@ module Musa
         #   timeslots.first_after(1.5r)  # => 2r
         #   timeslots.first_after(3r)    # => 3r
         #   timeslots.first_after(4r)    # => nil
+        #
+        # @param position [Rational, nil] search position (nil for first overall)
+        #
+        # @return [Rational, nil] next scheduled time, or nil if none
         #
         # @api private
         def first_after(position)
