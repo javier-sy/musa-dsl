@@ -14,13 +14,11 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 3.4.7'
 
-  # TODO para sistema de paquetes de MusaDSL
-  #s.metadata    = {
-    # "source_code_uri" => "https://",
-    # "homepage_uri" => "",
-    # "documentation_uri" => "",
-    # "changelog_uri" => ""
-  #}
+  s.metadata = {
+    'homepage_uri' => s.homepage,
+    'source_code_uri' => s.homepage,
+    'documentation_uri' => 'https://www.rubydoc.info/gems/musa-dsl'
+  }
 
   s.add_runtime_dependency 'prime', '~> 0.1'
   s.add_runtime_dependency 'matrix', '~> 0.4'
@@ -30,8 +28,8 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'citrus', '~> 3.0'
 
-  s.add_runtime_dependency 'midi-events', '~> 0.6'
-  s.add_runtime_dependency 'midi-parser', '~> 0.4'
+  s.add_runtime_dependency 'midi-events', '~> 0.7'
+  s.add_runtime_dependency 'midi-parser', '~> 0.5'
 
   s.add_development_dependency 'descriptive-statistics', '~> 2.2'
   s.add_development_dependency 'rspec', '~> 3'
