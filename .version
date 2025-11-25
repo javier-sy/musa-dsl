@@ -1,0 +1,6 @@
+# Configuración de versión para musa-dsl
+GEM_NAME="musa-dsl"
+MODULE_NAME="Musa"
+VERSION_FILE="lib/musa-dsl/version.rb"
+GEMSPEC_FILE="musa-dsl.gemspec"
+TEST_COMMAND="bundle exec rspec"
