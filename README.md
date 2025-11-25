@@ -224,3 +224,10 @@ Ruby refinements and metaprogramming utilities: Arrayfy, Hashify, ExplodeRanges,
 
 **📖 [Complete Documentation](docs/subsystems/core-extensions.md)**
 
+## Author
+
+* [Javier Sánchez Yeste](https://github.com/javier-sy)
+
+## License
+
+[Musa-DSL](https://github.com/javier-sy/musa-dsl) Copyright (c) 2016-2025 [Javier Sánchez Yeste](https://yeste.studio), licensed under LGPL 3.0 License
