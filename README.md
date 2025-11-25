@@ -77,8 +77,8 @@ MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) a
 - [**musalce-server**](https://github.com/javier-sy/musalce-server) - Live coding evaluation server with hot-reload capabilities
 - [**MusaLCEClientForVSCode**](https://github.com/javier-sy/MusaLCEClientForVSCode) - Visual Studio Code extension for live coding
 - [**MusaLCEClientForAtom**](https://github.com/javier-sy/MusaLCEClientForAtom) - Atom editor plugin for live coding
-- [**MusaLCEforBitwig**](https://github.com/javier-sy/MusaLCEforBitwig) - Bitwig Studio integration for live performance
-- [**MusaLCEforLive**](https://github.com/javier-sy/MusaLCEforLive) - Ableton Live integration for interactive composition
+- [**MusaLCEforBitwig**](https://github.com/javier-sy/MusaLCEforBitwig) - Bitwig Studio integration for live coding
+- [**MusaLCEforLive**](https://github.com/javier-sy/MusaLCEforLive) - Ableton Live integration for live coding
 
 ### musa-dsl Internal Architecture
 
