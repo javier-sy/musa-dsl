@@ -459,6 +459,38 @@ module Musa
         @scale_system.frequency_of_pitch(pitch, root, @a_frequency)
       end
 
+      # Searches for a chord across multiple scale types.
+      #
+      # Iterates through the specified scale kinds and pitch roots to find
+      # all scales that contain the given chord. Returns chords with their
+      # containing scale as context.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to search for
+      # @param kinds [Array<Symbol>, nil] scale kind IDs to search (default: all registered kinds)
+      # @param roots [Range, Array, nil] pitch offsets to search (default: 0...notes_in_octave)
+      # @return [Array<Musa::Chords::Chord>] chords with their containing scales
+      #
+      # @example Search G7 in major and mixolydian scales
+      #   tuning = Scales.et12[440.0]
+      #   g7 = tuning.major[60].dominant.chord :seventh
+      #   tuning.chords_in_scales(g7, kinds: [:major, :mixolydian])
+      #   # => [Chord in C major, Chord in G mixolydian]
+      #
+      # @example Search in all scale types
+      #   tuning.chords_in_scales(g7)  # searches all registered scale kinds
+      #
+      # @see ScaleKind#scales_containing
+      # @see Musa::Chords::Chord#in_scales
+      def chords_in_scales(chord, kinds: nil, roots: nil)
+        roots ||= 0...notes_in_octave
+        kinds ||= @scale_system.scale_kind_classes.keys
+
+        kinds.flat_map do |kind_id|
+          scale_kind = self[kind_id]
+          scale_kind.scales_containing(chord, roots: roots)
+        end
+      end
+
       def ==(other)
         self.class == other.class &&
             @scale_system == other.scale_system &&
@@ -575,6 +607,35 @@ module Musa
       #   tuning.major.absolut  # Scale rooted at MIDI 0
       def absolut
         self[0]
+      end
+
+      # Finds all scales of this kind that contain the given chord.
+      #
+      # Searches through scales rooted on different pitches to find which ones
+      # contain all the notes of the given chord. Returns chords with their
+      # containing scale as context.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to search for
+      # @param roots [Range, Array, nil] pitch offsets to search (default: 0...notes_in_octave)
+      # @return [Array<Musa::Chords::Chord>] chords with their containing scales
+      #
+      # @example Find G major triad in all major scales
+      #   tuning = Scales.et12[440.0]
+      #   g_triad = tuning.major[60].dominant.chord
+      #   tuning.major.scales_containing(g_triad)
+      #   # => [Chord in C major (V), Chord in G major (I), Chord in D major (IV)]
+      #
+      # @see Scale#chord_on
+      # @see ScaleSystemTuning#chords_in_scales
+      def scales_containing(chord, roots: nil)
+        roots ||= 0...tuning.notes_in_octave
+        base_pitch = chord.root.pitch % tuning.notes_in_octave
+
+        roots.filter_map do |root_offset|
+          root_pitch = base_pitch + root_offset
+          scale = self[root_pitch]
+          scale.chord_on(chord)
+        end
       end
 
       # Checks scale kind equality.
@@ -1036,6 +1097,80 @@ module Musa
       #   scale.offset_of_interval(:M3)  # => 4
       def offset_of_interval(interval_name)
         @kind.tuning.offset_of_interval(interval_name)
+      end
+
+      # Checks if all chord pitches exist in this scale.
+      #
+      # Uses the chord's definition to verify that every pitch in the chord
+      # can be found as a diatonic note in this scale.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to check
+      # @return [Boolean] true if all chord notes are in scale
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g7 = c_major.dominant.chord :seventh
+      #   c_major.contains_chord?(g7)  # => true
+      #
+      #   cm = c_major.tonic.chord.with_quality(:minor)
+      #   c_major.contains_chord?(cm)  # => false (Eb not in C major)
+      #
+      # @see #degree_of_chord
+      # @see #chord_on
+      def contains_chord?(chord)
+        chord.chord_definition.in_scale?(self, chord_root_pitch: chord.root.pitch)
+      end
+
+      # Returns the grade (0-based) where the chord root falls in this scale.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to check
+      # @return [Integer, nil] grade (0-based) or nil if chord not in scale
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g_chord = c_major.dominant.chord
+      #   c_major.degree_of_chord(g_chord)  # => 4 (V degree, 0-based)
+      #
+      # @see #contains_chord?
+      def degree_of_chord(chord)
+        return nil unless contains_chord?(chord)
+
+        note = note_of_pitch(chord.root.pitch, allow_chromatic: false)
+        note&.grade
+      end
+
+      # Creates an equivalent chord with this scale as its context.
+      #
+      # Returns a new Chord object that represents the same chord but with
+      # this scale as its harmonic context. The chord's voicing (move and
+      # duplicate settings) is preserved.
+      #
+      # @param chord [Musa::Chords::Chord] the source chord
+      # @return [Musa::Chords::Chord, nil] new chord with this scale, or nil if not contained
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g7 = c_major.dominant.chord :seventh
+      #
+      #   g_mixolydian = Scales.et12[440.0].mixolydian[67]
+      #   g7_in_mixolydian = g_mixolydian.chord_on(g7)
+      #   g7_in_mixolydian.scale  # => G Mixolydian scale
+      #
+      # @see #contains_chord?
+      # @see #degree_of_chord
+      def chord_on(chord)
+        return nil unless contains_chord?(chord)
+
+        root_note = note_of_pitch(chord.root.pitch, allow_chromatic: false)
+        return nil unless root_note
+
+        Musa::Chords::Chord.with_root(
+          root_note,
+          scale: self,
+          name: chord.chord_definition.name,
+          move: chord.move.empty? ? nil : chord.move,
+          duplicate: chord.duplicate.empty? ? nil : chord.duplicate
+        )
       end
 
       # Checks scale equality.

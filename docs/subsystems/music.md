@@ -220,6 +220,72 @@ doubled = i_chord.duplicate(root: -2, third: [-1, 1])  # Root 2 down, third 1 do
 lower = i_chord.octave(-1)  # Move chord down one octave
 ```
 
+### Chord-Scale Navigation
+
+MusaDSL provides methods to explore the relationship between chords and scales,
+enabling harmonic analysis and discovery of functional contexts.
+
+#### Checking if a Scale Contains a Chord
+
+```ruby
+c_major = Scales.et12[440.0].major[60]
+g7 = c_major.dominant.chord :seventh
+
+c_major.contains_chord?(g7)     # => true
+c_major.degree_of_chord(g7)     # => 4 (V degree, 0-based)
+
+# Non-diatonic chords return false/nil
+cm = c_major.tonic.chord.with_quality(:minor)  # C minor (Eb not in C major)
+c_major.contains_chord?(cm)     # => false
+c_major.degree_of_chord(cm)     # => nil
+```
+
+#### Creating a Chord in a Different Scale Context
+
+```ruby
+# Get the same chord but with a different scale as context
+g_mixolydian = Scales.et12[440.0].mixolydian[67]
+g7_in_mixolydian = g_mixolydian.chord_on(g7)
+g7_in_mixolydian.scale                        # => G Mixolydian scale
+g_mixolydian.degree_of_chord(g7_in_mixolydian)  # => 0 (I degree)
+```
+
+#### Finding Scales That Contain a Chord
+
+```ruby
+g_triad = c_major.dominant.chord  # G-B-D
+
+# Search in all major scales
+g_triad.in_scales(kinds: [:major])
+# => [Chord in C major (V), Chord in G major (I), Chord in D major (IV)]
+
+# Search across multiple scale types
+g_triad.in_scales(kinds: [:major, :mixolydian, :dorian])
+
+# Each result has its scale context
+g_triad.in_scales(kinds: [:major]).each do |chord|
+  scale = chord.scale
+  degree = scale.degree_of_chord(chord)
+  puts "#{scale.kind.class.id} rooted on #{scale.root_pitch}: degree #{degree}"
+end
+# Output:
+# major rooted on 60: degree 4
+# major rooted on 67: degree 0
+# major rooted on 62: degree 3
+```
+
+#### Low-Level Navigation Methods
+
+```ruby
+tuning = Scales.et12[440.0]
+
+# Search at ScaleKind level
+tuning.major.scales_containing(g_triad)
+
+# Search at ScaleSystemTuning level with custom roots
+tuning.chords_in_scales(g7, kinds: [:major, :minor_harmonic], roots: 60..71)
+```
+
 ## Defining Custom Scale Systems, Scale Kinds, and Chord Definitions
 
 The framework is extensible, allowing users to define custom tuning systems, scale types, and chord structures:

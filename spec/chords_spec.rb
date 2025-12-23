@@ -225,4 +225,118 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(chord.pitches.sort).to eq [60, 64, 67, 71]
     end
   end
+
+  context 'Chord-scale navigation' do
+    scale_system = Musa::Scales::Scales[:et12][440.0]
+    c_major = scale_system[:major][60]
+
+    it 'Scale#contains_chord? returns true for diatonic chord' do
+      chord = c_major.dominant.chord :seventh  # G7
+      expect(c_major.contains_chord?(chord)).to be true
+    end
+
+    it 'Scale#contains_chord? returns false for non-diatonic chord' do
+      chord = c_major.tonic.chord.with_quality(:minor)  # Cm (Eb not in C major)
+      expect(c_major.contains_chord?(chord)).to be false
+    end
+
+    it 'Scale#degree_of_chord returns correct grade' do
+      chord = c_major.dominant.chord  # G
+      expect(c_major.degree_of_chord(chord)).to eq 4
+    end
+
+    it 'Scale#degree_of_chord returns nil for non-diatonic chord' do
+      chord = c_major.tonic.chord.with_quality(:minor)  # Cm
+      expect(c_major.degree_of_chord(chord)).to be_nil
+    end
+
+    it 'Scale#chord_on returns chord with new scale context' do
+      g_mixolydian = scale_system[:mixolydian][67]
+      chord = c_major.dominant.chord :seventh  # G7
+      new_chord = g_mixolydian.chord_on(chord)
+
+      expect(new_chord).not_to be_nil
+      expect(new_chord.scale).to eq g_mixolydian
+      expect(new_chord.root.pitch).to eq chord.root.pitch
+    end
+
+    it 'Scale#chord_on returns nil for non-contained chord' do
+      a_major = scale_system[:major][69]
+      chord = c_major.dominant.chord :seventh  # G7 (has F natural, not in A major)
+      expect(a_major.chord_on(chord)).to be_nil
+    end
+
+    it 'ScaleKind#scales_containing finds matching scales' do
+      chord = c_major.dominant.chord  # G major triad
+      results = scale_system[:major].scales_containing(chord)
+
+      expect(results.length).to eq 3  # C major (V), G major (I), D major (IV)
+      expect(results.map { |c| c.scale.root_pitch % 12 }).to contain_exactly(0, 7, 2)
+    end
+
+    it 'ScaleSystemTuning#chords_in_scales searches across scale types' do
+      chord = c_major.dominant.chord :seventh  # G7
+      results = scale_system.chords_in_scales(chord, kinds: [:major, :mixolydian])
+
+      expect(results.length).to eq 2  # C major, G mixolydian
+      expect(results.map { |c| [c.scale.kind.class.id, c.scale.root_pitch % 12] }).to contain_exactly(
+        [:major, 0],
+        [:mixolydian, 7]
+      )
+    end
+
+    it 'Chord#in_scales finds all containing scales' do
+      chord = c_major.dominant.chord  # G major triad
+      results = chord.in_scales(kinds: [:major, :mixolydian])
+
+      expect(results.length).to eq 6  # 3 major + 3 mixolydian
+      results.each do |result_chord|
+        expect(result_chord.scale).not_to be_nil
+        expect(result_chord.root.pitch % 12).to eq(chord.root.pitch % 12)
+      end
+    end
+
+    # Edge cases with chromatic alterations
+    it 'handles harmonic minor scale (raised 7th)' do
+      a_harmonic_minor = scale_system[:minor_harmonic][69]  # A harmonic minor
+      e7 = a_harmonic_minor.dominant.chord :seventh  # E7 with G#
+
+      expect(a_harmonic_minor.contains_chord?(e7)).to be true
+      expect(a_harmonic_minor.degree_of_chord(e7)).to eq 4
+
+      # E7 should NOT be in A natural minor (has G natural, not G#)
+      a_natural_minor = scale_system[:minor][69]
+      expect(a_natural_minor.contains_chord?(e7)).to be false
+    end
+
+    it 'handles melodic minor scale' do
+      c_melodic_minor = scale_system[:minor_melodic][60]
+      # Melodic minor has raised 6th and 7th: C-D-Eb-F-G-A-B
+
+      # Chord on IV degree should have A natural (raised 6th)
+      fourth_chord = c_melodic_minor[3].chord  # F-A-C
+      expect(c_melodic_minor.contains_chord?(fourth_chord)).to be true
+    end
+
+    it 'finds dominant 7th chord across harmonic minor scales' do
+      # G7 (G-B-D-F) should be in C major (as V7) and C harmonic minor (as V7)
+      # C harmonic minor has: C-D-Eb-F-G-Ab-B (raised 7th = B natural)
+      # G7 pitches (mod 12): G=7, B=11, D=2, F=5 - all present in C harmonic minor
+      g7 = c_major.dominant.chord :seventh
+      results = g7.in_scales(kinds: [:major, :minor_harmonic])
+
+      scale_roots = results.map { |c| c.scale.root_pitch % 12 }
+      expect(scale_roots).to include(0)  # C major (G7 as V7)
+      expect(scale_roots.count(0)).to eq 2  # Both C major and C harmonic minor
+    end
+
+    it 'preserves voicing (move/duplicate) when creating chord_on' do
+      chord = c_major.dominant.chord(:seventh).move(root: -1).duplicate(fifth: 1)
+      g_mixolydian = scale_system[:mixolydian][67]
+      new_chord = g_mixolydian.chord_on(chord)
+
+      expect(new_chord.move).to eq chord.move
+      expect(new_chord.duplicate).to eq chord.duplicate
+    end
+  end
 end
