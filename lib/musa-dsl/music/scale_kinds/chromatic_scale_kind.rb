@@ -32,6 +32,13 @@ module Musa
     # @see MajorScaleKind Major scale (7 notes)
     # @see MinorNaturalScaleKind Minor scale (7 notes)
     class ChromaticScaleKind < ScaleKind
+      @base_metadata = {
+        family: :chromatic,
+        brightness: nil,
+        character: [:atonal, :all_notes],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: [:_1], pitch: 0 },

@@ -49,6 +49,13 @@ module Musa
     # @see DiminishedHWScaleKind Half-whole diminished
     # @see AlteredScaleKind Altered scale (another dominant scale)
     class DiminishedWHScaleKind < ScaleKind
+      @base_metadata = {
+        family: :symmetric,
+        brightness: nil,
+        character: [:diminished, :dominant, :jazz],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

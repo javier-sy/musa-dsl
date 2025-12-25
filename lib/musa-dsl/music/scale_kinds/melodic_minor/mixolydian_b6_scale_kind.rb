@@ -48,6 +48,13 @@ module Musa
     # @see MixolydianScaleKind Mixolydian mode (with major 6th)
     # @see MelodicMinorScaleKind Parent melodic minor scale
     class MixolydianB6ScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: 0,
+        character: [:hindu, :dominant, :melodic],
+        parent: { scale: :minor_melodic, degree: 5 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

@@ -48,6 +48,13 @@ module Musa
     # @see LocrianScaleKind Locrian mode (with minor 2nd)
     # @see MelodicMinorScaleKind Parent melodic minor scale
     class LocrianSharp2ScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: -2,
+        character: [:half_diminished, :jazz],
+        parent: { scale: :minor_melodic, degree: 6 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

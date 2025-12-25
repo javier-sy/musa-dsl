@@ -51,6 +51,13 @@ module Musa
     # @see MelodicMinorScaleKind Parent melodic minor scale
     # @see DiminishedWHScaleKind Another altered dominant scale option
     class AlteredScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: -3,
+        character: [:altered_dominant, :jazz, :tension],
+        parent: { scale: :minor_melodic, degree: 7 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

@@ -50,6 +50,13 @@ module Musa
     # @see MinorNaturalScaleKind Natural minor (with major 2nd)
     # @see DorianScaleKind Dorian mode
     class PhrygianScaleKind < ScaleKind
+      @base_metadata = {
+        family: :greek_modes,
+        brightness: -2,
+        character: [:dark, :spanish, :exotic],
+        parent: { scale: :major, degree: 3 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

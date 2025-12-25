@@ -47,6 +47,13 @@ module Musa
     # @see PhrygianDominantScaleKind Spanish Phrygian (similar exotic quality)
     # @see HungarianMinorScaleKind Hungarian minor
     class DoubleHarmonicScaleKind < ScaleKind
+      @base_metadata = {
+        family: :ethnic,
+        brightness: -1,
+        character: [:byzantine, :arabic, :exotic],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

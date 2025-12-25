@@ -49,6 +49,13 @@ module Musa
     # @see MinorHarmonicScaleKind Harmonic minor
     # @see AlteredScaleKind Altered scale (7th mode of melodic minor)
     class MelodicMinorScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: -1,
+        character: [:minor, :ascending, :classical],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

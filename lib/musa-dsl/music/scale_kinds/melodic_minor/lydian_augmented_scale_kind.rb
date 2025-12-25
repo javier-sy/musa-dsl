@@ -48,6 +48,13 @@ module Musa
     # @see LydianScaleKind Lydian mode
     # @see MelodicMinorScaleKind Parent melodic minor scale
     class LydianAugmentedScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: 3,
+        character: [:very_bright, :augmented, :ethereal],
+        parent: { scale: :minor_melodic, degree: 3 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

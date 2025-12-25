@@ -47,6 +47,13 @@ module Musa
     # @see MelodicMinorScaleKind Melodic minor (with major 2nd)
     # @see NeapolitanMinorScaleKind Neapolitan minor
     class NeapolitanMajorScaleKind < ScaleKind
+      @base_metadata = {
+        family: :ethnic,
+        brightness: -1,
+        character: [:neapolitan, :classical, :bright_dark],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

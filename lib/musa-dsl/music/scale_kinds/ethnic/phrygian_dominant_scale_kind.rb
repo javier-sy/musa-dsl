@@ -48,6 +48,13 @@ module Musa
     # @see PhrygianScaleKind Phrygian mode (with minor 3rd)
     # @see MinorHarmonicScaleKind Parent harmonic minor scale
     class PhrygianDominantScaleKind < ScaleKind
+      @base_metadata = {
+        family: :ethnic,
+        brightness: -1,
+        character: [:spanish, :flamenco, :jewish],
+        parent: { scale: :minor_harmonic, degree: 5 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

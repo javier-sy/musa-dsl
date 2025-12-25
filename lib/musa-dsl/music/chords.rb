@@ -484,32 +484,33 @@ module Musa
 
       # Finds this chord in other scales.
       #
-      # Searches through the specified scale kinds to find all scales that
-      # contain this chord. Returns new chord instances, each with its
-      # containing scale as context.
+      # Searches through scale kinds matching the given metadata criteria to find
+      # all scales that contain this chord. Returns new chord instances, each with
+      # its containing scale as context.
       #
-      # @param kinds [Array<Symbol>, nil] scale kind IDs to search (default: all registered kinds)
       # @param roots [Range, Array, nil] pitch offsets to search (default: full octave)
+      # @param metadata [Hash] metadata filters for scale kinds (family:, brightness:, etc.)
       # @return [Array<Chord>] this chord in different scale contexts
       #
-      # @example Find G major triad in major and mixolydian scales
+      # @example Find G major triad in diatonic scales
       #   g_triad = c_major.dominant.chord
-      #   g_triad.in_scales(kinds: [:major, :mixolydian])
-      #   # => [Chord in C major (V), Chord in G major (I), Chord in D major (IV),
-      #   #     Chord in G mixolydian (I), Chord in D mixolydian (IV), Chord in A mixolydian (VII)]
+      #   g_triad.in_scales(family: :diatonic)
+      #
+      # @example Find chord in scales with specific brightness
+      #   g7.in_scales(brightness: -1..1)
       #
       # @example Iterate over results
-      #   g7.in_scales(kinds: [:major]).each do |chord|
+      #   g7.in_scales(family: :greek_modes).each do |chord|
       #     scale = chord.scale
       #     degree = scale.degree_of_chord(chord)
       #     puts "#{scale.kind.class.id} on #{scale.root_pitch}: degree #{degree}"
       #   end
       #
       # @see Musa::Scales::Scale#chord_on
-      # @see Musa::Scales::ScaleSystemTuning#chords_in_scales
-      def in_scales(kinds: nil, roots: nil)
+      # @see Musa::Scales::ScaleSystemTuning#chords_of
+      def in_scales(roots: nil, **metadata)
         tuning = @scale&.kind&.tuning || @root.scale.kind.tuning
-        tuning.chords_in_scales(self, kinds: kinds, roots: roots)
+        tuning.chords_of(self, roots: roots, **metadata)
       end
 
       # Checks chord equality.

@@ -47,6 +47,13 @@ module Musa
     # @see MinorHarmonicScaleKind Harmonic minor (one augmented second)
     # @see DoubleHarmonicScaleKind Double harmonic (Byzantine)
     class HungarianMinorScaleKind < ScaleKind
+      @base_metadata = {
+        family: :ethnic,
+        brightness: -2,
+        character: [:gypsy, :eastern_european, :dramatic],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

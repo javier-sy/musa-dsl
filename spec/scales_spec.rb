@@ -416,4 +416,196 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(scale[12].pitch).to eq 71 + 12  # xiii = submediant + octave
     end
   end
+
+  context 'ScaleKind metadata system' do
+    let(:scale_system) { Musa::Scales::Scales[:et12][440.0] }
+    let(:major_kind) { scale_system[:major].class }
+    let(:dorian_kind) { scale_system[:dorian].class }
+    let(:minor_kind) { scale_system[:minor].class }
+
+    describe 'intrinsic_metadata' do
+      it 'derives id from scale structure' do
+        expect(major_kind.intrinsic_metadata[:id]).to eq :major
+        expect(dorian_kind.intrinsic_metadata[:id]).to eq :dorian
+      end
+
+      it 'derives grades from scale structure' do
+        expect(major_kind.intrinsic_metadata[:grades]).to eq 7
+        expect(dorian_kind.intrinsic_metadata[:grades]).to eq 7
+      end
+
+      it 'derives pitches from scale structure' do
+        expect(major_kind.intrinsic_metadata[:pitches]).to include(0, 2, 4, 5, 7, 9, 11)
+      end
+
+      it 'calculates intervals between degrees' do
+        # Major scale intervals within first octave: W-W-H-W-W-W-H = 2-2-1-2-2-2-1
+        expect(major_kind.intrinsic_metadata[:intervals]).to eq [2, 2, 1, 2, 2, 2, 1]
+      end
+
+      it 'detects leading tone (pitch 11)' do
+        expect(major_kind.intrinsic_metadata[:has_leading_tone]).to be true
+        expect(minor_kind.intrinsic_metadata[:has_leading_tone]).to be false
+      end
+
+      it 'detects tritone (pitch 6)' do
+        expect(scale_system[:lydian].class.intrinsic_metadata[:has_tritone]).to be true
+        expect(major_kind.intrinsic_metadata[:has_tritone]).to be false
+      end
+
+      it 'detects symmetric patterns' do
+        whole_tone = scale_system[:whole_tone].class
+        expect(whole_tone.intrinsic_metadata[:symmetric]).to eq :equal
+      end
+    end
+
+    describe 'base_metadata' do
+      it 'returns defined base metadata for major scale' do
+        expect(major_kind.base_metadata[:family]).to eq :diatonic
+        expect(major_kind.base_metadata[:brightness]).to eq 0
+        expect(major_kind.base_metadata[:character]).to include(:bright)
+      end
+
+      it 'returns defined base metadata for greek modes' do
+        expect(dorian_kind.base_metadata[:family]).to eq :greek_modes
+        expect(dorian_kind.base_metadata[:brightness]).to eq(-1)
+        expect(dorian_kind.base_metadata[:parent]).to eq({ scale: :major, degree: 2 })
+      end
+
+      it 'returns empty hash for parent scale (base_metadata has nil parent)' do
+        expect(major_kind.base_metadata[:parent]).to be_nil
+      end
+    end
+
+    describe 'custom_metadata' do
+      after { major_kind.reset_custom_metadata }
+
+      it 'allows extending with custom metadata' do
+        major_kind.extend_metadata(my_tag: :favorite, rating: 5)
+        expect(major_kind.custom_metadata[:my_tag]).to eq :favorite
+        expect(major_kind.custom_metadata[:rating]).to eq 5
+      end
+
+      it 'merges multiple extend_metadata calls' do
+        major_kind.extend_metadata(tag1: :a)
+        major_kind.extend_metadata(tag2: :b)
+        expect(major_kind.custom_metadata).to include(tag1: :a, tag2: :b)
+      end
+
+      it 'can be reset' do
+        major_kind.extend_metadata(temp: :data)
+        major_kind.reset_custom_metadata
+        expect(major_kind.custom_metadata).to be_empty
+      end
+    end
+
+    describe 'metadata (combined)' do
+      after { major_kind.reset_custom_metadata }
+
+      it 'combines all three layers' do
+        major_kind.extend_metadata(user_note: 'my favorite')
+
+        metadata = major_kind.metadata
+
+        # Intrinsic
+        expect(metadata[:grades]).to eq 7
+        # Base
+        expect(metadata[:family]).to eq :diatonic
+        # Custom
+        expect(metadata[:user_note]).to eq 'my favorite'
+      end
+
+      it 'custom overrides base which overrides intrinsic' do
+        major_kind.extend_metadata(family: :my_custom_family)
+        expect(major_kind.metadata[:family]).to eq :my_custom_family
+      end
+    end
+
+    describe 'metadata queries' do
+      after { major_kind.reset_custom_metadata }
+
+      it 'has_metadata? checks key existence' do
+        expect(major_kind.has_metadata?(:family)).to be true
+        expect(major_kind.has_metadata?(:nonexistent)).to be false
+      end
+
+      it 'has_metadata? checks value match' do
+        expect(major_kind.has_metadata?(:family, :diatonic)).to be true
+        expect(major_kind.has_metadata?(:family, :other)).to be false
+      end
+
+      it 'has_metadata? checks array inclusion' do
+        expect(major_kind.has_metadata?(:character, :bright)).to be true
+        expect(major_kind.has_metadata?(:character, :nonexistent)).to be false
+      end
+
+      it 'metadata_value returns specific value' do
+        expect(major_kind.metadata_value(:family)).to eq :diatonic
+        expect(major_kind.metadata_value(:brightness)).to eq 0
+      end
+    end
+
+    describe 'Scales.extend_metadata helper' do
+      after { major_kind.reset_custom_metadata }
+
+      it 'extends metadata by scale kind ID' do
+        Musa::Scales::Scales.extend_metadata(:major, custom_field: :value)
+        expect(major_kind.metadata[:custom_field]).to eq :value
+      end
+    end
+  end
+
+  context 'ScaleSystemTuning#scale_kinds' do
+    let(:tuning) { Musa::Scales::Scales[:et12][440.0] }
+
+    it 'returns all scale kinds without arguments' do
+      result = tuning.scale_kinds
+      expect(result).to be_an(Array)
+      expect(result.size).to eq 32
+      expect(result.first).to be_a(Musa::Scales::ScaleKind)
+    end
+
+    it 'filters by single metadata value' do
+      result = tuning.scale_kinds(family: :diatonic)
+      ids = result.map { |k| k.class.id }
+      expect(ids).to include(:major, :minor, :minor_harmonic, :major_harmonic)
+      expect(ids).not_to include(:dorian, :blues)
+    end
+
+    it 'filters by range' do
+      result = tuning.scale_kinds(brightness: 0..2)
+      result.each do |kind|
+        brightness = kind.class.metadata[:brightness]
+        expect(brightness).to be_between(0, 2) if brightness
+      end
+    end
+
+    it 'filters by character array inclusion' do
+      result = tuning.scale_kinds(character: :jazz)
+      expect(result).not_to be_empty
+      result.each do |kind|
+        expect(kind.class.metadata[:character]).to include(:jazz)
+      end
+    end
+
+    it 'filters with block' do
+      result = tuning.scale_kinds { |klass| klass.intrinsic_metadata[:has_leading_tone] }
+      expect(result).not_to be_empty
+      result.each do |kind|
+        expect(kind.class.intrinsic_metadata[:has_leading_tone]).to be true
+      end
+    end
+
+    it 'combines metadata criteria and block' do
+      result = tuning.scale_kinds(family: :greek_modes) { |klass| klass.metadata[:brightness]&.negative? }
+      ids = result.map { |k| k.class.id }
+      expect(ids).to include(:dorian, :phrygian, :locrian)
+      expect(ids).not_to include(:lydian, :mixolydian)
+    end
+
+    it 'returns empty array when no matches' do
+      result = tuning.scale_kinds(family: :nonexistent_family)
+      expect(result).to eq []
+    end
+  end
 end

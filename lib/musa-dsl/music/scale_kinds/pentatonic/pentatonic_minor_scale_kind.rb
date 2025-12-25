@@ -50,6 +50,13 @@ module Musa
     # @see PentatonicMajorScaleKind Major pentatonic
     # @see BluesScaleKind Blues scale (pentatonic + blue note)
     class PentatonicMinorScaleKind < ScaleKind
+      @base_metadata = {
+        family: :pentatonic,
+        brightness: -1,
+        character: [:bluesy, :simple, :rock],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

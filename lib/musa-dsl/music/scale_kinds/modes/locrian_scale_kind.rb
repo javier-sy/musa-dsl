@@ -53,6 +53,13 @@ module Musa
     # @see MinorNaturalScaleKind Natural minor
     # @see PhrygianScaleKind Phrygian mode (also has minor 2nd)
     class LocrianScaleKind < ScaleKind
+      @base_metadata = {
+        family: :greek_modes,
+        brightness: -3,
+        character: [:unstable, :diminished, :tense],
+        parent: { scale: :major, degree: 7 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

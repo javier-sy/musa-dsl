@@ -50,6 +50,13 @@ module Musa
     # @see MajorScaleKind Major scale (with perfect 4th)
     # @see MixolydianScaleKind Mixolydian mode
     class LydianScaleKind < ScaleKind
+      @base_metadata = {
+        family: :greek_modes,
+        brightness: 2,
+        character: [:bright, :dreamy, :floating],
+        parent: { scale: :major, degree: 4 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

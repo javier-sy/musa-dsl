@@ -64,6 +64,13 @@ module Musa
     # @see MinorNaturalScaleKind Natural minor (with minor 7th)
     # @see MajorScaleKind Major scale
     class MinorHarmonicScaleKind < ScaleKind
+      @base_metadata = {
+        family: :diatonic,
+        brightness: -2,
+        character: [:dark, :exotic, :dramatic],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic],

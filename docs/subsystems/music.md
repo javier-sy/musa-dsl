@@ -255,15 +255,18 @@ g_mixolydian.degree_of_chord(g7_in_mixolydian)  # => 0 (I degree)
 ```ruby
 g_triad = c_major.dominant.chord  # G-B-D
 
-# Search in all major scales
-g_triad.in_scales(kinds: [:major])
-# => [Chord in C major (V), Chord in G major (I), Chord in D major (IV)]
+# Search in diatonic scales
+g_triad.in_scales(family: :diatonic)
+# => [Chord in C major (V), Chord in G major (I), Chord in D major (IV), ...]
 
-# Search across multiple scale types
-g_triad.in_scales(kinds: [:major, :mixolydian, :dorian])
+# Search using metadata filters
+g_triad.in_scales(family: :greek_modes, brightness: -1..1)
+
+# Search in all scale types
+g_triad.in_scales
 
 # Each result has its scale context
-g_triad.in_scales(kinds: [:major]).each do |chord|
+g_triad.in_scales(family: :diatonic).each do |chord|
   scale = chord.scale
   degree = scale.degree_of_chord(chord)
   puts "#{scale.kind.class.id} rooted on #{scale.root_pitch}: degree #{degree}"
@@ -282,8 +285,163 @@ tuning = Scales.et12[440.0]
 # Search at ScaleKind level
 tuning.major.scales_containing(g_triad)
 
-# Search at ScaleSystemTuning level with custom roots
-tuning.chords_in_scales(g7, kinds: [:major, :minor_harmonic], roots: 60..71)
+# Search at ScaleSystemTuning level with metadata filters
+tuning.chords_of(g7, family: :diatonic, roots: 60..71)
+```
+
+### Scale Kind Metadata
+
+Scale kinds in MusaDSL have a three-layer metadata system that provides
+both automatic structural information and extensible custom properties.
+
+#### Metadata Layers
+
+1. **Intrinsic metadata**: Automatically derived from scale structure
+   - `id`: Scale kind identifier
+   - `grades`: Number of scale degrees
+   - `pitches`: Array of pitch offsets from root
+   - `intervals`: Intervals between consecutive degrees
+   - `has_leading_tone`: Whether scale has pitch 11 (semitone below octave)
+   - `has_tritone`: Whether scale contains tritone interval (pitch 6)
+   - `symmetric`: Type of symmetry if any (`:equal`, `:palindrome`, `:repeating`)
+
+2. **Base metadata**: Defined by musa-dsl library
+   - `family`: Scale family (`:diatonic`, `:greek_modes`, `:pentatonic`, etc.)
+   - `brightness`: Relative brightness (-3 to +3, major = 0)
+   - `character`: Array of descriptive tags
+   - `parent`: Parent scale and degree for modes (e.g., `{ scale: :major, degree: 2 }`)
+
+3. **Custom metadata**: Added by users at runtime
+
+#### Accessing Metadata
+
+```ruby
+tuning = Scales.et12[440.0]
+major_class = tuning.major.class
+
+# Get combined metadata (intrinsic < base < custom)
+major_class.metadata
+# => { id: :major, grades: 7, pitches: [0,2,4,5,7,9,11], family: :diatonic, ... }
+
+# Get specific layer
+major_class.intrinsic_metadata  # Structure-derived only
+major_class.base_metadata       # Library-defined only
+major_class.custom_metadata     # User-added only
+
+# Query helpers
+major_class.has_metadata?(:family)              # => true
+major_class.has_metadata?(:family, :diatonic)   # => true
+major_class.has_metadata?(:character, :bright)  # => true (array inclusion)
+major_class.metadata_value(:brightness)         # => 0
+```
+
+#### Extending Metadata
+
+Users can add custom metadata to any scale kind:
+
+```ruby
+# Extend a specific scale kind class
+tuning.dorian.class.extend_metadata(
+  my_mood: :nostalgic,
+  suitable_for: [:jazz, :fusion],
+  personal_rating: 5
+)
+
+# Or use the convenience method with scale ID
+Scales.extend_metadata(:dorian, my_mood: :nostalgic)
+
+# Multiple calls merge metadata
+Scales.extend_metadata(:phrygian, mood: :dark)
+Scales.extend_metadata(:phrygian, origin: :spanish)  # Merges with previous
+
+# Reset custom metadata if needed
+tuning.dorian.class.reset_custom_metadata
+```
+
+#### Custom Metadata Overrides
+
+Custom metadata takes precedence over base metadata:
+
+```ruby
+# Override library-defined family
+Scales.extend_metadata(:dorian, family: :my_custom_category)
+tuning.dorian.class.metadata[:family]  # => :my_custom_category
+```
+
+#### Brightness Scale Reference
+
+| Value | Meaning | Examples |
+|-------|---------|----------|
+| +3 | Very bright | Lydian augmented |
+| +2 | Bright | Lydian |
+| +1 | Slightly bright | Mixolydian, Lydian dominant |
+| 0 | Neutral (reference) | Major (Ionian) |
+| -1 | Slightly dark | Dorian |
+| -2 | Dark | Minor harmonic, Phrygian |
+| -3 | Very dark | Locrian, Natural minor |
+
+#### Scale Families
+
+- `:diatonic` - Major, minor natural, minor harmonic
+- `:greek_modes` - Dorian, Phrygian, Lydian, Mixolydian, Locrian
+- `:melodic_minor_modes` - Melodic minor and its modes
+- `:pentatonic` - Pentatonic major/minor
+- `:blues` - Blues scales
+- `:bebop` - Bebop scales
+- `:symmetric` - Whole tone, diminished
+- `:ethnic` - Hungarian, Spanish, Neapolitan, etc.
+- `:chromatic` - Chromatic scale
+
+### Searching Scale Kinds
+
+The `scale_kinds` method on ScaleSystemTuning allows searching and filtering
+scale kinds by their metadata properties.
+
+#### Basic Usage
+
+```ruby
+tuning = Scales.et12[440.0]
+
+# Get all scale kinds
+tuning.scale_kinds
+# => [major_kind, minor_kind, dorian_kind, ...]
+
+# Filter by family
+tuning.scale_kinds(family: :diatonic)
+# => [major_kind, minor_kind, minor_harmonic_kind, harmonic_major_kind]
+
+# Filter by brightness range
+tuning.scale_kinds(brightness: -1..1)
+
+# Filter by character
+tuning.scale_kinds(character: :jazz)
+```
+
+#### Custom Filtering with Blocks
+
+Use a block for complex filtering based on any metadata:
+
+```ruby
+# Scales with leading tone
+tuning.scale_kinds { |klass| klass.intrinsic_metadata[:has_leading_tone] }
+
+# Combine criteria and block
+tuning.scale_kinds(family: :greek_modes) { |klass| klass.metadata[:brightness]&.negative? }
+# => [dorian_kind, phrygian_kind, locrian_kind]
+```
+
+#### Integration with Chord Search
+
+The `chords_of` method uses the same metadata filtering:
+
+```ruby
+g7 = tuning.major[60].dominant.chord(:seventh)
+
+# Find G7 in diatonic scales
+tuning.chords_of(g7, family: :diatonic)
+
+# Find G7 in scales with specific brightness
+tuning.chords_of(g7, brightness: -1..1)
 ```
 
 ## Defining Custom Scale Systems, Scale Kinds, and Chord Definitions

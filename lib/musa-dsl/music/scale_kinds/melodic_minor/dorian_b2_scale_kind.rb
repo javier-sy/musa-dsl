@@ -49,6 +49,13 @@ module Musa
     # @see PhrygianScaleKind Phrygian mode
     # @see MelodicMinorScaleKind Parent melodic minor scale
     class DorianB2ScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: -2,
+        character: [:exotic, :phrygian_dorian],
+        parent: { scale: :minor_melodic, degree: 2 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

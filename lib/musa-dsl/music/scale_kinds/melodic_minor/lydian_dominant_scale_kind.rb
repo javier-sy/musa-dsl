@@ -51,6 +51,13 @@ module Musa
     # @see MixolydianScaleKind Mixolydian mode (with perfect 4th)
     # @see MelodicMinorScaleKind Parent melodic minor scale
     class LydianDominantScaleKind < ScaleKind
+      @base_metadata = {
+        family: :melodic_minor_modes,
+        brightness: 1,
+        character: [:bright, :dominant, :fusion],
+        parent: { scale: :minor_melodic, degree: 4 }
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

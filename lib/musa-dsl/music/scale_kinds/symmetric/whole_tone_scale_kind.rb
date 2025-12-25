@@ -46,6 +46,13 @@ module Musa
     # @see ScaleKind Abstract base class
     # @see DiminishedHWScaleKind Diminished scale (another symmetric scale)
     class WholeToneScaleKind < ScaleKind
+      @base_metadata = {
+        family: :symmetric,
+        brightness: nil,
+        character: [:floating, :impressionist, :ambiguous],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

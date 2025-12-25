@@ -49,6 +49,13 @@ module Musa
     # @see MajorScaleKind Major scale (with major 6th)
     # @see MinorHarmonicScaleKind Harmonic minor (similar augmented second)
     class HarmonicMajorScaleKind < ScaleKind
+      @base_metadata = {
+        family: :diatonic,
+        brightness: -1,
+        character: [:major_minor, :dramatic, :classical],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],

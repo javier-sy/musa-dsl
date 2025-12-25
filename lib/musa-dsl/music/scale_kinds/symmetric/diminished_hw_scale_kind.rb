@@ -49,6 +49,13 @@ module Musa
     # @see DiminishedWHScaleKind Whole-half diminished (dominant diminished)
     # @see WholeToneScaleKind Whole tone scale
     class DiminishedHWScaleKind < ScaleKind
+      @base_metadata = {
+        family: :symmetric,
+        brightness: nil,
+        character: [:diminished, :tense, :jazz],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[i _1 tonic first],

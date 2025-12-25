@@ -49,6 +49,13 @@ module Musa
     # @see MixolydianScaleKind Mixolydian (7-note parent)
     # @see BebopMajorScaleKind Bebop major scale
     class BebopDominantScaleKind < ScaleKind
+      @base_metadata = {
+        family: :bebop,
+        brightness: 1,
+        character: [:jazz, :chromatic_passing, :dominant],
+        parent: nil
+      }.freeze
+
       class << self
         @@pitches =
             [{ functions: %i[I _1 tonic first],
