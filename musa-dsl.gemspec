@@ -17,7 +17,8 @@ Gem::Specification.new do |s|
   s.metadata = {
     'homepage_uri' => s.homepage,
     'source_code_uri' => s.homepage,
-    'documentation_uri' => 'https://www.rubydoc.info/gems/musa-dsl'
+    'documentation_uri' => 'https://www.rubydoc.info/gems/musa-dsl',
+    'rubygems_mfa_required' => 'true'
   }
 
   s.add_runtime_dependency 'prime', '~> 0.1'
