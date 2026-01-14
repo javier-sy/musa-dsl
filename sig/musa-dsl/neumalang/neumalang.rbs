@@ -11,14 +11,14 @@ module Musa
         String | File string_or_file,
         ?decode_with: untyped?,
         ?debug: bool?
-      ) -> (Series::Serie::_SerieProtocol | Array[Hash[Symbol, untyped]])
+      ) -> (Musa::Series::_SerieProtocol | Array[Hash[Symbol, untyped]])
 
       # Parses Neumalang notation file.
       def parse_file: (
         String filename,
         ?decode_with: untyped?,
         ?debug: bool?
-      ) -> (Series::Serie::_SerieProtocol | Array[Hash[Symbol, untyped]])
+      ) -> (Musa::Series::_SerieProtocol | Array[Hash[Symbol, untyped]])
 
       # Parser namespace containing grammar and semantic modules.
       module Parser

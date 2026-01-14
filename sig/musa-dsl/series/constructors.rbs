@@ -6,49 +6,49 @@ module Musa
       extend Constructors
 
       # Creates undefined serie
-      def UNDEFINED: () -> Serie::_SerieProtocol
+      def UNDEFINED: () -> _SerieProtocol
 
       # Creates serie that always returns nil
-      def NIL: () -> Serie::_SerieProtocol
+      def NIL: () -> _SerieProtocol
 
       # Creates serie from array of values
-      def S: (*untyped values) -> Serie::_SerieProtocol
+      def S: (*untyped values) -> _SerieProtocol
 
       # Creates hash-mode serie from hash of series
-      def H: (**Serie::_SerieProtocol series_hash) -> Serie::_SerieProtocol
+      def H: (**_SerieProtocol series_hash) -> _SerieProtocol
 
       # Creates hash-mode combined serie from hash of series (cycling)
-      def HC: (**Serie::_SerieProtocol series_hash) -> Serie::_SerieProtocol
+      def HC: (**_SerieProtocol series_hash) -> _SerieProtocol
 
       # Creates array-mode serie from array of series
-      def A: (*Serie::_SerieProtocol series) -> Serie::_SerieProtocol
+      def A: (*_SerieProtocol series) -> _SerieProtocol
 
       # Creates array-mode combined serie from array of series (cycling)
-      def AC: (*Serie::_SerieProtocol series) -> Serie::_SerieProtocol
+      def AC: (*_SerieProtocol series) -> _SerieProtocol
 
       # Creates serie from evaluation block
-      def E: (*untyped value_args, **untyped key_args) { (*untyped, last_value: untyped, caller: untyped, **untyped) -> untyped } -> Serie::_SerieProtocol
+      def E: (*untyped value_args, **untyped key_args) { (*untyped, last_value: untyped, caller: untyped, **untyped) -> untyped } -> _SerieProtocol
 
       # Creates for-loop style numeric sequence
-      def FOR: (?from: Numeric?, ?to: Numeric?, ?step: Numeric?) -> Serie::_SerieProtocol
+      def FOR: (?from: Numeric?, ?to: Numeric?, ?step: Numeric?) -> _SerieProtocol
 
       # Creates random value serie from array or range
-      def RND: (*untyped _values, ?values: Array[untyped]?, ?from: Numeric?, ?to: Numeric?, ?step: Numeric?, ?random: (Random | Integer)?) -> Serie::_SerieProtocol
+      def RND: (*untyped _values, ?values: Array[untyped]?, ?from: Numeric?, ?to: Numeric?, ?step: Numeric?, ?random: (Random | Integer)?) -> _SerieProtocol
 
       # Creates single random value serie
-      def RND1: (*untyped _values, ?values: Array[untyped]?, ?from: Numeric?, ?to: Numeric?, ?step: Numeric?, ?random: (Random | Integer)?) -> Serie::_SerieProtocol
+      def RND1: (*untyped _values, ?values: Array[untyped]?, ?from: Numeric?, ?to: Numeric?, ?step: Numeric?, ?random: (Random | Integer)?) -> _SerieProtocol
 
       # Merges multiple series sequentially
-      def MERGE: (*Serie::_SerieProtocol series) -> Serie::_SerieProtocol
+      def MERGE: (*_SerieProtocol series) -> _SerieProtocol
 
       # Creates sine wave function serie
-      def SIN: (?start_value: Numeric?, ?steps: Numeric?, ?amplitude: Numeric?, ?center: Numeric?) -> Serie::_SerieProtocol
+      def SIN: (?start_value: Numeric?, ?steps: Numeric?, ?amplitude: Numeric?, ?center: Numeric?) -> _SerieProtocol
 
       # Creates Fibonacci sequence serie
-      def FIBO: () -> Serie::_SerieProtocol
+      def FIBO: () -> _SerieProtocol
 
       # Creates harmonic notes serie
-      def HARMO: (?error: Numeric?, ?extended: bool?) -> Serie::_SerieProtocol
+      def HARMO: (?error: Numeric?, ?extended: bool?) -> _SerieProtocol
 
       # Undefined serie class
       class UndefinedSerie

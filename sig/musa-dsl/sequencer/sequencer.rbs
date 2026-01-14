@@ -85,7 +85,7 @@ module Musa
       def launch: (Symbol event, *untyped value_parameters, **untyped key_parameters) -> void
 
       # Schedules block relative to current position.
-      def wait: (Numeric | Series::Serie::_SerieProtocol | Array[Numeric] bars_delay, ?debug: bool?) { (?control: EventHandler) -> void } -> EventHandler
+      def wait: (Numeric | Musa::Series::_SerieProtocol | Array[Numeric] bars_delay, ?debug: bool?) { (?control: EventHandler) -> void } -> EventHandler
 
       # Schedules block at current position.
       def now: () { (?control: EventHandler) -> void } -> EventHandler
@@ -94,11 +94,11 @@ module Musa
       def raw_at: (Numeric bar_position, ?force_first: bool?) { () -> void } -> nil
 
       # Schedules block at absolute position.
-      def at: (Numeric | Series::Serie::_SerieProtocol | Array[Numeric] bar_position, ?debug: bool?) { (?control: EventHandler) -> void } -> EventHandler
+      def at: (Numeric | Musa::Series::_SerieProtocol | Array[Numeric] bar_position, ?debug: bool?) { (?control: EventHandler) -> void } -> EventHandler
 
       # Plays series over time.
       def play: (
-        Series::Serie::_SerieProtocol serie,
+        Musa::Series::_SerieProtocol serie,
         ?mode: Symbol?,
         ?parameter: Symbol?,
         ?after_bars: Numeric?,
@@ -109,7 +109,7 @@ module Musa
 
       # Plays timed series.
       def play_timed: (
-        Series::Serie::_SerieProtocol timed_serie,
+        Musa::Series::_SerieProtocol timed_serie,
         ?at: Rational?,
         ?on_stop: Proc?,
         ?after_bars: Numeric?,
@@ -145,9 +145,6 @@ module Musa
       def debug: (?String? msg) -> void
       def to_s: () -> String
     end
-
-    # Alias for BaseSequencer
-    type Sequencer = BaseSequencer
 
     # Event handler for hierarchical event pub/sub.
     class EventHandler

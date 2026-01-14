@@ -26,7 +26,7 @@ module Musa
       def to_neumas: () -> Array[Hash[Symbol, untyped]]
 
       # Parses neuma notation string.
-      def neu: () -> Series::Serie::_SerieProtocol
+      def neu: () -> Musa::Series::_SerieProtocol
     end
   end
 end

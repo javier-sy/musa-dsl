@@ -4,79 +4,79 @@ module Musa
   module Series
     module Operations
       # Auto-restarts serie when exhausted
-      def autorestart: () -> Serie::_SerieProtocol
+      def autorestart: () -> _SerieProtocol
 
       # Repeats serie multiple times or conditionally
-      def repeat: (?Integer? times, ?condition: Proc?) ?{ () -> bool } -> Serie::_SerieProtocol
+      def repeat: (?Integer? times, ?condition: Proc?) ?{ () -> bool } -> _SerieProtocol
 
       # Limits serie to maximum number of values
-      def max_size: (Integer length) -> Serie::_SerieProtocol
+      def max_size: (Integer length) -> _SerieProtocol
 
       # Skips first N values
-      def skip: (Integer length) -> Serie::_SerieProtocol
+      def skip: (Integer length) -> _SerieProtocol
 
       # Flattens nested series into single level
-      def flatten: () -> Serie::_SerieProtocol
+      def flatten: () -> _SerieProtocol
 
       # Processes values with parameterized block
-      def process_with: (**untyped parameters) { (untyped value, **untyped parameters) -> untyped } -> Serie::_SerieProtocol
+      def process_with: (**untyped parameters) { (untyped value, **untyped parameters) -> untyped } -> _SerieProtocol
 
       # Converts array values to hash with specified keys
-      def hashify: (*Symbol keys) -> Serie::_SerieProtocol
+      def hashify: (*Symbol keys) -> _SerieProtocol
 
       # Rotates serie elements circularly
-      def shift: (Integer shift) -> Serie::_SerieProtocol
+      def shift: (Integer shift) -> _SerieProtocol
 
       # Locks serie preventing further modifications
-      def lock: () -> Serie::_SerieProtocol
+      def lock: () -> _SerieProtocol
 
       # Reverses order of values
-      def reverse: () -> Serie::_SerieProtocol
+      def reverse: () -> _SerieProtocol
 
       # Randomizes order of values
-      def randomize: (?random: Random?) -> Serie::_SerieProtocol
+      def randomize: (?random: Random?) -> _SerieProtocol
 
       # Removes values matching condition
-      def remove: (?Proc? block) ?{ (untyped) -> bool } -> Serie::_SerieProtocol
+      def remove: (?Proc? block) ?{ (untyped) -> bool } -> _SerieProtocol
 
       # Selects values matching condition
-      def select: (?Proc? block) ?{ (untyped) -> bool } -> Serie::_SerieProtocol
+      def select: (?Proc? block) ?{ (untyped) -> bool } -> _SerieProtocol
 
       # Switches between multiple series based on selector values
-      def switch: (*Serie::_SerieProtocol indexed_series, **Serie::_SerieProtocol hash_series) -> Serie::_SerieProtocol
+      def switch: (*_SerieProtocol indexed_series, **_SerieProtocol hash_series) -> _SerieProtocol
 
       # Multiplexes values from multiple series based on selector
-      def multiplex: (*Serie::_SerieProtocol indexed_series, **Serie::_SerieProtocol hash_series) -> Serie::_SerieProtocol
+      def multiplex: (*_SerieProtocol indexed_series, **_SerieProtocol hash_series) -> _SerieProtocol
 
       # Switches to entirely different series based on selector
-      def switch_serie: (*Serie::_SerieProtocol indexed_series, **Serie::_SerieProtocol hash_series) -> Serie::_SerieProtocol
+      def switch_serie: (*_SerieProtocol indexed_series, **_SerieProtocol hash_series) -> _SerieProtocol
 
       # Appends series sequentially
-      def after: (*Serie::_SerieProtocol series) -> Serie::_SerieProtocol
+      def after: (*_SerieProtocol series) -> _SerieProtocol
 
       # Appends another serie (operator)
-      def +: (Serie::_SerieProtocol other) -> Serie::_SerieProtocol
+      def +: (_SerieProtocol other) -> _SerieProtocol
 
       # Cuts serie into chunks of specified length
-      def cut: (Integer length) -> Serie::_SerieProtocol
+      def cut: (Integer length) -> _SerieProtocol
 
       # Merges serie of series into single serie
-      def merge: () -> Serie::_SerieProtocol
+      def merge: () -> _SerieProtocol
 
       # Combines multiple series for mapping
-      def with: (*Serie::_SerieProtocol with_series, ?on_restart: Proc?, ?isolate_values: bool?, **Serie::_SerieProtocol with_key_series) { (*untyped, **untyped) -> untyped } -> Serie::_SerieProtocol
+      def with: (*_SerieProtocol with_series, ?on_restart: Proc?, ?isolate_values: bool?, **_SerieProtocol with_key_series) { (*untyped, **untyped) -> untyped } -> _SerieProtocol
 
       # Alias for with
       alias eval with
 
       # Maps values via transformation block
-      def map: (?isolate_values: bool?) { (untyped) -> untyped } -> Serie::_SerieProtocol
+      def map: (?isolate_values: bool?) { (untyped) -> untyped } -> _SerieProtocol
 
       # Evaluates block one step ahead (anticipate)
-      def anticipate: () { (untyped current, untyped next_value) -> untyped } -> Serie::_SerieProtocol
+      def anticipate: () { (untyped current, untyped next_value) -> untyped } -> _SerieProtocol
 
       # Delays evaluation to next step (lazy evaluation)
-      def lazy: () { (untyped previous) -> untyped } -> Serie::_SerieProtocol
+      def lazy: () { (untyped previous) -> untyped } -> _SerieProtocol
     end
   end
 end

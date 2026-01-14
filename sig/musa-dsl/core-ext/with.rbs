@@ -18,24 +18,5 @@ module Musa
       def with: (*untyped value_parameters, ?keep_block_context: bool?, **untyped key_parameters) ?{ (*untyped) -> untyped } -> untyped
     end
 
-    # Smart proc binder for parameter introspection
-    module SmartProcBinder
-      class SmartProcBinder
-        # Creates new SmartProcBinder wrapping a proc
-        def initialize: (Proc proc) -> void
-
-        # Returns proc's parameter definitions
-        def parameters: () -> Array[[Symbol, Symbol]]
-
-        # Returns the wrapped proc
-        def proc: () -> Proc
-
-        # Applies parameters to proc
-        def _apply: (Array[untyped] value_parameters, Hash[Symbol, untyped] key_parameters) -> [Array[untyped], Hash[Symbol, untyped]]
-
-        # Calls the proc with parameters
-        def call: (*untyped, **untyped) -> untyped
-      end
-    end
   end
 end

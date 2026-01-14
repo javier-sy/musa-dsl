@@ -61,7 +61,7 @@ module Musa
         def []: (Integer index) -> Node
 
         # Converts options to series.
-        def to_serie: (?flatten: bool) ?{ (Array[OptionElement]) -> bool } -> Series::Serie::_SerieProtocol
+        def to_serie: (?flatten: bool) ?{ (Array[OptionElement]) -> bool } -> Musa::Series::_SerieProtocol
         alias s to_serie
 
         # Internal method to generate option arrays.

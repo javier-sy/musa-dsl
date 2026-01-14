@@ -13,7 +13,7 @@ module Musa
           ?work_title: String?,
           ?movement_number: (Integer | String)?,
           ?movement_title: String?,
-          ?encoding_date: DateTime?,
+          ?encoding_date: Time?,
           ?creators: Hash[Symbol, String]?,
           ?rights: Hash[Symbol, String]?
         ) ?{ () -> void } -> void
@@ -31,7 +31,7 @@ module Musa
         attr_accessor movement_number: (Integer | String)?
 
         # Encoding date getter/setter.
-        attr_accessor encoding_date: DateTime
+        attr_accessor encoding_date: Time
 
         # Adds rights information.
         def rights: (**String hash) -> void
