@@ -1,0 +1,37 @@
+# RBS for core-ext/deep-copy.rb - Deep copy functionality
+#
+# NOTE: RBS does not support Ruby refinements. The Object#dup(deep:) and
+# Object#clone(deep:) methods are added via `using Musa::Extension::DeepCopy`.
+
+module Musa
+  module Extension
+    module DeepCopy
+      # Main deep copy module providing class methods.
+      module DeepCopy
+        extend DeepCopy
+
+        # Creates a deep copy of an object, recursively copying nested structures.
+        def deep_copy: (
+          untyped object,
+          ?method: (:dup | :clone),
+          ?freeze: bool?
+        ) -> untyped
+
+        # Copies singleton class modules from source to target.
+        def copy_singleton_class_modules: (untyped source, untyped target) -> untyped
+      end
+    end
+  end
+end
+
+# Extended Object methods (via refinement)
+# Available when `using Musa::Extension::DeepCopy`
+class Object
+  # Enhanced dup with optional deep copy.
+  # Available via refinement: `using Musa::Extension::DeepCopy`
+  # def dup: (?deep: bool) -> self
+
+  # Enhanced clone with optional deep copy.
+  # Available via refinement: `using Musa::Extension::DeepCopy`
+  # def clone: (?freeze: bool?, ?deep: bool) -> self
+end

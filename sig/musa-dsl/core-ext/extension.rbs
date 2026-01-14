@@ -1,0 +1,7 @@
+# RBS for core-ext/extension.rb - Extension namespace module
+
+module Musa
+  # Namespace for core Ruby extensions and utilities used throughout Musa DSL.
+  module Extension
+  end
+end

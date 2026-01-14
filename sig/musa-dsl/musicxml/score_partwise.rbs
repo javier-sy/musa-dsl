@@ -1,0 +1,142 @@
+# RBS for musicxml/builder/score-partwise.rb - MusicXML score builder
+
+module Musa
+  module MusicXML
+    module Builder
+      # Main entry point for creating MusicXML scores.
+      class ScorePartwise
+        include Extension::With
+
+        # Creates a new MusicXML score.
+        def initialize: (
+          ?work_number: Integer?,
+          ?work_title: String?,
+          ?movement_number: (Integer | String)?,
+          ?movement_title: String?,
+          ?encoding_date: DateTime?,
+          ?creators: Hash[Symbol, String]?,
+          ?rights: Hash[Symbol, String]?
+        ) ?{ () -> void } -> void
+
+        # Work title getter/setter.
+        attr_accessor work_title: String?
+
+        # Work number getter/setter.
+        attr_accessor work_number: Integer?
+
+        # Movement title getter/setter.
+        attr_accessor movement_title: String?
+
+        # Movement number getter/setter.
+        attr_accessor movement_number: (Integer | String)?
+
+        # Encoding date getter/setter.
+        attr_accessor encoding_date: DateTime
+
+        # Adds rights information.
+        def rights: (**String hash) -> void
+        def add_rights: (Symbol | String type, String name) -> void
+
+        # Adds creator information.
+        def creators: (**String hash) -> void
+        def add_creator: (Symbol | String type, String name) -> void
+
+        # Adds a part to the score.
+        def part: (Symbol id, name: String, ?abbreviation: String?) ?{ () -> void } -> Internal::Part
+        def add_part: (Symbol id, name: String, ?abbreviation: String?) ?{ () -> void } -> Internal::Part
+
+        # Adds a part group.
+        def group: (Integer number, type: String, ?name: String?, ?abbreviation: String?, ?symbol: String?, ?group_barline: (bool | String)?, ?group_time: (bool | String)?) -> Internal::PartGroup
+        def add_group: (Integer number, type: String, ?name: String?, ?abbreviation: String?, ?symbol: String?, ?group_barline: (bool | String)?, ?group_time: (bool | String)?) -> Internal::PartGroup
+
+        # Generates MusicXML document.
+        def to_xml: (?IO? io, ?indent: Integer) -> (IO | StringIO)
+      end
+
+      module Internal
+        # Part in the score.
+        class Part
+          def initialize: (Symbol id, name: String, ?abbreviation: String?) ?{ () -> void } -> void
+
+          attr_reader id: Symbol
+          attr_accessor name: String
+          attr_accessor abbreviation: String?
+
+          # Adds a measure to the part.
+          def measure: (?divisions: Integer?) ?{ () -> void } -> Measure
+          def add_measure: (?divisions: Integer?) ?{ () -> void } -> Measure
+
+          def to_xml: (IO io, ?indent: Integer) -> void
+          def header_to_xml: (IO io, ?indent: Integer) -> void
+        end
+
+        # Part group for organizing parts.
+        class PartGroup
+          def initialize: (Integer number, type: String, ?name: String?, ?abbreviation: String?, ?symbol: String?, ?group_barline: (bool | String)?, ?group_time: (bool | String)?) -> void
+
+          attr_reader number: Integer
+          attr_reader type: String
+          attr_accessor name: String?
+          attr_accessor abbreviation: String?
+          attr_accessor symbol: String?
+          attr_accessor group_barline: (bool | String)?
+          attr_accessor group_time: (bool | String)?
+
+          def header_to_xml: (IO io, ?indent: Integer) -> void
+        end
+
+        # Measure in a part.
+        class Measure
+          def initialize: (?divisions: Integer?) ?{ () -> void } -> void
+
+          attr_accessor divisions: Integer?
+
+          # Adds attributes to the measure.
+          def attributes: () ?{ () -> void } -> Attributes
+          def add_attributes: () ?{ () -> void } -> Attributes
+
+          # Adds a note/pitch to the measure.
+          def pitch: (String step, octave: Integer, duration: Integer, type: String, ?dots: Integer?, ?alter: Integer?) -> void
+          def add_pitch: (step: String, octave: Integer, duration: Integer, type: String, ?dots: Integer?, ?alter: Integer?) -> void
+
+          # Adds a rest to the measure.
+          def rest: (duration: Integer, type: String, ?dots: Integer?) -> void
+          def add_rest: (duration: Integer, type: String, ?dots: Integer?) -> void
+
+          def to_xml: (IO io, ?indent: Integer) -> void
+        end
+
+        # Measure attributes (key, time, clef, etc.).
+        class Attributes
+          def initialize: () ?{ () -> void } -> void
+
+          # Sets divisions.
+          def divisions: (Integer value) -> void
+
+          # Sets key signature.
+          def key: (fifths: Integer, ?mode: String?) -> void
+
+          # Sets time signature.
+          def time: (beats: Integer, beat_type: Integer) -> void
+
+          # Sets clef.
+          def clef: (sign: String, line: Integer, ?number: Integer?) -> void
+
+          def to_xml: (IO io, ?indent: Integer) -> void
+        end
+
+        # Creator typed text element.
+        class Creator
+          def initialize: (Symbol | String type, String name) -> void
+          def to_xml: (IO io, ?indent: Integer) -> void
+        end
+
+        # Rights typed text element.
+        class Rights
+          def initialize: (Symbol | String type, String name) -> void
+          def to_xml: (IO io, ?indent: Integer) -> void
+        end
+      end
+    end
+  end
+end

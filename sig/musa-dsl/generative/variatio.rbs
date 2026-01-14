@@ -1,0 +1,78 @@
+# RBS for generative/variatio.rb - Combinatorial variation generator
+
+module Musa
+  module Variatio
+    # Combinatorial variation generator.
+    #
+    # Generates all combinations of field values using Cartesian product,
+    # constructs objects, applies attributes, and optionally finalizes.
+    class Variatio
+      # Creates variation generator with field definitions.
+      #
+      # @param instance_name Name for object parameter in blocks
+      def initialize: (Symbol instance_name) { () -> void } -> void
+
+      # Generates variations with runtime field value overrides.
+      def on: (**( Array[untyped] | Range[untyped] ) values) -> Array[untyped]
+
+      # Generates all variations with default field values.
+      def run: () -> Array[untyped]
+
+      # DSL context for fieldset definition.
+      class FieldsetContext
+        include Extension::With
+
+        # Defined fieldset
+        attr_reader _fieldset: Fieldset
+
+        def initialize: (Symbol name, ?( Array[untyped] | Range[untyped] )? options) { () -> void } -> void
+
+        # Defines a field with options.
+        def field: (Symbol name, ?( Array[untyped] | Range[untyped] )? options) -> void
+
+        # Defines nested fieldset.
+        def fieldset: (Symbol name, ?( Array[untyped] | Range[untyped] )? options) { () -> void } -> void
+
+        # Adds attribute modification block.
+        def with_attributes: () { (**untyped) -> void } -> void
+      end
+
+      # DSL context for main Variatio configuration.
+      class MainContext < FieldsetContext
+        # Constructor block
+        attr_reader _constructor: Proc?
+
+        # Finalize block
+        attr_reader _finalize: Proc?
+
+        def initialize: () { () -> void } -> void
+
+        # Defines object constructor.
+        def constructor: () { (**untyped) -> untyped } -> void
+
+        # Defines finalize block.
+        def finalize: () { (**untyped) -> void } -> void
+      end
+
+      # Field with name and options.
+      class Field
+        attr_reader name: Symbol
+        attr_accessor options: Array[untyped]
+
+        def inspect: () -> String
+        alias to_s inspect
+      end
+
+      # Fieldset containing fields and nested fieldsets.
+      class Fieldset
+        attr_reader name: Symbol
+        attr_reader with_attributes: Array[Proc]
+        attr_reader components: Array[Field | Fieldset]
+        attr_accessor options: Array[untyped]
+
+        def inspect: () -> String
+        alias to_s inspect
+      end
+    end
+  end
+end

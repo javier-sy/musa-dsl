@@ -1,0 +1,41 @@
+# RBS for core-ext/hashify.rb - Hashify refinement
+#
+# NOTE: RBS does not support Ruby refinements. These methods are added via
+# `using Musa::Extension::Hashify` and won't provide type checking.
+
+module Musa
+  module Extension
+    # Refinement that converts objects, arrays, and hashes into hashes.
+    #
+    # Methods available via refinement:
+    # - Object#hashify(keys:, default: nil) -> Hash
+    # - Array#hashify(keys:, default: nil) -> Hash
+    # - Hash#hashify(keys:, default: nil) -> Hash
+    module Hashify
+    end
+  end
+end
+
+# Extended Object methods (via refinement)
+# Available when `using Musa::Extension::Hashify`
+class Object
+  # Creates a hash mapping all specified keys to this object's value.
+  # Available via refinement: `using Musa::Extension::Hashify`
+  # def hashify: (keys: Array[Symbol], ?default: untyped?) -> Hash[Symbol, untyped]
+end
+
+# Extended Array methods (via refinement)
+# Available when `using Musa::Extension::Hashify`
+class Array[unchecked out Elem]
+  # Maps array elements to hash keys in order.
+  # Available via refinement: `using Musa::Extension::Hashify`
+  # def hashify: (keys: Array[Symbol], ?default: untyped?) -> Hash[Symbol, untyped]
+end
+
+# Extended Hash methods (via refinement)
+# Available when `using Musa::Extension::Hashify`
+class Hash[unchecked out K, unchecked out V]
+  # Filters and reorders hash to include only specified keys.
+  # Available via refinement: `using Musa::Extension::Hashify`
+  # def hashify: (keys: Array[Symbol], ?default: untyped?) -> Hash[Symbol, untyped]
+end

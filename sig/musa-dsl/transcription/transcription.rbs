@@ -1,0 +1,52 @@
+# RBS for transcription/transcription.rb - Transcription framework for GDV events
+
+module Musa
+  module Transcription
+    # Main transcription orchestrator.
+    #
+    # Chains multiple feature transcriptors to process GDV events through a
+    # transformation pipeline.
+    class Transcriptor
+      # Returns the transcriptor chain.
+      attr_reader transcriptors: Array[FeatureTranscriptor]
+
+      # Creates transcriptor with specified feature processors.
+      def initialize: (
+        ?Array[FeatureTranscriptor]? transcriptors,
+        ?base_duration: Rational?,
+        ?tick_duration: Rational?
+      ) -> void
+
+      # Transcribes GDV event(s) through the processor chain.
+      def transcript: (Hash[Symbol, untyped] | Array[Hash[Symbol, untyped]] element) -> (Hash[Symbol, untyped] | Array[Hash[Symbol, untyped]] | nil)
+    end
+
+    # Base class for feature transcriptors.
+    class FeatureTranscriptor
+      # Transcribes GDV event for this feature.
+      def transcript: (
+        Hash[Symbol, untyped] | Array[Hash[Symbol, untyped]] element,
+        base_duration: Rational,
+        tick_duration: Rational
+      ) -> (Hash[Symbol, untyped] | Array[Hash[Symbol, untyped]])
+
+      # Helper to safely process value or array.
+      def check: [T] (T | Array[T] value_or_array) { (T) -> void } -> void
+    end
+  end
+
+  # Namespace for transcriptor implementations.
+  module Transcriptors
+    module FromGDV
+      module ToMIDI
+        # Returns transcription set for MIDI output.
+        def self.transcription_set: (?duration_factor: Rational?) -> Array[Transcription::FeatureTranscriptor]
+      end
+
+      module ToMusicXML
+        # Returns transcription set for MusicXML output.
+        def self.transcription_set: () -> Array[Transcription::FeatureTranscriptor]
+      end
+    end
+  end
+end

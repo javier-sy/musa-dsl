@@ -1,0 +1,97 @@
+# RBS for datasets/score.rb - Time-indexed container for musical events
+
+module Musa
+  module Datasets
+    # Time-indexed container for musical events.
+    #
+    # Score organizes musical events along a timeline, storing them at specific
+    # time points and providing efficient queries for time intervals.
+    class Score
+      include Enumerable[[Rational, Array[Abs]]]
+      include AbsD
+      include ToMXML
+      include Queriable
+      include Render
+
+      # Natural keys for Score
+      NaturalKeys: Array[Symbol]
+
+      # Creates new score
+      def initialize: (?Hash[Rational, Array[Abs]]? hash) -> void
+
+      # Clears all events from score
+      def reset: () -> void
+
+      # Gets attribute value
+      def []: (Symbol key) -> untyped
+
+      # Returns latest finish time of all events
+      def finish: () -> Rational?
+
+      # Returns total duration of score
+      def duration: () -> Rational
+
+      # Adds event at time or gets time slot
+      def at: (Numeric time, ?add: Abs?) -> Array[Abs]?
+
+      # Returns number of time positions
+      def size: () -> Integer
+
+      # Returns all time positions sorted
+      def positions: () -> Array[Rational]
+
+      # Iterates over time slots in order
+      def each: () { (Rational, Array[Abs]) -> void } -> void
+
+      # Converts to hash representation
+      def to_h: () -> Hash[Rational, Array[Abs]]
+
+      # Queries events overlapping time interval
+      def between: (Rational closed_interval_start, Rational open_interval_finish) -> Array[Hash[Symbol, untyped]]
+
+      # Queries start/finish change events in interval
+      def changes_between: (Rational closed_interval_start, Rational open_interval_finish) -> Array[Hash[Symbol, untyped]]
+
+      # Collects all values for an attribute
+      def values_of: (Symbol attribute) -> Set[untyped]
+
+      # Creates filtered subset of score
+      def subset: () { (Abs) -> bool } -> Score
+
+      # Returns formatted string representation
+      def inspect: () -> String
+    end
+
+    # Query capability for time slots
+    module QueryableByTimeSlot
+    end
+
+    # Query capability for datasets
+    module QueryableByDataset
+    end
+
+    # MusicXML export capability
+    module ToMXML
+    end
+
+    # Query capabilities
+    module Queriable
+    end
+
+    # MIDI rendering capability
+    module Render
+    end
+
+    # Helper methods for string formatting
+    module Helper
+      # Formats modifier key-value pair
+      def modificator_string: (Symbol key, untyped value) -> String
+
+      # Returns sign character for number
+      def sign_of: (Numeric x) -> String
+
+      # Returns positive sign character for number
+      def positive_sign_of: (Numeric x) -> String
+    end
+  end
+end

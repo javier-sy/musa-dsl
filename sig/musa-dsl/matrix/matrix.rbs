@@ -1,0 +1,43 @@
+# RBS for matrix/matrix.rb - Matrix to P sequence conversions
+#
+# Note: RBS does not support Ruby refinements. These methods are added
+# to Array and Matrix via `using Musa::Extension::Matrix`.
+
+module Musa
+  module Extension
+    # Refinements for Array and Matrix to support P (point sequence) conversions.
+    #
+    # NOTE: RBS cannot express refinements. The methods below are documented
+    # for reference but won't provide type checking in refined contexts.
+    module Matrix
+    end
+  end
+end
+
+# Extended Array methods (via refinement)
+# These methods are available when `using Musa::Extension::Matrix`
+class Array[unchecked out Elem]
+  # Creates a hash mapping values to their indices.
+  # Available via refinement: `using Musa::Extension::Matrix`
+  # def indexes_of_values: () -> Hash[untyped, Array[Integer]]
+
+  # Converts an array of matrices to an array of P sequences.
+  # Available via refinement: `using Musa::Extension::Matrix`
+  # def to_p: (time_dimension: Integer, ?keep_time: bool?) -> Array[Datasets::P]
+
+  # Condenses matrices that share common boundary rows.
+  # Available via refinement: `using Musa::Extension::Matrix`
+  # def condensed_matrices: () -> Array[::Matrix[untyped]]
+end
+
+# Extended Matrix methods (via refinement)
+# These methods are available when `using Musa::Extension::Matrix`
+class Matrix[Elem]
+  # Converts a matrix to P (point sequence) format.
+  # Available via refinement: `using Musa::Extension::Matrix`
+  # def to_p: (time_dimension: Integer, ?keep_time: bool?) -> Array[Datasets::P]
+
+  # Provides direct access to internal rows array.
+  # Available via refinement: `using Musa::Extension::Matrix`
+  # def _rows: () -> Array[Array[Elem]]
+end

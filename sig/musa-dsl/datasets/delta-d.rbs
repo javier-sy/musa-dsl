@@ -1,0 +1,16 @@
+# RBS for datasets/delta-d.rb - Delta events with flexible duration encoding
+
+module Musa
+  module Datasets
+    # Delta events with flexible duration encoding.
+    #
+    # DeltaD extends Delta events with three different ways to specify
+    # duration changes in delta-encoded sequences.
+    module DeltaD
+      include Delta
+
+      # Natural keys for delta duration encoding
+      NaturalKeys: Array[Symbol]
+    end
+  end
+end

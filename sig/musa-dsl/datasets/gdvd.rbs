@@ -1,0 +1,40 @@
+# RBS for datasets/gdvd.rb - Delta-encoded score events
+
+module Musa
+  module Datasets
+    # Delta-encoded score events for efficient compression.
+    #
+    # GDVd represents musical events using delta encoding - storing only
+    # changes from previous events. Hash-based with extensible attributes.
+    module GDVd
+      include DeltaD
+      include DeltaI
+      include Helper
+
+      # Natural keys for delta encoding
+      NaturalKeys: Array[Symbol]
+
+      # Base duration for time calculations
+      attr_reader base_duration: Rational?
+
+      # Sets base duration, adjusting existing duration values
+      def base_duration=: (Rational value) -> Rational
+
+      # Reconstructs absolute GDV from delta encoding
+      def to_gdv: (untyped scale, previous: GDV) -> GDV
+
+      # Converts to Neuma delta notation string
+      def to_neuma: () -> String
+
+      # Hash access - allows user-defined keys
+      def []: (Symbol key) -> untyped
+      def []=: (Symbol key, untyped value) -> untyped
+      def keys: () -> Array[Symbol]
+      def include?: (Symbol key) -> bool
+      def has_key?: (Symbol key) -> bool
+    end
+
+    # Type alias for GDVd hash
+    type gdvd = Hash[Symbol, untyped] & GDVd
+  end
+end

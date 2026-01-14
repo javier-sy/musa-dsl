@@ -1,0 +1,57 @@
+# RBS for datasets/gdv.rb - Score-style musical events with scale degrees
+
+module Musa
+  module Datasets
+    # Score-style musical events with scale degrees.
+    #
+    # GDV represents musical events using score notation with scale degrees,
+    # octaves, and dynamics. Hash-based with extensible attributes.
+    module GDV
+      include AbsD
+      include Helper
+
+      # Natural keys for score events
+      NaturalKeys: Array[Symbol]
+
+      # MIDI velocity mapping for dynamics
+      VELOCITY_MAP: Array[Integer]
+
+      # Base duration for time calculations
+      attr_accessor base_duration: Rational?
+
+      # Returns grade (scale degree)
+      def grade: () -> (Integer | Symbol)?
+
+      # Returns sharps (chromatic alteration)
+      def sharps: () -> Integer?
+
+      # Returns octave offset
+      def octave: () -> Integer?
+
+      # Returns velocity (dynamics -5 to +4)
+      def velocity: () -> (Integer | Float)?
+
+      # Returns silence flag
+      def silence: () -> (bool | Symbol)?
+
+      # Converts to PDV (MIDI representation)
+      def to_pdv: (untyped scale) -> PDV
+
+      # Converts to Neuma notation string
+      def to_neuma: () -> String
+
+      # Converts to GDVd (delta encoding)
+      def to_gdvd: (untyped scale, ?previous: GDV?) -> GDVd
+
+      # Hash access - allows user-defined keys
+      def []: (Symbol key) -> untyped
+      def []=: (Symbol key, untyped value) -> untyped
+      def keys: () -> Array[Symbol]
+      def include?: (Symbol key) -> bool
+      def has_key?: (Symbol key) -> bool
+    end
+
+    # Type alias for GDV hash
+    type gdv = Hash[Symbol, untyped] & GDV
+  end
+end

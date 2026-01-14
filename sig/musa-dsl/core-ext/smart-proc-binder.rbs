@@ -1,0 +1,40 @@
+# RBS for core-ext/smart-proc-binder.rb - Intelligent parameter binding for Procs
+
+module Musa
+  module Extension
+    module SmartProcBinder
+      # Wrapper for Proc objects with intelligent parameter matching.
+      class SmartProcBinder
+        # Creates a new SmartProcBinder wrapping the given block.
+        def initialize: (Proc block, ?on_rescue: Proc?) -> void
+
+        # Returns the wrapped Proc.
+        def proc: () -> Proc
+
+        # Returns the parameter signature of the wrapped Proc.
+        def parameters: () -> Array[[Symbol, Symbol?]]
+
+        # Calls the wrapped Proc with smart parameter matching.
+        def call: (*untyped value_parameters, **untyped key_parameters) ?{ () -> untyped } -> untyped
+
+        # Internal call implementation with error handling.
+        def _call: (Array[untyped] value_parameters, ?Hash[Symbol, untyped] key_parameters, ?Proc? block) -> untyped
+
+        # Checks if the wrapped Proc accepts a specific keyword parameter.
+        def key?: (Symbol key) -> bool
+
+        # Alias for key?
+        def has_key?: (Symbol key) -> bool
+
+        # Filters arguments to match the Proc's signature.
+        def apply: (*untyped value_parameters, **untyped key_parameters) -> [Array[untyped], Hash[Symbol, untyped]]
+
+        # Internal implementation of argument filtering.
+        def _apply: (Array[untyped] value_parameters, Hash[Symbol, untyped] key_parameters) -> [Array[untyped], Hash[Symbol, untyped]]
+
+        def inspect: () -> String
+        alias to_s inspect
+      end
+    end
+  end
+end

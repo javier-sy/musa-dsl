@@ -1,0 +1,80 @@
+# RBS for datasets/e.rb - Base modules for musical events
+
+module Musa
+  module Datasets
+    # Base module for all datasets
+    module Dataset
+    end
+
+    # Base module for musical events
+    #
+    # Provides validation interface and natural keys concept.
+    module E
+      include Dataset
+
+      # Natural keys for base events (empty)
+      NaturalKeys: Array[Symbol]
+
+      # Checks if event is valid
+      def valid?: () -> bool
+
+      # Validates event, raising if invalid
+      def validate!: () -> void
+    end
+
+    # Events with absolute values
+    module Abs
+      include E
+    end
+
+    # Events with delta (incremental) values
+    module Delta
+      include E
+    end
+
+    # Absolute indexed events (array-based)
+    module AbsI
+      include Abs
+    end
+
+    # Absolute events with time component
+    module AbsTimed
+      include Abs
+
+      # Natural keys including time
+      NaturalKeys: Array[Symbol]
+    end
+
+    # Delta indexed events (array-based deltas)
+    module DeltaI
+      include Delta
+    end
+
+    # Absolute events with duration
+    #
+    # Provides duration, note_duration, and forward_duration accessors.
+    module AbsD
+      include Abs
+
+      # Natural keys including duration variants
+      NaturalKeys: Array[Symbol]
+
+      # Returns forward duration (time until next event)
+      # Defaults to :duration if :forward_duration not specified
+      def forward_duration: () -> Numeric
+
+      # Returns actual note duration
+      # Defaults to :duration if :note_duration not specified
+      def note_duration: () -> Numeric
+
+      # Returns event duration
+      def duration: () -> Numeric?
+
+      # Checks if thing can be converted to AbsD
+      def self.is_compatible?: (untyped thing) -> bool
+
+      # Converts thing to AbsD if possible
+      def self.to_AbsD: (untyped thing) -> AbsD
+    end
+  end
+end

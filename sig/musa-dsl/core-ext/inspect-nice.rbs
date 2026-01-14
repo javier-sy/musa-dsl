@@ -1,0 +1,43 @@
+# RBS for core-ext/inspect-nice.rb - InspectNice refinement
+#
+# NOTE: RBS does not support Ruby refinements. These methods are added via
+# `using Musa::Extension::InspectNice` and won't provide type checking.
+
+module Musa
+  module Extension
+    # Refinements that provide more readable inspect/to_s output.
+    #
+    # Methods available via refinement:
+    # - Hash#inspect -> String (compact format)
+    # - Hash#to_s -> String (aliases inspect)
+    # - Rational.to_s_as_inspect -> bool (class attribute)
+    # - Rational#inspect(simple: nil) -> String
+    # - Rational#to_s -> String
+    module InspectNice
+    end
+  end
+end
+
+# Extended Hash methods (via refinement)
+# Available when `using Musa::Extension::InspectNice`
+class Hash[unchecked out K, unchecked out V]
+  # Compact, readable inspect output with symbol-key shorthand.
+  # Available via refinement: `using Musa::Extension::InspectNice`
+  # def inspect: () -> String
+end
+
+# Extended Rational singleton class (via refinement)
+# Available when `using Musa::Extension::InspectNice`
+# class Rational
+#   singleton class
+#     attr_accessor to_s_as_inspect: bool?
+#   end
+# end
+
+# Extended Rational methods (via refinement)
+# Available when `using Musa::Extension::InspectNice`
+class Rational
+  # Musical-friendly inspect output for Rational numbers.
+  # Available via refinement: `using Musa::Extension::InspectNice`
+  # def inspect: (?simple: bool?) -> String
+end

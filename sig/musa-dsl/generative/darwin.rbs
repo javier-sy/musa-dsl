@@ -1,0 +1,88 @@
+# RBS for generative/darwin.rb - Evolutionary selection algorithm
+
+module Musa
+  module Darwin
+    # Evolutionary selector for population-based optimization.
+    #
+    # Evaluates population using measures and weights, returning sorted
+    # population by fitness score.
+    class Darwin
+      # Creates Darwin selector with evaluation rules.
+      def initialize: () { () -> void } -> void
+
+      # Selects and ranks population by fitness.
+      #
+      # Evaluates each object with measures, normalizes dimensions across
+      # population, applies weights, and returns population sorted by fitness.
+      def select: (Array[untyped] population) -> Array[untyped]
+
+      # DSL context for Darwin configuration.
+      class MainContext
+        include Extension::With
+
+        # Measures evaluation block
+        attr_reader _measures: Proc?
+
+        # Weight assignments
+        attr_reader _weights: Hash[Symbol, Numeric]
+
+        def initialize: () { () -> void } -> void
+
+        # Defines measures evaluation block.
+        def measures: () { (untyped object) -> void } -> Proc
+
+        # Assigns weights to features/dimensions.
+        def weight: (**Numeric feature_or_dimension_weights) -> void
+      end
+
+      # DSL context for object measurement.
+      class MeasuresEvalContext
+        include Extension::With
+
+        def initialize: () -> void
+
+        # Returns measure result.
+        def _measure: () -> Measure
+
+        # Marks object as having a feature.
+        def feature: (Symbol feature_name) -> void
+
+        # Records dimensional measurement.
+        def dimension: (Symbol dimension_name, Numeric value) -> void
+
+        # Marks object as non-viable (to be excluded).
+        def die: () -> void
+
+        # Checks if object marked as died.
+        def died?: () -> bool
+      end
+
+      # Measurement result for an object.
+      class Measure
+        # Feature flags
+        attr_reader features: Hash[Symbol, bool]
+
+        # Raw dimension values
+        attr_reader dimensions: Hash[Symbol, Numeric]
+
+        # Normalized (0-1) dimensions
+        attr_reader normalized_dimensions: Hash[Symbol, Float]
+
+        def initialize: (
+          Hash[Symbol, bool] features,
+          Hash[Symbol, Numeric] dimensions,
+          bool died
+        ) -> void
+
+        # Checks if object is non-viable.
+        def died?: () -> bool
+
+        # Calculates weighted fitness score.
+        def evaluate_weight: (Hash[Symbol, Numeric] weights) -> Float
+
+        def inspect: () -> String
+        alias to_s inspect
+      end
+    end
+  end
+end

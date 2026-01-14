@@ -1,0 +1,32 @@
+# RBS for core-ext/arrayfy.rb - Arrayfy refinement
+#
+# NOTE: RBS does not support Ruby refinements. These methods are added via
+# `using Musa::Extension::Arrayfy` and won't provide type checking.
+
+module Musa
+  module Extension
+    # Refinement that converts any object to an array, with optional repetition.
+    #
+    # Methods available via refinement:
+    # - Object#arrayfy(size: nil, default: nil) -> Array
+    # - Array#arrayfy(size: nil, default: nil) -> Array
+    module Arrayfy
+    end
+  end
+end
+
+# Extended Object methods (via refinement)
+# Available when `using Musa::Extension::Arrayfy`
+class Object
+  # Converts object to array, optionally repeated to target size.
+  # Available via refinement: `using Musa::Extension::Arrayfy`
+  # def arrayfy: (?size: Integer?, ?default: untyped?) -> Array[untyped]
+end
+
+# Extended Array methods (via refinement)
+# Available when `using Musa::Extension::Arrayfy`
+class Array[unchecked out Elem]
+  # Clones or cycles array to target size, replacing nil with default.
+  # Available via refinement: `using Musa::Extension::Arrayfy`
+  # def arrayfy: (?size: Integer?, ?default: untyped?) -> Array[Elem]
+end

@@ -1,0 +1,69 @@
+# RBS for generative/rules.rb - Rule-based production system
+
+module Musa
+  module Rules
+    # Rule-based generator with growth and pruning.
+    #
+    # Applies grow/cut rules to generate tree of valid possibilities.
+    class Rules
+      include Extension::With
+
+      # Creates rule system with defined rules.
+      def initialize: () { () -> void } -> void
+
+      # Generates possibility tree from object.
+      def generate_possibilities: (
+        untyped object,
+        ?Node? confirmed_node,
+        ?Node? node,
+        ?Array[untyped]? grow_rules,
+        **untyped parameters
+      ) -> Node
+
+      # Applies rules to seed objects sequentially.
+      def apply: (
+        untyped object_or_list,
+        ?Node? node,
+        **untyped parameters
+      ) -> Node
+
+      # Tree node representing possibility in generation.
+      class Node
+        # Parent node
+        attr_reader parent: Node?
+
+        # Child nodes
+        attr_reader children: Array[Node]
+
+        # Node object
+        attr_reader object: untyped
+
+        # Rejection reason(s)
+        attr_reader rejected: (String | Array[String])?
+
+        def initialize: (?untyped? object, ?Node? parent) -> void
+
+        # Adds child node.
+        def add: (untyped object) -> Node
+
+        # Marks node as rejected.
+        def reject!: (String | Array[String] rejection) -> self
+
+        # Marks node as ended/complete.
+        def mark_as_ended!: () -> self
+
+        # Checks if node is ended.
+        def ended?: () -> bool
+
+        # Returns path from root to this node.
+        def history: () -> Array[untyped]
+
+        # Collects objects from ended leaf nodes.
+        def fish: () -> Array[untyped]
+
+        # Returns all valid combination paths.
+        def combinations: (?Array[untyped]? parent_combination) -> Array[Array[untyped]]
+      end
+    end
+  end
+end

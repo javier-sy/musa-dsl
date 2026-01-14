@@ -1,0 +1,45 @@
+# RBS for core-ext/dynamic-proxy.rb - Dynamic proxy pattern
+
+module Musa
+  module Extension
+    module DynamicProxy
+      # Mixin module providing dynamic proxy behavior.
+      module DynamicProxyModule
+        # Forwards unknown methods to the receiver.
+        def method_missing: (Symbol method_name, *untyped args, **untyped key_args) ?{ () -> untyped } -> untyped
+
+        # Declares which methods the proxy responds to.
+        def respond_to_missing?: (Symbol method_name, bool include_private) -> bool
+
+        # Checks if the proxy has a receiver assigned.
+        def has_receiver?: () -> bool
+
+        # Delegates is_a? check to receiver or uses original.
+        def is_a?: (Class klass) -> bool
+
+        # Delegates kind_of? check to receiver or uses original.
+        def kind_of?: (Class klass) -> bool
+
+        # Delegates instance_of? check to receiver or uses original.
+        def instance_of?: (Class klass) -> bool
+
+        # Delegates equality check to receiver or uses original.
+        def ==: (untyped object) -> bool
+
+        # Delegates eql? check to receiver or uses original.
+        def eql?: (untyped object) -> bool
+      end
+
+      # Concrete DynamicProxy class ready for instantiation.
+      class DynamicProxy
+        include DynamicProxyModule
+
+        # Creates a new dynamic proxy.
+        def initialize: (?untyped? receiver) -> void
+
+        # The object to which methods are delegated.
+        attr_accessor receiver: untyped?
+      end
+    end
+  end
+end

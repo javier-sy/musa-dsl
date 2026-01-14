@@ -1,0 +1,61 @@
+# RBS for core-ext/attribute-builder.rb - DSL builder metaprogramming
+
+module Musa
+  module Extension
+    # Module providing metaprogramming methods for creating DSL builder patterns.
+    module AttributeBuilder
+      # Creates methods for adding id/value tuples to a hash collection.
+      def attr_tuple_adder_to_hash: (
+        Symbol name,
+        Class klass,
+        ?plural: Symbol?,
+        ?variable: Symbol?
+      ) -> void
+
+      # Creates methods for adding id/value tuples to an array collection.
+      def attr_tuple_adder_to_array: (
+        Symbol name,
+        Class klass,
+        ?plural: Symbol?,
+        ?variable: Symbol?
+      ) -> void
+
+      # Creates methods for adding complex objects to an array.
+      def attr_complex_adder_to_array: (
+        Symbol name,
+        Class klass,
+        ?plural: Symbol?,
+        ?variable: Symbol?
+      ) -> void
+
+      # Creates methods for adding complex objects with custom construction logic.
+      def attr_complex_adder_to_custom: (
+        Symbol name,
+        ?plural: Symbol?,
+        ?variable: Symbol?
+      ) { (*untyped, **untyped) -> untyped } -> void
+
+      # Creates a simple getter/setter DSL method for a single value.
+      def attr_simple_builder: (
+        Symbol name,
+        ?Class? klass,
+        ?variable: Symbol?
+      ) -> void
+
+      # Creates a getter/setter DSL method for a single id/value tuple.
+      def attr_tuple_builder: (
+        Symbol name,
+        Class klass,
+        ?variable: Symbol?
+      ) -> void
+
+      # Creates a getter/setter DSL method for complex objects.
+      def attr_complex_builder: (
+        Symbol name,
+        Class klass,
+        ?variable: Symbol?,
+        ?first_parameter: untyped?
+      ) -> void
+    end
+  end
+end

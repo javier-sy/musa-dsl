@@ -1,0 +1,20 @@
+# RBS for logger/logger.rb - Logger with sequencer position integration
+
+module Musa
+  module Logger
+    # Custom logger that displays sequencer position with log messages.
+    class Logger < ::Logger
+      # Creates a new logger with optional sequencer integration.
+      #
+      # @param sequencer Sequencer whose position will be displayed in log messages.
+      # @param position_format Format specification for position display (e.g., 3.3).
+      def initialize: (
+        ?sequencer: Sequencer::BaseSequencer?,
+        ?position_format: Numeric?
+      ) -> void
+
+      # Override level getter to handle encoding compatibility issues.
+      def level: () -> Integer
+    end
+  end
+end

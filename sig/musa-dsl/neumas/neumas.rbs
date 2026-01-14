@@ -1,0 +1,32 @@
+# RBS for neumas/neumas.rb - Neuma notation system
+
+module Musa
+  module Neumas
+    # Base neuma module for serie and parallel structures.
+    module Neuma
+      # Parallel neuma structure (polyphonic).
+      module Parallel
+        include Neuma
+      end
+
+      # Serie neuma structure (monophonic).
+      module Serie
+        include Neuma
+      end
+
+      # Creates parallel structure with another neuma.
+      def |: (String | Neuma other) -> Parallel
+    end
+  end
+
+  module Extension
+    # Extension module for neuma parsing.
+    module Neumas
+      # Converts string to neuma array.
+      def to_neumas: () -> Array[Hash[Symbol, untyped]]
+
+      # Parses neuma notation string.
+      def neu: () -> Series::Serie::_SerieProtocol
+    end
+  end
+end

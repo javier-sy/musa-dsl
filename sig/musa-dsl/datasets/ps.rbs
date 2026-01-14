@@ -1,0 +1,54 @@
+# RBS for datasets/ps.rb - Parameter segments for continuous changes
+
+module Musa
+  module Datasets
+    # Parameter segments for continuous changes between multidimensional points.
+    #
+    # PS represents a continuous change from one point to another over a duration.
+    # Hash-based with extensible attributes.
+    module PS
+      include AbsD
+      include Helper
+
+      # Natural keys including segment endpoints
+      NaturalKeys: Array[Symbol]
+
+      # Base duration for time calculations
+      attr_accessor base_duration: Rational?
+
+      # Returns starting value
+      def from: () -> (Numeric | Array[Numeric] | Hash[Symbol, Numeric])?
+
+      # Returns ending value
+      def to: () -> (Numeric | Array[Numeric] | Hash[Symbol, Numeric])?
+
+      # Returns right_open flag
+      def right_open: () -> bool?
+
+      # Converts to Neuma notation string (not yet implemented)
+      def to_neuma: () -> String
+
+      # Converts to PDV (not yet implemented)
+      def to_pdv: () -> PDV
+
+      # Converts to GDV (not yet implemented)
+      def to_gdv: () -> GDV
+
+      # Converts to absolute indexed format (not yet implemented)
+      def to_absI: () -> AbsI
+
+      # Validates PS structure
+      def valid?: () -> bool
+
+      # Hash access - allows user-defined keys
+      def []: (Symbol key) -> untyped
+      def []=: (Symbol key, untyped value) -> untyped
+      def keys: () -> Array[Symbol]
+      def include?: (Symbol key) -> bool
+      def has_key?: (Symbol key) -> bool
+    end
+
+    # Type alias for PS hash
+    type ps = Hash[Symbol, untyped] & PS
+  end
+end

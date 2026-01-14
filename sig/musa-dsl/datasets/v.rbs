@@ -1,0 +1,30 @@
+# RBS for datasets/v.rb - Array-based dataset with named key conversion
+
+module Musa
+  module Datasets
+    # Array-based dataset with named key conversion.
+    #
+    # V represents datasets stored as arrays (indexed values) and provides
+    # conversion to named key-value pairs (PackedV).
+    module V
+      include AbsI
+
+      # Converts array to packed hash (PackedV)
+      #
+      # @param mapper Array maps indices to keys, Hash maps indices to keys with defaults
+      def to_packed_V: (Array[Symbol?] | Hash[Symbol, untyped] mapper) -> PackedV
+    end
+
+    # Hash-based packed value dataset
+    module PackedV
+      include AbsI
+
+      # Hash access
+      def []: (Symbol key) -> untyped
+      def []=: (Symbol key, untyped value) -> untyped
+    end
+
+    # Type alias for V array
+    type v = Array[untyped] & V
+  end
+end

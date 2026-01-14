@@ -1,0 +1,50 @@
+# RBS for transport/transport.rb - Transport system connecting clocks to sequencers
+
+module Musa
+  module Transport
+    # Main transport class connecting clocks to sequencers.
+    class Transport
+      # The sequencer instance managing event scheduling.
+      attr_reader sequencer: Sequencer::BaseSequencer
+
+      # Creates a new transport connecting a clock to a sequencer.
+      def initialize: (
+        Clock::Clock clock,
+        ?Integer? beats_per_bar,
+        ?Integer? ticks_per_beat,
+        ?offset: Rational?,
+        ?sequencer: Sequencer::BaseSequencer?,
+        ?before_begin: Proc?,
+        ?on_start: Proc?,
+        ?after_stop: Proc?,
+        ?on_position_change: Proc?,
+        ?logger: untyped?,
+        ?do_log: bool?
+      ) -> void
+
+      # Registers a callback to run once before the first start.
+      def before_begin: () { (Sequencer::BaseSequencer) -> void } -> void
+
+      # Registers a callback to run each time the transport starts.
+      def on_start: () { (Sequencer::BaseSequencer) -> void } -> void
+
+      # Registers a callback to run when the transport stops.
+      def after_stop: () { (Sequencer::BaseSequencer) -> void } -> void
+
+      # Registers a callback for position changes.
+      def on_change_position: () { (Sequencer::BaseSequencer) -> void } -> void
+
+      # Starts the transport and begins playback.
+      def start: () -> void
+
+      # Changes the playback position (seek/jump).
+      def change_position_to: (?bars: Numeric?, ?beats: Numeric?, ?midi_beats: Integer?) -> void
+
+      # Stops the transport.
+      def stop: () -> void
+
+      # Returns the transport's logger.
+      def logger: () -> untyped
+    end
+  end
+end
