@@ -166,6 +166,8 @@ module Musa
       #
       # @param content [Object] element content
       # @param attributes [Hash, nil] element attributes
+      #
+      # @return [void]
       def initialize(content, attributes = nil)
         @content = content
         @attributes = attributes || {}
@@ -406,6 +408,14 @@ module Musa
 
         protected
 
+        # Generates condition block from simplified arguments.
+        #
+        # @param attribute [Symbol, nil] attribute to check
+        # @param after_collect_operation [Symbol, nil] operation on collected values
+        # @param comparison_method [Symbol, nil] comparison method to apply
+        # @param comparison_value [Object, nil] value to compare against
+        #
+        # @return [Proc, nil] condition block or nil if arguments incomplete
         def generate_simple_condition_block(attribute = nil,
                                             after_collect_operation = nil,
                                             comparison_method = nil,
@@ -451,6 +461,9 @@ module Musa
 
         # @param content [Object] node content
         # @param attributes [Hash] node attributes
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(content, attributes)
           super()
@@ -482,6 +495,9 @@ module Musa
       class BlockNode < Node
         # @param attributes [Hash] node attributes
         # @yield [parent, attributes] block to generate content
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(attributes, &block)
           @attributes = attributes
@@ -516,6 +532,9 @@ module Musa
       class ConditionNode < Node
         # @param node [Node] node to filter
         # @yield [option] condition block
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(node, &block)
           @node = node
@@ -545,6 +564,9 @@ module Musa
       class OrNode < Node
         # @param node1 [Node] first alternative
         # @param node2 [Node] second alternative
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(node1, node2)
           @node1 = node1
@@ -579,6 +601,9 @@ module Musa
       class NextNode < Node
         # @param node [Node] first node in sequence
         # @param after [Node] node to follow
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(node, after)
           @node = node
@@ -609,6 +634,9 @@ module Musa
       class RepeatNode < Node
         # @param node [Node] node to repeat
         # @param max [Integer, nil] maximum repetitions (nil = infinite)
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(node, max = nil)
           @node = node

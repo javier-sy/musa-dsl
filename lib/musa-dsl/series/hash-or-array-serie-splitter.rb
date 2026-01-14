@@ -40,6 +40,7 @@ module Musa
     #   first = pairs[0]
     #   second = pairs[1]
     #
+    # @return [Splitter] hash/array splitter
     # @api public
     def split
       Splitter.new(self)
@@ -68,6 +69,11 @@ module Musa
         @proxy = SplitterProxy.new(@source)
       end
 
+      # Accesses component serie by key or index.
+      #
+      # @param key_or_index [Symbol, Integer] hash key or array index
+      #
+      # @return [Split] component serie
       def [](key_or_index)
         raise "Can't get a component because Splitter is a prototype. To get a component you need a Splitter instance." unless instance?
 
@@ -78,6 +84,13 @@ module Musa
         end
       end
 
+      # Iterates over component series.
+      #
+      # @yield [key, split] for hash mode, [split] for array mode
+      # @yieldparam key [Symbol] hash key (hash mode only)
+      # @yieldparam split [Split] component serie
+      #
+      # @return [Enumerator, void] enumerator if no block given
       def each
         raise "Can't iterate because Splitter is in state '#{state}'. To iterate you need a Splitter in state 'instance'." unless instance?
 
@@ -104,6 +117,11 @@ module Musa
         end
       end
 
+      # Converts to hash of component series.
+      #
+      # @return [Hash{Symbol => Split}] hash of component series
+      #
+      # @raise [RuntimeError] if not in hash mode
       def to_hash
         if @proxy.hash_mode?
           @proxy.components.collect { |key| [key, self[key]] }.to_h
@@ -112,6 +130,11 @@ module Musa
         end
       end
 
+      # Converts to array of component series.
+      #
+      # @return [Array<Split>] array of component series
+      #
+      # @raise [RuntimeError] if not in array mode
       def to_ary
         if @proxy.array_mode?
           [].tap { |_| @proxy.components.each { |i| _[i] = self[i] } }

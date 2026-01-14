@@ -104,6 +104,8 @@ module Musa
       #     measures { |obj| dimension :value, obj[:score] }
       #     weight value: 1.0
       #   end
+      #
+      # @return [void]
       def initialize(&block)
         raise ArgumentError, 'block is needed' unless block
 
@@ -175,6 +177,14 @@ module Musa
         measured_objects.collect { |measured_object| measured_object[:object] }
       end
 
+      # Compares two measures by their weighted fitness.
+      #
+      # @param measure_a [Measure] first measure to compare
+      # @param measure_b [Measure] second measure to compare
+      #
+      # @return [Integer] comparison result (-1, 0, 1)
+      #
+      # @api private
       def evaluate_weights(measure_a, measure_b)
         measure_b.evaluate_weight(@weights) <=> measure_a.evaluate_weight(@weights)
       end
@@ -189,6 +199,7 @@ module Musa
         # @return [Hash] weight assignments
         attr_reader :_measures, :_weights
 
+        # @return [void]
         # @api private
         def initialize(&block)
           @_weights = {}
@@ -198,6 +209,9 @@ module Musa
         # Defines measures evaluation block.
         #
         # @yield [object] measures DSL block
+        #
+        # @return [Proc] the measures block
+        #
         # @api private
         def measures(&block)
           @_measures = block
@@ -205,7 +219,10 @@ module Musa
 
         # Assigns weights to features/dimensions.
         #
-        # @param feature_or_dimension_weights [Hash] name => weight pairs
+        # @param feature_or_dimension_weights [Hash{Symbol => Numeric}] name => weight pairs
+        #
+        # @return [void]
+        #
         # @api private
         def weight(**feature_or_dimension_weights)
           feature_or_dimension_weights.each do |name, value|
@@ -220,6 +237,7 @@ module Musa
       class MeasuresEvalContext
         include Musa::Extension::With
 
+        # @return [void]
         # @api private
         def initialize
           @_features = {}
@@ -238,6 +256,9 @@ module Musa
         # Marks object as having a feature.
         #
         # @param feature_name [Symbol] feature identifier
+        #
+        # @return [void]
+        #
         # @api private
         def feature(feature_name)
           @_features[feature_name] = true
@@ -247,12 +268,17 @@ module Musa
         #
         # @param dimension_name [Symbol] dimension identifier
         # @param value [Numeric] measured value
+        #
+        # @return [void]
+        #
         # @api private
         def dimension(dimension_name, value)
           @_dimensions[dimension_name] = value
         end
 
         # Marks object as non-viable (to be excluded).
+        #
+        # @return [void]
         #
         # @api private
         def die
@@ -280,6 +306,12 @@ module Musa
       class Measure
         attr_reader :features, :dimensions, :normalized_dimensions
 
+        # @param features [Hash{Symbol => Boolean}] feature flags
+        # @param dimensions [Hash{Symbol => Numeric}] dimension values
+        # @param died [Boolean] viability status
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(features, dimensions, died)
           @features = features
@@ -319,6 +351,9 @@ module Musa
           total
         end
 
+        # Returns string representation of measure.
+        #
+        # @return [String] formatted measure description
         def inspect
           "Measure features=#{@features.collect { |k, _v| k }} dimensions=#{@normalized_dimensions.collect { |k, v| [k, [@dimensions[k].round(5), v.round(2)]] }.to_h}"
         end

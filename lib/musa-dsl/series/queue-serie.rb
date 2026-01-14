@@ -79,6 +79,13 @@ module Musa
         init
       end
 
+      # Adds serie to queue.
+      #
+      # @param serie [Serie] instance serie to add
+      #
+      # @return [self] for chaining
+      #
+      # @raise [ArgumentError] if serie is not an instance
       def <<(serie)
         # when queue is a prototype it is also frozen so no serie can be added (it would raise an Exception if tried).
         # when queue is an instance the added serie should also be an instance (raise an Exception otherwise)
@@ -91,6 +98,9 @@ module Musa
         self
       end
 
+      # Clears all series from queue.
+      #
+      # @return [self] for chaining
       def clear
         @sources.clear
         init
@@ -148,6 +158,9 @@ module Musa
   end
 
   module Series::Operations
+    # Wraps this serie in a queue.
+    #
+    # @return [QueueSerie] queue containing this serie
     def queued
       Series::Constructors.QUEUE(self)
     end

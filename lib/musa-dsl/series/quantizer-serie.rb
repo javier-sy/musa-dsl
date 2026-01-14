@@ -63,6 +63,18 @@ module Musa
   end
 
   module Series::Constructors
+    # Quantizes time-value serie to discrete steps.
+    #
+    # @param time_value_serie [Serie] source timed serie
+    # @param reference [Numeric, nil] quantization reference
+    # @param step [Numeric, nil] step size
+    # @param value_attribute [Symbol, nil] attribute to quantize
+    # @param stops [Boolean, nil] include stop points
+    # @param predictive [Boolean, nil] use predictive mode
+    # @param left_open [Boolean, nil] left boundary open
+    # @param right_open [Boolean, nil] right boundary open
+    #
+    # @return [RawQuantizer, PredictiveQuantizer] quantized serie
     def QUANTIZE(time_value_serie,
                  reference: nil, step: nil,
                  value_attribute: nil,

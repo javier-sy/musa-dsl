@@ -97,6 +97,8 @@ module Musa
       # @param output [#puts, nil] anything responding to `puts` that accepts `MIDIEvents::Event`s (typically a MIDICommunications output).
       # @param channels [Array<Numeric>, Range, Numeric] list of MIDI channels to control. Ranges are expanded automatically.
       # @param do_log [Boolean] enables info level logs per emitted message.
+      #
+      # @return [void]
       def initialize(sequencer:, output:, channels:, do_log: nil)
         do_log ||= false
 
@@ -200,6 +202,8 @@ module Musa
       # @param output [#puts, nil]
       # @param channel [Integer] MIDI channel number (0-15).
       # @param name [String, nil] human friendly identifier.
+      #
+      # @return [void]
       def initialize(sequencer:, output:, channel:, name: nil, do_log: nil)
         do_log ||= false
 
@@ -337,6 +341,8 @@ module Musa
       class ControllersControl
         # @param output [#puts] MIDI output.
         # @param channel [Integer] MIDI channel number.
+        #
+        # @return [void]
         def initialize(output, channel)
           @output = output
           @channel = channel
@@ -368,6 +374,8 @@ module Musa
         #
         # @param controller_number_or_symbol [Integer, Symbol] CC number or well-known alias (see +@controller_map+).
         # @param value [Integer] byte value that will be clamped to 0-127.
+        #
+        # @return [Integer] clamped value
         def []=(controller_number_or_symbol, value)
           number = number_of(controller_number_or_symbol)
           value ||= 0
@@ -429,6 +437,8 @@ module Musa
         # @param velocity [Numeric, Array<Numeric>] on velocity (can be per-note).
         # @param duration [Numeric, nil] duration in bars or nil for infinite.
         # @param velocity_off [Numeric, Array<Numeric>] release velocity.
+        #
+        # @return [void]
         def initialize(voice, pitch:, velocity: nil, duration: nil, velocity_off: nil)
           raise ArgumentError, "MIDIVoice: note duration should be nil or Numeric: #{duration} (#{duration.class})" unless duration.nil? || duration.is_a?(Numeric)
 
