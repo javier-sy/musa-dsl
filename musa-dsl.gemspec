@@ -9,14 +9,14 @@ Gem::Specification.new do |s|
   s.authors     = ['Javier Sánchez Yeste']
   s.email       = 'javier.sy@gmail.com'
   s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples|\.github)/}) }
-  s.homepage    = 'https://github.com/javier-sy/musa-dsl'
+  s.homepage    = 'https://musadsl.yeste.studio'
   s.license     = 'LGPL-3.0-or-later'
 
   s.required_ruby_version = '>= 3.4.7'
 
   s.metadata = {
     'homepage_uri' => s.homepage,
-    'source_code_uri' => s.homepage,
+    'source_code_uri' => 'https://github.com/javier-sy/musa-dsl',
     'documentation_uri' => 'https://www.rubydoc.info/gems/musa-dsl',
     'rubygems_mfa_required' => 'true'
   }
@@ -39,4 +39,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'webrick', '~> 1.8'
   s.add_development_dependency 'rack', '~> 2.2'
   s.add_development_dependency 'rubocop'
+  s.add_development_dependency 'steep'
 end

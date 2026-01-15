@@ -12,3 +12,4 @@ test.musicxml
 doc
 .yardoc
 *.backup
+.vscode

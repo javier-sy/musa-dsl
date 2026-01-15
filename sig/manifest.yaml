@@ -1,1 +1,6 @@
-dependencies: []
+dependencies:
+  - name: json
+  - name: logger
+  - name: pathname
+  - name: forwardable
+  - name: singleton
