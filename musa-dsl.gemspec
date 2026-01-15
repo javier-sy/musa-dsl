@@ -39,5 +39,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'webrick', '~> 1.8'
   s.add_development_dependency 'rack', '~> 2.2'
   s.add_development_dependency 'rubocop'
+  s.add_development_dependency 'ruby-lsp'
   s.add_development_dependency 'steep'
 end
