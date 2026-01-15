@@ -3,7 +3,7 @@ require_relative 'lib/musa-dsl/version'
 Gem::Specification.new do |s|
   s.name        = 'musa-dsl'
   s.version     = Musa::VERSION
-  s.date        = '2025-08-23'
+  s.date        = Musa::VERSION_DATE
   s.summary     = 'A simple Ruby DSL for making complex music'
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
   s.authors     = ['Javier Sánchez Yeste']
@@ -38,4 +38,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'redcarpet', '~> 3.6'
   s.add_development_dependency 'webrick', '~> 1.8'
   s.add_development_dependency 'rack', '~> 2.2'
+  s.add_development_dependency 'rubocop'
 end
