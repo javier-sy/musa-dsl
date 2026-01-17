@@ -76,6 +76,9 @@ module Musa
         @source.next_value.tap { |value| @history << value unless value.nil? && !@history.empty? && @history.last.nil? }
       end
 
+      # Creates buffer reader for this buffered serie.
+      #
+      # @return [Buffer] buffer serie reader
       def buffer
         @buffer ||= Buffer.new(@history)
         @buffer.send(state).tap { |_| @buffers << _ }
@@ -156,6 +159,9 @@ module Musa
         init
       end
 
+      # Creates buffer reader for this buffered serie.
+      #
+      # @return [Buffer] buffer serie reader
       def buffer
         Buffer.new(self)
       end

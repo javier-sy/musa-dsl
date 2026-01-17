@@ -79,6 +79,8 @@ module Musa
     # @see https://github.com/javier-sy/midi-events MIDIEvents documentation
     class MIDIRecorder
       # @param sequencer [Musa::Sequencer::Sequencer] provides the musical position for each recorded message.
+      #
+      # @return [void]
       def initialize(sequencer)
         @sequencer = sequencer
         @midi_parser = MIDIParser.new
@@ -179,6 +181,8 @@ module Musa
         #
         # @param position [Rational] sequencer position when captured.
         # @param message [MIDIEvents::Event] parsed MIDI event.
+        #
+        # @return [void]
         def initialize(position, message)
           @position = position
           @message = message

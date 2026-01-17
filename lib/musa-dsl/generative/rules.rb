@@ -149,6 +149,8 @@ module Musa
       #     cut 'validate' { |obj| prune if invalid?(obj) }
       #     ended_when { |obj| complete?(obj) }
       #   end
+      #
+      # @return [void]
       def initialize(&block)
         @dsl = RulesEvalContext.new(&block)
       end
@@ -257,6 +259,7 @@ module Musa
         # @return [Array<CutRule>] cut rules
         attr_reader :_grow_rules, :_ended_when, :_cut_rules
 
+        # @return [void]
         # @api private
         def initialize(&block)
           @_grow_rules = []
@@ -296,10 +299,24 @@ module Musa
           self
         end
 
+        # Checks if end condition is defined.
+        #
+        # @return [Boolean] true if ended_when was called
+        #
+        # @api private
         def _has_ending?
           !@_ended_when.nil?
         end
 
+        # Evaluates end condition for object.
+        #
+        # @param object [Object] object to check
+        # @param history [Array] object history
+        # @param parameters [Hash] additional parameters
+        #
+        # @return [Boolean] true if object should end
+        #
+        # @api private
         def _ended?(object, history, **parameters)
           if @_ended_when
             with object, history, **parameters, &@_ended_when
@@ -311,11 +328,21 @@ module Musa
         class GrowRule
           attr_reader :name
 
+          # @param name [String] rule name
+          #
+          # @return [void]
           def initialize(name, &block)
             @name = name
             @block = block
           end
 
+          # Generates possible branched objects.
+          #
+          # @param object [Object] object to branch
+          # @param history [Array] object history
+          # @param parameters [Hash] additional parameters
+          #
+          # @return [Array<Object>] branched objects
           def generate_possibilities(object, history, **parameters)
             # TODO: optimize context using only one instance for all genereate_possibilities calls
             context = GrowRuleEvalContext.new
@@ -329,10 +356,16 @@ module Musa
 
             attr_reader :_branches
 
+            # @return [void]
             def initialize
               @_branches = []
             end
 
+            # Records a branched object.
+            #
+            # @param object [Object] branched object
+            #
+            # @return [self]
             def branch(object)
               @_branches << object
               self
@@ -347,11 +380,21 @@ module Musa
         class CutRule
           attr_reader :reason
 
+          # @param reason [String] rejection reason
+          #
+          # @return [void]
           def initialize(reason, &block)
             @reason = reason
             @block = block
           end
 
+          # Checks if object should be rejected.
+          #
+          # @param object [Object] object to check
+          # @param history [Array] object history
+          # @param parameters [Hash] additional parameters
+          #
+          # @return [Array<String>, nil] rejection reasons or nil if not rejected
           def rejects?(object, history, **parameters)
             # TODO: optimize context using only one instance for all rejects? checks
             context = CutRuleEvalContext.new
@@ -367,10 +410,16 @@ module Musa
 
             attr_reader :_secondary_reasons
 
+            # @return [void]
             def initialize
               @_secondary_reasons = []
             end
 
+            # Marks object for pruning.
+            #
+            # @param secondary_reason [String, nil] additional reason detail
+            #
+            # @return [self]
             def prune(secondary_reason = nil)
               @_secondary_reasons << secondary_reason
               self
@@ -399,6 +448,11 @@ module Musa
       class Node
         attr_reader :parent, :children, :object, :rejected
 
+        # @param object [Object, nil] node object
+        # @param parent [Node, nil] parent node
+        #
+        # @return [void]
+        #
         # @api private
         def initialize(object = nil, parent = nil)
           @parent = parent

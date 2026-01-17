@@ -146,6 +146,31 @@ module Musa
       def self.default_system
         @default_scale_system
       end
+
+      # Convenience method to extend metadata for a scale kind by ID.
+      #
+      # Finds the ScaleKind class by its ID symbol and adds custom metadata to it.
+      # This is a shortcut for accessing the class directly and calling extend_metadata.
+      #
+      # @param scale_kind_id [Symbol] the scale kind identifier (e.g., :major, :dorian)
+      # @param metadata [Hash] key-value pairs to add as custom metadata
+      # @return [Hash] the updated custom_metadata hash
+      # @raise [KeyError] if scale kind not found
+      #
+      # @example
+      #   Scales.extend_metadata(:major, my_tag: :favorite)
+      #   Scales.extend_metadata(:dorian, mood: :nostalgic, suitable_for: [:jazz])
+      #
+      # @see ScaleKind.extend_metadata
+      def self.extend_metadata(scale_kind_id, **metadata)
+        system = default_system
+        raise KeyError, "No default scale system registered" unless system
+
+        klass = system.scale_kind_class(scale_kind_id)
+        raise KeyError, "Scale kind :#{scale_kind_id} not found" unless klass
+
+        klass.extend_metadata(**metadata)
+      end
     end
 
     # Abstract base class for musical scale systems.
@@ -459,6 +484,113 @@ module Musa
         @scale_system.frequency_of_pitch(pitch, root, @a_frequency)
       end
 
+      # Returns scale kinds matching the given metadata criteria.
+      #
+      # Without arguments, returns all registered scale kinds.
+      # With keyword arguments, filters by metadata values.
+      # With a block, filters using custom predicate on ScaleKind class.
+      #
+      # @param metadata_criteria [Hash] metadata key-value pairs to match
+      # @yield [kind_class] optional block for custom filtering
+      # @yieldparam kind_class [Class] the ScaleKind subclass
+      # @yieldreturn [Boolean] true to include this scale kind
+      # @return [Array<ScaleKind>] matching scale kind instances
+      #
+      # @example All scale kinds
+      #   tuning.scale_kinds
+      #   # => [major_kind, minor_kind, dorian_kind, ...]
+      #
+      # @example Filter by metadata
+      #   tuning.scale_kinds(family: :diatonic)
+      #   tuning.scale_kinds(brightness: -1..1)
+      #   tuning.scale_kinds(character: :jazz)
+      #
+      # @example Filter with block
+      #   tuning.scale_kinds { |klass| klass.intrinsic_metadata[:has_leading_tone] }
+      #
+      # @example Combined
+      #   tuning.scale_kinds(family: :greek_modes) { |klass| klass.metadata[:brightness] < 0 }
+      #
+      # @see ScaleKind.metadata
+      # @see ScaleKind.has_metadata?
+      def scale_kinds(**metadata_criteria, &block)
+        result = @scale_system.scale_kind_classes.keys.map { |id| self[id] }
+
+        unless metadata_criteria.empty?
+          result = result.select do |kind|
+            matches_metadata?(kind.class, metadata_criteria)
+          end
+        end
+
+        if block
+          result = result.select { |kind| block.call(kind.class) }
+        end
+
+        result
+      end
+
+      # Searches for a chord across multiple scale types.
+      #
+      # Iterates through the specified scale kinds and pitch roots to find
+      # all scales that contain the given chord. Returns chords with their
+      # containing scale as context.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to search for
+      # @param roots [Range, Array, nil] pitch offsets to search (default: 0...notes_in_octave)
+      # @param metadata_criteria [Hash] metadata filters for scale kinds
+      # @return [Array<Musa::Chords::Chord>] chords with their containing scales
+      #
+      # @example Search G7 in greek mode scales
+      #   tuning = Scales.et12[440.0]
+      #   g7 = tuning.major[60].dominant.chord :seventh
+      #   tuning.chords_of(g7, family: :greek_modes)
+      #
+      # @example Search with brightness filter
+      #   tuning.chords_of(g7, brightness: -1..1)
+      #
+      # @example Search in all scale types
+      #   tuning.chords_of(g7)
+      #
+      # @see ScaleKind#scales_containing
+      # @see Musa::Chords::Chord#in_scales
+      def chords_of(chord, roots: nil, **metadata_criteria)
+        roots ||= 0...notes_in_octave
+        kinds = filtered_scale_kind_ids(**metadata_criteria)
+
+        kinds.flat_map do |kind_id|
+          self[kind_id].scales_containing(chord, roots: roots)
+        end
+      end
+
+      private
+
+      def filtered_scale_kind_ids(**metadata_criteria)
+        kinds = @scale_system.scale_kind_classes.keys
+
+        return kinds if metadata_criteria.empty?
+
+        kinds.select do |kind_id|
+          kind_class = @scale_system.scale_kind_class(kind_id)
+          matches_metadata?(kind_class, metadata_criteria)
+        end
+      end
+
+      def matches_metadata?(kind_class, criteria)
+        criteria.all? do |key, value|
+          actual = kind_class.metadata[key]
+          case value
+          when Range
+            actual.is_a?(Numeric) && value.include?(actual)
+          when Array
+            value.any? { |v| actual == v || (actual.is_a?(Array) && actual.include?(v)) }
+          else
+            actual == value || (actual.is_a?(Array) && actual.include?(value))
+          end
+        end
+      end
+
+      public
+
       def ==(other)
         self.class == other.class &&
             @scale_system == other.scale_system &&
@@ -577,6 +709,35 @@ module Musa
         self[0]
       end
 
+      # Finds all scales of this kind that contain the given chord.
+      #
+      # Searches through scales rooted on different pitches to find which ones
+      # contain all the notes of the given chord. Returns chords with their
+      # containing scale as context.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to search for
+      # @param roots [Range, Array, nil] pitch offsets to search (default: 0...notes_in_octave)
+      # @return [Array<Musa::Chords::Chord>] chords with their containing scales
+      #
+      # @example Find G major triad in all major scales
+      #   tuning = Scales.et12[440.0]
+      #   g_triad = tuning.major[60].dominant.chord
+      #   tuning.major.scales_containing(g_triad)
+      #   # => [Chord in C major (V), Chord in G major (I), Chord in D major (IV)]
+      #
+      # @see Scale#chord_on
+      # @see ScaleSystemTuning#chords_in_scales
+      def scales_containing(chord, roots: nil)
+        roots ||= 0...tuning.notes_in_octave
+        base_pitch = chord.root.pitch % tuning.notes_in_octave
+
+        roots.filter_map do |root_offset|
+          root_pitch = base_pitch + root_offset
+          scale = self[root_pitch]
+          scale.chord_on(chord)
+        end
+      end
+
       # Checks scale kind equality.
       #
       # @param other [ScaleKind]
@@ -685,7 +846,199 @@ module Musa
         @grade_names_index.keys
       end
 
+      # Returns intrinsic metadata derived from scale structure.
+      #
+      # This metadata is automatically calculated from the scale's pitch
+      # structure and cannot be modified. It includes:
+      #
+      # - **:id**: Scale kind identifier
+      # - **:grades**: Number of diatonic degrees
+      # - **:pitches**: Array of pitch offsets from root
+      # - **:intervals**: Intervals between consecutive degrees
+      # - **:has_leading_tone**: Whether scale has pitch 11 (semitone below octave)
+      # - **:has_tritone**: Whether scale contains tritone (pitch 6)
+      # - **:symmetric**: Type of symmetry if any (:equal, :palindrome, :repeating)
+      #
+      # @return [Hash] intrinsic metadata derived from structure
+      #
+      # @example
+      #   MajorScaleKind.intrinsic_metadata
+      #   # => { id: :major, grades: 7, pitches: [0, 2, 4, 5, 7, 9, 11],
+      #   #      intervals: [2, 2, 1, 2, 2, 2], has_leading_tone: true,
+      #   #      has_tritone: true, symmetric: nil }
+      def self.intrinsic_metadata
+        result = {}
+        result[:id] = id if respond_to?(:id)
+        result[:grades] = grades if respond_to?(:grades)
+        if respond_to?(:pitches)
+          result[:pitches] = pitches.map { |p| p[:pitch] }
+          result[:intervals] = compute_intervals
+          result[:has_leading_tone] = pitches.any? { |p| p[:pitch] == 11 }
+          result[:has_tritone] = pitches.any? { |p| p[:pitch] == 6 }
+          result[:symmetric] = compute_symmetry
+        end
+        result.compact
+      end
+
+      # Returns base metadata defined by the musa-dsl library.
+      #
+      # This metadata is defined in each ScaleKind subclass using the
+      # `@base_metadata` class instance variable. It typically includes:
+      #
+      # - **:family**: Scale family (:diatonic, :greek_modes, :pentatonic, etc.)
+      # - **:brightness**: Relative brightness (-3 to +3, major = 0)
+      # - **:character**: Array of descriptive tags
+      # - **:parent**: Parent scale and degree for modes
+      #
+      # @return [Hash] library-defined metadata
+      #
+      # @example
+      #   MajorScaleKind.base_metadata
+      #   # => { family: :diatonic, brightness: 0, character: [:bright, :stable] }
+      def self.base_metadata
+        @base_metadata || {}
+      end
+
+      # Returns custom metadata added by users at runtime.
+      #
+      # This metadata is added via {.extend_metadata} and can be cleared
+      # with {.reset_custom_metadata}. Takes precedence over base_metadata.
+      #
+      # @return [Hash] user-defined metadata
+      #
+      # @example
+      #   MajorScaleKind.extend_metadata(my_tag: :favorite)
+      #   MajorScaleKind.custom_metadata  # => { my_tag: :favorite }
+      def self.custom_metadata
+        @custom_metadata || {}
+      end
+
+      # Adds custom metadata to this scale kind.
+      #
+      # Custom metadata takes precedence over base_metadata when queried
+      # via {.metadata}. Multiple calls merge metadata together.
+      #
+      # @param metadata [Hash] key-value pairs to add
+      # @return [Hash] the updated custom_metadata hash (frozen)
+      #
+      # @example
+      #   MajorScaleKind.extend_metadata(my_mood: :happy, rating: 5)
+      #   MajorScaleKind.extend_metadata(suitable_for: [:pop, :classical])
+      #   MajorScaleKind.custom_metadata
+      #   # => { my_mood: :happy, rating: 5, suitable_for: [:pop, :classical] }
+      def self.extend_metadata(**metadata)
+        @custom_metadata ||= {}
+        @custom_metadata = @custom_metadata.merge(metadata).freeze
+      end
+
+      # Clears all custom metadata from this scale kind.
+      #
+      # @return [nil]
+      #
+      # @example
+      #   MajorScaleKind.extend_metadata(temp: :data)
+      #   MajorScaleKind.reset_custom_metadata
+      #   MajorScaleKind.custom_metadata  # => {}
+      def self.reset_custom_metadata
+        @custom_metadata = nil
+      end
+
+      # Returns combined metadata from all three layers.
+      #
+      # Layers are merged with later layers taking precedence:
+      # intrinsic_metadata < base_metadata < custom_metadata
+      #
+      # @return [Hash] combined metadata from all layers
+      #
+      # @example
+      #   MajorScaleKind.metadata
+      #   # => { id: :major, grades: 7, pitches: [...], family: :diatonic, ... }
+      def self.metadata
+        intrinsic_metadata
+          .merge(base_metadata)
+          .merge(custom_metadata)
+      end
+
+      # Returns a specific metadata value.
+      #
+      # @param key [Symbol] the metadata key
+      # @return [Object, nil] the value or nil if not found
+      #
+      # @example
+      #   MajorScaleKind.metadata_value(:family)  # => :diatonic
+      def self.metadata_value(key)
+        metadata[key]
+      end
+
+      # Checks whether metadata contains a key or key-value match.
+      #
+      # When called with just a key, checks for key existence.
+      # When called with key and value, checks for exact match or
+      # array inclusion (if metadata value is an array).
+      #
+      # @param key [Symbol] the metadata key
+      # @param value [Object, nil] optional value to match
+      # @return [Boolean] whether the condition is satisfied
+      #
+      # @example Key existence
+      #   MajorScaleKind.has_metadata?(:family)  # => true
+      #   MajorScaleKind.has_metadata?(:nonexistent)  # => false
+      #
+      # @example Value matching
+      #   MajorScaleKind.has_metadata?(:family, :diatonic)  # => true
+      #   MajorScaleKind.has_metadata?(:family, :pentatonic)  # => false
+      #
+      # @example Array inclusion
+      #   MajorScaleKind.has_metadata?(:character, :bright)  # => true
+      def self.has_metadata?(key, value = nil)
+        if value.nil?
+          metadata.key?(key)
+        else
+          metadata[key] == value ||
+            (metadata[key].is_a?(Array) && metadata[key].include?(value))
+        end
+      end
+
       private
+
+      # Computes intervals between consecutive scale degrees.
+      # @return [Array<Integer>, nil] intervals or nil if not calculable
+      # @api private
+      def self.compute_intervals
+        return nil unless respond_to?(:pitches) && pitches.size > 1
+        pitch_values = pitches.map { |p| p[:pitch] }
+        # Only compute within first octave
+        first_octave = pitch_values.take_while { |p| p < 12 }
+        first_octave.push(12) if first_octave.last != 12
+        first_octave.each_cons(2).map { |a, b| b - a }
+      end
+
+      # Computes symmetry type of the scale.
+      # @return [Symbol, nil] :equal, :palindrome, :repeating, or nil
+      # @api private
+      def self.compute_symmetry
+        return nil unless respond_to?(:pitches)
+        intervals = compute_intervals
+        return nil unless intervals && intervals.any?
+
+        # Check if intervals are all equal (e.g., whole tone: [2,2,2,2,2,2])
+        return :equal if intervals.uniq.size == 1
+
+        # Check for palindrome pattern
+        return :palindrome if intervals == intervals.reverse
+
+        # Check for repeating pattern
+        (1..intervals.size / 2).each do |len|
+          pattern = intervals.take(len)
+          if intervals.each_slice(len).all? { |slice| slice == pattern || slice.size < len }
+            return :repeating
+          end
+        end
+
+        nil
+      end
+
+      public
 
       # Creates internal index mapping function names to grade indices.
       #
@@ -1036,6 +1389,80 @@ module Musa
       #   scale.offset_of_interval(:M3)  # => 4
       def offset_of_interval(interval_name)
         @kind.tuning.offset_of_interval(interval_name)
+      end
+
+      # Checks if all chord pitches exist in this scale.
+      #
+      # Uses the chord's definition to verify that every pitch in the chord
+      # can be found as a diatonic note in this scale.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to check
+      # @return [Boolean] true if all chord notes are in scale
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g7 = c_major.dominant.chord :seventh
+      #   c_major.contains_chord?(g7)  # => true
+      #
+      #   cm = c_major.tonic.chord.with_quality(:minor)
+      #   c_major.contains_chord?(cm)  # => false (Eb not in C major)
+      #
+      # @see #degree_of_chord
+      # @see #chord_on
+      def contains_chord?(chord)
+        chord.chord_definition.in_scale?(self, chord_root_pitch: chord.root.pitch)
+      end
+
+      # Returns the grade (0-based) where the chord root falls in this scale.
+      #
+      # @param chord [Musa::Chords::Chord] the chord to check
+      # @return [Integer, nil] grade (0-based) or nil if chord not in scale
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g_chord = c_major.dominant.chord
+      #   c_major.degree_of_chord(g_chord)  # => 4 (V degree, 0-based)
+      #
+      # @see #contains_chord?
+      def degree_of_chord(chord)
+        return nil unless contains_chord?(chord)
+
+        note = note_of_pitch(chord.root.pitch, allow_chromatic: false)
+        note&.grade
+      end
+
+      # Creates an equivalent chord with this scale as its context.
+      #
+      # Returns a new Chord object that represents the same chord but with
+      # this scale as its harmonic context. The chord's voicing (move and
+      # duplicate settings) is preserved.
+      #
+      # @param chord [Musa::Chords::Chord] the source chord
+      # @return [Musa::Chords::Chord, nil] new chord with this scale, or nil if not contained
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g7 = c_major.dominant.chord :seventh
+      #
+      #   g_mixolydian = Scales.et12[440.0].mixolydian[67]
+      #   g7_in_mixolydian = g_mixolydian.chord_on(g7)
+      #   g7_in_mixolydian.scale  # => G Mixolydian scale
+      #
+      # @see #contains_chord?
+      # @see #degree_of_chord
+      def chord_on(chord)
+        return nil unless contains_chord?(chord)
+
+        root_note = note_of_pitch(chord.root.pitch, allow_chromatic: false)
+        return nil unless root_note
+
+        Musa::Chords::Chord.with_root(
+          root_note,
+          scale: self,
+          name: chord.chord_definition.name,
+          move: chord.move.empty? ? nil : chord.move,
+          duplicate: chord.duplicate.empty? ? nil : chord.duplicate
+        )
       end
 
       # Checks scale equality.

@@ -143,6 +143,8 @@ module Musa
       #     field :y, [:a, :b]
       #     constructor { |x:, y:| { x: x, y: y } }
       #   end
+      #
+      # @return [void]
       def initialize(instance_name, &block)
         raise ArgumentError, 'instance_name should be a symbol' unless instance_name.is_a?(Symbol)
         raise ArgumentError, 'block is needed' unless block
@@ -259,6 +261,11 @@ module Musa
 
       private
 
+      # Generates evaluation tree for parameter calculation.
+      #
+      # @param fieldset [Fieldset] fieldset to process
+      #
+      # @return [A, nil] root node of evaluation tree
       def generate_eval_tree_A(fieldset)
         root = nil
         current = nil
@@ -279,6 +286,11 @@ module Musa
         root
       end
 
+      # Generates evaluation tree for attribute application.
+      #
+      # @param fieldset [Fieldset] fieldset to process
+      #
+      # @return [B] root node of attribute tree
       def generate_eval_tree_B(fieldset)
         affected_field_names = []
         inner = []
@@ -298,12 +310,19 @@ module Musa
         attr_reader :parameter_name, :options
         attr_accessor :inner
 
+        # @param parameter_name [Symbol] parameter name
+        # @param options [Array] option values
+        #
+        # @return [void]
         def initialize(parameter_name, options)
           @parameter_name = parameter_name
           @options = options
           @inner = nil
         end
 
+        # Calculates all parameter combinations.
+        #
+        # @return [Array<Hash>] parameter combination hashes
         def calc_parameters
           unless @calc_parameters
             if inner
@@ -320,16 +339,19 @@ module Musa
       private_constant :A
 
       class A1 < A
+        # @return [void]
         def initialize(parameter_name, options)
           super parameter_name, options
 
           @own_parameters = @options.collect { |option| { @parameter_name => option } }
         end
 
+        # @return [Array<Hash>] own parameter combinations
         def calc_own_parameters
           @own_parameters
         end
 
+        # @return [String] string representation
         def inspect
           "A1 name: #{@parameter_name}, options: #{@options}, inner: #{@inner || 'nil'}"
         end
@@ -340,6 +362,11 @@ module Musa
       private_constant :A1
 
       class A2 < A
+        # @param parameter_name [Symbol] parameter name
+        # @param options [Array] option values
+        # @param subcomponent [A] nested tree
+        #
+        # @return [void]
         def initialize(parameter_name, options, subcomponent)
           super parameter_name, options
 
@@ -361,10 +388,12 @@ module Musa
           @own_parameters = result
         end
 
+        # @return [Array<Hash>] own parameter combinations
         def calc_own_parameters
           @own_parameters
         end
 
+        # @return [String] string representation
         def inspect
           "A2 name: #{@parameter_name}, options: #{@options}, subcomponent: #{@subcomponent}, inner: #{@inner || 'nil'}"
         end
@@ -383,6 +412,13 @@ module Musa
       class B
         attr_reader :parameter_name, :options, :affected_field_names, :blocks, :inner
 
+        # @param parameter_name [Symbol] parameter name
+        # @param options [Array] option values
+        # @param affected_field_names [Array<Symbol>] field names affected
+        # @param inner [Array<B>] nested B nodes
+        # @param blocks [Array<Proc>] with_attributes blocks
+        #
+        # @return [void]
         def initialize(parameter_name, options, affected_field_names, inner, blocks)
           @parameter_name = parameter_name
           @options = options
@@ -392,6 +428,12 @@ module Musa
           @procedures = blocks.collect { |proc| Musa::Extension::SmartProcBinder::SmartProcBinder.new proc }
         end
 
+        # Runs attribute application for this node.
+        #
+        # @param parameters_with_depth [Hash] parameters with nesting depth
+        # @param parent_parameters [Hash, nil] parent context parameters
+        #
+        # @return [void]
         def run(parameters_with_depth, parent_parameters = nil)
           parent_parameters ||= {}
 
@@ -417,6 +459,7 @@ module Musa
           end
         end
 
+        # @return [String] string representation
         def inspect
           "B name: #{@parameter_name}, options: #{@options}, affected_field_names: #{@affected_field_names}, blocks_size: #{@blocks.size}, inner: #{@inner}"
         end
@@ -435,6 +478,10 @@ module Musa
         # @return [Fieldset] defined fieldset
         attr_reader :_fieldset
 
+        # @param name [Symbol] fieldset name
+        # @param options [Array, Range, nil] fieldset options
+        #
+        # @return [void]
         # @api private
         def initialize(name, options = nil, &block)
           @_fieldset = Fieldset.new name, options.arrayfy.explode_ranges
@@ -446,6 +493,8 @@ module Musa
         #
         # @param name [Symbol] field name
         # @param options [Array, Range, nil] field option values
+        #
+        # @return [void]
         # @api private
         def field(name, options = nil)
           @_fieldset.components << Field.new(name, options.arrayfy.explode_ranges)
@@ -455,7 +504,10 @@ module Musa
         #
         # @param name [Symbol] fieldset name
         # @param options [Array, Range, nil] fieldset option values
+        #
         # @yield fieldset DSL block
+        #
+        # @return [void]
         # @api private
         def fieldset(name, options = nil, &block)
           fieldset_context = FieldsetContext.new name, options, &block
@@ -465,6 +517,8 @@ module Musa
         # Adds attribute modification block.
         #
         # @yield attribute modification block
+        #
+        # @return [void]
         # @api private
         def with_attributes(&block)
           @_fieldset.with_attributes << block
@@ -481,6 +535,7 @@ module Musa
         # @return [Proc, nil] finalize block
         attr_reader :_constructor, :_finalize
 
+        # @return [void]
         # @api private
         def initialize(&block)
           @_constructor = nil
@@ -492,6 +547,8 @@ module Musa
         # Defines object constructor.
         #
         # @yield constructor block receiving field values
+        #
+        # @return [void]
         # @api private
         def constructor(&block)
           @_constructor = block
@@ -500,6 +557,8 @@ module Musa
         # Defines finalize block.
         #
         # @yield finalize block receiving completed object
+        #
+        # @return [void]
         # @api private
         def finalize(&block)
           @_finalize = block
@@ -512,6 +571,7 @@ module Musa
         attr_reader :name
         attr_accessor :options
 
+        # @return [String] string representation
         def inspect
           "Field #{@name} options: #{@options}"
         end
@@ -520,6 +580,10 @@ module Musa
 
         private
 
+        # @param name [Symbol] field name
+        # @param options [Array] option values
+        #
+        # @return [void]
         def initialize(name, options)
           @name = name
           @options = options
@@ -532,6 +596,7 @@ module Musa
         attr_reader :name, :with_attributes, :components
         attr_accessor :options
 
+        # @return [String] string representation
         def inspect
           "Fieldset #{@name} options: #{@options} components: #{@components}"
         end
@@ -540,6 +605,10 @@ module Musa
 
         private
 
+        # @param name [Symbol] fieldset name
+        # @param options [Array, nil] option values
+        #
+        # @return [void]
         def initialize(name, options)
           @name = name
           @options = options || [nil]

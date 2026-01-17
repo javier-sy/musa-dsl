@@ -113,6 +113,8 @@ module Musa
       #     start: :a,
       #     finish: :x
       #   )
+      #
+      # @return [void]
       def initialize(transitions:, start:, finish: nil, random: nil)
         @transitions = transitions.clone.freeze
 

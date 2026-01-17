@@ -429,32 +429,41 @@ module Musa
         Chord.new(@root.octave(octave), @scale, chord_definition, @move, @duplicate, source_notes_map)
       end
 
-      # Creates new chord with positions moved to different octaves.
+      # Creates new chord with positions moved to different octaves, or returns current move settings.
       #
-      # Relocates specific chord positions to different octaves while keeping
-      # other positions unchanged. Multiple positions can be moved at once.
-      # Merges with existing moves.
+      # When called with arguments, relocates specific chord positions to different
+      # octaves while keeping other positions unchanged. Multiple positions can be
+      # moved at once. Merges with existing moves.
+      #
+      # When called without arguments, returns the current move settings hash.
       #
       # @param octaves [Hash{Symbol => Integer}] position to octave offset mapping
-      # @return [Chord] new chord with moved positions
+      # @return [Chord, Hash] new chord with moved positions, or current move settings if no arguments
       #
       # @example Move root down, seventh up
       #   chord.move(root: -1, seventh: 1)
       #
       # @example Drop voicing (move third and seventh down)
       #   chord.move(third: -1, seventh: -1)
+      #
+      # @example Get current move settings
+      #   chord.move  # => { root: -1 }
       def move(**octaves)
+        return @move if octaves.empty?
+
         Chord.new(@root, @scale, @chord_definition, @move.merge(octaves), @duplicate, @source_notes_map)
       end
 
-      # Creates new chord with positions duplicated in other octaves.
+      # Creates new chord with positions duplicated in other octaves, or returns current duplicate settings.
       #
-      # Adds copies of specific chord positions in different octaves.
-      # Original positions remain at their current octave.
+      # When called with arguments, adds copies of specific chord positions in
+      # different octaves. Original positions remain at their current octave.
       # Merges with existing duplications.
       #
+      # When called without arguments, returns the current duplicate settings hash.
+      #
       # @param octaves [Hash{Symbol => Integer, Array<Integer>}] position to octave(s)
-      # @return [Chord] new chord with duplicated positions
+      # @return [Chord, Hash] new chord with duplicated positions, or current duplicate settings if no arguments
       #
       # @example Duplicate root two octaves down
       #   chord.duplicate(root: -2)
@@ -464,8 +473,44 @@ module Musa
       #
       # @example Duplicate multiple positions
       #   chord.duplicate(root: -1, fifth: 1)
+      #
+      # @example Get current duplicate settings
+      #   chord.duplicate  # => { root: -1 }
       def duplicate(**octaves)
+        return @duplicate if octaves.empty?
+
         Chord.new(@root, @scale, @chord_definition, @move, @duplicate.merge(octaves), @source_notes_map)
+      end
+
+      # Finds this chord in other scales.
+      #
+      # Searches through scale kinds matching the given metadata criteria to find
+      # all scales that contain this chord. Returns new chord instances, each with
+      # its containing scale as context.
+      #
+      # @param roots [Range, Array, nil] pitch offsets to search (default: full octave)
+      # @param metadata [Hash] metadata filters for scale kinds (family:, brightness:, etc.)
+      # @return [Array<Chord>] this chord in different scale contexts
+      #
+      # @example Find G major triad in diatonic scales
+      #   g_triad = c_major.dominant.chord
+      #   g_triad.in_scales(family: :diatonic)
+      #
+      # @example Find chord in scales with specific brightness
+      #   g7.in_scales(brightness: -1..1)
+      #
+      # @example Iterate over results
+      #   g7.in_scales(family: :greek_modes).each do |chord|
+      #     scale = chord.scale
+      #     degree = scale.degree_of_chord(chord)
+      #     puts "#{scale.kind.class.id} on #{scale.root_pitch}: degree #{degree}"
+      #   end
+      #
+      # @see Musa::Scales::Scale#chord_on
+      # @see Musa::Scales::ScaleSystemTuning#chords_of
+      def in_scales(roots: nil, **metadata)
+        tuning = @scale&.kind&.tuning || @root.scale.kind.tuning
+        tuning.chords_of(self, roots: roots, **metadata)
       end
 
       # Checks chord equality.

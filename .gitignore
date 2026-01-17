@@ -12,3 +12,5 @@ test.musicxml
 doc
 .yardoc
 *.backup
+.vscode
+.ruby-lsp
