@@ -1626,8 +1626,7 @@ module Musa
       # This is a convenience method that combines scale note access with
       # chord creation. It's equivalent to `scale[grade].chord(...)`.
       #
-      # @param grade [Integer, Symbol, String] scale degree (0-based numeric,
-      #   function name like :tonic, or Roman numeral like :V)
+      # @param grade [Integer, Symbol, String] scale degree (0-based numeric, function name like :tonic, or Roman numeral like :V)
       # @param feature_values [Array<Symbol>] chord feature values (:seventh, :major, etc.)
       # @param allow_chromatic [Boolean] allow non-diatonic chord notes
       # @param move [Hash{Symbol => Integer}] initial octave moves for chord tones
