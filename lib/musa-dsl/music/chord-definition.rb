@@ -269,7 +269,7 @@ module Musa
 
       # Checks if chord fits within a scale.
       #
-      # @param scale [Scale] scale to check against
+      # @param scale [Scales::Scale] scale to check against
       # @param chord_root_pitch [Integer] chord root pitch
       # @return [Boolean] true if all chord notes are in scale
       #

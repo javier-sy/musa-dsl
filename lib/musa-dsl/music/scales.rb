@@ -1548,7 +1548,7 @@ module Musa
       # @param move [Hash{Symbol => Integer}] initial octave moves for chord tones
       # @param duplicate [Hash{Symbol => Integer, Array}] initial duplications
       # @param features_hash [Hash] additional feature key-value pairs
-      # @return [Chord] chord rooted on the specified degree
+      # @return [Chords::Chord] chord rooted on the specified degree
       #
       # @example Create triads
       #   scale.chord_on(0)           # Tonic triad (I)
@@ -1989,7 +1989,7 @@ module Musa
       # @param move [Hash{Symbol => Integer}] initial octave moves
       # @param duplicate [Hash{Symbol => Integer, Array<Integer>}] initial duplications
       # @param features_hash [Hash] feature key-value pairs
-      # @return [Chord] chord rooted on this note
+      # @return [Chords::Chord] chord rooted on this note
       #
       # @example Default triad
       #   note.chord  # Major triad

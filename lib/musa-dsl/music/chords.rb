@@ -196,9 +196,9 @@ module Musa
         # Maps each chord position (root, third, fifth, etc.) to its corresponding
         # note in the scale or chromatic scale.
         #
-        # @param root [NoteInScale] chord root note
+        # @param root [Scales::NoteInScale] chord root note
         # @param chord_definition [ChordDefinition] chord structure
-        # @param scale [Scale] scale context
+        # @param scale [Scales::Scale] scale context
         # @return [Hash{Symbol => Array<NoteInScale>}] position to notes mapping
         #
         # @api private
@@ -216,7 +216,7 @@ module Musa
         #
         # @param root_pitch [Integer] MIDI pitch of chord root
         # @param features [Hash] desired chord features (quality:, size:, etc.)
-        # @param scale [Scale] scale context for diatonic filtering
+        # @param scale [Scales::Scale] scale context for diatonic filtering
         # @param allow_chromatic [Boolean] allow non-diatonic chords
         # @return [ChordDefinition, nil] matching definition or nil
         #
@@ -244,7 +244,7 @@ module Musa
       # @!attribute grade
       #   @return [Symbol] position name (:root, :third, :fifth, etc.)
       # @!attribute note
-      #   @return [NoteInScale] the note at this position
+      #   @return [Scales::NoteInScale] the note at this position
       #
       # @api private
       ChordGradeNote = Struct.new(:grade, :note, keyword_init: true)
@@ -255,8 +255,8 @@ module Musa
       #
       # Use {with_root} or create chords from scale notes instead.
       #
-      # @param root [NoteInScale] chord root note
-      # @param scale [Scale, nil] scale context (nil if chromatic notes present)
+      # @param root [Scales::NoteInScale] chord root note
+      # @param scale [Scales::Scale, nil] scale context (nil if chromatic notes present)
       # @param chord_definition [ChordDefinition] chord structure
       # @param move [Hash, nil] octave moves for positions
       # @param duplicate [Hash, nil] octave duplications for positions

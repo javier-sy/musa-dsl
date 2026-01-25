@@ -77,10 +77,7 @@ module Musa
       include Series::Serie::Base
       include Series::Serie::WithSource
 
-      # Custom accessor name for source
-      # @return [Serie, nil] the proxied source serie
       alias proxy_source source
-      # @param serie [Serie] source serie to proxy
       alias proxy_source= source=
 
       def initialize(serie)

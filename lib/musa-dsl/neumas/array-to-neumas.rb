@@ -162,7 +162,7 @@ module Musa
         #
         # @param e [Object] element to convert
         #
-        # @return [Serie] converted neuma serie
+        # @return [Series::Serie] converted neuma serie
         #
         # @raise [ArgumentError] if type cannot be converted
         #

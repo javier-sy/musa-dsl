@@ -64,7 +64,7 @@ module Musa::Neumas
     class NeumaDecoder < Decoder # to get a GDV
       # Creates GDV neuma decoder.
       #
-      # @param scale [Scale] scale for interpreting grade values
+      # @param scale [Scales::Scale] scale for interpreting grade values
       # @param base_duration [Rational, nil] base duration unit (default: 1/4)
       # @param transcriptor [Transcriptor, nil] optional transcriptor for ornaments
       # @param base [Hash, nil] initial state (auto-created if nil)
@@ -106,7 +106,7 @@ module Musa::Neumas
 
       # Scale for interpreting grade values.
       #
-      # @return [Scale] scale object
+      # @return [Scales::Scale] scale object
       #
       # @api public
       attr_accessor :scale
