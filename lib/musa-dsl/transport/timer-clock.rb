@@ -279,13 +279,15 @@ module Musa
 
       # Terminates the clock's run loop.
       #
-      # Causes {#run} to exit. This is the clean shutdown mechanism.
+      # Causes {#run} to exit by setting the run flag to false and terminating
+      # the internal timer. This is the clean shutdown mechanism.
       #
       # @return [void]
       #
-      # @note After calling this, {#run} will exit
+      # @note After calling this, {#run} will exit and {Transport#start} will return
       def terminate
         @run = false
+        @timer&.terminate
       end
     end
   end
