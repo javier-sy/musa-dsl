@@ -47,8 +47,8 @@ module Musa
     end
 
     class Splitter
-      # @!parse include Musa::Series::Serie::WithSource
-      include Series::Serie.with(source: true)
+      include Series::Serie::Base
+      include Series::Serie::WithSource
       include Enumerable
 
       private def has_source; true; end
@@ -236,7 +236,7 @@ module Musa
       private_constant :SplitterProxy
 
       class Split
-        include Series::Serie.base
+        include Series::Serie::Base
 
         def initialize(proxy, key_or_index)
           @proxy = proxy

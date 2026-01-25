@@ -493,7 +493,7 @@ module Musa
     ###
 
     class UndefinedSerie
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize
         mark_as_undefined!
@@ -504,7 +504,7 @@ module Musa
     # private_constant :UndefinedSerie
 
     class NilSerie
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize
         mark_as_prototype!
@@ -530,7 +530,7 @@ module Musa
     #
     # @api private
     class FromArray
-      include Series::Serie.base
+      include Series::Serie::Base
 
       using Musa::Extension::Arrayfy
 
@@ -567,8 +567,8 @@ module Musa
     # private_constant :FromArray
 
     class Sequence
-      # @!parse include Musa::Series::Serie::WithSources
-      include Series::Serie.with(sources: true)
+      include Series::Serie::Base
+      include Series::Serie::WithSources
 
       def initialize(series)
         self.sources = series
@@ -613,8 +613,8 @@ module Musa
     private_constant :Sequence
 
     class FromEvalBlockWithParameters
-      # @!parse include Musa::Series::Serie::WithBlock
-      include Series::Serie.with(smart_block: true)
+      include Series::Serie::Base
+      include Series::Serie::WithSmartBlock
 
       using Extension::DeepCopy
 
@@ -670,7 +670,7 @@ module Musa
     private_constant :FromEvalBlockWithParameters
 
     class ForLoop
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(from, to, step)
         @from = from
@@ -728,7 +728,7 @@ module Musa
     private_constant :ForLoop
 
     class RandomValueFromArray
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(values, random)
         @values = values
@@ -757,7 +757,7 @@ module Musa
     private_constant :RandomValueFromArray
 
     class RandomNumberFromRange
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(from, to, step, random)
         @from = from
@@ -817,7 +817,7 @@ module Musa
     private_constant :RandomNumberFromRange
 
     class RandomValuesFromArray
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(values, random)
         @values = values.clone.freeze
@@ -849,7 +849,7 @@ module Musa
     private_constant :RandomValuesFromArray
 
     class RandomNumbersFromRange
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(from, to, step, random)
         @from = from
@@ -911,8 +911,8 @@ module Musa
     private_constant :RandomNumbersFromRange
 
     class FromHashOfSeries
-      # @!parse include Musa::Series::Serie::WithSources
-      include Series::Serie.with(sources: true)
+      include Series::Serie::Base
+      include Series::Serie::WithSources
 
       def initialize(hash_of_series, cycle_all_series)
         self.sources = hash_of_series
@@ -971,8 +971,8 @@ module Musa
     private_constant :FromHashOfSeries
 
     class FromArrayOfSeries
-      # @!parse include Musa::Series::Serie::WithSources
-      include Series::Serie.with(sources: true)
+      include Series::Serie::Base
+      include Series::Serie::WithSources
 
       def initialize(series_array, cycle_all_series)
         self.sources = series_array
@@ -1031,7 +1031,7 @@ module Musa
     private_constant :FromArrayOfSeries
 
     class SinFunction
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(start, steps, amplitude, center)
         @start = start.to_f
@@ -1106,7 +1106,7 @@ module Musa
     private_constant :SinFunction
 
     class Fibonacci
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize
         mark_as_prototype!
@@ -1134,7 +1134,7 @@ module Musa
     private_constant :Fibonacci
 
     class HarmonicNotes
-      include Series::Serie.base
+      include Series::Serie::Base
 
       def initialize(error, extended)
         @error = error

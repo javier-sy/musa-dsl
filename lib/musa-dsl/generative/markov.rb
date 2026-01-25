@@ -97,7 +97,7 @@ module Musa
     # Implements {Musa::Series::Serie} interface for integration with series operations.
     class Markov
       # TODO: adapt to series prototyping
-      include Musa::Series::Serie.base
+      include Musa::Series::Serie::Base
 
       # Creates Markov chain generator.
       #

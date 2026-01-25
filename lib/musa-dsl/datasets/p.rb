@@ -206,7 +206,7 @@ module Musa::Datasets
     #
     # @api private
     class PtoTimedSerie
-      include Musa::Series::Serie.base
+      include Musa::Series::Serie::Base
 
       # Creates new timed serie adapter.
       #

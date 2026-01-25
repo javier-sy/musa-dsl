@@ -72,19 +72,16 @@ module Musa
     #   proxy.proxy_source = serie_b
     #   proxy.next_value  # Now uses serie_b
     #
-    # @!parse
-    #   # Shadow documentation for ProxySerie's custom source accessor.
-    #   class ProxySerie
-    #     # @return [Serie, nil] the proxied source serie
-    #     attr_reader :proxy_source
-    #     # @param serie [Serie] source serie to proxy
-    #     attr_writer :proxy_source
-    #   end
-
     # @api private
     class ProxySerie
-      # @!parse include Musa::Series::Serie::WithSource
-      include Series::Serie.with(source: true, source_as: :proxy_source)
+      include Series::Serie::Base
+      include Series::Serie::WithSource
+
+      # Custom accessor name for source
+      # @return [Serie, nil] the proxied source serie
+      alias proxy_source source
+      # @param serie [Serie] source serie to proxy
+      alias proxy_source= source=
 
       def initialize(serie)
         self.proxy_source = serie

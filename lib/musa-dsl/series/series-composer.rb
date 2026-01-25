@@ -84,8 +84,8 @@ module Musa
       # @see Composer::Composer Full composer implementation
       # @api private
       class ComposerAsOperationSerie
-        # @!parse include Musa::Series::Serie::WithSource
-        include Musa::Series::Serie.with(source: true)
+        include Musa::Series::Serie::Base
+        include Musa::Series::Serie::WithSource
 
         def initialize(serie, &block)
           self.source = serie
