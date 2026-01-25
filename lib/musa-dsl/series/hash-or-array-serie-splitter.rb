@@ -47,6 +47,7 @@ module Musa
     end
 
     class Splitter
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
       include Enumerable
 
@@ -74,7 +75,7 @@ module Musa
       # @param key_or_index [Symbol, Integer] hash key or array index
       #
       # @return [Split] component serie
-      def [](key_or_index)
+      def get(key_or_index)
         raise "Can't get a component because Splitter is a prototype. To get a component you need a Splitter instance." unless instance?
 
         if @series.key?(key_or_index)
@@ -84,13 +85,7 @@ module Musa
         end
       end
 
-      # @!method get(key_or_index)
-      #   Accesses component serie by key or index.
-      #
-      #   @param key_or_index [Symbol, Integer] hash key or array index
-      #
-      #   @return [Split] component serie
-      alias_method :get, :[]
+      alias_method :[], :get
 
       # Iterates over component series.
       #

@@ -42,7 +42,8 @@ module Musa::Datasets::Score::ToMXML
     # @note This method is experimental and currently unused. See TODO comment.
     #
     # @api private
-    def initialize(element, bar, bar_size = 1r) # TODO remove (unused because of bad strategy to time groups)
+    def initialize(element, bar, bar_size = Rational(1))
+      # TODO remove (unused because of bad strategy to time groups)
       @continue_from_previous_bar = element[:start] < bar
       @continue_to_next_bar = element[:finish] >= bar + bar_size
 
@@ -99,7 +100,8 @@ module Musa::Datasets::Score::ToMXML
   #
   # @api private
   # @todo Complete or remove this experimental method
-  def time_and_tuplet_optimize(elements, bar, bar_size = 1r) # TODO remove (unused because of bad strategy to time groups)
+  def time_and_tuplet_optimize(elements, bar, bar_size = Rational(1))
+    # TODO remove (unused because of bad strategy to time groups)
     decompositions = elements.collect { |pdv| ElementDurationDecomposition.new(pdv, bar, bar_size) }
 
     denominators = decompositions.collect { |g| g.duration_decomposition.collect { |d| d.to_r.denominator } }.flatten.uniq

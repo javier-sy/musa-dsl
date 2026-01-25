@@ -284,7 +284,7 @@ module Musa
       #
       # @return [void]
       #
-      # @note After calling this, {#run} will exit and {Transport#start} will return
+      # @note After calling this, {#run} will exit and {Musa::Transport::Transport#start} will return
       def terminate
         @run = false
         @timer&.terminate

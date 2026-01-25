@@ -327,98 +327,37 @@ module Musa
           # For detailed parameter documentation, see {NoteComplexities::PARAMETERS}
           #
           # @api private (called by subclasses)
-          def initialize(*_rest,
-                         pizzicato: nil,  # true
-                         # main content
-                         grace: nil, # true
-                         cue: nil, # true
-                         chord: nil, # true
-                         duration: nil, # number positive divisions
-                         tie_start: nil, tie_stop: nil, # true
-                         voice: nil, # number
-                         type: nil, # whole / half / quarter / ...
-                         dots: nil, # number
-                         accidental: nil, # sharp / flat / ...
-                         time_modification: nil, # TimeModification class instance
-                         stem: nil, # up / down / double
-                         notehead: nil, # Notehead class instance
-                         staff: nil, # number
-
-                         # notations
-                         accidental_mark: nil, # sharp / natural / flat / ...
-                         arpeggiate: nil, # true / up / down
-
-                         tied: nil, # start / stop / continue
-                         tuplet: nil, # Tuplet class instance
-
-                         dynamics: nil, # pppp...ffff (single or array of)
-                         fermata: nil, # true / upright / inverted
-                         glissando: nil, # start / stop
-                         non_arpeggiate: nil, # top / bottom
-
-                         slide: nil, # start / stop
-                         slur: nil, # start / stop / continue | { type: start/stop/continue, [**other_attributes: other_values] }
-
-                         ## articulations
-                         accent: nil, # true
-                         breath_mark: nil, # true / comma / tick
-                         caesura: nil, # true
-                         detached_legato: nil, # true
-                         doit: nil, # true
-                         falloff: nil, # true
-                         other_articulation: nil, # text
-                         plop: nil, # true
-                         scoop: nil, # true
-                         spiccato: nil, # true
-                         staccatissimo: nil, # true
-                         staccato: nil, # true
-                         stress: nil, # true
-                         strong_accent: nil, # true / up / down
-                         tenuto: nil, # true
-                         unstress: nil, # true
-
-                         ## ornaments
-                         delayed_inverted_turn: nil, # true
-                         delayed_turn: nil, # true
-                         inverted_mordent: nil, # true
-                         inverted_turn: nil, # true
-                         mordent: nil, # true
-                         schleifer: nil, # true
-                         shake: nil, # true
-                         tremolo: nil, # start / stop / single,
-                         trill_mark: nil, # true
-                         turn: nil, # true
-                         vertical_turn: nil, # true
-                         wavy_line: nil, # true
-                         other_ornament: nil, # true
-                         ornament_accidental_mark: nil, # sharp / natural / flat / ...
-
-                         ## technical
-                         arrow: nil, # Arrow class instance
-                         bend: nil, # Bend class instance
-                         double_tongue: nil, # true
-                         down_bow: nil, # true
-                         fingering: nil,  # Fingering class instance
-                         fingernails: nil, # true
-                         fret: nil, # number
-                         hammer_on: nil, # start / stop
-                         handbell: nil, # damp / echo / ...
-                         harmonic: nil, # Harmonic class instance
-                         heel: nil, # true
-                         hole: nil, # Hole class instance
-                         open_string: nil, # true
-                         other_technical: nil, # text
-                         pluck: nil, # text
-                         pull_off: nil, # start / stop
-                         snap_pizzicato: nil, # true
-                         stopped: nil, # true
-                         string: nil, # number (string number)
-                         tap: nil, # text
-                         thumb_position: nil, # true
-                         toe: nil, # true
-                         triple_tongue: nil, # true
-                         up_bow: nil, # true
-                         **_keyrest,
+          def initialize(*rest_args,
+                         pizzicato: nil,
+                         grace: nil, cue: nil, chord: nil,
+                         duration: nil, tie_start: nil, tie_stop: nil,
+                         voice: nil, type: nil, dots: nil,
+                         accidental: nil, time_modification: nil,
+                         stem: nil, notehead: nil, staff: nil,
+                         accidental_mark: nil, arpeggiate: nil,
+                         tied: nil, tuplet: nil,
+                         dynamics: nil, fermata: nil, glissando: nil, non_arpeggiate: nil,
+                         slide: nil, slur: nil,
+                         accent: nil, breath_mark: nil, caesura: nil,
+                         detached_legato: nil, doit: nil, falloff: nil,
+                         other_articulation: nil, plop: nil, scoop: nil,
+                         spiccato: nil, staccatissimo: nil, staccato: nil,
+                         stress: nil, strong_accent: nil, tenuto: nil, unstress: nil,
+                         delayed_inverted_turn: nil, delayed_turn: nil,
+                         inverted_mordent: nil, inverted_turn: nil,
+                         mordent: nil, schleifer: nil, shake: nil,
+                         tremolo: nil, trill_mark: nil, turn: nil,
+                         vertical_turn: nil, wavy_line: nil,
+                         other_ornament: nil, ornament_accidental_mark: nil,
+                         arrow: nil, bend: nil, double_tongue: nil, down_bow: nil,
+                         fingering: nil, fingernails: nil, fret: nil,
+                         hammer_on: nil, handbell: nil, harmonic: nil,
+                         heel: nil, hole: nil, open_string: nil,
+                         other_technical: nil, pluck: nil, pull_off: nil,
+                         snap_pizzicato: nil, stopped: nil, string: nil,
+                         tap: nil, thumb_position: nil, toe: nil,
+                         triple_tongue: nil, up_bow: nil,
+                         **keyrest_args,
                          &block)
 
             @tuplets = []

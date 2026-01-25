@@ -179,6 +179,7 @@ module Musa
     #
     # @api private
     class TimedUnionOfArrayOfTimedSeries
+      # @!parse include Musa::Series::Serie::WithSources
       include Series::Serie.with(sources: true)
 
       # Creates array-mode union from series array.
@@ -356,6 +357,7 @@ module Musa
     #
     # @api private
     class TimedUnionOfHashOfTimedSeries
+      # @!parse include Musa::Series::Serie::WithSources
       include Series::Serie.with(sources: true)
 
       # Creates hash-mode union from named series hash.
@@ -632,6 +634,7 @@ module Musa
     #
     # @api private
     class TimedFlattener
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
 
       # Creates flattener wrapping source serie.
@@ -726,6 +729,7 @@ module Musa
     #
     # @api private
     class TimedCompacter
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
 
       # Creates compacter wrapping source serie.

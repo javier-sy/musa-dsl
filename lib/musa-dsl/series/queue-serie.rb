@@ -72,6 +72,7 @@ module Musa
     #
     # @api private
     class QueueSerie
+      # @!parse include Musa::Series::Serie::WithSources
       include Series::Serie.with(sources: true)
 
       def initialize(series)

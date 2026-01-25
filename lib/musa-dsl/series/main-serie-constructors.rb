@@ -567,6 +567,7 @@ module Musa
     # private_constant :FromArray
 
     class Sequence
+      # @!parse include Musa::Series::Serie::WithSources
       include Series::Serie.with(sources: true)
 
       def initialize(series)
@@ -612,6 +613,7 @@ module Musa
     private_constant :Sequence
 
     class FromEvalBlockWithParameters
+      # @!parse include Musa::Series::Serie::WithBlock
       include Series::Serie.with(smart_block: true)
 
       using Extension::DeepCopy
@@ -909,6 +911,7 @@ module Musa
     private_constant :RandomNumbersFromRange
 
     class FromHashOfSeries
+      # @!parse include Musa::Series::Serie::WithSources
       include Series::Serie.with(sources: true)
 
       def initialize(hash_of_series, cycle_all_series)
@@ -968,6 +971,7 @@ module Musa
     private_constant :FromHashOfSeries
 
     class FromArrayOfSeries
+      # @!parse include Musa::Series::Serie::WithSources
       include Series::Serie.with(sources: true)
 
       def initialize(series_array, cycle_all_series)

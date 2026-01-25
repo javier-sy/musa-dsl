@@ -57,6 +57,7 @@ module Musa
     end
 
     class SyncBufferSerie
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
 
       def initialize(serie)
@@ -145,6 +146,7 @@ module Musa
       # modo fill_on_restart: cuando una serie hace restart, las demás no se ven afectadas porque siguen recibiendo
       # todos los elementos de la serie original
 
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
 
       def initialize(serie)
@@ -243,6 +245,7 @@ module Musa
       end
 
       class Buffer
+        # @!parse include Musa::Series::Serie::WithSource
         include Series::Serie.with(source: true, private_source: true)
 
         def initialize(base)

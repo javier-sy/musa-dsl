@@ -143,22 +143,13 @@ module Musa::Datasets
     # @return [Object, nil] attribute value
     #
     # @api private
-    def [](key)
+    def get(key)
       if NaturalKeys.include?(key) && self.respond_to?(key)
         self.send(key)
       end
     end
 
-    # @!method get(key)
-    #   Gets attribute value.
-    #
-    #   Supports accessing natural keys like :duration, :finish.
-    #
-    #   @param key [Symbol] attribute name
-    #   @return [Object, nil] attribute value
-    #
-    #   @api private
-    alias_method :get, :[]
+    alias_method :[], :get
 
     # Returns latest finish time of all events.
     #

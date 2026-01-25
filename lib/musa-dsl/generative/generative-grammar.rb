@@ -369,17 +369,11 @@ module Musa
         # @param index [Integer] option index
         #
         # @return [Node] option converted to node
-        def [](index)
+        def get(index)
           options[index].to_serie.to_node
         end
 
-        # @!method get(index)
-        #   Gets option at index as series node.
-        #
-        #   @param index [Integer] option index
-        #
-        #   @return [Node] option converted to node
-        alias_method :get, :[]
+        alias_method :[], :get
 
         # Converts options to series.
         #

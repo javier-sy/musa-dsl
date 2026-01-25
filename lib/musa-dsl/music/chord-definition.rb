@@ -1,5 +1,3 @@
-require 'set'
-
 module Musa
   # Chord construction and manipulation framework.
   #
@@ -115,21 +113,12 @@ module Musa
       # @example
       #   ChordDefinition[:maj]   # => <ChordDefinition :maj>
       #   ChordDefinition[:min7]  # => <ChordDefinition :min7>
-      def self.[](name)
+      def self.get(name)
         @definitions[name]
       end
 
-      # @!method self.get(name)
-      #   Retrieves a registered chord definition by name.
-      #
-      #   @param name [Symbol] chord definition name
-      #   @return [ChordDefinition, nil] definition or nil if not found
-      #
-      #   @example
-      #     ChordDefinition.get(:maj)   # => <ChordDefinition :maj>
-      #     ChordDefinition.get(:min7)  # => <ChordDefinition :min7>
       class << self
-        alias_method :get, :[]
+        alias_method :[], :get
       end
 
       # Registers a new chord definition.
@@ -163,7 +152,7 @@ module Musa
         definition.features.each { |k, v| @features_by_value[v] = k }
 
         @feature_keys ||= Set[]
-        features.keys.each { |feature_name| @feature_keys << feature_name }
+        features.each_key { |feature_name| @feature_keys << feature_name }
 
         self
       end

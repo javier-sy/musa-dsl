@@ -128,6 +128,7 @@ module Musa
     private_constant :QuantizerTools
 
     class RawQuantizer
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
       include QuantizerTools
 
@@ -393,6 +394,7 @@ module Musa
     private_constant :RawQuantizer
 
     class PredictiveQuantizer
+      # @!parse include Musa::Series::Serie::WithSource
       include Series::Serie.with(source: true)
       include QuantizerTools
 

@@ -611,6 +611,9 @@ module Musa
       ###
 
       class ProcessWith
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithSources
+        # @!parse include Musa::Series::Serie::WithBlock
         include Serie.with(source: true,
                            sources: true, sources_as: :with_sources, mandatory_sources: false,
                            smart_block: true)
@@ -714,6 +717,8 @@ module Musa
       private_constant :ProcessWith
 
       class Anticipate
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithBlock
         include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
@@ -747,6 +752,8 @@ module Musa
       private_constant :Anticipate
 
       class Switcher
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithSources
         include Serie.with(source: true, sources: true, sources_as: :options)
 
         def initialize(selector, indexed_series, hash_series)
@@ -785,6 +792,8 @@ module Musa
       private_constant :Switcher
 
       class MultiplexSelector
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithSources
         include Serie.with(source: true, sources: true, sources_as: :options)
 
         def initialize(selector, indexed_series, hash_series)
@@ -829,6 +838,8 @@ module Musa
       private_constant :MultiplexSelector
 
       class SwitchFullSerie
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithSources
         include Serie.with(source: true, sources: true, sources_as: :options)
 
         def initialize(selector, indexed_series, hash_series)
@@ -865,6 +876,7 @@ module Musa
       private_constant :SwitchFullSerie
 
       class InfiniteRepeater
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie)
@@ -895,6 +907,7 @@ module Musa
       private_constant :InfiniteRepeater
 
       class Repeater
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, times = nil, &condition)
@@ -968,6 +981,7 @@ module Musa
       private_constant :Repeater
 
       class LengthLimiter
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, length)
@@ -1002,6 +1016,7 @@ module Musa
       private_constant :LengthLimiter
 
       class Skipper
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, length)
@@ -1081,6 +1096,7 @@ module Musa
       private_constant :Flattener
 
       class MergeSerieOfSeries
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie)
@@ -1158,6 +1174,8 @@ module Musa
       #
       # @api private
       class Processor
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithBlock
         include Serie.with(source: true, smart_block: true)
 
         def initialize(serie, parameters, &processor)
@@ -1211,6 +1229,7 @@ module Musa
       end
 
       class Autorestart
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie)
@@ -1243,6 +1262,7 @@ module Musa
       private_constant :Autorestart
 
       class Cutter
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, length)
@@ -1273,6 +1293,7 @@ module Musa
         end
 
         class CutSerie
+          # @!parse include Musa::Series::Serie::WithSource
           include Serie.with(source: true)
 
           def initialize(serie, length)
@@ -1314,6 +1335,7 @@ module Musa
       private_constant :Cutter
 
       class Locker
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie)
@@ -1351,6 +1373,7 @@ module Musa
       private_constant :Locker
 
       class Reverser
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie)
@@ -1387,6 +1410,7 @@ module Musa
       private_constant :Reverser
 
       class Randomizer
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, random)
@@ -1424,6 +1448,7 @@ module Musa
       private_constant :Randomizer
 
       class Shifter
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, shift)
@@ -1500,6 +1525,8 @@ module Musa
       private_constant :Shifter
 
       class Remover
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithBlock
         include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
@@ -1534,6 +1561,8 @@ module Musa
       private_constant :Remover
 
       class Selector
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithBlock
         include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
@@ -1559,6 +1588,7 @@ module Musa
       private_constant :Selector
 
       class HashFromSeriesArray
+        # @!parse include Musa::Series::Serie::WithSource
         include Serie.with(source: true)
 
         def initialize(serie, keys)
@@ -1592,6 +1622,8 @@ module Musa
       private_constant :HashFromSeriesArray
 
       class LazySerieEval
+        # @!parse include Musa::Series::Serie::WithSource
+        # @!parse include Musa::Series::Serie::WithBlock
         include Serie.with(source: true, block: true)
 
         def initialize(serie, &block)
