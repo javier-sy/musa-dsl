@@ -80,18 +80,30 @@ limited_chords = variatio.on(root: [60, 64])
 
 Production system with growth and pruning rules (similar to L-systems). Generates tree structures by applying sequential growth rules to create branches and validation rules to prune invalid paths. Useful for harmonic progressions with voice leading rules, melodic variations with contour constraints, or rhythmic patterns following metric rules.
 
+### Execution Model
+
+**Critical concept: Each `grow` rule = 1 level of depth in the tree.**
+
+```
+Seed → GrowRule1 → GrowRule2 → GrowRule3 → ... → Result
+         ↓            ↓            ↓
+      branches    branches    branches
+```
+
+Rules are processed **sequentially**: the first grow rule applies to the seed, the second grow rule applies to all results from the first, and so on. If you define N grow rules, you get N levels of transformation.
+
 **Constructor parameters:**
 - `&block` - DSL block defining grow rules, cut rules, and end condition
 
 **DSL methods:**
 - `grow(name, &block)` - Define growth rule that generates new branches
-  - Block receives: `|object, history, **params|`
+  - Block receives: `|object|` or `|object, history|` or `|object, history, **params|`
   - Use `branch(new_object)` to create new possibilities
 - `cut(reason, &block)` - Define pruning rule to eliminate invalid paths
-  - Block receives: `|object, history, **params|`
+  - Block receives: `|object|` or `|object, history|` or `|object, history, **params|`
   - Use `prune` to reject current branch
 - `ended_when(&block)` - Define end condition to mark complete branches
-  - Block receives: `|object, history, **params|`
+  - Block receives: `|object|` or `|object, history|` or `|object, history, **params|`
   - Return `true` to mark branch as complete
 
 **Execution methods:**
@@ -103,23 +115,83 @@ Production system with growth and pruning rules (similar to L-systems). Generate
 - `combinations` - Returns array of all valid complete paths through tree
 - `fish` - Returns array of all valid endpoint objects
 
+### Important: The `history` Parameter
+
+**Warning:** When using a single seed (the typical case), the `history` parameter is **always an empty array `[]`** in all grow rules. This is because `history` contains the path of *confirmed* objects from previous seeds when using multiple seeds.
+
+**Do NOT rely on `history` for tracking sequence length with a single seed:**
+```ruby
+# THIS DOES NOT WORK as expected with a single seed:
+ended_when do |pitch, history|
+  history.size == 7  # Always false! history is []
+end
+```
+
+### Recommended Pattern: Cumulative State
+
+The recommended approach is to make your **object accumulate state** rather than relying on `history`:
+
+```ruby
+require 'musa-dsl'
+
+# Generate 8-note melodies with interval constraints
+rules = Musa::Rules::Rules.new do
+  # Each grow rule adds ONE note. For 8 notes, we need 7 grow rules (seed + 7).
+  7.times do
+    grow 'add next note' do |melody, max_interval:|
+      last_note = melody.last
+      (-max_interval..max_interval).each do |interval|
+        next if interval == 0  # Skip unisons
+        new_note = last_note + interval
+        branch melody + [new_note] if new_note.between?(48, 84)  # Range limit
+      end
+    end
+  end
+
+  # Cut rule: no repeated notes
+  cut 'no repetition' do |melody|
+    prune if melody.size >= 2 && melody[-1] == melody[-2]
+  end
+
+  # End condition checks the OBJECT size, not history
+  ended_when do |melody|
+    melody.size == 8
+  end
+end
+
+# Seed is [[60]] - double array to prevent automatic flattening
+tree = rules.apply([[60]], max_interval: 4)
+
+# Extract all valid 8-note melodies
+melodies = tree.combinations.map(&:last)
+puts "Generated #{melodies.size} valid melodies"
+```
+
+**Key points:**
+- Use `N.times { grow }` to create N levels of depth
+- The object (`melody`) accumulates state as an array
+- Check `object.size` in `ended_when`, not `history.size`
+- Seed with `[[value]]` (double array) to prevent Ruby's `arrayfy` from flattening
+
+### Basic Example: Chord Voicings
+
 ```ruby
 require 'musa-dsl'
 
 # Build chord voicings by adding notes sequentially
 rules = Musa::Rules::Rules.new do
-  # Step 1: Choose root note
+  # Step 1: Choose root note (1st grow rule = 1st level)
   grow 'add root' do |seed|
     [60, 64, 67].each { |root| branch [root] }  # C, E, G
   end
 
-  # Step 2: Add third (major or minor)
+  # Step 2: Add third (2nd grow rule = 2nd level)
   grow 'add third' do |chord|
     branch chord + [chord[0] + 4]  # Major third
     branch chord + [chord[0] + 3]  # Minor third
   end
 
-  # Step 3: Add fifth
+  # Step 3: Add fifth (3rd grow rule = 3rd level)
   grow 'add fifth' do |chord|
     branch chord + [chord[0] + 7]
   end
@@ -148,6 +220,20 @@ voicings = combinations.map { |path| path.last }
 # With parameters
 tree_with_params = rules.apply(0, max_interval: 7)
 ```
+
+### Multiple Seeds (Advanced)
+
+When passing an array of seeds `[s1, s2, s3]`, they are processed **sequentially and chained**: each seed starts from the valid endpoints of the previous seed's tree. In this case, `history` contains the confirmed path from previous seeds.
+
+```ruby
+# With multiple seeds, history IS populated:
+rules.apply([seed1, seed2, seed3])
+# seed1 processes → fish valid endpoints
+# seed2 starts from each endpoint, history contains seed1's path
+# seed3 starts from seed2's endpoints, history contains seed1+seed2's paths
+```
+
+This is useful for multi-phase generation where each phase has different rules, but for most use cases the single-seed cumulative state pattern is simpler and recommended.
 
 ## Generative Grammar
 

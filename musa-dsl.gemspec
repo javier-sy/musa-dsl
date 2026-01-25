@@ -40,6 +40,4 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'debug', '~> 1'
   s.add_development_dependency 'rubocop', '~> 1'
-  # s.add_development_dependency 'ruby-lsp'
-  # s.add_development_dependency 'steep'
 end

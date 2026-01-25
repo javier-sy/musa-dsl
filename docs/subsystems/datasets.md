@@ -52,6 +52,51 @@ E (base event)
 - Glissandi and parameter sweeps (PS)
 - Dynamics changes and other evolving parameters
 
+## Duration Types in AbsD
+
+AbsD defines three duration concepts that enable complex rhythmic structures:
+
+| Field | Purpose | Default |
+|-------|---------|---------|
+| `:duration` | Total event process time | Required |
+| `:note_duration` | Actual sound length (staccato/legato) | = duration |
+| `:forward_duration` | Time until next event starts | = duration |
+
+**Examples:**
+
+```ruby
+include Musa::Datasets
+
+# Normal note - all durations equal
+{ pitch: 60, duration: 1.0 }.extend(AbsD)
+
+# Staccato - sounds shorter than it "lasts"
+{ pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(AbsD)
+
+# Chord (simultaneous notes) - next event starts immediately
+{ pitch: 60, duration: 1.0, forward_duration: 0 }.extend(AbsD)
+
+# Overlap (legato) - next note starts before this one ends
+{ pitch: 60, duration: 1.0, forward_duration: 0.8 }.extend(AbsD)
+```
+
+**Understanding DeltaD:**
+
+DeltaD is the delta-encoding counterpart to AbsD. While AbsD stores absolute durations, DeltaD stores changes relative to a previous event. If duration hasn't changed from the previous event, it can be omitted for compression (as shown in GDV → GDVd conversions).
+
+## Natural Keys
+
+Each dataset type defines "natural keys" - semantically meaningful fields for that type:
+
+| Module | Natural Keys |
+|--------|--------------|
+| **E** | `[]` (none) |
+| **AbsD** | `[:duration, :note_duration, :forward_duration]` |
+| **PDV** | AbsD keys + `[:pitch, :velocity]` |
+| **GDV** | AbsD keys + `[:grade, :sharps, :octave, :velocity, :silence]` |
+
+Custom keys (any not in NaturalKeys) are preserved through conversions, enabling you to attach composition-specific metadata that travels with your musical data.
+
 ## Extensibility
 
 All datasets support custom parameters beyond their natural keys:
@@ -101,6 +146,36 @@ gdv.is_a?(GDV)   # => true
 gdv.is_a?(Abs)   # => true (GDV includes Abs)
 gdv.is_a?(AbsD)  # => true (GDV includes AbsD for duration)
 ```
+
+## Using AbsD for Containers
+
+AbsD is not just for notes - use it for any time-spanning structure that needs a duration. This is useful for chord progression steps, sections, or any compositional element that occupies time but isn't itself a single note.
+
+```ruby
+include Musa::Datasets
+
+scale = Musa::Scales::Scales.et12[440.0].major[60]
+
+# A chord progression step (not a note, but has duration)
+step = {
+  duration: 2,                    # How long this step lasts
+  symbol: :I,                     # Chord symbol for reference
+  bass: { grade: 0, octave: -1, duration: 2, velocity: 0 }.extend(GDV),
+  chord: scale[:I].chord,         # Chord object
+  chord_duration: 7/4r,
+  chord_velocity: -1
+}.extend(AbsD)
+
+# Now the sequencer can use step.duration for timing
+# while the step contains all the musical information needed to render it
+```
+
+**When to use AbsD directly:**
+
+- Containers that hold multiple notes (chords, arpeggios)
+- Section markers with timing information
+- Harmonic rhythm steps in a progression
+- Any structure where you need `:duration` but PDV/GDV semantics don't apply
 
 ## Dataset Conversions
 

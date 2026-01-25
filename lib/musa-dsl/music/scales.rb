@@ -452,6 +452,12 @@ module Musa
     class ScaleSystemTuning
       extend Forwardable
 
+      # Creates a tuning instance for a scale system.
+      #
+      # @param scale_system [Class] the ScaleSystem subclass
+      # @param a_frequency [Numeric] reference A frequency in Hz
+      #
+      # @api private
       def initialize(scale_system, a_frequency)
         @scale_system = scale_system
         @a_frequency = a_frequency
@@ -468,18 +474,73 @@ module Musa
 
       # TODO: allow scales not based in octaves but in other intervals (like fifths or other ratios). Possibly based on intervals definition of ScaleSystem plus a "generator interval" attribute
 
+      # @!method notes_in_octave
+      #   Returns the number of notes in one octave.
+      #   Delegated from {ScaleSystem.notes_in_octave}.
+      #   @return [Integer] notes per octave (e.g., 12 for chromatic)
+
+      # @!method offset_of_interval(name)
+      #   Returns semitone offset for a named interval.
+      #   Delegated from {ScaleSystem.offset_of_interval}.
+      #   @param name [Symbol] interval name (e.g., :M3, :P5)
+      #   @return [Integer] semitone offset
+
       def_delegators :@scale_system, :notes_in_octave, :offset_of_interval
 
-      attr_reader :a_frequency, :scale_system
+      # Reference A frequency in Hz.
+      # @return [Float]
+      attr_reader :a_frequency
 
+      # The parent scale system.
+      # @return [Class] ScaleSystem subclass
+      attr_reader :scale_system
+
+      # Retrieves a scale kind by ID.
+      #
+      # Creates and caches {ScaleKind} instances for efficient reuse.
+      #
+      # @param scale_kind_class_id [Symbol] scale kind identifier (e.g., :major, :minor)
+      # @return [ScaleKind] scale kind instance
+      # @raise [KeyError] if scale kind not found
+      #
+      # @example
+      #   tuning[:major][60]   # C major scale
+      #   tuning[:minor][69]   # A minor scale
+      #
+      # @see ScaleKind
       def [](scale_kind_class_id)
         @scale_kinds[scale_kind_class_id] ||= @scale_system.scale_kind_class(scale_kind_class_id).new self
       end
 
+      # Returns the chromatic scale kind.
+      #
+      # Provides access to the chromatic scale, which contains all pitches
+      # in the scale system. Used as fallback for non-diatonic notes.
+      #
+      # @return [ScaleKind] chromatic scale kind instance
+      #
+      # @example
+      #   tuning.chromatic[60]   # Chromatic scale at C
+      #
+      # @see ScaleSystem.chromatic_class
       def chromatic
         @chromatic_scale_kind
       end
 
+      # Calculates frequency for a MIDI pitch.
+      #
+      # Delegates to the scale system's frequency calculation using
+      # this tuning's A frequency as reference.
+      #
+      # @param pitch [Numeric] MIDI pitch number (60 = middle C)
+      # @param root [Numeric] root pitch of the scale (for non-equal temperaments)
+      # @return [Float] frequency in Hz
+      #
+      # @example
+      #   tuning.frequency_of_pitch(69, 60)  # => 440.0 (A4)
+      #   tuning.frequency_of_pitch(60, 60)  # => ~261.63 (C4)
+      #
+      # @see ScaleSystem.frequency_of_pitch
       def frequency_of_pitch(pitch, root)
         @scale_system.frequency_of_pitch(pitch, root, @a_frequency)
       end
@@ -564,6 +625,12 @@ module Musa
 
       private
 
+      # Returns scale kind IDs filtered by metadata criteria.
+      #
+      # @param metadata_criteria [Hash] key-value pairs to match
+      # @return [Array<Symbol>] matching scale kind IDs
+      #
+      # @api private
       def filtered_scale_kind_ids(**metadata_criteria)
         kinds = @scale_system.scale_kind_classes.keys
 
@@ -575,6 +642,13 @@ module Musa
         end
       end
 
+      # Checks if a scale kind class matches the given criteria.
+      #
+      # @param kind_class [Class] ScaleKind subclass to check
+      # @param criteria [Hash] metadata key-value pairs to match
+      # @return [Boolean] true if all criteria match
+      #
+      # @api private
       def matches_metadata?(kind_class, criteria)
         criteria.all? do |key, value|
           actual = kind_class.metadata[key]
@@ -591,12 +665,21 @@ module Musa
 
       public
 
+      # Checks tuning equality.
+      #
+      # Tunings are equal if they have the same scale system and A frequency.
+      #
+      # @param other [ScaleSystemTuning] the tuning to compare
+      # @return [Boolean] true if equal
       def ==(other)
         self.class == other.class &&
             @scale_system == other.scale_system &&
             @a_frequency == other.a_frequency
       end
 
+      # Returns string representation.
+      #
+      # @return [String] human-readable description
       def inspect
         "<ScaleSystemTuning: scale_system = #{@scale_system} a_frequency = #{@a_frequency}>"
       end
@@ -1156,7 +1239,16 @@ module Musa
         freeze
       end
 
-      # Delegates tuning access to kind.
+      # @!method tuning
+      #   Returns the tuning system associated with this scale.
+      #
+      #   Delegated from {ScaleKind#tuning}.
+      #
+      #   @return [ScaleSystemTuning] the tuning system used by this scale
+      #
+      #   @example
+      #     scale = Scales.et12[440.0].major[60]
+      #     scale.tuning  # => ScaleSystemTuning for 12-TET at A=440Hz
       def_delegators :@kind, :tuning
 
       # Scale kind (major, minor, etc.).
@@ -1747,6 +1839,13 @@ module Musa
         end
       end
 
+      # Calculates note at given pitch offset from current note.
+      #
+      # @param in_scale_pitch [Numeric] base pitch
+      # @param sharps [Integer] number of semitones to add (negative for flats)
+      # @return [NoteInScale] resulting note
+      #
+      # @api private
       def calculate_note_of_pitch(in_scale_pitch, sharps)
         pitch = in_scale_pitch + sharps * @scale.kind.tuning.scale_system.part_of_tone_size
 

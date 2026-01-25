@@ -52,6 +52,7 @@ For users extending the DSL or integrating deeply:
 2. Explore [Music](subsystems/music.md) (scales & chords)
 3. Try [Generative](subsystems/generative.md) algorithms
 4. Use [MusicXML Builder](subsystems/musicxml-builder.md) for scores
+5. Explore [Demo Projects](https://github.com/javier-sy/musadsl-demo) - 22+ working examples
 
 ### Live Coding?
 1. Set up [REPL](subsystems/repl.md)

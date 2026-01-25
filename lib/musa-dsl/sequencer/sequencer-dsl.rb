@@ -59,7 +59,119 @@ module Musa
     class Sequencer
       extend Forwardable
 
-      # Delegates to BaseSequencer
+      # @!method beats_per_bar
+      #   Returns beats per bar (time signature numerator).
+      #
+      #   Delegated from {BaseSequencer#beats_per_bar}.
+      #
+      #   @return [Integer, nil] beats per bar, or nil for tickless mode
+
+      # @!method ticks_per_beat
+      #   Returns ticks per beat (timing resolution).
+      #
+      #   Delegated from {BaseSequencer#ticks_per_beat}.
+      #
+      #   @return [Integer, nil] ticks per beat, or nil for tickless mode
+
+      # @!method ticks_per_bar
+      #   Returns total ticks per bar.
+      #
+      #   Delegated from BaseSequencer#ticks_per_bar.
+      #
+      #   @return [Integer, nil] ticks per bar, or nil for tickless mode
+
+      # @!method tick_duration
+      #   Returns duration of a single tick.
+      #
+      #   Delegated from BaseSequencer#tick_duration.
+      #
+      #   @return [Rational, nil] tick duration in bars, or nil for tickless mode
+
+      # @!method offset
+      #   Returns the sequencer's starting position offset.
+      #
+      #   Delegated from {BaseSequencer#offset}.
+      #
+      #   @return [Rational, nil] position offset
+
+      # @!method size
+      #   Returns number of scheduled events.
+      #
+      #   Delegated from {BaseSequencer#size}.
+      #
+      #   @return [Integer] count of pending events
+
+      # @!method empty?
+      #   Checks if sequencer has no scheduled events.
+      #
+      #   Delegated from {BaseSequencer#empty?}.
+      #
+      #   @return [Boolean] true if no events scheduled
+
+      # @!method on_debug_at
+      #   Registers debug handler for specific position.
+      #
+      #   Delegated from {BaseSequencer#on_debug_at}.
+      #
+      #   @yield block to execute when position is reached in debug mode
+
+      # @!method on_error
+      #   Registers error handler for sequencer errors.
+      #
+      #   Delegated from {BaseSequencer#on_error}.
+      #
+      #   @yield [Exception] block to handle errors
+
+      # @!method on_fast_forward
+      #   Registers handler called during fast-forward operations.
+      #
+      #   Delegated from {BaseSequencer#on_fast_forward}.
+      #
+      #   @yield block executed during fast-forward
+
+      # @!method before_tick
+      #   Registers handler called before each tick.
+      #
+      #   Delegated from {BaseSequencer#before_tick}.
+      #
+      #   @yield block executed before tick processing
+
+      # @!method raw_at(position, &block)
+      #   Schedules block at position without DSL context wrapping.
+      #
+      #   Delegated from {BaseSequencer#raw_at}.
+      #
+      #   @param position [Numeric, Rational] bar position
+      #   @yield block to execute at position
+
+      # @!method tick
+      #   Advances sequencer by one tick and processes events.
+      #
+      #   Delegated from BaseSequencer#tick.
+      #
+      #   @return [void]
+
+      # @!method reset
+      #   Resets sequencer to initial state.
+      #
+      #   Delegated from {BaseSequencer#reset}.
+      #
+      #   @return [void]
+
+      # @!method position=(value)
+      #   Sets the current sequencer position.
+      #
+      #   Delegated from BaseSequencer#position=.
+      #
+      #   @param value [Numeric, Rational] new position in bars
+      #   @return [void]
+
+      # @!method event_handler
+      #   Returns the event handler for launch/on events.
+      #
+      #   Delegated from {BaseSequencer#event_handler}.
+      #
+      #   @return [EventHandler] event handler instance
       def_delegators :@sequencer,
                      :beats_per_bar, :ticks_per_beat, :ticks_per_bar, :tick_duration,
                      :offset,
@@ -71,7 +183,162 @@ module Musa
                      :position=,
                      :event_handler
 
-      # Delegates to DSLContext
+      # @!method position
+      #   Returns current sequencer position in bars.
+      #
+      #   Delegated from {DSLContext#position}.
+      #
+      #   @return [Rational] current position
+
+      # @!method quantize_position(reference, step, offset: nil)
+      #   Quantizes a position to a grid.
+      #
+      #   Delegated from {DSLContext#quantize_position}.
+      #
+      #   @param reference [Numeric, Rational] reference position
+      #   @param step [Numeric, Rational] grid step size
+      #   @param offset [Numeric, Rational, nil] grid offset
+      #   @return [Rational] quantized position
+
+      # @!method logger
+      #   Returns the sequencer's logger instance.
+      #
+      #   Delegated from {DSLContext#logger}.
+      #
+      #   @return [Logger, nil] logger instance
+
+      # @!method debug
+      #   Returns or enables debug mode.
+      #
+      #   Delegated from {DSLContext#debug}.
+      #
+      #   @return [Boolean] debug mode status
+
+      # @!method now(*value_parameters, **key_parameters, &block)
+      #   Executes block immediately at current position.
+      #
+      #   Delegated from {DSLContext#now}.
+      #
+      #   @param value_parameters [Array] parameters to pass to block
+      #   @param key_parameters [Hash] keyword parameters
+      #   @yield block to execute now
+      #   @return [void]
+
+      # @!method at(position, *value_parameters, **key_parameters, &block)
+      #   Schedules block to execute at specified position.
+      #
+      #   Delegated from {DSLContext#at}.
+      #
+      #   @param position [Numeric, Rational] bar position
+      #   @param value_parameters [Array] parameters to pass to block
+      #   @param key_parameters [Hash] keyword parameters
+      #   @yield block to execute at position
+      #   @return [void]
+
+      # @!method wait(duration, *value_parameters, **key_parameters, &block)
+      #   Schedules block after waiting specified duration.
+      #
+      #   Delegated from {DSLContext#wait}.
+      #
+      #   @param duration [Numeric, Rational] wait duration in bars
+      #   @param value_parameters [Array] parameters to pass to block
+      #   @param key_parameters [Hash] keyword parameters
+      #   @yield block to execute after wait
+      #   @return [void]
+
+      # @!method play(serie, decoder: nil, mode: nil, **options, &block)
+      #   Plays a series using the decoder.
+      #
+      #   Delegated from {DSLContext#play}.
+      #
+      #   @param serie [Serie] series to play
+      #   @param decoder [Object, nil] decoder for series elements
+      #   @param mode [Symbol, nil] playback mode (:neumalang, etc.)
+      #   @param options [Hash] additional play options
+      #   @yield [element] block to process each element
+      #   @return [PlayControl] control object for the playing series
+
+      # @!method play_timed(timed_serie, **options, &block)
+      #   Plays a timed series with explicit timing.
+      #
+      #   Delegated from {DSLContext#play_timed}.
+      #
+      #   @param timed_serie [Serie] timed series to play
+      #   @param options [Hash] play options
+      #   @yield [element, duration] block to process elements
+      #   @return [PlayControl] control object
+
+      # @!method every(interval, duration: nil, till: nil, **options, &block)
+      #   Executes block repeatedly at interval.
+      #
+      #   Delegated from {DSLContext#every}.
+      #
+      #   @param interval [Numeric, Rational] repetition interval in bars
+      #   @param duration [Numeric, Rational, nil] total duration
+      #   @param till [Numeric, Rational, nil] end position
+      #   @param options [Hash] additional options
+      #   @yield block to execute each interval
+      #   @return [EveryControl] control object
+
+      # @!method move(from: nil, to: nil, duration: nil, step: nil, **options, &block)
+      #   Interpolates values over time.
+      #
+      #   Delegated from {DSLContext#move}.
+      #
+      #   @param from [Numeric, nil] starting value
+      #   @param to [Numeric, nil] ending value
+      #   @param duration [Numeric, Rational, nil] interpolation duration
+      #   @param step [Numeric, Rational, nil] time step
+      #   @param options [Hash] additional options
+      #   @yield [value] block receiving interpolated values
+      #   @return [MoveControl] control object
+
+      # @!method everying
+      #   Returns control for active every loops.
+      #
+      #   Delegated from {DSLContext#everying}.
+      #
+      #   @return [EveryingControl] control for active loops
+
+      # @!method playing
+      #   Returns control for active play operations.
+      #
+      #   Delegated from {DSLContext#playing}.
+      #
+      #   @return [PlayingControl] control for active plays
+
+      # @!method moving
+      #   Returns control for active move interpolations.
+      #
+      #   Delegated from {DSLContext#moving}.
+      #
+      #   @return [MovingControl] control for active moves
+
+      # @!method launch(event_name, *parameters, **key_parameters)
+      #   Triggers an event by name.
+      #
+      #   Delegated from {DSLContext#launch}.
+      #
+      #   @param event_name [Symbol] event identifier
+      #   @param parameters [Array] event parameters
+      #   @param key_parameters [Hash] event keyword parameters
+      #   @return [void]
+
+      # @!method on(event_name, &block)
+      #   Registers handler for named event.
+      #
+      #   Delegated from {DSLContext#on}.
+      #
+      #   @param event_name [Symbol] event identifier
+      #   @yield block to execute when event fires
+      #   @return [void]
+
+      # @!method run
+      #   Runs the sequencer until all events complete.
+      #
+      #   Delegated from {DSLContext#run}.
+      #
+      #   @return [void]
       def_delegators :@dsl, :position, :quantize_position, :logger, :debug
       def_delegators :@dsl, :now, :at, :wait, :play, :play_timed, :every, :move
       def_delegators :@dsl, :everying, :playing, :moving
@@ -210,7 +477,104 @@ module Musa
         # @return [BaseSequencer] underlying sequencer
         attr_reader :sequencer
 
-        # Delegates to BaseSequencer
+        # @!method launch(event_name, *parameters, **key_parameters)
+        #   Triggers an event by name.
+        #
+        #   Delegated from {BaseSequencer#launch}.
+        #
+        #   @param event_name [Symbol] event identifier
+        #   @param parameters [Array] event parameters
+        #   @param key_parameters [Hash] event keyword parameters
+        #   @return [void]
+
+        # @!method on(event_name, &block)
+        #   Registers handler for named event.
+        #
+        #   Delegated from {BaseSequencer#on}.
+        #
+        #   @param event_name [Symbol] event identifier
+        #   @yield block to execute when event fires
+        #   @return [void]
+
+        # @!method position
+        #   Returns current sequencer position in bars.
+        #
+        #   Delegated from BaseSequencer#position.
+        #
+        #   @return [Rational] current position
+
+        # @!method quantize_position(reference, step, offset: nil)
+        #   Quantizes a position to a grid.
+        #
+        #   Delegated from {BaseSequencer#quantize_position}.
+        #
+        #   @param reference [Numeric, Rational] reference position
+        #   @param step [Numeric, Rational] grid step size
+        #   @param offset [Numeric, Rational, nil] grid offset
+        #   @return [Rational] quantized position
+
+        # @!method size
+        #   Returns number of scheduled events.
+        #
+        #   Delegated from {BaseSequencer#size}.
+        #
+        #   @return [Integer] count of pending events
+
+        # @!method everying
+        #   Returns control for active every loops.
+        #
+        #   Delegated from {BaseSequencer#everying}.
+        #
+        #   @return [EveryingControl] control for active loops
+
+        # @!method playing
+        #   Returns control for active play operations.
+        #
+        #   Delegated from {BaseSequencer#playing}.
+        #
+        #   @return [PlayingControl] control for active plays
+
+        # @!method moving
+        #   Returns control for active move interpolations.
+        #
+        #   Delegated from {BaseSequencer#moving}.
+        #
+        #   @return [MovingControl] control for active moves
+
+        # @!method ticks_per_bar
+        #   Returns total ticks per bar.
+        #
+        #   Delegated from BaseSequencer#ticks_per_bar.
+        #
+        #   @return [Integer, nil] ticks per bar, or nil for tickless mode
+
+        # @!method logger
+        #   Returns the sequencer's logger instance.
+        #
+        #   Delegated from {BaseSequencer#logger}.
+        #
+        #   @return [Logger, nil] logger instance
+
+        # @!method debug
+        #   Returns or enables debug mode.
+        #
+        #   Delegated from {BaseSequencer#debug}.
+        #
+        #   @return [Boolean] debug mode status
+
+        # @!method inspect
+        #   Returns string representation of the context.
+        #
+        #   Delegated from BaseSequencer#inspect.
+        #
+        #   @return [String] inspection string
+
+        # @!method run
+        #   Runs the sequencer until all events complete.
+        #
+        #   Delegated from {BaseSequencer#run}.
+        #
+        #   @return [void]
         def_delegators :@sequencer,
                        :launch, :on,
                        :position, :quantize_position,

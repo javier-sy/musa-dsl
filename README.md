@@ -58,6 +58,20 @@ Detailed tutorial showing the Neuma notation system for composing melodies with 
 
 **📖 [Complete Tutorial](docs/getting-started/tutorial.md)**
 
+## Demo Projects
+
+A collection of 22+ working demo projects covering the full spectrum of Musa DSL capabilities:
+
+- **Basic concepts**: Setup, series, neumas, canon
+- **Generative tools**: Markov chains, Variatio, Darwin, Grammar, Rules, Matrix
+- **DAW integration**: MIDI sync, live coding, clock modes
+- **External protocols**: OSC with SuperCollider and Max/MSP
+- **Advanced patterns**: Event architecture, parameter automation, multi-phase compositions
+
+Each demo is a complete, runnable project with documentation explaining the concepts demonstrated.
+
+**📦 [musadsl-demo Repository](https://github.com/javier-sy/musadsl-demo)**
+
 ## System Architecture
 
 MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) and associated projects for communication, development, and integration.
@@ -230,4 +244,4 @@ Ruby refinements and metaprogramming utilities: Arrayfy, Hashify, ExplodeRanges,
 
 ## License
 
-[Musa-DSL](https://github.com/javier-sy/musa-dsl) Copyright (c) 2016-2025 [Javier Sánchez Yeste](https://yeste.studio), licensed under LGPL 3.0 License
+[Musa-DSL](https://github.com/javier-sy/musa-dsl) Copyright (c) 2016-2026 [Javier Sánchez Yeste](https://yeste.studio), licensed under LGPL 3.0 License

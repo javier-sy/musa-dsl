@@ -1,5 +1,42 @@
 require_relative 'chord-definition'
 
+# Standard chord definitions for Western harmony.
+#
+# This file registers the common chord types used in Western music theory,
+# organized by size (number of notes) and quality (major, minor, etc.).
+#
+# ## Chord Categories
+#
+# ### Triads (3 notes)
+# - **Major** (:maj) - Root, major 3rd, perfect 5th (0-4-7)
+# - **Minor** (:min) - Root, minor 3rd, perfect 5th (0-3-7)
+# - **Diminished** (:dim) - Root, minor 3rd, diminished 5th (0-3-6)
+# - **Augmented** (:aug) - Root, major 3rd, augmented 5th (0-4-8)
+#
+# ### Seventh Chords (4 notes)
+# - **Major 7th** (:maj7) - Major triad + major 7th (0-4-7-11)
+# - **Minor 7th** (:min7) - Minor triad + minor 7th (0-3-7-10)
+# - **Dominant 7th** (:dom7) - Major triad + minor 7th (0-4-7-10)
+#
+# ### Extended Chords (5+ notes)
+# - **9th chords**: :maj9, :min9, :dom9
+# - **11th chords**: :maj11, :min11
+# - **13th chords**: :maj13, :min13
+#
+# ## Usage
+#
+# Chords are accessed via scale notes using the {Musa::Scales::NoteInScale#chord} method:
+#
+#     scale = Scales.et12[440.0].major[60]
+#     scale.tonic.chord                    # Major triad (default)
+#     scale.tonic.chord :seventh           # Major 7th
+#     scale.dominant.chord :seventh        # Dominant 7th
+#     scale.tonic.chord quality: :minor    # Minor triad
+#
+# @see Musa::Chords::ChordDefinition.register How chords are registered
+# @see Musa::Chords::Chord How to build and use chords
+# @see Musa::Scales::NoteInScale#chord Building chords from scale notes
+
 # TODO trasladar los acordes de https://en.wikipedia.org/wiki/Chord_notation
 
 # TRIADS

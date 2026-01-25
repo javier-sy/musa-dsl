@@ -87,6 +87,32 @@ dummy_clock = Musa::Clock::DummyClock.new(100)
 4. **on_change_position** - Run when position jumps/seeks
 5. **after_stop** - Run when transport stops
 
+### Clean Shutdown
+
+To cleanly terminate a transport using TimerClock:
+
+1. Call `transport.stop` from within a scheduled event
+2. This calls `clock.terminate` internally
+3. The clock's run loop exits
+4. `transport.start` returns
+5. Your code continues after `transport.start` for cleanup
+
+```ruby
+# Example: Self-terminating composition
+transport.sequencer.at 10 do
+  puts "Composition finished"
+  transport.stop  # This will cause transport.start to return
+end
+
+transport.start  # Blocks until transport.stop is called
+puts "Cleanup..."  # Executes after stop
+output.close
+```
+
+**Note:** For `InputMidiClock`, stop/start cycles are controlled by the DAW
+and don't terminate the process. The `terminate` method can be used explicitly
+if you need the run loop to exit.
+
 **Key methods:**
 - `start` - Start playback (blocks while running)
 - `stop` - Stop playback
