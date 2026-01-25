@@ -53,6 +53,7 @@ module Musa
         @period = tick_period_in_seconds.rationalize
         @correction = (correction || 0r).rationalize
         @stop = stop || false
+        @terminate = false
 
         @delayed_ticks_error = delayed_ticks_error || 1.0
         @logger = logger
@@ -61,25 +62,29 @@ module Musa
 
       # Runs the timer loop, yielding for each tick.
       #
-      # This method blocks and runs indefinitely until stopped. For each tick:
+      # This method blocks and runs until terminated. For each tick:
       # 1. Yields to caller if not stopped
       # 2. Calculates next tick time
       # 3. Sleeps precisely until next tick
       # 4. Logs warnings if timing cannot be maintained
       #
       # When stopped (@stop = true), the thread sleeps until {#continue} is called.
+      # When terminated (@terminate = true), the loop exits and this method returns.
       #
       # @yield Called once per tick for processing
       # @return [void]
       #
-      # @note This method blocks the current thread
+      # @note This method blocks the current thread until {#terminate} is called
       # @note Uses monotonic clock for drift-free timing
       def run
         @thread = Thread.current
+        @terminate = false
 
         @next_moment = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         loop do
+          break if @terminate
+
           unless @stop
             # Process the tick
             yield
@@ -102,8 +107,11 @@ module Musa
             sleep to_sleep if to_sleep > 0.0
           end
 
-          # When stopped, sleep thread until continue is called
-          sleep if @stop
+          # When stopped, sleep thread until continue or terminate is called
+          if @stop
+            break if @terminate
+            sleep
+          end
         end
       end
 
@@ -132,6 +140,21 @@ module Musa
         @stop = false
         @next_moment = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         @thread.run
+      end
+
+      # Terminates the timer loop permanently.
+      #
+      # Unlike {#stop} which pauses the timer (allowing {#continue} to resume),
+      # terminate causes the {#run} loop to exit completely. Use this for
+      # clean shutdown.
+      #
+      # @return [void]
+      #
+      # @note This wakes the thread if sleeping and causes {#run} to return
+      # @see #stop For pausing without terminating
+      def terminate
+        @terminate = true
+        @thread&.wakeup
       end
     end
   end
