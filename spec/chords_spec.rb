@@ -250,33 +250,56 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(c_major.degree_of_chord(chord)).to be_nil
     end
 
-    it 'Scale#chord_on returns chord with new scale context' do
+    it 'Chord#as_chord_in_scale returns chord with new scale context' do
       g_mixolydian = scale_system[:mixolydian][67]
       chord = c_major.dominant.chord :seventh  # G7
-      new_chord = g_mixolydian.chord_on(chord)
+      new_chord = chord.as_chord_in_scale(g_mixolydian)
 
       expect(new_chord).not_to be_nil
       expect(new_chord.scale).to eq g_mixolydian
       expect(new_chord.root.pitch).to eq chord.root.pitch
     end
 
-    it 'Scale#chord_on returns nil for non-contained chord' do
+    it 'Chord#as_chord_in_scale returns nil for non-contained chord' do
       a_major = scale_system[:major][69]
       chord = c_major.dominant.chord :seventh  # G7 (has F natural, not in A major)
-      expect(a_major.chord_on(chord)).to be_nil
+      expect(chord.as_chord_in_scale(a_major)).to be_nil
     end
 
-    it 'ScaleKind#scales_containing finds matching scales' do
+    it 'Scale#chord_on creates chord at specified degree' do
+      chord = c_major.chord_on(0)
+      expect(chord.root.pitch).to eq(60)
+      expect(chord.pitches).to eq([60, 64, 67])
+    end
+
+    it 'Scale#chord_on accepts symbolic grade' do
+      chord = c_major.chord_on(:dominant)
+      expect(chord.root.pitch).to eq(67)
+      expect(chord.pitches).to eq([67, 71, 74])
+    end
+
+    it 'Scale#chord_on accepts feature values' do
+      chord = c_major.chord_on(:dominant, :seventh)
+      expect(chord.root.pitch).to eq(67)
+      expect(chord.features[:size]).to eq(:seventh)
+    end
+
+    it 'Scale#chord_on accepts voicing parameters' do
+      chord = c_major.chord_on(0, :triad, move: {root: -1})
+      expect(chord.root.pitch).to eq(48)
+    end
+
+    it 'ScaleKind#find_chord_in_scales finds matching scales' do
       chord = c_major.dominant.chord  # G major triad
-      results = scale_system[:major].scales_containing(chord)
+      results = scale_system[:major].find_chord_in_scales(chord)
 
       expect(results.length).to eq 3  # C major (V), G major (I), D major (IV)
       expect(results.map { |c| c.scale.root_pitch % 12 }).to contain_exactly(0, 7, 2)
     end
 
-    it 'ScaleSystemTuning#chords_of searches across scale types with metadata filtering' do
+    it 'ScaleSystemTuning#search_chord_in_scales searches across scale types with metadata filtering' do
       chord = c_major.dominant.chord :seventh  # G7
-      results = scale_system.chords_of(chord, family: :diatonic)
+      results = scale_system.search_chord_in_scales(chord, family: :diatonic)
 
       # G7 appears in diatonic scales: C major (V), possibly others
       expect(results).not_to be_empty
@@ -285,9 +308,9 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       end
     end
 
-    it 'ScaleSystemTuning#chords_of filters by brightness range' do
+    it 'ScaleSystemTuning#search_chord_in_scales filters by brightness range' do
       chord = c_major.tonic.chord  # C major triad
-      results = scale_system.chords_of(chord, brightness: 0..2)
+      results = scale_system.search_chord_in_scales(chord, brightness: 0..2)
 
       expect(results).not_to be_empty
       results.each do |result_chord|
@@ -296,9 +319,9 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       end
     end
 
-    it 'Chord#in_scales finds all containing scales with metadata filtering' do
+    it 'Chord#search_in_scales finds all containing scales with metadata filtering' do
       chord = c_major.dominant.chord  # G major triad
-      results = chord.in_scales(family: :diatonic)
+      results = chord.search_in_scales(family: :diatonic)
 
       expect(results).not_to be_empty
       results.each do |result_chord|
@@ -308,9 +331,9 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       end
     end
 
-    it 'Chord#in_scales without filters searches all scale types' do
+    it 'Chord#search_in_scales without filters searches all scale types' do
       chord = c_major.tonic.chord  # C major triad
-      results = chord.in_scales
+      results = chord.search_in_scales
 
       # Should find chord in many scales across all families
       expect(results.length).to be > 10
@@ -343,7 +366,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       # C harmonic minor has: C-D-Eb-F-G-Ab-B (raised 7th = B natural)
       # G7 pitches (mod 12): G=7, B=11, D=2, F=5 - all present in C harmonic minor
       g7 = c_major.dominant.chord :seventh
-      results = g7.in_scales(family: :diatonic)
+      results = g7.search_in_scales(family: :diatonic)
 
       # Filter to only C root (pitch 0 mod 12) to verify both major and harmonic minor contain G7
       c_rooted = results.select { |c| c.scale.root_pitch % 12 == 0 }
@@ -352,10 +375,10 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(scale_kinds).to include(:minor_harmonic)
     end
 
-    it 'preserves voicing (move/duplicate) when creating chord_on' do
+    it 'Chord#as_chord_in_scale preserves voicing (move/duplicate)' do
       chord = c_major.dominant.chord(:seventh).with_move(root: -1).with_duplicate(fifth: 1)
       g_mixolydian = scale_system[:mixolydian][67]
-      new_chord = g_mixolydian.chord_on(chord)
+      new_chord = chord.as_chord_in_scale(g_mixolydian)
 
       expect(new_chord.move).to eq chord.move
       expect(new_chord.duplicate).to eq chord.duplicate

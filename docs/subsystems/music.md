@@ -247,9 +247,26 @@ c_major.degree_of_chord(cm)     # => nil
 ```ruby
 # Get the same chord but with a different scale as context
 g_mixolydian = Scales.et12[440.0].mixolydian[67]
-g7_in_mixolydian = g_mixolydian.chord_on(g7)
+g7_in_mixolydian = g7.as_chord_in_scale(g_mixolydian)
 g7_in_mixolydian.scale                        # => G Mixolydian scale
 g_mixolydian.degree_of_chord(g7_in_mixolydian)  # => 0 (I degree)
+```
+
+#### Creating Chords from Scale Degrees
+
+```ruby
+# Create chords directly from scale degrees using Scale#chord_on
+i_chord = scale.chord_on(0)                    # Tonic triad
+v7 = scale.chord_on(:dominant, :seventh)       # V7
+iv_maj7 = scale.chord_on(:IV, :seventh, :major)  # IVmaj7
+
+# Equivalent to using the note method then chord:
+scale[0].chord                      # Same as scale.chord_on(0)
+scale[:dominant].chord(:seventh)    # Same as scale.chord_on(:dominant, :seventh)
+
+# With voicing parameters
+scale.chord_on(:I, :seventh, move: {root: -1})
+scale.chord_on(0, :triad, duplicate: {root: 1})
 ```
 
 #### Finding Scales That Contain a Chord
@@ -258,17 +275,17 @@ g_mixolydian.degree_of_chord(g7_in_mixolydian)  # => 0 (I degree)
 g_triad = c_major.dominant.chord  # G-B-D
 
 # Search in diatonic scales
-g_triad.in_scales(family: :diatonic)
+g_triad.search_in_scales(family: :diatonic)
 # => [Chord in C major (V), Chord in G major (I), Chord in D major (IV), ...]
 
 # Search using metadata filters
-g_triad.in_scales(family: :greek_modes, brightness: -1..1)
+g_triad.search_in_scales(family: :greek_modes, brightness: -1..1)
 
 # Search in all scale types
-g_triad.in_scales
+g_triad.search_in_scales
 
 # Each result has its scale context
-g_triad.in_scales(family: :diatonic).each do |chord|
+g_triad.search_in_scales(family: :diatonic).each do |chord|
   scale = chord.scale
   degree = scale.degree_of_chord(chord)
   puts "#{scale.kind.class.id} rooted on #{scale.root_pitch}: degree #{degree}"
@@ -285,10 +302,10 @@ end
 tuning = Scales.et12[440.0]
 
 # Search at ScaleKind level
-tuning.major.scales_containing(g_triad)
+tuning.major.find_chord_in_scales(g_triad)
 
 # Search at ScaleSystemTuning level with metadata filters
-tuning.chords_of(g7, family: :diatonic, roots: 60..71)
+tuning.search_chord_in_scales(g7, family: :diatonic, roots: 60..71)
 ```
 
 ### Scale Kind Metadata
@@ -434,16 +451,16 @@ tuning.scale_kinds(family: :greek_modes) { |klass| klass.metadata[:brightness]&.
 
 #### Integration with Chord Search
 
-The `chords_of` method uses the same metadata filtering:
+The `search_chord_in_scales` method uses the same metadata filtering:
 
 ```ruby
 g7 = tuning.major[60].dominant.chord(:seventh)
 
 # Find G7 in diatonic scales
-tuning.chords_of(g7, family: :diatonic)
+tuning.search_chord_in_scales(g7, family: :diatonic)
 
 # Find G7 in scales with specific brightness
-tuning.chords_of(g7, brightness: -1..1)
+tuning.search_chord_in_scales(g7, brightness: -1..1)
 ```
 
 ## Defining Custom Scale Systems, Scale Kinds, and Chord Definitions

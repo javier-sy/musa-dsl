@@ -654,22 +654,22 @@ module Musa
       # @example Search G7 in greek mode scales
       #   tuning = Scales.et12[440.0]
       #   g7 = tuning.major[60].dominant.chord :seventh
-      #   tuning.chords_of(g7, family: :greek_modes)
+      #   tuning.search_chord_in_scales(g7, family: :greek_modes)
       #
       # @example Search with brightness filter
-      #   tuning.chords_of(g7, brightness: -1..1)
+      #   tuning.search_chord_in_scales(g7, brightness: -1..1)
       #
       # @example Search in all scale types
-      #   tuning.chords_of(g7)
+      #   tuning.search_chord_in_scales(g7)
       #
-      # @see ScaleKind#scales_containing
-      # @see Musa::Chords::Chord#in_scales
-      def chords_of(chord, roots: nil, **metadata_criteria)
+      # @see ScaleKind#find_chord_in_scales
+      # @see Musa::Chords::Chord#search_in_scales
+      def search_chord_in_scales(chord, roots: nil, **metadata_criteria)
         roots ||= 0...notes_in_octave
         kinds = filtered_scale_kind_ids(**metadata_criteria)
 
         kinds.flat_map do |kind_id|
-          self[kind_id].scales_containing(chord, roots: roots)
+          self[kind_id].find_chord_in_scales(chord, roots: roots)
         end
       end
 
@@ -869,19 +869,19 @@ module Musa
       # @example Find G major triad in all major scales
       #   tuning = Scales.et12[440.0]
       #   g_triad = tuning.major[60].dominant.chord
-      #   tuning.major.scales_containing(g_triad)
+      #   tuning.major.find_chord_in_scales(g_triad)
       #   # => [Chord in C major (V), Chord in G major (I), Chord in D major (IV)]
       #
-      # @see Scale#chord_on
-      # @see ScaleSystemTuning#chords_in_scales
-      def scales_containing(chord, roots: nil)
+      # @see Musa::Chords::Chord#as_chord_in_scale
+      # @see ScaleSystemTuning#search_chord_in_scales
+      def find_chord_in_scales(chord, roots: nil)
         roots ||= 0...tuning.notes_in_octave
         base_pitch = chord.root.pitch % tuning.notes_in_octave
 
         roots.filter_map do |root_offset|
           root_pitch = base_pitch + root_offset
           scale = self[root_pitch]
-          scale.chord_on(chord)
+          chord.as_chord_in_scale(scale)
         end
       end
 
@@ -1621,38 +1621,46 @@ module Musa
         note&.grade
       end
 
-      # Creates an equivalent chord with this scale as its context.
+      # Creates a chord rooted on the specified scale degree.
       #
-      # Returns a new Chord object that represents the same chord but with
-      # this scale as its harmonic context. The chord's voicing (move and
-      # duplicate settings) is preserved.
+      # This is a convenience method that combines scale note access with
+      # chord creation. It's equivalent to `scale[grade].chord(...)`.
       #
-      # @param chord [Musa::Chords::Chord] the source chord
-      # @return [Musa::Chords::Chord, nil] new chord with this scale, or nil if not contained
+      # @param grade [Integer, Symbol, String] scale degree (0-based numeric,
+      #   function name like :tonic, or Roman numeral like :V)
+      # @param feature_values [Array<Symbol>] chord feature values (:seventh, :major, etc.)
+      # @param allow_chromatic [Boolean] allow non-diatonic chord notes
+      # @param move [Hash{Symbol => Integer}] initial octave moves for chord tones
+      # @param duplicate [Hash{Symbol => Integer, Array}] initial duplications
+      # @param features_hash [Hash] additional feature key-value pairs
+      # @return [Chord] chord rooted on the specified degree
       #
-      # @example
-      #   c_major = Scales.et12[440.0].major[60]
-      #   g7 = c_major.dominant.chord :seventh
+      # @example Create triads
+      #   scale.chord_on(0)           # Tonic triad (I)
+      #   scale.chord_on(:dominant)   # Dominant triad (V)
+      #   scale.chord_on(:IV)         # Subdominant triad
       #
-      #   g_mixolydian = Scales.et12[440.0].mixolydian[67]
-      #   g7_in_mixolydian = g_mixolydian.chord_on(g7)
-      #   g7_in_mixolydian.scale  # => G Mixolydian scale
+      # @example Create extended chords
+      #   scale.chord_on(4, :seventh)              # V7
+      #   scale.chord_on(:dominant, :ninth)        # V9
+      #   scale.chord_on(0, :seventh, :major)      # Imaj7
       #
-      # @see #contains_chord?
-      # @see #degree_of_chord
-      def chord_on(chord)
-        return nil unless contains_chord?(chord)
-
-        root_note = note_of_pitch(chord.root.pitch, allow_chromatic: false)
-        return nil unless root_note
-
-        Musa::Chords::Chord.with_root(
-          root_note,
-          scale: self,
-          name: chord.chord_definition.name,
-          move: chord.move.empty? ? nil : chord.move,
-          duplicate: chord.duplicate.empty? ? nil : chord.duplicate
-        )
+      # @example With voicing
+      #   scale.chord_on(:I, :seventh, move: {root: -1})
+      #   scale.chord_on(0, :triad, duplicate: {root: 1})
+      #
+      # @see NoteInScale#chord
+      # @see #get
+      def chord_on(grade, *feature_values,
+                   allow_chromatic: nil,
+                   move: nil,
+                   duplicate: nil,
+                   **features_hash)
+        self[grade].chord(*feature_values,
+                          allow_chromatic: allow_chromatic,
+                          move: move,
+                          duplicate: duplicate,
+                          **features_hash)
       end
 
       # Checks scale equality.

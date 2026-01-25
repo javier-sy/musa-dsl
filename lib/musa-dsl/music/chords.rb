@@ -431,10 +431,6 @@ module Musa
         Chord.new(@root.at_octave(octave), @scale, chord_definition, @move, @duplicate, source_notes_map)
       end
 
-      # Current move settings (position to octave offset mapping).
-      # @return [Hash{Symbol => Integer}]
-      attr_reader :move
-
       # Creates new chord with positions moved to different octaves.
       #
       # Relocates specific chord positions to different octaves while keeping
@@ -452,10 +448,6 @@ module Musa
       def with_move(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move.merge(octaves), @duplicate, @source_notes_map)
       end
-
-      # Current duplicate settings (position to octave(s) mapping).
-      # @return [Hash{Symbol => Integer, Array<Integer>}]
-      attr_reader :duplicate
 
       # Creates new chord with positions duplicated in other octaves.
       #
@@ -503,10 +495,44 @@ module Musa
       #   end
       #
       # @see Musa::Scales::Scale#chord_on
-      # @see Musa::Scales::ScaleSystemTuning#chords_of
-      def in_scales(roots: nil, **metadata)
+      # @see Musa::Scales::ScaleSystemTuning#search_chord_in_scales
+      def search_in_scales(roots: nil, **metadata)
         tuning = @scale&.kind&.tuning || @root.scale.kind.tuning
-        tuning.chords_of(self, roots: roots, **metadata)
+        tuning.search_chord_in_scales(self, roots: roots, **metadata)
+      end
+
+      # Creates an equivalent chord with the given scale as its context.
+      #
+      # Returns a new Chord object representing the same chord but with
+      # the specified scale as its harmonic context. Returns nil if the
+      # chord is not contained in the scale.
+      #
+      # @param scale [Musa::Scales::Scale] the target scale
+      # @return [Chord, nil] new chord with target scale, or nil if not contained
+      #
+      # @example
+      #   c_major = Scales.et12[440.0].major[60]
+      #   g7 = c_major.dominant.chord :seventh
+      #
+      #   g_mixolydian = Scales.et12[440.0].mixolydian[67]
+      #   g7_in_mixolydian = g7.as_chord_in_scale(g_mixolydian)
+      #   g7_in_mixolydian.scale  # => G Mixolydian scale
+      #
+      # @see #search_in_scales
+      # @see Musa::Scales::Scale#contains_chord?
+      def as_chord_in_scale(scale)
+        return nil unless scale.contains_chord?(self)
+
+        root_note = scale.note_of_pitch(@root.pitch, allow_chromatic: false)
+        return nil unless root_note
+
+        Chord.with_root(
+          root_note,
+          scale: scale,
+          name: @chord_definition.name,
+          move: @move.empty? ? nil : @move,
+          duplicate: @duplicate.empty? ? nil : @duplicate
+        )
       end
 
       # Checks chord equality.
