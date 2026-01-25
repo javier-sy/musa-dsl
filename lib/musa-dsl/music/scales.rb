@@ -328,6 +328,27 @@ module Musa
         @a_tunings[a_frequency]
       end
 
+      # @!method self.get(a_frequency)
+      #   Creates or retrieves a tuning for this scale system.
+      #
+      #   Returns a {ScaleSystemTuning} instance for the specified A frequency.
+      #   Tunings are cached—repeated calls with same frequency return same instance.
+      #
+      #   @param a_frequency [Numeric] reference A frequency in Hz
+      #   @return [ScaleSystemTuning] tuning instance
+      #
+      #   @example Standard pitch
+      #     tuning = ScaleSystem.get(440.0)
+      #
+      #   @example Baroque pitch
+      #     baroque = ScaleSystem.get(415.0)
+      #
+      #   @example Modern high pitch
+      #     modern = ScaleSystem.get(442.0)
+      class << self
+        alias_method :get, :[]
+      end
+
       # Returns semitone offset for a named interval.
       #
       # @param name [Symbol] interval name (e.g., :M3, :P5)
@@ -511,6 +532,22 @@ module Musa
       def [](scale_kind_class_id)
         @scale_kinds[scale_kind_class_id] ||= @scale_system.scale_kind_class(scale_kind_class_id).new self
       end
+
+      # @!method get(scale_kind_class_id)
+      #   Retrieves a scale kind by ID.
+      #
+      #   Creates and caches {ScaleKind} instances for efficient reuse.
+      #
+      #   @param scale_kind_class_id [Symbol] scale kind identifier (e.g., :major, :minor)
+      #   @return [ScaleKind] scale kind instance
+      #   @raise [KeyError] if scale kind not found
+      #
+      #   @example
+      #     tuning.get(:major).get(60)   # C major scale
+      #     tuning.get(:minor).get(69)   # A minor scale
+      #
+      #   @see ScaleKind
+      alias_method :get, :[]
 
       # Returns the chromatic scale kind.
       #
@@ -771,6 +808,20 @@ module Musa
         @scales[root_pitch] = Scale.new(self, root_pitch: root_pitch) unless @scales.key?(root_pitch)
         @scales[root_pitch]
       end
+
+      # @!method get(root_pitch)
+      #   Creates or retrieves a scale rooted on specific pitch.
+      #
+      #   Scales are cached—repeated calls with same pitch return same instance.
+      #
+      #   @param root_pitch [Integer] MIDI root pitch (60 = middle C)
+      #   @return [Scale] scale instance
+      #
+      #   @example
+      #     major_kind = tuning[:major]
+      #     c_major = major_kind.get(60)     # C major
+      #     g_major = major_kind.get(67)     # G major
+      alias_method :get, :[]
 
       # Returns scale with default root (middle C, MIDI 60).
       #
@@ -1360,6 +1411,40 @@ module Musa
 
         @notes_by_grade[wide_grade].sharp(sharps)
       end
+
+      # @!method get(grade_or_symbol)
+      #   Accesses scale degree by grade, symbol, or function name.
+      #
+      #   Supports multiple access patterns:
+      #   - **Integer**: Numeric grade (0-based)
+      #   - **Symbol/String**: Function name or Roman numeral
+      #   - **With accidentals**: Add '#' for sharp, '_' for flat
+      #
+      #   Notes are cached—repeated access returns same instance.
+      #
+      #   @param grade_or_symbol [Integer, Symbol, String] degree specifier
+      #   @return [NoteInScale] note at specified degree
+      #   @raise [ArgumentError] if grade_or_symbol is invalid type
+      #
+      #   @example Numeric access
+      #     scale.get(0)    # Tonic
+      #     scale.get(4)    # Dominant (in major/minor)
+      #
+      #   @example Function name access
+      #     scale.get(:tonic)
+      #     scale.get(:dominant)
+      #     scale.get(:mediant)
+      #
+      #   @example Roman numeral access
+      #     scale.get(:I)     # Tonic
+      #     scale.get(:V)     # Dominant
+      #     scale.get(:IV)    # Subdominant
+      #
+      #   @example With accidentals
+      #     scale.get(:I#)     # Raised tonic
+      #     scale.get(:V_)     # Flatted dominant
+      #     scale.get('II##')  # Double-raised second
+      alias_method :get, :[]
 
       # Converts grade specifier to numeric grade and accidentals.
       #

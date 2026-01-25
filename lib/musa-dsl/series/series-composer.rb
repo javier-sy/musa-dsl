@@ -597,6 +597,17 @@ module Musa
             @routes[[on, as]]
           end
 
+          # @!method get(on, as)
+          #   Retrieves route at specified connection point.
+          #
+          #   @param on [Symbol] connection attribute name
+          #   @param as [Symbol, nil] hash key for assignment
+          #
+          #   @return [Route, nil] route at connection point
+          #
+          #   @api private
+          alias_method :get, :[]
+
           # Stores route at specified connection point.
           #
           # @param on [Symbol] connection attribute name

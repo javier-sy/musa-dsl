@@ -389,6 +389,13 @@ module Musa
           @controller[number_of(controller_number_or_symbol)]
         end
 
+        # @!method get(controller_number_or_symbol)
+        #   Returns the last value assigned to the controller.
+        #
+        #   @param controller_number_or_symbol [Integer, Symbol] CC number or well-known alias
+        #   @return [Integer, nil] last value assigned to the controller
+        alias_method :get, :[]
+
         # Resolves a controller reference to its MIDI CC number.
         #
         # @param controller_number_or_symbol [Integer, Symbol] CC number or alias.

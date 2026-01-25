@@ -149,6 +149,17 @@ module Musa::Datasets
       end
     end
 
+    # @!method get(key)
+    #   Gets attribute value.
+    #
+    #   Supports accessing natural keys like :duration, :finish.
+    #
+    #   @param key [Symbol] attribute name
+    #   @return [Object, nil] attribute value
+    #
+    #   @api private
+    alias_method :get, :[]
+
     # Returns latest finish time of all events.
     #
     # @return [Rational, nil] latest finish time, or nil if score is empty

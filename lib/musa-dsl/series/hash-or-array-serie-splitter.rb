@@ -84,6 +84,14 @@ module Musa
         end
       end
 
+      # @!method get(key_or_index)
+      #   Accesses component serie by key or index.
+      #
+      #   @param key_or_index [Symbol, Integer] hash key or array index
+      #
+      #   @return [Split] component serie
+      alias_method :get, :[]
+
       # Iterates over component series.
       #
       # @yield [key, split] for hash mode, [split] for array mode
