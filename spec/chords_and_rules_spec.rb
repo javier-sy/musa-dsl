@@ -12,38 +12,38 @@ RSpec.describe Musa::Rules do
 
       grow 'generate inversions' do |chord|
         branch chord
-        branch chord.move root: 1
-        branch chord.move(root: 1, third: 1)
-        branch chord.move(root: 1, third: 1, fifth: 1)
-        branch chord.move(root: 1, third: 1, fifth: 1, seventh: 1) if chord.features[:size] == :seventh
-        branch chord.move(root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1) if chord.features[:size] == :ninth
-        branch chord.move(root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1, eleventh: 1) if chord.features[:size] == :eleventh
+        branch chord.with_move root: 1
+        branch chord.with_move(root: 1, third: 1)
+        branch chord.with_move(root: 1, third: 1, fifth: 1)
+        branch chord.with_move(root: 1, third: 1, fifth: 1, seventh: 1) if chord.features[:size] == :seventh
+        branch chord.with_move(root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1) if chord.features[:size] == :ninth
+        branch chord.with_move(root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1, eleventh: 1) if chord.features[:size] == :eleventh
       end
 
       grow 'generate 4 voices duplicating one of them if needed' do |chord|
         if chord.pitches.size == 3
-          branch chord.duplicate({ chord.notes[0].grade => 1 })
+          branch chord.with_duplicate({ chord.notes[0].grade => 1 })
         end
       end
 
       # grow 'generate 2nd inversion' do |chord|
-      #   branch chord.move({ root: 1, third: 1 })
+      #   branch chord.with_move({ root: 1, third: 1 })
       # end
       #
       # grow 'generate 3rd inversion' do |chord|
-      #   branch chord.move({ root: 1, third: 1, fifth: 1 })
+      #   branch chord.with_move({ root: 1, third: 1, fifth: 1 })
       # end
       #
       # grow 'generate 4th inversion' do |chord|
-      #   branch chord.move({ root: 1, third: 1, fifth: 1, seventh: 1 }) if chord[:seventh]
+      #   branch chord.with_move({ root: 1, third: 1, fifth: 1, seventh: 1 }) if chord[:seventh]
       # end
       #
       # grow 'generate 5th inversion' do |chord|
-      #   branch chord.move({ root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1 }) if chord[:ninth]
+      #   branch chord.with_move({ root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1 }) if chord[:ninth]
       # end
       #
       # grow 'generate 6th inversion' do |chord|
-      #   branch chord.move({ root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1, eleventh: 1 }) if chord[:eleventh]
+      #   branch chord.with_move({ root: 1, third: 1, fifth: 1, seventh: 1, ninth: 1, eleventh: 1 }) if chord[:eleventh]
       # end
 
       # cut 'parallel fifth' do |chord, history|
@@ -104,9 +104,9 @@ RSpec.describe Musa::Rules do
       V7 = major.dominant.chord :dominant
       VM = major.fifth.chord :triad # , duplicate: { root: 1 }
 
-      V7_VI = major.sixth.scale(:major).fifth.chord :dominant
-      V7_II = major.second.scale(:major).fifth.chord :dominant
-      V7_V = major.fifth.scale(:major).fifth.chord :dominant
+      V7_VI = major.sixth.as_root_of(:major).fifth.chord :dominant
+      V7_II = major.second.as_root_of(:major).fifth.chord :dominant
+      V7_V = major.fifth.as_root_of(:major).fifth.chord :dominant
 
       VIm = major.sixth.chord :triad # , duplicate: { root: 1 }
 

@@ -171,8 +171,8 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(scale[8].grade).to eq 1
       expect(scale[8].octave).to eq 1
 
-      expect(scale[8].octave(0).grade).to eq 1
-      expect(scale[8].octave(0).octave).to eq 1
+      expect(scale[8].at_octave(0).grade).to eq 1
+      expect(scale[8].at_octave(0).octave).to eq 1
     end
 
     it 'Basic major scale pitch and functions' do
@@ -203,12 +203,12 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
       expect(scale[:V].functions).to include :dominant
 
-      expect(scale[:I].octave(-1).pitch).to eq 48
-      expect(scale[:I].octave(-1).octave).to eq -1
-      expect(scale[:I].octave(-1).grade).to eq 0
-      expect(scale.tonic.octave(-1).grade).to eq 0
+      expect(scale[:I].at_octave(-1).pitch).to eq 48
+      expect(scale[:I].at_octave(-1).octave).to eq -1
+      expect(scale[:I].at_octave(-1).grade).to eq 0
+      expect(scale.tonic.at_octave(-1).grade).to eq 0
 
-      expect(scale[0].octave(-1).pitch).to eq 48
+      expect(scale[0].at_octave(-1).pitch).to eq 48
     end
 
     it 'Basic minor scale pitch and functions' do
@@ -232,15 +232,15 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
       expect(scale[:VI].frequency).to eq 440.0
       expect(scale[:VI].pitch).to eq 69
-      expect(scale[:VI].octave(-1).frequency).to eq 220.0
-      expect(scale[:VI].octave(-1).pitch).to eq 69 - 12
+      expect(scale[:VI].at_octave(-1).frequency).to eq 220.0
+      expect(scale[:VI].at_octave(-1).pitch).to eq 69 - 12
     end
 
     it 'Basic scale navigation' do
       scale = scale_system[:major][60]
 
-      scale2 = scale.relative_minor.octave(-1).scale(:minor)
-      scale3 = scale.relative_minor.octave(-1).minor
+      scale2 = scale.relative_minor.at_octave(-1).as_root_of(:minor)
+      scale3 = scale.relative_minor.at_octave(-1).minor
 
       expect(scale2).to eq scale3
 
@@ -260,9 +260,9 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       expect(scale[0].on(scale2).octave).to eq -1
       expect(scale[0].on(scale2).pitch).to eq 60
 
-      expect(scale[0].octave(-1).on(scale2).grade).to eq 11
-      expect(scale[0].octave(-1).on(scale2).octave).to eq -2
-      expect(scale[0].octave(-1).on(scale2).pitch).to eq 48
+      expect(scale[0].at_octave(-1).on(scale2).grade).to eq 11
+      expect(scale[0].at_octave(-1).on(scale2).octave).to eq -2
+      expect(scale[0].at_octave(-1).on(scale2).pitch).to eq 48
     end
 
     it 'Getting a chromatic scale from a non-chromatic scale' do

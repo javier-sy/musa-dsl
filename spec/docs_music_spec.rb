@@ -55,8 +55,8 @@ RSpec.describe 'Music Documentation Examples' do
       c_major = tuning.major[60]
 
       # Octave navigation
-      note = c_major[2].octave(1)
-      expect(note.pitch).to eq(76)  # E in octave 1
+      note = c_major[2].at_octave(1)
+      expect(note.pitch).to eq(76)  # E transposed up 1 octave
 
       # Chromatic operations
       c_sharp = c_major.tonic.sharp
@@ -142,12 +142,12 @@ RSpec.describe 'Music Documentation Examples' do
       i_chord = c_major.tonic.chord
 
       # Move specific tones to different octaves
-      voiced = i_chord.move(root: -1, fifth: 1)
+      voiced = i_chord.with_move(root: -1, fifth: 1)
       expect(voiced.root.pitch).to eq(48)   # Root down one octave
       expect(voiced.fifth.pitch).to eq(79)  # Fifth up one octave
 
       # Duplicate tones in other octaves
-      doubled = i_chord.duplicate(root: -2)
+      doubled = i_chord.with_duplicate(root: -2)
       pitches = doubled.pitches
       expect(pitches).to include(36)  # Root 2 octaves down
       expect(pitches).to include(60)  # Original root

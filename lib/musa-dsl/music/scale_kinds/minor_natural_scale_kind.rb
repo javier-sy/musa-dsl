@@ -56,7 +56,7 @@ module Musa
     #     a_minor.tonic        # A (69)
     #     a_minor.dominant     # E (76)
     #     a_minor.iii          # C (72) - relative major root
-    #     a_minor.relative_major.scale(:major)  # C major scale
+    #     a_minor.relative_major.as_root_of(:major)  # C major scale
     #
     # @see ScaleKind Abstract base class
     # @see MajorScaleKind Major scale

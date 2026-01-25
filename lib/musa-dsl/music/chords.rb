@@ -47,13 +47,15 @@ module Musa
     #
     # ### Move - Relocate specific chord tones to different octaves:
     #
-    #     chord.move(root: -1, seventh: 1)
+    #     chord.with_move(root: -1, seventh: 1)
     #     # Root down one octave, seventh up one octave
+    #     chord.move  # => { root: -1, seventh: 1 } (current settings)
     #
     # ### Duplicate - Add copies of chord tones in other octaves:
     #
-    #     chord.duplicate(root: -2, third: [-1, 1])
+    #     chord.with_duplicate(root: -2, third: [-1, 1])
     #     # Add root 2 octaves down, third 1 octave down and 1 up
+    #     chord.duplicate  # => { root: -2, third: [-1, 1] } (current settings)
     #
     # ### Octave - Transpose entire chord:
     #
@@ -90,8 +92,8 @@ module Musa
     # @example Voicing with move and duplicate
     #   scale = Scales::Scales.default_system.default_tuning.major[60]
     #   chord = scale.dominant.chord(:seventh)
-    #     .move(root: -1, third: -1)
-    #     .duplicate(fifth: [0, 1])
+    #     .with_move(root: -1, third: -1)
+    #     .with_duplicate(fifth: [0, 1])
     #
     # @example Feature navigation
     #   scale = Scales::Scales.default_system.default_tuning.major[60]
@@ -423,62 +425,56 @@ module Musa
       #   chord.octave(2)
       def octave(octave)
         source_notes_map = @source_notes_map.transform_values do |notes|
-          notes.collect { |note| note.octave(octave) }.freeze
+          notes.collect { |note| note.at_octave(octave) }.freeze
         end.freeze
 
-        Chord.new(@root.octave(octave), @scale, chord_definition, @move, @duplicate, source_notes_map)
+        Chord.new(@root.at_octave(octave), @scale, chord_definition, @move, @duplicate, source_notes_map)
       end
 
-      # Creates new chord with positions moved to different octaves, or returns current move settings.
+      # Current move settings (position to octave offset mapping).
+      # @return [Hash{Symbol => Integer}]
+      attr_reader :move
+
+      # Creates new chord with positions moved to different octaves.
       #
-      # When called with arguments, relocates specific chord positions to different
-      # octaves while keeping other positions unchanged. Multiple positions can be
-      # moved at once. Merges with existing moves.
-      #
-      # When called without arguments, returns the current move settings hash.
+      # Relocates specific chord positions to different octaves while keeping
+      # other positions unchanged. Multiple positions can be moved at once.
+      # Merges with existing moves.
       #
       # @param octaves [Hash{Symbol => Integer}] position to octave offset mapping
-      # @return [Chord, Hash] new chord with moved positions, or current move settings if no arguments
+      # @return [Chord] new chord with moved positions
       #
       # @example Move root down, seventh up
-      #   chord.move(root: -1, seventh: 1)
+      #   chord.with_move(root: -1, seventh: 1)
       #
       # @example Drop voicing (move third and seventh down)
-      #   chord.move(third: -1, seventh: -1)
-      #
-      # @example Get current move settings
-      #   chord.move  # => { root: -1 }
-      def move(**octaves)
-        return @move if octaves.empty?
-
+      #   chord.with_move(third: -1, seventh: -1)
+      def with_move(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move.merge(octaves), @duplicate, @source_notes_map)
       end
 
-      # Creates new chord with positions duplicated in other octaves, or returns current duplicate settings.
+      # Current duplicate settings (position to octave(s) mapping).
+      # @return [Hash{Symbol => Integer, Array<Integer>}]
+      attr_reader :duplicate
+
+      # Creates new chord with positions duplicated in other octaves.
       #
-      # When called with arguments, adds copies of specific chord positions in
-      # different octaves. Original positions remain at their current octave.
+      # Adds copies of specific chord positions in different octaves.
+      # Original positions remain at their current octave.
       # Merges with existing duplications.
       #
-      # When called without arguments, returns the current duplicate settings hash.
-      #
       # @param octaves [Hash{Symbol => Integer, Array<Integer>}] position to octave(s)
-      # @return [Chord, Hash] new chord with duplicated positions, or current duplicate settings if no arguments
+      # @return [Chord] new chord with duplicated positions
       #
       # @example Duplicate root two octaves down
-      #   chord.duplicate(root: -2)
+      #   chord.with_duplicate(root: -2)
       #
       # @example Duplicate third in multiple octaves
-      #   chord.duplicate(third: [-1, 1])
+      #   chord.with_duplicate(third: [-1, 1])
       #
       # @example Duplicate multiple positions
-      #   chord.duplicate(root: -1, fifth: 1)
-      #
-      # @example Get current duplicate settings
-      #   chord.duplicate  # => { root: -1 }
-      def duplicate(**octaves)
-        return @duplicate if octaves.empty?
-
+      #   chord.with_duplicate(root: -1, fifth: 1)
+      def with_duplicate(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move, @duplicate.merge(octaves), @source_notes_map)
       end
 
@@ -549,12 +545,12 @@ module Musa
         notes_map = notes_map.transform_values(&:dup)
 
         moved&.each do |position, octave|
-          notes_map[position][0] = notes_map[position][0].octave(octave)
+          notes_map[position][0] = notes_map[position][0].at_octave(octave)
         end
 
         duplicated&.each do |position, octave|
           octave.arrayfy.each do |octave|
-            notes_map[position] << notes_map[position][0].octave(octave)
+            notes_map[position] << notes_map[position][0].at_octave(octave)
           end
         end
 

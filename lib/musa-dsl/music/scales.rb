@@ -137,6 +137,19 @@ module Musa
         @scale_systems[id]
       end
 
+      # @!method self.get(id)
+      #   Retrieves a registered scale system by ID.
+      #
+      #   @param id [Symbol] the scale system identifier
+      #   @return [Class] the ScaleSystem subclass
+      #   @raise [KeyError] if scale system not found
+      #
+      #   @example
+      #     Scales.get(:et12)  # => EquallyTempered12ToneScaleSystem
+      class << self
+        alias_method :get, :[]
+      end
+
       # Returns the default scale system.
       #
       # @return [Class] the default ScaleSystem subclass
@@ -1225,9 +1238,9 @@ module Musa
     #     scale[:V]     # Fifth degree
     #     scale[:IV]    # Fourth degree
     #
-    # **With accidentals** (sharp # or flat _):
+    # **With accidentals** (sharp # or flat _). Use strings for #:
     #
-    #     scale[:I#]    # Raised tonic
+    #     scale['I#']   # Raised tonic
     #     scale[:V_]    # Flatted dominant
     #     scale['II##'] # Double-raised second
     #
@@ -1254,8 +1267,8 @@ module Musa
     #   c_major.dominant.pitch   # => 67 (G)
     #   c_major[:III].pitch      # => 64 (E)
     #
-    # @example Chromatic alterations
-    #   c_major[:I#].pitch       # => 61 (C#)
+    # @example Chromatic alterations (use strings for #)
+    #   c_major['I#'].pitch      # => 61 (C#)
     #   c_major[:V_].pitch       # => 66 (F#/Gb)
     #
     # @example Building chords
@@ -1384,8 +1397,8 @@ module Musa
       #   scale[:V]     # Dominant
       #   scale[:IV]    # Subdominant
       #
-      # @example With accidentals
-      #   scale[:I#]     # Raised tonic
+      # @example With accidentals (use strings for #)
+      #   scale['I#']    # Raised tonic
       #   scale[:V_]     # Flatted dominant
       #   scale['II##']  # Double-raised second
       def [](grade_or_symbol)
@@ -1440,8 +1453,8 @@ module Musa
       #     scale.get(:V)     # Dominant
       #     scale.get(:IV)    # Subdominant
       #
-      #   @example With accidentals
-      #     scale.get(:I#)     # Raised tonic
+      #   @example With accidentals (use strings or quoted symbols for #)
+      #     scale.get('I#')    # Raised tonic
       #     scale.get(:V_)     # Flatted dominant
       #     scale.get('II##')  # Double-raised second
       alias_method :get, :[]
@@ -1713,9 +1726,10 @@ module Musa
     #
     # ## Scale Navigation
     #
-    #     note.scale(:minor)     # Same pitch in minor scale
-    #     note.major             # Same pitch in major scale
-    #     note.chromatic         # Same pitch in chromatic scale
+    #     note.scale                  # Parent scale this note belongs to
+    #     note.as_root_of(:minor)     # New minor scale with this pitch as root
+    #     note.minor                  # Same as note.as_root_of(:minor)
+    #     note.chromatic              # Same as note.as_root_of(:chromatic)
     #
     # ## Chord Construction
     #
@@ -1779,7 +1793,7 @@ module Musa
 
         @scale.kind.tuning.scale_system.scale_kind_classes.each_key do |name|
           define_singleton_method name do
-            scale(name)
+            as_root_of(name)
           end
         end
       end
@@ -1802,34 +1816,27 @@ module Musa
         @scale.kind.class.pitches[grade][:functions]
       end
 
-      # Transposes note or returns current octave.
+      # Current octave relative to scale root.
+      # @return [Integer]
+      attr_reader :octave
+
+      # Returns note transposed by octave offset.
       #
-      # **Without argument**: Returns current octave relative to scale root.
-      #
-      # **With argument**: Returns note transposed by octave offset.
-      #
-      # @param octave [Integer, nil] octave offset (nil to query current)
+      # @param offset [Integer] octave offset (positive = up, negative = down)
       # @param absolute [Boolean] if true, ignore current octave
-      # @return [Integer, NoteInScale] current octave or transposed note
-      # @raise [ArgumentError] if octave is not integer
-      #
-      # @example Query octave
-      #   note.octave  # => 0 (at scale root octave)
+      # @return [NoteInScale] transposed note
+      # @raise [ArgumentError] if offset is not integer
       #
       # @example Transpose relative
-      #   note.octave(1).pitch   # Up one octave from current
-      #   note.octave(-1).pitch  # Down one octave from current
+      #   note.at_octave(1).pitch   # Up one octave from current
+      #   note.at_octave(-1).pitch  # Down one octave from current
       #
       # @example Transpose absolute
-      #   note.octave(2, absolute: true).pitch  # At octave 2, regardless of current
-      def octave(octave = nil, absolute: false)
-        if octave.nil?
-          @octave
-        else
-          raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
+      #   note.at_octave(2, absolute: true).pitch  # At octave 2, regardless of current
+      def at_octave(offset, absolute: false)
+        raise ArgumentError, "#{offset} is not integer" unless offset == offset.to_i
 
-          @scale[@grade + ((absolute ? 0 : @octave) + octave) * @scale.kind.class.grades]
-        end
+        @scale[@grade + ((absolute ? 0 : @octave) + offset) * @scale.kind.class.grades]
       end
 
       # Creates a copy with background scale context.
@@ -2002,33 +2009,31 @@ module Musa
         @scale.kind.tuning.frequency_of_pitch(@pitch, @scale.root_pitch)
       end
 
-      # Changes scale while keeping pitch, or returns current scale.
+      # Parent scale this note belongs to.
+      # @return [Scale]
+      attr_reader :scale
+
+      # Creates a new scale with this note's pitch as the root.
       #
-      # **Without argument**: Returns current scale.
+      # @param kind_id_or_kind [Symbol, ScaleKind] scale kind or ID
+      # @return [Scale] new scale rooted at this pitch
       #
-      # **With argument**: Returns note at same pitch in different scale kind.
+      # @example Create minor scale from a note
+      #   e = c_major[64]           # E in C major
+      #   e_minor = e.as_root_of(:minor)  # E minor scale
       #
-      # @param kind_id_or_kind [Symbol, ScaleKind, nil] scale kind or ID
-      # @return [Scale, NoteInScale] current scale or note in new scale
+      # @example With ScaleKind object
+      #   minor_kind = tuning[:minor]
+      #   e_minor = e.as_root_of(minor_kind)
       #
-      # @example Query current scale
-      #   note.scale  # => <Scale: kind = MajorScaleKind ...>
-      #
-      # @example Change to minor
-      #   note.scale(:minor)  # Same pitch in minor scale
-      #
-      # @example Dynamic method
-      #   note.minor   # Same as note.scale(:minor)
-      #   note.major   # Same as note.scale(:major)
-      def scale(kind_id_or_kind = nil)
-        if kind_id_or_kind.nil?
-          @scale
+      # @example Dynamic method (equivalent)
+      #   note.minor   # Same as note.as_root_of(:minor)
+      #   note.major   # Same as note.as_root_of(:major)
+      def as_root_of(kind_id_or_kind)
+        if kind_id_or_kind.is_a? ScaleKind
+          kind_id_or_kind[@pitch]
         else
-          if kind_id_or_kind.is_a? ScaleKind
-            kind_id_or_kind[@pitch]
-          else
-            @scale.kind.tuning[kind_id_or_kind][@pitch]
-          end
+          @scale.kind.tuning[kind_id_or_kind][@pitch]
         end
       end
 

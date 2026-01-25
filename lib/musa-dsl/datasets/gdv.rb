@@ -204,7 +204,7 @@ module Musa::Datasets
         pdv[:pitch] = if self[:silence]
                         :silence
                       else
-                        scale[self[:grade]].sharp(self[:sharps] || 0).octave(self[:octave] || 0).pitch
+                        scale[self[:grade]].sharp(self[:sharps] || 0).at_octave(self[:octave] || 0).pitch
                       end
       end
 
@@ -399,8 +399,8 @@ module Musa::Datasets
             (self[:sharps] || 0) != (previous[:sharps] || 0)
 
             gdvd[:delta_grade] =
-                scale[self[:grade]].octave(self[:octave]).wide_grade -
-                scale[previous[:grade]].octave(previous[:octave]).wide_grade
+                scale[self[:grade]].at_octave(self[:octave]).wide_grade -
+                scale[previous[:grade]].at_octave(previous[:octave]).wide_grade
 
             gdvd[:delta_sharps] = (self[:sharps] || 0) - (previous[:sharps] || 0)
           end

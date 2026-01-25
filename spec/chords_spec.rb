@@ -7,7 +7,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     scale_system = Musa::Scales::Scales[:et12][440.0]
 
     major = scale_system[:major][60]
-    minor = major.octave(-1).relative_minor.scale(:minor)
+    minor = major.octave(-1).relative_minor.as_root_of(:minor)
     chromatic = scale_system[:chromatic][60]
 
     it 'Basic triad major chord creation from scale, with and without :triad feature' do
@@ -150,7 +150,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'Notes moved to another absolute octave' do
-      c = major.dominant.chord(:seventh, allow_chromatic: false).move(root: -1, third: -1, seventh: 1)
+      c = major.dominant.chord(:seventh, allow_chromatic: false).with_move(root: -1, third: -1, seventh: 1)
 
       expect(c.root.pitch).to eq (67 - 12)
       expect(c.third.pitch).to eq 71 - 12
@@ -160,7 +160,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'Notes duplicated to another absolute octave' do
-      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
+      c = major.dominant.chord(:seventh, allow_chromatic: false).with_duplicate(root: -2, third: [-1, 1])
 
       expect(c.root(all: true)[0].pitch).to eq 67
       expect(c.root(all: true)[1].pitch).to eq 67 - 24
@@ -177,13 +177,13 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'Getting pitches' do
-      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
+      c = major.dominant.chord(:seventh, allow_chromatic: false).with_duplicate(root: -2, third: [-1, 1])
       expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77].sort
     end
 
     it 'Chord with notes moved and getting a featured chord from it' do
       c = major.root.chord(:triad, move: { fifth: 1 }).featuring(size: :seventh)
-      d = major.root.chord(:triad).move(fifth: 1).featuring(size: :seventh)
+      d = major.root.chord(:triad).with_move(fifth: 1).featuring(size: :seventh)
 
       expect(c.pitches).to eq [60, 64, 67 + 12, 71].sort
       expect(d.pitches).to eq [60, 64, 67 + 12, 71].sort
@@ -191,21 +191,21 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
 
     it 'Chord with notes duplicated and getting a featured chord from it' do
       c = major.root.chord(:triad, duplicate: { fifth: 1 }).featuring(size: :seventh)
-      d = major.root.chord(:triad).duplicate(fifth: 1).featuring(size: :seventh)
+      d = major.root.chord(:triad).with_duplicate(fifth: 1).featuring(size: :seventh)
 
       expect(c.pitches.sort).to eq [60, 64, 67, 67 + 12, 71].sort
       expect(d.pitches.sort).to eq [60, 64, 67, 67 + 12, 71].sort
     end
 
     it 'Getting a chord on a different octave' do
-      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
+      c = major.dominant.chord(:seventh, allow_chromatic: false).with_duplicate(root: -2, third: [-1, 1])
       d = c.octave(-1).pitches
 
       expect(d).to eq [67 - 12, 67 - 24 - 12, 71 - 12, 71 - 12 - 12, 71 + 12 - 12, 74 - 12, 77 - 12].sort
     end
 
     it 'Getting sorted notes pitches' do
-      c = major.dominant.chord(:seventh, allow_chromatic: false).duplicate(root: -2, third: [-1, 1])
+      c = major.dominant.chord(:seventh, allow_chromatic: false).with_duplicate(root: -2, third: [-1, 1])
       expect(c.pitches).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77].sort
       expect(c.notes.collect(&:note).collect(&:pitch)).to eq [67, 67 - 24, 71, 71 - 12, 71 + 12, 74, 77].sort
     end
@@ -219,7 +219,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
       chord = major.root.chord(:seventh)
       expect(chord.pitches.sort).to eq [60, 64, 67, 71]
 
-      other_chord = chord.move root: 1
+      other_chord = chord.with_move root: 1
       expect(other_chord.pitches.sort).to eq [64, 67, 71, 72]
 
       expect(chord.pitches.sort).to eq [60, 64, 67, 71]
@@ -353,7 +353,7 @@ RSpec.describe Musa::Scales::EquallyTempered12ToneScaleSystem do
     end
 
     it 'preserves voicing (move/duplicate) when creating chord_on' do
-      chord = c_major.dominant.chord(:seventh).move(root: -1).duplicate(fifth: 1)
+      chord = c_major.dominant.chord(:seventh).with_move(root: -1).with_duplicate(fifth: 1)
       g_mixolydian = scale_system[:mixolydian][67]
       new_chord = g_mixolydian.chord_on(chord)
 

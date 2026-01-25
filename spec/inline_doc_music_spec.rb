@@ -454,26 +454,26 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(note.octave).to eq(0)
     end
 
-    it 'demonstrates NoteInScale#octave transpose relative' do
+    it 'demonstrates NoteInScale#at_octave transpose relative' do
       # From NoteInScale @example: Transpose relative
       tuning = Scales.default_system.default_tuning
       c_major = tuning.major[60]
       note = c_major[0]
 
-      up = note.octave(1)
-      down = note.octave(-1)
+      up = note.at_octave(1)
+      down = note.at_octave(-1)
 
       expect(up.pitch).to eq(72)
       expect(down.pitch).to eq(48)
     end
 
-    it 'demonstrates NoteInScale#octave transpose absolute' do
+    it 'demonstrates NoteInScale#at_octave transpose absolute' do
       # From NoteInScale @example: Transpose absolute
       tuning = Scales.default_system.default_tuning
       c_major = tuning.major[60]
-      note = c_major[0].octave(1)
+      note = c_major[0].at_octave(1)
 
-      absolute = note.octave(2, absolute: true)
+      absolute = note.at_octave(2, absolute: true)
 
       expect(absolute.pitch).to eq(84)  # Octave 2, regardless of current octave 1
     end
@@ -491,7 +491,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
       # From NoteInScale @example
       tuning = Scales.default_system.default_tuning
       c_major = tuning.major[60]
-      note = c_major[0].octave(1)
+      note = c_major[0].at_octave(1)
 
       expect(note.wide_grade).to eq(7)
     end
@@ -597,14 +597,14 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(scale.kind.class).to eq(Musa::Scales::MajorScaleKind)
     end
 
-    it 'demonstrates NoteInScale#scale change to minor' do
-      # From NoteInScale @example: Change to minor
+    it 'demonstrates NoteInScale#as_root_of' do
+      # From NoteInScale @example: Create scale with note as root
       tuning = Scales.default_system.default_tuning
       c_major = tuning.major[60]
       note = c_major.tonic
 
-      # scale(:minor) returns the Scale, not a NoteInScale
-      minor_scale = note.scale(:minor)
+      # as_root_of(:minor) returns the Scale, not a NoteInScale
+      minor_scale = note.as_root_of(:minor)
 
       expect(minor_scale).to be_a(Musa::Scales::Scale)
       expect(minor_scale.kind.class).to eq(Musa::Scales::MinorNaturalScaleKind)
@@ -809,8 +809,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       tuning = Scales.default_system.default_tuning
       scale = tuning.major[60]
       chord = scale.dominant.chord(:seventh)
-        .move(root: -1, third: -1)
-        .duplicate(fifth: [0, 1])
+        .with_move(root: -1, third: -1)
+        .with_duplicate(fifth: [0, 1])
 
       expect(chord).to be_a(Musa::Chords::Chord)
     end
@@ -975,57 +975,57 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(higher).to be_a(Musa::Chords::Chord)
     end
 
-    it 'demonstrates Chord#move root down seventh up' do
+    it 'demonstrates Chord#with_move root down seventh up' do
       # From Chord @example: Move root down, seventh up
       tuning = Scales.default_system.default_tuning
       scale = tuning.major[60]
       chord = scale.tonic.chord :seventh
 
-      voiced = chord.move(root: -1, seventh: 1)
+      voiced = chord.with_move(root: -1, seventh: 1)
 
       expect(voiced).to be_a(Musa::Chords::Chord)
     end
 
-    it 'demonstrates Chord#move drop voicing' do
+    it 'demonstrates Chord#with_move drop voicing' do
       # From Chord @example: Drop voicing
       tuning = Scales.default_system.default_tuning
       scale = tuning.major[60]
       chord = scale.tonic.chord :seventh
 
-      dropped = chord.move(third: -1, seventh: -1)
+      dropped = chord.with_move(third: -1, seventh: -1)
 
       expect(dropped).to be_a(Musa::Chords::Chord)
     end
 
-    it 'demonstrates Chord#duplicate root two octaves down' do
+    it 'demonstrates Chord#with_duplicate root two octaves down' do
       # From Chord @example: Duplicate root two octaves down
       tuning = Scales.default_system.default_tuning
       scale = tuning.major[60]
       chord = scale.tonic.chord
 
-      doubled = chord.duplicate(root: -2)
+      doubled = chord.with_duplicate(root: -2)
 
       expect(doubled).to be_a(Musa::Chords::Chord)
     end
 
-    it 'demonstrates Chord#duplicate third in multiple octaves' do
+    it 'demonstrates Chord#with_duplicate third in multiple octaves' do
       # From Chord @example: Duplicate third in multiple octaves
       tuning = Scales.default_system.default_tuning
       scale = tuning.major[60]
       chord = scale.tonic.chord
 
-      expanded = chord.duplicate(third: [-1, 1])
+      expanded = chord.with_duplicate(third: [-1, 1])
 
       expect(expanded).to be_a(Musa::Chords::Chord)
     end
 
-    it 'demonstrates Chord#duplicate multiple positions' do
+    it 'demonstrates Chord#with_duplicate multiple positions' do
       # From Chord @example: Duplicate multiple positions
       tuning = Scales.default_system.default_tuning
       scale = tuning.major[60]
       chord = scale.tonic.chord
 
-      expanded = chord.duplicate(root: -1, fifth: 1)
+      expanded = chord.with_duplicate(root: -1, fifth: 1)
 
       expect(expanded).to be_a(Musa::Chords::Chord)
     end
@@ -1058,7 +1058,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning[:major][60]
 
       relative_minor_root = c_major.relative_minor
-      a_minor = relative_minor_root.scale(:minor)
+      a_minor = relative_minor_root.as_root_of(:minor)
 
       expect(relative_minor_root.pitch).to eq(69)
       expect(a_minor).to be_a(Musa::Scales::Scale)
@@ -1080,7 +1080,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
       a_minor = tuning[:minor][69]
 
       relative_major_root = a_minor.relative_major
-      c_major = relative_major_root.scale(:major)
+      c_major = relative_major_root.as_root_of(:major)
 
       expect(relative_major_root.pitch).to eq(72)
       expect(c_major).to be_a(Musa::Scales::Scale)

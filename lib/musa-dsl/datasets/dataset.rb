@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Musical dataset framework for MusaDSL.
 #
 # The Datasets module provides a comprehensive framework for representing and transforming

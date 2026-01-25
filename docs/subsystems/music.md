@@ -123,8 +123,8 @@ c_major[:V]    # => Dominant (G)
 pitch = c_major.tonic.pitch   # => 60
 
 # Navigate with octaves
-note = c_major[2].octave(1)  # E in octave 1
-pitch_with_octave = note.pitch     # => 76
+note = c_major[2].at_octave(1)  # E transposed up 1 octave
+pitch_with_octave = note.pitch      # => 76
 
 # Chromatic operations - sharp and flat
 c_sharp = c_major.tonic.sharp   # => C# (chromatic, +1 semitone)
@@ -211,10 +211,12 @@ seventh_chord = i_chord.with_size(:seventh)  # C major 7th
 ninth_chord = i_chord.with_size(:ninth)      # C major 9th
 
 # Voicing modifications - move specific tones to different octaves
-voiced = i_chord.move(root: -1, fifth: 1)  # Root down, fifth up
+voiced = i_chord.with_move(root: -1, fifth: 1)  # Root down, fifth up
+i_chord.move  # => { root: -1, fifth: 1 } (current settings)
 
 # Duplicate tones in other octaves
-doubled = i_chord.duplicate(root: -2, third: [-1, 1])  # Root 2 down, third 1 down and 1 up
+doubled = i_chord.with_duplicate(root: -2, third: [-1, 1])  # Root 2 down, third 1 down and 1 up
+i_chord.duplicate  # => { root: -2, third: [-1, 1] } (current settings)
 
 # Transpose entire chord
 lower = i_chord.octave(-1)  # Move chord down one octave

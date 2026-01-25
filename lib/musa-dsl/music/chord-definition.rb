@@ -119,6 +119,19 @@ module Musa
         @definitions[name]
       end
 
+      # @!method self.get(name)
+      #   Retrieves a registered chord definition by name.
+      #
+      #   @param name [Symbol] chord definition name
+      #   @return [ChordDefinition, nil] definition or nil if not found
+      #
+      #   @example
+      #     ChordDefinition.get(:maj)   # => <ChordDefinition :maj>
+      #     ChordDefinition.get(:min7)  # => <ChordDefinition :min7>
+      class << self
+        alias_method :get, :[]
+      end
+
       # Registers a new chord definition.
       #
       # Creates and registers a chord definition with specified intervals and features.
