@@ -104,7 +104,7 @@ module Musa
       # Makes the scale system available via symbol lookup and dynamic method.
       # Optionally marks it as the default system.
       #
-      # @param scale_system [Class] the ScaleSystem subclass to register
+      # @param scale_system [Class<ScaleSystem>] the ScaleSystem subclass to register
       # @param default [Boolean] whether to set as default system
       # @return [self]
       #
@@ -126,7 +126,7 @@ module Musa
       # Retrieves a registered scale system by ID.
       #
       # @param id [Symbol] the scale system identifier
-      # @return [Class] the ScaleSystem subclass
+      # @return [Class<ScaleSystem>] the ScaleSystem subclass
       # @raise [KeyError] if scale system not found
       #
       # @example
@@ -143,7 +143,7 @@ module Musa
 
       # Returns the default scale system.
       #
-      # @return [Class] the default ScaleSystem subclass
+      # @return [Class<ScaleSystem>] the default ScaleSystem subclass
       #
       # @example
       #   Scales.default_system  # => EquallyTempered12ToneScaleSystem
@@ -359,7 +359,7 @@ module Musa
 
       # Registers a scale kind (major, minor, etc.) with this system.
       #
-      # @param scale_kind_class [Class] ScaleKind subclass to register
+      # @param scale_kind_class [Class<ScaleKind>] ScaleKind subclass to register
       # @return [self]
       #
       # @example
@@ -376,7 +376,7 @@ module Musa
       # Retrieves a registered scale kind by ID.
       #
       # @param id [Symbol] scale kind identifier
-      # @return [Class] ScaleKind subclass
+      # @return [Class<ScaleKind>] ScaleKind subclass
       # @raise [KeyError] if not found
       def self.scale_kind_class(id)
         raise KeyError, "Scale kind class [#{id}] not found in scale system [#{self.id}]" unless @scale_kind_classes.key? id
@@ -401,7 +401,7 @@ module Musa
 
       # Returns the chromatic scale kind class.
       #
-      # @return [Class] chromatic ScaleKind subclass
+      # @return [Class<ScaleKind>] chromatic ScaleKind subclass
       # @raise [RuntimeError] if chromatic scale not defined
       def self.chromatic_class
         raise "Chromatic scale kind class for [#{self.id}] scale system undefined" if @chromatic_scale_kind_class.nil?
@@ -462,7 +462,7 @@ module Musa
 
       # Creates a tuning instance for a scale system.
       #
-      # @param scale_system [Class] the ScaleSystem subclass
+      # @param scale_system [Class<ScaleSystem>] the ScaleSystem subclass
       # @param a_frequency [Numeric] reference A frequency in Hz
       #
       # @api private
@@ -500,7 +500,7 @@ module Musa
       attr_reader :a_frequency
 
       # The parent scale system.
-      # @return [Class] ScaleSystem subclass
+      # @return [Class<ScaleSystem>] ScaleSystem subclass
       attr_reader :scale_system
 
       # Retrieves a scale kind by ID.
@@ -563,7 +563,7 @@ module Musa
       #
       # @param metadata_criteria [Hash] metadata key-value pairs to match
       # @yield [kind_class] optional block for custom filtering
-      # @yieldparam kind_class [Class] the ScaleKind subclass
+      # @yieldparam kind_class [Class<ScaleKind>] the ScaleKind subclass
       # @yieldreturn [Boolean] true to include this scale kind
       # @return [Array<ScaleKind>] matching scale kind instances
       #
@@ -654,7 +654,7 @@ module Musa
 
       # Checks if a scale kind class matches the given criteria.
       #
-      # @param kind_class [Class] ScaleKind subclass to check
+      # @param kind_class [Class<ScaleKind>] ScaleKind subclass to check
       # @param criteria [Hash] metadata key-value pairs to match
       # @return [Boolean] true if all criteria match
       #
