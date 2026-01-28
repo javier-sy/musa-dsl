@@ -202,19 +202,18 @@ module Musa
           ticks_position = position / @tick_duration
 
           if ticks_position.round != ticks_position
-            original_position = position
-            position = ticks_position.round * @tick_duration
-
             if warn
               @logger.warn('BaseSequencer') do
                 '_check_position: rounding ' \
-                  "position #{original_position.inspect} (#{original_position.to_f.round(5)}) "\
-                  "to tick precision: #{position.inspect} (#{position.to_f.round(5)})"
+                  "position #{position.inspect} (#{position.to_f.round(5)}) "\
+                  "to tick precision: #{(ticks_position.round * @tick_duration).inspect} (#{(ticks_position.round * @tick_duration).to_f.round(5)})"
               end
             end
           end
 
-          position
+          # Always convert to Rational to ensure consistent hash key types
+          # (Float keys like 1.5 would not match Rational keys like 3/2r in timeslots hash)
+          ticks_position.round * @tick_duration
         end
 
         # Holds tick accumulation during fast-forward.
