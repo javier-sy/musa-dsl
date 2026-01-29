@@ -88,6 +88,20 @@ end
 transport.start
 ```
 
+## Times and durations
+
+The Sequencer internally encodes time using `Rational`. It is preferable to use Rational values (`1/2r`, `1r`, `3/4r`) instead of Float (`0.5`, `1.0`, `0.75`) for times and durations, as this avoids potential precision issues in the internal conversion.
+
+```ruby
+# Preferable
+at 1/2r do ... end
+wait 3/4r do ... end
+every 1/4r do ... end
+
+# Works but may cause imprecision
+at 0.5 do ... end
+```
+
 ## API Reference
 
 **Complete API documentation:**

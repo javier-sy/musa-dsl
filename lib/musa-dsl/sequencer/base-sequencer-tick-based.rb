@@ -43,6 +43,12 @@ module Musa
       # - Time signature-based composition (4/4, 3/4, etc.)
       # - Tick-precise event scheduling
       #
+      # ## Rational vs Float
+      #
+      # The sequencer internally encodes time as Rational. It is preferable to use
+      # Rational values for positions and durations, as using Float may cause
+      # precision issues in the conversion.
+      #
       # @example Creating tick-based sequencer (4/4, 96 ticks per beat)
       #   sequencer = BaseSequencer.new(4, 96)  # 4 beats, 96 ticks/beat
       #   sequencer.ticks_per_bar  # => 384r

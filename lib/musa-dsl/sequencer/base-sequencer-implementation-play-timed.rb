@@ -21,8 +21,6 @@ module Musa::Sequencer
     private def _play_timed(timed_serie, start_position, control, &block)
 
       if first_value_sample = timed_serie.peek_next_value
-        debug "_play_timed: first_value_sample #{first_value_sample}"
-
         hash_mode = first_value_sample[:value].is_a?(Hash)
 
         if hash_mode
