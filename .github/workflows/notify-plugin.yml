@@ -1,0 +1,17 @@
+name: Notify Plugin Rebuild
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger musa-claude-plugin rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PLUGIN_REBUILD_PAT }}
+          repository: javier-sy/musa-claude-plugin
+          event-type: source-updated
+          client-payload: '{"repo": "${{ github.repository }}", "sha": "${{ github.sha }}"}'
