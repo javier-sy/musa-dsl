@@ -39,19 +39,15 @@ module Musa::Sequencer
           command = queue.shift
           @timeslots.delete position_to_run if queue.empty?
 
-          if command.key?(:parent_control) && !command[:parent_control].stopped?
-            @event_handlers.push command[:parent_control]
+          push_parent = command.key?(:parent_control) && !command[:parent_control].stopped?
 
-            @tick_mutex.synchronize do
-              command[:block]&.call *command[:value_parameters], **command[:key_parameters]
-            end
+          @event_handlers.push(command[:parent_control]) if push_parent
 
-            @event_handlers.pop
-          else
-            @tick_mutex.synchronize do
-              command[:block]&.call *command[:value_parameters], **command[:key_parameters]
-            end
+          @tick_mutex.synchronize do
+            command[:block]&.call *command[:value_parameters], **command[:key_parameters]
           end
+
+          @event_handlers.pop if push_parent
         end
       end
 

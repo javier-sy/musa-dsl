@@ -641,9 +641,12 @@ module Musa
         # Wraps BaseSequencer#play, evaluating block in DSL context.
         #
         # @param value_parameters [Array] parameters (series, etc.)
-        # @param key_parameters [Hash] keyword parameters
+        # @param key_parameters [Hash] keyword parameters (on_stop:, after:, after_bars:, mode:, etc.)
         # @yield block to execute for each element
         # @return [PlayControl] control object
+        #
+        # @see BaseSequencer#play for full parameter documentation
+        # @note on_stop: fires on any termination; after: fires only on natural termination (NOT on manual .stop)
         def play(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -657,9 +660,12 @@ module Musa
         # Wraps BaseSequencer#play_timed, evaluating block in DSL context.
         #
         # @param value_parameters [Array] parameters (timed series, etc.)
-        # @param key_parameters [Hash] keyword parameters
+        # @param key_parameters [Hash] keyword parameters (on_stop:, after:, after_bars:, at:)
         # @yield block to execute for each element
         # @return [PlayTimedControl] control object
+        #
+        # @see BaseSequencer#play_timed for full parameter documentation
+        # @note on_stop: fires on any termination; after: fires only on natural termination (NOT on manual .stop)
         def play_timed(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -674,9 +680,12 @@ module Musa
         # Uses SmartProcBinder to apply parameters before with.
         #
         # @param value_parameters [Array] parameters (interval, etc.)
-        # @param key_parameters [Hash] keyword parameters
+        # @param key_parameters [Hash] keyword parameters (duration:, till:, condition:, on_stop:, after:, after_bars:)
         # @yield block to execute each iteration
         # @return [EveryControl] control object
+        #
+        # @see BaseSequencer#every for full parameter documentation
+        # @note on_stop: fires on any termination; after: fires only on natural termination (NOT on manual .stop)
         def every(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -691,9 +700,12 @@ module Musa
         # Wraps BaseSequencer#move, evaluating block in DSL context.
         #
         # @param value_parameters [Array] parameters (from, to, etc.)
-        # @param key_parameters [Hash] keyword parameters
+        # @param key_parameters [Hash] keyword parameters (every:, from:, to:, step:, duration:, till:, on_stop:, after:, after_bars:, etc.)
         # @yield block to execute each iteration with current value
         # @return [MoveControl] control object
+        #
+        # @see BaseSequencer#move for full parameter documentation
+        # @note on_stop: fires on any termination; after: fires only on natural termination (NOT on manual .stop)
         def move(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 

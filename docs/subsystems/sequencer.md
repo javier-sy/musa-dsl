@@ -102,6 +102,71 @@ every 1/4r do ... end
 at 0.5 do ... end
 ```
 
+## Control Callbacks: `on_stop` vs `after`
+
+The control objects returned by `every`, `play`, `play_timed`, and `move` support two types of callbacks with different semantics:
+
+- **`on_stop`**: Cleanup callback — fires **always** when the control terminates, whether naturally or via manual `.stop`. Use for resource cleanup, state updates, logging.
+- **`after`**: Continuation callback — fires **only on natural termination** (duration reached, series exhausted, till exceeded, condition failed). **NOT** called when `.stop` is used. Use for chaining sections, scheduling follow-up events.
+
+| Termination cause | `on_stop` fires? | `after` fires? |
+|---|---|---|
+| Manual `.stop` | Yes | **No** |
+| Duration reached | Yes | Yes |
+| Till position exceeded | Yes | Yes |
+| Condition failed | Yes | Yes |
+| Series exhausted (play) | Yes | Yes |
+| Nil interval (every, one-shot) | Yes | Yes |
+
+### Examples
+
+```ruby
+# Safe section chaining — .stop won't cause relaunch
+ctrl = every 1r do
+  # ... play pattern ...
+end
+
+ctrl.on_stop { puts "Pattern stopped (any reason)" }
+ctrl.after { launch :next_section }  # Only on natural end
+
+# Later: manual stop does NOT trigger :next_section
+ctrl.stop
+```
+
+```ruby
+# Play with on_stop for cleanup
+ctrl = play melody do |note:, duration:|
+  voice.note(note, duration: duration)
+end
+
+ctrl.on_stop { voice.all_notes_off }  # Always cleanup
+ctrl.after { launch :next_phrase }     # Only if melody finishes naturally
+```
+
+```ruby
+# Move with after for continuation
+ctrl = move from: 0, to: 127, duration: 4r, every: 1/4r do |v|
+  midi_cc(7, v.round)
+end
+
+ctrl.on_stop { puts "Fade ended" }     # Any reason
+ctrl.after { launch :next_section }     # Only if fade completes
+```
+
+### Parameter form
+
+`on_stop` and `after` can also be passed as parameters:
+
+```ruby
+every 1r, on_stop: proc { cleanup }, after: proc { continue } do
+  # ...
+end
+
+play melody, on_stop: proc { cleanup } do |note:|
+  # ...
+end
+```
+
 ## API Reference
 
 **Complete API documentation:**

@@ -124,9 +124,12 @@ module Musa::Sequencer
           end
         end
       else
+        control.do_on_stop.each(&:call)
 
-        control.do_after.each do |do_after|
-          _numeric_at position + do_after[:bars], control, &do_after[:block]
+        unless control.stopped?
+          control.do_after.each do |do_after|
+            _numeric_at position + do_after[:bars], control, &do_after[:block]
+          end
         end
       end
     end
@@ -165,7 +168,7 @@ module Musa::Sequencer
         self.after after_bars, &after if after
       end
 
-      # Registers callback for when playback stops.
+      # Registers callback for when playback stops (any reason, including manual stop).
       #
       # @yield stop callback block
       #
@@ -176,9 +179,10 @@ module Musa::Sequencer
         @do_on_stop << block
       end
 
-      # Registers callback to execute after playback completes.
+      # Registers callback to execute after playback terminates naturally
+      # (series exhausted). NOT called on manual stop (.stop).
       #
-      # @param bars [Numeric, nil] delay in bars after completion (default: 0)
+      # @param bars [Numeric, nil] delay in bars after natural termination (default: 0)
       # @yield after callback block
       #
       # @return [void]

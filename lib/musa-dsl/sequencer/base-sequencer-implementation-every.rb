@@ -48,9 +48,10 @@ module Musa::Sequencer
         if control.stopped? || duration_exceeded || till_exceeded || condition_failed || interval.nil?
           control.do_on_stop.each(&:call)
 
-          control.do_after.each do |do_after|
-            # _numeric_at position + (interval || 0) + do_after[:bars], control, &do_after[:block]
-            _numeric_at position + do_after[:bars], control, &do_after[:block]
+          unless control.stopped?
+            control.do_after.each do |do_after|
+              _numeric_at position + do_after[:bars], control, &do_after[:block]
+            end
           end
         else
           _numeric_at control._start_position + control._execution_counter * interval, control do
@@ -77,8 +78,8 @@ module Musa::Sequencer
     #
     # ## Callbacks
     #
-    # - **on_stop**: Called when loop stops (any reason)
-    # - **after**: Called after loop stops, with optional delay in bars
+    # - **on_stop**: Called when loop stops (any reason, including manual stop)
+    # - **after**: Called only on natural termination (duration/till/condition/nil-interval), NOT on manual stop
     #
     # ## Execution Tracking
     #
@@ -169,7 +170,7 @@ module Musa::Sequencer
         @condition_block = block
       end
 
-      # Registers callback for when loop stops.
+      # Registers callback for when loop stops (any reason, including manual stop).
       #
       # @yield stop callback block
       #
@@ -180,9 +181,10 @@ module Musa::Sequencer
         @do_on_stop << block
       end
 
-      # Registers callback to execute after loop stops.
+      # Registers callback to execute after loop terminates naturally.
+      # NOT called on manual stop (.stop).
       #
-      # @param bars [Numeric, nil] delay in bars after stop (default: 0)
+      # @param bars [Numeric, nil] delay in bars after natural termination (default: 0)
       # @yield after callback block
       #
       # @return [void]

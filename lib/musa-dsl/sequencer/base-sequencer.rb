@@ -622,8 +622,9 @@ module Musa
       # @param serie [Series] series to play
       # @param mode [Symbol] running mode (:at, :wait, :neumalang)
       # @param parameter [Symbol, nil] duration parameter name from serie values
-      # @param after_bars [Numeric, nil] schedule block after play finishes
-      # @param after [Proc, nil] block to execute after play finishes
+      # @param on_stop [Proc, nil] callback when play stops (any reason, including manual stop)
+      # @param after_bars [Numeric, nil] delay for after callback
+      # @param after [Proc, nil] callback after play completes naturally (NOT on manual stop)
       # @param context [Object, nil] context for neumalang processing
       # @param mode_args [Hash] additional mode-specific parameters
       # @yield [value] block executed for each serie value
@@ -666,6 +667,7 @@ module Musa
       def play(serie,
                mode: nil,
                parameter: nil,
+               on_stop: nil,
                after_bars: nil,
                after: nil,
                context: nil,
@@ -674,7 +676,7 @@ module Musa
 
         mode ||= :wait
 
-        control = PlayControl.new @event_handlers.last, after_bars: after_bars, after: after
+        control = PlayControl.new @event_handlers.last, on_stop: on_stop, after_bars: after_bars, after: after
         @event_handlers.push control
 
         _play serie.instance, control, context, mode: mode, parameter: parameter, **mode_args, &block
@@ -683,10 +685,10 @@ module Musa
 
         @playing << control
 
-        control.after do
+        control.on_stop do
           @playing.delete control
         end
-        
+
         control
       end
       
@@ -780,12 +782,6 @@ module Musa
         control = PlayTimedControl.new(@event_handlers.last,
                                        on_stop: on_stop, after_bars: after_bars, after: after)
 
-        control.on_stop do
-          control.do_after.each do |do_after|
-            _numeric_at position + do_after[:bars], control, &do_after[:block]
-          end
-        end
-
         @event_handlers.push control
 
         _play_timed(timed_serie.instance, at, control, &block)
@@ -794,7 +790,7 @@ module Musa
 
         @playing << control
 
-        control.after do
+        control.on_stop do
           @playing.delete control
         end
 
@@ -876,7 +872,7 @@ module Musa
 
         @everying << control
 
-        control.after do
+        control.on_stop do
           @everying.delete control
         end
 
@@ -1005,7 +1001,7 @@ module Musa
 
         @moving << control
 
-        control.after do
+        control.on_stop do
           @moving.delete control
         end
 

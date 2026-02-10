@@ -297,7 +297,7 @@ RSpec.describe Musa::Sequencer do
       expect(p).to eq [1r, 29/16r, 21/8r, 27/8r, 67/16r, 5r]
     end
 
-    it 'Bugfix: on every handler stop the after action is delayed 1 interval' do
+    it 'On every handler manual stop the after action is NOT called' do
       s = Musa::Sequencer::BaseSequencer.new 4, 4
 
       p = []
@@ -323,7 +323,7 @@ RSpec.describe Musa::Sequencer do
 
       s.run
 
-      expect(p).to eq [1r, 2r, 3r, 4r]
+      expect(p).to eq [1r, 2r, 3r]
     end
 
     it 'Basic play sequencing' do

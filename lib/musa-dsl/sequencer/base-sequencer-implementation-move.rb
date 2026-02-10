@@ -235,8 +235,10 @@ module Musa::Sequencer
                                 on_stop: on_stop, after_bars: after_bars, after: after)
 
       control.on_stop do
-        control.do_after.each do |do_after|
-          _numeric_at position + do_after[:bars], control, &do_after[:block]
+        unless control.manually_stopped?
+          control.do_after.each do |do_after|
+            _numeric_at position + do_after[:bars], control, &do_after[:block]
+          end
         end
       end
 
@@ -324,7 +326,7 @@ module Musa::Sequencer
             #
             # Do we need stop?
             #
-            control.stop if stop.all?
+            control.every_control.stop if stop.all?
 
             #
             # Calculate effective values and next_values applying the parameter function
@@ -527,6 +529,7 @@ module Musa::Sequencer
         super parent
 
         @every_control = EveryControl.new(self, duration: duration, till: till)
+        @manually_stopped = false
 
         @do_on_stop = []
         @do_after = []
@@ -540,7 +543,7 @@ module Musa::Sequencer
         end
       end
 
-      # Registers callback for when movement stops.
+      # Registers callback for when movement stops (any reason, including manual stop).
       #
       # @yield stop callback block
       #
@@ -550,9 +553,10 @@ module Musa::Sequencer
         @do_on_stop << block
       end
 
-      # Registers callback to execute after movement stops.
+      # Registers callback to execute after movement terminates naturally.
+      # NOT called on manual stop (.stop).
       #
-      # @param bars [Numeric, nil] delay in bars after stop (default: 0)
+      # @param bars [Numeric, nil] delay in bars after natural termination (default: 0)
       # @yield after callback block
       #
       # @return [void]
@@ -565,12 +569,24 @@ module Musa::Sequencer
         @do_after << { bars: bars.rationalize, block: block }
       end
 
-      # Stops movement.
+      # Stops movement manually.
+      #
+      # Sets manually_stopped flag before delegating to every_control.
+      # After callbacks will NOT fire on manual stop.
       #
       # @return [void]
       #
       def stop
+        @manually_stopped = true
         @every_control.stop
+      end
+
+      # Checks if movement was stopped manually (via .stop).
+      #
+      # @return [Boolean] true if manually stopped
+      #
+      def manually_stopped?
+        @manually_stopped
       end
 
       # Checks if movement is stopped.

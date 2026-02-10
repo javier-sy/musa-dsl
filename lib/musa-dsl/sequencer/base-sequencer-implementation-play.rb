@@ -203,10 +203,14 @@ module Musa::Sequencer
           end
         end
       else
-        control2 = EventHandler.new control
+        control.do_on_stop.each(&:call)
 
-        control.do_after.each do |do_after|
-          _numeric_at position + do_after[:bars], control2, &do_after[:block]
+        unless control.stopped?
+          control2 = EventHandler.new control
+
+          control.do_after.each do |do_after|
+            _numeric_at position + do_after[:bars], control2, &do_after[:block]
+          end
         end
       end
 
@@ -252,21 +256,26 @@ module Musa::Sequencer
     #
     # @api private
     class PlayControl < EventHandler
-      # @return [Array<Hash>] after callbacks with delays
+      # @return [Array<Proc>] callbacks when play stops (any reason, including manual stop)
+      attr_reader :do_on_stop
+      # @return [Array<Hash>] after callbacks with delays (only on natural termination)
       attr_reader :do_after
 
-      # Creates play control with optional after callback.
+      # Creates play control with optional callbacks.
       #
       # @param parent [EventHandler] parent event handler
+      # @param on_stop [Proc, nil] stop callback (fires on any termination)
       # @param after_bars [Rational, nil] delay for after callback
-      # @param after [Proc, nil] after callback block
+      # @param after [Proc, nil] after callback block (fires only on natural termination)
       #
       # @api private
-      def initialize(parent, after_bars: nil, after: nil)
+      def initialize(parent, on_stop: nil, after_bars: nil, after: nil)
         super parent
 
+        @do_on_stop = []
         @do_after = []
 
+        @do_on_stop << on_stop if on_stop
         after(after_bars, &after) if after
       end
 
@@ -322,7 +331,19 @@ module Musa::Sequencer
         @continuation_sequencer&.continuation_play(@continuation_parameters)
       end
 
-      # Registers callback to execute after play completes.
+      # Registers callback for when play stops (any reason, including manual stop).
+      #
+      # @yield stop callback block
+      #
+      # @return [void]
+      #
+      # @api private
+      def on_stop(&block)
+        @do_on_stop << block
+      end
+
+      # Registers callback to execute after play completes naturally
+      # (series exhausted). Not called on manual stop.
       #
       # @param bars [Numeric, nil] delay in bars after completion (default: 0)
       # @yield after callback block
