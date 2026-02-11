@@ -522,13 +522,22 @@ module Musa
 
       # Schedules block relative to current position.
       #
+      # Returns a control object whose `.stop` method cancels execution:
+      # the block will not run if the control is stopped before its scheduled
+      # position. For series-based delays, `.stop` also prevents further
+      # elements from being scheduled.
+      #
       # @param bars_delay [Numeric, Series, Array] delay from current position
       # @param debug [Boolean] enable debug logging
       # @yield block to execute at position + delay
-      # @return [EventHandler] control object
+      # @return [EventHandler] control object (supports .stop to cancel)
       #
-      # @example
+      # @example Basic wait
       #   seq.wait(2) { puts "2 beats later" }
+      #
+      # @example Cancelling a scheduled wait
+      #   h = seq.wait(4) { puts "won't run" }
+      #   h.stop
       def wait(bars_delay, debug: nil, &block)
         debug ||= false
 
@@ -536,7 +545,7 @@ module Musa
         @event_handlers.push control
 
         if bars_delay.is_a? Numeric
-          _numeric_at position + bars_delay.rationalize, control, debug: debug, &block
+          _numeric_at position + bars_delay.rationalize, control, debug: debug, skip_if_stopped: true, &block
         else
           bars_delay = Series::S(*bars_delay) if bars_delay.is_a?(Array)
           bars_delay = bars_delay.instance if bars_delay
@@ -551,8 +560,12 @@ module Musa
 
       # Schedules block at current position (immediate execution on next tick).
       #
+      # Returns a control object whose `.stop` method cancels execution
+      # if the block hasn't run yet (e.g., scheduled at current position
+      # but not yet reached by the tick loop).
+      #
       # @yield block to execute at current position
-      # @return [EventHandler] control object
+      # @return [EventHandler] control object (supports .stop to cancel)
       #
       # @example
       #   seq.now { puts "Executes now" }
@@ -560,7 +573,7 @@ module Musa
         control = EventHandler.new @event_handlers.last
         @event_handlers.push control
 
-        _numeric_at position, control, &block
+        _numeric_at position, control, skip_if_stopped: true, &block
 
         @event_handlers.pop
 
@@ -582,16 +595,25 @@ module Musa
 
       # Schedules block at absolute position.
       #
+      # Returns a control object whose `.stop` method cancels execution:
+      # the block will not run if the control is stopped before the scheduled
+      # position. For series-based positions, `.stop` also prevents further
+      # elements from being scheduled.
+      #
       # @param bar_position [Numeric, Series, Array] absolute position(s)
       # @param debug [Boolean] enable debug logging
       # @yield block to execute at position
-      # @return [EventHandler] control object
+      # @return [EventHandler] control object (supports .stop to cancel)
       #
       # @example Single position
       #   seq.at(4) { puts "At beat 4" }
       #
       # @example Series of positions
       #   seq.at([1, 2, 3.5, 4]) { |pos| puts "At #{pos}" }
+      #
+      # @example Cancelling a scheduled at
+      #   h = seq.at(8) { puts "won't run" }
+      #   h.stop
       def at(bar_position, debug: nil, &block)
         debug ||= false
 
@@ -599,7 +621,7 @@ module Musa
         @event_handlers.push control
 
         if bar_position.is_a? Numeric
-          _numeric_at bar_position.rationalize, control, debug: debug, &block
+          _numeric_at bar_position.rationalize, control, debug: debug, skip_if_stopped: true, &block
         else
           bar_position = Series::S(*bar_position) if bar_position.is_a? Array
           bar_position = bar_position.instance if bar_position

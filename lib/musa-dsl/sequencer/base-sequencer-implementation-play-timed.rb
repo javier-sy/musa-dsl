@@ -79,7 +79,7 @@ module Musa::Sequencer
                                  last_positions,
                                  binder, control)
 
-      source_next_value = timed_serie.next_value
+      source_next_value = control.stopped? ? nil : timed_serie.next_value
 
       if source_next_value
         affected_components = component_ids.select { |_| !source_next_value[:value][_].nil? }
@@ -109,11 +109,13 @@ module Musa::Sequencer
           end
 
           _numeric_at _quantize_position(start_position + time, warn: true), control do
-            binder.call(values,
-                        **extra_attributes,
-                        time: start_position + time,
-                        started_ago: started_ago,
-                        control: control)
+            unless control.stopped?
+              binder.call(values,
+                          **extra_attributes,
+                          time: start_position + time,
+                          started_ago: started_ago,
+                          control: control)
+            end
 
             _play_timed_step(hash_mode,
                              component_ids, extra_attribute_names,

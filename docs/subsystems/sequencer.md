@@ -102,7 +102,11 @@ every 1/4r do ... end
 at 0.5 do ... end
 ```
 
-## Control Callbacks: `on_stop` vs `after`
+## Control Objects and `.stop`
+
+All scheduling methods (`at`, `wait`, `now`, `play`, `play_timed`, `every`, `move`) return a control object that supports `.stop` to cancel execution. Calling `.stop` on the control prevents the associated block from running at its scheduled position, or stops further iterations for series/recurring operations.
+
+### `on_stop` vs `after` callbacks
 
 The control objects returned by `every`, `play`, `play_timed`, and `move` support two types of callbacks with different semantics:
 
@@ -151,6 +155,46 @@ end
 
 ctrl.on_stop { puts "Fade ended" }     # Any reason
 ctrl.after { launch :next_section }     # Only if fade completes
+```
+
+### Stopping `at`, `wait`, `now` and `play_timed`
+
+All scheduling methods return a control object that supports `.stop`:
+
+```ruby
+# Stop a scheduled at/wait/now before it executes
+h = at 5 do
+  puts "This won't execute if stopped before bar 5"
+end
+
+at 3 do
+  h.stop  # Cancels the block scheduled at bar 5
+end
+```
+
+```ruby
+# Stop a series-based at/wait
+h = at [1, 2, 3, 4, 5] do
+  puts "Repeating at positions from series"
+end
+
+at 3.5 do
+  h.stop  # No more executions from the series after this point
+end
+```
+
+```ruby
+# Stop play_timed — same on_stop/after semantics as play/every/move
+ctrl = play_timed(timed_serie) do |values, time:, started_ago:, control:|
+  # process values
+end
+
+ctrl.on_stop { puts "Stopped (any reason)" }
+ctrl.after { launch :next_section }  # Only on natural end
+
+at 10 do
+  ctrl.stop  # on_stop fires, after does NOT
+end
 ```
 
 ### Parameter form

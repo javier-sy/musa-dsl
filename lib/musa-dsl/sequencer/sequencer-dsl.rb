@@ -222,7 +222,7 @@ module Musa
       #   @param value_parameters [Array] parameters to pass to block
       #   @param key_parameters [Hash] keyword parameters
       #   @yield block to execute now
-      #   @return [void]
+      #   @return [EventHandler] control object
 
       # @!method at(position, *value_parameters, **key_parameters, &block)
       #   Schedules block to execute at specified position.
@@ -233,7 +233,7 @@ module Musa
       #   @param value_parameters [Array] parameters to pass to block
       #   @param key_parameters [Hash] keyword parameters
       #   @yield block to execute at position
-      #   @return [void]
+      #   @return [EventHandler] control object
 
       # @!method wait(duration, *value_parameters, **key_parameters, &block)
       #   Schedules block after waiting specified duration.
@@ -244,7 +244,7 @@ module Musa
       #   @param value_parameters [Array] parameters to pass to block
       #   @param key_parameters [Hash] keyword parameters
       #   @yield block to execute after wait
-      #   @return [void]
+      #   @return [EventHandler] control object
 
       # @!method play(serie, decoder: nil, mode: nil, **options, &block)
       #   Plays a series using the decoder.
@@ -596,7 +596,7 @@ module Musa
         # @param value_parameters [Array] parameters to pass to block
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute at current position
-        # @return [void]
+        # @return [EventHandler] control object
         def now(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -612,7 +612,7 @@ module Musa
         # @param value_parameters [Array] parameters (first is position)
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute at position
-        # @return [void]
+        # @return [EventHandler] control object
         def at(*value_parameters, **key_parameters, &block)
           block ||= proc {}
 
@@ -628,7 +628,7 @@ module Musa
         # @param value_parameters [Array] parameters (first is duration)
         # @param key_parameters [Hash] keyword parameters
         # @yield block to execute after wait
-        # @return [void]
+        # @return [EventHandler] control object
         def wait(*value_parameters, **key_parameters, &block)
           block ||= proc {}
           @sequencer.wait *value_parameters, **key_parameters do |*values, **key_values|

@@ -19,11 +19,20 @@ module Musa::Sequencer
     #
     #    - Shifts command from queue
     #    - Deletes timeslot if queue becomes empty
-    #    - Pushes parent_control to event handler stack if present
-    #    - Executes command block with parameters (mutex-protected)
+    #    - Pushes parent_control to event handler stack if present and not stopped
+    #    - If command has skip_if_stopped and control is stopped, skips block execution
+    #    - Otherwise executes command block with parameters (mutex-protected)
     #    - Pops parent_control from stack
     #
     # 4. Yields to other threads
+    #
+    # ## skip_if_stopped
+    #
+    # Commands scheduled with `skip_if_stopped: true` (via `_numeric_at`) are
+    # silently skipped when their control is stopped. Used by `at`, `wait`, `now`
+    # and `_serie_at` which have no cleanup logic. Not used by `play`, `every`,
+    # `move` or `play_timed` whose blocks mix user callbacks with cleanup/recursion
+    # that must execute even when stopped.
     #
     # @param position_to_run [Rational] position to execute events at
     #
@@ -43,8 +52,10 @@ module Musa::Sequencer
 
           @event_handlers.push(command[:parent_control]) if push_parent
 
-          @tick_mutex.synchronize do
-            command[:block]&.call *command[:value_parameters], **command[:key_parameters]
+          unless command[:skip_if_stopped] && command[:parent_control]&.stopped?
+            @tick_mutex.synchronize do
+              command[:block]&.call *command[:value_parameters], **command[:key_parameters]
+            end
           end
 
           @event_handlers.pop if push_parent
@@ -65,7 +76,7 @@ module Musa::Sequencer
     # @param force_first [Boolean] if true, insert at front of queue
     # @yield block to execute at position
     #
-    # @return [nil]
+    # @return [void]
     #
     # @example Force execution order
     #   _raw_numeric_at(1r) { puts "second" }
@@ -115,9 +126,23 @@ module Musa::Sequencer
     # - **Past position**: Warns and ignores
     # - **nil position** (tickless before first event): Allows scheduling
     #
+    # ## skip_if_stopped
+    #
+    # When `skip_if_stopped: true`, the block is silently skipped if `control`
+    # is stopped at execution time. This applies both for immediate execution
+    # (current position) and for future execution (checked in `_tick`).
+    # Used by `at`, `wait`, `now` and `_serie_at` for clean cancellation
+    # without wrapper procs or extra SmartProcBinder overhead.
+    #
+    # Not suitable for `play`/`every`/`move`/`play_timed` whose scheduled
+    # blocks contain cleanup logic (do_on_stop, do_after) that must run
+    # even when stopped.
+    #
     # @param at_position [Rational] position to schedule at
     # @param control [EventHandler] parent control for hierarchy
     # @param debug [Boolean, nil] enable debug callbacks
+    # @param skip_if_stopped [Boolean, nil] when true, skip block execution
+    #   if control is stopped. Used by at/wait/now/_serie_at.
     # @yield block to execute at position (may accept control:)
     #
     # @return [nil]
@@ -125,7 +150,7 @@ module Musa::Sequencer
     # @raise [ArgumentError] if at_position is nil or block not given
     #
     # @api private
-    private def _numeric_at(at_position, control, debug: nil, &block)
+    private def _numeric_at(at_position, control, debug: nil, skip_if_stopped: nil, &block)
       raise ArgumentError, "'at_position' parameter cannot be nil" if at_position.nil?
       raise ArgumentError, 'Yield block is mandatory' unless block
 
@@ -140,11 +165,13 @@ module Musa::Sequencer
       if at_position == @position
         @on_debug_at.each(&:call) if @logger.sev_threshold >= ::Logger::Severity::DEBUG
 
-        begin
-          locked = @tick_mutex.try_lock
-          block_key_parameters_binder._call(nil, key_parameters)
-        ensure
-          @tick_mutex.unlock if locked
+        unless skip_if_stopped && control.stopped?
+          begin
+            locked = @tick_mutex.try_lock
+            block_key_parameters_binder._call(nil, key_parameters)
+          ensure
+            @tick_mutex.unlock if locked
+          end
         end
 
       elsif @position.nil? || at_position > @position
@@ -159,7 +186,8 @@ module Musa::Sequencer
 
         @timeslots[at_position] << { parent_control: control,
                                      block: block_key_parameters_binder,
-                                     key_parameters: key_parameters }
+                                     key_parameters: key_parameters,
+                                     skip_if_stopped: skip_if_stopped }
       else
         @logger.warn('BaseSequencer') { "._numeric_at: ignoring past 'at' command for #{at_position}" }
       end
@@ -201,9 +229,9 @@ module Musa::Sequencer
       bar_position = position_or_serie.next_value
 
       if bar_position
-        _numeric_at bar_position, control, debug: debug, &block
+        _numeric_at bar_position, control, debug: debug, skip_if_stopped: true, &block
 
-        _numeric_at bar_position, control, debug: false do
+        _numeric_at bar_position, control, debug: false, skip_if_stopped: true do
           _serie_at position_or_serie, control, debug: debug, &block
         end
       else
