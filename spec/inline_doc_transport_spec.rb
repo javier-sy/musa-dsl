@@ -8,6 +8,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
     it 'example from line 50 - Creating a simple clock subclass' do
       class SimpleClock < Musa::Clock::Clock
         def run
+          @stopped = false
           @run = true
           @on_start.each(&:call)
 
@@ -16,11 +17,12 @@ RSpec.describe 'Transport Inline Documentation Examples' do
             sleep 0.1
           end
 
-          @on_stop.each(&:call)
+          stop  # Fires on_stop callbacks (idempotent)
         end
 
         def terminate
-          @run = false
+          stop         # Ensures on_stop callbacks fire
+          @run = false # Exits the run loop
         end
       end
 

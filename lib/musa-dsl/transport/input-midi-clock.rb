@@ -146,6 +146,7 @@ module Musa
       # @note Waits if no input assigned
       def run
         @run = true
+        @stopped = false
 
         while @run
           if @input
@@ -218,10 +219,21 @@ module Musa
         end
       end
 
+      # Stops the clock and fires on_stop callbacks.
+      #
+      # @return [void]
+      def stop
+        @started = false
+        super
+      end
+
       # Terminates the MIDI Clock processing loop.
+      #
+      # Calls {#stop} to ensure on_stop callbacks fire, then exits the run loop.
       #
       # @return [void]
       def terminate
+        stop
         @run = false
       end
 
@@ -235,6 +247,7 @@ module Musa
       def process_start
         @logger.debug('InputMidiClock') { 'processing Start...' }
 
+        @stopped = false
         @on_start.each(&:call)
         @started = true
 
@@ -259,10 +272,7 @@ module Musa
 
         when 'Stop'
           @logger.debug('InputMidiClock') { 'processing Stop...' }
-
-          @on_stop.each(&:call)
-          @started = false
-
+          stop
           @logger.debug('InputMidiClock') { 'processing Stop... done' }
 
         when 'Continue'

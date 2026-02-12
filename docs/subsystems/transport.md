@@ -89,13 +89,15 @@ dummy_clock = Musa::Clock::DummyClock.new(100)
 
 ### Clean Shutdown
 
-To cleanly terminate a transport using TimerClock:
+`transport.stop` triggers the complete lifecycle shutdown sequence, consistently across all clock types:
 
-1. Call `transport.stop` from within a scheduled event
-2. This calls `clock.terminate` internally
-3. The clock's run loop exits
-4. `transport.start` returns
-5. Your code continues after `transport.start` for cleanup
+1. `transport.stop` calls `clock.terminate`
+2. `clock.terminate` calls `clock.stop` (fires `on_stop` callbacks)
+3. Transport's `on_stop` handler executes `after_stop` callbacks
+4. Sequencer is reset
+5. `before_begin` callbacks run (preparing for potential restart)
+6. Clock's run loop exits
+7. `transport.start` returns
 
 ```ruby
 # Example: Self-terminating composition
@@ -109,9 +111,12 @@ puts "Cleanup..."  # Executes after stop
 output.close
 ```
 
-**Note:** For `InputMidiClock`, stop/start cycles are controlled by the DAW
-and don't terminate the process. The `terminate` method can be used explicitly
-if you need the run loop to exit.
+**Clock `stop` vs `terminate` contract:**
+
+- **`stop`**: Fires `on_stop` callbacks. Idempotent (second call is a no-op). All clocks implement it.
+- **`terminate`**: Calls `stop` first (guarantees callbacks), then exits the run loop. All clocks implement it.
+
+**Note:** For `InputMidiClock`, MIDI Stop messages from the DAW also trigger `clock.stop` (and thus `on_stop` callbacks). To fully exit the run loop, call `clock.terminate` or `transport.stop`.
 
 **Key methods:**
 - `start` - Start playback (blocks while running)

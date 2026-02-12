@@ -42,13 +42,15 @@ module Musa
     # Concrete clocks must:
     #
     # 1. Implement `run(&block)` - Start generating ticks, yield for each tick
-    # 2. Implement `terminate` - Stop the clock
-    # 3. Call registered callbacks at appropriate times
+    # 2. Override `stop` if additional cleanup is needed (call super)
+    # 3. Override `terminate` to call `stop` then exit the run loop
     # 4. Manage @run state properly
+    # 5. Reset `@stopped = false` at the start of `run` (and in `start` if applicable)
     #
     # @example Creating a simple clock subclass
     #   class SimpleClock < Clock
     #     def run
+    #       @stopped = false
     #       @run = true
     #       @on_start.each(&:call)
     #
@@ -57,11 +59,12 @@ module Musa
     #         sleep 0.1
     #       end
     #
-    #       @on_stop.each(&:call)
+    #       stop  # Fires on_stop callbacks (idempotent)
     #     end
     #
     #     def terminate
-    #       @run = false
+    #       stop         # Ensures on_stop callbacks fire
+    #       @run = false # Exits the run loop
     #     end
     #   end
     #
@@ -70,6 +73,7 @@ module Musa
       # Initializes the clock with empty callback collections.
       def initialize
         @run = nil
+        @stopped = false
         @on_start = []
         @on_stop = []
         @on_change_position = []
@@ -80,6 +84,20 @@ module Musa
       # @return [Boolean] true if clock is running, false otherwise.
       def running?
         @run
+      end
+
+      # Stops the clock and fires on_stop callbacks.
+      #
+      # Idempotent: calling stop multiple times only fires callbacks once.
+      # Subclasses that need additional stop logic (e.g., pausing a timer)
+      # should override and call super.
+      #
+      # @return [void]
+      def stop
+        return if @stopped
+
+        @stopped = true
+        @on_stop.each(&:call)
       end
 
       # Registers a callback to be called when the clock starts.
@@ -132,6 +150,9 @@ module Musa
       # This method should block and yield once per tick. Subclasses must
       # implement this method.
       #
+      # Subclasses should reset `@stopped = false` at the start of `run`
+      # to allow stop/start cycles.
+      #
       # @yield Called once per tick to advance the sequencer.
       # @return [void]
       #
@@ -139,20 +160,22 @@ module Musa
       #
       # @note This method typically runs in a loop until {#terminate} is called.
       # @note Subclasses should call @on_start callbacks when starting.
-      # @note Subclasses should call @on_stop callbacks when stopping.
+      # @note Subclasses should call {#stop} (not @on_stop directly) when stopping.
       def run
         raise NotImplementedError
       end
 
       # Stops the clock and terminates the run loop.
       #
-      # Subclasses must implement this method to cleanly stop the clock.
+      # Calls {#stop} to ensure on_stop callbacks fire, then exits the run loop.
+      # Subclasses must implement this method.
       #
       # @return [void]
       #
       # @raise [NotImplementedError] if not overridden by subclass.
       #
       # @note After calling this, {#run} should exit.
+      # @note Must call {#stop} to guarantee on_stop callbacks fire.
       def terminate
         raise NotImplementedError
       end

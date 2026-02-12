@@ -89,7 +89,7 @@ module Musa
       #
       # Calls on_start callbacks, then yields while the condition is true.
       # Uses Thread.pass instead of sleep for fast operation.
-      # Calls on_stop callbacks when done.
+      # Calls {#stop} when done (idempotent).
       #
       # @yield Called once per tick
       # @return [void]
@@ -98,6 +98,7 @@ module Musa
       def run
         @on_start.each(&:call)
         @run = true
+        @stopped = false
 
         while @run && eval_condition
           yield if block_given?
@@ -105,14 +106,25 @@ module Musa
           Thread.pass  # Cooperate with other threads
         end
 
-        @on_stop.each(&:call)
+        stop  # Idempotent: if terminate already called stop, this is a no-op
+      end
+
+      # Stops the clock and fires on_stop callbacks.
+      #
+      # @return [void]
+      def stop
+        @run = false
+        super
       end
 
       # Terminates the clock loop.
       #
+      # Calls {#stop} to ensure on_stop callbacks fire, then ensures the
+      # run loop exits.
+      #
       # @return [void]
       def terminate
-        @run = false
+        stop
       end
 
       private

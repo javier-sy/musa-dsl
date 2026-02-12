@@ -195,6 +195,7 @@ module Musa
       # @note Clock begins paused; call {#start} to begin ticking
       def run
         @run = true
+        @stopped = false
 
         while @run
           @timer = Timer.new(@period,
@@ -221,6 +222,7 @@ module Musa
       # @note Calls registered on_start callbacks
       def start
         unless @started
+          @stopped = false
           @on_start.each(&:call)
           @started = true
           @paused = false
@@ -230,20 +232,19 @@ module Musa
 
       # Stops the clock and resets to initial state.
       #
-      # Triggers @on_stop callbacks and marks clock as not started.
-      # Has no effect if not currently started.
+      # Stops the internal timer, resets state flags, and fires on_stop
+      # callbacks via super (idempotent).
       #
       # @return [void]
       #
-      # @note Calls registered on_stop callbacks
       # @note Different from {#pause}: stop resets to initial state
       def stop
         if @started
           @timer.stop
           @started = false
           @paused = false
-          @on_stop.each(&:call)
         end
+        super
       end
 
       # Pauses the clock without stopping it.
@@ -279,13 +280,14 @@ module Musa
 
       # Terminates the clock's run loop.
       #
-      # Causes {#run} to exit by setting the run flag to false and terminating
-      # the internal timer. This is the clean shutdown mechanism.
+      # Calls {#stop} to ensure on_stop callbacks fire, then exits the run loop
+      # by terminating the internal timer.
       #
       # @return [void]
       #
       # @note After calling this, {#run} will exit and {Musa::Transport::Transport#start} will return
       def terminate
+        stop
         @run = false
         @timer&.terminate
       end

@@ -91,6 +91,7 @@ module Musa
       #
       # @note This method does NOT block
       def run(&block)
+        @stopped = false
         @on_start.each(&:call)
         @run = true
         @block = block
@@ -111,12 +112,21 @@ module Musa
         end
       end
 
-      # Terminates the clock and calls on_stop callbacks.
+      # Stops the clock and fires on_stop callbacks.
+      #
+      # @return [void]
+      def stop
+        @run = false
+        super
+      end
+
+      # Terminates the clock.
+      #
+      # Delegates to {#stop} which fires on_stop callbacks and sets @run to false.
       #
       # @return [void]
       def terminate
-        @on_stop.each(&:call)
-        @run = false
+        stop
       end
     end
   end
