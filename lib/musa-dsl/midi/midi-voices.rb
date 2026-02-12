@@ -289,14 +289,19 @@ module Musa
         @controllers_control[:sustain_pedal]
       end
 
-      # Sends an immediate all-notes-off message on this channel and resets internal state.
+      # Sends immediate note-off messages for all active pitches and an all-notes-off message on this channel and resets internal state.
       #
       # @return [void]
       def all_notes_off
+        @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, 0x7b, 0)
+
+        @active_pitches.each do |pitch|
+          msg = MIDIEvents::NoteOff.new(@channel, pitch, 0)
+          @output&.puts msg unless @fast_forward
+        end
+
         @active_pitches.clear
         fill_active_pitches @active_pitches
-
-        @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, 0x7b, 0)
       end
 
       # Logs a message tagging the current voice.
