@@ -295,9 +295,11 @@ module Musa
       def all_notes_off
         @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, 0x7b, 0)
 
-        @active_pitches.each do |pitch|
+        @active_pitches.each_with_index do |pitch_status, pitch|
+          next if @fast_forward || pitch_status[:note_controls].empty?
+
           msg = MIDIEvents::NoteOff.new(@channel, pitch, 0)
-          @output&.puts msg unless @fast_forward
+          @output&.puts msg
         end
 
         @active_pitches.clear
