@@ -29,7 +29,43 @@ Musa-DSL is a programming language DSL (Domain-Specific Language) based on Ruby 
 - **Neumalang Notation** - Intuitive text-based and customizable musical (or sound) notation
 - **Transcription System** - Convert musical gestures to MIDI and MusicXML with ornament transcription expansion
 
-## Installation
+## Getting Started
+
+### Recommended Editor: RubyMine
+
+[RubyMine](https://www.jetbrains.com/ruby/) provides the best experience for MusaDSL development: intelligent autocomplete of methods and parameters, hover documentation, and type inference help you discover the API as you write.
+
+**Free licenses available:**
+- [Non-commercial use](https://www.jetbrains.com/non-commercial/) — for learning, hobbies, open-source, content creation
+- [Students](https://www.jetbrains.com/academy/student-pack/) and [Teachers/Researchers](https://www.jetbrains.com/academy/teacher-pack/) — with institutional email
+
+VSCode with the Ruby LSP extension also works well, though Ruby autocomplete and hover documentation are less complete.
+
+### AI Composition Assistant: Claude Code Plugin
+
+The fastest way to learn and compose with MusaDSL is through the **[musa-claude-plugin](https://github.com/javier-sy/musa-claude-plugin)** — a plugin for [Claude Code](https://claude.ai/code) that provides:
+
+- **`/explain`** — Ask any question about MusaDSL and get sourced answers with working code examples
+- **`/think`** — Creative ideation across 8 musical dimensions
+- **`/code`** — Describe your musical intention in natural language and get verified MusaDSL code
+- **`/analyze`** — Structured analysis of your compositions
+
+The plugin includes a semantic knowledge base covering all MusaDSL documentation, API reference, and 22+ demo projects. Your compositions and analyses become searchable knowledge that enriches future sessions.
+
+**Install in Claude Code:**
+```
+/plugin marketplace add javier-sy/musa-claude-plugin
+/plugin install musa-claude-plugin@yeste.studio
+```
+
+Then add your [Voyage AI](https://dash.voyageai.com/) API key to your shell profile:
+```
+export VOYAGE_API_KEY="your-key-here"
+```
+
+Run `/setup` to verify the installation.
+
+### Installation
 
 Add to your Gemfile:
 
