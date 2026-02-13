@@ -52,13 +52,15 @@ The fastest way to learn and compose with MusaDSL is through the **[musa-claude-
 
 The plugin includes a semantic knowledge base covering all MusaDSL documentation, API reference, and 22+ demo projects. Your compositions and analyses become searchable knowledge that enriches future sessions.
 
+**Requirements:** [Ruby 3.4+](https://www.ruby-lang.org/) and a [Voyage AI](https://dash.voyageai.com/) API key (free tier is sufficient for personal use).
+
 **Install in Claude Code:**
 ```
 /plugin marketplace add javier-sy/musa-claude-plugin
 /plugin install musa-claude-plugin@yeste.studio
 ```
 
-Then add your [Voyage AI](https://dash.voyageai.com/) API key to your shell profile:
+Then add your Voyage AI API key to your shell profile:
 ```
 export VOYAGE_API_KEY="your-key-here"
 ```
