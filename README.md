@@ -45,10 +45,10 @@ VSCode with the Ruby LSP extension also works well, though Ruby autocomplete and
 
 The fastest way to learn and compose with MusaDSL is through **[Nota](https://github.com/javier-sy/nota-plugin-for-claude)** — a plugin for [Claude Code](https://claude.ai/code) that provides:
 
-- **`/explain`** — Ask any question about MusaDSL and get sourced answers with working code examples
-- **`/think`** — Creative ideation across multiple musical dimensions
-- **`/code`** — Describe your musical intention in natural language and get verified MusaDSL code
-- **`/analyze`** — Structured analysis of your compositions
+- **`/nota:explain`** — Ask any question about MusaDSL and get sourced answers with working code examples
+- **`/nota:think`** — Creative ideation across multiple musical dimensions
+- **`/nota:code`** — Describe your musical intention in natural language and get verified MusaDSL code
+- **`/nota:analyze`** — Structured analysis of your compositions
 
 The plugin includes a semantic knowledge base covering all MusaDSL documentation, API reference, and 22+ demo projects. Your compositions and analyses become searchable knowledge that enriches future sessions.
 
@@ -65,7 +65,7 @@ Then add your Voyage AI API key to your shell profile:
 export VOYAGE_API_KEY="your-key-here"
 ```
 
-Run `/setup` to verify the installation.
+Run `/nota:setup` to verify the installation.
 
 ### Framework Installation
 
