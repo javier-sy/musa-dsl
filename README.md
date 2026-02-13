@@ -46,7 +46,7 @@ VSCode with the Ruby LSP extension also works well, though Ruby autocomplete and
 The fastest way to learn and compose with MusaDSL is through **[Nota](https://github.com/javier-sy/nota-plugin-for-claude)** — a plugin for [Claude Code](https://claude.ai/code) that provides:
 
 - **`/explain`** — Ask any question about MusaDSL and get sourced answers with working code examples
-- **`/think`** — Creative ideation across 8 musical dimensions
+- **`/think`** — Creative ideation across 9 musical dimensions
 - **`/code`** — Describe your musical intention in natural language and get verified MusaDSL code
 - **`/analyze`** — Structured analysis of your compositions
 
