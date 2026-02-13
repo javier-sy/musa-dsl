@@ -49,8 +49,9 @@ The fastest way to learn and compose with MusaDSL is through **[Nota](https://gi
 - **`/nota:think`** — Creative ideation across multiple musical dimensions
 - **`/nota:code`** — Describe your musical intention in natural language and get verified MusaDSL code
 - **`/nota:analyze`** — Structured analysis of your compositions
+- **`/nota:best-practices`** — Consolidate recurring patterns into searchable best practices
 
-The plugin includes a semantic knowledge base covering all MusaDSL documentation, API reference, and 22+ demo projects. Your compositions and analyses become searchable knowledge that enriches future sessions.
+The plugin includes a semantic knowledge base covering all MusaDSL documentation, API reference, 22+ demo projects, and 12 built-in composition best practices. Your compositions, analyses, and practices become searchable knowledge that enriches future sessions.
 
 **Requirements:** [Ruby 3.4+](https://www.ruby-lang.org/) and a [Voyage AI](https://dash.voyageai.com/) API key (free tier is sufficient for personal use).
 
