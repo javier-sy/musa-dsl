@@ -67,7 +67,7 @@ export VOYAGE_API_KEY="your-key-here"
 
 Run `/setup` to verify the installation.
 
-### Installation
+### Framework Installation
 
 Add to your Gemfile:
 
