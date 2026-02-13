@@ -8,10 +8,10 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger musa-claude-plugin rebuild
+      - name: Trigger nota-plugin-for-claude rebuild
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.PLUGIN_REBUILD_PAT }}
-          repository: javier-sy/musa-claude-plugin
+          repository: javier-sy/nota-plugin-for-claude
           event-type: source-updated
           client-payload: '{"repo": "${{ github.repository }}", "sha": "${{ github.sha }}"}'

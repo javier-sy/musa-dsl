@@ -43,7 +43,7 @@ VSCode with the Ruby LSP extension also works well, though Ruby autocomplete and
 
 ### AI Composition Assistant: Claude Code Plugin
 
-The fastest way to learn and compose with MusaDSL is through the **[musa-claude-plugin](https://github.com/javier-sy/musa-claude-plugin)** — a plugin for [Claude Code](https://claude.ai/code) that provides:
+The fastest way to learn and compose with MusaDSL is through **[Nota](https://github.com/javier-sy/nota-plugin-for-claude)** — a plugin for [Claude Code](https://claude.ai/code) that provides:
 
 - **`/explain`** — Ask any question about MusaDSL and get sourced answers with working code examples
 - **`/think`** — Creative ideation across 8 musical dimensions
@@ -56,8 +56,8 @@ The plugin includes a semantic knowledge base covering all MusaDSL documentation
 
 **Install in Claude Code:**
 ```
-/plugin marketplace add javier-sy/musa-claude-plugin
-/plugin install musa-claude-plugin@yeste.studio
+/plugin marketplace add javier-sy/nota-plugin-for-claude
+/plugin install nota@yeste.studio
 ```
 
 Then add your Voyage AI API key to your shell profile:
