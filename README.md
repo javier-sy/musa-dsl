@@ -56,8 +56,14 @@ The plugin includes a semantic knowledge base covering all MusaDSL documentation
 **Requirements:** [Ruby 3.4+](https://www.ruby-lang.org/) and a [Voyage AI](https://dash.voyageai.com/) API key (free tier is sufficient for personal use).
 
 **Install in Claude Code:**
+
+First, add the Nota marketplace:
 ```
 /plugin marketplace add javier-sy/nota-plugin-for-claude
+```
+
+Then install the plugin:
+```
 /plugin install nota@yeste.studio
 ```
 
