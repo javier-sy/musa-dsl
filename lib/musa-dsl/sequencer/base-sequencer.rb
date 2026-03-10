@@ -38,6 +38,22 @@ module Musa
     # - **Event Handlers**: Hierarchical event pub/sub system
     # - **Controls**: Objects returned by scheduling methods for lifecycle management
     #
+    # ## Block Parameter Flexibility (SmartProcBinder)
+    #
+    # All scheduling methods (`every`, `play`, `move`, `play_timed`) pass parameters
+    # to user blocks via SmartProcBinder. This means blocks can declare **only the
+    # parameters they need** — undeclared parameters are silently ignored.
+    #
+    # Keyword parameters (like `control:`) must be declared as keyword arguments
+    # in the block signature (`|control:|`), not as positional arguments (`|control|`).
+    #
+    # | Method | Positional params | Keyword params |
+    # |--------|-------------------|----------------|
+    # | `every` | _(none)_ | `control:` |
+    # | `play` | element (+ hash keys as keywords) | `control:` |
+    # | `move` | value, next_value | `control:`, `duration:`, `quantized_duration:`, `started_ago:`, `position_jitter:`, `duration_jitter:`, `right_open:` |
+    # | `play_timed` | values (+ extra attributes as keywords) | `time:`, `started_ago:`, `control:` |
+    #
     # ## Tick-based vs Tickless
     #
     # **Tick-based** (beats_per_bar and ticks_per_beat specified):
@@ -642,20 +658,23 @@ module Musa
       # Timing determined by mode.
       #
       # @param serie [Series] series to play
-      # @param mode [Symbol] running mode (:at, :wait, :neumalang)
+      # @param mode [Symbol] running mode (:at, :wait, :neumalang). Defaults to :wait
       # @param parameter [Symbol, nil] duration parameter name from serie values
       # @param on_stop [Proc, nil] callback when play stops (any reason, including manual stop)
       # @param after_bars [Numeric, nil] delay for after callback
       # @param after [Proc, nil] callback after play completes naturally (NOT on manual stop)
       # @param context [Object, nil] context for neumalang processing
       # @param mode_args [Hash] additional mode-specific parameters
-      # @yield [value] block executed for each serie value
+      # @yield block executed for each serie value (via SmartProcBinder — declare only the parameters you need)
+      # @yieldparam element [Object] the current serie element (positional). When the element is a Hash,
+      #   its keys are also available as keyword arguments (e.g., `|note:, duration:|`)
+      # @yieldparam control [PlayControl] the play control object (keyword, optional)
       # @return [PlayControl] control object
       #
       # ## Available Running Modes
       #
+      # - **:wait** (default): Elements with duration specify wait time before next element
       # - **:at**: Elements specify absolute positions via :at key
-      # - **:wait**: Elements with duration specify wait time
       # - **:neumalang**: Full Neumalang DSL with variables, commands, series, etc.
       #
       #
@@ -755,7 +774,11 @@ module Musa
       # @param on_stop [Proc, nil] callback when playback stops
       # @param after_bars [Numeric, nil] schedule after completion
       # @param after [Proc, nil] block after completion
-      # @yield [value] block for each value
+      # @yield block for each timed value (via SmartProcBinder — declare only the parameters you need)
+      # @yieldparam values [Hash, Array] current component values (positional). Hash in hash mode, Array in array mode
+      # @yieldparam time [Rational] absolute position of this event (keyword, optional)
+      # @yieldparam started_ago [Hash, Array] time since each component's last update (keyword, optional)
+      # @yieldparam control [PlayTimedControl] the play_timed control object (keyword, optional)
       # @return [PlayTimedControl] control object
       #
       # @example Hash mode timed series
@@ -842,6 +865,13 @@ module Musa
       # - **condition**: condition block returns false
       # - **nil interval**: immediate stop after first execution
       #
+      # ## Block Parameters (via SmartProcBinder)
+      #
+      # The block receives the following keyword parameter via SmartProcBinder.
+      # You can declare only the parameters you need — undeclared ones are silently ignored.
+      #
+      # - **control:** [EveryControl] — the control object for the current loop
+      #
       # @param interval [Numeric, nil] interval between executions (nil = once)
       # @param duration [Numeric, nil] total duration
       # @param till [Numeric, nil] end position
@@ -849,18 +879,16 @@ module Musa
       # @param on_stop [Proc, nil] callback when loop stops
       # @param after_bars [Numeric, nil] schedule after completion
       # @param after [Proc, nil] block after completion
-      # @yield [position] block executed each interval
+      # @yieldparam control [EveryControl] the loop's control object (keyword, optional)
       # @return [EveryControl] control object
       #
-      # @example
-      #   seq.every(1, till: 8) { |pos| puts "Beat #{pos}" }
+      # @example No parameters needed
+      #   seq.every(1, till: 8) { puts "Beat at #{seq.position}" }
       #
-      # @example Every 4 beats for 16 bars
-      #   sequencer.every(1r, duration: 4r) { puts "tick" }
-      #   # Executes at 1r, 2r, 3r, 4r, 5r (5 times total)
-      #
-      # @example Every beat until position 10
-      #   sequencer.every(1r, till: 10r) { |control| puts control.position }
+      # @example Accessing the control object (keyword argument)
+      #   seq.every(1r, duration: 4r) do |control:|
+      #     puts "Iteration #{control._execution_counter}"
+      #   end
       #
       # @example Conditional loop
       #   count = 0
@@ -947,7 +975,16 @@ module Musa
       # @param on_stop [Proc, nil] callback when animation stops
       # @param after_bars [Numeric, nil] schedule after completion
       # @param after [Proc, nil] block after completion
-      # @yield [value] block executed with interpolated value
+      # @yield block executed with interpolated value (via SmartProcBinder — declare only the parameters you need)
+      # @yieldparam value [Numeric, Array, Hash] current interpolated value(s) (positional)
+      # @yieldparam next_value [Numeric, Array, Hash, nil] next interpolated value(s), nil at end (positional)
+      # @yieldparam control [MoveControl] the move control object (keyword, optional)
+      # @yieldparam duration [Numeric, Array, Hash] interval duration per component (keyword, optional)
+      # @yieldparam quantized_duration [Numeric, Array, Hash] quantized interval duration (keyword, optional)
+      # @yieldparam started_ago [Numeric, Array, Hash, nil] time since component last changed (keyword, optional)
+      # @yieldparam position_jitter [Numeric, Array, Hash] position rounding error (keyword, optional)
+      # @yieldparam duration_jitter [Numeric, Array, Hash] duration rounding error (keyword, optional)
+      # @yieldparam right_open [Boolean, Array, Hash] whether final value is excluded (keyword, optional)
       # @return [MoveControl] control object
       #
       # @example Simple pitch glide
@@ -990,7 +1027,7 @@ module Musa
       #     function: proc { |ratio| ratio ** 2 }  # Ease-in
       #   ) { |value| puts value }
       #
-      # @example Linear fade
+      # @example Linear fade (only positional value needed)
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
       #   volume_values = []
@@ -1001,6 +1038,11 @@ module Musa
       #
       #   seq.run
       #   # Result: volume_values contains [0, 8, 16, 24, ..., 119, 127]
+      #
+      # @example Using keyword parameters
+      #   seq.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |value, next_value, control:, duration:|
+      #     puts "value=#{value.round} next=#{next_value&.round} dur=#{duration}"
+      #   end
       def move(every: nil,
                from: nil, to: nil, step: nil,
                duration: nil, till: nil,

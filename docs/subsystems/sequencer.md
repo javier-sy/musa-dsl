@@ -39,6 +39,7 @@ transport.sequencer.with do
   end
 
   # Play series (play): reproduces series with automatic timing
+  # Default mode is :wait — each element's :duration determines the wait before the next
   at 5 do
     play melody do |note:, duration:, control:|
       puts "Playing note: #{note}, duration: #{duration}"
@@ -46,6 +47,7 @@ transport.sequencer.with do
   end
 
   # Recurring event (every) with stop control
+  # Note: every passes control: as a keyword — declare only the params you need
   beat_loop = nil
   at 10 do
     # Store control object to stop it later
@@ -100,6 +102,88 @@ every 1/4r do ... end
 
 # Works but may cause imprecision
 at 0.5 do ... end
+```
+
+## Block Parameter Flexibility (SmartProcBinder)
+
+All scheduling methods (`every`, `play`, `move`, `play_timed`) pass parameters to user blocks via **SmartProcBinder**. This means blocks can declare **only the parameters they need** — undeclared parameters are silently ignored.
+
+**Important**: keyword parameters (like `control:`) must be declared as **keyword arguments** in the block signature (`|control:|`), not as positional arguments (`|control|`).
+
+### Parameters available per method
+
+| Method | Positional params | Keyword params |
+|--------|-------------------|----------------|
+| `every` | _(none)_ | `control:` |
+| `play` | element (+ hash keys as keywords) | `control:` |
+| `move` | value, next_value | `control:`, `duration:`, `quantized_duration:`, `started_ago:`, `position_jitter:`, `duration_jitter:`, `right_open:` |
+| `play_timed` | values (+ extra attributes as keywords) | `time:`, `started_ago:`, `control:` |
+
+### Examples
+
+```ruby
+# every — no params needed
+every 1r, duration: 4r do
+  puts "tick at #{position}"
+end
+
+# every — with control keyword
+every 1r do |control:|
+  puts "iteration #{control._execution_counter}"
+  control.stop if some_condition
+end
+
+# play — hash keys become keywords
+melody = S({ note: 60, duration: 1 }, { note: 64, duration: 1/2r })
+play melody do |note:, duration:|
+  voice.note(note, duration: duration)
+end
+
+# play — with control keyword
+play melody do |note:, duration:, control:|
+  voice.note(note, duration: duration)
+  control.stop if note == 64
+end
+
+# move — only positional value
+move from: 0, to: 127, duration: 4r, every: 1/4r do |value|
+  midi_cc(7, value.round)
+end
+
+# move — with keyword metadata
+move from: 60, to: 72, duration: 4r, every: 1/4r do |value, next_value, control:, duration:|
+  puts "value=#{value.round} next=#{next_value&.round} dur=#{duration}"
+end
+
+# play_timed — full signature
+play_timed(timed_serie) do |values, time:, started_ago:, control:|
+  puts "values=#{values} at time=#{time}"
+end
+```
+
+## Play Modes
+
+`play` supports three modes that determine how series elements are scheduled. The default mode is `:wait`.
+
+```ruby
+# :wait (default) — each element must have :duration; the sequencer waits
+# that duration before consuming the next element
+progression = S({ grade: 0, duration: 1 }, { grade: 3, duration: 1 })
+play progression do |grade:, duration:|
+  puts "Grade #{grade}, duration #{duration}"
+end
+
+# :at — each element must have :at; the sequencer schedules it at that absolute position
+events = S({ note: 60, at: 1 }, { note: 64, at: 3 })
+play events, mode: :at do |note:, at:|
+  puts "Note #{note} at position #{at}"
+end
+
+# :neumalang — full Neumalang DSL processing with decoder
+play neuma_serie, mode: :neumalang, decoder: decoder do |gdv|
+  pdv = gdv.to_pdv(scale)
+  voice.note(pdv[:pitch], velocity: pdv[:velocity], duration: pdv[:duration])
+end
 ```
 
 ## Control Objects and `.stop`
