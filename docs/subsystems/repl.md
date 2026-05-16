@@ -9,11 +9,15 @@ Editor → MusaLCE Client → TCP (port 1327) → REPL Server → DSL Context
                                              Results/Errors
 ```
 
-**Available MusaLCE Clients:**
+The REPL is **only** the TCP eval channel between editor and server. Communication with the DAW (transport, MIDI routing, OSC surface relay) goes over a different channel — UDP OSC handled by the [musalce-server](https://github.com/javier-sy/musalce-server) gem and the per-DAW controller extension. The two channels are layered, not the same protocol.
+
+**Available MusaLCE Clients** (REPL clients — talk to the server over TCP 1327):
 - **MusaLCEClientForVSCode**: Visual Studio Code extension
-- **MusaLCEClientForAtom**: Atom editor plugin
-- **MusaLCEforBitwig**: Bitwig Studio integration
-- **MusaLCEforLive**: Ableton Live integration
+- **MusaLCEClientForAtom**: Atom editor plugin (discontinued)
+
+**Available MusaLCE DAW extensions** (talk to the server over OSC/UDP — not REPL clients):
+- **MusaLCEforBitwig**: Bitwig Studio controller extension (Java)
+- **MusaLCEforLive**: Ableton Live MIDI Remote Script (Python)
 
 ## Communication Protocol
 
