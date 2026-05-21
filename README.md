@@ -41,39 +41,6 @@ Musa-DSL is a programming language DSL (Domain-Specific Language) based on Ruby 
 
 VSCode with the Ruby LSP extension also works well, though Ruby autocomplete and hover documentation are less complete.
 
-### AI Composition Assistant: Claude Code Plugin
-
-The fastest way to learn and compose with MusaDSL is through **[Nota](https://github.com/javier-sy/nota-plugin-for-claude)** — a plugin for [Claude Code](https://claude.ai/code) that provides:
-
-- **`/nota:explain`** — Ask any question about MusaDSL and get sourced answers with working code examples
-- **`/nota:think`** — Creative ideation across multiple musical dimensions
-- **`/nota:code`** — Describe your musical intention in natural language and get verified MusaDSL code
-- **`/nota:analyze`** — Structured analysis of your compositions
-- **`/nota:best-practices`** — Consolidate recurring patterns into searchable best practices
-
-The plugin includes a semantic knowledge base covering all MusaDSL documentation, API reference, 22+ demo projects, and 12 built-in composition best practices. Your compositions, analyses, and practices become searchable knowledge that enriches future sessions.
-
-**Requirements:** [Ruby 3.4+](https://www.ruby-lang.org/) and a [Voyage AI](https://dash.voyageai.com/) API key (free tier is sufficient for personal use).
-
-**Install in Claude Code:**
-
-First, add the Nota marketplace:
-```
-/plugin marketplace add javier-sy/nota-plugin-for-claude
-```
-
-Then install the plugin:
-```
-/plugin install nota@yeste.studio
-```
-
-Then add your Voyage AI API key to your shell profile:
-```
-export VOYAGE_API_KEY="your-key-here"
-```
-
-Run `/nota:setup` to verify the installation.
-
 ### Framework Installation
 
 Add to your Gemfile:
@@ -126,18 +93,11 @@ MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) a
 **Core Framework:**
 - [**musa-dsl**](https://github.com/javier-sy/musa-dsl) - Main DSL framework for algorithmic composition and musical thinking
 
-**MIDI Communication Stack:**
+**MIDI Communication Stack** (used internally by musa-dsl for MIDI I/O):
 - [**midi-events**](https://github.com/javier-sy/midi-events) - Low-level MIDI event definitions and protocols
 - [**midi-parser**](https://github.com/javier-sy/midi-parser) - MIDI file parsing and analysis
 - [**midi-communications**](https://github.com/javier-sy/midi-communications) - Cross-platform MIDI I/O abstraction layer
 - [**midi-communications-macos**](https://github.com/javier-sy/midi-communications-macos) - macOS-specific MIDI native implementation
-
-**Live Coding Environment (MusaLCE):**
-- [**musalce-server**](https://github.com/javier-sy/musalce-server) - Live coding evaluation server with hot-reload capabilities
-- [**MusaLCEClientForVSCode**](https://github.com/javier-sy/MusaLCEClientForVSCode) - Visual Studio Code extension for live coding
-- [**MusaLCEClientForAtom**](https://github.com/javier-sy/MusaLCEClientForAtom) - Atom editor plugin for live coding
-- [**MusaLCEforBitwig**](https://github.com/javier-sy/MusaLCEforBitwig) - Bitwig Studio integration for live coding
-- [**MusaLCEforLive**](https://github.com/javier-sy/MusaLCEforLive) - Ableton Live integration for live coding
 
 ### musa-dsl Internal Architecture
 
@@ -273,7 +233,7 @@ Comprehensive MusicXML score generation with hierarchical structure, multiple vo
 
 ### REPL - Live Coding Infrastructure
 
-TCP-based server for live coding with MusaLCE clients (VSCode, Atom, Bitwig, Live), real-time code evaluation and error handling.
+TCP-based server for live coding — real-time code evaluation and error handling. Consumed by external REPL clients (editor extensions, custom evaluators).
 
 **📖 [Complete Documentation](docs/subsystems/repl.md)**
 
@@ -282,6 +242,16 @@ TCP-based server for live coding with MusaLCE clients (VSCode, Atom, Bitwig, Liv
 Ruby refinements and metaprogramming utilities: Arrayfy, Hashify, ExplodeRanges, DeepCopy, DynamicProxy, AttributeBuilder, Logger.
 
 **📖 [Complete Documentation](docs/subsystems/core-extensions.md)**
+
+## More from the MusaDSL ecosystem
+
+- [MusaDSL](https://musadsl.yeste.studio) — Ruby framework for algorithmic sound and musical composition.
+- [MusaLCE](https://musalce.yeste.studio) — live coding environment for Ableton Live and Bitwig Studio.
+- [Nota](https://nota.yeste.studio) — Claude Code plugin for AI-assisted MusaDSL composition.
+- **Pulso** — Stream Deck plugin for MusaLCE Surface controls *(upcoming)*.
+- **VST3 plugins** — collection of audio plugins for mixing and mastering *(upcoming)*.
+
+For the full map — descriptions, how they relate, which one to pick for what — see [musa-ecosystem.yeste.studio](https://musa-ecosystem.yeste.studio).
 
 ## Author
 
