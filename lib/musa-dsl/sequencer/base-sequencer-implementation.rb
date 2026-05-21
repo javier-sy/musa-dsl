@@ -490,7 +490,5 @@ module Musa::Sequencer
 
       alias to_s inspect
     end
-
-    private_constant :EventHandler
   end
 end

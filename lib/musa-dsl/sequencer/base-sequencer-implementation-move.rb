@@ -597,7 +597,5 @@ module Musa::Sequencer
         @stop
       end
     end
-
-    private_constant :MoveControl
   end
 end

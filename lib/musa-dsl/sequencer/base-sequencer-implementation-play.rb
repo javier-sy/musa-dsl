@@ -359,7 +359,5 @@ module Musa::Sequencer
         @do_after << { bars: bars.rationalize, block: block }
       end
     end
-
-    private_constant :PlayControl
   end
 end
