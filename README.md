@@ -248,7 +248,7 @@ Ruby refinements and metaprogramming utilities: Arrayfy, Hashify, ExplodeRanges,
 - [MusaDSL](https://musadsl.yeste.studio) — Ruby framework for algorithmic sound and musical composition.
 - [MusaLCE](https://musalce.yeste.studio) — live coding environment for Ableton Live and Bitwig Studio.
 - [Nota](https://nota.yeste.studio) — Claude Code plugin for AI-assisted MusaDSL composition.
-- **Pulso** — Stream Deck plugin for MusaLCE Surface controls *(upcoming)*.
+- **Pulso** — Stream Deck control for music DAWs (Bitwig today; Ableton planned), with MusaLCE Surface integration *(upcoming)*.
 
 For the full map — descriptions, how they relate, which one to pick for what — see [musa-ecosystem.yeste.studio](https://musa-ecosystem.yeste.studio).
 
