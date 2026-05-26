@@ -1,6 +1,6 @@
-# Tutorial: Not So Quick Start
+# Neuma notation
 
-Here's a more detailed example showing the Neuma notation system:
+A more detailed example showing the Neuma notation system:
 
 ```ruby
 require 'musa-dsl'

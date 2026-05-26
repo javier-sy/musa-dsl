@@ -5,9 +5,10 @@ Complete documentation for the Musa DSL framework for algorithmic sound and musi
 ## 📚 Documentation Structure
 
 ### Getting Started
-- **[Installation](../README.md#installation)** - Set up Musa DSL
-- **[Quick Start](../README.md#quick-start)** - 5-minute introduction
-- **[Not So Quick Start](../README.md#not-so-quick-start)** - Comprehensive tutorial
+- **[Installation](../README.md#getting-started)** - Set up Musa DSL
+- **[Examples](../README.md#examples)** - Two runnable examples:
+  - [Sequencer DSL with interacting voices](examples/sequencer-dsl-voices.md)
+  - [Neuma notation](examples/neuma-notation.md)
 
 ### Core Subsystems
 
@@ -39,8 +40,8 @@ For users extending the DSL or integrating deeply:
 ## 🎯 Learning Paths
 
 ### New to Musa DSL?
-1. Start with [Quick Start](../README.md#quick-start)
-2. Read [System Architecture](../README.md#system-architecture)
+1. Start with one of the [Examples](../README.md#examples)
+2. Read [MusaDSL Architecture](../README.md#musadsl-architecture)
 3. Explore subsystems in this order:
    - [MIDI](subsystems/midi.md) - Output basics
    - [Sequencer](subsystems/sequencer.md) - Temporal control

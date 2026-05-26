@@ -82,5 +82,5 @@ yard stats --list-undoc
 ## See Also
 
 - **Conceptual Documentation**: [subsystems/](subsystems/) - Guides and tutorials for each subsystem
-- **Getting Started**: [getting-started/](getting-started/) - Quick start and tutorials
+- **Examples**: [examples/](examples/) - Runnable code examples
 - **Main Documentation**: [README.md](README.md) - Documentation hub

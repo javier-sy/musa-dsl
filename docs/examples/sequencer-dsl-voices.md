@@ -1,6 +1,6 @@
-# Quick Start
+# Sequencer DSL with interacting voices
 
-Here's a complete example showcasing the sequencer DSL with multiple melodic lines that interact with each other:
+A complete example showcasing the sequencer DSL with multiple melodic lines that interact with each other:
 
 ```ruby
 require 'musa-dsl'
