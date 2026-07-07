@@ -8,10 +8,10 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger nota-plugin-for-claude rebuild
+      - name: Trigger nota-plugin rebuild
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.PLUGIN_REBUILD_PAT }}
-          repository: javier-sy/nota-plugin-for-claude
+          repository: javier-sy/nota-plugin
           event-type: source-updated
           client-payload: '{"repo": "${{ github.repository }}", "sha": "${{ github.sha }}"}'
