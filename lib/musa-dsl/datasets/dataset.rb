@@ -86,11 +86,12 @@
 #
 # @example Delta encoding for compression
 #   scale = Musa::Scales::Scales.et12[440.0].major[60]
-#   gdv1 = { grade: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
-#   gdv2 = { grade: 2, duration: 1.0, velocity: 1 }.extend(Musa::Datasets::GDV)
+#   gdv1 = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(Musa::Datasets::GDV)
+#   gdv2 = { grade: 2, octave: 0, duration: 1r, velocity: 1 }.extend(Musa::Datasets::GDV)
+#   [gdv1, gdv2].each { |g| g.base_duration = 1/4r }
 #
-#   gdvd = gdv2.to_gdvd(scale, previous: gdv1)
-#   # => { delta_grade: 2, delta_velocity: 1 }
+#   gdv2.to_gdvd(scale, previous: gdv1)
+#   # => { delta_grade: 2, delta_sharps: 0, delta_velocity: 1 }
 #   # Duration unchanged, so omitted
 #
 # @example Score container

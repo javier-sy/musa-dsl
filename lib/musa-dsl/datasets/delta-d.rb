@@ -60,16 +60,14 @@ module Musa::Datasets
   #   delta3 = { factor_duration: 2 }.extend(DeltaD)
   #   # Result: duration becomes 2.0 (was 1.0)
   #
-  # @example Neuma notation representation
-  #   # Absolute duration
-  #   { abs_duration: 1.5 } => "1.5"
+  # How each one is written in neuma. Readings, not runnable examples: a bare
+  # `=>` in Ruby is a pattern match, not a result.
   #
-  #   # Delta duration
-  #   { delta_duration: 0.5 }  => "+0.5"
-  #   { delta_duration: -0.5 } => "-0.5"
+  #     { abs_duration: 1.5 }    -> "1.5"
+  #     { delta_duration: 0.5 }  -> "+0.5"
+  #     { delta_duration: -0.5 } -> "-0.5"
+  #     { factor_duration: 2 }   -> "*2"
   #
-  #   # Factor duration
-  #   { factor_duration: 2 } => "*2"
   #
   # @see Delta Parent delta module
   # @see GDVd Grade/Duration/Velocity delta encoding

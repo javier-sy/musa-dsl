@@ -340,6 +340,14 @@ module DocExamples
         begin
           value = eval((usings + [source]).join("\n"), TOPLEVEL_BINDING, example.file, example.line) # rubocop:disable Security/Eval
           usings << source if source.match?(/\A\s*using\s+\S/)
+        rescue LoadError => e
+          # A gem this project does not depend on -- midi-communications and
+          # friends, which also want hardware. The example is not wrong; it
+          # cannot run here, and everything after it would fail for the same
+          # reason, so the narrative stops rather than reporting the cascade.
+          checks << Check.new(statement: source, declared: declared,
+                              actual: e.message.lines.first.to_s.strip, status: :external)
+          break
         rescue Exception => e # rubocop:disable Lint/RescueException
           checks << Check.new(statement: source, declared: declared,
                               actual: "#{e.class}: #{e.message.lines.first.to_s.strip}",
@@ -437,6 +445,7 @@ if $PROGRAM_NAME == __FILE__
   puts format('  errors while running:     %d', totals[:error])
   puts format('  hung (killed after %ds):   %d', DocExamples::TIMEOUT, totals[:timeout])
   puts format('  declared as prose (nothing a test can contradict): %d', totals[:prose])
+  puts format('  need a gem this project does not depend on:        %d', totals[:external])
 
   unless failures.empty?
     puts

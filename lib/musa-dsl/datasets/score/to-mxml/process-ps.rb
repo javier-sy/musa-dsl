@@ -43,6 +43,11 @@
 # Uses DynamicsContext to track the last dynamics marking, preventing
 # duplicate markings when consecutive events have the same level.
 #
+# ## The context these examples are written against
+#
+#     measure = Musa::MusicXML::Builder::Internal::Measure.new(1, divisions: 96)
+#     logger  = Musa::Logger::Logger.new
+#
 # @api private
 module Musa::Datasets::Score::ToMXML
   using Musa::Extension::InspectNice

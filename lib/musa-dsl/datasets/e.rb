@@ -167,18 +167,19 @@ module Musa::Datasets
   # - More than duration: gap/rest before next event
   #
   # @example Basic duration
-  #   { pitch: 60, duration: 1.0 }.extend(AbsD)
+  #   event = { pitch: 60, duration: 1.0 }.extend(AbsD)
   #   event.duration          # => 1.0
   #   event.note_duration     # => 1.0 (defaults to duration)
   #   event.forward_duration  # => 1.0 (defaults to duration)
   #
   # @example Staccato note
-  #   { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(AbsD)
-  #   # Note sounds for 0.5, but next event waits 1.0
+  #   staccato = { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(AbsD)
+  #   staccato.note_duration     # => 0.5 (sounds shorter)
+  #   staccato.forward_duration  # => 1.0 (the next event still waits a full beat)
   #
   # @example Simultaneous events
-  #   { pitch: 60, duration: 1.0, forward_duration: 0 }.extend(AbsD)
-  #   # Next event starts immediately (chord)
+  #   chord_note = { pitch: 60, duration: 1.0, forward_duration: 0 }.extend(AbsD)
+  #   chord_note.forward_duration  # => 0 (the next event starts at the same time)
   #
   # @see Abs Parent absolute module
   # @see PS Pitch series with duration
@@ -202,7 +203,7 @@ module Musa::Datasets
     # @return [Numeric] forward duration
     #
     # @example
-    #   event.forward_duration  # => 1.0
+    #   { pitch: 60, duration: 1.0 }.extend(AbsD).forward_duration  # => 1.0
     def forward_duration
       self[:forward_duration] || self[:duration]
     end
@@ -214,7 +215,7 @@ module Musa::Datasets
     # @return [Numeric] note duration
     #
     # @example
-    #   event.note_duration  # => 0.5 (staccato)
+    #   { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(AbsD).note_duration  # => 0.5
     def note_duration
       self[:note_duration] || self[:duration]
     end
@@ -224,7 +225,7 @@ module Musa::Datasets
     # @return [Numeric] duration
     #
     # @example
-    #   event.duration  # => 1.0
+    #   { pitch: 60, duration: 1.0 }.extend(AbsD).duration  # => 1.0
     def duration
       self[:duration]
     end

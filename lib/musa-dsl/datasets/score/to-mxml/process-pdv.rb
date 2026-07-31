@@ -29,6 +29,11 @@ require 'prime'
 # Notes spanning bar lines are automatically tied. Duration is decomposed
 # and tie start/stop/continue markers added appropriately.
 #
+# ## The context these examples are written against
+#
+#     measure = Musa::MusicXML::Builder::Internal::Measure.new(1, divisions: 96)
+#     logger  = Musa::Logger::Logger.new
+#
 # @api private
 module Musa::Datasets::Score::ToMXML
   using Musa::Extension::InspectNice

@@ -12,6 +12,15 @@ module Musa::Datasets
     # These modules are applied automatically to query results and provide
     # chainable query methods for further filtering.
     #
+    # The examples below are written against a score holding a chord at 0r and a
+    # single note at 1r:
+    #
+    #     score = Score.new({ 0r => [{ pitch: 60, duration: 1r, velocity: 1 }.extend(PDV),
+    #                                { pitch: 64, duration: 1r, staccato: true }.extend(PDV)],
+    #                         1r => [{ pitch: 67, duration: 1r }.extend(PDV)] })
+    #     events = score.at(0r)
+    #     results = score.between(0r, 4r)
+    #
     # @see Score Score class using these modules
     module Queriable
       # Query methods for time slot arrays.

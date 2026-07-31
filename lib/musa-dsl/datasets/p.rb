@@ -108,10 +108,10 @@ module Musa::Datasets
     # @return [Musa::Series::Serie<PS>] series of parameter segments
     #
     # @example Create parameter segments
-    #   p = [60, 4, 64, 8, 67].extend(P)
-    #   serie = p.to_ps_serie
-    #   segment1 = serie.next_value
-    #   # => { from: 60, to: 64, duration: 1.0, right_open: true }
+    #   line = [60, 4, 64, 8, 67].extend(P)
+    #   serie = line.to_ps_serie.i  # a prototype cannot be consumed
+    #   serie.next_value
+    #   # => { from: 60, to: 64, duration: 1r, right_open: true }
     def to_ps_serie(base_duration: nil)
       base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
 
@@ -139,11 +139,11 @@ module Musa::Datasets
     # @return [PtoTimedSerie] series of timed events
     #
     # @example Basic timed serie
-    #   p = [60, 4, 64, 8, 67].extend(P)
-    #   serie = p.to_timed_serie
-    #   serie.next_value  # => { time: 0, value: 60 }
-    #   serie.next_value  # => { time: 1.0, value: 64 }
-    #   serie.next_value  # => { time: 3.0, value: 67 }
+    #   line = [60, 4, 64, 8, 67].extend(P)
+    #   serie = line.to_timed_serie.i  # a prototype cannot be consumed
+    #   serie.next_value  # => { time: 0r, value: 60 }
+    #   serie.next_value  # => { time: 1r, value: 64 }
+    #   serie.next_value  # => { time: 3r, value: 67 }
     #
     # @example Custom start time
     #   serie = p.to_timed_serie(time_start: 10)
