@@ -21,10 +21,21 @@ module Musa
       #
       # ## DSL Structure
       #
+      # A pipeline is declared by NAMING it and listing its operations; the names
+      # are then wired together with `route`. Operations are symbols (`reverse`)
+      # or hashes (`{ map: ... }`, `{ skip: 1 }`, `{ S: [...] }`). `input` and
+      # `output` are pipelines like any other — they are simply the ones the
+      # Composer creates for you, and can be renamed or multiplied through the
+      # `inputs:` and `outputs:` keywords.
+      #
       # ```ruby
       # composer do
-      #   input_name >> operation1 >> operation2 >> :output_name
-      #   :other_input >> transform >> :other_output
+      #   stage1 operation1, operation2
+      #   stage2 operation3
+      #
+      #   route input, to: stage1
+      #   route stage1, to: stage2
+      #   route stage2, to: output
       # end
       # ```
       #
@@ -38,14 +49,34 @@ module Musa
       #
       # @example Basic composer
       #   s = S(1, 2, 3).composer do
-      #     input.map { |x| x * 2 } >> :output
+      #     doubled({ map: ->(x) { x * 2 } })
+      #
+      #     route input, to: doubled
+      #     route doubled, to: output
       #   end
       #   s.i.to_a  # => [2, 4, 6]
       #
-      # @example Multi-pipeline
-      #   composer = Composer.new(input: S(1, 2, 3)) do
-      #     input.map { |x| x * 2 } >> :doubled
-      #     input.map { |x| x * 3 } >> :tripled
+      # @example Several stages in a row
+      #   s = S(1, 2, 3, 4, 5).composer do
+      #     backwards reverse
+      #     tail ({ skip: 1 })
+      #
+      #     route input, to: backwards
+      #     route backwards, to: tail
+      #     route tail, to: output
+      #   end
+      #   s.i.to_a  # => [4, 3, 2, 1]
+      #
+      # @example Several outputs
+      #   composer = Musa::Series::Composer::Composer.new(input: Musa::Series::Constructors.S(1, 2, 3),
+      #                                                   outputs: [:doubled, :tripled]) do
+      #     step_d({ map: ->(x) { x * 2 } })
+      #     step_t({ map: ->(x) { x * 3 } })
+      #
+      #     route input, to: step_d
+      #     route input, to: step_t
+      #     route step_d, to: doubled
+      #     route step_t, to: tripled
       #   end
       #   composer.output(:doubled).i.to_a  # => [2, 4, 6]
       #   composer.output(:tripled).i.to_a  # => [3, 6, 9]
@@ -53,11 +84,6 @@ module Musa
       # @yield composer DSL block
       #
       # @return [ComposerAsOperationSerie] composed serie
-      #
-      # @example Simple transformation
-      #   s.composer do
-      #     input.map { |x| x + 1 } >> :output
-      #   end
       #
       # @api public
       def composer(&block)

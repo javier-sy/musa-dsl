@@ -98,8 +98,8 @@ module Musa
     # @example Playing series
     #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
     #
-    #   pitches = Musa::Series::S(60, 62, 64, 65, 67)
-    #   durations = Musa::Series::S(1, 1, 0.5, 0.5, 2)
+    #   pitches = Musa::Series::Constructors.S(60, 62, 64, 65, 67)
+    #   durations = Musa::Series::Constructors.S(1, 1, 0.5, 0.5, 2)
     #   played_notes = []
     #
     #   seq.play(pitches.zip(durations)) do |pitch, duration|
@@ -681,7 +681,7 @@ module Musa
       # @example Playing notes from a series
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   notes = Musa::Series::S(60, 62, 64).zip(Musa::Series::S(1, 1, 2))
+      #   notes = Musa::Series::Constructors.S(60, 62, 64).zip(Musa::Series::Constructors.S(1, 1, 2))
       #   played_notes = []
       #
       #   seq.play(notes) do |pitch, duration|
@@ -694,8 +694,8 @@ module Musa
       # @example Parallel plays
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   melody = Musa::Series::S(60, 62, 64)
-      #   harmony = Musa::Series::S(48, 52, 55)
+      #   melody = Musa::Series::Constructors.S(60, 62, 64)
+      #   harmony = Musa::Series::Constructors.S(48, 52, 55)
       #   played_notes = []
       #
       #   seq.play([melody, harmony]) do |pitch|
@@ -784,7 +784,7 @@ module Musa
       # @example Hash mode timed series
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   timed_notes = Musa::Series::S(
+      #   timed_notes = Musa::Series::Constructors.S(
       #     { time: 0r, value: {pitch: 60, velocity: 96} },
       #     { time: 1r, value: {pitch: 64, velocity: 80} },
       #     { time: 2r, value: {pitch: 67, velocity: 64} }
@@ -797,12 +797,21 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # Result: played_notes contains [{pitch: 60, velocity: 96, time: 0r}, ...]
+      #   # played_notes == [{pitch: 60, velocity: 96, time: 95/96r},
+      #   #                  {pitch: 64, velocity: 80, time: 191/96r},
+      #   #                  {pitch: 67, velocity: 64, time: 287/96r}]
+      #   #
+      #   # NOTE the yielded `time:` is the sequencer's ABSOLUTE POSITION when the
+      #   # event fires, not the `time:` of the serie's element. The sequencer sits
+      #   # one tick before bar 1 until it starts (95/96 of a bar, with 24 ticks per
+      #   # beat and 4 beats per bar), so that its first tick lands exactly on bar 1;
+      #   # the element at serie time 0 fires there. The intervals do match the
+      #   # serie: each following event is exactly one bar later.
       #
       # @example Array mode with extra attributes
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   timed = Musa::Series::S(
+      #   timed = Musa::Series::Constructors.S(
       #     { time: 0r, value: [60, 96], channel: 0 },
       #     { time: 1r, value: [64, 80], channel: 1 }
       #   )

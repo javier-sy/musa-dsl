@@ -89,8 +89,19 @@ module Musa
         # Returns the parameter signature of the wrapped Proc.
         #
         # @return [Array<Array>] array of [type, name] pairs describing parameters.
+        #
         # @example
-        #   proc { |a, b, c:| }.parameters  # => [[:req, :a], [:req, :b], [:key, :c]]
+        #   SmartProcBinder.new(proc { |a, b, c:| }).parameters
+        #   # => [[:opt, :a], [:opt, :b], [:keyreq, :c]]
+        #
+        # @example A lambda reports the same parameters as required
+        #   SmartProcBinder.new(lambda { |a, b, c:| }).parameters
+        #   # => [[:req, :a], [:req, :b], [:keyreq, :c]]
+        #
+        # @note The positional types differ between a proc and a lambda -- `:opt`
+        #   and `:req` respectively -- because a proc tolerates being called with
+        #   the wrong number of arguments and a lambda does not. A keyword without
+        #   a default is `:keyreq` in both.
         def parameters
           @block.parameters
         end

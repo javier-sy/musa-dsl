@@ -437,8 +437,13 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(played_notes.size).to eq(3)
       expect(played_notes[0][:pitch]).to eq(60)
       expect(played_notes[0][:velocity]).to eq(96)
-      # Initial time may be offset by tick duration
-      expect(played_notes[0][:time]).to be_a(Rational)
+      # `time:` is the sequencer's ABSOLUTE POSITION, not the serie element's
+      # `time:`. The sequencer sits one tick before bar 1 (95/96 of a bar at 24
+      # ticks per beat and 4 beats per bar) so that its first tick lands exactly
+      # on bar 1, and the element at serie time 0 fires there.
+      expect(played_notes[0][:time]).to eq(Rational(95, 96))
+      expect(played_notes[1][:time]).to eq(Rational(191, 96))
+      expect(played_notes[2][:time]).to eq(Rational(287, 96))
       expect(played_notes[1][:pitch]).to eq(64)
       expect(played_notes[2][:pitch]).to eq(67)
     end

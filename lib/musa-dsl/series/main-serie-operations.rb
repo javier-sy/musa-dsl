@@ -101,11 +101,16 @@ module Musa
       #
       # @return [Autorestart] auto-restarting serie
       #
-      # @example Infinite loop
+      # @example Restarting after each pass
       #   pattern = S(1, 2, 3).autorestart
-      #   pattern.infinite?  # => true
       #   inst = pattern.i
-      #   inst.max_size(7).to_a  # => [1, 2, 3, 1, 2, 3, 1]
+      #   10.times.map { inst.next_value }  # => [1, 2, 3, nil, 1, 2, 3, nil, 1, 2]
+      #
+      # @note The serie ENDS at each pass -- yielding nil -- and restarts on the
+      #   next call. That nil is the signal that a pass finished, which is what
+      #   makes the repetition countable; it also means `infinite?` is false and
+      #   that `to_a` stops at the end of the first pass. For a serie with no
+      #   seam in it, use `repeat`.
       #
       # @api public
       def autorestart
@@ -435,7 +440,11 @@ module Musa
 
       # Cuts serie into chunks of specified length.
       #
-      # Returns serie of arrays, each containing `length` values.
+      # Returns a serie of SERIES, each yielding `length` values.
+      #
+      # The chunks are series and not arrays, which is what keeps the whole thing
+      # lazy -- nothing is materialised until each chunk is consumed. Ask for the
+      # arrays explicitly with `to_a(recursive: true)`.
       #
       # @param length [Integer] chunk size
       #
@@ -443,7 +452,7 @@ module Musa
       #
       # @example Cut into pairs
       #   s = S(1, 2, 3, 4, 5, 6).cut(2)
-      #   s.i.to_a  # => [[1, 2], [3, 4], [5, 6]]
+      #   s.i.to_a(recursive: true)  # => [[1, 2], [3, 4], [5, 6]]
       #
       # @api public
       def cut(length)

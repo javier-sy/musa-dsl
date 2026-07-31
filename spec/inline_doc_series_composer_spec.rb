@@ -145,8 +145,22 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       end
 
       expect(composer.output.i.to_a).to eq([2, 4, 6])
-      # Note: The original example shows accessing :doubled and :tripled outputs
-      # but this composer only has one output, so we only test the main output
+    end
+
+    it 'example - Several outputs' do
+      composer = Musa::Series::Composer::Composer.new(input: Musa::Series::Constructors.S(1, 2, 3),
+                                                      outputs: [:doubled, :tripled]) do
+        step_d({ map: ->(x) { x * 2 } })
+        step_t({ map: ->(x) { x * 3 } })
+
+        route input, to: step_d
+        route input, to: step_t
+        route step_d, to: doubled
+        route step_t, to: tripled
+      end
+
+      expect(composer.output(:doubled).i.to_a).to eq([2, 4, 6])
+      expect(composer.output(:tripled).i.to_a).to eq([3, 6, 9])
     end
   end
 

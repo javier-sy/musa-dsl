@@ -65,17 +65,17 @@ module Musa::Datasets
   #
   # Converts score notation to MIDI using a scale:
   #
-  #     gdv = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+  #     gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
   #     scale = Musa::Scales::Scales.et12[440.0].major[60]
   #     pdv = gdv.to_pdv(scale)
-  #     # => { pitch: 60, duration: 1.0, velocity: 64 }
+  #     # => { pitch: 60, duration: 1r, velocity: 64 }
   #
   # ### To GDVd (Delta Encoding)
   #
   # Converts to delta encoding for efficient storage:
   #
-  #     gdv1 = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(GDV)
-  #     gdv2 = { grade: 2, octave: 0, duration: 1.0, velocity: 1 }.extend(GDV)
+  #     gdv1 = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
+  #     gdv2 = { grade: 2, octave: 0, duration: 1r, velocity: 1 }.extend(GDV)
   #     gdvd = gdv2.to_gdvd(scale, previous: gdv1)
   #     # => { delta_grade: 2, delta_velocity: 1 }
   #
@@ -83,7 +83,7 @@ module Musa::Datasets
   #
   # Converts to Neuma string format for serialization:
   #
-  #     gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+  #     gdv = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
   #     gdv.base_duration = 1/4r
   #     gdv.to_neuma  # => "(0 4 mp)"
   #
@@ -101,35 +101,35 @@ module Musa::Datasets
   #     +4 (fff) → 127
   #
   # @example Basic score event
-  #   gdv = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
+  #   gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(Musa::Datasets::GDV)
   #   gdv.base_duration = 1/4r
   #   # First scale degree, base octave, 1 beat, mp dynamics
   #
   # @example Chromatic alteration
-  #   gdv = { grade: 0, octave: 0, sharps: 1, duration: 1.0 }.extend(GDV)
+  #   gdv = { grade: 0, octave: 0, sharps: 1, duration: 1r }.extend(GDV)
   #   # First scale degree sharp (C# in C major)
   #
   # @example Silence (rest)
-  #   gdv = { grade: :silence, duration: 1.0 }.extend(GDV)
+  #   gdv = { grade: :silence, duration: 1r }.extend(GDV)
   #   # Rest for 1 beat
   #
   # @example Convert to MIDI
-  #   gdv = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+  #   gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
   #   scale = Musa::Scales::Scales.et12[440.0].major[60]
   #   pdv = gdv.to_pdv(scale)
-  #   # => { pitch: 60, duration: 1.0, velocity: 64 }
+  #   # => { pitch: 60, duration: 1r, velocity: 64 }
   #
   # @example Convert to delta encoding
-  #   gdv1 = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
-  #   gdv2 = { grade: 2, duration: 1.0, velocity: 1 }.extend(GDV)
+  #   gdv1 = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
+  #   gdv2 = { grade: 2, duration: 1r, velocity: 1 }.extend(GDV)
   #   scale = Musa::Scales::Scales.et12[440.0].major[60]
   #   gdvd = gdv2.to_gdvd(scale, previous: gdv1)
   #   # => { delta_grade: 2, delta_velocity: 1 }
   #
   # @example Convert to Neuma notation
-  #   gdv = { grade: 0, octave: 1, duration: 1.0, velocity: 2 }.extend(GDV)
+  #   gdv = { grade: 0, octave: 1, duration: 1r, velocity: 2 }.extend(GDV)
   #   gdv.base_duration = 1/4r
-  #   gdv.to_neuma  # => "(0 o1 4 ff)"
+  #   gdv.to_neuma  # => "(0 o1 4 f)"
   #
   # @see PDV MIDI-style representation
   # @see GDVd Delta encoding
@@ -174,22 +174,22 @@ module Musa::Datasets
     # @return [PDV] MIDI representation dataset
     #
     # @example Basic conversion
-    #   gdv = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+    #   gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
     #   scale = Musa::Scales::Scales.et12[440.0].major[60]
     #   pdv = gdv.to_pdv(scale)
-    #   # => { pitch: 60, duration: 1.0, velocity: 64 }
+    #   # => { pitch: 60, duration: 1r, velocity: 64 }
     #
     # @example Chromatic note
-    #   gdv = { grade: 0, octave: 0, sharps: 1, duration: 1.0 }.extend(GDV)
+    #   gdv = { grade: 0, octave: 0, sharps: 1, duration: 1r }.extend(GDV)
     #   scale = Musa::Scales::Scales.et12[440.0].major[60]
     #   pdv = gdv.to_pdv(scale)
-    #   # => { pitch: 61, duration: 1.0 }
+    #   # => { pitch: 61, duration: 1r }
     #
     # @example Silence
-    #   gdv = { grade: :silence, duration: 1.0 }.extend(GDV)
+    #   gdv = { grade: :silence, duration: 1r }.extend(GDV)
     #   scale = Musa::Scales::Scales.et12[440.0].major[60]
     #   pdv = gdv.to_pdv(scale)
-    #   # => { pitch: :silence, duration: 1.0 }
+    #   # => { pitch: :silence, duration: 1r }
     #
     # @example Dynamics interpolation
     #   gdv = { grade: 0, velocity: 0.5 }.extend(GDV)
@@ -257,33 +257,38 @@ module Musa::Datasets
     # @return [String] Neuma notation
     #
     # @example Basic note
-    #   gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+    #   gdv = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
     #   gdv.base_duration = 1/4r
-    #   gdv.to_neuma  # => "(0 4 mf)"
-    #   # grade 0, duration 4 quarters, mf dynamics
+    #   gdv.to_neuma  # => "(0 4 mp)"
+    #   # grade 0, four base_durations long, mp
+    #
+    # @note The dynamics run ppp pp p mp mf f ff for velocities -3..3, so
+    #   velocity 0 is mp and not the middle of the range. And the duration must
+    #   be Rational: a Float duration reaches the notation as one, and
+    #   `{ duration: 1r }` renders "(0 4.0 mp)".
     #
     # @example With octave
-    #   gdv = { grade: 2, octave: 1, duration: 0.5, velocity: 2 }.extend(GDV)
+    #   gdv = { grade: 2, octave: 1, duration: 1/2r, velocity: 2 }.extend(GDV)
     #   gdv.base_duration = 1/4r
-    #   gdv.to_neuma  # => "(2 o1 2 ff)"
+    #   gdv.to_neuma  # => "(2 o1 2 f)"
     #
     # @example Sharp note
-    #   gdv = { grade: 0, sharps: 1, duration: 1.0 }.extend(GDV)
+    #   gdv = { grade: 0, sharps: 1, duration: 1r }.extend(GDV)
     #   gdv.base_duration = 1/4r
     #   gdv.to_neuma  # => "(0# 4)"
     #
     # @example Flat note
-    #   gdv = { grade: 1, sharps: -1, duration: 1.0 }.extend(GDV)
+    #   gdv = { grade: 1, sharps: -1, duration: 1r }.extend(GDV)
     #   gdv.base_duration = 1/4r
     #   gdv.to_neuma  # => "(1_ 4)"
     #
     # @example Silence
-    #   gdv = { grade: :silence, duration: 1.0 }.extend(GDV)
+    #   gdv = { grade: :silence, duration: 1r }.extend(GDV)
     #   gdv.base_duration = 1/4r
     #   gdv.to_neuma  # => "(silence 4)"
     #
     # @example With modifiers
-    #   gdv = { grade: 0, duration: 1.0, staccato: true }.extend(GDV)
+    #   gdv = { grade: 0, duration: 1r, staccato: true }.extend(GDV)
     #   gdv.base_duration = 1/4r
     #   gdv.to_neuma  # => "(0 4 staccato)"
     def to_neuma
@@ -358,20 +363,20 @@ module Musa::Datasets
     # @return [GDVd] delta-encoded dataset
     #
     # @example First event (no previous)
-    #   gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+    #   gdv = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
     #   gdvd = gdv.to_gdvd(scale)
-    #   # => { abs_grade: 0, abs_duration: 1.0, abs_velocity: 0 }
+    #   # => { abs_grade: 0, abs_duration: 1r, abs_velocity: 0 }
     #
     # @example Changed values
-    #   gdv1 = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
-    #   gdv2 = { grade: 2, duration: 1.0, velocity: 1 }.extend(GDV)
+    #   gdv1 = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
+    #   gdv2 = { grade: 2, duration: 1r, velocity: 1 }.extend(GDV)
     #   gdvd = gdv2.to_gdvd(scale, previous: gdv1)
     #   # => { delta_grade: 2, delta_velocity: 1 }
     #   # duration unchanged, so omitted
     #
     # @example Unchanged values
-    #   gdv1 = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
-    #   gdv2 = { grade: 0, duration: 1.0, velocity: 0 }.extend(GDV)
+    #   gdv1 = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
+    #   gdv2 = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
     #   gdvd = gdv2.to_gdvd(scale, previous: gdv1)
     #   # => {}
     #   # Everything unchanged

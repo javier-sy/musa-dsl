@@ -143,8 +143,12 @@ module Musa
     #
     # @example Hash of series
     #   h = H(pitch: S(60, 64, 67), velocity: S(96, 80, 64))
-    #   h.i.next_value  # => {pitch: 60, velocity: 96}
-    #   h.i.next_value  # => {pitch: 64, velocity: 80}
+    #   inst = h.i
+    #   inst.next_value  # => {pitch: 60, velocity: 96}
+    #   inst.next_value  # => {pitch: 64, velocity: 80}
+    #
+    # @note `h.i` builds a NEW instance every time it is called, each starting
+    #   from the beginning. Keep the instance to advance through the serie.
     #
     # @api public
     def H(**series_hash)
@@ -181,8 +185,9 @@ module Musa
     #
     # @example Array of series
     #   a = A(S(1, 2, 3), S(10, 20, 30))
-    #   a.i.next_value  # => [1, 10]
-    #   a.i.next_value  # => [2, 20]
+    #   inst = a.i
+    #   inst.next_value  # => [1, 10]
+    #   inst.next_value  # => [2, 20]
     #
     # @api public
     def A(*series)
@@ -435,10 +440,14 @@ module Musa
       SinFunction.new start_value, steps, amplitude, center
     end
 
-    # Creates Fibonacci sequence serie.
+    # Creates a Fibonacci serie: every value is the sum of the two before it.
     #
-    # Generates classic Fibonacci sequence: 0, 1, 1, 2, 3, 5, 8, 13, 21, ...
-    # Infinite serie.
+    # The two seeds ARE the first two values, so `FIBO()` yields 1, 1, 2, 3, 5...
+    # and any other pair gives a different sequence out of the same machine —
+    # not a delayed echo of Fibonacci, a relative of it. Infinite serie.
+    #
+    # @param first [Numeric] the first value (default 1)
+    # @param second [Numeric] the second value (default 1)
     #
     # @return [Fibonacci] Fibonacci sequence serie
     #
@@ -447,39 +456,78 @@ module Musa
     #   fib.infinite?  # => true
     #   inst = fib.i
     #   10.times.map { inst.next_value }
-    #   # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+    #   # => [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+    #
+    # @example Seeded: the sequence including its leading zero
+    #   inst = FIBO(0, 1).i
+    #   6.times.map { inst.next_value }
+    #   # => [0, 1, 1, 2, 3, 5]
+    #
+    # @example Seeded: Fibonacci with its first term removed
+    #   inst = FIBO(1, 2).i
+    #   6.times.map { inst.next_value }
+    #   # => [1, 2, 3, 5, 8, 13]
+    #
+    # @example Lucas numbers
+    #   inst = FIBO(2, 1).i
+    #   6.times.map { inst.next_value }
+    #   # => [2, 1, 3, 4, 7, 11]
     #
     # @example Rhythmic proportions
     #   durations = FIBO().i.map { |n| Rational(n, 16) }
     #
+    # @example A grid position that Fibonacci lands on, turn after turn
+    #   positions = FIBO().i.map { |n| n % 32 }
+    #
     # @api public
-    def FIBO()
-      Fibonacci.new
+    def FIBO(first = 1, second = 1)
+      Fibonacci.new first, second
     end
 
-    # Creates harmonic notes serie from fundamental.
+    # Creates a serie of the harmonic series, in semitones over the fundamental.
     #
-    # Generates MIDI note numbers for harmonic series based on listened
-    # fundamental. Approximates harmonics to nearest semitone within error
-    # tolerance.
+    # Yields the interval of each harmonic from a fundamental of 0, approximated
+    # to the nearest semitone, and skips any harmonic whose approximation error
+    # exceeds the tolerance. Infinite serie; add the fundamental's own pitch to
+    # place it. The values do not depend on any input: it starts producing at
+    # once.
     #
     # ## Parameters
     #
-    # - **error**: Maximum cents deviation to accept harmonic (default: 0.5)
-    # - **extended**: Include extended harmonics beyond audible range
+    # - **error**: maximum approximation error, IN SEMITONES, for a harmonic to
+    #   be accepted (default: 0.5, i.e. accept every harmonic, since no
+    #   approximation to the nearest semitone can be off by more than half of
+    #   one)
+    # - **extended**: yield `{ pitch:, error: }` instead of the bare pitch, so
+    #   the approximation error of each harmonic is available. It does NOT add
+    #   harmonics: the pitches are the same ones.
     #
-    # @param error [Numeric, nil] maximum deviation in semitones (default: 0.5)
-    # @param extended [Boolean, nil] include extended harmonics (default: false)
+    # @param error [Numeric, nil] maximum approximation error in semitones (default: 0.5)
+    # @param extended [Boolean, nil] yield pitch and error instead of pitch (default: false)
     #
     # @return [HarmonicNotes] harmonic series serie
     #
     # @example Harmonic series
-    #   # Listen to fundamental, serie returns harmonic notes
     #   harmonics = HARMO(error: 0.5)
-    #   harmonics.i  # Waits for fundamental input
+    #   inst = harmonics.i
+    #   8.times.map { inst.next_value }
+    #   # => [0, 12, 19, 24, 28, 31, 34, 36]
     #
-    # @example Extended harmonics
-    #   harm = HARMO(error: 0.3, extended: true)
+    # @example A tighter tolerance drops the harmonics that fall between semitones
+    #   inst = HARMO(error: 0.1).i
+    #   8.times.map { inst.next_value }
+    #   # => [0, 12, 19, 24, 31, 36, 38, 43]
+    #   # the 5th harmonic (28) is 0.137 semitones off, so it is not accepted
+    #
+    # @example Extended: the same pitches, carrying their error
+    #   inst = HARMO(error: 0.5, extended: true).i
+    #   3.times.map { inst.next_value }
+    #   # => [{ pitch: 0, error: 0.0 },
+    #   #     { pitch: 12, error: 0.0 },
+    #   #     { pitch: 19, error: 0.0195... }]
+    #
+    # @example Over a fundamental other than C
+    #   over_g = HARMO().i.map { |n| n + 67 }
     #
     # @api public
     def HARMO(error: nil, extended: nil)
@@ -1108,14 +1156,24 @@ module Musa
     class Fibonacci
       include Series::Serie::Base
 
-      def initialize
+      def initialize(first = 1, second = 1)
+        @first = first
+        @second = second
+
         mark_as_prototype!
         init
       end
 
+      attr_reader :first, :second
+
+      # The running pair is kept one step BEHIND what will be yielded, because
+      # `_next_value` returns the older of the two and then advances. Seeding it
+      # with (second - first, first) is what makes the first two values come out
+      # as exactly the two seeds; with the defaults it reduces to (0, 1), the
+      # state this serie has always started from.
       private def _init
-        @a = 0
-        @b = 1
+        @a = @second - @first
+        @b = @first
       end
 
       private def _next_value

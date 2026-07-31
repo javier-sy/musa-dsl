@@ -295,6 +295,17 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
   end
 
   context 'SmartProcBinder (smart-proc-binder.rb)' do
+    it 'reports a proc\'s positional parameters as optional and a lambda\'s as required' do
+      from_proc = Musa::Extension::SmartProcBinder::SmartProcBinder.new(proc { |a, b, c:| })
+      from_lambda = Musa::Extension::SmartProcBinder::SmartProcBinder.new(lambda { |a, b, c:| })
+
+      # A proc tolerates the wrong number of arguments and a lambda does not,
+      # which is why the positional types differ. A keyword without a default is
+      # :keyreq in both.
+      expect(from_proc.parameters).to eq [[:opt, :a], [:opt, :b], [:keyreq, :c]]
+      expect(from_lambda.parameters).to eq [[:req, :a], [:req, :b], [:keyreq, :c]]
+    end
+
     it 'example from line 34 - Basic usage' do
       block = proc { |a, b, c:| [a, b, c] }
       binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)

@@ -349,7 +349,11 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       note = c_major.note_of_pitch(64)
 
-      expect(note).not_to be_nil
+      expect(note.grade).to eq 2
+      expect(note.pitch).to eq 64
+
+      # and without a way in, a pitch outside the scale is simply not there
+      expect(c_major.note_of_pitch(63)).to be_nil
       expect(note.pitch).to eq(64)
     end
 
@@ -359,7 +363,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       note = c_major.note_of_pitch(63, allow_chromatic: true)
 
-      expect(note).not_to be_nil
+      # the pitch is kept; what changes is the scale the note belongs to
+      expect(note.pitch).to eq 63
+      expect(note.scale).not_to eq c_major
       expect(note.pitch).to eq(63)
     end
 
@@ -369,7 +375,13 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       note = c_major.note_of_pitch(63, allow_nearest: true)
 
-      expect(note).not_to be_nil
+      # the scale is kept; what changes is the PITCH -- 63 sits between D and E
+      expect(note.pitch).to eq 62
+      expect(note.grade).to eq 1
+
+      # ties are broken downwards, always
+      expect([61, 63, 66, 68, 70].map { |p| c_major.note_of_pitch(p, allow_nearest: true).pitch })
+        .to eq [60, 62, 65, 67, 69]
       expect([62, 64]).to include(note.pitch)
     end
 
@@ -715,6 +727,16 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       expect(definition).not_to be_nil
       expect(definition.name).to eq(:dom7_test)
+    end
+
+    it 'find_by_pitches returns the definition, not its name' do
+      # From ChordDefinition @example
+      definition = Musa::Chords::ChordDefinition.find_by_pitches([60, 64, 67])
+
+      expect(definition).to be_a(Musa::Chords::ChordDefinition)
+      expect(definition.name).to eq :maj
+
+      expect(Musa::Chords::ChordDefinition.find_by_pitches([60, 61, 62])).to be_nil
     end
 
     it 'demonstrates ChordDefinition.[] access' do

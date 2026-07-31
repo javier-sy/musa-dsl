@@ -165,7 +165,11 @@ module Musa
       # @return [ChordDefinition, nil] matching definition or nil
       #
       # @example
-      #   ChordDefinition.find_by_pitches([60, 64, 67])  # => :maj
+      #   definition = ChordDefinition.find_by_pitches([60, 64, 67])
+      #   definition.name  # => :maj
+      #
+      # @example No definition matches
+      #   ChordDefinition.find_by_pitches([60, 61, 62])  # => nil
       def self.find_by_pitches(pitches)
         @definitions.values.find { |d| d.matches(pitches) }
       end

@@ -386,10 +386,14 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       # Collect events
       events = serie.to_a(recursive: true)
 
-      # For MusicXML, ornaments should be preserved as attributes, not expanded
-      # So we should have 4 base events (not 11 like MIDI)
-      # Note: The actual count may vary based on how the transcriptor handles nested arrays
-      expect(events.size).to be >= 4
+      # For MusicXML the ornaments are preserved as attributes, not expanded, so
+      # the four neumas stay four events -- where the MIDI transcription expands
+      # them into eleven.
+      expect(events.size).to eq(4)
+      expect(events.map { |e| e[:grade] }).to eq [0, 2, 6, 11]
+      expect(events[1][:tr]).to be true
+      expect(events[2][:mor]).to be true
+      expect(events[0]).not_to include(:tr, :mor)
     end
   end
 end

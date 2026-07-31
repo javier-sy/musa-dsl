@@ -239,13 +239,20 @@ module Musa::Datasets::Score::ToMXML
   #
   # @raise [ArgumentError] if duration cannot be represented with dots
   #
-  # @example Quarter note
+  # @example Whole note
   #   type_and_dots_and_tuplet_ratio(1r)
-  #   # => ["quarter", 0, 1r]
+  #   # => ["whole", 0, (1/1)]
   #
-  # @example Dotted quarter
+  # @example Quarter note
+  #   type_and_dots_and_tuplet_ratio(1/4r)
+  #   # => ["quarter", 0, (1/1)]
+  #
+  # @example Dotted whole
   #   type_and_dots_and_tuplet_ratio(3/2r)
-  #   # => ["quarter", 1, 1r]
+  #   # => ["whole", 1, (1/1)]
+  #
+  # @note Durations are in BARS, as everywhere else in MusaDSL: 1r is a whole
+  #   note, 1/4r a quarter.
   #
   # @example Eighth triplet
   #   type_and_dots_and_tuplet_ratio(1/3r)
@@ -329,11 +336,14 @@ module Musa::Datasets::Score::ToMXML
   # @raise [ArgumentError] if duration is not power of 2 or out of range
   #
   # @example Standard durations
-  #   type_of(1r)    # => "quarter"
-  #   type_of(1/2r)  # => "eighth"
-  #   type_of(1/4r)  # => "16th"
-  #   type_of(2r)    # => "half"
-  #   type_of(4r)    # => "whole"
+  #   type_of(1r)    # => "whole"
+  #   type_of(1/2r)  # => "half"
+  #   type_of(1/4r)  # => "quarter"
+  #   type_of(2r)    # => "breve"
+  #   type_of(4r)    # => "long"
+  #
+  # @note The argument is in BARS, not in beats: 1r is a whole note. Reading it
+  #   as a quarter shifts every name two steps towards the long end.
   #
   # @api private
   def type_of(base_type_duration)

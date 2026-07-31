@@ -240,7 +240,7 @@ module Musa::Sequencer
     # @example Basic play control
     #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
     #
-    #   series = Musa::Series::S(60, 62, 64, 65, 67)
+    #   series = Musa::Series::Constructors.S(60, 62, 64, 65, 67)
     #   played_notes = []
     #   after_executed = []
     #

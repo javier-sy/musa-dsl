@@ -104,7 +104,7 @@ module Musa
       # @example At-mode usage
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   series = Musa::Series::S(
+      #   series = Musa::Series::Constructors.S(
       #     { pitch: 60, at: 0r },
       #     { pitch: 62, at: 1r },
       #     { pitch: 64, at: 2r }
@@ -176,7 +176,7 @@ module Musa
       # @example Wait-mode with duration
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   series = Musa::Series::S(
+      #   series = Musa::Series::Constructors.S(
       #     { pitch: 60, duration: 1r },
       #     { pitch: 62, duration: 0.5r },
       #     { pitch: 64, duration: 1.5r }

@@ -154,7 +154,7 @@ result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
 - `RND(...)` - Random values (infinite)
 - `RND1(...)` - Random single value (exhausts after one)
 - `SIN(steps:, amplitude:, center:)` - Sinusoidal waveform
-- `FIBO()` - Fibonacci sequence
+- `FIBO(first = 1, second = 1)` - Fibonacci sequence; the seeds are its first two values, so `FIBO()` gives 1, 1, 2, 3, 5..., `FIBO(0, 1)` includes the leading zero and `FIBO(2, 1)` gives the Lucas numbers
 - `HARMO(error:, extended:)` - Harmonic series (overtones)
 
 **Serie Operations:**

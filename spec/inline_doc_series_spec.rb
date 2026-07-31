@@ -138,9 +138,27 @@ RSpec.describe 'Series Inline Documentation Examples' do
 
     it 'example from line 492 - Harmonic series' do
       harmonics = HARMO(error: 0.5)
+      expect(harmonics.infinite?).to be true
+
       inst = harmonics.i
-      # Series waits for fundamental input, so we can only test it starts
-      expect(inst).to respond_to(:next_value)
+      expect(8.times.map { inst.next_value }).to eq [0, 12, 19, 24, 28, 31, 34, 36]
+    end
+
+    it 'HARMO: a tighter tolerance drops the harmonics that fall between semitones' do
+      inst = HARMO(error: 0.1).i
+      expect(8.times.map { inst.next_value }).to eq [0, 12, 19, 24, 31, 36, 38, 43]
+    end
+
+    it 'HARMO: extended yields the same pitches, carrying their error' do
+      plain = HARMO(error: 0.5).i
+      extended = HARMO(error: 0.5, extended: true).i
+
+      plain_values = 8.times.map { plain.next_value }
+      extended_values = 8.times.map { extended.next_value }
+
+      expect(extended_values.map { |v| v[:pitch] }).to eq plain_values
+      expect(extended_values[0]).to eq({ pitch: 0, error: 0.0 })
+      expect(extended_values[4][:error]).to be_within(0.001).of(-0.1369)
     end
   end
 

@@ -6,6 +6,12 @@ using Musa::Extension::Neumas
 RSpec.describe 'Neumas Inline Documentation Examples' do
   include Musa::All
 
+  # The grades a parsed neumas serie yields, absolute or relative. Lets the
+  # examples assert WHAT was parsed instead of merely that something was.
+  def grades(serie)
+    serie.i.to_a(recursive: true).map { |e| e[:gdvd][:abs_grade] || e[:gdvd][:delta_grade] }
+  end
+
   context 'Neumas module (neumas.rb)' do
     using Musa::Extension::Neumas
 
@@ -96,7 +102,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
         "(0) (-2) (-4) (-5)"     # Phrase C
       ].to_neumas
 
-      expect(melody).to respond_to(:i)
+      expect(grades(melody)).to eq [0, 2, 4, 5, 7, 5, 4, 2, 0, -2, -4, -5]
     end
 
     it 'example from line 52 - Mixed element types' do
@@ -106,14 +112,16 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
 
       song = [intro, verse, chorus].to_neumas
 
-      expect(song).to respond_to(:i)
+      expect(grades(song)).to eq [0, 2, 4, 0, 2, 2, -1, 0, 7, 5, 7]
     end
 
     it 'example from line 62 - Single element' do
       # Single element returns converted element directly (not merged)
       single = ["(0) (+2) (+4)"].to_neumas
 
-      expect(single).to respond_to(:i)
+      # "directly" is observable: the same class a bare string parses to
+      expect(single.class).to eq "(0) (+2) (+4)".to_neumas.class
+      expect(grades(single)).to eq [0, 2, 4]
     end
 
     it 'example from line 98 - Convert string array' do
@@ -123,21 +131,21 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       ].to_neumas
 
       # Returns MERGE of two parsed series
-      expect(phrases).to respond_to(:i)
+      expect(grades(phrases)).to eq [0, 2, 4, 5, 7]
     end
 
     it 'example from line 107 - Mixed types' do
       existing = "(0) (+2)".to_neumas
       combined = [existing, "(+4) (+5)"].to_neumas
 
-      expect(combined).to respond_to(:i)
+      expect(grades(combined)).to eq [0, 2, 4, 5]
     end
 
     it 'example from line 113 - Single element' do
       single = ["(0) (+2) (+4)"].to_neumas
       # Returns parsed series directly (not merged)
 
-      expect(single).to respond_to(:i)
+      expect(grades(single)).to eq [0, 2, 4]
     end
   end
 
@@ -317,13 +325,15 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       melody = "(0) (+2) (+2) (-1) (0)".to_neumas
       # Returns series of GDVD hashes
 
-      expect(melody).to respond_to(:i)
+      expect(melody.i.to_a(recursive: true).first).to eq({ kind: :gdvd, gdvd: { abs_grade: 0 } })
+      expect(grades(melody)).to eq [0, 2, 2, -1, 0]
     end
 
     it 'example from line 85 - With ornaments' do
       ornate = "(+2tr) (+3mor) (-1st)".to_neumas
 
-      expect(ornate).to respond_to(:i)
+      expect(ornate.i.to_a(recursive: true).map { |e| e[:gdvd][:modifiers] })
+        .to eq [{ tr: true }, { mor: true }, { st: true }]
     end
 
     it 'example from line 90 - Parallel voices' do
@@ -341,7 +351,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
     it 'example from line 133 - Parse simple melody' do
       neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
 
-      expect(neumas).to respond_to(:i)
+      expect(grades(neumas)).to eq [0, 2, 2, -1, 0]
     end
 
     it 'example from line 137 - Parse with immediate decoding' do
@@ -349,13 +359,15 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
       result = "(0) (+2) (+2) (-1) (0)".to_neumas(decode_with: decoder)
 
-      expect(result).to respond_to(:i)
+      # Decoding unwraps the { kind:, gdvd: } envelope: the elements ARE the gdvd
+      expect(result.i.to_a(recursive: true))
+        .to eq [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 }, { delta_grade: -1 }, { abs_grade: 0 }]
     end
 
     it 'example from line 142 - Parse with debug' do
       neumas = "(0) (+2) (+2)".to_neumas(debug: false)
 
-      expect(neumas).to respond_to(:i)
+      expect(grades(neumas)).to eq [0, 2, 2]
     end
 
     it 'example from line 158 - Convert to node for generative grammar' do

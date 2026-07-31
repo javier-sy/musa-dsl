@@ -785,6 +785,43 @@ RSpec.describe Musa::Series do
       expect(s.next_value).to eq 55
     end
 
+    it 'FIBO(first, second) yields the seeds as its first two values' do
+      expect(FIBO(0, 1).i.tap { |s| }.then { |s| 6.times.map { s.next_value } })
+        .to eq [0, 1, 1, 2, 3, 5]
+
+      expect(FIBO(1, 2).i.then { |s| 6.times.map { s.next_value } })
+        .to eq [1, 2, 3, 5, 8, 13]
+
+      # Lucas numbers
+      expect(FIBO(2, 1).i.then { |s| 6.times.map { s.next_value } })
+        .to eq [2, 1, 3, 4, 7, 11]
+
+      expect(FIBO(3, 7).i.then { |s| 6.times.map { s.next_value } })
+        .to eq [3, 7, 10, 17, 27, 44]
+    end
+
+    it 'FIBO() is FIBO(1, 1)' do
+      expect(FIBO().i.then { |s| 8.times.map { s.next_value } })
+        .to eq(FIBO(1, 1).i.then { |s| 8.times.map { s.next_value } })
+    end
+
+    it 'FIBO(first, second) keeps its seeds across restart and between instances' do
+      prototype = FIBO(2, 1)
+
+      expect(prototype.first).to eq 2
+      expect(prototype.second).to eq 1
+
+      one = prototype.i
+      other = prototype.i
+
+      3.times { one.next_value }
+
+      expect(other.next_value).to eq 2
+
+      one.restart
+      expect(3.times.map { one.next_value }).to eq [2, 1, 3]
+    end
+
     it 'HARMO().max_size(10)' do
       s = HARMO().i
 

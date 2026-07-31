@@ -1437,18 +1437,30 @@ module Musa
       # behavior when pitch is not in scale.
       #
       # @param pitch [Integer] MIDI pitch number
-      # @param allow_chromatic [Boolean] if true, return chromatic note when not in scale
-      # @param allow_nearest [Boolean] if true, return nearest scale note
-      # @return [NoteInScale, nil] matching note or nil
+      # @param allow_chromatic [Boolean] if true, return the note on the CHROMATIC
+      #   scale of the same tuning when the pitch is not in this scale. The pitch
+      #   is preserved; the scale of the returned note is not this one.
+      # @param allow_nearest [Boolean] if true, return the nearest note of THIS
+      #   scale, which means the returned pitch may differ from the one asked for.
+      #   Ties are broken downwards.
+      # @return [NoteInScale, nil] matching note, or nil when the pitch is not in
+      #   the scale and neither option was given
       #
       # @example Diatonic note
-      #   c_major.note_of_pitch(64)  # => E (in scale)
+      #   c_major.note_of_pitch(64).grade  # => 2  (E, in scale)
       #
-      # @example Chromatic note
-      #   c_major.note_of_pitch(63, allow_chromatic: true)  # => Eb (chromatic)
+      # @example Not in the scale, and nothing allowed
+      #   c_major.note_of_pitch(63)  # => nil
       #
-      # @example Nearest note
-      #   c_major.note_of_pitch(63, allow_nearest: true)  # => E or D (nearest)
+      # @example Chromatic note: same pitch, another scale
+      #   note = c_major.note_of_pitch(63, allow_chromatic: true)
+      #   note.pitch  # => 63
+      #   note.scale  # => the chromatic scale, NOT c_major
+      #
+      # @example Nearest note: same scale, another pitch
+      #   note = c_major.note_of_pitch(63, allow_nearest: true)
+      #   note.pitch  # => 62 (D) -- 63 sits between D and E, and ties go down
+      #   note.grade  # => 1
       def note_of_pitch(pitch, allow_chromatic: nil, allow_nearest: nil)
         allow_chromatic ||= false
         allow_nearest ||= false
