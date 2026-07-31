@@ -34,7 +34,10 @@ module Musa
     #   queue = QUEUE(S(1, 2, 3)).i
     #   queue.next_value  # => 1
     #   queue << S(4, 5, 6).i  # Add dynamically
-    #   queue.to_a  # => [2, 3, 4, 5, 6]
+    #   queue.to_a  # => [1, 2, 3, 4, 5, 6]
+    #
+    # @note `to_a` RESTARTS the instance, so it returns everything queued and
+    #   not what is left after the `next_value` above.
     #
     # @example Dynamic playlist
     #   queue = QUEUE().i
