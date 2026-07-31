@@ -121,8 +121,11 @@ RSpec.describe 'Series Inline Documentation Examples' do
     it 'example from line 438 - Basic sine wave' do
       wave = SIN(steps: 8, amplitude: 10, center: 50)
       result = wave.i.to_a
-      expect(result.size).to eq(8)
-      expect(result).to all(be_a(Numeric))
+
+      # One full period in 8 steps, starting and crossing the centre: the shape
+      # is the claim, not that the values happen to be numbers.
+      expect(result.collect { |v| v.round(6) })
+        .to eq([50.0, 53.535534, 55.0, 53.535534, 50.0, 46.464466, 45.0, 46.464466])
     end
 
     it 'example from line 461 - Fibonacci numbers' do
@@ -131,9 +134,8 @@ RSpec.describe 'Series Inline Documentation Examples' do
       inst = fib.i
       result = []
       10.times { result << inst.next_value }
-      # FIBO() may start at 1, not 0, so let's just check it's Fibonacci-like
-      expect(result.size).to eq(10)
-      expect(result).to all(be_a(Integer))
+
+      expect(result).to eq([1, 1, 2, 3, 5, 8, 13, 21, 34, 55])
     end
 
     it 'example from line 492 - Harmonic series' do
@@ -464,8 +466,15 @@ RSpec.describe 'Series Inline Documentation Examples' do
 
     it 'example from line 49 - Empty proxy' do
       proxy = PROXY()
-      # Assign later: proxy.proxy_source = S(1, 2, 3)
-      expect(proxy).to respond_to(:proxy_source=)
+
+      expect(proxy.undefined?).to be true
+      expect(proxy.prototype?).to be false
+      expect(proxy.instance?).to be false
+
+      proxy.proxy_source = S(1, 2, 3)
+
+      expect(proxy.prototype?).to be true
+      expect(proxy.i.to_a).to eq([1, 2, 3])
     end
 
     it 'example from line 53 - With initial source' do

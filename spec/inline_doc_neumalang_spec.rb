@@ -42,9 +42,10 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
       neumas = Musa::Neumalang::Neumalang.parse("(0) (+2) (+2) (-1) (0)")
       # => Serie of GDVD neuma objects
 
-      expect(neumas).to respond_to(:i)
-      expect(neumas.i.to_a.size).to eq(5)
-      expect(neumas.i.to_a[0][:kind]).to eq(:gdvd)
+      expect(neumas.i.to_a.collect { |e| e[:kind] }).to eq([:gdvd] * 5)
+      expect(neumas.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+                { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
     it 'example from line 941 - Parse with decoder (immediate GDV conversion)' do
@@ -150,8 +151,9 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
 
       # Parse simple melody
       melody_neumas = melody.to_neumas
-      expect(melody_neumas).to respond_to(:i)
-      expect(melody_neumas.i.to_a.size).to eq(5)
+      expect(melody_neumas.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+                { delta_grade: -1 }, { abs_grade: 0 }])
 
       # Parse rhythm with durations
       rhythm_neumas = rhythm.to_neumas
@@ -345,12 +347,10 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
     it 'integrates with Series for sequential playback' do
       neumas = "(0) (+2) (+4) (+5) (+7)".to_neumas
 
-      # Neumas parse returns series-like object
-      expect(neumas).to respond_to(:i)
-
-      # Can convert to array and count
-      count = neumas.i.to_a.size
-      expect(count).to eq(5)
+      # An ascending line, absolute at its head and differential afterwards.
+      expect(neumas.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 4 },
+                { delta_grade: 5 }, { delta_grade: 7 }])
     end
 
     it 'handles error on invalid notation' do

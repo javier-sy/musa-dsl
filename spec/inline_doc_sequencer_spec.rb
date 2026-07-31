@@ -397,22 +397,54 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
     it 'example from line 269 - Basic play control with after callback' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
-      series = S({pitch: 60}, {pitch: 62}, {pitch: 64}, {pitch: 65}, {pitch: 67})
+      # Each element carries its own duration: that is what makes play walk time.
+      series = S({ pitch: 60, duration: 1r }, { pitch: 62, duration: 1r },
+                 { pitch: 64, duration: 1r }, { pitch: 65, duration: 1r },
+                 { pitch: 67, duration: 1r })
       played_notes = []
       after_executed = []
+      stopped_at = []
 
-      control = seq.play(series) do |pitch:|
+      control = seq.play(series) do |pitch:, duration:|
         played_notes << { pitch: pitch, position: seq.position }
       end
 
+      control.on_stop { stopped_at << seq.position }
       control.after(2r) { after_executed << seq.position }
 
       seq.run
 
-      expect(played_notes.size).to eq(5)
-      # Note: after callback is scheduled but needs explicit timing to execute
-      # The control.after mechanism schedules events for future execution
-      expect(control).to respond_to(:after)
+      # One note per bar, from the position before bar 1 onwards.
+      expect(played_notes.collect { |n| n[:pitch] }).to eq([60, 62, 64, 65, 67])
+      expect(played_notes.collect { |n| n[:position] })
+        .to eq([95/96r, 191/96r, 287/96r, 383/96r, 479/96r])
+
+      # The play ends one bar after its last note, and `after` fires two bars later.
+      expect(stopped_at).to eq([575/96r])
+      expect(after_executed).to eq([767/96r])
+    end
+
+    it 'a play over a serie without durations never completes its control' do
+      # Elements with no :duration all fire in the same instant (issue #72), and
+      # the control then never terminates: neither on_stop nor after ever runs.
+      # Since `after` is the documented way to chain sections, a section built on
+      # such a serie stops the chain silently. Pinned here so the day it is fixed
+      # this spec says so.
+      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+
+      fired = []
+      stopped = []
+      afters = []
+
+      control = seq.play(S({ pitch: 60 }, { pitch: 62 })) { |pitch:| fired << seq.position }
+      control.on_stop { stopped << seq.position }
+      control.after(2r) { afters << seq.position }
+
+      400.times { seq.tick }
+
+      expect(fired).to eq([95/96r, 95/96r])
+      expect(stopped).to be_empty
+      expect(afters).to be_empty
     end
   end
 

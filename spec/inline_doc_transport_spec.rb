@@ -232,9 +232,12 @@ RSpec.describe 'Transport Inline Documentation Examples' do
 
       expect(clock.input).to be_nil
 
-      # Later: clock.input = MIDICommunications::Input.all.first
-      # For testing, we just verify the input setter exists
-      expect(clock).to respond_to(:input=)
+      # The claim is that the input can be supplied later, so supply one: the
+      # clock accepts any object and holds on to it.
+      later_input = Object.new
+      clock.input = later_input
+
+      expect(clock.input).to equal(later_input)
     end
 
     it 'example from line 54 - Checking performance' do

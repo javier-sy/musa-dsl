@@ -16,19 +16,19 @@ RSpec.describe 'MIDI Documentation Examples' do
       # Verify recorder was created
       expect(recorder).to be_a(Musa::MIDIRecorder::MIDIRecorder)
 
-      # Verify it has transcription method
-      expect(recorder).to respond_to(:transcription)
+      # The whole surface, exercised rather than merely named: record stamps the
+      # sequencer's position, transcription reads it back, clear empties it.
+      expect(recorder.transcription).to eq([])
+      expect(recorder.raw).to eq([])
 
-      # Verify it has raw method
-      expect(recorder).to respond_to(:raw)
+      sequencer.position = 1r
+      recorder.record([0x90, 60, 100])
 
-      # Verify it has clear method
-      expect(recorder).to respond_to(:clear)
+      expect(recorder.transcription)
+        .to eq([{ position: 1r, channel: 0, pitch: 60, velocity: 100 }])
 
-      # Verify it has record method
-      expect(recorder).to respond_to(:record)
+      recorder.clear
 
-      # Initially empty
       expect(recorder.transcription).to eq([])
       expect(recorder.raw).to eq([])
 

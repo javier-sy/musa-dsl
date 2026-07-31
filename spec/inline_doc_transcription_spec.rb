@@ -23,9 +23,21 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       # 3. Transcribe to MIDI events
       midi_events = gdv_events.collect { |gdv| transcriptor.transcript(gdv) }.flatten
 
-      # Verify events were expanded (ornaments create multiple notes)
-      expect(midi_events.size).to be > gdv_events.size
-      expect(midi_events).to all(be_a(Hash))
+      # The ornaments are the claim: the trill becomes an alternation that fills
+      # its bar, the mordent an upper auxiliary followed by the remainder of the
+      # note, and the staccato a note_duration half its duration.
+      expect(midi_events.size).to eq(26)
+
+      trill = midi_events.first(22)
+      expect(trill.collect { |e| e[:grade] }).to eq([1, 0] * 11)
+      expect(trill.collect { |e| e[:duration] }).to eq([1/16r] * 4 + [1/24r] * 18)
+      expect(trill.sum { |e| e[:duration] }).to eq(1r)
+
+      expect(midi_events[22, 3]).to eq([{ grade: 2, duration: 1/16r },
+                                        { grade: 3, duration: 1/16r },
+                                        { grade: 2, duration: 7/8r }])
+
+      expect(midi_events.last).to eq({ grade: 4, duration: 1/2r, note_duration: 1/4r })
     end
 
     it 'example from line 189 - Create transcriptor chain' do
@@ -379,9 +391,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       # Parse and convert to GDV with preserved ornament markers
       serie = Musa::Neumalang::Neumalang.parse(neumas, decode_with: decoder)
                                          .process_with { |gdv| transcriptor.transcript(gdv) }
-
-      # Verify serie is created
-      expect(serie).to respond_to(:next_value)
 
       # Collect events
       events = serie.to_a(recursive: true)

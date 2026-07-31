@@ -295,13 +295,16 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0, 60], [1, 62]]
 
       rows = matrix._rows
-      original_size = rows.size
 
-      # This is used internally to manipulate matrices
-      expect(rows).to respond_to(:shift)
-      expect(rows).to respond_to(:pop)
-      expect(rows).to respond_to(:prepend)
-      expect(rows).to respond_to(:append)
+      # Not a copy: it is the matrix's own storage, which is why condensing can
+      # shift rows off it. Any Array responds to shift; what matters is that
+      # shifting this one changes the matrix.
+      expect(rows).to eq([[0, 60], [1, 62]])
+      expect(matrix._rows).to equal(matrix._rows)
+
+      rows.shift
+
+      expect(matrix.to_a).to eq([[1, 62]])
     end
   end
 

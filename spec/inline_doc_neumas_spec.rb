@@ -345,7 +345,14 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
     it 'example from line 95 - Convert to generative node' do
       node = "(0) (+2) (+2) (-1) (0)".nn  # to_neumas_to_node
 
-      expect(node).to respond_to(:next)
+      # A single-option final node wrapping the parsed serie: the whole phrase is
+      # one alternative, ready to be combined with | and + in a grammar.
+      # (The node class lives in a private namespace, so the shape is the claim.)
+      expect(node.options.size).to eq(1)
+      expect(node.options.first.size).to eq(1)
+      expect(node.options.first.first.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+                { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
     it 'example from line 133 - Parse simple melody' do
@@ -373,7 +380,10 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
     it 'example from line 158 - Convert to node for generative grammar' do
       node = "(0) (+2) (+2) (-1) (0)".to_neumas_to_node
 
-      expect(node).to respond_to(:next)
+      expect(node.options.size).to eq(1)
+      expect(node.options.first.first.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+                { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
     it 'example from line 179 - Two-voice harmony' do
@@ -393,10 +403,16 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       # Parse complex notation
       melody = "(+2_) (+2_2) (+1_/2) (+2_)".to_neumas
 
-      # Verify series structure
-      expect(melody).to respond_to(:i)
+      # `_` after a grade is a flat, and repeating it flattens further: `+2__`
+      # is a double flat. But `_` between digits is the digit separator Ruby
+      # uses, so `+2_2` is the grade +22, NOT +2 twice flattened -- which is
+      # what this line records, and why it reads as it does.
+      expect(melody.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ delta_grade: 2, delta_sharps: -1 },
+                { delta_grade: 22 },
+                { delta_grade: 1, delta_sharps: -1, factor_duration: 1/2r },
+                { delta_grade: 2, delta_sharps: -1 }])
 
-      # Count neumas
       neumas_array = melody.i.to_a
       expect(neumas_array.size).to eq(4)
 
@@ -417,11 +433,12 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(parallel[:parallel]).to be_an(Array)
       expect(parallel[:parallel].size).to eq(2)
 
-      # Each voice should be a serie
-      parallel[:parallel].each do |voice|
-        expect(voice[:kind]).to eq(:serie)
-        expect(voice[:serie]).to respond_to(:i)
-      end
+      # Each voice is a serie, and keeps its own line: the first is absolute at
+      # its head and differential afterwards, the second entirely differential.
+      expect(parallel[:parallel].collect { |voice| voice[:kind] }).to eq([:serie, :serie])
+      expect(parallel[:parallel].collect { |voice| voice[:serie].i.to_a.collect { |e| e[:gdvd] } })
+        .to eq([[{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 4 }],
+                [{ delta_grade: 7 }, { delta_grade: 5 }, { delta_grade: 7 }]])
     end
 
     it 'uses decoder to maintain differential state' do
@@ -462,12 +479,13 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
     it 'verifies array to_neumas merges multiple elements' do
       phrases = ["(0) (+2)", "(+4) (+5)", "(+7)"].to_neumas
 
-      # Should merge all phrases into one series
-      expect(phrases).to respond_to(:i)
+      # The three phrases become one sequence, in order and complete.
+      expect(phrases.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 4 },
+                { delta_grade: 5 }, { delta_grade: 7 }])
 
-      # Verify all elements are present
       all_neumas = phrases.i.to_a
-      expect(all_neumas.size).to be >= 3
+      expect(all_neumas.size).to eq(5)
     end
   end
 end

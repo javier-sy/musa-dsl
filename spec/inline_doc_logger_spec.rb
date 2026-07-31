@@ -509,15 +509,25 @@ RSpec.describe 'Logger Inline Documentation Examples' do
 
   context 'Logger inheritance from Ruby Logger' do
     it 'inherits all standard Ruby Logger methods' do
-      logger, _ = create_logger_with_capture
+      logger, capture = create_logger_with_capture
 
-      expect(logger).to respond_to(:debug)
-      expect(logger).to respond_to(:info)
-      expect(logger).to respond_to(:warn)
-      expect(logger).to respond_to(:error)
-      expect(logger).to respond_to(:fatal)
-      expect(logger).to respond_to(:level)
-      expect(logger).to respond_to(:level=)
+      # The claim is inheritance, so assert the ancestry and then that the
+      # inherited severities actually reach the output -- responding to a name
+      # is not the same as logging through it.
+      expect(logger).to be_a(::Logger)
+
+      logger.level = ::Logger::DEBUG
+
+      logger.debug { 'a debug line' }
+      logger.info { 'an info line' }
+      logger.warn { 'a warn line' }
+      logger.error { 'an error line' }
+      logger.fatal { 'a fatal line' }
+
+      result = capture.string
+
+      expect(result).to include('a debug line', 'an info line', 'a warn line',
+                                'an error line', 'a fatal line')
     end
 
     it 'supports standard Logger severity constants' do

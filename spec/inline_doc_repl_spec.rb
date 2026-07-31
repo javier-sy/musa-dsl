@@ -184,7 +184,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
 
       # Verify binding captures the context
       expect(binding_captured).to be_a(Binding)
-      expect(binding_captured.receiver).to respond_to(:sequencer)
+      expect(binding_captured.receiver).to equal(context)
       expect(binding_captured.receiver.sequencer).to be_a(Musa::Sequencer::BaseSequencer)
     end
 
@@ -206,8 +206,10 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       context_proxy = Musa::Extension::DynamicProxy::DynamicProxy.new(context)
 
       # Verify the deferred context is valid
-      expect(context_proxy.receiver).to eq(context)
-      expect(context_proxy.receiver).to respond_to(:execute)
+      # The proxy forwards, which is the whole claim: calling through it reaches
+      # the deferred context.
+      expect(context_proxy.receiver).to equal(context)
+      expect(context_proxy.execute('1 + 1', '(spec)', 1)).to eq(2)
     end
 
     it 'example from line 340 - With Ruby Binding' do
@@ -557,9 +559,6 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       # Shows how REPL hooks into sequencer error handling
 
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 24, do_error_log: false)
-
-      # Verify sequencer has on_error capability
-      expect(sequencer).to respond_to(:on_error)
 
       errors_captured = []
 

@@ -12,11 +12,22 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       # Create recorder
       recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
 
-      # Verify recorder was created and has expected methods
       expect(recorder).to be_a(Musa::MIDIRecorder::MIDIRecorder)
-      expect(recorder).to respond_to(:record)
-      expect(recorder).to respond_to(:transcription)
-      expect(recorder).to respond_to(:clear)
+
+      # A fresh recorder has recorded nothing, and recording stamps the message
+      # with the sequencer's position.
+      expect(recorder.raw).to eq([])
+      expect(recorder.transcription).to eq([])
+
+      sequencer.position = 1r
+      recorder.record([0x90, 60, 100])
+
+      expect(recorder.transcription)
+        .to eq([{ position: 1r, channel: 0, pitch: 60, velocity: 100 }])
+
+      recorder.clear
+
+      expect(recorder.raw).to eq([])
     end
 
     it 'example from class doc line 44 - Complete recording and transcription workflow' do
@@ -70,16 +81,30 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       recorder.record([0x90, 60, 100])
 
       raw = recorder.raw
-      expect(raw).to be_an(Array)
       expect(raw.size).to eq(1)
-      expect(raw.first).to respond_to(:position)
-      expect(raw.first).to respond_to(:message)
+
+      # The raw entry keeps the position it was recorded at and the parsed
+      # MIDI event, not the bytes.
+      expect(raw.first.position).to eq(1r)
+      expect(raw.first.message).to be_a(MIDIEvents::NoteOn)
+      expect(raw.first.message.note).to eq(60)
+      expect(raw.first.message.velocity).to eq(100)
+      expect(raw.first.message.channel).to eq(0)
     end
   end
 
   context 'MIDIVoices (midi-voices.rb)' do
     let(:sequencer) { Musa::Sequencer::Sequencer.new(4, 24) }
     let(:mock_output) { double('MIDI Output', puts: nil) }
+
+    # A real recipient: what matters about a voice is the MIDI it emits, and a
+    # double that swallows everything cannot show it.
+    let(:recording_output) do
+      Class.new do
+        def sent = @sent ||= []
+        def puts(message) = sent << message
+      end.new
+    end
 
     it 'example from module doc line 18 - Basic voice setup' do
       # Create voice manager
@@ -92,14 +117,29 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       expect(voices).to be_a(Musa::MIDIVoices::MIDIVoices)
       expect(voices.voices.size).to eq(4)
 
-      # Get a voice and verify it can play notes
-      voice = voices.voices.first
-      expect(voice).to respond_to(:note)
+      # One voice per channel, in order.
+      expect(voices.voices.collect(&:channel)).to eq([0, 1, 2, 3])
+    end
 
-      # Play a note
-      note_ctrl = voice.note pitch: 60, velocity: 90, duration: 1r/4
-      expect(note_ctrl).to respond_to(:note_off)
-      expect(note_ctrl).to respond_to(:on_stop)
+    it 'a note reaches MIDI as a note-on now and a note-off when it ends' do
+      voices = Musa::MIDIVoices::MIDIVoices.new(
+        sequencer: sequencer,
+        output: recording_output,
+        channels: 0..3
+      )
+
+      voice = voices.voices.first
+      voice.note pitch: 60, velocity: 90, duration: 1r/4
+
+      expect(recording_output.sent.size).to eq(1)
+      expect(recording_output.sent.first).to be_a(MIDIEvents::NoteOn)
+      expect(recording_output.sent.first.note).to eq(60)
+      expect(recording_output.sent.first.velocity).to eq(90)
+
+      200.times { sequencer.tick }
+
+      expect(recording_output.sent.collect { |m| m.class.name.split('::').last })
+        .to eq(%w[NoteOn NoteOff])
     end
 
     it 'example from class doc line 53 - Basic setup and playback' do
@@ -154,8 +194,6 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       # Create indefinite note (duration nil triggers different code path)
       # Use a very long duration instead to test the callback
       note_ctrl = voice.note pitch: 60, velocity: 90, duration: 100r
-      expect(note_ctrl).to respond_to(:note_off)
-      expect(note_ctrl).to respond_to(:on_stop)
 
       # Register callback
       note_ctrl.on_stop { callback_executed = true }
@@ -357,13 +395,12 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       # Register after callback
       note_ctrl.after(1r) { callback_executed = true }
 
-      # Note off and advance sequencer
+      # after(1r) means a whole bar later, so the sequencer has to get there:
+      # two ticks are 2/96 of a bar and the callback would look broken.
       note_ctrl.note_off
-      sequencer.tick
-      sequencer.tick
+      200.times { sequencer.tick }
 
-      # Eventually callback should be scheduled
-      expect(note_ctrl).to respond_to(:after)
+      expect(callback_executed).to be true
     end
 
     it 'handles note with silence pitch' do
@@ -378,8 +415,7 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       # Should NOT send MIDI for silence
       expect(mock_output).not_to receive(:puts)
 
-      note_ctrl = voice.note pitch: :silence, duration: 1r/4
-      expect(note_ctrl).to respond_to(:note_off)
+      voice.note pitch: :silence, duration: 1r/4
     end
 
     it 'handles note with array of pitches' do
@@ -420,20 +456,23 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
     it 'validates note duration parameter' do
       voices = Musa::MIDIVoices::MIDIVoices.new(
         sequencer: sequencer,
-        output: mock_output,
+        output: recording_output,
         channels: [0]
       )
 
       voice = voices.voices.first
 
-      # The validation happens when note is called, not directly on NoteControl
-      # Since NoteControl is private, we test through the public API
-      # Invalid duration types should be caught if validation exists
-      expect(voice).to respond_to(:note)
+      # NoteControl is private, so a duration is exercised through the public
+      # API and judged by the MIDI it produces: on now, off a quarter later.
+      voice.note pitch: 60, velocity: 100, duration: 1r/4
 
-      # Test that valid durations work
-      note_ctrl = voice.note pitch: 60, velocity: 100, duration: 1r/4
-      expect(note_ctrl).to respond_to(:note_off)
+      expect(recording_output.sent.collect { |m| m.class.name.split('::').last })
+        .to eq(%w[NoteOn])
+
+      200.times { sequencer.tick }
+
+      expect(recording_output.sent.collect { |m| m.class.name.split('::').last })
+        .to eq(%w[NoteOn NoteOff])
     end
 
     it 'handles logging' do

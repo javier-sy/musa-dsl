@@ -110,10 +110,14 @@ RSpec.describe 'Generative Documentation Examples' do
       expect(voicings).to include([60, 64, 67])  # C major
       expect(voicings).to include([60, 63, 67])  # C minor
 
-      # With parameters
+      # With parameters. `max_interval:` is passed through to the blocks, none
+      # of which reads it here, so the result is the same six voicings -- which
+      # is worth asserting rather than assuming.
       tree_with_params = rules.apply(0, max_interval: 7)
-      expect(tree_with_params).to respond_to(:combinations)
-      expect(tree_with_params.combinations).to be_an(Array)
+
+      expect(tree_with_params.combinations.collect(&:last))
+        .to eq([[60, 64, 67], [60, 63, 67], [64, 68, 71],
+                [64, 67, 71], [67, 71, 74], [67, 70, 74]])
     end
 
     it 'generates combinations using Generative Grammar with operators' do

@@ -15,8 +15,9 @@ RSpec.describe 'Neumas Documentation Examples' do
 
       # Parse simple melody
       melody_neumas = melody.to_neumas
-      expect(melody_neumas).to respond_to(:i)
-      expect(melody_neumas.i.to_a.size).to eq(5)
+      expect(melody_neumas.i.to_a.collect { |e| e[:gdvd] })
+        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+                { delta_grade: -1 }, { abs_grade: 0 }])
 
       # Parse rhythm with durations
       rhythm_neumas = rhythm.to_neumas

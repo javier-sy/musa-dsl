@@ -66,10 +66,6 @@ RSpec.describe 'Core Extensions Documentation Examples' do
 
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
 
-      # Create logger using Kernel.logger if available
-      # Note: The actual Logger implementation may vary
-      expect(sequencer).to respond_to(:run)
-
       # Sequencer can execute code at specific positions
       executed = false
       sequencer.at 1 do
