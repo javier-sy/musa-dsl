@@ -79,9 +79,9 @@ module Musa::Datasets
   # - **Delta velocity**: "+f" or "-f" (dynamics change)
   #
   # @example First event (absolute encoding)
-  #   gdvd = { abs_grade: 0, abs_duration: 1.0, abs_velocity: 0 }.extend(GDVd)
-  #   gdvd.base_duration = 1/4r
+  #   gdvd = { abs_grade: 0, abs_duration: 1r, abs_velocity: 0 }.extend(GDVd)
   #   gdvd.to_neuma  # => "(0 4 mp)"
+  #   # One bar, written as 4 with the default base_duration of 1/4r.
   #
   # @example Delta encoding (unchanged duration)
   #   gdvd = { delta_grade: 2, delta_velocity: 1 }.extend(GDVd)
@@ -136,16 +136,26 @@ module Musa::Datasets
     # @return [Rational]
     attr_reader :base_duration
 
-    # Sets base duration, adjusting existing duration values.
+    # Sets base duration, rescaling existing duration values.
     #
-    # When base_duration changes, existing abs_duration and delta_duration
-    # are scaled proportionally to maintain actual time values.
+    # Durations are stored in bars and written in neuma as a multiple of
+    # base_duration. Changing base_duration scales abs_duration and
+    # delta_duration by the same factor, so what survives the change is the
+    # **written figure**, not the sounding length: the event goes on reading
+    # `(0 1)` while coming to last half of what it did.
     #
     # @param value [Rational] new base duration
     #
-    # @example
-    #   gdvd[:abs_duration] = 1.0
-    #   gdvd.base_duration = 1/4r  # abs_duration scaled by factor
+    # @note The two implicit defaults do not agree. This setter treats an unset
+    #   base_duration as 1 bar, while {#to_neuma} defaults it to 1/4r -- and
+    #   memoises it. So a `to_neuma` called before the first assignment changes
+    #   what that assignment does.
+    #
+    # @example The figure survives the change of unit; the sounding length does not
+    #   gdvd = { abs_grade: 0, abs_duration: 1r }.extend(GDVd)
+    #   gdvd.base_duration = 1/2r
+    #   gdvd[:abs_duration]  # => 1/2r
+    #   gdvd.to_neuma        # => "(0 1)"
     def base_duration=(value)
       factor = value / (@base_duration || 1)
       @base_duration = value
@@ -318,8 +328,7 @@ module Musa::Datasets
     #   gdvd.to_neuma  # => "(+#)"
     #
     # @example Absolute values
-    #   gdvd = { abs_grade: 0, abs_duration: 1.0 }.extend(GDVd)
-    #   gdvd.base_duration = 1/4r
+    #   gdvd = { abs_grade: 0, abs_duration: 1r }.extend(GDVd)
     #   gdvd.to_neuma  # => "(0 4)"
     def to_neuma
       @base_duration ||= Rational(1,4)

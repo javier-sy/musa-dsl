@@ -254,9 +254,11 @@ module Musa::Datasets::Score::ToMXML
   # @note Durations are in BARS, as everywhere else in MusaDSL: 1r is a whole
   #   note, 1/4r a quarter.
   #
-  # @example Eighth triplet
+  # @example Half-note triplet
   #   type_and_dots_and_tuplet_ratio(1/3r)
-  #   # => ["eighth", 0, 3/2r]
+  #   # => ["half", 0, 3/2r]
+  #   # Three of them fill a bar: each is written as a half note (1/2r) played
+  #   # in the time of 1/3r, which is what the 3:2 ratio says.
   #
   # @api private
   def type_and_dots_and_tuplet_ratio(noteable_duration)

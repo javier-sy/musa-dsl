@@ -10,7 +10,8 @@ module Musa
     # ## Features
     #
     # - Handles circular references via object registry
-    # - Preserves singleton class modules (dataset extensions)
+    # - Preserves singleton class modules (dataset extensions) -- with `:clone`
+    #   only, since `:dup` drops the singleton class, as it does in plain Ruby
     # - Supports both :dup and :clone methods
     # - Special handling for Arrays, Hashes, Ranges, Structs, Procs
     # - Recursively copies instance variables
@@ -33,8 +34,11 @@ module Musa
     #
     # @example Preserving modules
     #   event = { pitch: 60 }.extend(Musa::Datasets::AbsI)
-    #   copy = event.dup(deep: true)
-    #   copy.is_a?(Musa::Datasets::AbsI)  # => true
+    #   event.clone(deep: true).is_a?(Musa::Datasets::AbsI)  # => true
+    #   event.dup(deep: true).is_a?(Musa::Datasets::AbsI)    # => false
+    #
+    #   # A dataset IS a Hash carrying a module, so copying one with :dup
+    #   # silently demotes it to a plain Hash. Datasets are copied with :clone.
     #
     # @see Arrayfy Uses deep_copy for preserving modules
     # @see Hashify Uses deep_copy for preserving modules
@@ -288,12 +292,22 @@ module Musa
       #
       #   @return [Object] cloned object (shallow or deep).
       #
-      #   @example Deep clone with freeze control
+      #   Unlike `:dup`, a deep `:clone` preserves the modules an object has been
+      #   extended with, which is why datasets are copied with it.
+      #
+      #   @note Freezing does not currently behave as `Object#clone` does. On an
+      #     unfrozen Array or Hash, `deep: true` with `freeze: true` raises
+      #     FrozenError (the copy is frozen before it is filled); and a deep clone
+      #     of a frozen object comes back unfrozen unless `freeze: true` is asked
+      #     for explicitly.
+      #
+      #   @example Deep clone
       #     using Musa::Extension::DeepCopy
       #     hash = { nested: { value: 1 } }
-      #     copy = hash.clone(deep: true, freeze: true)
-      #     copy.frozen?  # => true
-      #     copy[:nested].frozen?  # => true (deep freeze)
+      #     copy = hash.clone(deep: true)
+      #     copy[:nested].equal?(hash[:nested])  # => false
+      #     copy[:nested][:value] = 2
+      #     hash[:nested][:value]  # => 1
       class ::Object; end
 
       refine Object do

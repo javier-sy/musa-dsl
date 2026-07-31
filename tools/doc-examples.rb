@@ -38,6 +38,13 @@ module DocExamples
   # A declared output we can compare against, as opposed to a description of one.
   LITERAL = /\A(\[.*\]|\{.*\}|-?[\d._\/r]+|true|false|nil|:[a-z_]+[?!]?|".*"|'.*')\z/i
 
+  # An example may declare that a statement FAILS -- `# => ArgumentError: cannot
+  # move back` -- and that is how documentation usually describes a guard. Read
+  # naively the raise looks like the runner's own failure, so the claim goes
+  # unchecked precisely where the documentation is making a promise about
+  # rejection.
+  EXCEPTION = /\A([A-Z]\w*(?:::\w+)*)\s*(?::.*)?\z/m
+
   module_function
 
   # Every @example block in the inline documentation, with its code recovered
@@ -152,6 +159,14 @@ module DocExamples
         source, declared = '', match[1].strip
       end
 
+      # A continuation of the previous statement, not a new one. `chord =
+      # scale.tonic.chord` parses on its own, so a following `.with_move(...)`
+      # would be flushed as an orphan and taken for a syntax error -- and the
+      # fluent chains are exactly where the interesting documentation is.
+      if pending.empty? && source.strip.start_with?('.') && result.last && result.last[1].nil?
+        pending << result.pop.first
+      end
+
       pending << source unless source.strip.empty?
 
       joined = pending.join("\n")
@@ -203,12 +218,34 @@ module DocExamples
 
       # And the namespace they are written inside, so that unqualified constants
       # resolve the way they do for a reader of that part of the file.
+      #
+      # By aliasing its constants and EXTENDING it, never `include`-ing it: a
+      # comment inside `module AbsD` would otherwise include AbsD into Object,
+      # making EVERY object an AbsD and quietly turning the answer to
+      # `AbsD.is_compatible?({pitch: 60})` from false into true. Extending gives
+      # the reader the module's methods, which is their position in the file,
+      # without moving anyone else's ancestry.
+      # Deeper levels overwrite shallower ones -- `Musa::Extension::DeepCopy::DeepCopy`
+      # is what `DeepCopy` means to someone reading inside it -- but nothing that
+      # already existed at top level is touched.
+      established = Object.constants(false)
+
       narrative.first.namespace.each_with_object([]) do |name, path|
         path << name
         begin
-          eval("include #{path.join('::')}", TOPLEVEL_BINDING) # rubocop:disable Security/Eval
+          scope = eval(path.join('::'), TOPLEVEL_BINDING) # rubocop:disable Security/Eval
+          next unless scope.is_a?(Module)
+
+          scope.constants(false).each do |constant|
+            next if established.include?(constant)
+
+            Object.send(:remove_const, constant) if Object.const_defined?(constant, false)
+            Object.const_set(constant, scope.const_get(constant))
+          end
+
+          eval('self', TOPLEVEL_BINDING).extend(scope) unless scope.is_a?(Class) # rubocop:disable Security/Eval
         rescue StandardError, ScriptError
-          nil # a class, or not yet defined: nothing to include
+          nil # not defined at this point in the file: nothing to alias
         end
       end
 
@@ -217,22 +254,43 @@ module DocExamples
         eval(code, TOPLEVEL_BINDING) rescue nil # rubocop:disable Security/Eval, Style/RescueModifier
       end
 
+      # Refinements are lexically scoped to the eval that activates them, so a
+      # `using` written as the first line of an example switches off again on the
+      # next statement -- and the example goes on to demonstrate exactly what the
+      # refinement provides. Carrying them forward is what a file does for its own
+      # reader, and it is what makes `.to_neumas` and `dup(deep: true)` mean
+      # anything after line one.
+      usings = []
+
       statements(narrative.flat_map(&:code)).each do |source, declared|
         example = narrative.first
 
+        # What the example says it raises, if it says so at all.
+        wanted = if declared && (match = declared.match(EXCEPTION))
+                   begin
+                     constant = eval(match[1], TOPLEVEL_BINDING) # rubocop:disable Security/Eval
+                     constant if constant.is_a?(Class) && constant <= Exception
+                   rescue Exception # rubocop:disable Lint/RescueException
+                     nil
+                   end
+                 end
+
         begin
-          value = eval(source, TOPLEVEL_BINDING, example.file, example.line) # rubocop:disable Security/Eval
+          value = eval((usings + [source]).join("\n"), TOPLEVEL_BINDING, example.file, example.line) # rubocop:disable Security/Eval
+          usings << source if source.match?(/\A\s*using\s+\S/)
         rescue Exception => e # rubocop:disable Lint/RescueException
           checks << Check.new(statement: source, declared: declared,
                               actual: "#{e.class}: #{e.message.lines.first.to_s.strip}",
-                              status: :error)
+                              status: wanted ? (e.is_a?(wanted) ? :ok : :mismatch) : :error)
           next
         end
 
         next unless declared
 
         status =
-          if declared !~ LITERAL
+          if wanted
+            :mismatch # it promised to reject this and did not
+          elsif declared !~ LITERAL
             :prose
           else
             expected = begin

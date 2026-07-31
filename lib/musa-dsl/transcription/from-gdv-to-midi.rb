@@ -573,11 +573,15 @@ module Musa::Transcriptors
       #
       # @example Staccato level 2
       #   gdv = { grade: 0, duration: 1r, st: 2 }
+      #   staccato.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
       #   # => { grade: 0, duration: 1r, note_duration: 1/4r }
       #
       # @example Very short note (minimum enforced)
       #   gdv = { grade: 0, duration: 1/16r, st: true }
-      #   # note_duration clamped to base_duration * 1/8 (minimum)
+      #   staccato.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
+      #   # => { grade: 0, duration: 1/16r, note_duration: 1/32r }
+      #   # Halving 1/16r would give 1/32r anyway; the minimum, base_duration/8,
+      #   # is also 1/32r here, so this is where the clamp starts to bite.
       #
       # @api public
       # Process: .st .st(1) .st(2) .st(3): staccato level 1 2 3

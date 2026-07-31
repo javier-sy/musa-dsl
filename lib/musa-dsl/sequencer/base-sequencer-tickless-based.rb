@@ -51,7 +51,9 @@ module Musa
       #   sequencer = BaseSequencer.new  # No tick parameters
       #   sequencer.ticks_per_bar   # => Float::INFINITY
       #   sequencer.tick_duration   # => 0r
-      #   sequencer.position        # => nil (before first event)
+      #   sequencer.position        # => nil
+      #   # nil, not a bar number: a tickless sequencer has no position of its
+      #   # own until it reaches the first scheduled event.
       #
       # @example Precise timing without quantization
       #   sequencer.at(1r) { puts "Event 1" }
@@ -166,18 +168,21 @@ module Musa
         #
         # @raise [ArgumentError] if new_position < current position
         #
+        # Note that the sequencer must have reached its first event before it can
+        # be fast-forwarded: until then its position is nil and there is nothing
+        # to move forward from.
+        #
         # @example Jump to future position
         #   sequencer.at(1.25r) { puts "Event 1" }
         #   sequencer.at(1.5r) { puts "Event 2" }
         #   sequencer.at(2.75r) { puts "Event 3" }
         #
-        #   sequencer.position = 2r
-        #   # Executes events at 1.25r and 1.5r
-        #   # Position becomes exactly 2r (not 2.75r)
+        #   sequencer.tick           # position becomes 1.25r, prints "Event 1"
+        #   sequencer.position = 2r  # executes the event at 1.5r on the way
+        #   sequencer.position       # => 2r
+        #   # Exactly 2r: it stops where it was told, not at the next event (2.75r).
         #
         # @example Cannot move backward
-        #   sequencer.position = 1r
-        #   sequencer.tick  # position = 1.25r
         #   sequencer.position = 1r  # => ArgumentError: cannot move back
         #
         # @api public

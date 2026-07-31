@@ -13,10 +13,12 @@ module Musa
     #
     # Chords are typically created from scale notes rather than directly:
     #
-    #     scale = Scales::Scales.default_system.default_tuning.major[60]
-    #     chord = scale.tonic.chord              # C major triad
-    #     chord = scale.tonic.chord :seventh     # C major seventh
-    #     chord = scale.dominant.chord :ninth    # G ninth chord
+    #     c_major = Scales::Scales.default_system.default_tuning.major[60]
+    #     chord = c_major.tonic.chord              # C major triad
+    #     chord = c_major.tonic.chord :seventh     # C major seventh
+    #     chord = c_major.dominant.chord :ninth    # G ninth chord
+    #
+    # `c_major` is the scale every example below is written against.
     #
     # ## Accessing Chord Tones
     #
@@ -351,10 +353,11 @@ module Musa
       # @return [Array<Integer>] MIDI pitches sorted by pitch
       #
       # @example All pitches
-      #   chord.pitches  # => [60, 64, 67]
+      #   c_triad = c_major.tonic.chord
+      #   c_triad.pitches  # => [60, 64, 67]
       #
       # @example Specific positions
-      #   chord.pitches(:root, :third)  # => [60, 64]
+      #   c_triad.pitches(:root, :third)  # => [60, 64]
       def pitches(*grades)
         grades = @notes_map.keys if grades.empty?
         @sorted_notes.select { |_| grades.include?(_.grade) }.collect { |_| _.note.pitch }
@@ -365,7 +368,7 @@ module Musa
       # @return [Hash{Symbol => Symbol}] features hash (quality:, size:, etc.)
       #
       # @example
-      #   chord.features  # => { quality: :major, size: :triad }
+      #   c_major.tonic.chord.features  # => { quality: :major, size: :triad }
       def features
         @chord_definition.features
       end
@@ -482,13 +485,14 @@ module Musa
       #
       # @example Find G major triad in diatonic scales
       #   g_triad = c_major.dominant.chord
-      #   g_triad.in_scales(family: :diatonic)
+      #   g_triad.search_in_scales(family: :diatonic)
       #
       # @example Find chord in scales with specific brightness
-      #   g7.in_scales(brightness: -1..1)
+      #   g7 = c_major.dominant.chord(:seventh)
+      #   g7.search_in_scales(brightness: -1..1)
       #
       # @example Iterate over results
-      #   g7.in_scales(family: :greek_modes).each do |chord|
+      #   g7.search_in_scales(family: :greek_modes).each do |chord|
       #     scale = chord.scale
       #     degree = scale.degree_of_chord(chord)
       #     puts "#{scale.kind.class.id} on #{scale.root_pitch}: degree #{degree}"

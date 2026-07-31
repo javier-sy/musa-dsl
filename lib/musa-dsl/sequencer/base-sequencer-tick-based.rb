@@ -28,6 +28,19 @@ module Musa
       # - **Fast-forward**: {#position=} jumps to future position
       # - **Quantization**: All positions rounded to tick grid
       #
+      # ## Where time starts
+      #
+      # A new sequencer sits **one tick before bar 1**, at `1r - tick_duration`
+      # (plus `offset`), not at `1r`. This is deliberate: {#tick} advances first
+      # and executes afterwards, so the *first* tick lands exactly on bar 1 and
+      # bar 1 gets its full complement of ticks. Nothing is scheduled at the
+      # starting position, which is why it is never observed in a piece.
+      #
+      # It is observable from outside, though, and it is the reason a `move` or
+      # an `every` written directly in the sequencer body -- rather than inside
+      # an `at 1` -- begins one tick early: it is being started at the position
+      # before bar 1.
+      #
       # ## Fast-Forward Mechanism
       #
       # When jumping forward via `position=`:
@@ -53,10 +66,12 @@ module Musa
       #   sequencer = BaseSequencer.new(4, 96)  # 4 beats, 96 ticks/beat
       #   sequencer.ticks_per_bar  # => 384r
       #   sequencer.tick_duration  # => 1/384r
-      #   sequencer.position       # => 1r (start of bar 1)
+      #   sequencer.position       # => 383/384r  (one tick before bar 1)
       #
       # @example Advancing time with tick
-      #   sequencer.tick  # Advance one tick (1/384 of a bar)
+      #   sequencer.tick      # the first tick lands on bar 1
+      #   sequencer.position  # => 1r
+      #   sequencer.tick
       #   sequencer.position  # => 385/384r
       #
       # @example Fast-forward to future position
@@ -65,7 +80,7 @@ module Musa
       #
       # @example Quantization warning
       #   sequencer.at(1.5001r) { puts "event" }
-      #   # WARN: rounding position 1.5001 to tick precision: 1.5
+      #   # WARN: rounding position 15001/10000 (1.5001) to tick precision: 3/2 (1.5)
       #
       # @api private
       module TickBasedTiming
@@ -73,7 +88,9 @@ module Musa
 
         # Current playback position in bars (Rational).
         #
-        # Always aligned to tick boundaries. Bar 1 starts at position 1r.
+        # Always aligned to tick boundaries. Bar 1 is position 1r; a sequencer
+        # that has not ticked yet is one tick short of it (see "Where time
+        # starts").
         #
         # @return [Rational] current position
         attr_reader :position
@@ -100,9 +117,11 @@ module Musa
         # @return [void]
         #
         # @example Normal tick progression
+        #   sequencer.position  # => 383/384r
+        #   sequencer.tick
         #   sequencer.position  # => 1r
         #   sequencer.tick
-        #   sequencer.position  # => 385/384r (1 + 1/384)
+        #   sequencer.position  # => 385/384r
         #
         # @api public
         def tick
@@ -139,13 +158,12 @@ module Musa
         # @raise [ArgumentError] if new_position < current position
         #
         # @example Jump to future bar
-        #   sequencer.position  # => 1r
-        #   sequencer.position = 5r  # Fast-forward to bar 5
-        #   # Executes all events from bar 1 to bar 5
+        #   sequencer.position       # => 383/384r
+        #   sequencer.position = 5r  # ticks forward, executing every event in between
+        #   sequencer.position       # => 5r
         #
         # @example Cannot move backward
-        #   sequencer.position = 0r
-        #   # => ArgumentError: cannot move back
+        #   sequencer.position = 0r  # => ArgumentError: cannot move back
         #
         # @api public
         def position=(new_position)
@@ -199,9 +217,9 @@ module Musa
         # @return [Rational] quantized position aligned to tick grid
         #
         # @example Quantization to tick boundaries
-        #   # With 384 ticks per bar, tick_duration = 1/384r
-        #   _quantize_position(1.5001r)  # => 1.5r (385/384 ticks)
-        #   # Logs warning: "rounding position 1.5001 to tick precision: 1.5"
+        #   # With 384 ticks per bar, 1.5001 bars is 576.038 ticks: tick 576 wins.
+        #   sequencer.send(:_quantize_position, 1.5001r)  # => 3/2r
+        #   # Logs warning: "rounding position 15001/10000 (1.5001) to tick precision: 3/2 (1.5)"
         #
         # @api private
         private def _quantize_position(position, warn: true)

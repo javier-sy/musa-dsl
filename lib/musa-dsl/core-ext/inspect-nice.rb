@@ -71,7 +71,7 @@ module Musa
       #   @example Mixed keys
       #     using Musa::Extension::InspectNice
       #     { pitch: 60, 'name' => 'C4' }.inspect
-      #     # => "{ pitch: 60, 'name' => 'C4' }"
+      #     # => '{ pitch: 60, "name" => "C4" }'
       class ::Hash; end
 
       # @!method to_s

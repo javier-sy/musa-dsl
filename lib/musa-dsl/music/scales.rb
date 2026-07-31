@@ -989,7 +989,7 @@ module Musa
       #
       # @example
       #   MajorScaleKind.base_metadata
-      #   # => { family: :diatonic, brightness: 0, character: [:bright, :stable] }
+      #   # => { family: :diatonic, brightness: 0, character: [:bright, :stable, :resolved], parent: nil }
       def self.base_metadata
         @base_metadata || {}
       end

@@ -66,7 +66,10 @@ module Musa::Datasets
   #   # Returns all events starting in [0, 2) or overlapping interval
   #
   # @example Filter events
-  #   high_notes = score.subset { |event| event[:pitch] > 60 }
+  #   pitched = Score.new({ 0r => [{ pitch: 60, duration: 1r }.extend(PDV)],
+  #                         1r => [{ pitch: 64, duration: 1r }.extend(PDV)] })
+  #   high_notes = pitched.subset { |event| event[:pitch] > 60 }
+  #   high_notes.positions  # => [1r]
   #
   # @example Get all positions
   #   score.positions  # => [0r, 1r, 2r, ...]
@@ -195,9 +198,10 @@ module Musa::Datasets
     #   events = score.at(0r)  # => Array of events at time 0
     #
     # @example Multiple events at same time (chord)
-    #   score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(PDV))
-    #   score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(PDV))
-    #   score.at(0r).size  # => 2
+    #   chord = Score.new
+    #   chord.at(0r, add: { pitch: 60, duration: 1.0 }.extend(PDV))
+    #   chord.at(0r, add: { pitch: 64, duration: 1.0 }.extend(PDV))
+    #   chord.at(0r).size  # => 2
     def at(time, add: nil)
       time = time.rationalize
 
@@ -223,10 +227,12 @@ module Musa::Datasets
     # @return [Integer] number of distinct time positions
     #
     # @example
-    #   score.at(0r, add: event1)
-    #   score.at(0r, add: event2)  # Same time
-    #   score.at(1r, add: event3)  # Different time
-    #   score.size  # => 2 (two time positions)
+    #   sized = Score.new
+    #   sized.at(0r, add: { pitch: 60, duration: 1r }.extend(PDV))
+    #   sized.at(0r, add: { pitch: 64, duration: 1r }.extend(PDV))  # Same time
+    #   sized.at(1r, add: { pitch: 67, duration: 1r }.extend(PDV))  # Different time
+    #   sized.size  # => 2
+    #   # Two time positions, not three events.
     def size
       @score.keys.size
     end
@@ -236,9 +242,10 @@ module Musa::Datasets
     # @return [Array<Rational>] sorted time positions
     #
     # @example
-    #   score.at(1r, add: event1)
-    #   score.at(0r, add: event2)
-    #   score.positions  # => [0r, 1r]
+    #   placed = Score.new
+    #   placed.at(1r, add: { pitch: 60, duration: 1r }.extend(PDV))
+    #   placed.at(0r, add: { pitch: 64, duration: 1r }.extend(PDV))
+    #   placed.positions  # => [0r, 1r]
     def positions
       @score.keys.sort
     end
