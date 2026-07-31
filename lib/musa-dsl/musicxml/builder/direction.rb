@@ -14,6 +14,13 @@ module Musa
         # include tempo, dynamics, pedaling, text instructions, and other musical
         # indications.
         #
+        # ## Reaching them
+        #
+        # Direction types are written inside a `direction` block on a measure, and
+        # the examples throughout this file are against:
+        #
+        #     measure = Measure.new(1, divisions: 2)
+        #
         # ## Direction Types
         #
         # Directions can contain multiple direction-type elements:
@@ -220,10 +227,10 @@ module Musa
         # Supports dotted beat units.
         #
         # @example Quarter note = 120 BPM
-        #   metronome beat_unit: 'quarter', per_minute: '120'
+        #   measure.metronome beat_unit: 'quarter', per_minute: '120'
         #
         # @example Dotted eighth = 90
-        #   metronome beat_unit: 'eighth', beat_unit_dots: 1, per_minute: '90'
+        #   measure.metronome beat_unit: 'eighth', beat_unit_dots: 1, per_minute: '90'
         class Metronome < DirectionType
           include Helper
 
@@ -264,13 +271,13 @@ module Musa
         # Supports niente (to/from nothing) hairpins.
         #
         # @example Crescendo
-        #   wedge 'crescendo'
+        #   measure.direction { wedge 'crescendo' }
         #
         # @example Diminuendo to nothing
-        #   wedge 'diminuendo', niente: true
+        #   measure.direction { wedge 'diminuendo', niente: true }
         #
         # @example Stop wedge
-        #   wedge 'stop'
+        #   measure.direction { wedge 'stop' }
         class Wedge < DirectionType
           include Helper
 
@@ -297,10 +304,10 @@ module Musa
         # Can specify multiple dynamics for compound markings.
         #
         # @example Single dynamic
-        #   dynamics 'f'
+        #   measure.direction { dynamics 'f' }
         #
         # @example Multiple dynamics (sforzando-forte)
-        #   dynamics ['sf', 'f']
+        #   measure.direction { dynamics ['sf', 'f'] }
         class Dynamics < DirectionType
           def initialize(value, # pp / ppp / ... or array of
                          &block)
@@ -327,13 +334,13 @@ module Musa
         # and continue types with optional line display.
         #
         # @example Pedal down
-        #   pedal 'start', line: true
+        #   measure.direction { pedal 'start', line: true }
         #
         # @example Pedal up
-        #   pedal 'stop'
+        #   measure.direction { pedal 'stop' }
         #
         # @example Pedal change
-        #   pedal 'change'
+        #   measure.direction { pedal 'change' }
         class Pedal < DirectionType
           include Helper
 
@@ -361,10 +368,10 @@ module Musa
         # Supports different line types and end styles.
         #
         # @example Start bracket
-        #   bracket 'start', line_end: 'down', line_type: 'solid'
+        #   measure.direction { bracket 'start', line_end: 'down', line_type: 'solid' }
         #
         # @example Stop bracket
-        #   bracket 'stop', line_end: 'up'
+        #   measure.direction { bracket 'stop', line_end: 'up' }
         class Bracket < DirectionType
           include Helper
 
@@ -394,10 +401,10 @@ module Musa
         # Represents dashed extension lines for text or other markings.
         #
         # @example Start dashed line
-        #   dashes 'start'
+        #   measure.direction { dashes 'start' }
         #
         # @example Stop dashed line
-        #   dashes 'stop'
+        #   measure.direction { dashes 'stop' }
         class Dashes < DirectionType
           def initialize(type, # start / stop / continue
                          &block)
@@ -420,10 +427,10 @@ module Musa
         # Can contain multiple text strings.
         #
         # @example Single text
-        #   words 'Allegro'
+        #   measure.direction { words 'Allegro' }
         #
         # @example Multiple texts
-        #   words ['con', 'brio']
+        #   measure.direction { words ['con', 'brio'] }
         class Words < DirectionType
           def initialize(value, # string | Array of string
                          &block)
@@ -448,13 +455,13 @@ module Musa
         # Type indicates up/down/stop/continue, size indicates octaves (8 or 15).
         #
         # @example Start 8va
-        #   octave_shift 'up', size: 8
+        #   measure.direction { octave_shift 'up', size: 8 }
         #
         # @example Start 8vb
-        #   octave_shift 'down', size: 8
+        #   measure.direction { octave_shift 'down', size: 8 }
         #
         # @example Stop octave shift
-        #   octave_shift 'stop'
+        #   measure.direction { octave_shift 'stop' }
         class OctaveShift < DirectionType
           include Helper
 

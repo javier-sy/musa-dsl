@@ -30,6 +30,13 @@ module Musa
         # Common pattern: backup by the full measure duration to restart from the
         # beginning of the measure.
         #
+        # ## The measure these examples are written against
+        #
+        #     measure = Measure.new(1, divisions: 2)
+        #
+        # Two divisions to the quarter, so a full 4/4 measure is 8 divisions --
+        # which is the number every `backup 8` below is rewinding.
+        #
         # ## Workflow Example
         #
         # 1. Write notes for voice 1

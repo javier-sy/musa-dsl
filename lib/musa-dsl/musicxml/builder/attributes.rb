@@ -122,46 +122,51 @@ module Musa
         # - 6/8 (compound): beats=6, beat_type=8
         # - 2/2 (cut time): beats=2, beat_type=2
         #
+        # ## Reaching it
+        #
+        # Time signatures are written through the attributes DSL rather than
+        # constructed directly. The examples below are against:
+        #
+        #     measure = Measure.new(1, divisions: 2)
+        #
+        # The class itself is `Musa::MusicXML::Builder::Internal::Time`, which
+        # collides with Ruby's own `Time` anywhere outside this file.
+        #
         # ## Compound Time Signatures
         #
-        # Some meters combine multiple beat groups (e.g., 3+2+3/8):
-        #
-        #     Time.new do |t|
-        #       t.add_beats beats: 3, beat_type: 8
-        #       t.add_beats beats: 2, beat_type: 8
-        #       t.add_beats beats: 3, beat_type: 8
-        #     end
+        # Some meters combine multiple beat groups (e.g., 3+2+3/8). These are
+        # built by calling {#add_beats} once per group; the block form the
+        # constructor appears to accept does not populate anything.
         #
         # ## Senza Misura (Unmeasured Time)
         #
-        # For cadenzas and free-form sections without strict meter:
-        #
-        #     Time.new(senza_misura: '')
+        # For cadenzas and free-form sections without strict meter, pass
+        # `senza_misura: ''`.
         #
         # @example Common time (4/4)
-        #   Time.new(beats: 4, beat_type: 4)
+        #   measure.attributes { time beats: 4, beat_type: 4 }
         #
         # @example Waltz (3/4)
-        #   Time.new(beats: 3, beat_type: 4)
+        #   measure.attributes { time beats: 3, beat_type: 4 }
         #
         # @example Compound meter (6/8)
-        #   Time.new(beats: 6, beat_type: 8)
-        #
-        # @example Complex meter (5/4)
-        #   Time.new(beats: 5, beat_type: 4)
+        #   measure.attributes { time beats: 6, beat_type: 8 }
         #
         # @example Compound signature (3+2+3/8)
-        #   time = Time.new
-        #   time.add_beats(beats: 3, beat_type: 8)
-        #   time.add_beats(beats: 2, beat_type: 8)
-        #   time.add_beats(beats: 3, beat_type: 8)
+        #   signature = Musa::MusicXML::Builder::Internal::Time.new
+        #   signature.add_beats(beats: 3, beat_type: 8)
+        #   signature.add_beats(beats: 2, beat_type: 8)
+        #   signature.add_beats(beats: 3, beat_type: 8)
+        #   signature.beats.size  # => 3
         #
         # @example Piano - different time per staff
-        #   Time.new(1, beats: 4, beat_type: 4)  # Treble: 4/4
-        #   Time.new(2, beats: 3, beat_type: 4)  # Bass: 3/4
+        #   measure.attributes do
+        #     time 1, beats: 4, beat_type: 4  # Treble: 4/4
+        #     time 2, beats: 3, beat_type: 4  # Bass: 3/4
+        #   end
         #
         # @example Cadenza (unmeasured)
-        #   Time.new(senza_misura: '')
+        #   measure.attributes { time senza_misura: '' }
         class Time
           include Helper::ToXML
 
@@ -172,14 +177,18 @@ module Musa
           # @param beats [Integer, nil] time signature numerator (beats per measure)
           # @param beat_type [Integer, nil] time signature denominator (note value per beat)
           #
+          # @note A block passed here is accepted and then ignored, so the
+          #   compound-meter form `Time.new { |t| t.add_beats(...) }` builds an
+          #   empty time signature. Use {#add_beats} after construction.
+          #
           # @example 4/4 time
-          #   Time.new(beats: 4, beat_type: 4)
+          #   measure.attributes { time beats: 4, beat_type: 4 }
           #
           # @example 6/8 time
-          #   Time.new(beats: 6, beat_type: 8)
+          #   measure.attributes { time beats: 6, beat_type: 8 }
           #
           # @example Unmeasured time
-          #   Time.new(senza_misura: '')
+          #   measure.attributes { time senza_misura: '' }
           def initialize(number = nil, senza_misura: nil, beats: nil, beat_type: nil)
             @number = number
 
@@ -211,10 +220,11 @@ module Musa
           # @return [void]
           #
           # @example Complex meter (3+2+3/8)
-          #   time = Time.new
-          #   time.add_beats(beats: 3, beat_type: 8)
-          #   time.add_beats(beats: 2, beat_type: 8)
-          #   time.add_beats(beats: 3, beat_type: 8)
+          #   signature = Musa::MusicXML::Builder::Internal::Time.new
+          #   signature.add_beats(beats: 3, beat_type: 8)
+          #   signature.add_beats(beats: 2, beat_type: 8)
+          #   signature.add_beats(beats: 3, beat_type: 8)
+          #   signature.beats.size  # => 3
           def add_beats(beats:, beat_type:)
             @beats << { beats: beats, beat_type: beat_type }
           end
@@ -291,33 +301,42 @@ module Musa
         #
         # Common for tenor voice (treble clef 8va basso) and piccolo (treble 8va alta).
         #
+        # ## Reaching it
+        #
+        # Clefs are written through the attributes DSL. The examples below are
+        # against `measure = Measure.new(1, divisions: 2)`.
+        #
+        # `line:` is a required keyword even where the clef has no line, so
+        # percussion and tablature must pass `line: nil` explicitly; the emitted
+        # XML then correctly omits the element.
+        #
         # @example Treble clef
-        #   Clef.new(sign: 'G', line: 2)
+        #   measure.attributes { clef sign: 'G', line: 2 }
         #
         # @example Bass clef
-        #   Clef.new(sign: 'F', line: 4)
+        #   measure.attributes { clef sign: 'F', line: 4 }
         #
-        # @example Alto clef
-        #   Clef.new(sign: 'C', line: 3)
-        #
-        # @example Tenor clef
-        #   Clef.new(sign: 'C', line: 4)
+        # @example Alto and tenor clefs
+        #   measure.attributes { clef sign: 'C', line: 3 }
+        #   measure.attributes { clef sign: 'C', line: 4 }
         #
         # @example Tenor voice (treble 8va basso)
-        #   Clef.new(sign: 'G', line: 2, octave_change: -1)
+        #   measure.attributes { clef sign: 'G', line: 2, octave_change: -1 }
         #
         # @example Piccolo (treble 8va alta)
-        #   Clef.new(sign: 'G', line: 2, octave_change: 1)
+        #   measure.attributes { clef sign: 'G', line: 2, octave_change: 1 }
         #
         # @example Piano - different clefs per staff
-        #   Clef.new(1, sign: 'G', line: 2)  # Treble clef (right hand)
-        #   Clef.new(2, sign: 'F', line: 4)  # Bass clef (left hand)
+        #   measure.attributes do
+        #     clef 1, sign: 'G', line: 2  # Treble clef (right hand)
+        #     clef 2, sign: 'F', line: 4  # Bass clef (left hand)
+        #   end
         #
         # @example Percussion
-        #   Clef.new(sign: 'percussion')
+        #   measure.attributes { clef sign: 'percussion', line: nil }
         #
         # @example Guitar tablature
-        #   Clef.new(sign: 'TAB')
+        #   measure.attributes { clef sign: 'TAB', line: nil }
         class Clef
           include Helper::ToXML
 
@@ -428,6 +447,11 @@ module Musa
         #       time beats: 4, beat_type: 4
         #       clef sign: 'G', line: 2
         #     end
+        #
+        # The per-method examples further down are written against one built
+        # that way:
+        #
+        #     attributes = Attributes.new(divisions: 4)
         #
         # @example Simple single-staff attributes
         #   Attributes.new(

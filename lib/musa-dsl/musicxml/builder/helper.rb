@@ -151,12 +151,14 @@ module Musa
             # @return [IO, StringIO] the io parameter, containing the XML output
             #
             # @example Writing to file
+            #   element = Measure.new(1, divisions: 2)
             #   File.open('output.xml', 'w') do |f|
             #     element.to_xml(f)
             #   end
             #
             # @example Getting XML as string
             #   xml_string = element.to_xml.string
+            #   xml_string.start_with?('<measure')  # => true
             def to_xml(io = nil, indent: nil)
               io ||= StringIO.new
               indent ||= 0
@@ -239,10 +241,11 @@ module Musa
           # @raise [ArgumentError] if value is not klass, Hash, or nil
           #
           # @example Flexible parameter acceptance
-          #   # Method can accept either:
-          #   time_modification: { actual_notes: 3, normal_notes: 2 }
-          #   # or:
-          #   time_modification: TimeModification.new(actual_notes: 3, normal_notes: 2)
+          #   # A caller may pass either a hash of constructor parameters...
+          #   make_instance_if_needed(TimeModification, { actual_notes: 3, normal_notes: 2 })
+          #   # ...or an already-built instance, which is returned unchanged.
+          #   built = TimeModification.new(actual_notes: 3, normal_notes: 2)
+          #   make_instance_if_needed(TimeModification, built).equal?(built)  # => true
           #
           # @api private
           def make_instance_if_needed(klass, hash_or_class_instance)

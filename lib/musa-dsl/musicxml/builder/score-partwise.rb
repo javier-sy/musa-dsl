@@ -62,6 +62,10 @@ module Musa
       #     score.add_part :p2, name: "Violin II"
       #     score.add_group 1, type: 'stop'
       #
+      # ## The score the per-method examples are written against
+      #
+      #     score = ScorePartwise.new
+      #
       # ## XML Output
       #
       # Generate MusicXML 3.0 compliant XML:

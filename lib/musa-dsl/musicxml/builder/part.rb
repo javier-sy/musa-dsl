@@ -25,6 +25,10 @@ module Musa
         # Parts are typically created via {Musa::MusicXML::Builder::ScorePartwise#part} or {Musa::MusicXML::Builder::ScorePartwise#add_part}.
         # Measures are added sequentially, automatically numbered starting from 1.
         #
+        # The per-method examples below are written against:
+        #
+        #     part = Part.new(:p1, name: "Violin I")
+        #
         # @example Creating a part with measures
         #   part = Part.new(:p1, name: "Violin I", abbreviation: "Vln. I") do
         #     measure do

@@ -45,6 +45,7 @@ module Musa
         #
         # Created via Measure#add_pitch or Measure#pitch:
         #
+        #     measure = Measure.new(1, divisions: 2)
         #     measure.pitch 'C', octave: 5, duration: 4, type: 'quarter'
         #     measure.add_pitch step: 'F', alter: 1, octave: 4, duration: 2, type: 'eighth'
         #

@@ -69,7 +69,7 @@ module Musa
         #   end
         #
         # @example Measure with dynamics and tempo
-        #   measure do
+        #   Measure.new(2, divisions: 4) do
         #     metronome beat_unit: 'quarter', per_minute: 120
         #
         #     direction do
@@ -85,6 +85,10 @@ module Musa
         #       dynamics 'f'
         #     end
         #   end
+        #
+        # ## The measure the per-method examples are written against
+        #
+        #     measure = Measure.new(1, divisions: 4)
         #
         # @see Attributes Musical attributes (key, time, clef)
         # @see PitchedNote Pitched note
@@ -243,7 +247,7 @@ module Musa
           # @return [Backup] the created backup element
           #
           # @example Piano grand staff
-          #   measure do
+          #   Measure.new(1, divisions: 2) do
           #     pitch 'C', octave: 5, duration: 8, type: 'half', staff: 1
           #     backup 8  # Rewind to start
           #     pitch 'C', octave: 3, duration: 8, type: 'half', staff: 2
@@ -262,7 +266,7 @@ module Musa
           # @return [Forward] the created forward element
           #
           # @example Skip to beat 3
-          #   measure do
+          #   Measure.new(1, divisions: 2) do
           #     pitch 'C', octave: 4, duration: 2, type: 'quarter'
           #     forward 4  # Skip 2 beats
           #     pitch 'D', octave: 4, duration: 2, type: 'quarter'

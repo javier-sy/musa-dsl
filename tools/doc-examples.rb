@@ -271,8 +271,20 @@ module DocExamples
         end
       end
 
-      # The file's own vocabulary first, quietly.
+      # The file's own vocabulary first, quietly -- minus any name the narrative
+      # itself uses as a DSL verb.
+      #
+      # In Ruby a local variable shadows a method of the same name, so binding
+      # `part` from an earlier example turns a later `part :p1, name: "Flute" do`
+      # into a syntax error. The runner would then be reporting a defect it had
+      # introduced -- and the hazard is real for readers too: name a local `part`
+      # and the `part` verb stops being available.
+      spoken = narrative.flat_map(&:code)
+
       preamble(narrative.first.file, before: narrative.first.line).each do |code|
+        name = code[ASSIGNMENT, 1]
+        next if name && spoken.any? { |line| line.match?(/^\s*#{Regexp.escape(name)}\s+[^=\s]/) }
+
         eval(code, TOPLEVEL_BINDING) rescue nil # rubocop:disable Security/Eval, Style/RescueModifier
       end
 
