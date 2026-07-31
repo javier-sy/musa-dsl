@@ -21,14 +21,13 @@ module Musa
       # Represents simultaneous musical events (multiple voices, chords).
       # Contains array of neuma series in `:parallel` key.
       #
-      # @example Parallel structure
-      #   {
-      #     kind: :parallel,
-      #     parallel: [
-      #       { kind: :serie, serie: melody_neumas },
-      #       { kind: :serie, serie: bass_neumas }
-      #     ]
-      #   }.extend(Musa::Neumas::Neuma::Parallel)
+      # The shape it takes (a structure, not a runnable example):
+      #
+      #     { kind: :parallel,
+      #       parallel: [{ kind: :serie, serie: melody_neumas },
+      #                  { kind: :serie, serie: bass_neumas }] }.extend(Parallel)
+      #
+      # It is built by {Neuma#|} rather than written out; see there.
       #
       # @api public
       module Parallel
@@ -40,11 +39,9 @@ module Musa
       # Represents sequential musical events (single voice melody).
       # Contains array of neuma objects in `:serie` key.
       #
-      # @example Serie structure
-      #   {
-      #     kind: :serie,
-      #     serie: [neuma1, neuma2, neuma3]
-      #   }.extend(Musa::Neumas::Neuma::Serie)
+      # The shape it takes (a structure, not a runnable example):
+      #
+      #     { kind: :serie, serie: [neuma1, neuma2, neuma3] }.extend(Serie)
       #
       # @api public
       module Serie
@@ -63,12 +60,23 @@ module Musa
       # @raise [ArgumentError] if other cannot be converted
       #
       # @example Create parallel from neumas
-      #   melody = "(0) (+2) (+4)".to_neumas
-      #   bass = "(-7) (-5) (-3)".to_neumas
-      #   harmony = melody | bass
+      #   using Musa::Extension::Neumas  # refinements are per file
+      #
+      #   # The voices are parallelised as notation. The right operand has to be
+      #   # something convertible to neumas -- a String -- so an already parsed
+      #   # serie works on the left but not on the right.
+      #   harmony = "(0) (+2) (+4)" | "(-7) (-5) (-3)"
+      #
+      #   harmony[:kind]           # => :parallel
+      #   harmony[:parallel].size  # => 2
       #
       # @example Chain multiple parallels
-      #   satb = soprano | alto | tenor | bass
+      #   using Musa::Extension::Neumas
+      #
+      #   satb = "(+7) (+9)" | "(+4) (+5)" | "(0) (+2)" | "(-7) (-5)"
+      #
+      #   # Chaining adds to the existing parallel instead of nesting it.
+      #   satb[:parallel].size  # => 4
       #
       # @api public
       def |(other)

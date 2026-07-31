@@ -42,34 +42,41 @@ module Musa
   # - Build counterpoint with species rules
   # - Generate chord voicings with spacing constraints
   #
-  # @example Basic chord progression rules
-  #   rules = Musa::Rules::Rules.new do
-  #     # Generate possible next chords
-  #     grow 'next chord' do |chord, history|
-  #       case chord
-  #       when :I   then branch(:ii); branch(:IV); branch(:V)
-  #       when :ii  then branch(:V); branch(:vii)
-  #       when :IV  then branch(:I); branch(:V)
-  #       when :V   then branch(:I); branch(:vi)
-  #       when :vi  then branch(:ii); branch(:IV)
-  #       when :vii then branch(:I)
+  # ## What these show, and what they do not
+  #
+  # The examples below are READINGS, not runnable examples: as written they all
+  # return zero combinations. Whether the algorithm or its documentation is at
+  # fault is issue #73, and until that is decided nothing here should be copied
+  # as working code.
+  #
+  #     rules = Musa::Rules::Rules.new do
+  #       # Generate possible next chords
+  #       grow 'next chord' do |chord, history|
+  #         case chord
+  #         when :I   then branch(:ii); branch(:IV); branch(:V)
+  #         when :ii  then branch(:V); branch(:vii)
+  #         when :IV  then branch(:I); branch(:V)
+  #         when :V   then branch(:I); branch(:vi)
+  #         when :vi  then branch(:ii); branch(:IV)
+  #         when :vii then branch(:I)
+  #         end
+  #       end
+  #
+  #       # Avoid parallel fifths -- has_parallel_fifths? is the piece's own
+  #       cut 'parallel fifths' do |chord, history|
+  #         prune if has_parallel_fifths?(history + [chord])
+  #       end
+  #
+  #       # End after 4 chords
+  #       ended_when do |chord, history|
+  #         history.size == 4
   #       end
   #     end
   #
-  #     # Avoid parallel fifths
-  #     cut 'parallel fifths' do |chord, history|
-  #       prune if has_parallel_fifths?(history + [chord])
-  #     end
-  #
-  #     # End after 4 chords
-  #     ended_when do |chord, history|
-  #       history.size == 4
-  #     end
-  #   end
-  #
-  #   tree = rules.apply([:I])
-  #   progressions = tree.combinations
-  #   # => [[:I, :ii, :V, :I], [:I, :IV, :V, :I], ...]
+  #     tree = rules.apply([:I])
+  #     tree.combinations
+  #     # intended: [[:I, :ii, :V, :I], [:I, :IV, :V, :I], ...]
+  #     # actual:   [] -- see issue #73
   #
   # @example Melodic contour rules with parameters
   #   rules = Musa::Rules::Rules.new do
@@ -143,12 +150,15 @@ module Musa
       # @yield rule definition DSL block
       # @yieldreturn [void]
       #
-      # @example
-      #   rules = Rules.new do
-      #     grow 'generate' { |obj| branch new_obj }
-      #     cut 'validate' { |obj| prune if invalid?(obj) }
-      #     ended_when { |obj| complete?(obj) }
-      #   end
+      # The shape of the block (a reading; and note the `do...end`, since
+      # `grow 'generate' { ... }` binds the braces to the string and is a Ruby
+      # syntax error):
+      #
+      #     rules = Rules.new do
+      #       grow('generate') { |obj| branch new_obj }
+      #       cut('validate') { |obj| prune if invalid?(obj) }
+      #       ended_when { |obj| complete?(obj) }
+      #     end
       #
       # @return [void]
       def initialize(&block)
@@ -218,13 +228,14 @@ module Musa
       #
       # @return [Node] root node with all combination paths
       #
-      # @example Single seed
-      #   tree = rules.apply(:I)
-      #   tree.combinations  # => [[:I, :ii, :V, :I], ...]
+      # Seeding (readings, for the reason given on the module: these return
+      # nothing today -- issue #73):
       #
-      # @example Multiple seeds
-      #   tree = rules.apply([:I, :ii, :V])
-      #   tree.combinations  # => combinations starting from each seed
+      #     rules.apply(:I).combinations
+      #     # intended: [[:I, :ii, :V, :I], ...]
+      #
+      #     rules.apply([:I, :ii, :V]).combinations
+      #     # intended: combinations starting from each seed
       def apply(object_or_list, node = nil, **parameters)
         list = object_or_list.arrayfy.clone
 
@@ -555,13 +566,11 @@ module Musa
         #
         # @return [Array<Array<Object>>] all valid complete paths
         #
-        # @example
-        #   tree.combinations
-        #   # => [
-        #   #   [:I, :ii, :V, :I],
-        #   #   [:I, :IV, :V, :I],
-        #   #   ...
-        #   # ]
+        # What a grown tree is meant to yield (a reading -- see issue #73):
+        #
+        #     tree.combinations
+        #     # intended: [[:I, :ii, :V, :I], [:I, :IV, :V, :I], ...]
+        #
         # @api private
         def combinations(parent_combination = nil)
           parent_combination ||= []

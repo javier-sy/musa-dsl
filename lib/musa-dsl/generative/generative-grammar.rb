@@ -255,8 +255,12 @@ module Musa
         # @param comparison_method [Symbol, nil] comparison method to apply
         # @param comparison_value [Object, nil] value to compare against
         #
-        # @yieldparam option [Array<OptionElement>] option to evaluate
-        # @yieldreturn [Boolean] true if option should be included
+        # @yieldparam option [Array<OptionElement>] option so far -- PARTIAL as
+        #   well as complete: the block is asked while the tree grows, not once
+        #   at the end
+        # @yieldreturn [Boolean] true if this option may continue growing. A
+        #   predicate that rejects the partials it passes through prunes them
+        #   and never reaches the complete option it was written for
         #
         # @return [ConditionNode] limited node
         #
@@ -307,8 +311,12 @@ module Musa
         # @param raw [Boolean] if true, return raw OptionElement arrays
         # @param content [Symbol] how to extract content (:itself, :join, etc.)
         #
-        # @yieldparam option [Array<OptionElement>] option to evaluate
-        # @yieldreturn [Boolean] true if option should be included
+        # @yieldparam option [Array<OptionElement>] option so far -- PARTIAL as
+        #   well as complete: the block is asked while the tree grows, not once
+        #   at the end
+        # @yieldreturn [Boolean] true if this option may continue growing. A
+        #   predicate that rejects the partials it passes through prunes them
+        #   and never reaches the complete option it was written for
         #
         # @return [Array] generated options
         #
@@ -316,22 +324,31 @@ module Musa
         # @raise [ArgumentError] if raw and content both specified
         #
         # @example Basic usage
+        #   a = N('a', size: 1)
+        #   b = N('b', size: 1)
         #   grammar = (a | b).repeat(2)
-        #   grammar.options
-        #   # => [["a", "a"], ["a", "b"], ["b", "a"], ["b", "b"]]
+        #
+        #   grammar.options  # => [["a", "a"], ["a", "b"], ["b", "a"], ["b", "b"]]
         #
         # @example With content formatting
-        #   grammar.options(content: :join)
-        #   # => ["aa", "ab", "ba", "bb"]
+        #   grammar.options(content: :join)  # => ["aa", "ab", "ba", "bb"]
         #
         # @example With filtering
-        #   grammar.options { |o| o.size == 2 }
+        #   # The block prunes during growth, so it sees options of size 1 too:
+        #   # `option.size == 2` would kill them and yield nothing at all.
+        #   grammar.options { |option| option.size <= 2 }.size  # => 4
+        #   grammar.options(content: :join) { |option| option.all? { |e| e.content == 'a' } }
+        #   # => ["aa"]
         #
         # @example Simplified filtering
+        #   # The first argument names an ATTRIBUTE of the nodes, not a method of
+        #   # the option: `size` here is the `size: 1` each N was given. Nodes
+        #   # without it make this form fail on nil.
         #   grammar.options(:size, :sum, :<=, 4, content: :join)
+        #   # => ["aa", "ab", "ba", "bb"]
         #
         # @example Raw OptionElements
-        #   grammar.options(raw: true)
+        #   grammar.options(raw: true).size  # => 4
         def options(attribute = nil,
                     after_collect_operation = nil,
                     comparison_method = nil,
@@ -381,8 +398,12 @@ module Musa
         #
         # @param flatten [Boolean] flatten nested series
         #
-        # @yieldparam option [Array<OptionElement>] option to evaluate
-        # @yieldreturn [Boolean] true if option should be included
+        # @yieldparam option [Array<OptionElement>] option so far -- PARTIAL as
+        #   well as complete: the block is asked while the tree grows, not once
+        #   at the end
+        # @yieldreturn [Boolean] true if this option may continue growing. A
+        #   predicate that rejects the partials it passes through prunes them
+        #   and never reaches the complete option it was written for
         #
         # @return [Musa::Series::Serie] series of options
         def to_serie(flatten: true, &condition)
@@ -398,8 +419,12 @@ module Musa
         #
         # @param parent [Array<OptionElement>, nil] parent elements
         #
-        # @yieldparam option [Array<OptionElement>] option to evaluate
-        # @yieldreturn [Boolean] true if option should be included
+        # @yieldparam option [Array<OptionElement>] option so far -- PARTIAL as
+        #   well as complete: the block is asked while the tree grows, not once
+        #   at the end
+        # @yieldreturn [Boolean] true if this option may continue growing. A
+        #   predicate that rejects the partials it passes through prunes them
+        #   and never reaches the complete option it was written for
         #
         # @return [Array<Array<OptionElement>>] option arrays
         #

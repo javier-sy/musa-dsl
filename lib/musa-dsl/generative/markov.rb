@@ -78,13 +78,20 @@ module Musa
   #   melody = Musa::Markov::Markov.new(
   #     start: 60,  # Middle C
   #     finish: nil,  # Infinite
+  #     # Every reachable state needs its own row: landing on one that has no
+  #     # transitions raises "No transition defined for ...".
   #     transitions: {
   #       60 => { 62 => 0.4, 64 => 0.3, 59 => 0.3 },  # C → D/E/B
   #       62 => { 60 => 0.3, 64 => 0.4, 67 => 0.3 },  # D → C/E/G
-  #       64 => [60, 62, 65, 67],                      # E → C/D/F/G
-  #       # ... more transitions
-  #     }
+  #       64 => [60, 62, 65, 67],                     # E → C/D/F/G
+  #       65 => [64, 67],                             # F → E/G
+  #       67 => [64, 65, 60],                         # G → E/F/C
+  #       59 => [60, 62]                              # B → C/D
+  #     },
+  #     random: 3
   #   ).i.max_size(16).to_a
+  #
+  #   melody.first(6)  # => [60, 64, 62, 67, 64, 60]
   #
   # @see Musa::Series::Serie Series interface for chaining operations
   # @see Musa::Extension::SmartProcBinder Smart procedure binding for history-based transitions

@@ -52,35 +52,38 @@ module Musa
   #     weight complexity: 2.0, has_alpha: 1.0, has_beta: -0.5
   #   end
   #
-  #   population = generate_candidates()
-  #   selected = darwin.select(population)
-  #   # Returns population sorted by fitness (best first)
+  #   population = [{ type: :alpha, complexity: 1 },
+  #                 { type: :beta,  complexity: 3 },
+  #                 { type: :alpha, complexity: 5 },
+  #                 { type: :alpha, complexity: 2, bad_property: true }]
   #
-  # @example Musical chord progression selection
-  #   darwin = Musa::Darwin::Darwin.new do
-  #     measures do |progression|
-  #       # Eliminate progressions with parallel fifths
-  #       die if has_parallel_fifths?(progression)
+  #   darwin.select(population).collect { |o| [o[:type], o[:complexity]] }
+  #   # => [[:alpha, 1], [:alpha, 5], [:beta, 3]]
+  #   # Sorted by fitness, and the one that died is gone rather than last.
   #
-  #       # Prefer smooth voice leading
-  #       dimension :voice_leading, -total_voice_leading_distance(progression)
+  # A musical selection reads the same way, with the piece's own helpers doing
+  # the judging (a reading: `has_parallel_fifths?` and friends are yours, not
+  # the framework's):
   #
-  #       # Prefer certain cadences
-  #       feature :authentic_cadence if ends_with_V_I?(progression)
-  #       feature :plagal_cadence if ends_with_IV_I?(progression)
+  #     darwin = Musa::Darwin::Darwin.new do
+  #       measures do |progression|
+  #         die if has_parallel_fifths?(progression)
   #
-  #       # Penalize excessive chromaticism
-  #       dimension :chromaticism, -count_chromatic_notes(progression)
+  #         dimension :voice_leading, -total_voice_leading_distance(progression)
+  #
+  #         feature :authentic_cadence if ends_with_V_I?(progression)
+  #         feature :plagal_cadence if ends_with_IV_I?(progression)
+  #
+  #         dimension :chromaticism, -count_chromatic_notes(progression)
+  #       end
+  #
+  #       weight voice_leading: 3.0,
+  #              authentic_cadence: 2.0,
+  #              plagal_cadence: 1.0,
+  #              chromaticism: 1.5
   #     end
   #
-  #     weight voice_leading: 3.0,
-  #            authentic_cadence: 2.0,
-  #            plagal_cadence: 1.0,
-  #            chromaticism: 1.5
-  #   end
-  #
-  #   candidates = generate_progressions()
-  #   best = darwin.select(candidates).first(10)  # Top 10 progressions
+  #     best = darwin.select(candidates).first(10)
   #
   # @see Darwin Main evolutionary selector class
   # @see Musa::Extension::With DSL context management for evaluation blocks
@@ -126,11 +129,15 @@ module Musa
       # @return [Array] population sorted by fitness (descending)
       #
       # @example
-      #   candidates = [obj1, obj2, obj3, ...]
-      #   ranked = darwin.select(candidates)
-      #   best = ranked.first      # Highest fitness
-      #   worst = ranked.last      # Lowest fitness
-      #   top10 = ranked.first(10) # Top 10
+      #   simple = Darwin.new do
+      #     measures { |o| dimension :complexity, -o[:complexity].to_f }
+      #     weight complexity: 1.0
+      #   end
+      #
+      #   ranked = simple.select([{ complexity: 3 }, { complexity: 1 }, { complexity: 5 }])
+      #
+      #   ranked.first  # => { complexity: 1 }
+      #   ranked.last   # => { complexity: 5 }
       def select(population)
         measured_objects = []
 

@@ -71,8 +71,9 @@
 #
 # neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
 #
-# # Access parsed differential values
-# neumas.i.each do |neuma|
+# # Access parsed differential values. A serie has no `each`: consume it with
+# # `to_a` on an instance, or keep it lazy with the serie operations.
+# neumas.i.to_a.each do |neuma|
 #   puts "GDVD: #{neuma[:gdvd].inspect}"
 # end
 # ```
@@ -81,17 +82,23 @@
 #   using Musa::Extension::Neumas
 #
 #   melody = "(0) (+2) (+2) (-1) (0)".to_neumas
-#   # Returns series of GDVD hashes
+#   melody.i.to_a.collect { |n| n[:gdvd] }
+#   # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+#   #     { delta_grade: -1 }, { abs_grade: 0 }]
 #
 # @example With ornaments
 #   using Musa::Extension::Neumas
 #
-#   ornate = "+2.tr +3.mor -1.st".to_neumas
+#   # Ornaments live inside the neuma and carry no dot.
+#   ornate = "(+2 tr) (+3 mor) (-1 st)".to_neumas
+#   ornate.i.to_a.collect { |n| n[:gdvd][:modifiers] }
+#   # => [{ tr: true }, { mor: true }, { st: true }]
 #
 # @example Parallel voices
 #   using Musa::Extension::Neumas
 #
 #   harmony = "(0) (+2) (+4)" | "(+7) (+5) (+7)"
+#   harmony[:parallel].size  # => 2
 #
 # @example Convert to generative node
 #   using Musa::Extension::Neumas

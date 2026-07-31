@@ -36,8 +36,11 @@ module Musa::Neumas
     #     base_duration: 1/4r
     #   )
     #
-    #   gdvd = decoder.decode({ grade_diff: +2, duration_factor: 2 })
-    #   # => { grade_diff: +2, duration_factor: 2, base_duration: 1/4r }
+    #   # The keys are GDVd's own, and the event must carry the dataset: a bare
+    #   # hash has no base_duration to set.
+    #   gdvd = decoder.decode({ delta_grade: 2, factor_duration: 2 }.extend(Musa::Datasets::GDVd))
+    #   gdvd  # => { delta_grade: 2, factor_duration: 2 }
+    #   gdvd.base_duration  # => 1/4r
     #   # Still differential, not converted to absolute
     #
     # @example Intermediate processing workflow
@@ -47,15 +50,14 @@ module Musa::Neumas
     #   neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
     #   differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
     #
-    #   # Process each neuma (keeping differential format)
-    #   gdvds = []
-    #   neumas.i.each do |neuma|
-    #     gdvd = differential_decoder.decode(neuma[:gdvd])
-    #     gdvds << gdvd
-    #   end
+    #   # Process each neuma, keeping the differential format. A serie has no
+    #   # `each`: `map` is a serie operation and stays lazy until consumed.
+    #   gdvds = neumas.map { |neuma| differential_decoder.decode(neuma[:gdvd]) }
     #
-    #   # GDVD objects still have differential values
-    #   # Can transform them before converting to absolute GDV
+    #   gdvds.i.to_a
+    #   # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+    #   #     { delta_grade: -1 }, { abs_grade: 0 }]
+    #   # Still differential, and transformable before converting to absolute GDV
     #
     # @see Musa::Neumas::Decoders::NeumaDecoder
     # @see Musa::Neumas::Decoders::DifferentialDecoder
@@ -84,9 +86,12 @@ module Musa::Neumas
       # @return [Hash] GDVD with base_duration set
       #
       # @example Process differential neuma
-      #   gdvd = { grade_diff: +2, duration_factor: 2 }
-      #   result = decoder.process(gdvd)
-      #   # => { grade_diff: +2, duration_factor: 2, base_duration: 1/4r }
+      #   quarters = NeumaDifferentialDecoder.new(base_duration: 1/4r)
+      #   gdvd = { delta_grade: 2, factor_duration: 2 }.extend(Musa::Datasets::GDVd)
+      #   result = quarters.process(gdvd)
+      #   result  # => { delta_grade: 2, factor_duration: 2 }
+      #   result.base_duration  # => 1/4r
+      #   # base_duration travels with the event, it is not one of its keys
       #
       # @api public
       def process(gdvd)
