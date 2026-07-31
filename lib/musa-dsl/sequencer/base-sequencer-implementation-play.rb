@@ -5,6 +5,10 @@ using Musa::Extension::InspectNice
 
 module Musa::Sequencer
   class BaseSequencer
+    # The sequencer these examples are written against:
+    #
+    #     sequencer = BaseSequencer.new(4, 24)
+    #
     # Play implementation for series-based event scheduling.
     #
     # Implements the `play` method that consumes a Musa::Series and schedules
@@ -240,19 +244,22 @@ module Musa::Sequencer
     # @example Basic play control
     #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
     #
-    #   series = Musa::Series::Constructors.S(60, 62, 64, 65, 67)
+    #   # play consumes datasets, not bare values: each element is a hash, and
+    #   # its :duration is how far the player advances before the next one.
+    #   series = Musa::Series::Constructors.S({ pitch: 60, duration: 1r },
+    #                                         { pitch: 62, duration: 1r })
     #   played_notes = []
     #   after_executed = []
     #
-    #   control = seq.play(series) do |note|
-    #     played_notes << { pitch: note, position: seq.position }
+    #   control = seq.play(series) do |pitch:, duration:|
+    #     played_notes << { pitch: pitch, position: seq.position }
     #   end
     #
     #   control.after(2r) { after_executed << seq.position }
     #
     #   seq.run
-    #   # Result: played_notes contains all 5 notes
-    #   # Result: after_executed contains position 2 bars after play completes
+    #   played_notes.collect { |n| n[:pitch] }  # => [60, 62]
+    #   # after_executed holds the position 2 bars after play completes
     #
     # @api private
     class PlayControl < EventHandler
@@ -351,6 +358,7 @@ module Musa::Sequencer
       # @return [void]
       #
       # @example Delayed callback
+      #   control = seq.play(series) { |pitch:, duration:| }
       #   control.after(4r) { puts "4 bars after play ends" }
       #
       # @api private

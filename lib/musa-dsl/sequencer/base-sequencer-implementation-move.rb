@@ -3,6 +3,10 @@ require_relative '../core-ext/inspect-nice'
 
 module Musa::Sequencer
   class BaseSequencer
+    # The sequencer these examples are written against:
+    #
+    #     sequencer = BaseSequencer.new(4, 24)
+    #
     using Musa::Extension::Arrayfy
     using Musa::Extension::InspectNice
 

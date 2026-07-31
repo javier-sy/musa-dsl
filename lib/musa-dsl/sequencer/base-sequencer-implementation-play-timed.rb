@@ -2,6 +2,10 @@ require_relative '../core-ext/inspect-nice'
 
 module Musa::Sequencer
   class BaseSequencer
+    # The sequencer these examples are written against:
+    #
+    #     sequencer = BaseSequencer.new(4, 24)
+    #
     using Musa::Extension::InspectNice
 
     # Initializes timed series playback.
@@ -142,7 +146,9 @@ module Musa::Sequencer
     # Simpler than PlayControl - no pause/continue support.
     #
     # @example Basic play_timed control
-    #   control = sequencer.play_timed(timed_series) { |values| ... }
+    #   timed_series = Musa::Series::Constructors.S({ time: 0r, value: 60 },
+    #                                               { time: 1r, value: 64 })
+    #   control = sequencer.play_timed(timed_series) { |values| }
     #   control.on_stop { puts "Playback finished!" }
     #   control.after(2r) { puts "2 bars after end" }
     #
@@ -190,6 +196,7 @@ module Musa::Sequencer
       # @return [void]
       #
       # @example Delayed callback
+      #   control = sequencer.play_timed(timed_series) { |values| }
       #   control.after(4r) { puts "4 bars after playback ends" }
       #
       # @api private

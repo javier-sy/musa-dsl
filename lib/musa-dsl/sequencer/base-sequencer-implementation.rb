@@ -5,6 +5,10 @@ module Musa::Sequencer
   using Musa::Extension::InspectNice
 
   class BaseSequencer
+    # The sequencer these examples are written against:
+    #
+    #     sequencer = BaseSequencer.new(4, 24)
+    #
     # Executes all events scheduled at position.
     #
     # Processes the event queue at the given position, executing each command's
@@ -78,9 +82,11 @@ module Musa::Sequencer
     #
     # @return [void]
     #
-    # @example Force execution order
-    #   _raw_numeric_at(1r) { puts "second" }
-    #   _raw_numeric_at(1r, force_first: true) { puts "first" }
+    # Ordering at the same position (a private helper, so this is a reading
+    # rather than a runnable example):
+    #
+    #     _raw_numeric_at(1r) { puts "second" }
+    #     _raw_numeric_at(1r, force_first: true) { puts "first" }
     #
     # @api private
     private def _raw_numeric_at(at_position, force_first: nil, &block)
@@ -219,10 +225,12 @@ module Musa::Sequencer
     #
     # @return [nil]
     #
-    # @example Series scheduling
-    #   positions = Musa::Series.from_array([1r, 1.5r, 2r, 3r])
-    #   _serie_at(positions, control) { puts "event" }
-    #   # Schedules events at 1r, 1.5r, 2r, 3r
+    # Scheduling from a serie of positions (a private helper, so this is a
+    # reading rather than a runnable example):
+    #
+    #     positions = Musa::Series::Constructors.S(1r, 1.5r, 2r, 3r).i
+    #     _serie_at(positions, control) { puts "event" }
+    #     # Schedules events at 1r, 1.5r, 2r, 3r
     #
     # @api private
     private def _serie_at(position_or_serie, control, debug: nil, &block)

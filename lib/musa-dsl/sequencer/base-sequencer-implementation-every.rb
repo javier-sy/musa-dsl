@@ -1,5 +1,9 @@
 module Musa::Sequencer
   class BaseSequencer
+    # The sequencer these examples are written against:
+    #
+    #     sequencer = BaseSequencer.new(4, 24)
+    #
     # Implements recurring event execution at regular intervals.
     #
     # Recursively schedules block execution at interval-based positions.

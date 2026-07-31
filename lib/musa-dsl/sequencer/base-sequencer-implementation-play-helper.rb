@@ -1,6 +1,10 @@
 module Musa
   module Sequencer
     class BaseSequencer
+      # The sequencer these examples are written against:
+      #
+      #     sequencer = BaseSequencer.new(4, 24)
+      #
       # Play evaluation modes for interpreting series elements.
       #
       # PlayEval and its subclasses implement different strategies for interpreting
@@ -303,7 +307,8 @@ module Musa
       #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
       #
       #   using Musa::Extension::Neumas
-      #   neumalang_series = "0 +2 +2 -1 0".to_neumas
+      #   # Neumas need their parentheses: a bare "0 +2" does not parse.
+      #   neumalang_series = "(0) (+2) (+2) (-1) (0)".to_neumas
       #
       #   played_notes = []
       #

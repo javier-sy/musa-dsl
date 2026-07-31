@@ -66,7 +66,7 @@ module Musa
     # **Tickless** (no timing parameters):
     #
     # - Continuous rational time
-    # - `tick(position)` jumps to arbitrary position
+    # - `tick` advances to the next scheduled position (it takes no argument)
     # - Suitable for score-like continuous timing
     # - Example: `BaseSequencer.new` → tickless mode
     #
@@ -92,22 +92,26 @@ module Musa
     #   seq.at(1) { puts "Position 1" }
     #   seq.at(1.5) { puts "Position 1.5" }
     #
-    #   seq.tick(1)    # Jumps to position 1
-    #   seq.tick(1.5)  # Jumps to position 1.5
+    #   seq.tick  # Jumps to position 1 -- tick takes no argument; in tickless
+    #   seq.tick  # mode it advances to wherever the next event is scheduled.
     #
     # @example Playing series
     #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
     #
-    #   pitches = Musa::Series::Constructors.S(60, 62, 64, 65, 67)
-    #   durations = Musa::Series::Constructors.S(1, 1, 0.5, 0.5, 2)
+    #   # Series are combined with H, which yields the hashes play consumes;
+    #   # there is no `zip`. The :duration of each element is what makes play
+    #   # walk time.
+    #   notes = Musa::Series::Constructors.H(
+    #     pitch: Musa::Series::Constructors.S(60, 62, 64, 65, 67),
+    #     duration: Musa::Series::Constructors.S(1r, 1r, 1/2r, 1/2r, 2r))
     #   played_notes = []
     #
-    #   seq.play(pitches.zip(durations)) do |pitch, duration|
+    #   seq.play(notes) do |pitch:, duration:|
     #     played_notes << { pitch: pitch, duration: duration, position: seq.position }
     #   end
     #
     #   seq.run
-    #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
+    #   played_notes.collect { |n| n[:pitch] }  # => [60, 62, 64, 65, 67]
     #
     # @example Every and move
     #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
@@ -126,6 +130,10 @@ module Musa
     #   seq.run
     #   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
     #   # Result: volume_values = [0, 8, 16, ..., 119, 127]
+    #
+    # The per-method examples further down are written against:
+    #
+    #     sequencer = BaseSequencer.new(4, 24)
     #
     # @api public
     class BaseSequencer
@@ -683,30 +691,37 @@ module Musa
       # @example Playing notes from a series
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   notes = Musa::Series::Constructors.S(60, 62, 64).zip(Musa::Series::Constructors.S(1, 1, 2))
+      #   notes = Musa::Series::Constructors.H(
+      #     pitch: Musa::Series::Constructors.S(60, 62, 64),
+      #     duration: Musa::Series::Constructors.S(1r, 1r, 2r))
       #   played_notes = []
       #
-      #   seq.play(notes) do |pitch, duration|
+      #   seq.play(notes) do |pitch:, duration:|
       #     played_notes << { pitch: pitch, duration: duration, position: seq.position }
       #   end
       #
       #   seq.run
-      #   # Result: played_notes contains [{pitch: 60, duration: 1, position: 0}, ...]
+      #   played_notes.collect { |n| n[:pitch] }  # => [60, 62, 64]
       #
       # @example Parallel plays
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
-      #   melody = Musa::Series::Constructors.S(60, 62, 64)
-      #   harmony = Musa::Series::Constructors.S(48, 52, 55)
+      #   # Simultaneous voices are simultaneous plays, one per voice: play takes
+      #   # a serie, not an array of them.
+      #   melody = Musa::Series::Constructors.H(
+      #     pitch: Musa::Series::Constructors.S(60, 62, 64),
+      #     duration: Musa::Series::Constructors.S(1r, 1r, 1r))
+      #   harmony = Musa::Series::Constructors.H(
+      #     pitch: Musa::Series::Constructors.S(48, 52, 55),
+      #     duration: Musa::Series::Constructors.S(1r, 1r, 1r))
       #   played_notes = []
       #
-      #   seq.play([melody, harmony]) do |pitch|
-      #     # pitch will be array [melody_pitch, harmony_pitch]
-      #     played_notes << { melody: pitch[0], harmony: pitch[1], position: seq.position }
+      #   [melody, harmony].each do |voice|
+      #     seq.play(voice) { |pitch:, duration:| played_notes << pitch }
       #   end
       #
       #   seq.run
-      #   # Result: played_notes contains [{melody: 60, harmony: 48, position: 0}, ...]
+      #   played_notes  # => [60, 48, 62, 52, 64, 55]
       def play(serie,
                mode: nil,
                parameter: nil,
