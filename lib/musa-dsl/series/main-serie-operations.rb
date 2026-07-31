@@ -508,10 +508,12 @@ module Musa
       # @return [With] combined serie
       #
       # @example Combine pitches and velocities
+      #   # Positional with-series cannot isolate their values, so say so:
+      #   # otherwise prefer the named form below.
       #   pitches = S(60, 64, 67)
       #   velocities = S(96, 80, 64)
-      #   notes = pitches.with(velocities) { |p, v| {pitch: p, velocity: v} }
-      #   notes.i.to_a  # => [{pitch: 60, velocity: 96}, ...]
+      #   notes = pitches.with(velocities, isolate_values: false) { |p, v| {pitch: p, velocity: v} }
+      #   notes.i.to_a  # => [{pitch: 60, velocity: 96}, {pitch: 64, velocity: 80}, {pitch: 67, velocity: 64}]
       #
       # @example Named series
       #   melody = S(60, 64, 67)
@@ -1182,17 +1184,18 @@ module Musa
       #
       # @example Simple transformation
       #   serie = FromArray.new([1, 2, 3])
-      #   processor = Processor.new(serie, {}) { |v| v * 2 }
+      #   processor = Processor.new(serie, {}) { |v| v * 2 }.i
       #   processor.next_value  # => 2
       #   processor.next_value  # => 4
       #
       # @example Transformation with parameters
-      #   processor = Processor.new(serie, multiplier: 3) { |v, multiplier:| v * multiplier }
+      #   Processor.new(serie, multiplier: 3) { |v, multiplier:| v * multiplier }.i.to_a
+      #   # => [3, 6, 9]
       #
       # @example Returning arrays (flattened)
-      #   processor = Processor.new(serie, {}) { |v| [v, v + 1] }
-      #   processor.next_value  # => 1
-      #   processor.next_value  # => 2
+      #   flattening = Processor.new(serie, {}) { |v| [v, v + 1] }.i
+      #   flattening.next_value  # => 1
+      #   flattening.next_value  # => 2
       #
       # @api private
       class Processor

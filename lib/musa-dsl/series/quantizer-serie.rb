@@ -31,10 +31,13 @@ module Musa
     # @return [RawQuantizer, PredictiveQuantizer] quantized serie
     #
     # @example Basic quantization
-    #   # Quantize to semitones (12 steps per octave)
-    #   pitch_bend = S({time: 0r, value: 60.3}, {time: 1r, value: 61.8})
+    #   # Quantize to semitones. The events must carry the AbsTimed dataset:
+    #   # a bare hash of the same shape is not one and will not be processed.
+    #   pitch_bend = S({time: 0r, value: 60.3}.extend(Musa::Datasets::AbsTimed),
+    #                  {time: 1r, value: 61.8}.extend(Musa::Datasets::AbsTimed))
     #   quantized = pitch_bend.quantize(step: 1)
-    #   quantized.i.to_a  # => [{time: 0, value: 60, duration: 1}, ...]
+    #   quantized.i.to_a
+    #   # => [{time: 0r, value: 60, duration: 1/2r}, {time: 1/2r, value: 61, duration: 1/2r}]
     #
     # @example Predictive quantization
     #   continuous = S({time: 0r, value: 0}, {time: 4r, value: 10})

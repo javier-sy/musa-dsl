@@ -41,8 +41,10 @@ module Musa
     # @example Circular structure
     #   loop_serie = PROXY()
     #   sequence = S(1, 2, 3).after(loop_serie)
-    #   loop_serie.proxy_source = sequence
-    #   # Creates infinite loop: 1, 2, 3, 1, 2, 3, ...
+    #   loop_serie.proxy_source = sequence  # => SystemStackError
+    #   # Intended to create an infinite loop 1, 2, 3, 1, 2, 3, ... but closing
+    #   # the circle currently overflows the stack: resolving the proxy's state
+    #   # walks the sources back into the proxy without noticing the cycle.
     #
     # @example With initial source
     #   proxy = PROXY(S(1, 2, 3))
@@ -63,14 +65,16 @@ module Musa
     #
     # @example Basic proxy
     #   original = FromArray.new([1, 2, 3])
-    #   proxy = ProxySerie.new(original)
+    #   proxy = ProxySerie.new(original).i
     #   proxy.next_value  # => 1 (delegates to original)
     #
     # @example Dynamic serie switching
-    #   proxy = ProxySerie.new(serie_a)
-    #   proxy.next_value  # Uses serie_a
-    #   proxy.proxy_source = serie_b
-    #   proxy.next_value  # Now uses serie_b
+    #   serie_a = S(1, 2, 3)
+    #   serie_b = S(10, 20, 30)
+    #   proxy = ProxySerie.new(serie_a).i
+    #   proxy.next_value  # => 1
+    #   proxy.proxy_source = serie_b.i
+    #   proxy.next_value  # => 10
     #
     # @api private
     class ProxySerie

@@ -140,19 +140,39 @@ module DocExamples
   # already read, and nothing else. Taking the whole file instead binds names to
   # whatever the last assignment in it happened to build, which invents
   # mismatches that are the runner's fault and not the documentation's.
+  # An assignment may span several lines -- the vocabulary a file establishes is
+  # often a whole DSL block -- so lines are accumulated until they parse, exactly
+  # as statements are. RUNAWAY caps that accumulation: a fragment that never
+  # parses would otherwise swallow everything after it.
+  RUNAWAY = 40
+
   def preamble(path, before:)
-    File.readlines(path).first(before - 1).filter_map do |line|
+    pending = []
+
+    File.readlines(path).first(before - 1).each_with_object([]) do |line, result|
       match = line.match(/^\s*#\s{2,}(.*)$/)
-      next unless match
+
+      unless match
+        pending.clear
+        next
+      end
 
       code = match[1].sub(/\s*#\s*=>.*\z/, '').rstrip
-      next unless code =~ ASSIGNMENT
+      next if code.strip.empty? && pending.empty?
 
-      begin
-        RubyVM::AbstractSyntaxTree.parse(code) && code
+      pending << code
+
+      parses = begin
+        RubyVM::AbstractSyntaxTree.parse(pending.join("\n"))
       rescue SyntaxError
-        nil
+        false
       end
+
+      pending.clear if pending.size > RUNAWAY
+      next unless parses
+
+      result << pending.join("\n") if pending.first =~ ASSIGNMENT
+      pending.clear
     end
   end
 

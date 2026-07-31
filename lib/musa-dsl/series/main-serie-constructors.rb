@@ -237,7 +237,9 @@ module Musa
     # @return [FromEvalBlockWithParameters] evaluation-based serie
     #
     # @example Counter
-    #   counter = E(1) { |v, last_value:| last_value + 1 unless last_value == 5 }
+    #   # last_value is nil on the first call -- the positional arguments are
+    #   # the serie's parameters, handed to every call, not a seed value.
+    #   counter = E { |last_value:| (last_value || 0) + 1 unless last_value == 5 }
     #   counter.i.to_a  # => [1, 2, 3, 4, 5]
     #
     # @example Fibonacci
@@ -247,7 +249,7 @@ module Musa
     #     a
     #   }
     #   fib.parameters = [0, 1]
-    #   fib.i.to_a(limit: 10)  # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+    #   fib.i.max_size(10).to_a  # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
     #
     # @api public
     def E(*value_args, **key_args, &block)
@@ -569,12 +571,12 @@ module Musa
     # Supports optional module extensions for enhanced functionality.
     #
     # @example Basic array serie
-    #   serie = FromArray.new([1, 2, 3, 4, 5])
+    #   serie = FromArray.new([1, 2, 3, 4, 5]).i  # a prototype cannot be read
     #   serie.next_value  # => 1
     #   serie.next_value  # => 2
     #
     # @example With extensions
-    #   serie = FromArray.new([60, 62, 64], [SomeExtension])
+    #   serie = FromArray.new([60, 62, 64], [Musa::Datasets::AbsI])
     #
     # @api private
     class FromArray

@@ -139,7 +139,7 @@ module Musa
     #   s2 = S({ time: 0r, value: { a: 10 } })  # 'a' already used!
     #
     #   union = TIMED_UNION(s1, s2).i
-    #   union.next_value  # RuntimeError: Value: key a already used
+    #   union.next_value  # => RuntimeError: Value: key a already used
     #
     # @see flatten_timed Splits compound values into individual timed events
     # @see compact_timed Removes events with all-nil values

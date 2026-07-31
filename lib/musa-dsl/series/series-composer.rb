@@ -102,9 +102,11 @@ module Musa
       # @example Using composer as operation
       #   serie = FromArray.new([1, 2, 3, 4])
       #   transformed = serie.composer do
-      #     # Composer pipeline configuration
-      #     pipeline { |v| v * 2 }
-      #   end
+      #     doubled({ map: ->(x) { x * 2 } })
+      #
+      #     route input, to: doubled
+      #     route doubled, to: output
+      #   end.i
       #   transformed.next_value  # => 2
       #
       # @see Composer::Composer Full composer implementation
@@ -262,6 +264,9 @@ module Musa
       # - **Operation symbols**: Series operations return as symbols for parsing
       # - **Constructor symbols**: Series constructors return as symbols for parsing
       #
+      # The per-method examples further down are written against that first
+      # composer: a single `reverse` step from input to output.
+      #
       # @example Basic pipeline
       #   composer = Composer.new(input: S(1, 2, 3)) do
       #     step1 reverse
@@ -396,11 +401,26 @@ module Musa
         # @raise [RuntimeError] if composer not yet committed
         #
         # @example Access output
-        #   composer.output.i.to_a  # => [3, 2, 1]
+        #   # Only after commit!; with the default auto_commit that has already
+        #   # happened by the time the constructor returns.
+        #   Composer.new(input: S(1, 2, 3)) do
+        #     step1 reverse
+        #     route input, to: step1
+        #     route step1, to: output
+        #   end.output.i.to_a  # => [3, 2, 1]
         #
         # @example Multiple outputs
-        #   composer.output(:doubled).i.to_a  # => [2, 4, 6]
-        #   composer.output(:tripled).i.to_a  # => [3, 6, 9]
+        #   two_ways = Composer.new(input: S(1, 2, 3), outputs: [:doubled, :tripled]) do
+        #     twice({ map: ->(x) { x * 2 } })
+        #     thrice({ map: ->(x) { x * 3 } })
+        #
+        #     route input, to: twice
+        #     route input, to: thrice
+        #     route twice, to: doubled
+        #     route thrice, to: tripled
+        #   end
+        #   two_ways.output(:doubled).i.to_a  # => [2, 4, 6]
+        #   two_ways.output(:tripled).i.to_a  # => [3, 6, 9]
         #
         # @api public
         def output(name = nil)
@@ -522,9 +542,15 @@ module Musa
         # @return [void]
         #
         # @example Add routes dynamically
-        #   composer.update do
-        #     route step3, to: output
+        #   growing = Composer.new(input: S(1, 2, 3), auto_commit: false) do
+        #     step1 reverse
+        #     route input, to: step1
         #   end
+        #   growing.update do
+        #     route step1, to: output
+        #   end
+        #   growing.commit!
+        #   growing.output.i.to_a  # => [3, 2, 1]
         #
         # @api public
         def update(&block)
@@ -548,12 +574,14 @@ module Musa
         # @raise [RuntimeError] if already committed
         #
         # @example Manual commit
-        #   composer = Composer.new(auto_commit: false) do
-        #     # ... pipeline definitions ...
+        #   deferred = Composer.new(auto_commit: false) do
+        #     step1 reverse
+        #     route input, to: step1
+        #     route step1, to: output
         #   end
-        #   composer.input.proxy_source = S(1, 2, 3)
-        #   composer.commit!
-        #   result = composer.output.i.to_a
+        #   deferred.input.proxy_source = S(1, 2, 3)
+        #   deferred.commit!
+        #   deferred.output.i.to_a  # => [3, 2, 1]
         #
         # @api public
         def commit!
@@ -813,16 +841,15 @@ module Musa
           #
           # @return [Array(Proc, Proc), Proc, Object] [first, chain] pair or single proc
           #
-          # @example Array with constructor + operations
-          #   parse([{ S: [1, 2, 3] }, :reverse, { skip: 1 }])
-          #   # => [first_proc, chain_proc]
-          #   # first_proc: creates S([1,2,3])
-          #   # chain_proc: applies reverse >> skip(1)
+          # Shapes it accepts (a private helper, so these are readings rather
+          # than runnable examples):
           #
-          # @example Operations only
-          #   parse([:reverse, { skip: 1 }])
-          #   # => [nil, chain_proc]
-          #   # chain_proc: applies reverse >> skip(1)
+          #     parse([{ S: [1, 2, 3] }, :reverse, { skip: 1 }])
+          #     # [first_proc, chain_proc] -- first creates S([1,2,3]),
+          #     # chain applies reverse >> skip(1)
+          #
+          #     parse([:reverse, { skip: 1 }])
+          #     # [nil, chain_proc] -- no constructor, chain applies reverse >> skip(1)
           #
           # @api private
           private def parse(thing)
@@ -986,13 +1013,14 @@ module Musa
           #
           # @raise [ArgumentError] if Array parameter invalid
           #
-          # @example No parameter
-          #   call_operation_according_to_parameter(serie, :reverse, nil)
-          #   # => serie.reverse
+          # How the parameter is read (a private helper, so these are readings
+          # rather than runnable examples):
           #
-          # @example With block
-          #   call_operation_according_to_parameter(serie, :map, ->(x) { x * 2 })
-          #   # => serie.map { |x| x * 2 }
+          #     call_operation_according_to_parameter(serie, :reverse, nil)
+          #     # serie.reverse
+          #
+          #     call_operation_according_to_parameter(serie, :map, ->(x) { x * 2 })
+          #     # serie.map { |x| x * 2 }
           #
           # @api private
           private def call_operation_according_to_parameter(target, operation, parameter)

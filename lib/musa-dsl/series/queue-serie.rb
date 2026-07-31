@@ -40,10 +40,13 @@ module Musa
     #   not what is left after the `next_value` above.
     #
     # @example Dynamic playlist
-    #   queue = QUEUE().i
-    #   queue << melody1.i
+    #   melody1 = S(60, 62)
+    #   melody2 = S(67, 69)
+    #   # An empty QUEUE() is undefined and cannot be instantiated, so the queue
+    #   # starts with its first serie and grows from there.
+    #   queue = QUEUE(melody1).i
     #   queue << melody2.i
-    #   # Plays melody1 then melody2
+    #   queue.to_a  # => [60, 62, 67, 69]
     #
     # @api public
     def QUEUE(*series)
