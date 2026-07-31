@@ -110,8 +110,9 @@ module Musa
       #
       # @return [Array<Integer>] histogram indexed by milliseconds
       #
-      # @example
-      #   time_table[5]  # => 123 (123 ticks took 5ms)
+      # A reading of the histogram (it is empty until the clock has run):
+      #
+      #     time_table[5]  # 123 ticks took 5ms
       attr_reader :time_table
 
       # Assigns a MIDI input port.

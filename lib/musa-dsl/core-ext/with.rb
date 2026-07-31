@@ -67,14 +67,16 @@ module Musa
     #   # Block keeps caller's context, object accessed via _
     #
     # @example With parameters
-    #   class Builder
+    #   class NamedBuilder
+    #     include Musa::Extension::With
+    #
     #     def initialize(name, &block)
     #       @name = name
     #       with(name, &block) if block
     #     end
     #   end
     #
-    #   Builder.new('test') do |name|
+    #   NamedBuilder.new('test') do |name|
     #     # Has access to object's context AND receives name parameter
     #     puts @name  # Works
     #     puts name   # Also works

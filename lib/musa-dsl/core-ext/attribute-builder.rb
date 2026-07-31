@@ -21,7 +21,9 @@ module Musa
     # - Automatic pluralization (item → items) unless specified
     #
     # @example Using in a class
-    #   class Score
+    #   Track = Struct.new(:id, :name)
+    #
+    #   class Arrangement
     #     extend Musa::Extension::AttributeBuilder
     #
     #     def initialize
@@ -31,9 +33,10 @@ module Musa
     #     attr_tuple_adder_to_hash :track, Track
     #   end
     #
-    #   score = Score.new
-    #   score.add_track :piano, params
-    #   score.tracks  # => { piano: Track(...) }
+    #   arrangement = Arrangement.new
+    #   arrangement.add_track :piano, 'Piano I'
+    #   arrangement.tracks[:piano].name  # => "Piano I"
+    #   # The adder builds klass.new(id, parameter), so the class takes both.
     #
     # @see Musa::Datasets Score classes use these extensively
     module AttributeBuilder

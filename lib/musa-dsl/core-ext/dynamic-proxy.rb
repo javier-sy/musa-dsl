@@ -22,10 +22,10 @@ module Musa
     #   proxy.upcase  # => "HELLO" (forwarded to String)
     #
     # @example Lazy initialization
-    #   proxy = DynamicProxy.new
+    #   lazy = DynamicProxy.new
     #   # ... later ...
-    #   proxy.receiver = expensive_object
-    #   proxy.some_method  # Now forwards to expensive_object
+    #   lazy.receiver = [1, 2, 3]
+    #   lazy.size  # => 3, now forwarded to the array
     module DynamicProxy
       # Mixin module providing dynamic proxy behavior.
       #

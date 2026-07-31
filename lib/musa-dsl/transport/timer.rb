@@ -26,9 +26,10 @@ module Musa
     # 4. Calculate sleep time = (next_moment + correction) - current_time
     # 5. Sleep if positive, warn if negative (delayed)
     #
-    # @example Internal use by TimerClock
-    #   timer = Timer.new(0.02083, logger: logger)  # ~48 ticks/second
-    #   timer.run { sequencer.tick }
+    # How TimerClock uses it (a reading: `run` blocks until stopped):
+    #
+    #     timer = Timer.new(0.02083, logger: logger)  # ~48 ticks/second
+    #     timer.run { sequencer.tick }
     #
     # @see TimerClock Uses Timer internally
     class Timer
@@ -48,7 +49,8 @@ module Musa
       #
       # @example 120 BPM, 24 ticks per beat
       #   period = 60.0 / (120 * 24)  # 0.02083 seconds
-      #   timer = Timer.new(period, logger: logger)
+      #   timer = Timer.new(period, logger: Musa::Logger::Logger.new)
+      #   timer.period  # => 1/48r
       def initialize(tick_period_in_seconds, correction: nil, stop: nil, delayed_ticks_error: nil, logger: nil, do_log: nil)
         @period = tick_period_in_seconds.rationalize
         @correction = (correction || 0r).rationalize

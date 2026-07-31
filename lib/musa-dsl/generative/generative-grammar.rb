@@ -215,8 +215,8 @@ module Musa
         #
         # @example Fixed repetition
         #   a = N('a')
-        #   aaa = a.repeat(3)         # exactly 3 times
-        #   aaa = a.repeat(exactly: 3)  # same
+        #   aaa = a.repeat(3)  # exactly 3 times -- `exactly` is positional,
+        #                      # so repeat(exactly: 3) is not accepted
         #
         # @example Bounded repetition
         #   a_range = a.repeat(min: 2, max: 4)  # 2, 3, or 4 times

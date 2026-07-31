@@ -126,16 +126,17 @@ module Musa
     # If the bound context has a sequencer with on_error support, the REPL
     # automatically hooks into it to report async errors during playback.
     #
-    # @example With DynamicProxy (complex DSL)
-    #   class MyDSL
-    #     include Musa::REPL::CustomizableDSLContext
-    #     # ... DSL methods ...
-    #   end
+    # With DynamicProxy (complex DSL) (a reading: this starts a listening server):
     #
-    #   repl = Musa::REPL::REPL.new(
-    #     bind: Musa::Extension::DynamicProxy::DynamicProxy.new(MyDSL.new),
-    #     port: 1327
-    #   )
+    #     class MyDSL
+    #       include Musa::REPL::CustomizableDSLContext
+    #       # ... DSL methods ...
+    #     end
+    #
+    #     repl = Musa::REPL::REPL.new(
+    #       Musa::Extension::DynamicProxy::DynamicProxy.new(MyDSL.new),
+    #       port: 1327
+    #     )
     #
     # @example With direct Binding (musalce-server pattern)
     #   sequencer.with(keep_block_context: false) do
@@ -147,13 +148,14 @@ module Musa
     #     @repl = Musa::REPL::REPL.new(binding, highlight_exception: false)
     #   end
     #
-    # @example With after_eval callback
-    #   dsl_context = MyDSL.new
-    #   context_proxy = Musa::Extension::DynamicProxy::DynamicProxy.new(dsl_context)
-    #   repl = REPL.new(
-    #     bind: context_proxy,
-    #     after_eval: -> (source) { log_execution(source) }
-    #   )
+    # With after_eval callback (a reading: this starts a listening server):
+    #
+    #     dsl_context = MyDSL.new
+    #     context_proxy = Musa::Extension::DynamicProxy::DynamicProxy.new(dsl_context)
+    #     repl = REPL.new(
+    #       context_proxy,
+    #       after_eval: -> (source) { log_execution(source) }
+    #     )
     #
     # @see CustomizableDSLContext For binding DSL contexts with DynamicProxy
     # @see Musa::Extension::DynamicProxy::DynamicProxy Proxy wrapper for DSL contexts
@@ -195,15 +197,16 @@ module Musa
       # @yield [source] Called via after_eval after successful execution
       # @yieldparam source [String] the executed source code
       #
-      # @example With DynamicProxy and named parameters
-      #   dsl_context = MyDSL.new
-      #   custom_logger = Musa::Logger::Logger.new
-      #   REPL.new(
-      #     bind: Musa::Extension::DynamicProxy::DynamicProxy.new(dsl_context),
-      #     port: 1327,
-      #     after_eval: -> (src) { log_execution(src) },
-      #     logger: custom_logger
-      #   )
+      # With DynamicProxy and named parameters (a reading: this starts a listening server):
+      #
+      #     dsl_context = MyDSL.new
+      #     custom_logger = Musa::Logger::Logger.new
+      #     REPL.new(
+      #       Musa::Extension::DynamicProxy::DynamicProxy.new(dsl_context),
+      #       port: 1327,
+      #       after_eval: -> (src) { log_execution(src) },
+      #       logger: custom_logger
+      #     )
       #
       # @example With direct Binding (musalce-server pattern)
       #   # Inside a context setup block:
@@ -380,10 +383,11 @@ module Musa
       # @note After stopping, the REPL cannot be restarted (would need new instance)
       # @note Uses Thread.pass to ensure thread scheduling
       #
-      # @example
-      #   repl = REPL.new(bind: context)
-      #   # ... later
-      #   repl.stop  # Clean shutdown
+      # A reading -- this starts a listening server:
+      #
+      #     repl = REPL.new(context)
+      #     # ... later
+      #     repl.stop  # Clean shutdown
       def stop
         @run = false
 
@@ -636,7 +640,7 @@ module Musa
     #       include CustomizableDSLContext
     #
     #       def initialize
-    #         @repl = REPL.new(bind: Musa::Extension::DynamicProxy::DynamicProxy.new(self))
+    #         @repl = REPL.new(Musa::Extension::DynamicProxy::DynamicProxy.new(self))
     #       end
     #
     #       protected def binder
@@ -664,7 +668,7 @@ module Musa
     #
     #     def initialize
     #       @sequencer = Musa::Sequencer::Sequencer.new(4, 24)
-    #       @repl = REPL.new(bind: Musa::Extension::DynamicProxy::DynamicProxy.new(self))
+    #       @repl = REPL.new(Musa::Extension::DynamicProxy::DynamicProxy.new(self))
     #     end
     #
     #     protected def binder

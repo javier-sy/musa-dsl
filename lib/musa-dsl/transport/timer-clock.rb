@@ -43,7 +43,7 @@ module Musa
     #
     # @example Complete setup with external activation (live coding pattern)
     #   clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
-    #   transport = Transport.new(clock, beats_per_bar: 4)
+    #   transport = Transport.new(clock, 4, 24)  # positional: beats/bar, ticks/beat
     #
     #   # Schedule events
     #   transport.sequencer.at(4) { transport.stop }
@@ -87,7 +87,7 @@ module Musa
       #   # All equivalent for 120 BPM, 24 ticks/beat:
       #   TimerClock.new(bpm: 120, ticks_per_beat: 24)
       #   TimerClock.new(bpm: 120)  # ticks_per_beat defaults to 24
-      #   TimerClock.new(period: 0.02083, ticks_per_beat: 24)
+      #   TimerClock.new(0.02083, ticks_per_beat: 24)  # period is positional
       def initialize(period = nil, ticks_per_beat: nil, bpm: nil, correction: nil, delayed_ticks_error: nil, logger: nil, do_log: nil)
         do_log ||= false
 

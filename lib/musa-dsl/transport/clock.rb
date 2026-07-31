@@ -68,6 +68,11 @@ module Musa
     #     end
     #   end
     #
+    # The per-method examples below are written against a clock that does not
+    # need hardware or real time:
+    #
+    #     clock = Musa::Clock::DummyClock.new(4)
+    #
     # @abstract Subclass and implement {#run} and {#terminate}
     class Clock
       # Initializes the clock with empty callback collections.

@@ -47,11 +47,8 @@ module Musa
     #
     # @example Basic setup with TimerClock
     #   clock = Musa::Clock::TimerClock.new(bpm: 120)
-    #   transport = Musa::Transport::Transport.new(
-    #     clock,
-    #     beats_per_bar: 4,
-    #     ticks_per_beat: 24
-    #   )
+    #   # beats_per_bar and ticks_per_beat are positional, not keywords.
+    #   transport = Musa::Transport::Transport.new(clock, 4, 24)
     #
     #   # Schedule events. Bars are numbered from 1, and `at 0` is before the
     #   # sequencer's starting position, so it would silently never fire. The

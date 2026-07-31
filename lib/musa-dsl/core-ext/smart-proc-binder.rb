@@ -42,9 +42,9 @@ module Musa
       #
       # @example With rescue handling
       #   error_handler = proc { |e| puts "Error: #{e.message}" }
-      #   binder = SmartProcBinder.new(block, on_rescue: error_handler)
+      #   guarded = SmartProcBinder.new(proc { raise 'boom' }, on_rescue: error_handler)
       #
-      #   binder.call(invalid_args)  # Calls error_handler instead of raising
+      #   guarded.call  # prints "Error: boom" instead of raising
       #
       # @example Checking parameter support
       #   binder.key?(:pitch)  # => true/false
@@ -160,9 +160,10 @@ module Musa
         # @return [Boolean] true if key is accepted, false otherwise.
         #
         # @example
-        #   proc { |a:, b:, **rest| }.key?(:a)       # => true
-        #   proc { |a:, b:, **rest| }.key?(:unknown) # => true (has **rest)
-        #   proc { |a:, b:| }.key?(:unknown)         # => false
+        #   # key? belongs to the binder, not to Proc.
+        #   SmartProcBinder.new(proc { |a:, b:, **rest| }).key?(:a)        # => true
+        #   SmartProcBinder.new(proc { |a:, b:, **rest| }).key?(:unknown)  # => true (has **rest)
+        #   SmartProcBinder.new(proc { |a:, b:| }).key?(:unknown)          # => false
         def key?(key)
           @has_key_rest || @key_parameters.include?(key)
         end
