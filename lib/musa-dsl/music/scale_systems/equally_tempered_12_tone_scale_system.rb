@@ -64,11 +64,11 @@ module Musa
         # @return [Float] frequency in Hz
         #
         # @example Standard A440 tuning
-        #   frequency_of_pitch(69, nil, 440.0)  # => 440.0 (A4)
-        #   frequency_of_pitch(60, nil, 440.0)  # => 261.63 (C4, middle C)
+        #   EquallyTempered12ToneScaleSystem.frequency_of_pitch(69, nil, 440.0)  # => 440.0
+        #   EquallyTempered12ToneScaleSystem.frequency_of_pitch(60, nil, 440.0).round(2)  # => 261.63
         #
         # @example Baroque tuning
-        #   frequency_of_pitch(69, nil, 415.0)  # => 415.0 (A4)
+        #   EquallyTempered12ToneScaleSystem.frequency_of_pitch(69, nil, 415.0)  # => 415.0
         def frequency_of_pitch(pitch, _root_pitch, a_frequency)
           (a_frequency * Rational(2)**Rational(pitch - 69, 12)).to_f
         end

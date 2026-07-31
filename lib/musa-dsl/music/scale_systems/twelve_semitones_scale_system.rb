@@ -49,8 +49,8 @@ module Musa
         # @return [Hash{Symbol => Integer}] interval name to semitones mapping
         #
         # @example
-        #   intervals[:P5]  # => 7 (perfect fifth)
-        #   intervals[:M3]  # => 4 (major third)
+        #   TwelveSemitonesScaleSystem.intervals[:P5]  # => 7 (perfect fifth)
+        #   TwelveSemitonesScaleSystem.intervals[:M3]  # => 4 (major third)
         def intervals
           @@intervals
         end

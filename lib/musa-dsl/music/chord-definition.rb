@@ -13,9 +13,14 @@ module Musa
   # ## Basic Usage
   #
   #     # Create chord from scale note
-  #     scale = Scales::Scales.default_system.default_tuning.major[60]
-  #     chord = scale.tonic.chord         # C major triad
-  #     chord = scale.tonic.chord :triad  # Explicitly specify size
+  #     c_major = Scales.default_system.default_tuning.major[60]
+  #     chord = c_major.tonic.chord         # C major triad
+  #     chord = c_major.tonic.chord :triad  # Explicitly specify size
+  #
+  # The examples below are written against `c_major` and against the definition
+  # of a major triad:
+  #
+  #     maj_def = chord_def = ChordDefinition[:maj]
   #
   # ## Features
   #
@@ -181,7 +186,7 @@ module Musa
       # @return [Hash] combined features
       #
       # @example
-      #   features_from([:major, :triad])
+      #   ChordDefinition.features_from([:major, :triad])
       #   # => { quality: :major, size: :triad }
       def self.features_from(values = nil, hash = nil)
         values ||= []
@@ -200,8 +205,8 @@ module Musa
       # @return [Array<ChordDefinition>] matching definitions
       #
       # @example
-      #   find_by_features(quality: :major, size: :triad)
-      #   # => [<ChordDefinition :maj>]
+      #   ChordDefinition.find_by_features(quality: :major, size: :triad).collect(&:name)
+      #   # => [:maj]
       def self.find_by_features(*values, **hash)
         features = features_from(values, hash)
         @definitions.values.select { |d| features <= d.features }

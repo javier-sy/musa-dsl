@@ -13,7 +13,7 @@ module Musa
     #
     # Chords are typically created from scale notes rather than directly:
     #
-    #     c_major = Scales::Scales.default_system.default_tuning.major[60]
+    #     c_major = Scales.default_system.default_tuning.major[60]
     #     chord = c_major.tonic.chord              # C major triad
     #     chord = c_major.tonic.chord :seventh     # C major seventh
     #     chord = c_major.dominant.chord :ninth    # G ninth chord
@@ -81,7 +81,7 @@ module Musa
     #     minor_chord.scale  # => nil (Eb not in C major)
     #
     # @example Basic triad creation
-    #   scale = Scales::Scales.default_system.default_tuning.major[60]
+    #   scale = Scales.default_system.default_tuning.major[60]
     #   chord = scale.tonic.chord
     #   chord.root.pitch   # => 60 (C)
     #   chord.third.pitch  # => 64 (E)
@@ -92,13 +92,13 @@ module Musa
     #   chord.seventh.pitch  # => 71 (B)
     #
     # @example Voicing with move and duplicate
-    #   scale = Scales::Scales.default_system.default_tuning.major[60]
+    #   scale = Scales.default_system.default_tuning.major[60]
     #   chord = scale.dominant.chord(:seventh)
     #     .with_move(root: -1, third: -1)
     #     .with_duplicate(fifth: [0, 1])
     #
     # @example Feature navigation
-    #   scale = Scales::Scales.default_system.default_tuning.major[60]
+    #   scale = Scales.default_system.default_tuning.major[60]
     #   maj_triad = scale.tonic.chord
     #   min_triad = maj_triad.with_quality(:minor)
     #   maj_seventh = maj_triad.with_size(:seventh)
@@ -386,13 +386,18 @@ module Musa
       # @raise [ArgumentError] if no matching chord definition found
       #
       # @example Change size
-      #   chord.featuring(size: :seventh)
+      #   c_triad = c_major.tonic.chord
+      #   c_triad.featuring(size: :seventh).features  # => { quality: :major, size: :seventh }
       #
       # @example Change quality
-      #   chord.featuring(quality: :minor)
+      #   # A C minor triad needs an Eb, which C major does not have, so the
+      #   # change has to be allowed to leave the scale.
+      #   c_triad.featuring(quality: :minor, allow_chromatic: true).features
+      #   # => { quality: :minor, size: :triad }
       #
       # @example Change multiple features
-      #   chord.featuring(quality: :dominant, size: :ninth)
+      #   c_major.dominant.chord.featuring(quality: :dominant, size: :ninth).features
+      #   # => { quality: :dominant, size: :ninth }
       def featuring(*values, allow_chromatic: false, **hash)
         # create a new list of features based on current features but
         # replacing the values for the new ones and adding the new features

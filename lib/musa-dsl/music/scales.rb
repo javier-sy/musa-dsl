@@ -21,7 +21,7 @@ module Musa
   # ## Basic Usage
   #
   #     # Access the default system (12-tone equal temperament at A=440Hz)
-  #     tuning = Scales::Scales.default_system.default_tuning
+  #     tuning = Scales.default_system.default_tuning
   #
   #     # Get a C major scale (root pitch 60 = middle C)
   #     c_major = tuning.major[60]
@@ -75,23 +75,23 @@ module Musa
     #
     # @example Accessing scale systems
     #   # Get system by symbol
-    #   system = Scales::Scales[:et12]
+    #   system = Scales[:et12]
     #
     #   # Get system by method
-    #   system = Scales::Scales.et12
+    #   system = Scales.et12
     #
     #   # Get default system
-    #   system = Scales::Scales.default_system
+    #   system = Scales.default_system
     #
     # @example Working with tunings
     #   # Get tuning with A=440Hz (default)
-    #   tuning = Scales::Scales[:et12][440.0]
+    #   tuning = Scales[:et12][440.0]
     #
     #   # Get tuning with baroque pitch A=415Hz
-    #   baroque = Scales::Scales[:et12][415.0]
+    #   baroque = Scales[:et12][415.0]
     #
     # @example Building scales
-    #   tuning = Scales::Scales.default_system.default_tuning
+    #   tuning = Scales.default_system.default_tuning
     #
     #   # C major scale
     #   c_major = tuning.major[60]
@@ -265,9 +265,10 @@ module Musa
       # @raise [RuntimeError] if not implemented in subclass
       #
       # @example
-      #   intervals[:M3]   # => 4  (major third = 4 semitones)
-      #   intervals[:P5]   # => 7  (perfect fifth = 7 semitones)
-      #   intervals[:m7]   # => 10 (minor seventh = 10 semitones)
+      #   # On a concrete system: this one is abstract and raises.
+      #   Scales.et12.intervals[:M3]   # => 4   (major third)
+      #   Scales.et12.intervals[:P5]   # => 7   (perfect fifth)
+      #   Scales.et12.intervals[:m7]   # => 10  (minor seventh)
       def self.intervals
         # TODO: implementar intérvalos sinónimos (p.ej, m3 = A2)
         # TODO: implementar identificación de intérvalos, teniendo en cuenta no sólo los semitonos sino los grados de separación
@@ -288,11 +289,9 @@ module Musa
       # @raise [RuntimeError] if not implemented in subclass
       #
       # @example Equal temperament
-      #   # A440 (MIDI 69)
-      #   frequency_of_pitch(69, 60, 440.0)  # => 440.0
-      #
-      #   # Middle C (MIDI 60)
-      #   frequency_of_pitch(60, 60, 440.0)  # => ~261.63 Hz
+      #   # On a concrete system: this one is abstract and raises.
+      #   Scales.et12.frequency_of_pitch(69, 60, 440.0)  # => 440.0
+      #   Scales.et12.frequency_of_pitch(60, 60, 440.0).round(2)  # => 261.63
       def self.frequency_of_pitch(pitch, root_pitch, a_frequency)
         raise 'Method not implemented. Should be implemented in subclass.'
       end
@@ -316,13 +315,14 @@ module Musa
       # @return [ScaleSystemTuning] tuning instance
       #
       # @example Standard pitch
-      #   tuning = ScaleSystem[440.0]
+      #   tuning = Scales.et12[440.0]
+      #   tuning.a_frequency  # => 440.0
       #
       # @example Baroque pitch
-      #   baroque = ScaleSystem[415.0]
+      #   Scales.et12[415.0].a_frequency  # => 415.0
       #
-      # @example Modern high pitch
-      #   modern = ScaleSystem[442.0]
+      # @example Tunings are cached
+      #   Scales.et12[442.0].equal?(Scales.et12[442.0])  # => true
       def self.get(a_frequency)
         a_frequency = a_frequency.to_f
 
@@ -342,7 +342,7 @@ module Musa
       # @return [Integer] semitone offset
       #
       # @example
-      #   offset_of_interval(:P5)  # => 7
+      #   Scales.et12.offset_of_interval(:P5)  # => 7
       def self.offset_of_interval(name)
         intervals[name]
       end
@@ -352,7 +352,7 @@ module Musa
       # @return [ScaleSystemTuning] default tuning instance
       #
       # @example
-      #   tuning = ScaleSystem.default_tuning
+      #   Scales.et12.default_tuning.a_frequency  # => 440.0
       def self.default_tuning
         self[default_a_frequency]
       end
@@ -447,7 +447,7 @@ module Musa
     #     tuning.chromatic[60]   # C chromatic scale
     #
     # @example Standard usage
-    #   tuning = Scales::Scales.default_system.default_tuning
+    #   tuning = Scales.default_system.default_tuning
     #   c_major = tuning.major[60]
     #   a_minor = tuning.minor[69]
     #
@@ -873,11 +873,9 @@ module Musa
       #   - **:pitch** [Integer]: semitone offset from root
       # @raise [RuntimeError] if not implemented in subclass
       #
-      # @example Major scale structure (partial)
-      #   [{ functions: [:I, :tonic, :_1], pitch: 0 },
-      #    { functions: [:II, :supertonic, :_2], pitch: 2 },
-      #    { functions: [:III, :mediant, :_3], pitch: 4 },
-      #    ...]
+      # @example Major scale structure
+      #   MajorScaleKind.pitches.first(2)
+      #   # => [{ functions: [:I, :_1, :tonic, :first], pitch: 0 }, { functions: [:II, :_2, :supertonic, :second], pitch: 2 }]
       def self.pitches
         raise 'Method not implemented. Should be implemented in subclass.'
       end
@@ -1676,10 +1674,10 @@ module Musa
     #
     # Chromatic notes remember their diatonic context:
     #
-    #     c# = c_major.tonic.sharp        # C# in C major context
-    #     c#.background_scale             # => c_major
-    #     c#.background_note              # => C (natural)
-    #     c#.background_sharps            # => 1
+    #     c_sharp = c_major.tonic.sharp        # C# in C major context
+    #     c_sharp.background_scale             # => c_major
+    #     c_sharp.background_note              # => C (natural)
+    #     c_sharp.background_sharps            # => 1
     #
     # @example Basic usage
     #   c_major = tuning.major[60]
@@ -1803,8 +1801,8 @@ module Musa
       # @return [NoteInScale, nil] background note or nil
       #
       # @example
-      #   c# = c_major.tonic.sharp
-      #   c#.background_note.pitch  # => 60 (C natural)
+      #   c_sharp = c_major.tonic.sharp
+      #   c_sharp.background_note.pitch  # => 60 (C natural)
       def background_note
         @background_scale[@background_grade + (@background_octave || 0) * @background_scale.kind.class.grades] if @background_grade
       end
@@ -2011,8 +2009,12 @@ module Musa
       #   note.chord :ninth     # Ninth chord
       #
       # @example With features
-      #   note.chord quality: :minor, size: :seventh
-      #   note.chord :minor, :seventh  # Same as above
+      #   # The features must be reachable in the scale: a minor seventh on the
+      #   # supertonic is diatonic in C major, one on the dominant is not.
+      #   c_major.supertonic.chord(quality: :minor, size: :seventh).features
+      #   # => { quality: :minor, size: :seventh }
+      #   c_major.supertonic.chord(:minor, :seventh).features  # Same as above
+      #   # => { quality: :minor, size: :seventh }
       #
       # @example With voicing
       #   note.chord :seventh, move: {root: -1}, duplicate: {fifth: 1}
