@@ -56,6 +56,19 @@ module DocExamples
 
   module_function
 
+  # Most declared outputs are glossed: `# => 4   (major third)`, `# => 1r (start
+  # of bar 1)`. Read whole they are prose and go unchecked -- which is how a
+  # value can be wrong and nobody notice, the exact failure this tool exists for.
+  # A gloss is separated from the value by a run of spaces, which is what tells
+  # it apart from `(1/1)`, a Rational's own inspect.
+  def value_of(declared)
+    return declared if declared =~ LITERAL
+
+    head = declared.split(/\s{2,}/, 2).first.to_s.strip
+
+    head =~ LITERAL ? head : declared
+  end
+
   # Every @example block in the inline documentation, with its code recovered
   # from the comment, the namespace it is documented inside, and which run of
   # comment lines it belongs to.
@@ -247,6 +260,14 @@ module DocExamples
       read.close
       checks = []
 
+      # Nothing the examples say out loud is wanted here: they log, they puts,
+      # and Ruby reports a syntax error on stderr before raising it. All of it
+      # would drown the report -- and, when this runs as a spec, the failures of
+      # the rest of the suite. The findings travel through the pipe, which is a
+      # different descriptor, so silencing these two loses nothing.
+      $stdout.reopen(File::NULL)
+      $stderr.reopen(File::NULL)
+
       # Somewhere harmless to run: the examples write files (`File.write
       # 'output.xml'`, ...) and a tool that litters the repository it is checking
       # is a hazard, not a check.
@@ -327,8 +348,10 @@ module DocExamples
       statements(narrative.flat_map(&:code)).each do |source, declared|
         example = narrative.first
 
+        claimed = declared && value_of(declared)
+
         # What the example says it raises, if it says so at all.
-        wanted = if declared && (match = declared.match(EXCEPTION))
+        wanted = if claimed && (match = claimed.match(EXCEPTION))
                    begin
                      constant = eval(match[1], TOPLEVEL_BINDING) # rubocop:disable Security/Eval
                      constant if constant.is_a?(Class) && constant <= Exception
@@ -373,20 +396,20 @@ module DocExamples
         status =
           if wanted
             :mismatch # it promised to reject this and did not
-          elsif declared !~ LITERAL
+          elsif claimed !~ LITERAL
             :prose
           else
             expected = begin
-              eval(declared, TOPLEVEL_BINDING) # rubocop:disable Security/Eval
+              eval(claimed, TOPLEVEL_BINDING) # rubocop:disable Security/Eval
             rescue Exception # rubocop:disable Lint/RescueException
               :__unparseable__
             end
 
             if expected == :__unparseable__
               :prose
-            elsif value == expected || value.inspect.gsub(/\s+/, '') == declared.gsub(/\s+/, '')
+            elsif value == expected || value.inspect.gsub(/\s+/, '') == claimed.gsub(/\s+/, '')
               :ok
-            elsif spoke && (output == expected.to_s || output == declared.strip)
+            elsif spoke && (output == expected.to_s || output == claimed.strip)
               :ok
             else
               :mismatch
