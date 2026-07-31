@@ -46,6 +46,14 @@ module DocExamples
   # rejection.
   EXCEPTION = /\A([A-Z]\w*(?:::\w+)*)\s*(?::.*)?\z/m
 
+  # What closes an @example block. Named explicitly rather than "anything
+  # starting with @", because `@melody = (0) (+2)` is neumalang -- a variable in
+  # the notation, not a YARD tag -- and cutting the example there truncated a
+  # multi-line string in the middle.
+  TAG = /\A@!?(param|return|example|api|see|note|raise|yield\w*|option|overload|
+              deprecated|since|todo|abstract|attr\w*|author|version|method|
+              attribute|visibility|private|scope)\b/x
+
   module_function
 
   # Every @example block in the inline documentation, with its code recovered
@@ -97,7 +105,7 @@ module DocExamples
           # `#` before a `@see` still closes cleanly.
           if line.match?(/^\s*#\s*$/)
             blanks += 1
-          elsif (match = line.match(/^\s*#\s{3,}(.*)$/)) && !match[1].start_with?('@')
+          elsif (match = line.match(/^\s*#\s{3,}(.*)$/)) && match[1] !~ TAG
             blanks.times { current.code << '' }
             blanks = 0
             current.code << match[1]

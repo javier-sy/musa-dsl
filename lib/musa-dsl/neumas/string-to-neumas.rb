@@ -39,7 +39,7 @@
 #
 # ### Complete Examples
 # ```ruby
-# "0 +2 +2 -1 0"              # Simple melodic sequence
+# "(0) (+2) (+2) (-1) (0)"              # Simple melodic sequence
 # "+2_ +2_2 +1_/2"            # With duration variations
 # "+2.tr +3.mor -1.st"        # With ornaments
 # "(+1_/4)+2_ +2_"            # With appogiatura
@@ -49,7 +49,7 @@
 #
 # Use `|` operator to create parallel (polyphonic) structures:
 # ```ruby
-# "0 +2 +4" | "+7 +5 +7"      # Two voices in parallel
+# "(0) (+2) (+4)" | "(+7) (+5) (+7)"      # Two voices in parallel
 # ```
 #
 # ## Usage with Refinement
@@ -58,9 +58,9 @@
 # ```ruby
 # using Musa::Extension::Neumas
 #
-# melody = "0 +2 +2 -1 0".to_neumas
+# melody = "(0) (+2) (+2) (-1) (0)".to_neumas
 # # or shorter:
-# melody = "0 +2 +2 -1 0".n
+# melody = "(0) (+2) (+2) (-1) (0)".n
 # ```
 #
 # ## Integration with Decoders
@@ -69,7 +69,7 @@
 # ```ruby
 # using Musa::Extension::Neumas
 #
-# neumas = "0 +2 +2 -1 0".to_neumas
+# neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
 #
 # # Access parsed differential values
 # neumas.i.each do |neuma|
@@ -80,7 +80,7 @@
 # @example Basic parsing
 #   using Musa::Extension::Neumas
 #
-#   melody = "0 +2 +2 -1 0".to_neumas
+#   melody = "(0) (+2) (+2) (-1) (0)".to_neumas
 #   # Returns series of GDVD hashes
 #
 # @example With ornaments
@@ -91,12 +91,12 @@
 # @example Parallel voices
 #   using Musa::Extension::Neumas
 #
-#   harmony = "0 +2 +4" | "+7 +5 +7"
+#   harmony = "(0) (+2) (+4)" | "(+7) (+5) (+7)"
 #
 # @example Convert to generative node
 #   using Musa::Extension::Neumas
 #
-#   node = "0 +2 +2 -1 0".nn  # to_neumas_to_node
+#   node = "(0) (+2) (+2) (-1) (0)".nn  # to_neumas_to_node
 #
 # @see Musa::Neumalang
 # @see Musa::Neumas::Decoders::NeumaDecoder
@@ -145,17 +145,17 @@ module Musa
       #
       #   @example Parse simple melody
       #     using Musa::Extension::Neumas
-      #     neumas = "0 +2 +2 -1 0".to_neumas
+      #     neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
       #
       #   @example Parse with immediate decoding
       #     using Musa::Extension::Neumas
       #     # Create a simple decoder
       #     decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
-      #     result = "0 +2 +2 -1 0".to_neumas(decode_with: decoder)
+      #     result = "(0) (+2) (+2) (-1) (0)".to_neumas(decode_with: decoder)
       #
       #   @example Parse with debug
       #     using Musa::Extension::Neumas
-      #     neumas = "0 +2 +2".to_neumas(debug: true)
+      #     neumas = "(0) (+2) (+2)".to_neumas(debug: true)
       #
       #   @api public
       class ::String; end
@@ -174,7 +174,7 @@ module Musa
       #
       #   @example Convert to node for generative grammar
       #     using Musa::Extension::Neumas
-      #     node = "0 +2 +2 -1 0".to_neumas_to_node
+      #     node = "(0) (+2) (+2) (-1) (0)".to_neumas_to_node
       #
       #   @see Musa::Generative
       #
@@ -198,8 +198,8 @@ module Musa
       #   @example Two-voice harmony
       #     using Musa::Extension::Neumas
       #
-      #     melody = "0 +2 +4 +5"
-      #     bass = "-7 -5 -3 -1"
+      #     melody = "(0) (+2) (+4) (+5)"
+      #     bass = "(-7) (-5) (-3) (-1)"
       #     harmony = melody | bass
       #
       #   @api public

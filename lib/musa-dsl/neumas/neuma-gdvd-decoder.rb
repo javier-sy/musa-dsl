@@ -44,7 +44,7 @@ module Musa::Neumas
     #   # Process neumas in differential format before final conversion
     #   using Musa::Extension::Neumas
     #
-    #   neumas = "0 +2 +2 -1 0".to_neumas
+    #   neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
     #   differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
     #
     #   # Process each neuma (keeping differential format)

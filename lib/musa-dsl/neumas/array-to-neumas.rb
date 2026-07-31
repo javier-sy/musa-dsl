@@ -13,9 +13,9 @@ module Musa
     #
     # Arrays are converted using `MERGE` to create sequential series:
     # ```ruby
-    # ["0 +2 +4", "+5 +7"].to_neumas
+    # ["(0) (+2) (+4)", "(+5) (+7)"].to_neumas
     # # Equivalent to:
-    # MERGE("0 +2 +4".to_neumas, "+5 +7".to_neumas)
+    # MERGE("(0) (+2) (+4)".to_neumas, "(+5) (+7)".to_neumas)
     # ```
     #
     # ## Element Types
@@ -32,9 +32,9 @@ module Musa
     # using Musa::Extension::Neumas
     #
     # phrases = [
-    #   "0 +2 +4 +5",    # First phrase
-    #   "+7 +5 +4 +2",   # Second phrase
-    #   "0 -2 -4 -5"     # Third phrase
+    #   "(0) (+2) (+4) (+5)",    # First phrase
+    #   "(+7) (+5) (+4) (+2)",   # Second phrase
+    #   "(0) (-2) (-4) (-5)"     # Third phrase
     # ].to_neumas
     # ```
     #
@@ -49,17 +49,17 @@ module Musa
     #   using Musa::Extension::Neumas
     #
     #   melody = [
-    #     "0 +2 +4 +5",    # Phrase A
-    #     "+7 +5 +4 +2",   # Phrase B
-    #     "0 -2 -4 -5"     # Phrase C
+    #     "(0) (+2) (+4) (+5)",    # Phrase A
+    #     "(+7) (+5) (+4) (+2)",   # Phrase B
+    #     "(0) (-2) (-4) (-5)"     # Phrase C
     #   ].to_neumas
     #
     # @example Mixed element types
     #   using Musa::Extension::Neumas
     #
-    #   intro = "0 +2 +4".to_neumas
-    #   verse = "0 +2 +2 -1 0"
-    #   chorus = "+7 +5 +7"
+    #   intro = "(0) (+2) (+4)".to_neumas
+    #   verse = "(0) (+2) (+2) (-1) (0)"
+    #   chorus = "(+7) (+5) (+7)"
     #
     #   song = [intro, verse, chorus].to_neumas
     #
@@ -67,7 +67,7 @@ module Musa
     #   using Musa::Extension::Neumas
     #
     #   # Single element returns converted element directly (not merged)
-    #   single = ["0 +2 +4"].to_neumas
+    #   single = ["(0) (+2) (+4)"].to_neumas
     #
     # Must be activated with `using Musa::Extension::Neumas`.
     #
@@ -103,21 +103,21 @@ module Musa
       #     using Musa::Extension::Neumas
       #
       #     phrases = [
-      #       "0 +2 +4",
-      #       "+5 +7"
+      #       "(0) (+2) (+4)",
+      #       "(+5) (+7)"
       #     ].to_neumas
       #     # Returns MERGE of two parsed series
       #
       #   @example Mixed types
       #     using Musa::Extension::Neumas
       #
-      #     existing = "0 +2".to_neumas
-      #     combined = [existing, "+4 +5"].to_neumas
+      #     existing = "(0) (+2)".to_neumas
+      #     combined = [existing, "(+4) (+5)"].to_neumas
       #
       #   @example Single element
       #     using Musa::Extension::Neumas
       #
-      #     single = ["0 +2 +4"].to_neumas
+      #     single = ["(0) (+2) (+4)"].to_neumas
       #     # Returns parsed series directly (not merged)
       #
       #   @api public

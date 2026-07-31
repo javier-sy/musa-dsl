@@ -63,8 +63,8 @@ module Musa
       # @raise [ArgumentError] if other cannot be converted
       #
       # @example Create parallel from neumas
-      #   melody = "0 +2 +4".to_neumas
-      #   bass = "-7 -5 -3".to_neumas
+      #   melody = "(0) (+2) (+4)".to_neumas
+      #   bass = "(-7) (-5) (-3)".to_neumas
       #   harmony = melody | bass
       #
       # @example Chain multiple parallels

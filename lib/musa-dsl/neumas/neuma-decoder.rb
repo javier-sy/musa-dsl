@@ -45,9 +45,9 @@ module Musa::Neumas
   #
   # Neumas are text-based musical notation:
   # ```ruby
-  # "0 +2 +2 -1"        # Grade sequence (scale degrees)
+  # "(0) (+2) (+2) (-1)"        # Grade sequence (scale degrees)
   # "_ _2 _/2"          # Duration modifiers
-  # ".st .tr .mor"      # Articulation/ornament modifiers
+  # "(0 st) (0 tr) (0 mor)"  # Articulation/ornament modifiers, inside the neuma
   # "(+1_/4)+2_"        # Appogiatura (grace note) + main note
   # ```
   #
@@ -62,7 +62,7 @@ module Musa::Neumas
   # )
   #
   # # Parse and decode neuma string
-  # neumas = "0 +2 +2 -1 0".to_neumas
+  # neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
   # neumas.each { |neuma| decoder.decode(neuma) }
   # ```
   #

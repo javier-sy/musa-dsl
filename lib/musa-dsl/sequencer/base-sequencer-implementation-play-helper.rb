@@ -307,7 +307,7 @@ module Musa
       #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
       #
       #   using Musa::Extension::Neumas
-      #   # Neumas need their parentheses: a bare "0 +2" does not parse.
+      #   # Neumas need their parentheses: a bare "(0) (+2)" does not parse.
       #   neumalang_series = "(0) (+2) (+2) (-1) (0)".to_neumas
       #
       #   played_notes = []

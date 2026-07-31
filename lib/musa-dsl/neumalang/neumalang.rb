@@ -103,9 +103,11 @@ module Musa
     # - **Grade notation**: `0`, `+2`, `-1`, `^2` (octave up), `v1` (octave down)
     # - **Duration notation**: `_`, `_2`, `_/2`, `_3/2` (dotted), `_.` (dots)
     # - **Velocity notation**: `p`, `pp`, `mp`, `mf`, `f`, `ff`, `fff`
-    # - **Modifiers**: `.tr`, `.mor`, `.turn`, `.st`, `.b` (ornaments/articulations)
+    # - **Modifiers**: `tr`, `mor`, `turn`, `st`, `b` (ornaments/articulations),
+    #   written inside the neuma and WITHOUT a leading dot: `(+2 2 tr)`
     # - **Appogiatura**: `(+1_/4)+2_` (grace note before main note)
-    # - **Parallel**: `[0 +2 +4 | +7 +5 +7]` (multiple voices)
+    # - **Parallel**: `[(0) (+2) (+4) || (+7) (+5) (+7)]` (multiple voices,
+    #   separated by a DOUBLE bar)
     # - **Vectors**: `<1 2 3>` (V), `<a: 1 b: 2>` (PackedV)
     # - **Process**: `<< 1 _ _ 2 _ >>` (rhythmic process)
     # - **Commands**: `{ ruby code }` (embedded Ruby)
@@ -166,12 +168,12 @@ module Musa
     #
     # @example Complex notation
     #   neumas = Musa::Neumalang::Neumalang.parse(
-    #     "(0) (+2 .tr) (+4 _) (+5 _2) ((^1 _/4) +7 _) (+5) (+4) (+2) (0)"
+    #     "(0) (+2 tr) (+4) (+5) (+7) (+5) (+4) (+2) (0)"
     #   )
     #
     # @example Parallel voices
     #   neumas = Musa::Neumalang::Neumalang.parse(
-    #     "[(0) (+2) (+4) | (+7) (+5) (+7)]"
+    #     "[(0) (+2) (+4) || (+7) (+5) (+7)]"
     #   )
     #
     # @example With variables and commands
@@ -219,7 +221,7 @@ module Musa
         # Semantic action for parallel structure (voices separated by `|`).
         #
         # Transforms bracketed parallel notation into Parallel structure.
-        # Used for polyphonic notation like `"[0 +2 | +7 +5]"`.
+        # Used for polyphonic notation like `"[(0) (+2) || (+7) (+5)]"`.
         #
         # @api private
         module BracketedBarSentences
@@ -443,7 +445,7 @@ module Musa
 
         # Semantic action for neuma notation (core musical event).
         #
-        # Transforms neuma notation like `"+2_2.tr"` into GDVD structure.
+        # Transforms neuma notation like `"(+2 2 tr)"` into GDVD structure.
         # Combines grade, octave, duration, velocity, and modifiers.
         #
         # This is the most important module - it builds the musical events
@@ -464,7 +466,7 @@ module Musa
           # @return [Hash] GDVD neuma with kind :gdvd
           #
           # @example Parse result
-          #   # "+2_2.tr" becomes:
+          #   # "(+2 2 tr)" becomes:
           #   {
           #     kind: :gdvd,
           #     gdvd: {
@@ -964,7 +966,7 @@ module Musa
       #
       # @example Complex notation
       #   neumas = Musa::Neumalang::Neumalang.parse(
-      #     "[(0) (+2 .tr) (+4 _) | (+7) (+5 .mor) (+7 _)] (+9 _2)"
+      #     "[(0) (+2 tr) (+4) || (+7) (+5 mor) (+7)] (+9)"
       #   )
       #   # Parallel voices followed by longer note
       #

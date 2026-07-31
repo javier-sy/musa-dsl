@@ -17,7 +17,7 @@ module Musa::Neumas
     #
     # ```ruby
     # Neuma String → Parser → GDVD → NeumaDecoder → GDV → Transcriptor → MIDI/MusicXML
-    # "0 +2 +2 -1"              ↓                      ↓
+    # "(0) (+2) (+2) (-1)"              ↓                      ↓
     #                   {grade_diff: +2}    {grade: 2, duration: 1/4r}
     # ```
     #
