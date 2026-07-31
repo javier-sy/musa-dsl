@@ -53,9 +53,11 @@ module Musa
     #     ticks_per_beat: 24
     #   )
     #
-    #   # Schedule events
-    #   transport.sequencer.at 0 { puts "Start!" }
-    #   transport.sequencer.at 4 { puts "Bar 4" }
+    #   # Schedule events. Bars are numbered from 1, and `at 0` is before the
+    #   # sequencer's starting position, so it would silently never fire. The
+    #   # parentheses are required: `at 1 { ... }` is a Ruby syntax error.
+    #   transport.sequencer.at(1) { puts "Start!" }
+    #   transport.sequencer.at(4) { puts "Bar 4" }
     #
     #   transport.start
     #

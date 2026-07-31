@@ -46,13 +46,13 @@ module Musa
   #       /Users/me/composition.rb
   #       #begin
   #       puts "Starting..."
-  #       at 0 { play :C4 }
+  #       at(1) { play :C4 }
   #       #end
   #
   #     Server → Client:
   #       //echo
   #       puts "Starting..."
-  #       at 0 { play :C4 }
+  #       at(1) { play :C4 }
   #       //end
   #       Starting...
   #
@@ -427,7 +427,7 @@ module Musa
       # @example From evaluated code
       #   # In REPL-evaluated code:
       #   puts "Starting sequence..."
-      #   sequencer.at 4 { puts "Bar 4!" }
+      #   sequencer.at(4) { puts "Bar 4!" }
       #   # Output appears in editor
       #
       # @example Multiple messages
@@ -679,8 +679,8 @@ module Musa
     #
     # @example From REPL client
     #   # Code sent by editor:
-    #   at 0 { play C4 }
-    #   at 4 { play D4 }
+    #   at(1) { play C4 }
+    #   at(4) { play D4 }
     #   # Executes in LiveCodingEnvironment instance context
     #
     # @see REPL The REPL server that uses this interface
@@ -745,7 +745,7 @@ module Musa
       #
       # @example Internal usage by REPL
       #   # REPL calls this internally:
-      #   context.execute("sequencer.at 0 { puts 'tick' }", "(repl)", 1)
+      #   context.execute("sequencer.at(1) { puts 'tick' }", "(repl)", 1)
       #
       # @see REPL#bind= Where this method is called during code execution
       def execute(source_block, file, line)

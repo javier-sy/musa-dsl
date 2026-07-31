@@ -261,7 +261,9 @@ module Musa
       #
       #   puts seq.size  # => 0
       #   puts seq.empty?  # => true
-      #   puts seq.position  # => 0
+      #   puts seq.position  # => 95/96
+      #   # Back to one tick before bar 1, not to zero: with 4 beats of 24 ticks
+      #   # the reset position is 1r - 1/96r, so the next tick lands on bar 1.
       def reset
         @timeslots.clear
         @everying.clear

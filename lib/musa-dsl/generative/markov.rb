@@ -44,10 +44,11 @@ module Musa
   #       a: [:b, :c],      # 50/50 chance
   #       b: [:a, :c],
   #       c: [:a, :b, :x]
-  #     }
+  #     },
+  #     random: 7  # an explicit seed makes the sequence the same sequence
   #   ).i
   #
-  #   markov.to_a  # => [:a, :c, :b, :a, :b, :c, :x]
+  #   markov.to_a  # => [:a, :c, :a, :c, :x]
   #
   # @example Weighted probability transitions
   #   markov = Musa::Markov::Markov.new(
@@ -105,7 +106,10 @@ module Musa
       #   Keys are states, values are next state definitions (Array, Hash, or Proc)
       # @param start [Object] initial state
       # @param finish [Object, nil] terminal state (nil for infinite)
-      # @param random [Random, Integer, nil] random number generator or seed
+      # @param random [Integer, nil] seed for the random number generator
+      #
+      # @note A `Random` instance passed here is currently ignored and replaced
+      #   by an unseeded one; pass the seed itself to get reproducibility.
       #
       # @example
       #   markov = Markov.new(

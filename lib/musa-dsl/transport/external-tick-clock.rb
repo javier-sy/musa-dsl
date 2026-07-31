@@ -36,18 +36,20 @@ module Musa
     #   clock = ExternalTickClock.new
     #   transport = Transport.new(clock)
     #
-    #   # Schedule some events
-    #   transport.sequencer.at 1 { puts "Tick 1" }
-    #   transport.sequencer.at 2 { puts "Tick 2" }
+    #   # Schedule some events. Note the parentheses: `at 1 { ... }` is a syntax
+    #   # error in Ruby, since the braces would bind to the argument.
+    #   transport.sequencer.at(1) { puts "Bar 1" }
+    #   transport.sequencer.at(2) { puts "Bar 2" }
     #
     #   # Start in background (non-blocking for ExternalTickClock)
     #   thread = Thread.new { transport.start }
     #   sleep 0.1  # Let transport initialize
     #
-    #   # Generate ticks manually
-    #   clock.tick  # => (nothing, position 0)
-    #   clock.tick  # => "Tick 1"
-    #   clock.tick  # => "Tick 2"
+    #   # Generate ticks manually. The sequencer starts one tick before bar 1,
+    #   # so the very first tick is bar 1 -- and bar 2 is 96 ticks further on.
+    #   clock.tick  # => "Bar 1"
+    #   95.times { clock.tick }
+    #   clock.tick  # => "Bar 2"
     #
     #   transport.stop
     #   thread.join

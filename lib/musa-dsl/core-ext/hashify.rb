@@ -52,8 +52,13 @@ module Musa
     #   using Musa::Extension::Hashify
     #
     #   # User provides just a pitch
-    #   60.hashify(keys: [:pitch, :velocity], default: 64)
+    #   [60].hashify(keys: [:pitch, :velocity], default: 64)
     #   # => { pitch: 60, velocity: 64 }
+    #
+    #   # A bare value is broadcast to every key instead, and `default` only
+    #   # applies when the value itself is nil:
+    #   60.hashify(keys: [:pitch, :velocity], default: 64)
+    #   # => { pitch: 60, velocity: 60 }
     #
     #   # User provides array [pitch, velocity, duration]
     #   [62, 90, 0.5].hashify(keys: [:pitch, :velocity, :duration])

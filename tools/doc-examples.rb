@@ -27,6 +27,7 @@
 #   ruby tools/doc-examples.rb -v         # list every mismatch in full
 
 require 'json'
+require 'stringio'
 require 'timeout'
 require 'tmpdir'
 require_relative '../lib/musa-dsl'
@@ -65,6 +66,7 @@ module DocExamples
       lines = File.readlines(path)
       examples = []
       current = nil
+      blanks = 0
       namespace = []   # [indent, name] pairs, deepest last
       block = 0
 
@@ -82,10 +84,22 @@ module DocExamples
           examples << current if current
           current = Example.new(file: path, line: index + 1, title: match[1].strip,
                                 code: [], namespace: namespace.map(&:last), block: [path, block])
+          blanks = 0
         elsif current
-          # The block continues while the comment stays indented under it; a bare
-          # `#`, another tag or the end of the comment closes it.
-          if (match = line.match(/^\s*#\s{3,}(.*)$/)) && !match[1].start_with?('@')
+          # The block continues while the comment stays indented under it; another
+          # tag or the end of the comment closes it.
+          #
+          # A bare `#` does NOT close it. Almost every DSL example in this codebase
+          # breathes -- `field :root, ...` <blank> `constructor do ... end` -- and
+          # ending the block at the first blank line kept the first two lines of it
+          # and threw away the rest, which then failed to parse. Blank lines are
+          # held back and only committed when indented content follows them, so a
+          # `#` before a `@see` still closes cleanly.
+          if line.match?(/^\s*#\s*$/)
+            blanks += 1
+          elsif (match = line.match(/^\s*#\s{3,}(.*)$/)) && !match[1].start_with?('@')
+            blanks.times { current.code << '' }
+            blanks = 0
             current.code << match[1]
           else
             examples << current
@@ -226,8 +240,13 @@ module DocExamples
       # the reader the module's methods, which is their position in the file,
       # without moving anyone else's ancestry.
       # Deeper levels overwrite shallower ones -- `Musa::Extension::DeepCopy::DeepCopy`
-      # is what `DeepCopy` means to someone reading inside it -- but nothing that
+      # is what `DeepCopy` means to someone reading inside it -- but a name that
       # already existed at top level is touched.
+      #
+      # A module that contains a constant of its own name yields that inner one:
+      # `Musa::Transport::Transport` is what `Transport` means to anyone who has
+      # done `include Musa::All`, and aliasing the enclosing module over it is how
+      # `Transport.new` came to be a call on a module.
       established = Object.constants(false)
 
       narrative.first.namespace.each_with_object([]) do |name, path|
@@ -239,8 +258,11 @@ module DocExamples
           scope.constants(false).each do |constant|
             next if established.include?(constant)
 
+            value = scope.const_get(constant)
+            value = value.const_get(constant) if value.is_a?(Module) && value.const_defined?(constant, false)
+
             Object.send(:remove_const, constant) if Object.const_defined?(constant, false)
-            Object.const_set(constant, scope.const_get(constant))
+            Object.const_set(constant, value)
           end
 
           eval('self', TOPLEVEL_BINDING).extend(scope) unless scope.is_a?(Class) # rubocop:disable Security/Eval
@@ -275,6 +297,14 @@ module DocExamples
                    end
                  end
 
+        # What the statement PRINTS is often what the example declares: `puts
+        # seq.empty?  # => false` is about the false on screen, not about puts
+        # returning nil, and `clock.tick  # => "Tick 1"` is about what a
+        # registered block printed. Read as return values these are all nil.
+        printed = StringIO.new
+        stdout = $stdout
+        $stdout = printed
+
         begin
           value = eval((usings + [source]).join("\n"), TOPLEVEL_BINDING, example.file, example.line) # rubocop:disable Security/Eval
           usings << source if source.match?(/\A\s*using\s+\S/)
@@ -283,9 +313,14 @@ module DocExamples
                               actual: "#{e.class}: #{e.message.lines.first.to_s.strip}",
                               status: wanted ? (e.is_a?(wanted) ? :ok : :mismatch) : :error)
           next
+        ensure
+          $stdout = stdout
         end
 
         next unless declared
+
+        output = printed.string.strip
+        spoke = value.nil? && !output.empty?
 
         status =
           if wanted
@@ -303,13 +338,16 @@ module DocExamples
               :prose
             elsif value == expected || value.inspect.gsub(/\s+/, '') == declared.gsub(/\s+/, '')
               :ok
+            elsif spoke && (output == expected.to_s || output == declared.strip)
+              :ok
             else
               :mismatch
             end
           end
 
         checks << Check.new(statement: source, declared: declared,
-                            actual: value.inspect, status: status)
+                            actual: spoke ? "printed #{output.inspect}" : value.inspect,
+                            status: status)
       end
 
       write.write(JSON.dump(checks.map(&:to_h)))
