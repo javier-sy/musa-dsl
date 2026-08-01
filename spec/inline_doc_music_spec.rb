@@ -875,6 +875,35 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(maj_seventh).to be_a(Musa::Chords::Chord)
     end
 
+    it 'builds a chord on a bare pitch, with no scale in hand (issue #71)' do
+      # The no-scale branch asked the tuning for a scale kind called 60 --
+      # `tuning[pitch].major` where the library's idiom is `tuning.major[pitch]`,
+      # the kind first and the pitch rooting it. It is the only route the
+      # @param documents and the only one no example or spec exercised.
+      expect(Musa::Chords::Chord.with_root(60, quality: :major, size: :triad).pitches)
+        .to eq([60, 64, 67])
+
+      # Re-rooting anywhere is the point: this is what a neo-Riemannian
+      # operator needs, and it has no scale to offer.
+      expect(Musa::Chords::Chord.with_root(63, quality: :major, size: :triad).pitches)
+        .to eq([63, 67, 70])
+    end
+
+    it 'a quality outside the fallback major scale needs allow_chromatic or a name' do
+      # Searching by features is constrained by the scale, and the fallback is a
+      # major scale on the pitch, which has no minor third.
+      expect { Musa::Chords::Chord.with_root(60, quality: :minor, size: :triad) }
+        .to raise_error(ArgumentError, /Unable to find chord definition/)
+
+      expect(Musa::Chords::Chord.with_root(60, quality: :minor, size: :triad,
+                                           allow_chromatic: true).pitches)
+        .to eq([60, 63, 67])
+
+      # Naming the definition skips the search entirely.
+      expect(Musa::Chords::Chord.with_root(60, name: :min).pitches).to eq([60, 63, 67])
+      expect(Musa::Chords::Chord.with_root(60, name: :dim).pitches).to eq([60, 63, 66])
+    end
+
     it 'demonstrates Chord.with_root with note from scale' do
       # From Chord @example: With note from scale
       tuning = Scales.default_system.default_tuning

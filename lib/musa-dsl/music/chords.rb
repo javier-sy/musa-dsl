@@ -140,6 +140,21 @@ module Musa
       # @example With features instead of name
       #   Chord.with_root(60, scale: c_major, quality: :major, size: :triad)
       #
+      # @example Without a scale, on a bare MIDI pitch
+      #   # The fallback is a major scale rooted on the pitch itself, so the
+      #   # chord can be re-rooted anywhere without a scale in hand.
+      #   Chord.with_root(60, quality: :major, size: :triad).pitches  # => [60, 64, 67]
+      #   Chord.with_root(63, quality: :major, size: :triad).pitches  # => [63, 67, 70]
+      #
+      # @example A quality that leaves the fallback scale
+      #   # Searching by features is constrained by the scale, and a minor third
+      #   # is not in the major scale the pitch just rooted. Either let it be
+      #   # chromatic, or name the definition, which skips the search.
+      #   Chord.with_root(60, quality: :minor, size: :triad, allow_chromatic: true).pitches
+      #   # => [60, 63, 67]
+      #   Chord.with_root(60, name: :min).pitches  # => [60, 63, 67]
+      #   Chord.with_root(60, name: :dim).pitches  # => [60, 63, 66]
+      #
       # @example With voicing parameters
       #   Chord.with_root(60, scale: c_major, name: :maj7,
       #                   move: {root: -1}, duplicate: {fifth: 1})
@@ -152,7 +167,14 @@ module Musa
             if scale
               scale.note_of_pitch(root_note_or_pitch_or_symbol, allow_chromatic: allow_chromatic)
             else
-              scale = Musa::Scales::Scales.default_system.default_tuning[root_note_or_pitch_or_symbol].major
+              # A major scale rooted on the pitch itself, which is the documented
+              # fallback. The scale kind comes first and the pitch roots it --
+              # `tuning.major[pitch]`, not `tuning[pitch].major`, which asks the
+              # tuning for a scale kind called 60.
+              #
+              # allow_chromatic has nothing to decide here: the pitch is this
+              # scale's own tonic, so it is always in it.
+              scale = Musa::Scales::Scales.default_system.default_tuning.major[root_note_or_pitch_or_symbol]
               scale.note_of_pitch(root_note_or_pitch_or_symbol)
             end
           when Symbol
