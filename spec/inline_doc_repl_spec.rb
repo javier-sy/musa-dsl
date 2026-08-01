@@ -5,7 +5,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
   include Musa::All
 
   context 'REPL module (repl.rb)' do
-    it 'example from line 129 - With DynamicProxy (complex DSL)' do
+    it '@example With DynamicProxy (complex DSL)' do
       # Note: This test demonstrates the pattern, but doesn't actually start a REPL server
       # to avoid TCP port conflicts and thread management in tests
 
@@ -38,7 +38,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(dsl_context.commands_executed).to include("play C4")
     end
 
-    it 'example from line 140 - With direct Binding (musalce-server pattern)' do
+    it '@example With direct Binding (musalce-server pattern)' do
       # This demonstrates the musalce-server binding pattern
       # Note: The example shows the conceptual pattern used in musalce-server
       # where binding is captured within a DSL context block
@@ -79,7 +79,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(context.at(1) {}).to eq("scheduled at 1")
     end
 
-    it 'example from line 150 - With after_eval callback' do
+    it '@example With after_eval callback' do
       # Demonstrates the after_eval callback pattern
 
       executed_sources = []
@@ -117,7 +117,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(dsl_context.log).to include("note 60")
     end
 
-    it 'example from line 197 - With DynamicProxy and named parameters' do
+    it '@example With DynamicProxy and named parameters' do
       # Demonstrates full REPL initialization with all parameters
 
       class MyDSLContext
@@ -158,7 +158,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(custom_logger).to be_a(Musa::Logger::Logger)
     end
 
-    it 'example from line 207 - With direct Binding (musalce-server pattern) validation' do
+    it '@example With direct Binding (musalce-server pattern) validation' do
       # Validates the direct binding pattern
 
       class DirectBindingContext
@@ -188,7 +188,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(binding_captured.receiver.sequencer).to be_a(Musa::Sequencer::BaseSequencer)
     end
 
-    it 'example from line 211 - Deferred binding' do
+    it '@example Deferred binding' do
       # Demonstrates creating REPL without immediate binding
 
       class DeferredDSL
@@ -212,7 +212,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(context_proxy.execute('1 + 1', '(spec)', 1)).to eq(2)
     end
 
-    it 'example from line 340 - With Ruby Binding' do
+    it '@example With Ruby Binding' do
       # Demonstrates how binding.receiver returns the DSLContext instance
 
       class DSLContext
@@ -239,7 +239,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(test_binding.receiver.name).to eq("test_context")
     end
 
-    it 'example from line 344 - With DynamicProxy receiver' do
+    it '@example With DynamicProxy receiver' do
       # Demonstrates how proxy.receiver returns the wrapped object
 
       class WrappedDSL
@@ -264,7 +264,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(proxy.receiver.id).to eq(42)
     end
 
-    it 'example from line 426 - From evaluated code (puts redirection)' do
+    it '@example From evaluated code (puts redirection)' do
       # Demonstrates output redirection pattern used in REPL
 
       class REPLMockContext
@@ -300,7 +300,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(context.output_buffer).to include("Bar 4!")
     end
 
-    it 'example from line 432 - Multiple messages' do
+    it '@example Multiple messages' do
       # Demonstrates sending multiple messages
 
       class MultiMessageContext
@@ -333,7 +333,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(context.messages[2]).to eq("Line 3")
     end
 
-    it 'example from line 604 - escape method for protocol lines' do
+    it '@example escape method for protocol lines' do
       # Demonstrates the escape method for protocol safety
       # The escape method adds '//' prefix to lines starting with '//'
       # to prevent protocol confusion
@@ -356,7 +356,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(escape.call(normal_line)).to eq("Hello")
     end
 
-    it 'example from line 660 - Basic implementation of CustomizableDSLContext' do
+    it '@example Basic implementation of CustomizableDSLContext' do
       # Complete example of implementing CustomizableDSLContext
 
       class LiveCodingEnvironment
@@ -396,7 +396,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(test_executed).to be true
     end
 
-    it 'example from line 679 - From REPL client execution' do
+    it '@example From REPL client execution' do
       # Demonstrates how code sent by editor is executed
 
       class ClientExecutionContext
@@ -431,7 +431,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(context.notes_played).to eq([:C4, :D4])
     end
 
-    it 'example from line 710 - binder implementation pattern' do
+    it '@example binder implementation pattern' do
       # Demonstrates the recommended binder implementation
 
       class StandardDSL
@@ -454,7 +454,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(binder1.receiver).to eq(dsl)
     end
 
-    it 'example from line 745 - Internal usage by REPL (execute method)' do
+    it '@example Internal usage by REPL (execute method)' do
       # Demonstrates how REPL calls execute internally
 
       class ExecutableContext

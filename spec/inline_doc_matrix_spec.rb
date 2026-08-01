@@ -6,7 +6,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   using Musa::Extension::Matrix
 
   context 'Musa::Extension::Matrix module documentation' do
-    it 'example from line 49 - Basic matrix conversion' do
+    it '@example Basic matrix conversion' do
       # Matrix: [time, pitch]
       matrix = Matrix[[0, 60], [1, 62], [2, 64]]
       p_sequences = matrix.to_p(time_dimension: 0)
@@ -34,7 +34,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       expect(first_p[4]).to be_kind_of(Musa::Datasets::V)
     end
 
-    it 'example from line 59 - Multi-dimensional musical parameters' do
+    it '@example Multi-dimensional musical parameters' do
       # Matrix: [time, pitch, velocity]
       matrix = Matrix[[0, 60, 100], [0.5, 62, 110], [1, 64, 120]]
       p_sequences = matrix.to_p(time_dimension: 0, keep_time: false)
@@ -61,7 +61,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       expect(first_p[4]).to be_kind_of(Musa::Datasets::V)
     end
 
-    it 'example from line 69 - Condensing connected matrices' do
+    it '@example Condensing connected matrices' do
       # Two phrases that connect at [1, 62]
       phrase1 = Matrix[[0, 60], [1, 62]]
       phrase2 = Matrix[[1, 62], [2, 64], [3, 65]]
@@ -85,7 +85,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Array#indexes_of_values (line 98)' do
-    it 'example from line 95 - Creates hash mapping values to indices' do
+    it '@example Creates hash mapping values to indices' do
       result = [10, 20, 10, 30, 20].indexes_of_values
 
       # => { 10 => [0, 2], 20 => [1, 4], 30 => [3] }
@@ -143,7 +143,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Array#condensed_matrices (line 146)' do
-    it 'example from line 140 - Merges matrices with shared boundaries' do
+    it '@example Merges matrices with shared boundaries' do
       # Matrix A ends where Matrix B begins -> they merge
       a = Matrix[[0, 60], [1, 62]]
       b = Matrix[[1, 62], [2, 64]]
@@ -201,7 +201,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Matrix#to_p (line 225)' do
-    it 'example from line 208 - Basic conversion' do
+    it '@example Basic conversion' do
       matrix = Matrix[[0, 60], [1, 62], [2, 64]]
       result = matrix.to_p(time_dimension: 0)
 
@@ -221,7 +221,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       expect(first_p[4]).to eq([64])
     end
 
-    it 'example from line 215 - Keeping time dimension' do
+    it '@example Keeping time dimension' do
       matrix = Matrix[[0, 60, 100], [1, 62, 110], [2, 64, 120]]
       result = matrix.to_p(time_dimension: 0, keep_time: true)
 
@@ -309,7 +309,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Matrix#decompose (line 305)' do
-    it 'example from line 283 - Decomposes into directional segments' do
+    it '@example Decomposes into directional segments' do
       # Points with time in dimension 0
       points = [[0, 10], [1, 20], [0.5, 15], [2, 30]]
       matrix = Matrix.rows(points)

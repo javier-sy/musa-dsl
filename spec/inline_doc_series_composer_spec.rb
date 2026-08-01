@@ -5,7 +5,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   include Musa::All
 
   context 'Composer class - Pipeline Definition' do
-    it 'example from line 154 - Pipeline with constructor' do
+    it '@example Pipeline with constructor' do
       composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         my_pipeline ({ S: [1, 2, 3] }), reverse, { skip: 1 }
         route my_pipeline, to: output
@@ -13,7 +13,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([2, 1])
     end
 
-    it 'example from line 162 - Pipeline with operations only' do
+    it '@example Pipeline with operations only' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         my_pipeline reverse, { skip: 1 }
         route input, to: my_pipeline
@@ -24,7 +24,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Composer class - Routing System' do
-    it 'example from line 191 - Hash routing' do
+    it '@example Hash routing' do
       composer = Musa::Series::Composer::Composer.new(inputs: [:a, :b], auto_commit: false) do
         step1 reverse
         step2 reverse
@@ -43,7 +43,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([{x: 3, y: 30}, {x: 2, y: 20}, {x: 1, y: 10}])
     end
 
-    it 'example from line 209 - Setter routing' do
+    it '@example Setter routing' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         step1 reverse
         route input, to: step1
@@ -55,7 +55,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Composer class - Basic Examples' do
-    it 'example from line 241 - Basic pipeline' do
+    it '@example Basic pipeline' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         step1 reverse
         route input, to: step1
@@ -64,7 +64,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([3, 2, 1])
     end
 
-    it 'example from line 248 - Multiple inputs merging' do
+    it '@example Multiple inputs merging' do
       composer = Musa::Series::Composer::Composer.new(inputs: { a: S(1, 2), b: S(10, 20) }) do
         hash_merge ({ H: {} })
         route a, to: hash_merge, as: :x
@@ -74,7 +74,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([{x: 1, y: 10}, {x: 2, y: 20}])
     end
 
-    it 'example from line 257 - Multiple outputs' do
+    it '@example Multiple outputs' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         doubled ({ eval: ->(v) { v * 2 } })
         tripled ({ eval: ->(v) { v * 3 } })
@@ -86,7 +86,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([2, 4, 6])
     end
 
-    it 'example from line 268 - Complex routing' do
+    it '@example Complex routing' do
       composer = Musa::Series::Composer::Composer.new(inputs: [:a, :b], auto_commit: false) do
         step1 reverse
         step2 ({ skip: 1 })
@@ -108,7 +108,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: input' do
-    it 'example from line 345 - Set input source dynamically' do
+    it '@example Set input source dynamically' do
       composer = Musa::Series::Composer::Composer.new(auto_commit: false) do
         step reverse
         route input, to: step
@@ -124,7 +124,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: output' do
-    it 'example from line 373 - Access output' do
+    it '@example Access output' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         step reverse
         route input, to: step
@@ -134,7 +134,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([3, 2, 1])
     end
 
-    it 'example from line 376 - Multiple outputs' do
+    it '@example Multiple outputs' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         doubled ({ eval: ->(v) { v * 2 } })
         tripled ({ eval: ->(v) { v * 3 } })
@@ -165,7 +165,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: route' do
-    it 'example from line 413 - Hash routing (inside DSL block)' do
+    it '@example Hash routing (inside DSL block)' do
       composer = Musa::Series::Composer::Composer.new(inputs: [:a, :b], auto_commit: false) do
         step1 reverse
         step2 reverse
@@ -184,7 +184,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([{x: 2, y: 20}, {x: 1, y: 10}])
     end
 
-    it 'example from line 431 - Setter routing (inside DSL block)' do
+    it '@example Setter routing (inside DSL block)' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         step reverse
         route input, to: step
@@ -194,7 +194,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([3, 2, 1])
     end
 
-    it 'example from line 440 - Custom on parameter (inside DSL block)' do
+    it '@example Custom on parameter (inside DSL block)' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3), auto_commit: false) do
         step reverse
         hash_merge ({ H: {} })
@@ -209,7 +209,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: pipeline' do
-    it 'example from line 467 - Direct call (inside DSL block)' do
+    it '@example Direct call (inside DSL block)' do
       composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         pipeline(:my_step, [{ S: [1, 2, 3] }, :reverse])  # Fixed: elements as array
         route my_step, to: output
@@ -218,7 +218,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
       expect(composer.output.i.to_a).to eq([3, 2, 1])
     end
 
-    it 'example from line 475 - DSL equivalent (method_missing)' do
+    it '@example DSL equivalent (method_missing)' do
       composer = Musa::Series::Composer::Composer.new(inputs: nil) do
         my_step ({ S: [1, 2, 3] }), reverse
         route my_step, to: output
@@ -229,7 +229,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: update' do
-    it 'example from line 498 - Add routes dynamically' do
+    it '@example Add routes dynamically' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3), auto_commit: false) do
         step1 reverse
         step2 ({ skip: 1 })
@@ -249,7 +249,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: commit!' do
-    it 'example from line 524 - Manual commit' do
+    it '@example Manual commit' do
       composer = Musa::Series::Composer::Composer.new(auto_commit: false) do
         step reverse
         route input, to: step
@@ -282,7 +282,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'DSL: method_missing' do
-    it 'example from line 1021 - DSL syntax demonstration' do
+    it '@example DSL syntax demonstration' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         # `reverse` → returns :reverse (operation symbol)
         # `my_step reverse, { skip: 1 }` → creates pipeline named :my_step

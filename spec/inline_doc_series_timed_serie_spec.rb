@@ -5,7 +5,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
   include Musa::All
 
   context 'TIMED_UNION constructor' do
-    it 'example from line 99 - Array mode with direct values' do
+    it '@example Array mode with direct values' do
       s1 = S({ time: 0r, value: 1 }, { time: 1r, value: 2 })
       s2 = S({ time: 0r, value: 10 }, { time: 2r, value: 20 })
 
@@ -19,7 +19,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       ])
     end
 
-    it 'example from line 109 - Hash mode with named sources' do
+    it '@example Hash mode with named sources' do
       melody = S({ time: 0r, value: 60 }, { time: 1r, value: 64 })
       bass = S({ time: 0r, value: 36 }, { time: 2r, value: 40 })
 
@@ -33,7 +33,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       ])
     end
 
-    it 'example from line 119 - Hash values with polyphonic events' do
+    it '@example Hash values with polyphonic events' do
       s1 = S({ time: 0r, value: { a: 1, b: 2 } })
       s2 = S({ time: 0r, value: { c: 10, d: 20 } })
 
@@ -44,7 +44,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       expect(result[:value]).to eq({ a: 1, b: 2, c: 10, d: 20 })
     end
 
-    it 'example from line 126 - Extra attributes synchronization' do
+    it '@example Extra attributes synchronization' do
       s1 = S({ time: 0r, value: 1, velocity: 80, duration: 1r })
       s2 = S({ time: 0r, value: 10, velocity: 90 })
 
@@ -57,7 +57,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       expect(result[:duration]).to eq([1r, nil])
     end
 
-    it 'example from line 137 - Key conflict detection' do
+    it '@example Key conflict detection' do
       s1 = S({ time: 0r, value: { a: 1, b: 2 } })
       s2 = S({ time: 0r, value: { a: 10 } })  # 'a' already used!
 
@@ -68,7 +68,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
   end
 
   context 'flatten_timed operation' do
-    it 'example from line 501 - Hash values to individual voices' do
+    it '@example Hash values to individual voices' do
       s = S({ time: 0r, value: { a: 60, b: 64 }, velocity: { a: 80, b: 90 } })
 
       flat = s.flatten_timed.i
@@ -79,7 +79,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       expect(result[:b]).to eq({ time: 0r, value: 64, velocity: 90 }.extend(Musa::Datasets::AbsTimed))
     end
 
-    it 'example from line 509 - Array values to indexed events' do
+    it '@example Array values to indexed events' do
       s = S({ time: 0r, value: [60, 64], velocity: [80, 90] })
 
       flat = s.flatten_timed.i
@@ -90,7 +90,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       expect(result[1]).to eq({ time: 0r, value: 64, velocity: 90 }.extend(Musa::Datasets::AbsTimed))
     end
 
-    it 'example from line 517 - Direct values pass through' do
+    it '@example Direct values pass through' do
       s = S({ time: 0r, value: 60, velocity: 80 })
 
       flat = s.flatten_timed.i
@@ -103,7 +103,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
   end
 
   context 'compact_timed operation' do
-    it 'example from line 545 - Remove direct nil events' do
+    it '@example Remove direct nil events' do
       s = S({ time: 0r, value: 1 },
             { time: 1r, value: nil },
             { time: 2r, value: 3 })
@@ -116,7 +116,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       ])
     end
 
-    it 'example from line 554 - Remove all-nil hash events' do
+    it '@example Remove all-nil hash events' do
       s = S({ time: 0r, value: { a: 1, b: 2 } },
             { time: 1r, value: { a: nil, b: nil } },
             { time: 2r, value: { a: 3, b: nil } })
@@ -129,7 +129,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       ])
     end
 
-    it 'example from line 563 - Clean sparse union results' do
+    it '@example Clean sparse union results' do
       s1 = S({ time: 0r, value: 1 }, { time: 2r, value: 3 })
       s2 = S({ time: 1r, value: 10 })
 
@@ -148,7 +148,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
   end
 
   context 'union_timed method' do
-    it 'example from line 598 - Array mode' do
+    it '@example Array mode' do
       melody = S({ time: 0r, value: 60 })
       bass = S({ time: 0r, value: 36 })
 
@@ -158,7 +158,7 @@ RSpec.describe 'Series Timed Serie Inline Documentation Examples' do
       expect(result[:value]).to eq([60, 36])
     end
 
-    it 'example from line 605 - Hash mode' do
+    it '@example Hash mode' do
       melody = S({ time: 0r, value: 60 })
       bass = S({ time: 0r, value: 36 })
       drums = S({ time: 0r, value: 38 })

@@ -6,7 +6,7 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
   using Musa::Extension::Neumas
 
   context 'Neumalang module documentation (neumalang.rb)' do
-    it 'example from line 145 - Basic parsing (simple melody)' do
+    it '@example Basic parsing (simple melody)' do
       neumas = Musa::Neumalang::Neumalang.parse("(0) (+2) (+2) (-1) (0)")
       # Returns serie of GDVD neuma objects
 
@@ -16,7 +16,7 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
       expect(neumas.i.to_a[1][:gdvd][:delta_grade]).to eq(2)
     end
 
-    it 'example from line 154 - With decoder' do
+    it '@example With decoder' do
       scale = Musa::Scales::Scales.et12[440.0].major[60]
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
         scale,
@@ -38,7 +38,7 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
       expect(gdv_array[0][:duration]).to eq(1/4r)
     end
 
-    it 'example from line 937 - Parse simple notation' do
+    it '@example Parse simple notation' do
       neumas = Musa::Neumalang::Neumalang.parse("(0) (+2) (+2) (-1) (0)")
       # => Serie of GDVD neuma objects
 
@@ -48,7 +48,7 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
                 { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
-    it 'example from line 941 - Parse with decoder (immediate GDV conversion)' do
+    it '@example Parse with decoder (immediate GDV conversion)' do
       scale = Musa::Scales::Scales.et12[440.0].major[60]
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
         scale,
@@ -70,7 +70,7 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
       expect(gdv_array[0]).to have_key(:velocity)
     end
 
-    it 'example from line 954 - Parse file' do
+    it '@example Parse file' do
       # Create temporary file
       require 'tempfile'
 
@@ -90,7 +90,7 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
       end
     end
 
-    it 'example from line 958 - Debug parsing' do
+    it '@example Debug parsing' do
       # Test without actually printing (debug mode dumps to stdout)
       expect {
         neumas = Musa::Neumalang::Neumalang.parse(

@@ -15,7 +15,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   context 'Neumas module (neumas.rb)' do
     using Musa::Extension::Neumas
 
-    it 'example from line 151 - Basic neuma parsing' do
+    it '@example Basic neuma parsing' do
 
       # Parse simple melody notation
       melody = "(0) (+2) (+2) (-1) (0)".to_neumas
@@ -30,7 +30,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(gdvd_values.size).to eq(5)
     end
 
-    it 'example from line 162 - Parse with duration and ornaments' do
+    it '@example Parse with duration and ornaments' do
       # Neuma with varied durations and ornaments
       notation = "(+2_) (+2_2) (+1_/2) (+2_ tr)"
       neumas = notation.to_neumas
@@ -41,7 +41,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(first_neuma[:gdvd][:delta_sharps]).to eq(-1)
     end
 
-    it 'example from line 175 - Create parallel voices' do
+    it '@example Create parallel voices' do
       # Define individual voice lines
       soprano = "(0) (+2) (+4) (+5) (+7)"
       alto = "(-2) (0) (+2) (+3) (+5)"
@@ -56,7 +56,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(satb[:parallel].size).to eq(4)
     end
 
-    it 'example from line 191 - Compose sections from arrays' do
+    it '@example Compose sections from arrays' do
       # Define musical sections
       verse = "(0) (+2) (+2) (-1) (0)"
       chorus = "(+7) (+5) (+7) (+5) (+4)"
@@ -70,7 +70,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(total_count).to be > 0
     end
 
-    it 'example from line 269 - Create parallel from neumas' do
+    it '@example Create parallel from neumas' do
       melody = "(0) (+2) (+4)"
       bass = "(-7) (-5) (-3)"
       harmony = melody | bass
@@ -79,7 +79,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(harmony[:parallel].size).to eq(2)
     end
 
-    it 'example from line 274 - Chain multiple parallels' do
+    it '@example Chain multiple parallels' do
       soprano = "(0) (+2) (+4)"
       alto = "(-2) (0) (+2)"
       tenor = "(-5) (-3) (-1)"
@@ -95,7 +95,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   context 'Array refinement (array-to-neumas.rb)' do
     using Musa::Extension::Neumas
 
-    it 'example from line 44 - Sequential phrases' do
+    it '@example Sequential phrases' do
       melody = [
         "(0) (+2) (+4) (+5)",    # Phrase A
         "(+7) (+5) (+4) (+2)",   # Phrase B
@@ -105,7 +105,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(grades(melody)).to eq [0, 2, 4, 5, 7, 5, 4, 2, 0, -2, -4, -5]
     end
 
-    it 'example from line 52 - Mixed element types' do
+    it '@example Mixed element types' do
       intro = "(0) (+2) (+4)".to_neumas
       verse = "(0) (+2) (+2) (-1) (0)"
       chorus = "(+7) (+5) (+7)"
@@ -115,7 +115,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(grades(song)).to eq [0, 2, 4, 0, 2, 2, -1, 0, 7, 5, 7]
     end
 
-    it 'example from line 62 - Single element' do
+    it '@example Single element' do
       # Single element returns converted element directly (not merged)
       single = ["(0) (+2) (+4)"].to_neumas
 
@@ -124,7 +124,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(grades(single)).to eq [0, 2, 4]
     end
 
-    it 'example from line 98 - Convert string array' do
+    it '@example Convert string array' do
       phrases = [
         "(0) (+2) (+4)",
         "(+5) (+7)"
@@ -134,14 +134,14 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(grades(phrases)).to eq [0, 2, 4, 5, 7]
     end
 
-    it 'example from line 107 - Mixed types' do
+    it '@example Mixed types' do
       existing = "(0) (+2)".to_neumas
       combined = [existing, "(+4) (+5)"].to_neumas
 
       expect(grades(combined)).to eq [0, 2, 4, 5]
     end
 
-    it 'example from line 113 - Single element' do
+    it '@example Single element' do
       single = ["(0) (+2) (+4)"].to_neumas
       # Returns parsed series directly (not merged)
 
@@ -150,7 +150,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   end
 
   context 'Decoder infrastructure (neuma-decoder.rb)' do
-    it 'example from line 92 - Basic decoder creation' do
+    it '@example Basic decoder creation' do
       # Create a mock scale object
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
@@ -163,7 +163,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.base[:duration]).to eq(1/4r)
     end
 
-    it 'example from line 215 - Stateful decoding' do
+    it '@example Stateful decoding' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(
         base_duration: 1/4r
       )
@@ -178,7 +178,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(result).to eq(gdvd1)
     end
 
-    it 'example from line 235 - Create decoder with base state' do
+    it '@example Create decoder with base state' do
       base_state = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
       decoder = Musa::Neumas::Decoders::Decoder.new(base_state)
 
@@ -187,7 +187,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.base[:duration]).to eq(1/4r)
     end
 
-    it 'example from line 299 - Create decoder with transcriptor' do
+    it '@example Create decoder with transcriptor' do
       base_state = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
 
       # Create mock transcriptor
@@ -205,7 +205,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   end
 
   context 'NeumaDecoder (neuma-gdv-decoder.rb)' do
-    it 'example from line 39 - Create decoder with mock scale' do
+    it '@example Create decoder with mock scale' do
       # Create a simple mock scale object
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
@@ -218,7 +218,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.base_duration).to eq(1/4r)
     end
 
-    it 'example from line 51 - Using with transcriptor' do
+    it '@example Using with transcriptor' do
       scale = Object.new
 
       # Create mock transcriptor
@@ -235,7 +235,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.transcriptor).to eq(transcriptor)
     end
 
-    it 'example from line 107 - Create decoder with scale' do
+    it '@example Create decoder with scale' do
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
         scale,
@@ -247,7 +247,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.base[:duration]).to eq(1/4r)
     end
 
-    it 'example from line 118 - Custom initial state' do
+    it '@example Custom initial state' do
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
         scale,
@@ -263,7 +263,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   context 'NeumaDifferentialDecoder (neuma-gdvd-decoder.rb)' do
     using Musa::Extension::Neumas
 
-    it 'example from line 31 - Process GDVD' do
+    it '@example Process GDVD' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(
         base_duration: 1/4r
       )
@@ -280,7 +280,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(result.base_duration).to eq(1/4r)
     end
 
-    it 'example from line 39 - Intermediate processing workflow' do
+    it '@example Intermediate processing workflow' do
       # Process neumas in differential format before final conversion
       neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
       differential_decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
@@ -298,7 +298,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(gdvds.size).to eq(5)
     end
 
-    it 'example from line 85 - Create decoder with eighth note base' do
+    it '@example Create decoder with eighth note base' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(base_duration: 1/8r)
 
       # The base duration is what the decoder is for: it travels with every
@@ -309,7 +309,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoded.base_duration).to eq(1/8r)
     end
 
-    it 'example from line 101 - Process differential neuma' do
+    it '@example Process differential neuma' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(base_duration: 1/4r)
 
       # Create mock GDVD object
@@ -326,7 +326,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   context 'String refinement (string-to-neumas.rb)' do
     using Musa::Extension::Neumas
 
-    it 'example from line 80 - Basic parsing' do
+    it '@example Basic parsing' do
       melody = "(0) (+2) (+2) (-1) (0)".to_neumas
       # Returns series of GDVD hashes
 
@@ -334,20 +334,20 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(grades(melody)).to eq [0, 2, 2, -1, 0]
     end
 
-    it 'example from line 85 - With ornaments' do
+    it '@example With ornaments' do
       ornate = "(+2tr) (+3mor) (-1st)".to_neumas
 
       expect(ornate.i.to_a(recursive: true).map { |e| e[:gdvd][:modifiers] })
         .to eq [{ tr: true }, { mor: true }, { st: true }]
     end
 
-    it 'example from line 90 - Parallel voices' do
+    it '@example Parallel voices' do
       harmony = "(0) (+2) (+4)" | "(+7) (+5) (+7)"
 
       expect(harmony[:kind]).to eq(:parallel)
     end
 
-    it 'example from line 95 - Convert to generative node' do
+    it '@example Convert to generative node' do
       node = "(0) (+2) (+2) (-1) (0)".nn  # to_neumas_to_node
 
       # A single-option final node wrapping the parsed serie: the whole phrase is
@@ -360,13 +360,13 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
                 { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
-    it 'example from line 133 - Parse simple melody' do
+    it '@example Parse simple melody' do
       neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
 
       expect(grades(neumas)).to eq [0, 2, 2, -1, 0]
     end
 
-    it 'example from line 137 - Parse with immediate decoding' do
+    it '@example Parse with immediate decoding' do
       # Create a simple decoder
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
       result = "(0) (+2) (+2) (-1) (0)".to_neumas(decode_with: decoder)
@@ -376,13 +376,13 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
         .to eq [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 }, { delta_grade: -1 }, { abs_grade: 0 }]
     end
 
-    it 'example from line 142 - Parse with debug' do
+    it '@example Parse with debug' do
       neumas = "(0) (+2) (+2)".to_neumas(debug: false)
 
       expect(grades(neumas)).to eq [0, 2, 2]
     end
 
-    it 'example from line 158 - Convert to node for generative grammar' do
+    it '@example Convert to node for generative grammar' do
       node = "(0) (+2) (+2) (-1) (0)".to_neumas_to_node
 
       expect(node.options.size).to eq(1)
@@ -391,7 +391,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
                 { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
-    it 'example from line 179 - Two-voice harmony' do
+    it '@example Two-voice harmony' do
       melody = "(0) (+2) (+4) (+5)"
       bass = "(-7) (-5) (-3) (-1)"
       harmony = melody | bass

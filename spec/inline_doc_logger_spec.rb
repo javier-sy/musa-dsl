@@ -70,7 +70,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
   end
 
   context 'Musa::Logger module (logger.rb)' do
-    it 'example from line 32 - Complete workflow' do
+    it '@example Complete workflow' do
       # Setup
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
       logger, output = create_logger_with_capture(sequencer: sequencer)
@@ -97,7 +97,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
   end
 
   context 'Musa::Logger::Logger class (logger.rb)' do
-    it 'example from line 85 - Basic usage without sequencer' do
+    it '@example Basic usage without sequencer' do
       logger, output = create_logger_with_capture
       logger.warn "Something happened"
 
@@ -108,7 +108,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       expect(result).not_to match(/\d+\.\d+:/)
     end
 
-    it 'example from line 92 - With sequencer integration' do
+    it '@example With sequencer integration' do
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
       logger, output = create_logger_with_capture(sequencer: sequencer)
       logger.level = Logger::INFO
@@ -125,7 +125,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       expect(result).to match(/4\.500:/)
     end
 
-    it 'example from line 106 - With custom position format' do
+    it '@example With custom position format' do
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
 
       # 5 integer digits, 2 decimal places
@@ -150,7 +150,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       expect(result).not_to include("[DEBUG]")
     end
 
-    it 'example from line 127 - With program name' do
+    it '@example With program name' do
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
       logger, output = create_logger_with_capture(sequencer: sequencer)
       logger.level = Logger::INFO
@@ -167,7 +167,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       expect(result).to match(/4\.500:/)
     end
 
-    it 'example from line 142 - Real-world scenario with multiple components' do
+    it '@example Real-world scenario with multiple components' do
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
       logger, output = create_logger_with_capture(sequencer: sequencer)
       logger.level = Logger::DEBUG
@@ -200,7 +200,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       expect(result).not_to match(/\[DEBUG\].*Evaluating next value/)
     end
 
-    it 'example from line 169 - Changing log level dynamically' do
+    it '@example Changing log level dynamically' do
       # Test with DEBUG level
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
       logger, output_debug = create_logger_with_capture(sequencer: sequencer)
@@ -236,7 +236,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       expect(result_warn).to include("Warning message")
     end
 
-    it 'example from line 196 - Position format examples' do
+    it '@example Position format examples' do
       sequencer = Musa::Sequencer::Sequencer.new(4, 24)
 
       # Different formats for position display:

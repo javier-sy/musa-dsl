@@ -47,6 +47,11 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # Claims verified today. May only grow.
   VERIFIED_FLOOR = 441
 
+  # Spec examples named `@example <title>` whose title no longer appears in the
+  # documentation. Each is a spec testing a claim that has been renamed or
+  # removed. MAY ONLY GO DOWN.
+  ORPHANED_REFERENCES = 91
+
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
   # given example falls into depends on the machine -- with midi-communications
@@ -69,6 +74,10 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
 
   def tally(status)
     @checks.count { |_, check| check.status == status }
+  end
+
+  def normalise(title)
+    title.to_s.strip.downcase.gsub(/[^a-z0-9]+/, ' ').strip
   end
 
   def where(example)
@@ -101,6 +110,32 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
                        "#{file} has #{found} contradicted outputs, KNOWN_LIES expects #{expected}. " \
                        'If they were fixed, remove the entry; if there are new ones, they are new bugs.'
     end
+  end
+
+  it 'references documentation examples that still exist' do
+    documented = @checks.map { |example, _| example }.to_set { |example| normalise(example.title) }
+    documented.merge(DocExamples.extract.collect { |example| normalise(example.title) })
+
+    referenced = Dir.glob(File.expand_path('{inline_doc_*,docs_*}.rb', __dir__)).flat_map do |path|
+      File.readlines(path).each_with_index.filter_map do |line, index|
+        match = line.match(/^\s*it\s+(['"])@example (.+?)\1\s+do/)
+        ["#{File.basename(path)}:#{index + 1}", match[2]] if match
+      end
+    end
+
+    orphans = referenced.reject { |_, title| documented.include?(normalise(title)) }
+
+    detail = orphans.first(12).collect { |where, title| "  #{where}  #{title}" }.join("\n")
+
+    expect(orphans.size).to be <= ORPHANED_REFERENCES,
+                            "#{orphans.size} spec examples name an @example the documentation no " \
+                            "longer has, above the #{ORPHANED_REFERENCES} already known. Either " \
+                            "the example was renamed -- follow it -- or it was removed, and the " \
+                            "spec is testing a claim nobody makes.\n\n#{detail}"
+
+    expect(orphans.size).to be >= ORPHANED_REFERENCES,
+                            "Only #{orphans.size} orphaned references left. Lower " \
+                            "ORPHANED_REFERENCES to #{orphans.size}."
   end
 
   it 'does not verify less than it used to' do

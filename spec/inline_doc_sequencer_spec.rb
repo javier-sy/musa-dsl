@@ -5,7 +5,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   include Musa::All
 
   context 'BaseSequencer (base-sequencer.rb)' do
-    it 'example from line 62 - Basic tick-based sequencer' do
+    it '@example Basic tick-based sequencer' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)  # 4/4, 24 ticks/beat
 
       executed = []
@@ -19,7 +19,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed).to eq(["Beat 1", "Beat 2", "Beat 3.5"])
     end
 
-    it 'example from line 71 - Tickless sequencer' do
+    it '@example Tickless sequencer' do
       seq = Musa::Sequencer::BaseSequencer.new  # Tickless mode
 
       executed = []
@@ -34,7 +34,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed).to eq(["Position 1", "Position 1.5"])
     end
 
-    it 'example from line 80 - Playing series' do
+    it '@example Playing series' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       notes = S({pitch: 60, duration: 1}, {pitch: 62, duration: 1},
@@ -58,7 +58,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(played_notes[4][:duration]).to eq(2)
     end
 
-    it 'example from line 94 - Every and move' do
+    it '@example Every and move' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       tick_positions = []
@@ -81,7 +81,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(volume_values.size).to be > 10  # Multiple steps
     end
 
-    it 'example from line 237 - Resetting sequencer state' do
+    it '@example Resetting sequencer state' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       # Schedule some events
@@ -102,7 +102,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(seq.position).to be < 1
     end
 
-    it 'example from line 322 - Monitoring event execution with on_debug_at' do
+    it '@example Monitoring event execution with on_debug_at' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_log: true)
 
       debug_calls = []
@@ -121,7 +121,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(debug_calls[1][:position]).to eq(2)
     end
 
-    it 'example from line 351 - Handling errors in scheduled events' do
+    it '@example Handling errors in scheduled events' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_error_log: false)
 
       errors = []
@@ -144,7 +144,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed).to eq(["Normal event", "This still executes"])
     end
 
-    it 'example from line 383 - Tracking fast-forward operations' do
+    it '@example Tracking fast-forward operations' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       ff_state = []
@@ -167,7 +167,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(ff_state[1]).to match(/Fast-forward ended at position 10/)
     end
 
-    it 'example from line 417 - Logging tick positions with before_tick' do
+    it '@example Logging tick positions with before_tick' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       tick_log = []
@@ -188,7 +188,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(tick_log).to include(2)
     end
 
-    it 'example from line 461 - Basic event pub/sub with on/launch' do
+    it '@example Basic event pub/sub with on/launch' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       received_values = []
@@ -214,7 +214,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(received_values[1]).to eq({ pitch: 64, velocity: 80 })
     end
 
-    it 'example from line 791 - Linear fade with move' do
+    it '@example Linear fade with move' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       volume_values = []
@@ -233,7 +233,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'TickBasedTiming (base-sequencer-tick-based.rb)' do
-    it 'example from line 46 - Creating tick-based sequencer' do
+    it '@example Creating tick-based sequencer' do
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)  # 4 beats, 96 ticks/beat
 
       expect(sequencer.ticks_per_bar).to eq(384r)
@@ -242,7 +242,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to be < 1r
     end
 
-    it 'example from line 52 - Advancing time with tick' do
+    it '@example Advancing time with tick' do
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)
 
       initial_position = sequencer.position
@@ -252,7 +252,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to eq(initial_position + 1/384r)
     end
 
-    it 'example from line 56 - Fast-forward to future position' do
+    it '@example Fast-forward to future position' do
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)
 
       ff_started = false
@@ -270,7 +270,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to eq(2r)
     end
 
-    it 'example from line 198 - Quantization to tick boundaries' do
+    it '@example Quantization to tick boundaries' do
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)
 
       # With 384 ticks per bar, tick_duration = 1/384r
@@ -281,7 +281,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'TicklessBasedTiming (base-sequencer-tickless-based.rb)' do
-    it 'example from line 50 - Creating tickless sequencer' do
+    it '@example Creating tickless sequencer' do
       sequencer = Musa::Sequencer::BaseSequencer.new  # No tick parameters
 
       expect(sequencer.ticks_per_bar).to eq(Float::INFINITY)
@@ -289,7 +289,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to be_nil  # before first event
     end
 
-    it 'example from line 56 - Precise timing without quantization' do
+    it '@example Precise timing without quantization' do
       sequencer = Musa::Sequencer::BaseSequencer.new
 
       executed = []
@@ -311,7 +311,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to eq(4/3r)
     end
 
-    it 'example from line 64 - Complex polyrhythm (5 against 7)' do
+    it '@example Complex polyrhythm (5 against 7)' do
       sequencer = Musa::Sequencer::BaseSequencer.new  # Tickless mode
 
       notes_a = []
@@ -332,7 +332,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(notes_b[1]).to eq(6/5r)
     end
 
-    it 'example from line 129 - Event-driven progression with tick' do
+    it '@example Event-driven progression with tick' do
       sequencer = Musa::Sequencer::BaseSequencer.new
 
       executed = []
@@ -354,7 +354,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed).to eq(["A", "B", "C"])
     end
 
-    it 'example from line 172 - Jump to future position' do
+    it '@example Jump to future position' do
       sequencer = Musa::Sequencer::BaseSequencer.new
 
       executed = []
@@ -376,7 +376,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'Play operations (base-sequencer-implementation-play.rb)' do
-    it 'example from line 56 - Basic series playback' do
+    it '@example Basic series playback' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       notes = S({pitch: 60, duration: 1r}, {pitch: 64, duration: 1r}, {pitch: 67, duration: 1r})
@@ -395,7 +395,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(played_notes[2][:pitch]).to eq(67)
     end
 
-    it 'example from line 269 - Basic play control with after callback' do
+    it '@example Basic play control with after callback' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       # Each element carries its own duration: that is what makes play walk time.
@@ -450,7 +450,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'PlayTimed operations (base-sequencer-implementation-play-timed.rb)' do
-    it 'example from line 37 - Hash mode timed series' do
+    it '@example Hash mode timed series' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       timed_notes = S(
@@ -481,7 +481,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(played_notes[2][:pitch]).to eq(67)
     end
 
-    it 'example from line 55 - Array mode with extra attributes' do
+    it '@example Array mode with extra attributes' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       timed = S(
@@ -506,7 +506,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'PlayEval modes (base-sequencer-implementation-play-helper.rb)' do
-    it 'example from line 110 - At-mode usage' do
+    it '@example At-mode usage' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       series = S(
@@ -549,7 +549,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
                                   { pitch: 64, position: 5r }])      # not bar 9
     end
 
-    it 'example from line 182 - Wait-mode with duration' do
+    it '@example Wait-mode with duration' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       series = S(
@@ -575,7 +575,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'Move operations (base-sequencer-implementation-move.rb)' do
-    it 'example from line 41 - Simple pitch glide' do
+    it '@example Simple pitch glide' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       pitch_values = []
@@ -591,7 +591,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(pitch_values.size).to be > 10
     end
 
-    it 'example from line 53 - Multi-parameter fade' do
+    it '@example Multi-parameter fade' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       controller_values = []
@@ -617,7 +617,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(controller_values.last[:brightness]).to eq(127)
     end
 
-    it 'example from line 74 - Non-linear interpolation' do
+    it '@example Non-linear interpolation' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       values = []
@@ -640,7 +640,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'Every operations (base-sequencer-implementation-every.rb)' do
-    it 'example from line 28 - Every 1 beat for 4 beat duration' do
+    it '@example Every 1 beat for 4 beat duration' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       ticks = []
@@ -655,7 +655,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(ticks.first).to be < 1
     end
 
-    it 'example from line 131 - Dynamic control with execution counter' do
+    it '@example Dynamic control with execution counter' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       counters = []
@@ -678,7 +678,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'Sequencer DSL (sequencer-dsl.rb)' do
-    it 'example from line 38 - Basic DSL usage' do
+    it '@example Basic DSL usage' do
       executed = []
 
       sequencer = Musa::Sequencer::Sequencer.new(4, 96) do
@@ -696,7 +696,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed.count("Every beat")).to eq(4)
     end
 
-    it 'example from line 49 - DSL context access' do
+    it '@example DSL context access' do
       sequencer = Musa::Sequencer::Sequencer.new(4, 96) do
         at(1r) do
           position  # DSL context method available
@@ -707,7 +707,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect { sequencer.run }.not_to raise_error
     end
 
-    it 'example from line 144 - Evaluating blocks in DSL context with "with"' do
+    it '@example Evaluating blocks in DSL context with "with"' do
       seq = Musa::Sequencer::Sequencer.new(4, 96)
 
       executed = []
@@ -729,7 +729,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed.select { |s| s.to_s.start_with?("beat at") }.size).to eq(4)
     end
 
-    it 'example from line 164 - Passing parameters to with block' do
+    it '@example Passing parameters to with block' do
       seq = Musa::Sequencer::Sequencer.new(4, 96)
 
       notes = []
@@ -745,7 +745,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(notes).to eq([60, 64, 67])
     end
 
-    it 'example from line 179 - Comparison: with DSL context vs external context' do
+    it '@example Comparison: with DSL context vs external context' do
       seq = Musa::Sequencer::Sequencer.new(4, 96)
 
       executed_external = []

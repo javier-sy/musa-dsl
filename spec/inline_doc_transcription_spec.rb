@@ -6,7 +6,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
   using Musa::Extension::Neumas
 
   context 'Transcription module documentation (transcription.rb)' do
-    it 'example from line 107 - Complete transcription workflow' do
+    it '@example Complete transcription workflow' do
       # 1. Generate GDV events
       gdv_events = [
         { grade: 0, duration: 1r, tr: true },
@@ -40,7 +40,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(midi_events.last).to eq({ grade: 4, duration: 1/2r, note_duration: 1/4r })
     end
 
-    it 'example from line 189 - Create transcriptor chain' do
+    it '@example Create transcriptor chain' do
       transcriptor = Musa::Transcription::Transcriptor.new(
         [Musa::Transcriptors::FromGDV::ToMIDI::Appogiatura.new,
          Musa::Transcriptors::FromGDV::ToMIDI::Trill.new,
@@ -55,7 +55,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(transcriptor.transcriptors[2]).to be_a(Musa::Transcriptors::FromGDV::ToMIDI::Staccato)
     end
 
-    it 'example from line 211 - Create MIDI transcriptor' do
+    it '@example Create MIDI transcriptor' do
       transcriptor = Musa::Transcription::Transcriptor.new(
         Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
         base_duration: 1/4r,
@@ -67,7 +67,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
         .to eq(%w[Appogiatura Mordent Turn Trill Staccato Base])
     end
 
-    it 'example from line 235 - Transcribe single event' do
+    it '@example Transcribe single event' do
       transcriptor = Musa::Transcription::Transcriptor.new(
         Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
         base_duration: 1/4r,
@@ -85,7 +85,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result.sum { |n| n[:duration] }).to eq(1r)
     end
 
-    it 'example from line 240 - Transcribe array of events' do
+    it '@example Transcribe array of events' do
       transcriptor = Musa::Transcription::Transcriptor.new(
         Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
         base_duration: 1/4r,
@@ -108,7 +108,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
   end
 
   context 'FromGDV module documentation (from-gdv.rb)' do
-    it 'example from line 34 - Basic base event' do
+    it '@example Basic base event' do
       gdv = { grade: 0, duration: 1r, base: true }
       transcriptor = Musa::Transcriptors::FromGDV::Base.new
       result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -118,7 +118,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result).to be_a(Musa::Datasets::AbsD)
     end
 
-    it 'example from line 75 - Process base event' do
+    it '@example Process base event' do
       base = Musa::Transcriptors::FromGDV::Base.new
       gdv = { grade: 0, duration: 1r, base: true }
       result = base.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -126,7 +126,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[:duration]).to eq(0)
     end
 
-    it 'example from line 81 - Normal event (unchanged)' do
+    it '@example Normal event (unchanged)' do
       base = Musa::Transcriptors::FromGDV::Base.new
       gdv = { grade: 0, duration: 1r }
       result = base.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -137,7 +137,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
   end
 
   context 'ToMIDI module documentation (from-gdv-to-midi.rb)' do
-    it 'example from line 54 - MIDI trill expansion' do
+    it '@example MIDI trill expansion' do
       gdv = { grade: 0, duration: 1r, tr: true }
       transcriptor = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new
       result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -149,7 +149,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result.sum { |n| n[:duration] }).to eq(1r)
     end
 
-    it 'example from line 110 - Create MIDI transcription chain with default factor' do
+    it '@example Create MIDI transcription chain with default factor' do
       transcriptors = Musa::Transcriptors::FromGDV::ToMIDI.transcription_set
       transcriptor = Musa::Transcription::Transcriptor.new(
         transcriptors,
@@ -159,7 +159,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(transcriptor.transcriptors.size).to eq(6)
     end
 
-    it 'example from line 117 - Custom duration factor for faster ornaments' do
+    it '@example Custom duration factor for faster ornaments' do
       transcriptors = Musa::Transcriptors::FromGDV::ToMIDI.transcription_set(
         duration_factor: 1/8r
       )
@@ -168,7 +168,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(transcriptors.size).to eq(6)
     end
 
-    it 'example from line 160 - Appogiatura expansion' do
+    it '@example Appogiatura expansion' do
       app = Musa::Transcriptors::FromGDV::ToMIDI::Appogiatura.new
       gdv = {
         grade: 0,
@@ -186,7 +186,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[1][:duration]).to eq(7/8r)
     end
 
-    it 'example from line 236 - Upper mordent' do
+    it '@example Upper mordent' do
       mor = Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new(duration_factor: 1/4r)
       gdv = { grade: 0, duration: 1r, mor: true }
       result = mor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -199,7 +199,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[2][:grade]).to eq(0)
     end
 
-    it 'example from line 244 - Lower mordent' do
+    it '@example Lower mordent' do
       mor = Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new(duration_factor: 1/4r)
       gdv = { grade: 0, duration: 1r, mor: :down }
       result = mor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -212,7 +212,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[2][:grade]).to eq(0)
     end
 
-    it 'example from line 338 - Upper turn' do
+    it '@example Upper turn' do
       turn = Musa::Transcriptors::FromGDV::ToMIDI::Turn.new
       gdv = { grade: 0, duration: 1r, turn: true }
       result = turn.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -228,7 +228,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[0][:duration]).to eq(1/4r)
     end
 
-    it 'example from line 349 - Lower turn' do
+    it '@example Lower turn' do
       turn = Musa::Transcriptors::FromGDV::ToMIDI::Turn.new
       gdv = { grade: 0, duration: 1r, turn: :down }
       result = turn.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -242,7 +242,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[3][:grade]).to eq(0)   # Main
     end
 
-    it 'example from line 452 - Standard trill' do
+    it '@example Standard trill' do
       trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
       gdv = { grade: 0, duration: 1r, tr: true }
       result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -253,7 +253,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result.collect { |n| n[:duration] }).to eq([1/16r] * 4 + [1/24r] * 18)
     end
 
-    it 'example from line 458 - Trill starting low' do
+    it '@example Trill starting low' do
       trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
       gdv = { grade: 0, duration: 1r, tr: :low }
       result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -263,7 +263,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[1][:grade]).to eq(0)
     end
 
-    it 'example from line 462 - Custom duration factor' do
+    it '@example Custom duration factor' do
       trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
       gdv = { grade: 0, duration: 1r, tr: 1/8r }
       result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -278,7 +278,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result.sum { |n| n[:duration] }).to eq(1r)
     end
 
-    it 'example from line 596 - Basic staccato' do
+    it '@example Basic staccato' do
       staccato = Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new
       gdv = { grade: 0, duration: 1r, st: true }
       result = staccato.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -288,7 +288,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[:note_duration]).to eq(1/2r)
     end
 
-    it 'example from line 602 - Staccato level 2' do
+    it '@example Staccato level 2' do
       staccato = Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new
       gdv = { grade: 0, duration: 1r, st: 2 }
       result = staccato.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -298,7 +298,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[:note_duration]).to eq(1/4r)
     end
 
-    it 'example from line 606 - Very short note (minimum enforced)' do
+    it '@example Very short note (minimum enforced)' do
       staccato = Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new
       gdv = { grade: 0, duration: 1/16r, st: true }
       result = staccato.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
@@ -310,7 +310,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
   end
 
   context 'ToMusicXML module documentation (from-gdv-to-musicxml.rb)' do
-    it 'example from line 91 - Create MusicXML transcription chain' do
+    it '@example Create MusicXML transcription chain' do
       transcriptors = Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set
       transcriptor = Musa::Transcription::Transcriptor.new(
         transcriptors,
@@ -320,7 +320,7 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(transcriptor.transcriptors.size).to eq(2)
     end
 
-    it 'example from line 136 - Process appogiatura' do
+    it '@example Process appogiatura' do
       app = Musa::Transcriptors::FromGDV::ToMusicXML::Appogiatura.new
       gdv = {
         grade: 0,

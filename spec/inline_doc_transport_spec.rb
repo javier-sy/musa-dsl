@@ -5,7 +5,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   include Musa::All
 
   context 'Clock (clock.rb)' do
-    it 'example from line 50 - Creating a simple clock subclass' do
+    it '@example Creating a simple clock subclass' do
       class SimpleClock < Musa::Clock::Clock
         def run
           @stopped = false
@@ -48,7 +48,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(ticks).to be > 0
     end
 
-    it 'example from line 93 - on_start callback' do
+    it '@example on_start callback' do
       clock = Musa::Clock::DummyClock.new(10)
       started = false
 
@@ -63,7 +63,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(started).to be true
     end
 
-    it 'example from line 106 - on_stop callback' do
+    it '@example on_stop callback' do
       clock = Musa::Clock::DummyClock.new(5)
       stopped = false
 
@@ -75,7 +75,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(stopped).to be true
     end
 
-    it 'example from line 123 - on_change_position callback' do
+    it '@example on_change_position callback' do
       clock = Musa::Clock::ExternalTickClock.new
       position_changes = []
 
@@ -93,7 +93,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'DummyClock (dummy-clock.rb)' do
-    it 'example from line 25 - Fixed tick count' do
+    it '@example Fixed tick count' do
       clock = Musa::Clock::DummyClock.new(100)  # Exactly 100 ticks
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -105,7 +105,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(ticks).to be > 0
     end
 
-    it 'example from line 30 - Custom condition' do
+    it '@example Custom condition' do
       continue_running = true
       clock = Musa::Clock::DummyClock.new { continue_running }
       transport = Musa::Transport::Transport.new(clock, 4, 24)
@@ -121,7 +121,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(ticks).to eq(5)
     end
 
-    it 'example from line 36 - Testing specific sequences' do
+    it '@example Testing specific sequences' do
       ticks = 0
       some_condition = true
       clock = Musa::Clock::DummyClock.new { ticks < 50 || some_condition }
@@ -143,7 +143,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'ExternalTickClock (external-tick-clock.rb)' do
-    it 'example from line 28 - Manual stepping' do
+    it '@example Manual stepping' do
       clock = Musa::Clock::ExternalTickClock.new
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -164,7 +164,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(executed).to include("tick 1", "tick 2")
     end
 
-    it 'example from line 38 - Integration with game loop' do
+    it '@example Integration with game loop' do
       clock = Musa::Clock::ExternalTickClock.new
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -195,7 +195,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(ticks_generated).to eq(1)
     end
 
-    it 'example from line 50 - Testing' do
+    it '@example Testing' do
       clock = Musa::Clock::ExternalTickClock.new
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -221,7 +221,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'InputMidiClock (input-midi-clock.rb)' do
-    it 'example from line 40 - Basic setup (without actual MIDI)' do
+    it '@example Basic setup (without actual MIDI)' do
       # Note: This test simulates the setup without requiring actual MIDI hardware
       # In real use, you would use: input = MIDICommunications::Input.all.first
 
@@ -232,7 +232,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(clock.input).to be_nil
     end
 
-    it 'example from line 47 - Dynamic input assignment' do
+    it '@example Dynamic input assignment' do
       clock = Musa::Clock::InputMidiClock.new  # No input yet
 
       expect(clock.input).to be_nil
@@ -245,7 +245,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(clock.input).to equal(later_input)
     end
 
-    it 'example from line 54 - Checking performance' do
+    it '@example Checking performance' do
       clock = Musa::Clock::InputMidiClock.new
 
       # time_table shows histogram: X ms took Y ticks
@@ -254,7 +254,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'TimerClock (timer-clock.rb)' do
-    it 'example from line 38 - Basic setup with BPM' do
+    it '@example Basic setup with BPM' do
       clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -262,14 +262,14 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(clock.ticks_per_beat).to eq(24r)
     end
 
-    it 'example from line 43 - With timing correction' do
+    it '@example With timing correction' do
       # Correction compensates for system-specific timing offsets
       clock = Musa::Clock::TimerClock.new(bpm: 140, ticks_per_beat: 24, correction: -0.001)
 
       expect(clock.bpm).to eq(140r)
     end
 
-    it 'example from line 48 - Dynamic tempo changes' do
+    it '@example Dynamic tempo changes' do
       clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
 
       expect(clock.bpm).to eq(120r)
@@ -280,7 +280,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(clock.bpm).to eq(140r)
     end
 
-    it 'example from line 69 - All equivalent clock configurations' do
+    it '@example All equivalent clock configurations' do
       # All equivalent for 120 BPM, 24 ticks/beat:
       clock1 = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
       clock2 = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)  # Same as clock1
@@ -292,7 +292,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(clock1.ticks_per_beat).to eq(clock3.ticks_per_beat)
     end
 
-    it 'example from line 143 - Tempo automation' do
+    it '@example Tempo automation' do
       clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
 
       expect(clock.bpm).to eq(120r)
@@ -304,13 +304,13 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'Timer (timer.rb)' do
-    it 'example from line 30 - Internal use by TimerClock' do
+    it '@example Internal use by TimerClock' do
       timer = Musa::Clock::Timer.new(0.02083)  # ~48 ticks/second
 
       expect(timer.period).to eq(Rational(2083, 100000))
     end
 
-    it 'example from line 50 - 120 BPM, 24 ticks per beat' do
+    it '@example 120 BPM, 24 ticks per beat' do
       period = 60.0 / (120 * 24)  # 0.02083 seconds
       timer = Musa::Clock::Timer.new(period)
 
@@ -319,7 +319,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'Transport (transport.rb)' do
-    it 'example from line 49 - Basic setup with TimerClock' do
+    it '@example Basic setup with TimerClock' do
       clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -345,7 +345,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(executed).to include("Start!", "Bar 4")
     end
 
-    it 'example from line 63 - With lifecycle callbacks' do
+    it '@example With lifecycle callbacks' do
       clock = Musa::Clock::DummyClock.new(200)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -364,7 +364,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(lifecycle).to include("Initializing...", "Started!", "Stopped, cleaning up...")
     end
 
-    it 'example from line 104 - With parameters' do
+    it '@example With parameters' do
       clock = Musa::Clock::DummyClock.new(100)
 
       executed = []
@@ -383,7 +383,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(executed.first).to match(/Started at/)
     end
 
-    it 'example from line 105 - With callback methods' do
+    it '@example With callback methods' do
       clock = Musa::Clock::DummyClock.new(100)
 
       setup_done = false
@@ -406,7 +406,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(recording_saved).to be true
     end
 
-    it 'example from line 177 - before_begin callback' do
+    it '@example before_begin callback' do
       clock = Musa::Clock::DummyClock.new(100)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -425,7 +425,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(initialized_position).to be_a(Rational)
     end
 
-    it 'example from line 194 - on_start callback' do
+    it '@example on_start callback' do
       clock = Musa::Clock::DummyClock.new(100)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -445,7 +445,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(start_positions.first).to be_a(Rational)
     end
 
-    it 'example from line 210 - after_stop callback' do
+    it '@example after_stop callback' do
       clock = Musa::Clock::DummyClock.new(100)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -467,7 +467,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(cleanup_done).to be true
     end
 
-    it 'example from line 228 - on_change_position callback' do
+    it '@example on_change_position callback' do
       clock = Musa::Clock::DummyClock.new(400)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -490,7 +490,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(position_jumps.first).to be_within(0.1).of(8.0)
     end
 
-    it 'example from line 269 - Jump to bar 8' do
+    it '@example Jump to bar 8' do
       clock = Musa::Clock::DummyClock.new(400)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -507,7 +507,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(executed).to include("Bar 8")
     end
 
-    it 'example from line 272 - MIDI Song Position Pointer' do
+    it '@example MIDI Song Position Pointer' do
       clock = Musa::Clock::DummyClock.new(400)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 

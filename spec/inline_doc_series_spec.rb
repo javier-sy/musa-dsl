@@ -5,61 +5,61 @@ RSpec.describe 'Series Inline Documentation Examples' do
   include Musa::All
 
   context 'Constructors (main-serie-constructors.rb)' do
-    it 'example from line 101 - Undefined placeholder' do
+    it '@example Undefined placeholder' do
       proxy = PROXY()  # Uses UNDEFINED internally
       expect(proxy.undefined?).to be true
     end
 
-    it 'example from line 117 - Nil serie' do
+    it '@example Nil serie' do
       s = NIL().i
       expect(s.next_value).to be_nil
       expect(s.next_value).to be_nil
     end
 
-    it 'example from line 137 - Basic array' do
+    it '@example Basic array' do
       notes = S(60, 64, 67, 72)
       expect(notes.i.to_a).to eq([60, 64, 67, 72])
     end
 
-    it 'example from line 141 - With ranges' do
+    it '@example With ranges' do
       scale = S(60..67)
       expect(scale.i.to_a).to eq([60, 61, 62, 63, 64, 65, 66, 67])
     end
 
-    it 'example from line 160 - Hash of series' do
+    it '@example Hash of series' do
       h = H(pitch: S(60, 64, 67), velocity: S(96, 80, 64))
       inst = h.i
       expect(inst.next_value).to eq({pitch: 60, velocity: 96})
       expect(inst.next_value).to eq({pitch: 64, velocity: 80})
     end
 
-    it 'example from line 179 - Combined cycling all series' do
+    it '@example Combined cycling all series' do
       hc = HC(a: S(1, 2), b: S(10, 20, 30))
       result = hc.max_size(6).i.to_a
       expect(result).to eq([{a:1, b:10}, {a:2, b:20}, {a:1, b:30},
                             {a:2, b:10}, {a:1, b:20}, {a:2, b:30}])
     end
 
-    it 'example from line 198 - Array of series' do
+    it '@example Array of series' do
       a = A(S(1, 2, 3), S(10, 20, 30))
       inst = a.i
       expect(inst.next_value).to eq([1, 10])
       expect(inst.next_value).to eq([2, 20])
     end
 
-    it 'example from line 217 - Combined cycling all series (array)' do
+    it '@example Combined cycling all series (array)' do
       ac = AC(S(1, 2), S(10, 20, 30))
       result = ac.max_size(6).i.to_a
       expect(result).to eq([[1, 10], [2, 20], [1, 30],
                             [2, 10], [1, 20], [2, 30]])
     end
 
-    it 'example from line 250 - Counter' do
+    it '@example Counter' do
       counter = E(1) { |v, last_value:| (last_value || v) + 1 unless (last_value || v) >= 5 }
       expect(counter.i.to_a).to eq([2, 3, 4, 5])
     end
 
-    it 'example from line 254 - Fibonacci' do
+    it '@example Fibonacci' do
       fib = E { |last_value:, caller:|
         a, b = caller.parameters
         caller.parameters = [b, a + b]
@@ -72,22 +72,22 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result).to eq([0, 1, 1, 2, 3, 5, 8, 13, 21, 34])
     end
 
-    it 'example from line 279 - Ascending sequence' do
+    it '@example Ascending sequence' do
       s = FOR(from: 0, to: 10, step: 2)
       expect(s.i.to_a).to eq([0, 2, 4, 6, 8, 10])
     end
 
-    it 'example from line 283 - Descending sequence' do
+    it '@example Descending sequence' do
       s = FOR(from: 10, to: 0, step: 2)
       expect(s.i.to_a).to eq([10, 8, 6, 4, 2, 0])
     end
 
-    it 'example from line 287 - Infinite sequence' do
+    it '@example Infinite sequence' do
       s = FOR(from: 0, step: 1)  # to: nil
       expect(s.infinite?).to be true
     end
 
-    it 'example from line 318 - Random from array' do
+    it '@example Random from array' do
       # A shuffle, not a die: every value comes out exactly once and then the
       # serie ends. Membership was all that was asserted here, and membership is
       # true of a die too -- it is the part that does not distinguish them.
@@ -111,22 +111,22 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(9.times.collect { instance.next_value }).to eq([3, 2, 1, 1, 2, 3, 3, 2, 1])
     end
 
-    it 'example from line 322 - Random from range' do
+    it '@example Random from range' do
       expect(RND(from: 0, to: 10, step: 5, random: 7).i.to_a).to eq([0, 10, 5])
     end
 
-    it 'example from line 326 - With seed' do
+    it '@example With seed' do
       # The claim is reproducibility, so assert it: same seed, same sequence.
       expect(RND(1, 2, 3, random: 42).i.to_a).to eq([3, 2, 1])
       expect(RND(1, 2, 3, random: 42).i.to_a).to eq([3, 2, 1])
     end
 
-    it 'example from line 358 - Merge sequences' do
+    it '@example Merge sequences' do
       merged = MERGE(S(1, 2, 3), S(10, 20, 30))
       expect(merged.i.to_a).to eq([1, 2, 3, 10, 20, 30])
     end
 
-    it 'example from line 389 - Single random value' do
+    it '@example Single random value' do
       rnd = RND1(1, 2, 3, 4, 5)
       inst = rnd.i
       first_value = inst.next_value
@@ -134,7 +134,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(inst.next_value).to be_nil  # exhausted
     end
 
-    it 'example from line 438 - Basic sine wave' do
+    it '@example Basic sine wave' do
       wave = SIN(steps: 8, amplitude: 10, center: 50)
       result = wave.i.to_a
 
@@ -144,7 +144,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
         .to eq([50.0, 53.535534, 55.0, 53.535534, 50.0, 46.464466, 45.0, 46.464466])
     end
 
-    it 'example from line 461 - Fibonacci numbers' do
+    it '@example Fibonacci numbers' do
       fib = FIBO()
       expect(fib.infinite?).to be true
       inst = fib.i
@@ -154,7 +154,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result).to eq([1, 1, 2, 3, 5, 8, 13, 21, 34, 55])
     end
 
-    it 'example from line 492 - Harmonic series' do
+    it '@example Harmonic series' do
       harmonics = HARMO(error: 0.5)
       expect(harmonics.infinite?).to be true
 
@@ -181,7 +181,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
   end
 
   context 'Operations (main-serie-operations.rb)' do
-    it 'example from line 112 - Infinite loop' do
+    it '@example Infinite loop' do
       pattern = S(1, 2, 3).autorestart
       inst = pattern.i
       result = []
@@ -193,74 +193,74 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result[0..2]).to eq([1, 2, 3])
     end
 
-    it 'example from line 136 - Fixed repetitions' do
+    it '@example Fixed repetitions' do
       s = S(1, 2, 3).repeat(3)
       expect(s.i.to_a).to eq([1, 2, 3, 1, 2, 3, 1, 2, 3])
     end
 
-    it 'example from line 140 - Conditional repeat' do
+    it '@example Conditional repeat' do
       count = 0
       s = S(1, 2, 3).repeat { (count += 1) < 3 }
       result = s.i.to_a
       expect(result).to eq([1, 2, 3, 1, 2, 3, 1, 2, 3])
     end
 
-    it 'example from line 144 - Infinite repeat' do
+    it '@example Infinite repeat' do
       s = S(1, 2, 3).repeat
       expect(s.infinite?).to be true
     end
 
-    it 'example from line 167 - Limit to 5' do
+    it '@example Limit to 5' do
       s = FOR(from: 0, step: 1).max_size(5)
       expect(s.i.to_a).to eq([0, 1, 2, 3, 4])
     end
 
-    it 'example from line 184 - Skip first 2' do
+    it '@example Skip first 2' do
       s = S(1, 2, 3, 4, 5).skip(2)
       expect(s.i.to_a).to eq([3, 4, 5])
     end
 
-    it 'example from line 199 - Flatten nested' do
+    it '@example Flatten nested' do
       s = S(S(1, 2), S(3, 4), 5).flatten
       expect(s.i.to_a).to eq([1, 2, 3, 4, 5])
     end
 
-    it 'example from line 232 - Array to hash' do
+    it '@example Array to hash' do
       s = S([60, 96], [64, 80]).hashify(:pitch, :velocity)
       inst = s.i
       expect(inst.next_value).to eq({pitch: 60, velocity: 96})
     end
 
-    it 'example from line 249 - Transpose notes' do
+    it '@example Transpose notes' do
       # shift operation rotates elements in series
       s = S(60, 64, 67).shift(-1)  # Rotate left by 1
       result = s.i.to_a
       expect(result).to eq([64, 67, 60])  # First element moved to end
     end
 
-    it 'example from line 276 - Retrograde' do
+    it '@example Retrograde' do
       s = S(1, 2, 3, 4).reverse
       expect(s.i.to_a).to eq([4, 3, 2, 1])
     end
 
-    it 'example from line 293 - Shuffle' do
+    it '@example Shuffle' do
       s = S(1, 2, 3, 4, 5).randomize
       result = s.i.to_a
       expect(result.size).to eq(5)
       expect(result.sort).to eq([1, 2, 3, 4, 5])
     end
 
-    it 'example from line 314 - Remove odds' do
+    it '@example Remove odds' do
       s = S(1, 2, 3, 4, 5).remove { |n| n.odd? }
       expect(s.i.to_a).to eq([2, 4])
     end
 
-    it 'example from line 335 - Select evens' do
+    it '@example Select evens' do
       s = S(1, 2, 3, 4, 5).select { |n| n.even? }
       expect(s.i.to_a).to eq([2, 4])
     end
 
-    it 'example from line 355 - Index switching' do
+    it '@example Index switching' do
       s1 = S(1, 2, 3)
       s2 = S(10, 20, 30)
       selector = S(0, 1, 0, 1)
@@ -268,17 +268,17 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result.i.to_a).to eq([1, 10, 2, 20])
     end
 
-    it 'example from line 403 - Append' do
+    it '@example Append' do
       s = S(1, 2).after(S(3, 4), S(5, 6))
       expect(s.i.to_a).to eq([1, 2, 3, 4, 5, 6])
     end
 
-    it 'example from line 418 - Concatenate' do
+    it '@example Concatenate' do
       s = S(1, 2) + S(3, 4)
       expect(s.i.to_a).to eq([1, 2, 3, 4])
     end
 
-    it 'example from line 435 - Cut into pairs' do
+    it '@example Cut into pairs' do
       s = S(1, 2, 3, 4, 5, 6).cut(2)
       inst = s.i
       result = []
@@ -288,13 +288,13 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result).to eq([[1, 2], [3, 4], [5, 6]])
     end
 
-    it 'example from line 451 - Merge phrases' do
+    it '@example Merge phrases' do
       phrases = S(S(1, 2, 3), S(4, 5, 6))
       merged = phrases.merge
       expect(merged.i.to_a).to eq([1, 2, 3, 4, 5, 6])
     end
 
-    it 'example from line 492 - Combine pitches and velocities' do
+    it '@example Combine pitches and velocities' do
       pitches = S(60, 64, 67)
       velocities = S(96, 80, 64)
       notes = pitches.with(velocities, isolate_values: false) { |p, v| {pitch: p, velocity: v} }
@@ -303,7 +303,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
                                   {pitch: 67, velocity: 64}])
     end
 
-    it 'example from line 498 - Named series' do
+    it '@example Named series' do
       melody = S(60, 64, 67)
       rhythm = S(1r, 0.5r, 0.5r)
       combined = melody.with(duration: rhythm) { |pitch, duration:|
@@ -314,12 +314,12 @@ RSpec.describe 'Series Inline Documentation Examples' do
                                       {pitch: 67, duration: 0.5r}])
     end
 
-    it 'example from line 539 - Transpose notes with map' do
+    it '@example Transpose notes with map' do
       notes = S(60, 64, 67).map { |n| n + 12 }
       expect(notes.i.to_a).to eq([72, 76, 79])
     end
 
-    it 'example from line 565 - Smooth transitions' do
+    it '@example Smooth transitions' do
       s = S(1, 5, 3, 8).anticipate { |prev, current, next_val|
         next_val ? (current + next_val) / 2.0 : current
       }
@@ -328,7 +328,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result.size).to eq(4)
     end
 
-    it 'example from line 570 - Add interval information' do
+    it '@example Add interval information' do
       notes = S(60, 64, 67, 72).anticipate { |prev, pitch, next_pitch|
         interval = next_pitch ? next_pitch - pitch : nil
         {pitch: pitch, interval: interval}
@@ -341,7 +341,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
   end
 
   context 'Base Series (base-series.rb)' do
-    it 'example from line 85 - Create instances' do
+    it '@example Create instances' do
       proto = S(1, 2, 3)
       a = proto.instance
       b = proto.instance  # Different instance
@@ -350,7 +350,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(b.next_value).to eq(1)  # independent
     end
 
-    it 'example from line 101 - Peek ahead' do
+    it '@example Peek ahead' do
       s = S(1, 2, 3).i
       expect(s.peek_next_value).to eq(1)
       expect(s.peek_next_value).to eq(1)  # same
@@ -358,19 +358,19 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(s.peek_next_value).to eq(2)
     end
 
-    it 'example from line 129 - Track current' do
+    it '@example Track current' do
       s = S(1, 2, 3).i
       expect(s.current_value).to be_nil
       s.next_value  # => 1
       expect(s.current_value).to eq(1)
     end
 
-    it 'example from line 177 - Basic conversion' do
+    it '@example Basic conversion' do
       proto = S(1, 2, 3)
       expect(proto.to_a).to eq([1, 2, 3])
     end
 
-    it 'example from line 181 - Preserve instance' do
+    it '@example Preserve instance' do
       inst = S(1, 2, 3).i
       original_values = inst.to_a(duplicate: true)  # Consumes copy, inst unchanged
       expect(original_values).to eq([1, 2, 3])
@@ -378,13 +378,13 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(inst.next_value).to eq(1)
     end
 
-    it 'example from line 185 - Recursive conversion' do
+    it '@example Recursive conversion' do
       s = S(S(1, 2), S(3, 4))
       result = s.to_a(recursive: true)
       expect(result).to eq([[1, 2], [3, 4]])
     end
 
-    it 'example from line 1011 - Restart series' do
+    it '@example Restart series' do
       s = S(1, 2, 3).i
       expect(s.next_value).to eq(1)
       expect(s.next_value).to eq(2)
@@ -392,7 +392,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(s.next_value).to eq(1)
     end
 
-    it 'example from line 1051 - Basic iteration' do
+    it '@example Basic iteration' do
       s = S(1, 2, 3).i
       expect(s.next_value).to eq(1)
       expect(s.next_value).to eq(2)
@@ -402,12 +402,12 @@ RSpec.describe 'Series Inline Documentation Examples' do
   end
 
   context 'Array to Serie (array-to-serie.rb)' do
-    it 'example from line 66 - Basic conversion' do
+    it '@example Basic conversion' do
       result = [60, 64, 67].to_serie.i.to_a
       expect(result).to eq([60, 64, 67])
     end
 
-    it 'example from line 69 - Serie of series' do
+    it '@example Serie of series' do
       result = [[1, 2], [3, 4]].to_serie(of_series: true)
       # Each [1,2], [3,4] becomes S(1,2), S(3,4)
       inst = result.i
@@ -415,7 +415,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(chunk1.i.to_a).to eq([1, 2])
     end
 
-    it 'example from line 73 - Recursive conversion' do
+    it '@example Recursive conversion' do
       result = [[1, [2, 3]], [4, 5]].to_serie(recursive: true)
       inst = result.i
 
@@ -429,14 +429,14 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(inst.next_value.i.to_a).to eq([4, 5])
     end
 
-    it 'example from line 97 - Short form' do
+    it '@example Short form' do
       result = [1, 2, 3].s  # => S(1, 2, 3)
       expect(result.i.to_a).to eq([1, 2, 3])
     end
   end
 
   context 'Buffer Serie (buffer-serie.rb)' do
-    it 'example from line 24 - Multiple independent readers' do
+    it '@example Multiple independent readers' do
       source = S(1, 2, 3, 4).buffered
       reader1 = source.buffer.i
       reader2 = source.buffer.i
@@ -447,7 +447,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(reader2.next_value).to eq(2)
     end
 
-    it 'example from line 49 - Create buffered serie' do
+    it '@example Create buffered serie' do
       buffered = S(1, 2, 3, 4).buffered
       reader1 = buffered.buffer.i
       reader2 = buffered.buffer.i
@@ -458,7 +458,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
   end
 
   context 'Splitter (hash-or-array-serie-splitter.rb)' do
-    it 'example from line 26 - Split hash values' do
+    it '@example Split hash values' do
       notes = S({pitch: 60, vel: 96}, {pitch: 64, vel: 80})
       splitter = notes.split.i
 
@@ -469,7 +469,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(velocities.next_value).to eq(96)
     end
 
-    it 'example from line 48 - Split components' do
+    it '@example Split components' do
       splitter = S({a: 1, b: 2}, {a: 3, b: 4}).split.i
       expect(splitter[:a].to_a).to eq([1, 3])
       expect(splitter[:b].to_a).to eq([2, 4])
@@ -477,7 +477,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
   end
 
   context 'Proxy Serie (proxy-serie.rb)' do
-    it 'example from line 24 - Forward reference' do
+    it '@example Forward reference' do
       proxy = PROXY()
       expect(proxy.undefined?).to be true
 
@@ -486,7 +486,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(proxy.prototype?).to be true
     end
 
-    it 'example from line 49 - Empty proxy' do
+    it '@example Empty proxy' do
       proxy = PROXY()
 
       expect(proxy.undefined?).to be true
@@ -499,14 +499,14 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(proxy.i.to_a).to eq([1, 2, 3])
     end
 
-    it 'example from line 53 - With initial source' do
+    it '@example With initial source' do
       proxy = PROXY(S(1, 2, 3))
       expect(proxy.i.to_a).to eq([1, 2, 3])
     end
   end
 
   context 'Queue Serie (queue-serie.rb)' do
-    it 'example from line 22 - Basic queue' do
+    it '@example Basic queue' do
       queue = QUEUE(S(1, 2, 3)).i
       expect(queue.next_value).to eq(1)
       queue << S(4, 5, 6).i  # Add dynamically
@@ -517,14 +517,14 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(remaining).to eq([2, 3, 4, 5, 6])
     end
 
-    it 'example from line 45 - Create queue' do
+    it '@example Create queue' do
       queue = QUEUE(S(1, 2), S(3, 4))
       expect(queue.i.to_a).to eq([1, 2, 3, 4])
     end
   end
 
   context 'Quantizer Serie (quantizer-serie.rb)' do
-    it 'example from line 28 - Basic quantization' do
+    it '@example Basic quantization' do
       # Quantize to semitones (12 steps per octave)
       pitch_bend = S({time: 0r, value: 60.3}, {time: 1r, value: 61.8})
         .map { |v| v.extend(Musa::Datasets::AbsTimed) }
@@ -534,7 +534,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result.size).to be > 0
     end
 
-    it 'example from line 60 - Quantize to integers' do
+    it '@example Quantize to integers' do
       serie = S({time: 0r, value: 1.3}, {time: 1r, value: 2.7})
         .map { |v| v.extend(Musa::Datasets::AbsTimed) }
       quantized = serie.quantize(step: 1)
