@@ -39,6 +39,8 @@ module Musa
         #   Key.new(1, fifths: 0)  # Treble clef: C major
         #   Key.new(2, fifths: 0)  # Bass clef: C major
         class Key
+          include Musa::Extension::With
+
           include Helper::ToXML
 
           # Creates a key signature.
@@ -53,12 +55,14 @@ module Musa
           #
           # @example E minor
           #   Key.new(fifths: 1, mode: 'minor')
-          def initialize(number = nil, cancel: nil, fifths:, mode: nil)
+          def initialize(number = nil, cancel: nil, fifths:, mode: nil, &block)
             @number = number
 
             @cancel = cancel
             @fifths = fifths
             @mode = mode
+
+            with &block if block_given?
           end
 
           # Staff number (for multi-staff instruments).
@@ -135,8 +139,9 @@ module Musa
         # ## Compound Time Signatures
         #
         # Some meters combine multiple beat groups (e.g., 3+2+3/8). These are
-        # built by calling {#add_beats} once per group; the block form the
-        # constructor appears to accept does not populate anything.
+        # built by calling {#add_beats} once per group, either on the object or
+        # inside the configuration block, which is the only route the DSL has --
+        # the adder builds the Time itself and hands back no reference.
         #
         # ## Senza Misura (Unmeasured Time)
         #
@@ -159,6 +164,16 @@ module Musa
         #   signature.add_beats(beats: 3, beat_type: 8)
         #   signature.beats.size  # => 3
         #
+        # @example The same, through the DSL
+        #   compound = measure.attributes do
+        #     time do
+        #       add_beats beats: 3, beat_type: 8
+        #       add_beats beats: 2, beat_type: 8
+        #       add_beats beats: 3, beat_type: 8
+        #     end
+        #   end
+        #   compound.times.first.beats.size  # => 3
+        #
         # @example Piano - different time per staff
         #   measure.attributes do
         #     time 1, beats: 4, beat_type: 4  # Treble: 4/4
@@ -168,6 +183,8 @@ module Musa
         # @example Cadenza (unmeasured)
         #   measure.attributes { time senza_misura: '' }
         class Time
+          include Musa::Extension::With
+
           include Helper::ToXML
 
           # Creates a time signature.
@@ -177,10 +194,6 @@ module Musa
           # @param beats [Integer, nil] time signature numerator (beats per measure)
           # @param beat_type [Integer, nil] time signature denominator (note value per beat)
           #
-          # @note A block passed here is accepted and then ignored, so the
-          #   compound-meter form `Time.new { |t| t.add_beats(...) }` builds an
-          #   empty time signature. Use {#add_beats} after construction.
-          #
           # @example 4/4 time
           #   measure.attributes { time beats: 4, beat_type: 4 }
           #
@@ -189,13 +202,24 @@ module Musa
           #
           # @example Unmeasured time
           #   measure.attributes { time senza_misura: '' }
-          def initialize(number = nil, senza_misura: nil, beats: nil, beat_type: nil)
+          #
+          # @example Compound meter (3+2+3/8), which needs the block
+          #   attributes = Musa::MusicXML::Builder::Internal::Attributes.new
+          #   attributes.time do
+          #     add_beats beats: 3, beat_type: 8
+          #     add_beats beats: 2, beat_type: 8
+          #     add_beats beats: 3, beat_type: 8
+          #   end
+          #   attributes.times.first.beats.size  # => 3
+          def initialize(number = nil, senza_misura: nil, beats: nil, beat_type: nil, &block)
             @number = number
 
             @senza_misura = senza_misura unless beats && beat_type
             @beats = []
 
             add_beats beats: beats, beat_type: beat_type if beats && beat_type
+
+            with &block if block_given?
           end
 
           # Staff number (for multi-staff instruments).
@@ -306,9 +330,8 @@ module Musa
         # Clefs are written through the attributes DSL. The examples below are
         # against `measure = Measure.new(1, divisions: 2)`.
         #
-        # `line:` is a required keyword even where the clef has no line, so
-        # percussion and tablature must pass `line: nil` explicitly; the emitted
-        # XML then correctly omits the element.
+        # `line:` is optional, as it is in MusicXML: a clef that sits on no line
+        # simply leaves it out, and no `<line>` element is written.
         #
         # @example Treble clef
         #   measure.attributes { clef sign: 'G', line: 2 }
@@ -333,18 +356,22 @@ module Musa
         #   end
         #
         # @example Percussion
-        #   measure.attributes { clef sign: 'percussion', line: nil }
+        #   measure.attributes { clef sign: 'percussion' }
         #
         # @example Guitar tablature
-        #   measure.attributes { clef sign: 'TAB', line: nil }
+        #   measure.attributes { clef sign: 'TAB' }
         class Clef
+          include Musa::Extension::With
+
           include Helper::ToXML
 
           # Creates a clef.
           #
           # @param number [Integer, nil] staff number (for multi-staff parts)
           # @param sign [String] clef sign: 'G', 'F', 'C', 'percussion', 'TAB'
-          # @param line [Integer] staff line number (1-5, bottom to top)
+          # @param line [Integer, nil] staff line number (1-5, bottom to top).
+          #   Optional, as it is in MusicXML: percussion and tablature clefs sit
+          #   on no line, and omitting it writes no `<line>` element.
           # @param octave_change [Integer, nil] octave transposition (-2, -1, 0, +1, +2)
           #
           # @example Treble clef
@@ -355,11 +382,16 @@ module Musa
           #
           # @example Tenor voice (treble 8va basso)
           #   Clef.new(sign: 'G', line: 2, octave_change: -1)
-          def initialize(number = nil, sign:, line:, octave_change: nil)
+          #
+          # @example Percussion, which has no line
+          #   Musa::MusicXML::Builder::Internal::Clef.new(sign: 'percussion').line  # => nil
+          def initialize(number = nil, sign:, line: nil, octave_change: nil, &block)
             @number = number
             @sign = sign
             @line = line
             @octave_change = octave_change
+
+            with &block if block_given?
           end
 
           # Staff number (for multi-staff instruments).

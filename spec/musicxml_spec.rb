@@ -563,4 +563,62 @@ RSpec.describe Musa::MusicXML::Builder do
       expect(score.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), "musicxml_5_spec.musicxml")).strip
     end
   end
+
+  # Two notations that the builder could not reach: a compound meter, because
+  # Time accepted a configuration block and dropped it, and a clef with no line,
+  # because `line:` was a required keyword (issue #78).
+  context 'Attributes that need more than keyword arguments' do
+    def xml_of(element)
+      io = StringIO.new
+      element.to_xml(io)
+      io.string.gsub(/\n\s*/, '')
+    end
+
+    let(:attributes) { Musa::MusicXML::Builder::Internal::Attributes.new }
+
+    it 'writes a compound meter through the configuration block' do
+      attributes.time do
+        add_beats beats: 3, beat_type: 8
+        add_beats beats: 2, beat_type: 8
+        add_beats beats: 3, beat_type: 8
+      end
+
+      expect(attributes.times.first.beats.size).to eq(3)
+      expect(xml_of(attributes))
+        .to eq('<attributes><time>' \
+               '<beats>3</beats><beat-type>8</beat-type>' \
+               '<beats>2</beats><beat-type>8</beat-type>' \
+               '<beats>3</beats><beat-type>8</beat-type>' \
+               '</time></attributes>')
+    end
+
+    it 'takes the block in the underscore form as well, as the rest of the DSL does' do
+      attributes.time { |_| _.add_beats(beats: 5, beat_type: 4) }
+
+      expect(attributes.times.first.beats).to eq([{ beats: 5, beat_type: 4 }])
+    end
+
+    it 'gives Key and Clef the same block, which used to be forwarded and dropped' do
+      attributes.key(fifths: 0) { self.mode = 'minor' }
+      attributes.clef(sign: 'G', line: 2) { self.octave_change = -1 }
+
+      expect(attributes.keys.first.mode).to eq('minor')
+      expect(attributes.clefs.first.octave_change).to eq(-1)
+    end
+
+    it 'writes a clef that sits on no line' do
+      expect(Musa::MusicXML::Builder::Internal::Clef.new(sign: 'percussion').line).to be_nil
+
+      attributes.clef sign: 'percussion'
+
+      expect(xml_of(attributes)).to eq('<attributes><clef><sign>percussion</sign></clef></attributes>')
+    end
+
+    it 'still writes the line when there is one' do
+      attributes.clef sign: 'G', line: 2
+
+      expect(xml_of(attributes))
+        .to eq('<attributes><clef><sign>G</sign><line>2</line></clef></attributes>')
+    end
+  end
 end
