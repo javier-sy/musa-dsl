@@ -201,6 +201,30 @@ module Musa::Sequencer
       nil
     end
 
+    # An absolute position, brought forward to now if it has already gone by.
+    #
+    # A declared position in the past is a real thing to say -- a serie built
+    # from recorded material, or a section entered late -- and dropping it is
+    # the one answer that cannot be right: `_numeric_at` ignores past positions,
+    # so an element scheduled behind the play simply never sounded and the serie
+    # stopped there without a word (issue #82). Playing it as already due keeps
+    # the serie moving and says so in the log.
+    #
+    # @param at_position [Rational] the declared position
+    #
+    # @return [Rational] the position to actually use
+    #
+    # @api private
+    private def _due_position(at_position)
+      return at_position if position.nil? || at_position >= position
+
+      @logger.warn('BaseSequencer') do
+        "._due_position: #{at_position} has already gone by; playing it now, at #{position}"
+      end
+
+      position
+    end
+
     # Recursively schedules events from a series of positions.
     #
     # Implements series-based scheduling by:

@@ -510,29 +510,34 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       series = S(
-        { pitch: 60, at: 0r },
-        { pitch: 62, at: 1r },
-        { pitch: 64, at: 2r }
+        { pitch: 60, at: 1r },
+        { pitch: 62, at: 2r },
+        { pitch: 64, at: 3r }
       )
 
-      played_notes = []
+      played = []
 
-      seq.play(series, mode: :at) do |pitch:|
-        played_notes << { pitch: pitch, position: seq.position }
-      end
-
+      seq.play(series, mode: :at) { |pitch:| played << [pitch, seq.position] }
       400.times { seq.tick }
 
-      # :at mode is off by one element. Each element's :at schedules WHEN THE
-      # NEXT ONE is evaluated, not when this one plays: the first plays
-      # immediately and the last element's :at is never used. Declared at 0, 1
-      # and 2, only the first ever sounds, because the second is scheduled at
-      # 0r -- already past.
-      expect(played_notes).to eq([{ pitch: 60, position: 95/96r }])
+      expect(played).to eq([[60, 1r], [62, 2r], [64, 3r]])
     end
 
-    it ':at mode plays each element at the PREVIOUS element\'s position' do
-      # Pinned so the day this is fixed the spec says so.
+    it '@example A position already gone by is played as due, not dropped' do
+      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      played = []
+
+      seq.play(S({ pitch: 60, at: 0r }, { pitch: 62, at: 2r }),
+               mode: :at) { |pitch:| played << [pitch, seq.position] }
+      400.times { seq.tick }
+
+      expect(played).to eq([[60, 95/96r], [62, 2r]])
+    end
+
+    it ':at mode plays each element where the element says, not where its predecessor did' do
+      # This used to be off by one: the :at travelled in the continuation, which
+      # is when the NEXT element is fetched, so these three sounded at 95/96r,
+      # 1r and 5r (issue #82).
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       played_notes = []
@@ -544,9 +549,9 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
 
       1200.times { seq.tick }
 
-      expect(played_notes).to eq([{ pitch: 60, position: 95/96r },   # not bar 1
-                                  { pitch: 62, position: 1r },       # not bar 5
-                                  { pitch: 64, position: 5r }])      # not bar 9
+      expect(played_notes).to eq([{ pitch: 60, position: 1r },
+                                  { pitch: 62, position: 5r },
+                                  { pitch: 64, position: 9r }])
     end
 
     it '@example Wait-mode with duration' do

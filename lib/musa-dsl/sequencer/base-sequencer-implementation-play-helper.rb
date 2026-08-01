@@ -102,26 +102,40 @@ module Musa
       # At-mode evaluator for absolute position scheduling.
       #
       # Interprets elements as data with optional :at key specifying absolute
-      # position. If :at present, schedules at that position. Otherwise uses
-      # current position.
+      # position. If :at present, plays the element at that position. Otherwise
+      # plays it at the current position.
+      #
+      # A declared position that has already gone by is played immediately, as
+      # already due, and the sequencer says so in the log. Dropping it was the
+      # old behaviour and it took the rest of the serie with it (issue #82).
       #
       # @example At-mode usage
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #
       #   series = Musa::Series::Constructors.S(
-      #     { pitch: 60, at: 0r },
-      #     { pitch: 62, at: 1r },
-      #     { pitch: 64, at: 2r }
+      #     { pitch: 60, at: 1r },
+      #     { pitch: 62, at: 2r },
+      #     { pitch: 64, at: 3r }
       #   )
       #
-      #   played_notes = []
+      #   played = []
       #
-      #   seq.play(series, mode: :at) do |element|
-      #     played_notes << { pitch: element[:pitch], position: seq.position }
-      #   end
+      #   seq.play(series, mode: :at) { |pitch:| played << [pitch, seq.position] }
+      #   400.times { seq.tick }
       #
-      #   seq.run
-      #   # Result: played_notes contains [{pitch: 60, position: 0r}, {pitch: 62, position: 1r}, ...]
+      #   played  # => [[60, 1r], [62, 2r], [64, 3r]]
+      #
+      # @example A position already gone by is played as due, not dropped
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #   played = []
+      #
+      #   seq.play(Musa::Series::Constructors.S({ pitch: 60, at: 0r },
+      #                                         { pitch: 62, at: 2r }),
+      #            mode: :at) { |pitch:| played << [pitch, seq.position] }
+      #   400.times { seq.tick }
+      #
+      #   # 0r is behind the sequencer, which starts one tick before bar 1.
+      #   played  # => [[60, 95/96r], [62, 2r]]
       #
       # @api private
       class AtModePlayEval < PlayEval
@@ -137,8 +151,15 @@ module Musa
 
         # Determines operation from element.
         #
-        # Hash elements with :at key schedule at absolute position.
-        # Other elements use current position.
+        # An element with an :at plays AT it -- `current_at` is what says so --
+        # and the serie is then read again at that same position to find out
+        # where the following element wants to be. Anything else plays at the
+        # current position and the serie continues immediately.
+        #
+        # The :at used to travel in `continue_parameter` alone, which is when
+        # the NEXT element is fetched, so every element played at its
+        # predecessor's position and the first one played wherever the play
+        # started (issue #82).
         #
         # @param element [Hash, Object] element to process
         #
@@ -146,26 +167,19 @@ module Musa
         #
         # @api private
         def run_operation(element)
-          value = nil
-
-          if element.is_a? Hash
-            value = {
-              current_operation: :block,
+          if element.is_a?(Hash) && element[:at]
+            { current_operation: :block,
               current_block: @block_procedure_binder,
               current_parameter: element,
+              current_at: element[:at],
               continue_operation: :at,
-              continue_parameter: element[:at]
-            }
+              continue_parameter: element[:at] }
+          else
+            { current_operation: :block,
+              current_block: @block_procedure_binder,
+              current_parameter: element,
+              continue_operation: :now }
           end
-
-          value ||= {
-            current_operation: @block_procedure_binder,
-            current_parameter: element,
-            continue_operation: :at,
-            continue_parameter: position
-          }
-
-          value
         end
       end
 

@@ -126,9 +126,20 @@ module Musa::Sequencer
           # duplicating parameters as direct object value (operation[:current_parameter])
           # and key_passed parameters (**operation[:current_parameter])
           #
-          __play_eval.block_procedure_binder.call operation[:current_parameter],
-                                                  **operation[:current_parameter],
-                                                  control: control
+          run_block = proc do
+            __play_eval.block_procedure_binder.call operation[:current_parameter],
+                                                    **operation[:current_parameter],
+                                                    control: control
+          end
+
+          # An element that says WHEN it sounds is scheduled at that position
+          # rather than run inline. Only :at mode does this today; every other
+          # mode leaves current_at nil and plays where the play already is.
+          if operation[:current_at]
+            _numeric_at _due_position(operation[:current_at]), control, &run_block
+          else
+            run_block.call
+          end
 
         when :event
           control._launch operation[:current_event],
@@ -192,7 +203,7 @@ module Musa::Sequencer
           end
 
         when :at
-          _numeric_at operation[:continue_parameter], control do
+          _numeric_at _due_position(operation[:continue_parameter]), control do
             _play serie, control, __play_eval: __play_eval, **mode_args
           end
 
