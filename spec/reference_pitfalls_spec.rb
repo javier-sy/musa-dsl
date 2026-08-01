@@ -170,15 +170,22 @@ RSpec.describe 'Pitfalls warned about in the reference' do
     expect(values.last).to eq(12)
   end
 
-  it 'the indefinite note the reference offers cannot be created (issue #81)' do
+  it 'a note with no duration sounds until it is released by hand' do
     sequencer = Musa::Sequencer::Sequencer.new(4, 24)
     output = [].tap { |sent| def sent.puts(message) = self << message }
     voice = Musa::MIDIVoices::MIDIVoices.new(
       sequencer: sequencer, output: output, channels: [0]
     ).voices.first
 
-    expect { voice.note(60, duration: nil) }
-      .to raise_error(NoMethodError, /undefined method '\+' for nil/)
+    control = voice.note(60, duration: nil)
+    400.times { sequencer.tick }
+
+    expect(output.size).to eq(1)
+    expect(control.active?).to be true
+
+    control.note_off
+
+    expect(output.size).to eq(2)
   end
 
   it 'series constructors DO work inside a DSL block, contrary to the old warning' do

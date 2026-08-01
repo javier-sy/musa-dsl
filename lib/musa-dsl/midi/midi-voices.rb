@@ -171,23 +171,35 @@ module Musa
     # callbacks on note stop, and fast-forward mode for silent state updates.
     #
     # @example Playing notes
+    #   sent_before = output.size
+    #
     #   voice.note pitch: 60, velocity: 90, duration: 1r/4
     #   voice.note pitch: [60, 64, 67], velocity: 100, duration: 1r  # chord
     #
     #   # Four note-ons: the single note and the three of the chord.
-    #   output.count { |m| m.is_a?(MIDIEvents::NoteOn) }  # => 4
+    #   output.size - sent_before  # => 4
     #
     # @example Notes released by hand
-    #   # `duration: nil` -- the indefinite note this class documents -- cannot
-    #   # currently be created through {MIDIVoice#note}, which computes a
-    #   # note_duration from it unconditionally. Until that is fixed, a duration
-    #   # longer than the passage and an early note_off do the same job.
-    #   note_ctrl = voice.note pitch: 62, velocity: 90, duration: 100r
+    #   # No duration: nothing is scheduled to end it, and it sounds until the
+    #   # control is asked to release it. A pedal tone, a drone, anything whose
+    #   # end depends on something other than a length decided in advance.
+    #   note_ctrl = voice.note pitch: 62, velocity: 90, duration: nil
     #   ended = false
     #   note_ctrl.on_stop { ended = true }
     #   # ... later:
     #   note_ctrl.note_off
     #   ended  # => true
+    #
+    # @example A note released before its scheduled end
+    #   # The control that `note` returns releases it whenever you want, and the
+    #   # note-off it had scheduled arrives to find the note already over: it
+    #   # does nothing, and on_stop fires once.
+    #   note_ctrl = voice.note pitch: 64, velocity: 90, duration: 100r
+    #   stops = 0
+    #   note_ctrl.on_stop { stops += 1 }
+    #   note_ctrl.note_off
+    #   note_ctrl.active?  # => false
+    #   stops              # => 1
     #
     # @example Controller and sustain pedal
     #   voice.controller[:mod_wheel] = 64
@@ -273,11 +285,12 @@ module Musa
       # @param pitchvalue [Numeric, Array<Numeric>, nil] optional shorthand for +pitch+.
       # @param pitch [Numeric, Symbol, Array<Numeric, Symbol>] MIDI note numbers or :silence. Arrays/ranges expand to multiple notes.
       # @param velocity [Numeric, Array<Numeric>] raw velocity (0-127). Defaults to 63.
-      # @param duration [Numeric] musical duration in bars. Documented as
-      #   accepting nil for a note that stays on until {NoteControl#note_off} is
-      #   called by hand -- and {NoteControl} does accept a nil duration -- but
-      #   this method computes `duration + duration_offset` unconditionally, so
-      #   nil raises here and the indefinite note is unreachable.
+      # @param duration [Numeric, nil] musical duration in bars, or nil for a
+      #   note that stays on until {NoteControl#note_off} is called by hand.
+      #   Nothing is scheduled to end a note with no duration, so releasing it
+      #   is the caller's job; the voice logs one at debug level, since a
+      #   duration left out by mistake looks exactly like one left out on
+      #   purpose.
       # @param duration_offset [Numeric] offset applied when scheduling the note-off inside the sequencer.
       # @param note_duration [Numeric, nil] alternative duration in bars for legato control.
       # @param velocity_off [Numeric, Array<Numeric>] release velocity (defaults to 63).
@@ -289,9 +302,17 @@ module Musa
           velocity ||= 63
 
           duration_offset ||= -@tick_duration
-          note_duration ||= [0, duration + duration_offset].max
+
+          # Only when there is a duration to compute it from. Computing it
+          # unconditionally raised on the nil that means "no end of its own",
+          # which NoteControl one layer down goes out of its way to accept, so
+          # the indefinite note could be implemented but not asked for
+          # (issue #81). The keyword's own default value was unusable.
+          note_duration ||= [0, duration + duration_offset].max if duration
 
           velocity_off ||= 63
+
+          log "note #{pitch} has no duration: it will sound until note_off" unless note_duration
 
           NoteControl.new(self, pitch: pitch, velocity: velocity, duration: note_duration, velocity_off: velocity_off).note_on
         end
@@ -529,6 +550,16 @@ module Musa
         # @param velocity [Numeric, Array<Numeric>] optional override for the release velocity.
         # @return [void]
         def note_off(velocity: nil)
+          # A note ends once. Releasing one by hand before its scheduled end
+          # leaves that scheduled note_off still on its way, and it used to
+          # arrive and run `on_stop` and `after` a second time -- the callbacks
+          # that chain a section or free a resource, fired again at a moment the
+          # composer believes no longer exists. The active_pitches count already
+          # kept the stale one from emitting MIDI while another note held the
+          # pitch; this extends the same protection to the callbacks, and drops
+          # the redundant NoteOff when nothing else holds it.
+          return nil if @end_position
+
           velocity ||= @velocity_off
 
           velocity = velocity.arrayfy.explode_ranges
