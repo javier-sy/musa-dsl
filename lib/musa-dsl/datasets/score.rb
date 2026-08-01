@@ -130,7 +130,7 @@ module Musa::Datasets
     #
     # @return [void]
     #
-    # @example
+    # @example Reset score
     #   score.reset
     #   score.size  # => 0
     def reset
@@ -158,7 +158,7 @@ module Musa::Datasets
     #
     # @return [Rational, nil] latest finish time, or nil if score is empty
     #
-    # @example
+    # @example Finish time
     #   score.at(0r, add: { duration: 2.0 }.extend(AbsD))
     #   score.finish  # => 2r
     def finish
@@ -171,7 +171,7 @@ module Musa::Datasets
     #
     # @return [Rational] total duration
     #
-    # @example
+    # @example Duration calculation
     #   score.at(0r, add: { duration: 2.0 }.extend(AbsD))
     #   score.duration  # => 1r (finish 2r - 1r)
     def duration
@@ -226,7 +226,7 @@ module Musa::Datasets
     #
     # @return [Integer] number of distinct time positions
     #
-    # @example
+    # @example Size counting
     #   sized = Score.new
     #   sized.at(0r, add: { pitch: 60, duration: 1r }.extend(PDV))
     #   sized.at(0r, add: { pitch: 64, duration: 1r }.extend(PDV))  # Same time
@@ -241,7 +241,7 @@ module Musa::Datasets
     #
     # @return [Array<Rational>] sorted time positions
     #
-    # @example
+    # @example Positions sorted
     #   placed = Score.new
     #   placed.at(1r, add: { pitch: 60, duration: 1r }.extend(PDV))
     #   placed.at(0r, add: { pitch: 64, duration: 1r }.extend(PDV))
@@ -260,7 +260,7 @@ module Musa::Datasets
     #
     # @return [void]
     #
-    # @example
+    # @example Iterate over time slots
     #   score.each do |time, events|
     #     puts "At #{time}: #{events.size} event(s)"
     #   end
@@ -272,7 +272,7 @@ module Musa::Datasets
     #
     # @return [Hash{Rational => Array<Abs>}] time → events mapping
     #
-    # @example
+    # @example Convert to hash
     #   hash = score.to_h
     #   # => { 0r => [event1, event2], 1r => [event3] }
     def to_h

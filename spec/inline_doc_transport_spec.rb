@@ -254,7 +254,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'TimerClock (timer-clock.rb)' do
-    it '@example Basic setup with BPM' do
+    it 'Basic setup with BPM' do
       clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 

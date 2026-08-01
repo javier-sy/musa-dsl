@@ -48,9 +48,10 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   VERIFIED_FLOOR = 441
 
   # Spec examples named `@example <title>` whose title no longer appears in the
-  # documentation. Each is a spec testing a claim that has been renamed or
-  # removed. MAY ONLY GO DOWN.
-  ORPHANED_REFERENCES = 39
+  # documentation. At zero, and it stays there: an example that loses its
+  # reference has either been renamed -- follow it -- or removed, in which case
+  # the spec should stop claiming to come from one.
+  ORPHANED_REFERENCES = 0
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a

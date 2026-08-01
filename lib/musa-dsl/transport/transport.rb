@@ -188,7 +188,7 @@ module Musa
       # @yieldparam sequencer [Sequencer] the sequencer instance
       # @return [void]
       #
-      # @example
+      # @example before_begin callback
       #   transport.before_begin do |seq|
       #     puts "Initializing at position #{seq.position}"
       #     load_samples
@@ -205,7 +205,7 @@ module Musa
       # @yieldparam sequencer [Sequencer] the sequencer instance
       # @return [void]
       #
-      # @example
+      # @example on_start callback
       #   transport.on_start do |seq|
       #     puts "Starting playback at #{seq.position}"
       #   end
@@ -221,7 +221,7 @@ module Musa
       # @yieldparam sequencer [Sequencer] the sequencer instance
       # @return [void]
       #
-      # @example
+      # @example after_stop callback
       #   transport.after_stop do |seq|
       #     puts "Stopped at position #{seq.position}"
       #     cleanup_resources
@@ -239,7 +239,7 @@ module Musa
       # @yieldparam sequencer [Sequencer] the sequencer instance
       # @return [void]
       #
-      # @example
+      # @example on_change_position callback
       #   transport.on_change_position do |seq|
       #     puts "Position jumped to #{seq.position}"
       #     resync_external_devices

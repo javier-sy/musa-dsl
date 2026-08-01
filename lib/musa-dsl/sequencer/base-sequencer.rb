@@ -315,7 +315,7 @@ module Musa
       #
       # @return [void]
       #
-      # @example
+      # @example Running until nothing is left
       #   seq.at(1) { puts "Event 1" }
       #   seq.at(2) { puts "Event 2" }
       #   seq.run  # Executes both events

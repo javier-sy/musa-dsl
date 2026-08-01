@@ -123,7 +123,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # { delta_pitch: +2 }                    # Duration unchanged
     end
 
-    it '@example AbsTimed event' do
+    it '@example Timed event' do
       event1 = { time: 0.0, value: { pitch: 60 } }.extend(Musa::Datasets::AbsTimed)
       event2 = { time: 1.0, value: { pitch: 64 } }.extend(Musa::Datasets::AbsTimed)
 

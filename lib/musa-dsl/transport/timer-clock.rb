@@ -83,7 +83,7 @@ module Musa
       # @param logger [Logger, nil] logger for warnings/errors
       # @param do_log [Boolean, nil] enable timing logs
       #
-      # @example
+      # @example All equivalent clock configurations
       #   # All equivalent for 120 BPM, 24 ticks/beat:
       #   TimerClock.new(bpm: 120, ticks_per_beat: 24)
       #   TimerClock.new(bpm: 120)  # ticks_per_beat defaults to 24

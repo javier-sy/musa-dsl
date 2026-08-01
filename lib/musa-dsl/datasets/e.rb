@@ -235,7 +235,7 @@ module Musa::Datasets
     # @param thing [Object] object to check
     # @return [Boolean] true if compatible
     #
-    # @example
+    # @example AbsD compatibility check
     #   AbsD.is_compatible?({ duration: 1.0 })  # => true
     #   AbsD.is_compatible?({ pitch: 60 })      # => false
     def self.is_compatible?(thing)
@@ -248,7 +248,7 @@ module Musa::Datasets
     # @return [AbsD] AbsD dataset
     # @raise [ArgumentError] if thing cannot be converted
     #
-    # @example
+    # @example Convert to AbsD
     #   AbsD.to_AbsD({ duration: 1.0 })  # => AbsD dataset
     def self.to_AbsD(thing)
       if thing.is_a?(AbsD)

@@ -56,7 +56,7 @@ module Musa
         # Represents a `<creator>` element specifying who created various aspects
         # of the work (composer, lyricist, arranger, etc.).
         #
-        # @example
+        # @example Creator
         #   creator = Creator.new(:composer, "Ludwig van Beethoven")
         #   creator.to_xml  # => <creator type="composer">Ludwig van Beethoven</creator>
         class Creator < TypedText
@@ -65,7 +65,7 @@ module Musa
           # @param type [String, Symbol] creator type (e.g., :composer, :lyricist, :arranger)
           # @param name [String] creator's name
           #
-          # @example
+          # @example Several kinds of creator
           #   Creator.new(:composer, "Mozart")
           #   Creator.new(:lyricist, "Da Ponte")
           def initialize(type, name)
@@ -79,7 +79,7 @@ module Musa
         # Represents a `<rights>` element specifying copyright, licensing, or
         # attribution information.
         #
-        # @example
+        # @example Rights
         #   rights = Rights.new(:lyrics, "Copyright 2024 Publisher Name")
         #   rights.to_xml  # => <rights type="lyrics">Copyright 2024 Publisher Name</rights>
         class Rights < TypedText
@@ -88,7 +88,7 @@ module Musa
           # @param type [String, Symbol] rights type (e.g., :lyrics, :music, :arrangement)
           # @param name [String] rights statement or holder name
           #
-          # @example
+          # @example Several kinds of rights
           #   Rights.new(:music, "Copyright 2024 ACME Publishing")
           #   Rights.new(:lyrics, "Public Domain")
           def initialize(type, name)

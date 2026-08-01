@@ -21,7 +21,7 @@ module Musa::Datasets
     # @param x [Numeric] number to check
     # @return [String] '+' or ''
     #
-    # @example
+    # @example positive_sign_of
     #   positive_sign_of(5)   # => '+'
     #   positive_sign_of(-3)  # => ''
     #
@@ -35,7 +35,7 @@ module Musa::Datasets
     # @param x [Numeric] number to check
     # @return [String] '+' (positive), '+' (zero), or '-' (negative)
     #
-    # @example
+    # @example sign_of
     #   sign_of(5)   # => '+'
     #   sign_of(0)   # => '+'
     #   sign_of(-3)  # => '-'
@@ -53,7 +53,7 @@ module Musa::Datasets
     # @param x [Integer] velocity value
     # @return [String] dynamics marking
     #
-    # @example
+    # @example velocity_of
     #   velocity_of(-5)  # => 'ppp'
     #   velocity_of(0)   # => 'mf'
     #   velocity_of(4)   # => 'fff'

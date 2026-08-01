@@ -333,7 +333,7 @@ module Musa::Datasets
     # @param x [Integer] velocity value
     # @return [String] dynamics marking
     #
-    # @example
+    # @example Velocity to dynamics conversion
     #   velocity_of(-3)  # => "ppp"
     #   velocity_of(0)   # => "mp"
     #   velocity_of(1)   # => "mf"

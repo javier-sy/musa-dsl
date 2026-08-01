@@ -214,7 +214,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(received_values[1]).to eq({ pitch: 64, velocity: 80 })
     end
 
-    it '@example Linear fade with move' do
+    it 'Linear fade with move' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       volume_values = []

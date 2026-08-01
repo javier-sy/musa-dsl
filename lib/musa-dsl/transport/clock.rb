@@ -112,7 +112,7 @@ module Musa
       # @yield Called when clock starts running.
       # @return [void]
       #
-      # @example
+      # @example on_start callback
       #   clock.on_start { puts "Clock started!" }
       def on_start(&block)
         @on_start << block
@@ -125,7 +125,7 @@ module Musa
       # @yield Called when clock stops running.
       # @return [void]
       #
-      # @example
+      # @example on_stop callback
       #   clock.on_stop { puts "Clock stopped!" }
       def on_stop(&block)
         @on_stop << block
@@ -142,7 +142,7 @@ module Musa
       # @yieldparam midi_beats [Integer, nil] new position in MIDI beats (for MIDI Clock)
       # @return [void]
       #
-      # @example
+      # @example on_change_position callback
       #   clock.on_change_position do |bars:, beats:, midi_beats:|
       #     puts "Position changed to bar #{bars}"
       #   end
