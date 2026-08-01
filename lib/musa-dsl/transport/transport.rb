@@ -362,17 +362,30 @@ module Musa
       #
       # @example Jump to bar 8 (fast-forwards through bars 1-7)
       #   transport.change_position_to(bars: 8)
+      #   transport.sequencer.position  # => 767/96r
+      #   # One tick before bar 8, the position from which the next tick is bar 8.
       #
       # @example MIDI Song Position Pointer
-      #   transport.change_position_to(midi_beats: 96)  # Bar 4 in 4/4
+      #   # MIDI beats are sixteenths: 96 of them are 24 quarters, six bars of
+      #   # 4/4, so counting from bar 1 this lands on bar 7.
+      #   transport.change_position_to(midi_beats: 96)
+      #   transport.sequencer.position  # => 671/96r
       #
       # @example Preventing sound during fast-forward with MIDIVoices
+      #   output = [].tap { |sent| def sent.puts(message) = self << message }
+      #   midi_voices = Musa::MIDIVoices::MIDIVoices.new(
+      #     sequencer: transport.sequencer, output: output, channels: [0])
+      #
+      #   transport.sequencer.at(4) { midi_voices.voices.first.note pitch: 60, duration: 1r }
+      #
       #   transport.sequencer.on_fast_forward do |is_starting|
       #     midi_voices.fast_forward = is_starting
       #   end
       #
-      #   # Now position changes won't produce audible MIDI output
+      #   # Seeking past bar 4 updates the voice's state without sounding it:
+      #   # without this guard the note would emit its note-on and note-off.
       #   transport.change_position_to(bars: 10)
+      #   output.size  # => 0
       def change_position_to(bars: nil, beats: nil, midi_beats: nil)
         logger.debug('Transport') do
           "asked to change position to #{"#{bars} bars " if bars}#{"#{beats} beats " if beats}" \

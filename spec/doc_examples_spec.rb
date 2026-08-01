@@ -45,14 +45,14 @@ RSpec.describe 'Inline documentation examples' do
   }.freeze
 
   # Claims verified today. May only grow.
-  VERIFIED_FLOOR = 432
+  VERIFIED_FLOOR = 435
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
   # given example falls into depends on the machine -- with midi-communications
   # installed but no hardware, "needs a gem" becomes "raises" -- and the sum is
   # what stays stable. MAY ONLY GO DOWN.
-  UNRUNNABLE_CEILING = 11
+  UNRUNNABLE_CEILING = 10
 
   # Every narrative is forked and given five seconds -- documentation is full of
   # transports that block and infinite series consumed with to_a -- so a machine
