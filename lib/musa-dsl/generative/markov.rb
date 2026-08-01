@@ -113,10 +113,9 @@ module Musa
       #   Keys are states, values are next state definitions (Array, Hash, or Proc)
       # @param start [Object] initial state
       # @param finish [Object, nil] terminal state (nil for infinite)
-      # @param random [Integer, nil] seed for the random number generator
-      #
-      # @note A `Random` instance passed here is currently ignored and replaced
-      #   by an unseeded one; pass the seed itself to get reproducibility.
+      # @param random [Random, Integer, nil] a generator, or a seed to build one
+      #   with, or nothing for an unseeded one. A seed and a `Random` built from
+      #   that same seed give the same chain.
       #
       # @example
       #   markov = Markov.new(
@@ -125,6 +124,19 @@ module Musa
       #     finish: :x
       #   )
       #
+      # @example A seed and a generator built from it are the same thing
+      #   transitions = { a: [:b, :c], b: [:a, :c], c: [:a, :b, :x] }
+      #
+      #   from_seed = Markov.new(start: :a, finish: :x, transitions: transitions, random: 7)
+      #   from_generator = Markov.new(start: :a, finish: :x, transitions: transitions,
+      #                               random: Random.new(7))
+      #
+      #   from_seed.i.to_a == from_generator.i.to_a  # => true
+      #
+      # @note A generator passed in is used, not copied, so several series
+      #   sharing one draw from the same stream -- `next_value` advances it.
+      #   `to_a` does not, because it consumes a deep copy of the serie.
+      #
       # @return [void]
       def initialize(transitions:, start:, finish: nil, random: nil)
         @transitions = transitions.clone.freeze
@@ -132,7 +144,12 @@ module Musa
         @start = start
         @finish = finish
 
-        @random = Random.new random if random.is_a?(Integer)
+        # A seed is turned into a generator; a generator is kept as it is. The
+        # second line used to overwrite the ivar the first had not set, so a
+        # `Random` passed in was replaced by an unseeded one and the chain came
+        # out different on every run while the caller believed it was pinned
+        # (issue #79).
+        @random = random.is_a?(Integer) ? Random.new(random) : random
         @random ||= Random.new
 
         @procedure_binders = {}
