@@ -4,6 +4,50 @@ require 'musa-dsl'
 RSpec.describe Musa::Datasets::Score::ToMXML do
   context 'Score with complexities to MXML generation' do
 
+    # Gaps between events are filled with rests, and the code that does it had
+    # no test: `to_mxml` raised `uninitialized constant ...ToMXML::PDV` for one
+    # shape of gap only -- between two events inside the same bar (issue #69).
+    # Whole-bar gaps and a bar that starts late take other paths and worked, so
+    # the defect needed a particular figure to be seen at all. All four shapes
+    # are covered here.
+    def notes_and_rests(*events)
+      score = Musa::Datasets::Score.new
+
+      events.each do |at, duration, pitch|
+        score.at(at, add: { pitch: pitch, duration: duration }.extend(Musa::Datasets::PDV))
+      end
+
+      xml = score.to_mxml(4, 24, bpm: 120, title: 'gaps',
+                          parts: { p1: { name: 'Part', clefs: { g: 2 } } },
+                          do_log: false).to_xml.string
+
+      xml.scan(%r{<note>.*?</note>}m).collect do |note|
+        type = note[%r{<type>(\w+)}, 1]
+        note.include?('<rest') ? "rest #{type}" : "#{note[%r{<step>(\w)}, 1]}#{note[%r{<octave>(\d)}, 1]} #{type}"
+      end
+    end
+
+    it 'fills a gap between two events inside the same bar' do
+      expect(notes_and_rests([1r, 1/4r, 60], [1 + 1/2r, 1/4r, 64]))
+        .to eq(['C4 quarter', 'rest quarter', 'E4 quarter', 'rest quarter'])
+    end
+
+    it 'fills a gap of whole bars' do
+      expect(notes_and_rests([1r, 1r, 60], [3r, 1r, 64]))
+        .to eq(['C4 whole', 'rest whole', 'E4 whole', 'rest whole'])
+    end
+
+    it 'fills the head of a bar whose first event starts late' do
+      expect(notes_and_rests([1 + 1/2r, 1/4r, 60]))
+        .to eq(['rest half', 'C4 quarter', 'rest quarter'])
+    end
+
+    it 'fills several gaps in one bar' do
+      # The trailing whole rest is the empty bar to_mxml always closes with.
+      expect(notes_and_rests([1r, 1/4r, 60], [1 + 1/2r, 1/4r, 64], [1 + 3/4r, 1/4r, 67]))
+        .to eq(['C4 quarter', 'rest quarter', 'E4 quarter', 'G4 quarter', 'rest whole'])
+    end
+
     it 'converts a pdv + ps with dynamics dataset score to MusicXML' do
       score = Musa::Datasets::Score.new
 

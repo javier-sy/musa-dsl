@@ -126,7 +126,7 @@ module Musa::Datasets::Score::ToMXML
       pointer = process_pdv(measure, bar, divisions_per_bar,
                             { start: bar + pointer,
                               finish: bar + effective_start,
-                              dataset: { pitch: :silence, duration: effective_start - pointer }.extend(PDV) },
+                              dataset: { pitch: :silence, duration: effective_start - pointer }.extend(Musa::Datasets::PDV) },
                             pointer,
                             logger, do_log)
     end
