@@ -1373,12 +1373,32 @@ module Musa
 
       alias_method :[], :get
 
-      # Converts grade specifier to numeric grade and accidentals.
+      # Resolves any way of naming a grade into the number this scale uses for
+      # it, plus its accidentals.
+      #
+      # This is the step {#get} takes before looking a note up, and it is public
+      # because a piece often has to take a grade from somewhere that is not
+      # Ruby -- a configuration file, a text score, a message from an editor --
+      # and needs the same reading the scale itself would make. Where
+      # {#parse_grade} stops at the syntax, this resolves the function name
+      # through the scale kind: `:dominant` becomes 4 in a diatonic scale.
       #
       # @param grade_or_string_or_symbol [Integer, Symbol, String] grade specifier
       # @return [Array(Integer, Integer)] wide grade and accidentals count
       #
-      # @api private
+      # @example Numbers, names and functions all arrive at a grade
+      #   c_major.grade_of(2)           # => [2, 0]
+      #   c_major.grade_of('I')         # => [0, 0]
+      #   c_major.grade_of(:dominant)   # => [4, 0]
+      #
+      # @example Accidentals travel apart from the grade
+      #   c_major.grade_of('I#')  # => [0, 1]
+      #
+      # @example Beyond the octave, the number keeps going
+      #   c_major.grade_of(7)  # => [7, 0]
+      #   # Seven grades to the octave, so 7 is the tonic an octave up.
+      #
+      # @see #parse_grade the syntax-only half of this
       def grade_of(grade_or_string_or_symbol)
         name, wide_grade, accidentals = parse_grade(grade_or_string_or_symbol)
 
@@ -1392,15 +1412,38 @@ module Musa
         return octave * @kind.class.grades + grade, accidentals
       end
 
-      # Parses grade string/symbol into components.
+      # Reads the notation of a grade, without deciding what it means.
       #
-      # Handles formats like "I#", ":V_", "7##", extracting function name,
-      # numeric grade, and accidentals.
+      # Splits a written grade into its three parts: a function name, a numeric
+      # grade, and a count of accidentals. **Exactly one of name and grade comes
+      # back**, according to how it was written -- `'II'` is a name, `'2'` is a
+      # number -- and resolving a name into a number is {#grade_of}'s job, since
+      # that depends on the scale kind and this does not.
+      #
+      # Accidentals are a single signed count: `#` adds one, `_` subtracts one,
+      # and they may repeat.
+      #
+      # Public because it is the only way to read the grade notation without a
+      # scale deciding for you, which is what a custom decoder needs.
       #
       # @param neuma_grade [Integer, Symbol, String] grade to parse
       # @return [Array(Symbol, Integer, Integer)] name, wide_grade, accidentals
       #
-      # @api private
+      # @example A written function name comes back as a name
+      #   c_major.parse_grade('I')   # => [:I, nil, 0]
+      #   c_major.parse_grade(:tonic)  # => [:tonic, nil, 0]
+      #
+      # @example A written number comes back as a number
+      #   c_major.parse_grade('7')  # => [nil, 7, 0]
+      #   c_major.parse_grade(2)    # => [nil, 2, 0]
+      #
+      # @example Accidentals accumulate, sharps positive and flats negative
+      #   c_major.parse_grade('I#')    # => [:I, nil, 1]
+      #   c_major.parse_grade('V_')    # => [:V, nil, -1]
+      #   c_major.parse_grade('II__')  # => [:II, nil, -2]
+      #   c_major.parse_grade('7##')   # => [nil, 7, 2]
+      #
+      # @see #grade_of which resolves the name this leaves unresolved
       def parse_grade(neuma_grade)
         name = wide_grade = nil
         accidentals = 0
@@ -1811,14 +1854,25 @@ module Musa
       # @return [Integer, nil]
       attr_reader :background_sharps
 
-      # Returns wide grade (grade + octave * grades_per_octave).
+      # The grade counted straight through the octaves, rather than restarting
+      # at each one.
+      #
+      # `grade + octave * grades_per_octave`. It is what makes the distance
+      # between two notes a subtraction: within one octave `grade` would do, but
+      # across octaves it wraps, and this does not. That is why the delta
+      # encoding of {Musa::Datasets::GDV} and {Musa::Datasets::GDVd} is written
+      # in terms of this and not of `grade`.
       #
       # @return [Integer]
       #
-      # @example
-      #   note.wide_grade  # => 7 (second octave, first degree)
+      # @example Seven grades to the octave in a diatonic scale
+      #   c_major.tonic.wide_grade                # => 0
+      #   c_major.tonic.at_octave(1).wide_grade   # => 7
+      #   c_major[7].wide_grade                   # => 7
+      #   # Asking for grade 7 of a seven-grade scale is the tonic an octave up.
       #
-      # @api private
+      # @example Which is what makes an interval a subtraction
+      #   c_major.dominant.at_octave(1).wide_grade - c_major.tonic.wide_grade  # => 11
       def wide_grade
         @grade + @octave * @scale.kind.class.grades
       end

@@ -45,7 +45,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   }.freeze
 
   # Claims verified today. May only grow.
-  VERIFIED_FLOOR = 441
+  VERIFIED_FLOOR = 458
 
   # Spec examples named `@example <title>` whose title no longer appears in the
   # documentation. At zero, and it stays there: an example that loses its

@@ -512,7 +512,20 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(c_sharp.background_note.pitch).to eq(60)
     end
 
-    it 'demonstrates NoteInScale#wide_grade' do
+    it 'grade_of, parse_grade and wide_grade are public API (issue #68)' do
+    # They carried `@api private` while being public Ruby methods, which is the
+    # worst of both: readers avoided them, or reached them through `send`.
+    # wide_grade is not even arguably internal -- GDV and GDVd are written in
+    # terms of it -- and the other two are the only way to read grade notation
+    # without a scale deciding for you. Pinned so a later `private` is a
+    # decision and not a slip.
+    scale = Musa::Scales::Scales.et12[440.0].major[60]
+
+    expect(scale.public_methods).to include(:grade_of, :parse_grade)
+    expect(scale.tonic.public_methods).to include(:wide_grade)
+  end
+
+  it 'demonstrates NoteInScale#wide_grade' do
       # From NoteInScale @example
       tuning = Scales.default_system.default_tuning
       c_major = tuning.major[60]
