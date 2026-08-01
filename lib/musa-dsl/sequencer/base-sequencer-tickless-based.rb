@@ -134,9 +134,32 @@ module Musa
         #   sequencer.tick  # position becomes 1.5r, prints "B"
         #   sequencer.tick  # position becomes 2r, prints "C"
         #
+        # @example Ticking a schedule that has run out does nothing
+        #   exhausted = Musa::Sequencer::BaseSequencer.new
+        #   exhausted.at(1r) { }
+        #   exhausted.tick
+        #
+        #   exhausted.tick
+        #   exhausted.position  # => 1r  (it stays where it was)
+        #
         # @api public
         def tick
-          _tick @position_mutex.synchronize { @position = @timeslots.first_after(@position) }
+          # `first_after` returns nil when the schedule is exhausted, which is
+          # the END of time and not a position. Assigning it moved the position
+          # back to nil -- the BEGINNING of time, the other thing nil means
+          # here -- so a tick past the last event ran the clock backwards and
+          # left the sequencer unmovable again (issue #76).
+          #
+          # A tick is "advance to the next event". With no next event there is
+          # nothing to advance to and nobody to call.
+          position_to_run = @position_mutex.synchronize do
+            next_position = @timeslots.first_after(@position)
+            @position = next_position if next_position
+
+            next_position
+          end
+
+          _tick position_to_run if position_to_run
         end
 
         # TODO puede pensarse que un sequencer tickbased es como un ticklessbased en que cada tick se aavanza el position en 1 / ticks_per_bar
@@ -168,9 +191,10 @@ module Musa
         #
         # @raise [ArgumentError] if new_position < current position
         #
-        # Note that the sequencer must have reached its first event before it can
-        # be fast-forwarded: until then its position is nil and there is nothing
-        # to move forward from.
+        # It works from the start too, before any tick: a sequencer that has not
+        # reached its first event has a nil position, which is the beginning of
+        # time and not a missing one. Skipping an introduction while rendering,
+        # or seeking before playback begins, is exactly when this is reached for.
         #
         # @example Jump to future position
         #   sequencer.at(1.25r) { puts "Event 1" }
@@ -182,32 +206,58 @@ module Musa
         #   sequencer.position       # => 2r
         #   # Exactly 2r: it stops where it was told, not at the next event (2.75r).
         #
+        # @example Jump from the start, without ticking first
+        #   from_scratch = Musa::Sequencer::BaseSequencer.new
+        #   from_scratch.at(1.25r) { puts "Event 1" }
+        #   from_scratch.at(2.75r) { puts "Event 2" }
+        #
+        #   from_scratch.position       # => nil
+        #   from_scratch.position = 2r  # prints "Event 1" on the way
+        #   from_scratch.position       # => 2r
+        #
+        # @example Past the end of the schedule
+        #   beyond = Musa::Sequencer::BaseSequencer.new
+        #   beyond.at(1r) { }
+        #
+        #   beyond.position = 9r  # runs the event and stops where it was told
+        #   beyond.position       # => 9r
+        #
         # @example Cannot move backward
         #   sequencer.position = 1r  # => ArgumentError: cannot move back
         #
         # @api public
         def position=(new_position)
-          raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{new_position}" if new_position < @position
+          # A nil position is the beginning of time, not a missing one: nothing
+          # is behind it, so no target can be a move backwards.
+          raise ArgumentError, "Sequencer #{self}: cannot move back. current position: #{@position} new position: #{new_position}" \
+            if @position && new_position < @position
 
           @on_fast_forward.each { |block| block.call(true) }
 
-          loop do
-            next_position = nil
+          begin
+            loop do
+              next_position = @position_mutex.synchronize { @timeslots.first_after(@position) }
 
-            @position_mutex.synchronize do
-              next_position = @timeslots.first_after(@position)
+              # nil here is the OTHER nil: the schedule is exhausted. Comparing
+              # it raised in the middle of the jump, after the events had run
+              # and before the position was assigned (issue #76).
+              break if next_position.nil? || next_position > new_position
+
+              # The position moves WITH the events, as it does in `tick` and in
+              # tick-based mode. It used to stay put for the whole jump, so a
+              # block asking `sequencer.position` while being fast-forwarded
+              # over got the position the jump started from -- and, now that a
+              # jump can start before the first tick, it would have got nil.
+              _tick @position_mutex.synchronize { @position = next_position }
             end
 
-            if next_position <= new_position
-              _tick next_position
-            else
-              break
-            end
+            @position = new_position
+          ensure
+            # Whatever happens in there, fast-forward has to be switched off
+            # again: the failed jump used to leave it on, and handlers that mute
+            # themselves during a jump stayed muted for the rest of the run.
+            @on_fast_forward.each { |block| block.call(false) }
           end
-
-          @position = new_position
-
-          @on_fast_forward.each { |block| block.call(false) }
         end
 
         # Initializes tickless timing (no-op).
