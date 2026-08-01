@@ -215,9 +215,11 @@ module Musa
 
         # Determines operation from element.
         #
-        # AbsD-compatible elements wait by duration.
+        # AbsD-compatible elements wait by their forward duration -- which is
+        # `:forward_duration` when given and `:duration` otherwise, and either
+        # key alone makes the element AbsD-compatible.
         # Elements with :wait_event continue on event.
-        # Other elements continue immediately.
+        # Other elements continue immediately, all in the same instant.
         #
         # @param element [Hash, Object] element to process
         #

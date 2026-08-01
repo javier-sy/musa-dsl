@@ -152,6 +152,12 @@ module Musa::Datasets
   # - **:note_duration**: Actual note duration (may differ for staccato, etc.)
   # - **:forward_duration**: Time until next event (may be 0 for simultaneous events)
   #
+  # None of the three is required: an event belongs here as soon as it declares
+  # ANY of them. `:duration` and `:forward_duration` are what make it occupy
+  # time, and either one alone is enough -- an impulse (a click, a percussive
+  # attack that frees itself) has no sounding length of its own and does have a
+  # distance to the next event, and that is a well formed event of the domain.
+  #
   # ## Duration Types
   #
   # **duration**: How long the event process lasts (note playing, dynamics change, etc.)
@@ -181,6 +187,15 @@ module Musa::Datasets
   #   chord_note = { pitch: 60, duration: 1.0, forward_duration: 0 }.extend(AbsD)
   #   chord_note.forward_duration  # => 0 (the next event starts at the same time)
   #
+  # @example An impulse: spacing without a length of its own
+  #   click = { forward_duration: 1/4r }.extend(AbsD)
+  #   click.forward_duration  # => (1/4)
+  #   click.duration          # => nil
+  #   click.note_duration     # => nil
+  #
+  #   # `duration` does not fall back on `forward_duration`, and should not: the
+  #   # click does not sound for the whole gap. Nil is the honest answer.
+  #
   # @see Abs Parent absolute module
   # @see PS Pitch series with duration
   # @see PDV Pitch/Duration/Velocity
@@ -198,12 +213,17 @@ module Musa::Datasets
 
     # Returns forward duration (time until next event).
     #
-    # Defaults to `:duration` if `:forward_duration` not specified.
+    # Defaults to `:duration` if `:forward_duration` not specified. This is the
+    # value `play` waits on in `:wait` mode, so it is what advances a serie.
     #
     # @return [Numeric] forward duration
     #
     # @example
     #   { pitch: 60, duration: 1.0 }.extend(AbsD).forward_duration  # => 1.0
+    #
+    # @example The fallback runs one way only
+    #   { forward_duration: 1/2r }.extend(AbsD).forward_duration  # => (1/2)
+    #   { forward_duration: 1/2r }.extend(AbsD).duration          # => nil
     def forward_duration
       self[:forward_duration] || self[:duration]
     end
@@ -232,14 +252,20 @@ module Musa::Datasets
 
     # Checks if thing can be converted to AbsD.
     #
+    # Either duration key is enough: what makes an event occupy time is that it
+    # declares how long it lasts, or how long until the next one, and it need
+    # not declare both.
+    #
     # @param thing [Object] object to check
     # @return [Boolean] true if compatible
     #
     # @example AbsD compatibility check
-    #   AbsD.is_compatible?({ duration: 1.0 })  # => true
-    #   AbsD.is_compatible?({ pitch: 60 })      # => false
+    #   AbsD.is_compatible?({ duration: 1.0 })          # => true
+    #   AbsD.is_compatible?({ forward_duration: 1.0 })  # => true
+    #   AbsD.is_compatible?({ pitch: 60 })              # => false
     def self.is_compatible?(thing)
-      thing.is_a?(AbsD) || thing.is_a?(Hash) && thing.has_key?(:duration)
+      thing.is_a?(AbsD) ||
+        thing.is_a?(Hash) && (thing.has_key?(:duration) || thing.has_key?(:forward_duration))
     end
 
     # Converts thing to AbsD if possible.
@@ -249,11 +275,12 @@ module Musa::Datasets
     # @raise [ArgumentError] if thing cannot be converted
     #
     # @example Convert to AbsD
-    #   AbsD.to_AbsD({ duration: 1.0 })  # => AbsD dataset
+    #   AbsD.to_AbsD({ duration: 1.0 }).is_a?(AbsD)          # => true
+    #   AbsD.to_AbsD({ forward_duration: 1.0 }).is_a?(AbsD)  # => true
     def self.to_AbsD(thing)
       if thing.is_a?(AbsD)
         thing
-      elsif thing.is_a?(Hash) && thing.has_key?(:duration)
+      elsif thing.is_a?(Hash) && (thing.has_key?(:duration) || thing.has_key?(:forward_duration))
         thing.clone.extend(AbsD)
       else
         raise ArgumentError, "Cannot convert #{thing} to AbsD dataset"

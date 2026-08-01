@@ -693,4 +693,65 @@ RSpec.describe Musa::Sequencer do
       expect([a, b, c, d]).to eq [2, 2, 1, 1]
     end
   end
+
+  # An event that carries only :forward_duration is an impulse: it has no
+  # sounding length of its own and it does have a distance to the next one. It
+  # used to be invisible to the wait-mode evaluator, which tested for :duration
+  # alone, so a serie of them emptied itself into a single instant (issue #72).
+  context 'A serie of pure forward durations' do
+    include Musa::Series
+
+    def positions_of(serie)
+      sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+      positions = []
+
+      sequencer.at 1 do
+        sequencer.play(serie) { |**| positions << sequencer.position }
+      end
+
+      400.times { sequencer.tick }
+      positions
+    end
+
+    let(:rhythm) { [1/4r, 3/8r, 1/8r] }
+
+    it 'advances the serie exactly as the same rhythm written with durations' do
+      only_forward = S(*rhythm.collect { |gap| { forward_duration: gap } })
+      both = S(*rhythm.collect { |gap| { duration: gap, forward_duration: gap } })
+
+      expect(positions_of(only_forward)).to eq([1r, 5/4r, 13/8r])
+      expect(positions_of(only_forward)).to eq(positions_of(both))
+    end
+
+    it 'ends, so its after fires -- which a collapsed serie could not do' do
+      sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+      ended = []
+
+      sequencer.at 1 do
+        sequencer.play(S(*rhythm.collect { |gap| { forward_duration: gap } })) { |**| }
+                 .after { ended << sequencer.position }
+      end
+
+      400.times { sequencer.tick }
+
+      # 1 + 1/4 + 3/8 + 1/8 = 1 + 3/4
+      expect(ended).to eq([7/4r])
+    end
+
+    it 'is an AbsD, and its duration stays nil rather than borrowing the gap' do
+      impulse = { forward_duration: 1/4r }
+
+      expect(Musa::Datasets::AbsD.is_compatible?(impulse)).to be true
+
+      dataset = Musa::Datasets::AbsD.to_AbsD(impulse)
+      expect(dataset.forward_duration).to eq(1/4r)
+      expect(dataset.duration).to be_nil
+      expect(dataset.note_duration).to be_nil
+    end
+
+    it 'an element with no duration at all still means "at the same time"' do
+      expect(Musa::Datasets::AbsD.is_compatible?({ pitch: 60 })).to be false
+      expect(positions_of(S({ pitch: 60 }, { pitch: 62 }))).to eq([1r, 1r])
+    end
+  end
 end
