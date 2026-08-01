@@ -40,22 +40,26 @@ module Musa::Datasets
   #
   # - **Pitch → Grade**: Finds closest scale degree
   # - **Chromatic notes**: Represented as grade + sharps
-  # - **Velocity**: Maps MIDI 0-127 to dynamics -5 to +4 (ppp to fff)
+  # - **Velocity**: Maps MIDI 1-127 to dynamics -5 to +4 (ppppp to fff)
   #
   # ### Velocity Mapping
   #
   # MIDI velocities are mapped to musical dynamics:
   #
-  #     MIDI 1-1    → velocity -5 (ppp)
-  #     MIDI 2-8    → velocity -4 (pp)
-  #     MIDI 9-16   → velocity -3 (p)
-  #     MIDI 17-33  → velocity -2 (mp)
-  #     MIDI 34-48  → velocity -1 (mf-)
-  #     MIDI 49-64  → velocity  0 (mf)
-  #     MIDI 65-80  → velocity +1 (f)
-  #     MIDI 81-96  → velocity +2 (ff)
-  #     MIDI 97-112 → velocity +3 (fff-)
+  #     MIDI 1-1     → velocity -5 (ppppp)
+  #     MIDI 2-8     → velocity -4 (pppp)
+  #     MIDI 9-16    → velocity -3 (ppp)
+  #     MIDI 17-33   → velocity -2 (pp)
+  #     MIDI 34-48   → velocity -1 (p)
+  #     MIDI 49-64   → velocity  0 (mp)
+  #     MIDI 65-80   → velocity +1 (mf)
+  #     MIDI 81-96   → velocity +2 (f)
+  #     MIDI 97-112  → velocity +3 (ff)
   #     MIDI 113-127 → velocity +4 (fff)
+  #
+  # The names come from {Helper#velocity_of}, and zero is mp, not mf. The table
+  # used to name them two steps towards the soft end, which is where the
+  # `velocity 0 == mf` misreading kept coming back from (issue #74).
   #
   # ## Base Duration
   #

@@ -47,20 +47,50 @@ module Musa::Datasets
 
     # Converts numeric velocity to dynamics marking.
     #
-    # Maps velocity values (-5 to +4) to standard dynamics markings.
-    # Range: ppp (-5) to fff (+4), centered at mf (0).
+    # The exact inverse of the neumalang parser's absolute velocity rule, which
+    # is generative rather than tabular -- `p+` and `f+` accept any number of
+    # letters -- so this is generative too, and every integer has a name:
     #
-    # @param x [Integer] velocity value
+    #     ... ppp (-3)  pp (-2)  p (-1)  mp (0)  mf (1)  f (2)  ff (3)  fff (4) ...
+    #
+    # Zero is `mp` and one is `mf`. That is not a convention chosen here: it is
+    # what the parser reads and what {GDV::VELOCITY_MAP} encodes (64 and 80,
+    # which are MuseScore's mp and mf).
+    #
+    # WHY NOT A TABLE. It used to be `%w[ppp pp p mp mf f ff fff][x + 3]`, and
+    # eight entries could not name the ten the rest of the code works with:
+    # below -3 the index went negative, Ruby counted from the end, and the
+    # softest dynamics came back as the loudest -- `pppp`, which the notation
+    # accepts and the parser reads as -4, was reprinted as `fff` (issue #74).
+    #
+    # This function is total on purpose. The dynamic range of MIDI is not its
+    # business: {GDV#to_pdv} clamps to -5..+4 when it converts, which is where
+    # the physical range actually ends.
+    #
+    # @param x [Numeric] velocity value (fractional values floor, as GDV
+    #   interpolates them)
     # @return [String] dynamics marking
     #
     # @example velocity_of
-    #   velocity_of(-5)  # => 'ppp'
-    #   velocity_of(0)   # => 'mf'
-    #   velocity_of(4)   # => 'fff'
+    #   velocity_of(-3)  # => "ppp"
+    #   velocity_of(0)   # => "mp"
+    #   velocity_of(1)   # => "mf"
+    #   velocity_of(4)   # => "fff"
+    #
+    # @example Beyond the named eight, which the notation reaches
+    #   velocity_of(-4)  # => "pppp"
+    #   velocity_of(-5)  # => "ppppp"
+    #   velocity_of(5)   # => "ffff"
     #
     # @api private
     def velocity_of(x)
-      %w[ppp pp p mp mf f ff fff][x + 3]
+      x = x.floor
+
+      case x <=> 0
+      when -1 then 'p' * -x
+      when 0 then 'mp'
+      else x == 1 ? 'mf' : 'f' * (x - 1)
+      end
     end
 
     # Formats modifier with parameters for Neuma notation.

@@ -253,7 +253,8 @@ module Musa::Datasets
     # - **sharps**: '#' for sharp, '_' for flat (e.g., "0#" = first degree sharp)
     # - **octave**: 'o' + number (e.g., "o1" = up one octave, "o-1" = down one)
     # - **duration**: Number of base_duration units
-    # - **velocity**: Dynamics string (ppp, pp, p, mp, mf, f, ff, fff)
+    # - **velocity**: Dynamics string (ppp, pp, p, mp, mf, f, ff, fff -- and any
+    #   number of p's or f's beyond those, see {Helper#velocity_of})
     # - **modifiers**: Additional key-value pairs (e.g., "staccato")
     #
     # @return [String] Neuma notation
@@ -268,6 +269,11 @@ module Musa::Datasets
     #   velocity 0 is mp and not the middle of the range. And the duration must
     #   be Rational: a Float duration reaches the notation as one, and
     #   `{ duration: 1r }` renders "(0 4.0 mp)".
+    #
+    # @example Softer than ppp, which VELOCITY_MAP reaches and the notation names
+    #   gdv = { grade: 0, duration: 1r, velocity: -4 }.extend(GDV)
+    #   gdv.base_duration = 1/4r
+    #   gdv.to_neuma  # => "(0 4 pppp)"
     #
     # @example With octave
     #   gdv = { grade: 2, octave: 1, duration: 1/2r, velocity: 2 }.extend(GDV)
@@ -325,26 +331,6 @@ module Musa::Datasets
 
       '(' + attributes.join(' ') + ')'
     end
-
-    # Converts velocity number to dynamics string.
-    #
-    # Maps numeric velocity (-3 to +4) to standard dynamics markings.
-    #
-    # @param x [Integer] velocity value
-    # @return [String] dynamics marking
-    #
-    # @example Velocity to dynamics conversion
-    #   velocity_of(-3)  # => "ppp"
-    #   velocity_of(0)   # => "mp"
-    #   velocity_of(1)   # => "mf"
-    #   velocity_of(4)   # => "fff"
-    #
-    # @api private
-    def velocity_of(x)
-      %w[ppp pp p mp mf f ff fff][x + 3]
-    end
-
-    private :velocity_of
 
     # Converts to GDVd (delta encoding).
     #

@@ -432,13 +432,11 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(neuma).to eq("(0 4 staccato)")
     end
 
-    it '@example Velocity to dynamics conversion' do
-      gdv = { grade: 0 }.extend(Musa::Datasets::GDV)
+    it '@example Softer than ppp, which VELOCITY_MAP reaches and the notation names' do
+      gdv = { grade: 0, duration: 1r, velocity: -4 }.extend(Musa::Datasets::GDV)
+      gdv.base_duration = 1/4r
 
-      expect(gdv.send(:velocity_of, -3)).to eq("ppp")
-      expect(gdv.send(:velocity_of, 0)).to eq("mp")
-      expect(gdv.send(:velocity_of, 1)).to eq("mf")
-      expect(gdv.send(:velocity_of, 4)).to eq("fff")
+      expect(gdv.to_neuma).to eq('(0 4 pppp)')
     end
 
     it '@example First event (no previous)' do
@@ -996,8 +994,17 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       helper = Object.new.extend(Musa::Datasets::Helper)
 
       expect(helper.send(:velocity_of, -3)).to eq('ppp')
+      expect(helper.send(:velocity_of, 0)).to eq('mp')
       expect(helper.send(:velocity_of, 1)).to eq('mf')
       expect(helper.send(:velocity_of, 4)).to eq('fff')
+    end
+
+    it '@example Beyond the named eight, which the notation reaches' do
+      helper = Object.new.extend(Musa::Datasets::Helper)
+
+      expect(helper.send(:velocity_of, -4)).to eq('pppp')
+      expect(helper.send(:velocity_of, -5)).to eq('ppppp')
+      expect(helper.send(:velocity_of, 5)).to eq('ffff')
     end
 
     it '@example Boolean modifier (flag)' do

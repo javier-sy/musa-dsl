@@ -40,12 +40,10 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # names the issue that will remove it. Nothing else may be added here without
   # an issue: the rule of this audit is that a documentation spec disagreeing
   # with the documentation is a bug report, not an assertion to loosen.
-  KNOWN_LIES = {
-    'datasets/helper.rb' => 2 # issue #74: velocity_of's unguarded negative index
-  }.freeze
+  KNOWN_LIES = {}.freeze
 
   # Claims verified today. May only grow.
-  VERIFIED_FLOOR = 469
+  VERIFIED_FLOOR = 472
 
   # Spec examples named `@example <title>` whose title no longer appears in the
   # documentation. At zero, and it stays there: an example that loses its
