@@ -300,7 +300,9 @@ module Musa
       #
       # Shuffles values randomly. Requires finite serie.
       #
-      # @param random [Random, nil] Random instance (default: new Random)
+      # @param random [Random, Integer, nil] a generator, or a seed to build one
+      #   with, or nothing for an unseeded one -- the same three forms {RND}
+      #   takes, since they are the same idea offered twice.
       #
       # @return [Randomizer] randomized serie
       #
@@ -308,9 +310,18 @@ module Musa
       #   s = S(1, 2, 3, 4, 5).randomize
       #   s.i.to_a  # => random permutation
       #
+      # @example The same seed is the same shuffle
+      #   S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a  # => [5, 2, 4, 3, 1]
+      #   S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a  # => [5, 2, 4, 3, 1]
+      #
       # @api public
       def randomize(random: nil)
+        # Without this the Integer reached Randomizer intact and only failed
+        # when the serie was consumed, with a traceback pointing far away from
+        # the call that caused it (issue #87).
+        random = Random.new(random) if random.is_a?(Integer)
         random ||= Random.new
+
         Randomizer.new self, random
       end
 

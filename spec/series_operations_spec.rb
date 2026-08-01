@@ -958,4 +958,32 @@ RSpec.describe Musa::Series do
     end
 
   end
+
+  # `randomize` and `RND` are the same idea offered twice, and only one of them
+  # took a seed. The Integer reached Randomizer intact and raised when the serie
+  # was consumed, far from the call that caused it (issue #87).
+  context 'Seeding randomize' do
+    include Musa::Series::Constructors
+
+    it 'accepts a seed, as RND does' do
+      expect(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a).to eq([5, 2, 4, 3, 1])
+    end
+
+    it 'gives the same shuffle for the same seed' do
+      expect(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a)
+        .to eq(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a)
+    end
+
+    it 'agrees with a Random built from that seed, and with RND' do
+      expect(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a)
+        .to eq(S(1, 2, 3, 4, 5).randomize(random: Random.new(7)).i.to_a)
+
+      expect(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a)
+        .to eq(RND(1, 2, 3, 4, 5, random: 7).i.to_a)
+    end
+
+    it 'still shuffles without a seed' do
+      expect(S(1, 2, 3, 4, 5).randomize.i.to_a.sort).to eq([1, 2, 3, 4, 5])
+    end
+  end
 end

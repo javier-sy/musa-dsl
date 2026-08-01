@@ -250,6 +250,11 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result.sort).to eq([1, 2, 3, 4, 5])
     end
 
+    it '@example The same seed is the same shuffle' do
+      expect(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a).to eq([5, 2, 4, 3, 1])
+      expect(S(1, 2, 3, 4, 5).randomize(random: 7).i.to_a).to eq([5, 2, 4, 3, 1])
+    end
+
     it '@example Remove odds' do
       s = S(1, 2, 3, 4, 5).remove { |n| n.odd? }
       expect(s.i.to_a).to eq([2, 4])
