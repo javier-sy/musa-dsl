@@ -223,6 +223,51 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       expect(control.active?).to be false
     end
 
+    it 'ends a note when the last hold on its pitch is let go, not before' do
+      voices = Musa::MIDIVoices::MIDIVoices.new(
+        sequencer: sequencer, output: recording_output, channels: [0])
+      voice = voices.voices.first
+
+      stops = []
+      first = voice.note pitch: 60, duration: 4r
+      first.on_stop { stops << ['first', sequencer.position] }
+
+      96.times { sequencer.tick }
+
+      second = voice.note pitch: 60, duration: 8r    # the same pitch, overlapping
+      second.on_stop { stops << ['second', sequencer.position] }
+
+      1200.times { sequencer.tick }
+
+      # The first note lets go a bar into the second one, but pitch 60 is still
+      # on: its note has not stopped sounding, and it does not end until the
+      # count of holds on that pitch falls to zero.
+      expect(recording_output.sent.collect { |m| m.class.name.split('::').last })
+        .to eq(%w[NoteOn NoteOn NoteOff])
+
+      expect(stops.collect(&:first)).to eq(%w[first second])
+      expect(stops.collect(&:last).uniq.size).to eq(1)
+      expect(first.end_position).to eq(second.end_position)
+    end
+
+    it 'ends a chord when the last of its pitches goes quiet' do
+      voices = Musa::MIDIVoices::MIDIVoices.new(
+        sequencer: sequencer, output: recording_output, channels: [0])
+      voice = voices.voices.first
+
+      ended_at = nil
+      chord = voice.note pitch: [60, 64, 67], duration: 2r
+      chord.on_stop { ended_at = sequencer.position }
+
+      doubling = voice.note pitch: 64, duration: 6r
+
+      1200.times { sequencer.tick }
+
+      # Two of the chord's pitches go quiet at bar 3; 64 is held by the doubling
+      # note until bar 7, and that is when the chord is over.
+      expect(ended_at).to eq(doubling.end_position)
+    end
+
     it 'runs on_stop once when a note is released before its scheduled end' do
       voices = Musa::MIDIVoices::MIDIVoices.new(
         sequencer: sequencer, output: recording_output, channels: [0])

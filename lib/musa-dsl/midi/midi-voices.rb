@@ -194,12 +194,20 @@ module Musa
     #   # The control that `note` returns releases it whenever you want, and the
     #   # note-off it had scheduled arrives to find the note already over: it
     #   # does nothing, and on_stop fires once.
-    #   note_ctrl = voice.note pitch: 64, velocity: 90, duration: 100r
+    #   note_ctrl = voice.note pitch: 65, velocity: 90, duration: 100r
     #   stops = 0
     #   note_ctrl.on_stop { stops += 1 }
     #   note_ctrl.note_off
     #   note_ctrl.active?  # => false
     #   stops              # => 1
+    #
+    # @example A note whose pitch someone else is still holding
+    #   # A note has stopped sounding when its pitch has, and a pitch stops when
+    #   # the last note holding it lets go. Pitch 67 is still held by the chord
+    #   # above, so this one is still sounding after it has been released.
+    #   doubling = voice.note pitch: 67, velocity: 90, duration: 100r
+    #   doubling.note_off
+    #   doubling.active?  # => true
     #
     # @example Controller and sustain pedal
     #   voice.controller[:mod_wheel] = 64
@@ -342,6 +350,14 @@ module Musa
         @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, 0x7b, 0)
 
         @active_pitches.each_with_index do |pitch_status, pitch|
+          # Everything goes quiet here, including the notes that had let go of a
+          # pitch someone else was holding and were waiting for it to fall to
+          # zero. Clearing the table without telling them would leave them
+          # sounding for ever as far as they know, and their callbacks unrun.
+          waiting = pitch_status[:awaiting_silence]
+          pitch_status[:awaiting_silence] = []
+          waiting.each(&:_pitch_silenced)
+
           next if @fast_forward || pitch_status[:note_controls].empty?
 
           msg = MIDIEvents::NoteOff.new(@channel, pitch, 0)
@@ -367,9 +383,13 @@ module Musa
 
       private
 
+      # `awaiting_silence` holds the controls that have let go of the pitch while
+      # someone else was still holding it. Their note has not stopped sounding
+      # yet -- the pitch is still on -- so they are told when the count reaches
+      # zero and the NoteOff finally goes out.
       def fill_active_pitches(pitches)
         (0..127).each do |pitch|
-          pitches[pitch] = { note_controls: Set[], velocity: 0 }
+          pitches[pitch] = { note_controls: Set[], velocity: 0, awaiting_silence: [] }
         end
       end
 
@@ -509,6 +529,9 @@ module Musa
           @do_on_stop = []
           @do_after = []
 
+          @released = false
+          @awaited_pitches = 0
+
           @start_position = @end_position = nil
         end
 
@@ -518,6 +541,8 @@ module Musa
         def note_on
           @start_position = @voice.sequencer.position
           @end_position = nil
+          @released = false
+          @awaited_pitches = 0
 
           @pitch.each_index do |i|
             pitch = @pitch[i]
@@ -550,19 +575,20 @@ module Musa
         # @param velocity [Numeric, Array<Numeric>] optional override for the release velocity.
         # @return [void]
         def note_off(velocity: nil)
-          # A note ends once. Releasing one by hand before its scheduled end
+          # A note is let go once. Releasing one by hand before its scheduled end
           # leaves that scheduled note_off still on its way, and it used to
-          # arrive and run `on_stop` and `after` a second time -- the callbacks
+          # arrive and run `on_stop` and `after` a SECOND time -- the callbacks
           # that chain a section or free a resource, fired again at a moment the
-          # composer believes no longer exists. The active_pitches count already
-          # kept the stale one from emitting MIDI while another note held the
-          # pitch; this extends the same protection to the callbacks, and drops
-          # the redundant NoteOff when nothing else holds it.
-          return nil if @end_position
+          # composer believes no longer exists.
+          return nil if @released
+
+          @released = true
 
           velocity ||= @velocity_off
 
           velocity = velocity.arrayfy.explode_ranges
+
+          @awaited_pitches = 0
 
           @pitch.each_index do |i|
             pitch = @pitch[i]
@@ -570,26 +596,41 @@ module Musa
 
             next if silence?(pitch)
 
-            @voice.active_pitches[pitch][:note_controls].delete self
+            status = @voice.active_pitches[pitch]
+            status[:note_controls].delete self
 
-            next unless @voice.active_pitches[pitch][:note_controls].empty?
+            # The count is what decides when the sound stops: while another
+            # control still holds this pitch, the pitch is still on and this
+            # note has not stopped sounding. Wait to be told.
+            unless status[:note_controls].empty?
+              status[:awaiting_silence] << self
+              @awaited_pitches += 1
+              next
+            end
 
             msg = MIDIEvents::NoteOff.new(@voice.channel, pitch, velocity_off)
             @voice.log msg.verbose_name.to_s
             @voice.output.puts msg if @voice.output && !@voice.fast_forward?
+
+            waiting = status[:awaiting_silence]
+            status[:awaiting_silence] = []
+            waiting.each(&:_pitch_silenced)
           end
 
-          @end_position = @voice.sequencer.position
-
-          @do_on_stop.each do |do_on_stop|
-            @voice.sequencer.wait 0, &do_on_stop
-          end
-
-          @do_after.each do |do_after|
-            @voice.sequencer.wait @voice.tick_duration + do_after[:bars], &do_after[:block]
-          end
+          _end_note if @awaited_pitches.zero?
 
           nil
+        end
+
+        # Told by whoever brought one of this note's pitches down to zero.
+        #
+        # @return [void]
+        #
+        # @api private
+        def _pitch_silenced
+          @awaited_pitches -= 1
+
+          _end_note if @awaited_pitches.zero?
         end
 
         # @return [Boolean] true while the note is sounding (NoteOn sent, NoteOff pending).
@@ -621,6 +662,29 @@ module Musa
         end
 
         private
+
+        # The note is over: every pitch it was sounding has gone quiet.
+        #
+        # This is what `end_position` reports and when the callbacks run. It is
+        # not the moment the control let go of its pitches -- another note may
+        # still be holding one of them, and until the count reaches zero the
+        # pitch is still on.
+        #
+        # @return [void]
+        # @api private
+        def _end_note
+          @end_position = @voice.sequencer.position
+
+          @do_on_stop.each do |do_on_stop|
+            @voice.sequencer.wait 0, &do_on_stop
+          end
+
+          @do_after.each do |do_after|
+            @voice.sequencer.wait @voice.tick_duration + do_after[:bars], &do_after[:block]
+          end
+
+          nil
+        end
 
         # @return [Boolean] true if the pitch represents a rest/gap.
         # @api private
