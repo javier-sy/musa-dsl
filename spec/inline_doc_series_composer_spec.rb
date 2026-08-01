@@ -282,7 +282,7 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'DSL: method_missing' do
-    it '@example DSL syntax demonstration' do
+    it 'DSL syntax demonstration' do
       composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
         # `reverse` → returns :reverse (operation symbol)
         # `my_step reverse, { skip: 1 }` → creates pipeline named :my_step

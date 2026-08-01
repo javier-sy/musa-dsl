@@ -90,7 +90,7 @@ module Musa
         #
         # @return [Array<Array>] array of [type, name] pairs describing parameters.
         #
-        # @example
+        # @example Reading a proc's parameters
         #   SmartProcBinder.new(proc { |a, b, c:| }).parameters
         #   # => [[:opt, :a], [:opt, :b], [:keyreq, :c]]
         #
@@ -159,7 +159,7 @@ module Musa
         #
         # @return [Boolean] true if key is accepted, false otherwise.
         #
-        # @example
+        # @example Keywords, including a **rest that accepts any
         #   # key? belongs to the binder, not to Proc.
         #   SmartProcBinder.new(proc { |a:, b:, **rest| }).key?(:a)        # => true
         #   SmartProcBinder.new(proc { |a:, b:, **rest| }).key?(:unknown)  # => true (has **rest)

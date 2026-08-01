@@ -158,7 +158,7 @@ RSpec.describe 'REPL Inline Documentation Examples' do
       expect(custom_logger).to be_a(Musa::Logger::Logger)
     end
 
-    it '@example With direct Binding (musalce-server pattern) validation' do
+    it '@example With direct Binding (musalce-server pattern)' do
       # Validates the direct binding pattern
 
       class DirectBindingContext

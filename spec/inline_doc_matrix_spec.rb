@@ -85,7 +85,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Array#indexes_of_values (line 98)' do
-    it '@example Creates hash mapping values to indices' do
+    it '@example Where each value appears' do
       result = [10, 20, 10, 30, 20].indexes_of_values
 
       # => { 10 => [0, 2], 20 => [1, 4], 30 => [3] }
@@ -143,7 +143,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Array#condensed_matrices (line 146)' do
-    it '@example Merges matrices with shared boundaries' do
+    it '@example Matrices that share a boundary are merged' do
       # Matrix A ends where Matrix B begins -> they merge
       a = Matrix[[0, 60], [1, 62]]
       b = Matrix[[1, 62], [2, 64]]
@@ -309,7 +309,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Matrix#decompose (line 305)' do
-    it '@example Decomposes into directional segments' do
+    it 'Decomposes into directional segments' do
       # Points with time in dimension 0
       points = [[0, 10], [1, 20], [0.5, 15], [2, 30]]
       matrix = Matrix.rows(points)

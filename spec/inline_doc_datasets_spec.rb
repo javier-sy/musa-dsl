@@ -5,7 +5,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   include Musa::All
 
   context 'Dataset base (dataset.rb)' do
-    it '@example Basic PackedV to V conversion' do
+    it 'Basic PackedV to V conversion' do
       pv = { a: 1, b: 2, c: 3 }.extend(Musa::Datasets::PackedV)
 
       v = pv.to_V([:c, :b, :a])
@@ -13,7 +13,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(v).to eq([3, 2, 1])
     end
 
-    it '@example Point series structure' do
+    it 'Point series structure' do
       p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
 
       expect(p[0]).to eq(60)     # First pitch
@@ -23,7 +23,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(p[4]).to eq(67)     # Third pitch
     end
 
-    it '@example Convert P to timed series' do
+    it 'Convert P to timed series' do
       p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
 
       timed = p.to_timed_serie(base_duration: 1/4r, time_start: 0r).instance
@@ -41,7 +41,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(event3[:value]).to eq(67)
     end
 
-    it '@example MIDI-style PDV' do
+    it '@example MIDI-style pitch/duration/velocity' do
       pdv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PDV)
       pdv.base_duration = 1/4r
 
@@ -57,7 +57,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(gdv[:grade]).to eq(0)
     end
 
-    it '@example Score-style GDV' do
+    it 'Score-style GDV' do
       gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
       gdv.base_duration = 1/4r
 
@@ -107,7 +107,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect { event.validate! }.not_to raise_error
     end
 
-    it '@example Delta vs Absolute encoding' do
+    it '@example Delta vs Absolute' do
       # Absolute encoding (3 events)
       abs1 = { pitch: 60, duration: 1.0 }
       abs2 = { pitch: 62, duration: 1.0 }
@@ -555,7 +555,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # Down 2 semitones, up one octave
     end
 
-    it '@example Base duration adjustment' do
+    it 'Base duration adjustment' do
       gdvd = {}.extend(Musa::Datasets::GDVd)
       gdvd[:abs_duration] = 1.0
       gdvd.base_duration = 1/4r
@@ -1388,7 +1388,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # Events sorted by ascending pitch
     end
 
-    it '@example Group by pitch (interval queries)' do
+    it '@example Group by pitch' do
       score = Musa::Datasets::Score.new
       score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
       score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))

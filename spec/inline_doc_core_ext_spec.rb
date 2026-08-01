@@ -69,7 +69,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(velocities).to eq([80, 100, 80, 100, 80])
     end
 
-    it '@example Object#arrayfy with size' do
+    it '@example With size' do
       result = "hello".arrayfy(size: 3)
       expect(result).to eq(["hello", "hello", "hello"])
     end
@@ -194,7 +194,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(copy.is_a?(Musa::Datasets::V)).to be true
     end
 
-    it '@example copy_singleton_class_modules' do
+    it '@example Carrying the singleton modules over' do
       source = [60, 100].extend(Musa::Datasets::V)
       target = [60, 100]
       Musa::Extension::DeepCopy::DeepCopy.copy_singleton_class_modules(source, target)
@@ -215,7 +215,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(arr).to eq([[1, 2]])  # inner array independent
     end
 
-    it '@example Deep clone with freeze control' do
+    it '@example Deep clone' do
       hash = { nested: { value: 1 } }
       copy = hash.clone(deep: true, freeze: false)
       expect(copy.frozen?).to be false
@@ -232,7 +232,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(proxy.upcase).to eq("HELLO")  # forwarded to String
     end
 
-    it '@example Complete example' do
+    it '@example Everything is forwarded, including is_a?' do
       proxy = Musa::Extension::DynamicProxy::DynamicProxy.new
       proxy.receiver = [1, 2, 3]
       expect(proxy.size).to eq(3)
@@ -268,7 +268,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(result).to eq('{ pitch: 60, "name" => "C4" }')
     end
 
-    it '@example Detailed format examples' do
+    it 'Detailed format examples' do
       expect((5/4r).inspect).to eq("1+1/4r")
       expect((7/4r).inspect).to eq("1+3/4r")
       expect((-3/2r).inspect).to eq("-1-1/2r")
@@ -287,7 +287,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       Rational.to_s_as_inspect = nil  # Reset
     end
 
-    it '@example When to_s_as_inspect is false' do
+    it '@example When to_s_as_inspect is false/nil' do
       Rational.to_s_as_inspect = false
       expect((5/4r).to_s).to eq("5/4")
       Rational.to_s_as_inspect = nil  # Reset
@@ -324,7 +324,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(binder.key?(:unknown)).to be false
     end
 
-    it '@example key? with rest parameters' do
+    it '@example Keywords, including a **rest that accepts any' do
       block1 = proc { |a:, b:, **rest| }
       binder1 = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block1)
       expect(binder1.key?(:a)).to be true

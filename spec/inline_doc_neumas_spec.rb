@@ -15,7 +15,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   context 'Neumas module (neumas.rb)' do
     using Musa::Extension::Neumas
 
-    it '@example Basic neuma parsing' do
+    it 'Basic neuma parsing' do
 
       # Parse simple melody notation
       melody = "(0) (+2) (+2) (-1) (0)".to_neumas
@@ -30,7 +30,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(gdvd_values.size).to eq(5)
     end
 
-    it '@example Parse with duration and ornaments' do
+    it 'Parse with duration and ornaments' do
       # Neuma with varied durations and ornaments
       notation = "(+2_) (+2_2) (+1_/2) (+2_ tr)"
       neumas = notation.to_neumas
@@ -41,7 +41,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(first_neuma[:gdvd][:delta_sharps]).to eq(-1)
     end
 
-    it '@example Create parallel voices' do
+    it '@example Create parallel from neumas' do
       # Define individual voice lines
       soprano = "(0) (+2) (+4) (+5) (+7)"
       alto = "(-2) (0) (+2) (+3) (+5)"
@@ -56,7 +56,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(satb[:parallel].size).to eq(4)
     end
 
-    it '@example Compose sections from arrays' do
+    it 'Compose sections from arrays' do
       # Define musical sections
       verse = "(0) (+2) (+2) (-1) (0)"
       chorus = "(+7) (+5) (+7) (+5) (+4)"
@@ -150,7 +150,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   end
 
   context 'Decoder infrastructure (neuma-decoder.rb)' do
-    it '@example Basic decoder creation' do
+    it 'Basic decoder creation' do
       # Create a mock scale object
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
@@ -205,7 +205,7 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   end
 
   context 'NeumaDecoder (neuma-gdv-decoder.rb)' do
-    it '@example Create decoder with mock scale' do
+    it '@example Create decoder with scale' do
       # Create a simple mock scale object
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(

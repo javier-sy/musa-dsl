@@ -93,7 +93,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'DummyClock (dummy-clock.rb)' do
-    it '@example Fixed tick count' do
+    it '@example Fixed tick count (automatic activation)' do
       clock = Musa::Clock::DummyClock.new(100)  # Exactly 100 ticks
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -105,7 +105,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(ticks).to be > 0
     end
 
-    it '@example Custom condition' do
+    it '@example Custom condition (automatic activation)' do
       continue_running = true
       clock = Musa::Clock::DummyClock.new { continue_running }
       transport = Musa::Transport::Transport.new(clock, 4, 24)
@@ -143,7 +143,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'ExternalTickClock (external-tick-clock.rb)' do
-    it '@example Manual stepping' do
+    it '@example Manual stepping for testing' do
       clock = Musa::Clock::ExternalTickClock.new
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -195,7 +195,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(ticks_generated).to eq(1)
     end
 
-    it '@example Testing' do
+    it 'Testing' do
       clock = Musa::Clock::ExternalTickClock.new
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 
@@ -221,7 +221,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'InputMidiClock (input-midi-clock.rb)' do
-    it '@example Basic setup (without actual MIDI)' do
+    it '@example Basic setup with DAW synchronization' do
       # Note: This test simulates the setup without requiring actual MIDI hardware
       # In real use, you would use: input = MIDICommunications::Input.all.first
 
@@ -304,7 +304,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'Timer (timer.rb)' do
-    it '@example Internal use by TimerClock' do
+    it 'Internal use by TimerClock' do
       timer = Musa::Clock::Timer.new(0.02083)  # ~48 ticks/second
 
       expect(timer.period).to eq(Rational(2083, 100000))
@@ -490,7 +490,7 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(position_jumps.first).to be_within(0.1).of(8.0)
     end
 
-    it '@example Jump to bar 8' do
+    it '@example Jump to bar 8 (fast-forwards through bars 1-7)' do
       clock = Musa::Clock::DummyClock.new(400)
       transport = Musa::Transport::Transport.new(clock, 4, 24)
 

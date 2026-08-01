@@ -81,7 +81,7 @@ module Musa
         #
         # @return [Object] target with modules applied.
         #
-        # @example
+        # @example Carrying the singleton modules over
         #   source = [60, 100].extend(Musa::Datasets::V)
         #   target = [60, 100]
         #   DeepCopy.copy_singleton_class_modules(source, target)

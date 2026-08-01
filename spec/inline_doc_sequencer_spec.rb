@@ -102,7 +102,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(seq.position).to be < 1
     end
 
-    it '@example Monitoring event execution with on_debug_at' do
+    it '@example Monitoring event execution' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_log: true)
 
       debug_calls = []
@@ -167,7 +167,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(ff_state[1]).to match(/Fast-forward ended at position 10/)
     end
 
-    it '@example Logging tick positions with before_tick' do
+    it '@example Logging tick positions' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       tick_log = []
@@ -188,7 +188,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(tick_log).to include(2)
     end
 
-    it '@example Basic event pub/sub with on/launch' do
+    it '@example Basic event pub/sub' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       received_values = []
@@ -233,7 +233,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'TickBasedTiming (base-sequencer-tick-based.rb)' do
-    it '@example Creating tick-based sequencer' do
+    it '@example Creating tick-based sequencer (4/4, 96 ticks per beat)' do
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)  # 4 beats, 96 ticks/beat
 
       expect(sequencer.ticks_per_bar).to eq(384r)
@@ -332,7 +332,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(notes_b[1]).to eq(6/5r)
     end
 
-    it '@example Event-driven progression with tick' do
+    it '@example Event-driven progression' do
       sequencer = Musa::Sequencer::BaseSequencer.new
 
       executed = []
@@ -376,7 +376,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'Play operations (base-sequencer-implementation-play.rb)' do
-    it '@example Basic series playback' do
+    it 'Basic series playback' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       notes = S({pitch: 60, duration: 1r}, {pitch: 64, duration: 1r}, {pitch: 67, duration: 1r})
@@ -395,7 +395,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(played_notes[2][:pitch]).to eq(67)
     end
 
-    it '@example Basic play control with after callback' do
+    it '@example Basic play control' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       # Each element carries its own duration: that is what makes play walk time.
@@ -640,7 +640,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'Every operations (base-sequencer-implementation-every.rb)' do
-    it '@example Every 1 beat for 4 beat duration' do
+    it 'Every 1 beat for 4 beat duration' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       ticks = []
@@ -655,7 +655,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(ticks.first).to be < 1
     end
 
-    it '@example Dynamic control with execution counter' do
+    it '@example Dynamic control' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       counters = []
@@ -707,7 +707,7 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect { sequencer.run }.not_to raise_error
     end
 
-    it '@example Evaluating blocks in DSL context with "with"' do
+    it '@example Evaluating blocks in DSL context' do
       seq = Musa::Sequencer::Sequencer.new(4, 96)
 
       executed = []

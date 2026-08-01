@@ -47,7 +47,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(inst.next_value).to eq([2, 20])
     end
 
-    it '@example Combined cycling all series (array)' do
+    it '@example Combined cycling all series' do
       ac = AC(S(1, 2), S(10, 20, 30))
       result = ac.max_size(6).i.to_a
       expect(result).to eq([[1, 10], [2, 20], [1, 30],
@@ -87,7 +87,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(s.infinite?).to be true
     end
 
-    it '@example Random from array' do
+    it '@example Shuffling an array' do
       # A shuffle, not a die: every value comes out exactly once and then the
       # serie ends. Membership was all that was asserted here, and membership is
       # true of a die too -- it is the part that does not distinguish them.
@@ -181,7 +181,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
   end
 
   context 'Operations (main-serie-operations.rb)' do
-    it '@example Infinite loop' do
+    it 'Infinite loop' do
       pattern = S(1, 2, 3).autorestart
       inst = pattern.i
       result = []
@@ -314,7 +314,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
                                       {pitch: 67, duration: 0.5r}])
     end
 
-    it '@example Transpose notes with map' do
+    it '@example Transpose notes' do
       notes = S(60, 64, 67).map { |n| n + 12 }
       expect(notes.i.to_a).to eq([72, 76, 79])
     end
@@ -469,7 +469,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(velocities.next_value).to eq(96)
     end
 
-    it '@example Split components' do
+    it 'Split components' do
       splitter = S({a: 1, b: 2}, {a: 3, b: 4}).split.i
       expect(splitter[:a].to_a).to eq([1, 3])
       expect(splitter[:b].to_a).to eq([2, 4])
@@ -486,7 +486,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(proxy.prototype?).to be true
     end
 
-    it '@example Empty proxy' do
+    it 'Empty proxy' do
       proxy = PROXY()
 
       expect(proxy.undefined?).to be true
@@ -517,7 +517,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(remaining).to eq([2, 3, 4, 5, 6])
     end
 
-    it '@example Create queue' do
+    it 'Create queue' do
       queue = QUEUE(S(1, 2), S(3, 4))
       expect(queue.i.to_a).to eq([1, 2, 3, 4])
     end
@@ -534,7 +534,7 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(result.size).to be > 0
     end
 
-    it '@example Quantize to integers' do
+    it 'Quantize to integers' do
       serie = S({time: 0r, value: 1.3}, {time: 1r, value: 2.7})
         .map { |v| v.extend(Musa::Datasets::AbsTimed) }
       quantized = serie.quantize(step: 1)

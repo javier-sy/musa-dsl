@@ -96,7 +96,7 @@ module Musa
       #   @return [Hash{Object => Array<Integer>}] hash where keys are array values
       #     and values are arrays of indices.
       #
-      #   @example
+      #   @example Where each value appears
       #     using Musa::Extension::Matrix
       #     [10, 20, 10, 30, 20].indexes_of_values
       #     # => { 10 => [0, 2], 20 => [1, 4], 30 => [3] }
@@ -143,7 +143,7 @@ module Musa
       #
       #   @return [Array<::Matrix>] condensed array of matrices with shared boundaries merged.
       #
-      #   @example
+      #   @example Matrices that share a boundary are merged
       #     using Musa::Extension::Matrix
       #     # Matrix A ends where Matrix B begins -> they merge
       #     a = Matrix[[0, 60], [1, 62]]

@@ -50,7 +50,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # Spec examples named `@example <title>` whose title no longer appears in the
   # documentation. Each is a spec testing a claim that has been renamed or
   # removed. MAY ONLY GO DOWN.
-  ORPHANED_REFERENCES = 91
+  ORPHANED_REFERENCES = 39
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a

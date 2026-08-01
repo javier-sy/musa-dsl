@@ -204,7 +204,7 @@ RSpec.describe 'MusicXML Builder Inline Documentation Examples' do
       expect(xml_string).to include('<mode>major</mode>')
     end
 
-    it '@example Bb minor (5 flats)' do
+    it '@example B♭ minor (5 flats)' do
       key = Musa::MusicXML::Builder::Internal::Key.new(fifths: -5, mode: 'minor')
 
       xml_string = key.to_xml.string

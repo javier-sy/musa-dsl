@@ -117,7 +117,7 @@ module Musa
 
       # Concrete DynamicProxy class ready for instantiation.
       #
-      # @example
+      # @example Everything is forwarded, including is_a?
       #   proxy = DynamicProxy.new
       #   proxy.receiver = [1, 2, 3]
       #   proxy.size      # => 3
