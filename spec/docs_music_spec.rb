@@ -5,6 +5,19 @@ using Musa::Extension::Matrix
 
 RSpec.describe 'Music Documentation Examples' do
 
+  # ChordDefinition's registry is global and has no way to undo a registration,
+  # so a spec that adds one leaves it there for everything that runs afterwards.
+  # It is not hypothetical: the documentation-examples spec asks
+  # `find_by_features(quality: :major, size: :triad)` and got `[:maj, :maj_test]`
+  # once these had run. Whatever a spec registers here, it takes away again.
+  after do
+    definitions = Musa::Chords::ChordDefinition.instance_variable_get(:@definitions)
+    %i[sus4_test add9_test].each { |name| definitions&.delete(name) }
+  end
+
+
+
+
   context 'Music - Scales & Chords' do
     include Musa::Scales
     include Musa::Chords

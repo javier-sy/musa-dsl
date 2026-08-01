@@ -29,23 +29,25 @@ RSpec.describe 'Transcription Documentation Examples' do
                                          .map { |gdv| gdv.to_pdv(scale) }
                                          .to_a(recursive: true)
 
-      # Verify expansion occurred (more notes than original 4 due to ornament expansion)
-      expect(result.size).to be > 4
+      # Four neumas become eleven notes, and where each one goes is exact.
+      expect(result.size).to eq(11)
 
-      # First note (no ornament)
-      expect(result[0][:pitch]).to eq(60)  # C4
-      expect(result[0][:duration]).to eq(1/4r)
+      # The plain note keeps its quarter.
+      expect(result[0]).to eq({ pitch: 60, duration: 1/4r, velocity: 80 })
 
-      # Trill expansion (note with tr: true expands to multiple notes)
-      # Second note has trill, so we should see alternating pitches
-      trill_notes = result[1..6]  # Approximate range for trill expansion
-      expect(trill_notes.any? { |n| n[:pitch] == 64 }).to be true  # E4 (original)
-      expect(trill_notes.any? { |n| n[:pitch] == 65 }).to be true  # F4 (upper neighbor)
+      # The trill fills its quarter with six alternations of a 1/24 each
+      # (duration_factor: 1/6r), starting on the upper neighbour F4 rather than
+      # on the written E4.
+      expect(result[1..6].collect { |n| n[:pitch] }).to eq([65, 64, 65, 64, 65, 64])
+      expect(result[1..6].collect { |n| n[:duration] }).to eq([1/24r] * 6)
+      expect(result[1..6].sum { |n| n[:duration] }).to eq(1/4r)
 
-      # Verify all results have pitch, duration, and velocity
-      result.each do |pdv|
-        expect(pdv).to include(:pitch, :duration, :velocity)
-      end
+      # The mordent is auxiliary and back, and then holds the rest of the note.
+      expect(result[7..9]).to eq([{ pitch: 71, duration: 1/24r, velocity: 80 },
+                                  { pitch: 72, duration: 1/24r, velocity: 80 },
+                                  { pitch: 71, duration: 1/6r, velocity: 80 }])
+
+      expect(result[10]).to eq({ pitch: 79, duration: 1/4r, velocity: 80 })
     end
 
     it 'generates MusicXML with ornaments preserved as notation symbols' do

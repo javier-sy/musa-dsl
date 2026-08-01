@@ -35,7 +35,7 @@ require_relative '../tools/doc-examples'
 # Run it alone, with detail, while working on documentation:
 #
 #   bundle exec ruby tools/doc-examples.rb series -v
-RSpec.describe 'Inline documentation examples' do
+RSpec.describe 'Inline documentation examples', runs_last: true do
   # Declared outputs the code contradicts and that are not fixed yet. Each entry
   # names the issue that will remove it. Nothing else may be added here without
   # an issue: the rule of this audit is that a documentation spec disagreeing

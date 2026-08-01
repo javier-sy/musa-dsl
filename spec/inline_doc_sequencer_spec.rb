@@ -89,7 +89,8 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       seq.at(2) { }
       seq.every(1, till: 8) { }
 
-      expect(seq.size).to be >= 2  # At least 2 scheduled events
+      # Two `at` and the first pulse of the `every`.
+      expect(seq.size).to eq(3)
       expect(seq.empty?).to be false
 
       # Reset clears everything
@@ -520,13 +521,32 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
         played_notes << { pitch: pitch, position: seq.position }
       end
 
-      seq.run
+      400.times { seq.tick }
 
-      # At-mode schedules at absolute positions, but series needs proper at values
-      expect(played_notes.size).to be >= 1
-      expect(played_notes[0][:pitch]).to eq(60)
-      # Position depends on how at-mode processes the series
-      expect(played_notes[0][:position]).to be_a(Rational)
+      # :at mode is off by one element. Each element's :at schedules WHEN THE
+      # NEXT ONE is evaluated, not when this one plays: the first plays
+      # immediately and the last element's :at is never used. Declared at 0, 1
+      # and 2, only the first ever sounds, because the second is scheduled at
+      # 0r -- already past.
+      expect(played_notes).to eq([{ pitch: 60, position: 95/96r }])
+    end
+
+    it ':at mode plays each element at the PREVIOUS element\'s position' do
+      # Pinned so the day this is fixed the spec says so.
+      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+
+      played_notes = []
+
+      seq.play(S({ pitch: 60, at: 1r }, { pitch: 62, at: 5r }, { pitch: 64, at: 9r }),
+               mode: :at) do |pitch:|
+        played_notes << { pitch: pitch, position: seq.position }
+      end
+
+      1200.times { seq.tick }
+
+      expect(played_notes).to eq([{ pitch: 60, position: 95/96r },   # not bar 1
+                                  { pitch: 62, position: 1r },       # not bar 5
+                                  { pitch: 64, position: 5r }])      # not bar 9
     end
 
     it 'example from line 182 - Wait-mode with duration' do

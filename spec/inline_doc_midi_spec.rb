@@ -191,19 +191,43 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
 
       callback_executed = false
 
-      # Create indefinite note (duration nil triggers different code path)
-      # Use a very long duration instead to test the callback
+      # A duration longer than the passage, released by hand. The indefinite
+      # note this documents -- duration: nil -- cannot be created through
+      # #note, which is issue #81; the line below is the workaround, and the
+      # example after this one pins the defect.
       note_ctrl = voice.note pitch: 60, velocity: 90, duration: 100r
 
-      # Register callback
       note_ctrl.on_stop { callback_executed = true }
-
-      # Manually stop the note
       note_ctrl.note_off
 
-      # Callback should be scheduled on sequencer
       sequencer.tick
+
       expect(callback_executed).to be true
+    end
+
+    it 'cannot create the indefinite note it documents (issue #81)' do
+      voices = Musa::MIDIVoices::MIDIVoices.new(
+        sequencer: sequencer, output: recording_output, channels: [0])
+      voice = voices.voices.first
+
+      # #note computes note_duration from the duration unconditionally.
+      expect { voice.note pitch: 60, velocity: 90, duration: nil }
+        .to raise_error(NoMethodError, /undefined method '\+' for nil/)
+
+      # NoteControl, which #note would have handed it to, accepts the nil and
+      # holds the note until it is released by hand.
+      control = Musa::MIDIVoices::MIDIVoice.const_get(:NoteControl)
+                    .new(voice, pitch: 60, velocity: 90, duration: nil, velocity_off: 63)
+                    .note_on
+
+      400.times { sequencer.tick }
+
+      expect(recording_output.sent.collect { |m| m.class.name.split('::').last }).to eq(%w[NoteOn])
+
+      control.note_off
+
+      expect(recording_output.sent.collect { |m| m.class.name.split('::').last })
+        .to eq(%w[NoteOn NoteOff])
     end
 
     it 'example from class doc line 80 - Fast-forward for silent catch-up' do

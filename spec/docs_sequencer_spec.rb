@@ -108,8 +108,10 @@ RSpec.describe 'Sequencer Documentation Examples' do
       expect(at_events).to include(1, 30)
 
       # Verify wait: event 2 bars after last now/at
-      expect(wait_events.size).to eq(1)
-      expect(wait_events.first).to be_between(2.9, 3.1)  # Approximately 3
+      # Not "approximately 3": exactly 287/96r, two bars on from the position
+      # before bar 1 where the sequencer starts, and therefore one tick before
+      # bar 3. The tolerance was hiding that convention.
+      expect(wait_events).to eq([287/96r])
 
       # Verify play: series played with all notes and durations
       expect(play_notes.size).to eq(8)

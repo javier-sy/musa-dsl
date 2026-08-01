@@ -68,10 +68,9 @@ RSpec.describe 'Transport Documentation Examples' do
 
       transport.start
 
-      # Verify position changes were tracked (if any occurred)
-      # on_change_position is called when position jumps/seeks occur
-      # Since we're not jumping positions, this may be empty
-      expect(positions).to be_an(Array)
+      # on_change_position fires on seeks, and this run never seeks, so it is
+      # not "may be empty": it is empty, and that is the claim.
+      expect(positions).to eq([])
     end
 
     it 'allows changing playback position via change_position_to' do
@@ -96,9 +95,10 @@ RSpec.describe 'Transport Documentation Examples' do
 
       # Verify the event at position 8 was executed
       expect(events).to include(:measure_8)
-      # Verify position change was detected (approximately at bar 8)
-      expect(positions_changed).not_to be_empty
-      expect(positions_changed.first.to_f).to be_within(0.1).of(8.0)
+      # One seek, reported at exactly 767/96r -- one tick before bar 8, the
+      # position from which the next tick is bar 8. The 0.1 tolerance was
+      # standing in for that tick.
+      expect(positions_changed).to eq([767/96r])
     end
   end
 

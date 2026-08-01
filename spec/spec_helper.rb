@@ -96,4 +96,16 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   # Kernel.srand config.seed
+
+  # Groups tagged `runs_last: true` are moved to the end of the run.
+  #
+  # There is one: the documentation examples, which fork a few hundred processes.
+  # Nothing else in the suite cares, but timer_spec measures the average error of
+  # a 1 ms timer over a thousand ticks and asks for it to stay under 0.1% -- a
+  # figure that belongs to the machine, not to the code, and that a fork storm
+  # immediately before it can spoil. Running the forks last removes the only
+  # plausible interaction between the two.
+  config.register_ordering(:global) do |groups|
+    groups.partition { |group| !group.metadata[:runs_last] }.flatten
+  end
 end
