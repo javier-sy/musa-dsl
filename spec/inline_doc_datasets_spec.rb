@@ -373,8 +373,8 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       pdv = gdv.to_pdv(scale)
 
-      # velocity 0.5 interpolates between mp (64) and mf (80)
-      expect(pdv[:velocity]).to be_between(64, 80)
+      # Halfway between mp (64) and mf (80), and exactly halfway: 72.0.
+      expect(pdv[:velocity]).to eq(72.0)
     end
 
     it 'example from line 257 - Basic note' do
@@ -776,8 +776,11 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       serie = p.to_timed_serie(base_duration: 1/4r)
 
-      expect(serie).to be_a(Musa::Datasets::P::PtoTimedSerie)
-      # base_duration: quarter note = 1/4 beat
+      # The 4 and the 8 between the pitches are durations in base_durations, so
+      # the third point lands at 3r and not at 2r.
+      expect(serie.i.to_a).to eq([{ time: 0r, value: 60 },
+                                  { time: 1r, value: 64 },
+                                  { time: 3r, value: 67 }])
     end
 
     it 'example from line 80 - Start at specific time' do
@@ -1248,8 +1251,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       pitches = score.values_of(:pitch)
 
-      expect(pitches).to be_a(Set)
-      expect(pitches).to include(60, 64, 67)
+      expect(pitches).to eq(Set[60, 64, 67])
     end
 
     it 'example from line 412 - Get all grades' do
@@ -1260,8 +1262,7 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       grades = score.values_of(:grade)
 
-      expect(grades).to be_a(Set)
-      expect(grades).to include(0, 2, 4)
+      expect(grades).to eq(Set[0, 2, 4])
     end
 
     it 'example from line 434 - Filter by pitch' do
@@ -1521,13 +1522,15 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       played = []
       outer.render(on: seq) do |event|
-        played << event[:pitch]
+        played << [event[:pitch], seq.position]
       end
 
       seq.run
 
-      expect(played).to include(60, 67, 69)
-      # inner plays at sequencer time 2r
+      # The nested score is placed at its own position in the outer one, so its
+      # bar 1 becomes the outer's bar 2. Every event fires one tick before its
+      # bar, which is where this sequencer starts everything.
+      expect(played).to eq([[60, 95/96r], [67, 191/96r], [69, 287/96r]])
     end
 
     it 'example from line 89 - Console output' do
@@ -1558,13 +1561,13 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       events = []
       outer.render(on: seq) do |event|
-        events << event[:pitch]
+        events << [event[:pitch], seq.position]
       end
 
       seq.run
 
-      expect(events).to include(60, 67)
-      # Inner scores automatically rendered at their scheduled times
+      # Inner scores are rendered at their scheduled times without being asked.
+      expect(events).to eq([[60, 95/96r], [67, 191/96r]])
     end
   end
 end

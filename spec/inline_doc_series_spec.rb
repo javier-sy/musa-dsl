@@ -88,21 +88,37 @@ RSpec.describe 'Series Inline Documentation Examples' do
     end
 
     it 'example from line 318 - Random from array' do
-      dice = RND(1, 2, 3, 4, 5, 6)
-      value = dice.i.next_value
-      expect([1, 2, 3, 4, 5, 6]).to include(value)
+      # A shuffle, not a die: every value comes out exactly once and then the
+      # serie ends. Membership was all that was asserted here, and membership is
+      # true of a die too -- it is the part that does not distinguish them.
+      shuffled = RND(1, 2, 3, 4, 5, 6, random: 42)
+
+      expect(shuffled.i.to_a).to eq([4, 6, 3, 5, 2, 1])
+      expect(shuffled.infinite?).to be false
+
+      instance = shuffled.i
+      6.times { instance.next_value }
+      expect(instance.next_value).to be_nil
+    end
+
+    it 'sampling with replacement is RND().repeat' do
+      die = RND(1, 2, 3, random: 42).repeat
+
+      expect(die.infinite?).to be true
+
+      instance = die.i
+      # Reshuffled on each pass, so values do repeat across passes.
+      expect(9.times.collect { instance.next_value }).to eq([3, 2, 1, 1, 2, 3, 3, 2, 1])
     end
 
     it 'example from line 322 - Random from range' do
-      rand = RND(from: 0, to: 100, step: 10)
-      value = rand.i.next_value
-      expect([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).to include(value)
+      expect(RND(from: 0, to: 10, step: 5, random: 7).i.to_a).to eq([0, 10, 5])
     end
 
     it 'example from line 326 - With seed' do
-      rnd = RND(1, 2, 3, random: 42)  # Reproducible
-      value = rnd.i.next_value
-      expect([1, 2, 3]).to include(value)
+      # The claim is reproducibility, so assert it: same seed, same sequence.
+      expect(RND(1, 2, 3, random: 42).i.to_a).to eq([3, 2, 1])
+      expect(RND(1, 2, 3, random: 42).i.to_a).to eq([3, 2, 1])
     end
 
     it 'example from line 358 - Merge sequences' do
@@ -401,10 +417,16 @@ RSpec.describe 'Series Inline Documentation Examples' do
 
     it 'example from line 73 - Recursive conversion' do
       result = [[1, [2, 3]], [4, 5]].to_serie(recursive: true)
-      # Nested arrays become nested series
       inst = result.i
-      first = inst.next_value
-      expect(first.i.to_a).to be_an(Array)
+
+      # Nesting goes all the way down: the first element is a serie holding a
+      # value and another serie.
+      first = inst.next_value.i.to_a
+
+      expect(first.first).to eq(1)
+      expect(first.last.i.to_a).to eq([2, 3])
+
+      expect(inst.next_value.i.to_a).to eq([4, 5])
     end
 
     it 'example from line 97 - Short form' do

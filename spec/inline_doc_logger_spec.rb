@@ -248,8 +248,9 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       logger_compact, output_compact = create_logger_with_capture(sequencer: sequencer, position_format: 2.0)
       logger_precise, output_precise = create_logger_with_capture(sequencer: sequencer, position_format: 4.4)
 
-      expect(logger_compact).to be_a(Musa::Logger::Logger)
-      expect(logger_precise).to be_a(Musa::Logger::Logger)
+      # The two halves of the format are field width and decimals, and both are
+      # observable in the output: 2.0 pads to two and shows none, 4.4 pads to
+      # four and shows four. Asserting the class asserted neither.
 
       # Test compact format (2.0)
       logger_compact.level = Logger::INFO
@@ -258,9 +259,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       end
       sequencer.run
 
-      result_compact = output_compact.string
-      # Should have no decimals
-      expect(result_compact).to match(/4:.*Compact format/)
+      expect(output_compact.string).to eq("  4: [INFO]  Compact format\n")
 
       # Test precise format (4.4)
       sequencer2 = Musa::Sequencer::Sequencer.new(4, 24)
@@ -271,9 +270,7 @@ RSpec.describe 'Logger Inline Documentation Examples' do
       end
       sequencer2.run
 
-      result_precise = output_precise2.string
-      # Should have 4 decimal places
-      expect(result_precise).to match(/4\.5000:.*Precise format/)
+      expect(output_precise2.string).to eq("   4.5000: [INFO]  Precise format\n")
     end
   end
 

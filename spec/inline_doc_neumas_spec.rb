@@ -301,7 +301,12 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
     it 'example from line 85 - Create decoder with eighth note base' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(base_duration: 1/8r)
 
-      expect(decoder).to be_a(Musa::Neumas::Decoders::NeumaDifferentialDecoder)
+      # The base duration is what the decoder is for: it travels with every
+      # event it decodes. Asserting the class asserted nothing about it.
+      decoded = decoder.decode({ delta_grade: 2 }.extend(Musa::Datasets::GDVd))
+
+      expect(decoded).to eq({ delta_grade: 2 })
+      expect(decoded.base_duration).to eq(1/8r)
     end
 
     it 'example from line 101 - Process differential neuma' do

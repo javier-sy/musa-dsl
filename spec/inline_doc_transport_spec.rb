@@ -134,9 +134,11 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       end
 
       transport.start
-      # Runs minimum 50 ticks, then checks some_condition
 
-      expect(ticks).to be >= 50
+      # The block is the clock's condition, evaluated before every tick: it
+      # keeps going while ticks < 50 OR the flag is set, and the flag is only
+      # cleared at 60. So it stops at exactly 60, not "at least 50".
+      expect(ticks).to eq(60)
     end
   end
 
@@ -187,7 +189,10 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       transport.stop
       thread.join
 
-      expect(ticks_generated).to be > 0
+      # Five ticks is 5/96 of a bar, so the `every 1` pulses exactly once: the
+      # one it fires at its own starting position, before bar 1. "More than
+      # zero" was true of any number of frames at all.
+      expect(ticks_generated).to eq(1)
     end
 
     it 'example from line 50 - Testing' do

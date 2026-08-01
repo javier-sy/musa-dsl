@@ -62,8 +62,9 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
         tick_duration: 1/96r
       )
 
-      expect(transcriptor).to be_a(Musa::Transcription::Transcriptor)
-      expect(transcriptor.transcriptors).not_to be_empty
+      # The MIDI set, in the order it is applied.
+      expect(transcriptor.transcriptors.collect { |t| t.class.name.split('::').last })
+        .to eq(%w[Appogiatura Mordent Turn Trill Staccato Base])
     end
 
     it 'example from line 235 - Transcribe single event' do
@@ -76,11 +77,12 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       gdv = { grade: 0, duration: 1r, tr: true }
       result = transcriptor.transcript(gdv)
 
-      # Trill expands to array of notes
-      expect(result).to be_a(Array)
-      expect(result.size).to be > 1
-      expect(result).to all(have_key(:grade))
-      expect(result).to all(have_key(:duration))
+      # 22 notes alternating upper neighbour and main, four of 1/16 and then
+      # eighteen of 1/24, filling exactly the bar the note was worth.
+      expect(result.size).to eq(22)
+      expect(result.collect { |n| n[:grade] }).to eq([1, 0] * 11)
+      expect(result.collect { |n| n[:duration] }).to eq([1/16r] * 4 + [1/24r] * 18)
+      expect(result.sum { |n| n[:duration] }).to eq(1r)
     end
 
     it 'example from line 240 - Transcribe array of events' do
@@ -96,9 +98,12 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       ]
       results = transcriptor.transcript(gdvs)
 
-      expect(results).to be_a(Array)
-      # Mordent expands first event, second unchanged
-      expect(results.size).to be > 2
+      # The mordent becomes auxiliary, back, and the remainder of the note; the
+      # plain event passes through untouched.
+      expect(results).to eq([{ grade: 0, duration: 1/16r },
+                             { grade: 1, duration: 1/16r },
+                             { grade: 0, duration: 7/8r },
+                             { grade: 2, duration: 1r }])
     end
   end
 
@@ -137,13 +142,11 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       transcriptor = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new
       result = transcriptor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
 
-      # Trill expands to array of alternating notes
-      expect(result).to be_a(Array)
-      expect(result.size).to be > 2
-
-      # Check for alternating grades (0 and 1 for upper neighbor)
-      grades = result.map { |n| n[:grade] }.uniq.sort
-      expect(grades).to include(0, 1)
+      # The default duration_factor is 1/4r, so this is the same expansion the
+      # full MIDI set produces.
+      expect(result.size).to eq(22)
+      expect(result.collect { |n| n[:grade] }).to eq([1, 0] * 11)
+      expect(result.sum { |n| n[:duration] }).to eq(1r)
     end
 
     it 'example from line 110 - Create MIDI transcription chain with default factor' do
@@ -244,13 +247,10 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       gdv = { grade: 0, duration: 1r, tr: true }
       result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
 
-      # Trill generates alternating upper/main notes filling duration
-      expect(result).to be_a(Array)
-      expect(result.size).to be > 2
-
-      # Check alternating pattern
-      grades = result.map { |n| n[:grade] }
-      expect(grades).to include(0, 1)
+      # duration_factor: 1/4r is also the default, so this is the same 22 notes.
+      expect(result.size).to eq(22)
+      expect(result.collect { |n| n[:grade] }).to eq([1, 0] * 11)
+      expect(result.collect { |n| n[:duration] }).to eq([1/16r] * 4 + [1/24r] * 18)
     end
 
     it 'example from line 458 - Trill starting low' do
@@ -268,9 +268,14 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       gdv = { grade: 0, duration: 1r, tr: 1/8r }
       result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
 
-      # Faster trill with shorter note durations
-      expect(result).to be_a(Array)
-      expect(result.size).to be > 2
+      # A numeric :tr is documented as a duration factor, but instead of setting
+      # the factor it multiplies the note duration by `base_duration * tr`, so
+      # the base duration is compounded twice: 1/512 where 1/32 was meant, and
+      # 766 notes where 32 were. Each is far below the 1/96 tick it was handed.
+      # Pinned so the day this is fixed the spec says so.
+      expect(result.size).to eq(766)
+      expect(result.collect { |n| n[:duration] }.uniq).to eq([1/512r, 1/768r])
+      expect(result.sum { |n| n[:duration] }).to eq(1r)
     end
 
     it 'example from line 596 - Basic staccato' do

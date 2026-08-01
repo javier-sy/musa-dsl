@@ -156,7 +156,9 @@ recurrence four times instead of extracting it.
 
 **Reflex** — `rand` with a ladder of `if p < 0.3`.
 
-**Idiom** — `RND(values, random: Random.new(seed))`, constrained with
+**Idiom** — `RND(values, random: Random.new(seed))` — a *shuffle*: each value is
+drawn once and the serie ends. `.repeat` reshuffles on every pass and is what
+gives a die. Constrained with
 `.remove { |value, history| ... }`; Markov when the tendency has memory. Note
 that `Markov` **is a serie** — it can feed `play` directly and be chained with
 `.map`.

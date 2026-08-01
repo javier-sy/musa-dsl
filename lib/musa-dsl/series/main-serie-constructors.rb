@@ -292,7 +292,10 @@ module Musa
     # - **Array mode**: Random values from provided array
     # - **Range mode**: Random numbers from range (from, to, step)
     #
-    # Infinite serie - never exhausts.
+    # A SHUFFLE, NOT A DIE. Each value is drawn once and removed, so the serie is
+    # a random permutation and then ends: six values from `RND(1..6)` and nil on
+    # the seventh. `.repeat` is what gives sampling with replacement, reshuffling
+    # on each pass, and that one is infinite.
     #
     # @param _values [Array] values to choose from (positional)
     # @param values [Array, nil] values to choose from (named)
@@ -306,16 +309,23 @@ module Musa
     # @raise [ArgumentError] if using both positional and named values
     # @raise [ArgumentError] if mixing array and range parameters
     #
-    # @example Random from array
-    #   dice = RND(1, 2, 3, 4, 5, 6)
-    #   dice.i.next_value  # => random 1-6
+    # @example Shuffling an array
+    #   shuffled = RND(1, 2, 3, 4, 5, 6, random: 42)
+    #   shuffled.i.to_a       # => [4, 6, 3, 5, 2, 1]
+    #   shuffled.infinite?    # => false
+    #
+    # @example Rolling a die -- with replacement, which needs repeat
+    #   die = RND(1, 2, 3, 4, 5, 6, random: 42).repeat
+    #   die.infinite?  # => true
     #
     # @example Random from range
-    #   rand = RND(from: 0, to: 100, step: 10)
-    #   rand.i.next_value  # => random 0, 10, 20, ..., 100
+    #   RND(from: 0, to: 10, step: 5, random: 7).i.to_a  # => [0, 10, 5]
     #
     # @example With seed
-    #   rnd = RND(1, 2, 3, random: 42)  # Reproducible
+    #   # The same seed is the same sequence, which is what makes a piece the
+    #   # same piece.
+    #   RND(1, 2, 3, random: 42).i.to_a  # => [3, 2, 1]
+    #   RND(1, 2, 3, random: 42).i.to_a  # => [3, 2, 1]
     #
     # @api public
     def RND(*_values, values: nil, from: nil, to: nil, step: nil, random: nil)

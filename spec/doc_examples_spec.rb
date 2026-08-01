@@ -45,7 +45,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   }.freeze
 
   # Claims verified today. May only grow.
-  VERIFIED_FLOOR = 435
+  VERIFIED_FLOOR = 441
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
