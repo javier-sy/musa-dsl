@@ -121,9 +121,14 @@ module Musa
   #   require 'musa-dsl'
   #   include Musa::All
   #
-  #   # Now you have access to all Musa DSL methods and classes
-  #   score = S.with(pitches: [60, 62, 64, 65])
-  #   sequencer = Sequencer.new
+  #   # Now you have access to all Musa DSL methods and classes. S() is a
+  #   # constructor method, not a class.
+  #   pitches = S(60, 62, 64, 65)
+  #   pitches.i.to_a  # => [60, 62, 64, 65]
+  #
+  #   sequencer = Sequencer.new(4, 24)  # 4 beats per bar, 24 ticks per beat
+  #   scale = Scales.et12[440.0].major[60]
+  #   scale.tonic.pitch  # => 60
   #
   # @example Selective inclusion (alternative)
   #   # Instead of Musa::All, you can include only what you need:

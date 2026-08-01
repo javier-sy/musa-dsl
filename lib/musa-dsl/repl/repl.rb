@@ -138,15 +138,17 @@ module Musa
     #       port: 1327
     #     )
     #
-    # @example With direct Binding (musalce-server pattern)
-    #   sequencer.with(keep_block_context: false) do
-    #     # Define DSL methods in this context
-    #     def play(note); end
-    #     def at(pos, &block); end
+    # With a direct Binding, as musalce-server does it (a reading: the last line
+    # starts a listening server):
     #
-    #     # Create REPL with this binding
-    #     @repl = Musa::REPL::REPL.new(binding, highlight_exception: false)
-    #   end
+    #     sequencer.with(keep_block_context: false) do
+    #       # Define DSL methods in this context
+    #       def play(note); end
+    #       def at(pos, &block); end
+    #
+    #       # Create REPL with this binding
+    #       @repl = Musa::REPL::REPL.new(binding, highlight_exception: false)
+    #     end
     #
     # With after_eval callback (a reading: this starts a listening server):
     #
@@ -212,11 +214,12 @@ module Musa
       #   # Inside a context setup block:
       #   @repl = REPL.new(binding, highlight_exception: false)
       #
-      # @example Deferred binding
-      #   repl = REPL.new  # Start server without binding
-      #   # ... later ...
-      #   context = MyDSL.new
-      #   repl.bind = Musa::Extension::DynamicProxy::DynamicProxy.new(context)
+      # Binding it later (a reading: `REPL.new` starts a listening server):
+      #
+      #     repl = REPL.new  # Start server without binding
+      #     # ... later ...
+      #     context = MyDSL.new
+      #     repl.bind = Musa::Extension::DynamicProxy::DynamicProxy.new(context)
       def initialize(bind = nil, port: nil, after_eval: nil, logger: nil, highlight_exception: true)
 
         self.bind = bind
@@ -341,14 +344,14 @@ module Musa
       # @note Can only be set once
       # @note Automatically hooks into `bind.receiver.sequencer.on_error` if available
       #
-      # @example With Ruby Binding
-      #   # binding.receiver returns the DSLContext instance
-      #   repl.bind = binding  # Inside DSL context
+      # The two ways to hand it a context (readings: they need a live REPL, and
+      # binding it is a once-only operation):
       #
-      # @example With DynamicProxy
-      #   # proxy.receiver returns the wrapped object
-      #   dsl_context = MyDSL.new
-      #   repl.bind = Musa::Extension::DynamicProxy::DynamicProxy.new(dsl_context)
+      #     # binding.receiver returns the DSLContext instance
+      #     repl.bind = binding  # Inside DSL context
+      #
+      #     # proxy.receiver returns the wrapped object
+      #     repl.bind = Musa::Extension::DynamicProxy::DynamicProxy.new(MyDSL.new)
       def bind=(bind)
         raise 'Already binded' if @bind
 
@@ -428,15 +431,15 @@ module Musa
       # @note Thread-safe for multi-threaded code execution
       # @note Messages sent via {#send} with proper escaping
       #
-      # @example From evaluated code
-      #   # In REPL-evaluated code:
-      #   puts "Starting sequence..."
-      #   sequencer.at(4) { puts "Bar 4!" }
-      #   # Output appears in editor
+      # What it looks like from evaluated code (readings: these reach a connected
+      # editor, so they need a live REPL):
       #
-      # @example Multiple messages
-      #   repl.puts("Line 1", "Line 2", "Line 3")
-      #   # Sends three separate lines to client
+      #     puts "Starting sequence..."
+      #     sequencer.at(4) { puts "Bar 4!" }
+      #     # Output appears in the editor
+      #
+      #     repl.puts("Line 1", "Line 2", "Line 3")
+      #     # Sends three separate lines to the client
       def puts(*messages)
         if @connection
           messages.each do |message|
@@ -606,9 +609,10 @@ module Musa
       # @param text [String] text to potentially escape
       # @return [String] escaped text (or original if no escaping needed)
       #
-      # @example
-      #   escape("//comment")  # => "///comment"
-      #   escape("Hello")      # => "Hello"
+      # What it does (a reading: a private helper):
+      #
+      #     escape("//comment")  # "///comment"
+      #     escape("Hello")      # "Hello"
       #
       # @api private
       def escape(text)
@@ -662,30 +666,31 @@ module Musa
     # - All DSL methods (public and private)
     # - Local variables captured in the binding
     #
-    # @example Basic implementation
-    #   class LiveCodingEnvironment
-    #     include Musa::REPL::CustomizableDSLContext
+    # A live coding environment built on it (a reading: it starts a listening
+    # server in its constructor):
     #
-    #     def initialize
-    #       @sequencer = Musa::Sequencer::Sequencer.new(4, 24)
-    #       @repl = REPL.new(Musa::Extension::DynamicProxy::DynamicProxy.new(self))
+    #     class LiveCodingEnvironment
+    #       include Musa::REPL::CustomizableDSLContext
+    #
+    #       def initialize
+    #         @sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+    #         @repl = REPL.new(Musa::Extension::DynamicProxy::DynamicProxy.new(self))
+    #       end
+    #
+    #       protected def binder
+    #         @__binder ||= binding
+    #       end
+    #
+    #       # DSL methods accessible from REPL:
+    #       def at(position, &block)
+    #         @sequencer.at(position, &block)
+    #       end
     #     end
     #
-    #     protected def binder
-    #       @__binder ||= binding
-    #     end
+    # And what the editor then sends, which executes in that instance's context:
     #
-    #     # DSL methods accessible from REPL:
-    #     def at(position, &block)
-    #       @sequencer.at(position, &block)
-    #     end
-    #   end
-    #
-    # @example From REPL client
-    #   # Code sent by editor:
-    #   at(1) { play C4 }
-    #   at(4) { play D4 }
-    #   # Executes in LiveCodingEnvironment instance context
+    #     at(1) { play C4 }
+    #     at(4) { play D4 }
     #
     # @see REPL The REPL server that uses this interface
     # @see Musa::Extension::DynamicProxy::DynamicProxy Wraps contexts for transparent method access
@@ -747,9 +752,9 @@ module Musa
       #
       # @raise [Exception] any exception raised by the executed code
       #
-      # @example Internal usage by REPL
-      #   # REPL calls this internally:
-      #   context.execute("sequencer.at(1) { puts 'tick' }", "(repl)", 1)
+      # How the REPL calls it (a reading: `context` is the bound DSL context):
+      #
+      #     context.execute("sequencer.at(1) { puts 'tick' }", "(repl)", 1)
       #
       # @see REPL#bind= Where this method is called during code execution
       def execute(source_block, file, line)

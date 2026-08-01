@@ -289,12 +289,15 @@ module Musa
       # @return [Array<Array<Array>>] array of directional segments, each segment
       #   being an array of points.
       #
-      # @example
-      #   # Points with time in dimension 0
-      #   points = [[0, 10], [1, 20], [0.5, 15], [2, 30]]
-      #   decompose(points, 0)
-      #   # => [[[1, 20], [0.5, 15], [0, 10]], [[0, 10], [0.5, 15], [1, 20], [2, 30]]]
-      #   # Two segments: one going backward in time, one forward
+      # How it splits a sequence that goes back in time (a reading: this is a
+      # private helper, reached through {#condensed_matrices}):
+      #
+      #     points = [[0, 10], [1, 20], [0.5, 15], [2, 30]]
+      #     decompose(points, 0)
+      #     # [[[0, 10], [1, 20]], [[0.5, 15], [1, 20]], [[0.5, 15], [2, 30]]]
+      #
+      # Three ascending runs rather than two, each holding the pair it spans;
+      # the prose above describes the intent, and the two do not agree.
       #
       # @todo POTENTIAL LOGIC INCONSISTENCY: Review the direction logic in backward and forward scans.
       #   - Line 300 comment: "Scan backward... while time is non-decreasing"

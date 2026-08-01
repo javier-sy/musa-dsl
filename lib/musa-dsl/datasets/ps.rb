@@ -85,10 +85,9 @@ module Musa::Datasets
   #   # ps1 stops just before 64, ps2 starts at 64 - no discontinuity
   #
   # @example Created from P point series
-  #   p = [60, 4, 64, 8, 67].extend(P)
-  #   serie = p.to_ps_serie
-  #   ps1 = serie.next_value
-  #   # => { from: 60, to: 64, duration: 1.0, right_open: true }
+  #   line = [60, 4, 64, 8, 67].extend(P)
+  #   serie = line.to_ps_serie.i  # a prototype cannot be consumed
+  #   serie.next_value  # => { from: 60, duration: 1r, to: 64, right_open: true }
   #
   # @see AbsD Parent absolute duration module
   # @see P Point series (source of PS)

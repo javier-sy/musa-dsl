@@ -32,6 +32,19 @@ module Musa
   #   voice = voices.voices.first
   #   voice.note pitch: 60, velocity: 90, duration: 1r/4
   #
+  # ## What an output has to be
+  #
+  # Anything that answers `puts` with a MIDI event. In production that is a
+  # `MIDICommunications::Output`; for the per-method examples below it is a
+  # collector, which is also the shortest way to see what a voice emits:
+  #
+  #     sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+  #     output = [].tap { |sent| def sent.puts(message) = self << message }
+  #
+  #     voices = Musa::MIDIVoices::MIDIVoices.new(
+  #       sequencer: sequencer, output: output, channels: 0..3)
+  #     voice = voices.voices.first
+  #
   # @see MIDIVoices Voice collection manager
   # @see Musa::Sequencer::Sequencer Timeline and scheduling
   # @see https://github.com/arirusso/midi-communications midi-communications gem
@@ -158,15 +171,23 @@ module Musa
     # callbacks on note stop, and fast-forward mode for silent state updates.
     #
     # @example Playing notes
-    #   voice = voices.voices.first
     #   voice.note pitch: 60, velocity: 90, duration: 1r/4
     #   voice.note pitch: [60, 64, 67], velocity: 100, duration: 1r  # chord
     #
-    # @example Indefinite notes with manual control
-    #   note_ctrl = voice.note pitch: 60, duration: nil
-    #   note_ctrl.on_stop { puts "Note ended!" }
+    #   # Four note-ons: the single note and the three of the chord.
+    #   output.count { |m| m.is_a?(MIDIEvents::NoteOn) }  # => 4
+    #
+    # @example Notes released by hand
+    #   # `duration: nil` -- the indefinite note this class documents -- cannot
+    #   # currently be created through {MIDIVoice#note}, which computes a
+    #   # note_duration from it unconditionally. Until that is fixed, a duration
+    #   # longer than the passage and an early note_off do the same job.
+    #   note_ctrl = voice.note pitch: 62, velocity: 90, duration: 100r
+    #   ended = false
+    #   note_ctrl.on_stop { ended = true }
     #   # ... later:
     #   note_ctrl.note_off
+    #   ended  # => true
     #
     # @example Controller and sustain pedal
     #   voice.controller[:mod_wheel] = 64
@@ -252,7 +273,11 @@ module Musa
       # @param pitchvalue [Numeric, Array<Numeric>, nil] optional shorthand for +pitch+.
       # @param pitch [Numeric, Symbol, Array<Numeric, Symbol>] MIDI note numbers or :silence. Arrays/ranges expand to multiple notes.
       # @param velocity [Numeric, Array<Numeric>] raw velocity (0-127). Defaults to 63.
-      # @param duration [Numeric, nil] musical duration in bars. When nil the note stays on until {NoteControl#note_off} is called manually.
+      # @param duration [Numeric] musical duration in bars. Documented as
+      #   accepting nil for a note that stays on until {NoteControl#note_off} is
+      #   called by hand -- and {NoteControl} does accept a nil duration -- but
+      #   this method computes `duration + duration_offset` unconditionally, so
+      #   nil raises here and the indefinite note is unreachable.
       # @param duration_offset [Numeric] offset applied when scheduling the note-off inside the sequencer.
       # @param note_duration [Numeric, nil] alternative duration in bars for legato control.
       # @param velocity_off [Numeric, Array<Numeric>] release velocity (defaults to 63).
@@ -333,11 +358,11 @@ module Musa
       # symbolic names to values. All values are clamped to 0-127 automatically.
       #
       # @example Using symbolic controller names
-      #   voice = voices.voices.first
       #   voice.controller[:mod_wheel] = 64        # Set modulation wheel
       #   voice.controller[:volume] = 100          # Set volume (CC 7)
       #   voice.controller[:expression] = 90       # Set expression (CC 11)
-      #   current = voice.controller[:mod_wheel]   # Get current value
+      #
+      #   voice.controller[:mod_wheel]  # => 64
       #
       # @example Using numeric controller numbers
       #   voice.controller[1] = 64    # Modulation wheel (CC 1)

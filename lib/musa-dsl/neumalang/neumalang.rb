@@ -954,8 +954,12 @@ module Musa
       #   # => Serie of GDV events ready for playback
       #
       # @example Parse file
-      #   file = File.open("melody.neuma")
-      #   neumas = Musa::Neumalang::Neumalang.parse(file)
+      #   File.write("melody.neuma", "(0) (+2) (+2)")
+      #
+      #   File.open("melody.neuma") do |file|
+      #     Musa::Neumalang::Neumalang.parse(file).to_a(recursive: true).size
+      #   end
+      #   # => 3
       #
       # @example Debug parsing
       #   neumas = Musa::Neumalang::Neumalang.parse(
@@ -1014,15 +1018,19 @@ module Musa
       # @raise [Citrus::ParseError] if notation has syntax errors
       #
       # @example Parse neuma file
-      #   neumas = Musa::Neumalang::Neumalang.parse_file("melodies/theme.neuma")
+      #   File.write("theme.neuma", "(0) (+2) (+2) (-1) (0)")
+      #
+      #   neumas = Musa::Neumalang::Neumalang.parse_file("theme.neuma")
+      #   neumas.to_a(recursive: true).collect { |n| n[:gdvd] }
+      #   # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 }, { delta_grade: -1 }, { abs_grade: 0 }]
       #
       # @example Parse with decoder
       #   scale = Musa::Scales::Scales.et12[440.0].major[60]
       #   decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale)
-      #   gdvs = Musa::Neumalang::Neumalang.parse_file(
-      #     "melodies/theme.neuma",
-      #     decode_with: decoder
-      #   )
+      #
+      #   gdvs = Musa::Neumalang::Neumalang.parse_file("theme.neuma", decode_with: decoder)
+      #   gdvs.to_a(recursive: true).collect { |gdv| gdv[:grade] }
+      #   # => [0, 2, 4, 3, 0]
       #
       # @api public
       def parse_file(filename, decode_with: nil, debug: nil)

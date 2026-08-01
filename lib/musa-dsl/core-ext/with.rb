@@ -82,11 +82,12 @@ module Musa
     #     puts name   # Also works
     #   end
     #
-    # @example Explicit keep_block_context
-    #   Builder.new do |obj|
-    #     obj.add :item
-    #     # Block explicitly keeps caller's context
-    #   end
+    # @example The object arrives only through a parameter named `_`
+    #   # The NAME is the switch, not the presence of a parameter: `_` means
+    #   # "keep my context and hand me the object". Any other name declares a
+    #   # parameter that `with` is expected to supply, so it arrives nil.
+    #   named = Builder.new { |obj| obj.nil? }
+    #   underscored = Builder.new { |_| _.add :item }
     #
     # @see SmartProcBinder Used internally for parameter management
     # @see Musa::Datasets DSL builder methods use this extensively

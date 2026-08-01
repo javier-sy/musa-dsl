@@ -122,8 +122,9 @@ module Musa
   #   # 3. Transcribe to MIDI events
   #   midi_events = gdv_events.collect { |gdv| transcriptor.transcript(gdv) }.flatten
   #
-  #   # 4. Send to MIDI output
-  #   midi_events.each { |event| midi_output.send_event(event) }
+  #   midi_events.size  # => 26
+  #
+  #   # 4. Send them wherever they play: a MIDIVoice, a synthesis server, a file
   #
   # @see Musa::Transcriptors::FromGDV::ToMIDI
   # @see Musa::Transcriptors::FromGDV::ToMusicXML
@@ -151,11 +152,16 @@ module Musa
     # subsequent transcriptors process each element and results are flattened.
     #
     # @example Create transcriptor chain
+    #   # The feature transcriptors live in the set for the target notation.
+    #   set = Musa::Transcriptors::FromGDV::ToMIDI
+    #
     #   transcriptor = Musa::Transcription::Transcriptor.new(
-    #     [Appogiatura.new, Trill.new, Staccato.new],
+    #     [set::Appogiatura.new, set::Trill.new, set::Staccato.new],
     #     base_duration: 1/4r,
     #     tick_duration: 1/96r
     #   )
+    #
+    #   transcriptor.transcriptors.size  # => 3
     #
     # @api public
     class Transcriptor
@@ -286,13 +292,15 @@ module Musa
       # @param value_or_array [Object, Array] value to check
       # @yield [value] block to call for each value
       #
-      # @example Check ornament options
-      #   check(ornament_value) do |option|
-      #     case option
-      #     when :up then direction = :up
-      #     when :down then direction = :down
+      # How a feature transcriptor reads an option that may come alone or in a
+      # list (a reading: `check` is called on the transcriptor, from inside it):
+      #
+      #     check(ornament_value) do |option|
+      #       case option
+      #       when :up then direction = :up
+      #       when :down then direction = :down
+      #       end
       #     end
-      #   end
       #
       # @api public
       def check(value_or_array, &block)
