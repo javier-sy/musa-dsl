@@ -29,8 +29,11 @@ RSpec.describe Musa::Datasets do
     end
 
     it 'GDV neumas to PDV and back to neumas via GDV::NeumaDecoder' do
+      # Only the enharmonics move: 2_ comes back as 1#. The dynamics survive --
+      # p used to come back as mp here, which is the drift this expectation
+      # recorded until issue #86 was fixed.
       gdv_abs_neumas_1 = '(0 o0 1 p) (0 o1 2 p) (3# o1 2 p) (0 o-1 3 p) (2_ o0 3 fff) (1 o0 2 fff) (5 o1 1/2 ppp) (silence 1/2 ppp)'
-      gdv_abs_neumas_2 = '(0 o0 1 mp) (0 o1 2 mp) (3# o1 2 mp) (0 o-1 3 mp) (1# o0 3 fff) (1 o0 2 fff) (5 o1 1/2 ppp) (silence 1/2 ppp)'
+      gdv_abs_neumas_2 = '(0 o0 1 p) (0 o1 2 p) (3# o1 2 p) (0 o-1 3 p) (1# o0 3 fff) (1 o0 2 fff) (5 o1 1/2 ppp) (silence 1/2 ppp)'
 
       scale = Musa::Scales::Scales.default_system.default_tuning.major[60]
 
@@ -176,15 +179,28 @@ RSpec.describe Musa::Datasets do
         gdv.base_duration = 1/4r
         expect(gdv.to_pdv(scale)[:velocity]).to eq(midi)
 
-        # p (-1) does not come back: VELOCITY_MAP puts it at MIDI 49, and
-        # PDV#to_gdv's range list closes the previous band at 48 and opens the
-        # next at 49, so 49 reads as mp. One entry of ten, and the only one --
-        # this is not about the naming, it is the two tables disagreeing.
-        next if velocity == -1
-
         pdv = { pitch: 60, duration: 1/4r, velocity: midi }.extend(Musa::Datasets::PDV)
         expect(pdv.to_gdv(scale)[:velocity]).to eq(velocity)
       end
+    end
+
+    # p used to be the one dynamic that did not come back: VELOCITY_MAP put it
+    # at MIDI 49 while to_gdv's own copy of the bands closed the previous one at
+    # 48, so 49 read back as mp and a note recorded at 49 came out at 64 (issue
+    # #86). The bands are derived from the map now, so they cannot drift apart.
+    it 'derives the MIDI bands from the map, so every dynamic contains its own velocity' do
+      bands = Musa::Datasets::GDV::VELOCITY_BANDS
+
+      expect(bands.size).to eq(Musa::Datasets::GDV::VELOCITY_MAP.size)
+
+      Musa::Datasets::GDV::VELOCITY_MAP.each_with_index do |midi, index|
+        expect(bands[index]).to cover(midi)
+      end
+
+      # And they tile 1..127 with no gap and no overlap.
+      expect(bands.first.first).to eq(1)
+      expect(bands.last.last).to eq(127)
+      expect(bands.each_cons(2).all? { |a, b| b.first == a.last + 1 }).to be true
     end
 
     it 'floors a fractional velocity, as GDV interpolates them' do

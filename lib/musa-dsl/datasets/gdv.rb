@@ -163,6 +163,22 @@ module Musa::Datasets
     # ppp = 16 ... fff = 127 (-5 ... 4) the standard used by Musescore 3 and others starts at ppp = 16
     VELOCITY_MAP = [1, 8, 16, 33, 49, 64, 80, 96, 112, 127].freeze
 
+    # The same mapping read the other way: which dynamic a MIDI velocity belongs
+    # to. Each band runs from just above the previous dynamic's velocity up to
+    # its own, so every value in VELOCITY_MAP falls in its own band.
+    #
+    # DERIVED, NOT WRITTEN AGAIN. {PDV#to_gdv} used to carry its own copy of
+    # these ten ranges, and the copy disagreed with VELOCITY_MAP at exactly one
+    # edge: it closed p's band at 48 and started mp's at 49, so p's own velocity
+    # read back as mp and the dynamic did not survive a round trip (issue #86).
+    # One rule written twice is one rule that will be corrected once.
+    #
+    # @return [Array<Range>] MIDI velocity bands, from -5 to +4
+    # @api private
+    VELOCITY_BANDS = VELOCITY_MAP.each_with_index.collect do |top, i|
+      (i.zero? ? top : VELOCITY_MAP[i - 1] + 1)..top
+    end.freeze
+
     # Converts to PDV (MIDI representation).
     #
     # Translates score notation to MIDI using a scale:

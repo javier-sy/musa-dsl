@@ -50,8 +50,8 @@ module Musa::Datasets
   #     MIDI 2-8     → velocity -4 (pppp)
   #     MIDI 9-16    → velocity -3 (ppp)
   #     MIDI 17-33   → velocity -2 (pp)
-  #     MIDI 34-48   → velocity -1 (p)
-  #     MIDI 49-64   → velocity  0 (mp)
+  #     MIDI 34-49   → velocity -1 (p)
+  #     MIDI 50-64   → velocity  0 (mp)
   #     MIDI 65-80   → velocity +1 (mf)
   #     MIDI 81-96   → velocity +2 (f)
   #     MIDI 97-112  → velocity +3 (ff)
@@ -60,6 +60,11 @@ module Musa::Datasets
   # The names come from {Helper#velocity_of}, and zero is mp, not mf. The table
   # used to name them two steps towards the soft end, which is where the
   # `velocity 0 == mf` misreading kept coming back from (issue #74).
+  #
+  # The bands themselves are {GDV::VELOCITY_BANDS}, derived from
+  # {GDV::VELOCITY_MAP} so that each dynamic's own MIDI velocity falls inside
+  # its own band. They used to be written out here a second time, and disagreed
+  # with the map at MIDI 49 (issue #86).
   #
   # ## Base Duration
   #
@@ -176,9 +181,8 @@ module Musa::Datasets
       gdv[:duration] = self[:duration] if self[:duration]
 
       if self[:velocity]
-        # ppp = 16 ... fff = 127
         # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
-        gdv[:velocity] = [1..1, 2..8, 9..16, 17..33, 34..48, 49..64, 65..80, 81..96, 97..112, 113..127].index { |r| r.cover? self[:velocity] } - 5
+        gdv[:velocity] = GDV::VELOCITY_BANDS.index { |band| band.cover?(self[:velocity]) } - 5
       end
 
       (keys - NaturalKeys).each { |k| gdv[k] = self[k] }
