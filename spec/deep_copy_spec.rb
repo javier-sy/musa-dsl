@@ -381,4 +381,103 @@ describe Musa::Extension::DeepCopy::DeepCopy do
       end
     end
   end
+
+  # Freezing had never been tested, and of the six combinations Object#clone
+  # offers, two of them diverged: freeze: true raised FrozenError on any
+  # unfrozen container (the copy was frozen before the code that fills it ran),
+  # and a deep clone of a frozen object came back unfrozen (issue #75).
+  describe 'freezing' do
+    let(:unfrozen) { { nested: { value: 1 } } }
+    let(:frozen) { { nested: { value: 1 }.freeze }.freeze }
+
+    it 'answers each of Object#clone rules as Object#clone does' do
+      expect(unfrozen.clone(deep: true).frozen?).to be false
+      expect(unfrozen.clone(deep: true, freeze: true).frozen?).to be true
+      expect(unfrozen.clone(deep: true, freeze: false).frozen?).to be false
+
+      expect(frozen.clone(deep: true).frozen?).to be true
+      expect(frozen.clone(deep: true, freeze: true).frozen?).to be true
+      expect(frozen.clone(deep: true, freeze: false).frozen?).to be false
+    end
+
+    it 'decides every node by the rule, not only the outermost one' do
+      original = { constant: { name: 'white' }.freeze, mutable: [1] }
+
+      preserved = original.clone(deep: true)
+      expect(preserved.frozen?).to be false
+      expect(preserved[:constant].frozen?).to be true
+      expect(preserved[:mutable].frozen?).to be false
+
+      all = original.clone(deep: true, freeze: true)
+      expect([all, all[:constant], all[:mutable]].collect(&:frozen?)).to eq([true, true, true])
+
+      none = original.clone(deep: true, freeze: false)
+      expect([none, none[:constant], none[:mutable]].collect(&:frozen?)).to eq([false, false, false])
+    end
+
+    it 'still copies deeply while doing it' do
+      copy = frozen.clone(deep: true)
+
+      expect(copy[:nested]).not_to be_equal(frozen[:nested])
+      expect(copy[:nested]).to eq(frozen[:nested])
+    end
+
+    it 'hands everything back unfrozen through dup, whatever the original was' do
+      copy = frozen.dup(deep: true)
+
+      expect(copy.frozen?).to be false
+      expect(copy[:nested].frozen?).to be false
+    end
+
+    it 'applies the same rule to a Struct, which is filled through its setters' do
+      klass = Struct.new(:a, :b)
+      unfrozen_struct = klass.new(1, [2])
+      frozen_struct = klass.new(1, [2]).freeze
+
+      expect(unfrozen_struct.clone(deep: true).frozen?).to be false
+      expect(unfrozen_struct.clone(deep: true, freeze: true).frozen?).to be true
+      expect(frozen_struct.clone(deep: true).frozen?).to be true
+      expect(frozen_struct.clone(deep: true, freeze: false).frozen?).to be false
+
+      # And it is a deep copy, which is the point of filling it at all.
+      copy = frozen_struct.clone(deep: true)
+      expect(copy.b).not_to be_equal(frozen_struct.b)
+      expect(copy.b).to eq([2])
+    end
+
+    it 'applies it to a Range subclass, the only Range Ruby does not freeze itself' do
+      subclass = Class.new(Range)
+      range = subclass.new(1, 5)
+
+      expect(range.frozen?).to be false
+      expect(range.clone(deep: true).frozen?).to be false
+      expect(range.clone(deep: true, freeze: true).frozen?).to be true
+
+      # A plain Range is born frozen, so there is nothing for the rule to decide.
+      expect((1..5).clone(deep: true).frozen?).to be true
+    end
+  end
+
+  describe 'Range' do
+    # Rebuilding a Range from its ends alone dropped the third thing it is made
+    # of, so every deep copy of an exclusive range came back inclusive.
+    it 'keeps exclude_end?' do
+      expect((1...5).clone(deep: true)).to eq(1...5)
+      expect((1...5).clone(deep: true).exclude_end?).to be true
+      expect((1..5).clone(deep: true).exclude_end?).to be false
+    end
+
+    it 'copies its ends deeply' do
+      ends = ['a', 'z']
+      copy = (ends.first..ends.last).clone(deep: true)
+
+      expect(copy.first).to eq('a')
+      expect(copy.first).not_to be_equal(ends.first)
+    end
+
+    it 'survives a beginless or endless range' do
+      expect((1..).clone(deep: true)).to eq(1..)
+      expect((..5).clone(deep: true)).to eq(..5)
+    end
+  end
 end

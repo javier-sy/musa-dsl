@@ -15,7 +15,8 @@ module Musa
     # - Supports both :dup and :clone methods
     # - Special handling for Arrays, Hashes, Ranges, Structs, Procs
     # - Recursively copies instance variables
-    # - Optional freeze control for :clone method
+    # - Freeze control for :clone, following Object#clone's own three rules
+    #   (`true` freezes, `false` does not, `nil` preserves) at every node
     #
     # ## Use Cases
     #
@@ -155,40 +156,66 @@ module Musa
           end
         end
 
-        def deep_copy_range(register, range, method, freeze)
-          copy = range.class.new(_deep_copy(register, range.first, method, freeze), _deep_copy(register, range.last, method, freeze))
-          copy.freeze if range.frozen?
+        # Ruby's three rules for `clone`, in one place: `true` freezes, `false`
+        # does not, and `nil` -- the default -- preserves what the original was.
+        # `freeze` travels down the recursion, so each node of the graph is
+        # decided by its own original.
+        #
+        # It is applied at the END of every copier, never at creation. Every
+        # copier below fills its copy after it exists -- `merge!` for a Hash,
+        # `map!` for an Array, the setters for a Struct -- and a copy frozen at
+        # creation cannot be filled at all. Freezing at creation is what made
+        # `clone(deep: true, freeze: true)` raise FrozenError for every
+        # unfrozen container, which was the whole of issue #75.
+        def freeze_as_asked(copy, object, method, freeze)
+          copy.freeze if method == :clone && (freeze || (freeze.nil? && object.frozen?))
 
-          register(register, range, copy)
+          copy
+        end
+
+        # A copy that can still be written to, whatever the caller asked for.
+        # The freezing comes later, through {#freeze_as_asked}.
+        def unfrozen_copy(object, method, freeze)
+          try_deep_copy(object, method, method == :clone ? false : freeze)
+        end
+
+        def deep_copy_range(register, range, method, freeze)
+          # exclude_end? is the third thing a Range is made of, and rebuilding
+          # without it turned (1...5) into (1..5) on every deep copy.
+          copy = range.class.new(_deep_copy(register, range.first, method, freeze),
+                                 _deep_copy(register, range.last, method, freeze),
+                                 range.exclude_end?)
+
+          # A plain Range is frozen by Ruby the moment it is built, so `false`
+          # cannot be honoured for one -- there is nothing to unfreeze it with,
+          # and nothing to be gained either, a Range being immutable. Subclasses
+          # of Range are NOT born frozen, and for those the rule decides.
+          register(register, range, freeze_as_asked(copy, range, method, freeze))
         rescue StandardError
-          register(register, range, range.send(method))
+          # Beginless ranges (whose #first raises) and subclasses with a
+          # constructor of their own end up here.
+          register(register, range, freeze_as_asked(unfrozen_copy(range, method, freeze), range, method, freeze))
         end
 
         def deep_copy_struct(register, struct, method, freeze)
-          duplication = register(register, struct, struct.send(method))
+          duplication = register(register, struct, unfrozen_copy(struct, method, freeze))
 
           struct.each_pair do |attr, value|
             duplication.__send__("#{attr}=", _deep_copy(register, value, method, freeze))
           end
 
-          duplication
+          freeze_as_asked(duplication, struct, method, freeze)
         end
 
         def deep_copy_object(register, object, method, freeze)
-          if method == :clone && object.frozen?
-            copy = try_deep_copy(object, :clone, false)
-          else
-            copy = try_deep_copy(object, method, freeze)
-          end
+          copy = unfrozen_copy(object, method, freeze)
 
           register(register, object, copy)
           deep_copy_instance_variables(register, object, register(register, object, copy), method, freeze)
 
           yield object, copy if block_given?
 
-          copy.freeze if method == :clone && object.frozen? && freeze
-
-          copy
+          freeze_as_asked(copy, object, method, freeze)
         end
 
         def deep_copy_proc(register, object, method, freeze)
@@ -295,11 +322,10 @@ module Musa
       #   Unlike `:dup`, a deep `:clone` preserves the modules an object has been
       #   extended with, which is why datasets are copied with it.
       #
-      #   @note Freezing does not currently behave as `Object#clone` does. On an
-      #     unfrozen Array or Hash, `deep: true` with `freeze: true` raises
-      #     FrozenError (the copy is frozen before it is filled); and a deep clone
-      #     of a frozen object comes back unfrozen unless `freeze: true` is asked
-      #     for explicitly.
+      #   Freezing follows `Object#clone`'s three rules, applied to every node of
+      #   the graph rather than just the top one: `true` freezes, `false` does
+      #   not, and the default `nil` gives each copy the frozen state its own
+      #   original had.
       #
       #   @example Deep clone
       #     using Musa::Extension::DeepCopy
@@ -308,6 +334,23 @@ module Musa
       #     copy[:nested].equal?(hash[:nested])  # => false
       #     copy[:nested][:value] = 2
       #     hash[:nested][:value]  # => 1
+      #
+      #   @example freeze: true freezes the whole copy, all the way down
+      #     using Musa::Extension::DeepCopy
+      #     copy = { nested: { value: 1 } }.clone(deep: true, freeze: true)
+      #     copy.frozen?           # => true
+      #     copy[:nested].frozen?  # => true
+      #
+      #   @example By default each node keeps the state its own original had
+      #     using Musa::Extension::DeepCopy
+      #     original = { constant: { name: 'white' }.freeze, mutable: [1] }
+      #     copy = original.clone(deep: true)
+      #     copy.frozen?             # => false
+      #     copy[:constant].frozen?  # => true
+      #     copy[:mutable].frozen?   # => false
+      #
+      #     # Which is what `clone` means in Ruby. `dup` is the one that hands
+      #     # back everything unfrozen.
       class ::Object; end
 
       refine Object do

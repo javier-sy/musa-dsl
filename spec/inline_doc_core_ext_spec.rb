@@ -217,11 +217,28 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
 
     it '@example Deep clone' do
       hash = { nested: { value: 1 } }
-      copy = hash.clone(deep: true, freeze: false)
-      expect(copy.frozen?).to be false
-      # Deep copy creates independent nested structure
+      copy = hash.clone(deep: true)
+
+      expect(copy[:nested].equal?(hash[:nested])).to be false
+
       copy[:nested][:value] = 2
       expect(hash[:nested][:value]).to eq(1)
+    end
+
+    it '@example freeze: true freezes the whole copy, all the way down' do
+      copy = { nested: { value: 1 } }.clone(deep: true, freeze: true)
+
+      expect(copy.frozen?).to be true
+      expect(copy[:nested].frozen?).to be true
+    end
+
+    it '@example By default each node keeps the state its own original had' do
+      original = { constant: { name: 'white' }.freeze, mutable: [1] }
+      copy = original.clone(deep: true)
+
+      expect(copy.frozen?).to be false
+      expect(copy[:constant].frozen?).to be true
+      expect(copy[:mutable].frozen?).to be false
     end
   end
 
