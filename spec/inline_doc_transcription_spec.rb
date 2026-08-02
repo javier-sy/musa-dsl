@@ -263,19 +263,59 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[1][:grade]).to eq(0)
     end
 
-    it '@example Custom duration factor' do
+    it '@example A numeric :tr, which scales this performer\'s trill' do
       trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
-      gdv = { grade: 0, duration: 1r, tr: 1/8r }
-      result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
 
-      # A numeric :tr is documented as a duration factor, but instead of setting
-      # the factor it multiplies the note duration by `base_duration * tr`, so
-      # the base duration is compounded twice: 1/512 where 1/32 was meant, and
-      # 766 notes where 32 were. Each is far below the 1/96 tick it was handed.
-      # Pinned so the day this is fixed the spec says so.
-      expect(result.size).to eq(766)
-      expect(result.collect { |n| n[:duration] }.uniq).to eq([1/512r, 1/768r])
+      normal = trill.transcript({ grade: 0, duration: 1r, tr: true },
+                                base_duration: 1/4r, tick_duration: 1/96r)
+      faster = trill.transcript({ grade: 0, duration: 1r, tr: 1/2r },
+                                base_duration: 1/4r, tick_duration: 1/96r)
+
+      expect(normal.size).to eq(22)
+      expect(faster.size).to eq(46)
+
+      # tr: 1 is the neutral element -- this performer's own trill.
+      expect(trill.transcript({ grade: 0, duration: 1r, tr: 1r },
+                              base_duration: 1/4r, tick_duration: 1/96r).size).to eq(22)
+    end
+
+    it '@example The same number over a faster performer gives a faster trill' do
+      quick = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/8r)
+
+      expect(quick.transcript({ grade: 0, duration: 1r, tr: 1/2r },
+                              base_duration: 1/4r, tick_duration: 1/96r).size).to eq(94)
+    end
+
+    it 'a numeric :tr used to compound the base duration twice (issue #83)' do
+      trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
+
+      result = trill.transcript({ grade: 0, duration: 1r, tr: 1/8r },
+                                base_duration: 1/4r, tick_duration: 1/96r)
+
+      # It gave 766 notes of 1/512 and 1/768 in the space of a quarter, each a
+      # fraction of the 1/96 tick it was handed: `note_duration *= base_duration
+      # * tr` applied the base a second time and kept the default factor the
+      # caller was replacing.
+      expect(result.size).to eq(94)
+      expect(result.collect { |n| n[:duration] }.uniq).to eq([1/64r, 1/96r])
       expect(result.sum { |n| n[:duration] }).to eq(1r)
+    end
+
+    it 'never trills finer than the grid it is given' do
+      trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/8r)
+      logged = []
+      trill.instance_variable_set(:@logger, Class.new do
+        define_method(:warn) { |_progname = nil, &block| logged << block.call }
+      end.new)
+
+      result = trill.transcript({ grade: 0, duration: 1r, tr: 1/8r },
+                                base_duration: 1/4r, tick_duration: 1/96r)
+
+      # The middle of a trill accelerates to 2/3 of its note duration, so the
+      # floor is a tick and a half if nothing is to fall below the tick.
+      expect(result.collect { |n| n[:duration] }.min).to eq(1/96r)
+      expect(logged.size).to eq(1)
+      expect(logged.first).to include('below the tick')
     end
 
     it '@example Basic staccato' do

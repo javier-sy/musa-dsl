@@ -431,21 +431,46 @@ module Musa::Transcriptors
       #   gdv = { grade: 0, duration: 1r, tr: :low }
       #   # Starts with lower neighbor, then alternates upper/main
       #
-      # @example Custom duration factor
-      #   gdv = { grade: 0, duration: 1r, tr: 1/8r }
-      #   # Faster trill with shorter note durations
+      # @example A numeric :tr, which scales this performer's trill
+      #   trill = Trill.new(duration_factor: 1/4r)
+      #
+      #   normal = trill.transcript({ grade: 0, duration: 1r, tr: true },
+      #                             base_duration: 1/4r, tick_duration: 1/96r)
+      #   faster = trill.transcript({ grade: 0, duration: 1r, tr: 1/2r },
+      #                             base_duration: 1/4r, tick_duration: 1/96r)
+      #
+      #   normal.size  # => 22
+      #   faster.size  # => 46
+      #
+      #   # And `tr: 1` is the neutral element: this performer's own trill.
+      #   trill.transcript({ grade: 0, duration: 1r, tr: 1r },
+      #                    base_duration: 1/4r, tick_duration: 1/96r).size  # => 22
+      #
+      # @example The same number over a faster performer gives a faster trill
+      #   quick = Trill.new(duration_factor: 1/8r)
+      #
+      #   quick.transcript({ grade: 0, duration: 1r, tr: 1/2r },
+      #                    base_duration: 1/4r, tick_duration: 1/96r).size  # => 94
+      #
+      #   # 46 against 94 for the same `tr(1/2)`: the score says "twice as fast
+      #   # as usual" and main.rb says what usual is.
       #
       # @api public
       # Process: .tr
       class Trill < Musa::Transcription::FeatureTranscriptor
         # Creates trill transcriptor.
         #
-        # @param duration_factor [Rational] factor for trill note duration
-        #   relative to base_duration (default: 1/4)
+        # @param duration_factor [Rational] how fast this performer trills: the
+        #   trill note duration as a factor of base_duration (default: 1/4). A
+        #   numeric `:tr` in the score is a factor over THIS, so one knob here
+        #   moves every trill of the piece together.
+        # @param logger [Musa::Logger::Logger, nil] where to say that a trill
+        #   was asked to go finer than the tick.
         #
         # @api public
-        def initialize(duration_factor: nil)
+        def initialize(duration_factor: nil, logger: nil)
           @duration_factor = duration_factor || 1/4r
+          @logger = logger || Musa::Logger::Logger.new
         end
 
         # Transcribes trill to alternating note sequence.
@@ -465,9 +490,53 @@ module Musa::Transcriptors
 
             check(tr) do |tr|
               case tr
-              when Numeric # duration factor
-                note_duration *= base_duration * tr.to_r
+              when Numeric
+                # A factor over this transcriptor's own trill speed, not an
+                # absolute duration: `tr(1/2)` is twice as fast as this
+                # performer usually trills, whatever that is. So one knob in
+                # main.rb governs every ornament of the piece and they all move
+                # together when it changes.
+                #
+                # Speed is a realisation matter and not a notation one, which is
+                # what the MusicXML side shows: it has no trill transcriptor at
+                # all, reads :tr as "is there a trill" and writes <trill-mark/>,
+                # discarding the value. A number meaning an absolute duration
+                # would be an assertion the engraved score silently loses.
+                #
+                # It used to be `*= base_duration * tr`, applying the base
+                # duration a second time and keeping the default factor the
+                # caller was replacing: `tr(1/8)` gave 766 notes of 1/512 in the
+                # space of a quarter (issue #83).
+                note_duration *= tr.to_r
               end
+            end
+
+            # As Mordent already does with the same parameter, three hundred
+            # lines up: a trill finer than the grid is not a fast trill, it is
+            # an unplayable one, and several of its notes would land on the same
+            # tick. Asking for one is a legitimate way to say "as fast as you
+            # can"; it just should not pass unnoticed.
+            #
+            # The floor is a tick and a HALF, not a tick, because the middle of
+            # a trill accelerates to 2/3 of its note duration -- measured, that
+            # is the smallest thing it ever emits. Clamping to one tick would
+            # have made the promise nominal and let the fast section through
+            # below the grid anyway.
+            minimum_duration = tick_duration * 3/2r
+
+            if note_duration < minimum_duration
+              # Once per transcriptor: a piece full of trills should say this
+              # once, not once per note.
+              unless @warned_about_tick
+                @warned_about_tick = true
+
+                @logger.warn('Trill') do
+                  "a trill note of #{note_duration} would go below the tick #{tick_duration} " \
+                    "when it accelerates; trilling at #{minimum_duration} instead"
+                end
+              end
+
+              note_duration = minimum_duration
             end
 
             used_duration = 0r
