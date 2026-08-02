@@ -153,5 +153,53 @@ RSpec.describe Musa::MIDIRecorder do
       expect(recorder.raw.size).to eq(0)
       expect(recorder.transcription.size).to eq(0)
     end
+
+    # A NoteOn of velocity 0 is a NoteOff -- the running-status form, and what
+    # most keyboards and sequencers actually emit. It used to be recorded as a
+    # note of velocity 0 that nobody played, and the note it was releasing never
+    # got its duration, because only a NoteOff closed one (issue #89).
+    it 'takes a note on of velocity 0 as the note off it is' do
+      sequencer = Musa::Sequencer::BaseSequencer.new 4, 4
+      recorder = Musa::MIDIRecorder::MIDIRecorder.new sequencer
+
+      sequencer.at(1) { recorder.record [0x90, 60, 100] }   # note on
+      sequencer.at(2) { recorder.record [0x90, 60, 0] }     # release, running status
+      sequencer.at(3) { recorder.record [0x90, 64, 90] }    # note on
+      sequencer.at(4) { recorder.record [0x80, 64, 64] }    # release, explicit
+
+      400.times { sequencer.tick }
+
+      result = recorder.transcription
+
+      expect(result.size).to eq(3)
+
+      expect(result[0]).to eq(position: 1r, channel: 0, pitch: 60, velocity: 100,
+                              duration: 1r, velocity_off: 0)
+
+      # And the gap between the release and the next note is seen as a silence,
+      # which it was not either: `last_note` is what marks "a note ended here",
+      # and the phantom never set it.
+      expect(result[1]).to eq(position: 2r, channel: 0, pitch: :silence, duration: 1r)
+
+      expect(result[2]).to eq(position: 3r, channel: 0, pitch: 64, velocity: 90,
+                              duration: 1r, velocity_off: 64)
+    end
+
+    it 'gives the same note whichever way it was released' do
+      sequencer = Musa::Sequencer::BaseSequencer.new 4, 4
+      recorder = Musa::MIDIRecorder::MIDIRecorder.new sequencer
+
+      sequencer.at(1) { recorder.record [0x90, 60, 100] }
+      sequencer.at(2) { recorder.record [0x90, 60, 0] }
+      sequencer.at(3) { recorder.record [0x90, 60, 100] }
+      sequencer.at(4) { recorder.record [0x80, 60, 0] }
+
+      400.times { sequencer.tick }
+
+      running_status, _silence, explicit = recorder.transcription
+
+      expect(running_status.slice(:pitch, :velocity, :duration, :velocity_off))
+        .to eq(explicit.slice(:pitch, :velocity, :duration, :velocity_off))
+    end
   end
 end

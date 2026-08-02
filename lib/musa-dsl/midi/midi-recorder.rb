@@ -119,6 +119,10 @@ module Musa
       # and, when appropriate, :duration and :velocity_off. Silences (gaps between
       # notes on the same channel) are expressed as `pitch: :silence`.
       #
+      # Both ways of releasing a note are read as a release: an explicit NoteOff
+      # and a NoteOn of velocity 0, which is the running-status form and what
+      # most keyboards and sequencers emit.
+      #
       # @return [Array<Hash>] list of events suitable for Musa transcription pipelines.
       # @example Output format
       #   [
@@ -132,11 +136,37 @@ module Musa
 
         notes = []
 
+        release = lambda do |mm, position|
+          note_on[mm.channel] ||= {}
+
+          note = note_on[mm.channel][mm.note]
+
+          if note
+            note_on[mm.channel].delete mm.note
+
+            note[:duration] = position - note[:position]
+            note[:velocity_off] = mm.velocity
+          end
+
+          last_note[mm.channel] = position
+        end
+
         @messages.each do |m|
           mm = m.message
 
           case mm
           when MIDIEvents::NoteOn
+            # A NoteOn of velocity 0 IS a NoteOff -- the running-status form, and
+            # what most keyboards and sequencers actually emit. Taking it as a
+            # note recorded a phantom note nobody played AND left the note it was
+            # releasing without its :duration, since only a NoteOff closed one
+            # (issue #89). Its velocity, 0, is the release velocity, which is all
+            # the message says about how the note ended.
+            if mm.velocity.zero?
+              release.call(mm, m.position)
+              next
+            end
+
             if last_note[mm.channel]
               notes << { position: last_note[mm.channel], channel: mm.channel, pitch: :silence, duration: m.position - last_note[mm.channel] }
               last_note.delete mm.channel
@@ -150,18 +180,7 @@ module Musa
             notes << note
 
           when MIDIEvents::NoteOff
-            note_on[mm.channel] ||= {}
-
-            note = note_on[mm.channel][mm.note]
-
-            if note
-              note_on[mm.channel].delete mm.note
-
-              note[:duration] = m.position - note[:position]
-              note[:velocity_off] = mm.velocity
-            end
-
-            last_note[mm.channel] = m.position
+            release.call(mm, m.position)
           end
         end
 
