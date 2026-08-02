@@ -76,23 +76,6 @@ limited_chords = variatio.on(root: [60, 64])
 # => 2 roots × 2 types = 4 variations
 ```
 
-## Rules
-
-Extracted to its own gem, **musa-rules**, in musa-dsl 0.47. It enumerates the
-sequences that satisfy a set of rules: each element of a list is elaborated
-through stages, pruned between them, and the rules can see what was already
-chosen for the elements before it — which is what makes voice-leading and
-no-repetition constraints expressible.
-
-The documentation that lived here described a different algorithm from the one
-that existed, and every example it gave returned zero combinations
-([issue #73](https://github.com/javier-sy/musa-dsl/issues/73)). The engine was
-taken out rather than patched in place, so that its remaining design questions
-could be answered on their own terms. It is not published yet.
-
-For the cartesian product without memory or pruning, see **Variatio** above; for
-alternative-and-sequence structures, **Generative Grammar** below.
-
 ## Generative Grammar
 
 Formal grammars with combinatorial generation using operators. Useful for generating melodic patterns with rhythmic constraints, harmonic progressions, or variations of musical motifs.
