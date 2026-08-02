@@ -13,13 +13,11 @@ RSpec.describe 'Transport Documentation Examples' do
       expect(timer_clock.bpm).to eq 120
       expect(timer_clock.ticks_per_beat).to eq 24
 
-      # DummyClock - runs as fast as it can, for a bounded number of ticks.
-      # Careful with the count: it yields ONE FEWER than asked for, because the
-      # condition decrements before testing. `new(1)` yields nothing at all.
+      # DummyClock - runs as fast as it can, for the number of ticks asked for.
       dummy_clock = Musa::Clock::DummyClock.new(100)
       ticks = 0
       dummy_clock.run { ticks += 1 }
-      expect(ticks).to eq 99
+      expect(ticks).to eq 100
 
       # ExternalTickClock - one tick per call, whenever somebody calls.
       external_clock = Musa::Clock::ExternalTickClock.new

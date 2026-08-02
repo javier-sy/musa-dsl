@@ -56,11 +56,7 @@ module Musa
     class DummyClock < Clock
       # Creates a new dummy clock with tick limit or condition.
       #
-      # @param ticks [Integer, nil] tick budget (mutually exclusive with block).
-      #   It yields ONE FEWER than this: the condition decrements before testing,
-      #   so `new(100)` yields 99 and `new(1)` yields nothing at all. Documented
-      #   rather than corrected because every spec in the suite that uses this
-      #   clock is calibrated against the current count.
+      # @param ticks [Integer, nil] number of ticks to generate (mutually exclusive with block)
       # @param do_log [Boolean, nil] enable logging
       # @yield Condition block called each iteration; runs while truthy
       #
@@ -139,9 +135,12 @@ module Musa
       # @api private
       def eval_condition
         if @ticks
-          # Tick count mode: decrement and check
-          @ticks -= 1
-          @ticks.positive?
+          # Tick count mode: spend one and say whether it was there to spend.
+          # The comparison has to be `>= 0` and not `> 0` BECAUSE the decrement
+          # happens first: what is being asked is not "are there any left?" but
+          # "was there one for this turn?". Testing before spending would take
+          # the other comparison.
+          (@ticks -= 1) >= 0
         else
           # Block condition mode
           @block.call
