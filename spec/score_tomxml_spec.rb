@@ -132,4 +132,75 @@ RSpec.describe Musa::Datasets::Score::ToMXML do
       expect(mxml.to_xml.string.strip).to eq File.read(File.join(File.dirname(__FILE__), 'score_tomxml_3_spec.musicxml')).strip
     end
   end
+
+  # Durations are fractions of a BAR and figures are named in fractions of a
+  # WHOLE NOTE. A bar measures beats_per_bar / beat_type whole notes, so the two
+  # coincide only in 4/4 -- which is why one number served for both, and why
+  # everything outside 4/4 was named wrong (issue #70).
+  context 'Meters other than 4/4' do
+    def render(beats_per_bar, ticks_per_beat, duration, beat_type: nil)
+      score = Musa::Datasets::Score.new
+      score.at(1r, add: { instrument: :p, pitch: 60, duration: duration }.extend(Musa::Datasets::PDV))
+
+      xml = score.to_mxml(beats_per_bar, ticks_per_beat, beat_type: beat_type,
+                          parts: { p: { name: 'P' } }).to_xml.string
+      note = xml[/<note>.*?<\/note>/m].to_s
+
+      { divisions: xml[/<divisions>(\d+)/, 1].to_i,
+        beats: xml[/<beats>(\d+)/, 1].to_i,
+        beat_type: xml[/<beat-type>(\d+)/, 1].to_i,
+        duration: note[/<duration>(\d+)/, 1].to_i,
+        type: note[/<type>(\w+)/, 1],
+        dots: note.scan('<dot').size }
+    end
+
+    it 'names a quarter of a bar by what it is in each meter' do
+      # The same written duration, which sounds for a quarter of a bar in all of
+      # them, and is a different figure in each.
+      expect(render(4, 24, 1/4r).slice(:duration, :type, :dots))
+        .to eq(duration: 24, type: 'quarter', dots: 0)
+
+      expect(render(3, 24, 1/4r).slice(:duration, :type, :dots))
+        .to eq(duration: 18, type: 'eighth', dots: 1)   # 18/24 of a quarter
+
+      expect(render(2, 24, 1/4r).slice(:duration, :type, :dots))
+        .to eq(duration: 12, type: 'eighth', dots: 0)
+
+      expect(render(6, 24, 1/4r).slice(:duration, :type, :dots))
+        .to eq(duration: 36, type: 'quarter', dots: 1)
+    end
+
+    it 'writes a real quarter note in every meter, without calling it a tuplet' do
+      # A quarter note is a third of a 3/4 bar. That used to raise
+      # NotImplementedError: read as a fraction of a whole note, a third is a
+      # triplet.
+      [[4, 1/4r], [3, 1/3r], [2, 1/2r], [6, 1/6r]].each do |beats_per_bar, duration|
+        expect(render(beats_per_bar, 24, duration).slice(:duration, :type, :dots))
+          .to eq({ duration: 24, type: 'quarter', dots: 0 }), "in #{beats_per_bar}/4"
+      end
+    end
+
+    it 'writes the bar itself as the figure the bar is' do
+      expect(render(4, 24, 1r).slice(:type, :dots)).to eq(type: 'whole', dots: 0)
+      expect(render(3, 24, 1r).slice(:type, :dots)).to eq(type: 'half', dots: 1)
+      expect(render(6, 24, 1r, beat_type: 8).slice(:type, :dots)).to eq(type: 'half', dots: 1)
+    end
+
+    it 'takes the beat type, so 6/8 is a 6/8 and its beat is an eighth' do
+      result = render(6, 24, 1/6r, beat_type: 8)
+
+      expect(result[:beats]).to eq(6)
+      expect(result[:beat_type]).to eq(8)
+
+      # MusicXML counts divisions per QUARTER, and in 6/8 a quarter holds two
+      # beats of 24 ticks.
+      expect(result[:divisions]).to eq(48)
+      expect(result.slice(:duration, :type, :dots)).to eq(duration: 24, type: 'eighth', dots: 0)
+    end
+
+    it 'refuses a grid that cannot be expressed in whole divisions' do
+      expect { render(2, 25, 1/2r, beat_type: 2) }
+        .to raise_error(ArgumentError, /divisions must be whole/)
+    end
+  end
 end

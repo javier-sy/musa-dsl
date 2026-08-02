@@ -50,6 +50,10 @@ module Musa
         # @param measure [Musa::MusicXML::Builder::Measure] target measure
         # @param bar [Integer] bar number (1-based)
         # @param divisions_per_bar [Integer] total divisions in bar
+        # @param bar_duration [Rational] how much of a whole note a bar is,
+        #   `beats_per_bar / beat_type` -- 1 in 4/4, 3/4 in both 3/4 and 6/8.
+        #   Durations here are fractions of a BAR and figures are named in whole
+        #   notes, and this is what turns one into the other.
         # @param element [Hash] event hash from score query
         #   Contains :start, :finish, :dataset keys
         # @param pointer [Rational] current position in bar (0-1)
@@ -66,8 +70,8 @@ module Musa
         #     finish: 2r,
         #     dataset: { pitch: 60, duration: 1r }.extend(Musa::Datasets::PDV)
         #   }
-        #   pointer = process_pdv(measure, 1, 96, element, 0r, logger, false)
-        #   # Adds C4 quarter note, returns 1r
+        #   pointer = process_pdv(measure, 1, 96, 1r, element, 0r, logger, false)
+        #   # Adds C4 whole note (a bar of 4/4), returns 1r
         #
         # @example Rest
         #   element = {
@@ -75,19 +79,19 @@ module Musa
         #     finish: 2r,
         #     dataset: { pitch: :silence, duration: 1r }.extend(Musa::Datasets::PDV)
         #   }
-        #   pointer = process_pdv(measure, 1, 96, element, 0r, logger, false)
-        #   # Adds quarter rest, returns 1r
+        #   pointer = process_pdv(measure, 1, 96, 1r, element, 0r, logger, false)
+        #   # Adds a whole rest, returns 1r
         #
         # @example Note with articulation
         #   dataset = { pitch: 64, duration: 1/2r, st: true }.extend(Musa::Datasets::PDV)
-        #   # Adds staccato eighth note
+        #   # Adds a staccato half note: half a bar of 4/4
         #
         # @example Tied note across bar
         #   element = { start: 1r, finish: 3r, dataset: { pitch: 60, duration: 2r } }
         #   # Automatically tied: tie-start in bar 1, tie-stop in bar 2
         #
         # @api private
-        private def process_pdv(measure, bar, divisions_per_bar, element, pointer, logger, do_log)
+        private def process_pdv(measure, bar, divisions_per_bar, bar_duration, element, pointer, logger, do_log)
 
           pitch, octave, sharps = pitch_and_octave_and_sharps(element[:dataset])
 
@@ -100,9 +104,14 @@ module Musa
                                    (1r - effective_start) :
                                    (element[:start] + element[:dataset][:duration] - (bar + effective_start))
 
+          # Decomposed in WHOLE NOTES, because "dotteable" is a property of the
+          # written figure and not of the bar: a beat of 3/4 is a third of a bar,
+          # which decomposes into nothing, and a quarter note, which decomposes
+          # into itself. `bar_duration` is what tells one from the other, and it
+          # is 1 in 4/4 -- which is why this went unnoticed (issue #70).
           effective_duration_decomposition = \
             integrate_as_dotteable_durations(
-              decompose_as_sum_of_simple_durations(effective_duration))
+              decompose_as_sum_of_simple_durations(effective_duration * bar_duration))
 
           if do_log
             logger.debug ''
@@ -126,7 +135,7 @@ module Musa
           elsif pointer < effective_start
             logger.warn { "       ->  adding start rest duration #{effective_start - pointer} start #{bar + pointer} finish #{bar + effective_start}" } if do_log
 
-            pointer = process_pdv(measure, bar, divisions_per_bar,
+            pointer = process_pdv(measure, bar, divisions_per_bar, bar_duration,
                                   { start: bar + pointer,
                                     finish: bar + effective_start,
                                     dataset: { pitch: :silence, duration: effective_start - pointer }.extend(Musa::Datasets::PDV) },
@@ -150,9 +159,13 @@ module Musa
           first = true
 
           until effective_duration_decomposition.empty?
-            duration = effective_duration_decomposition.shift
+            notated_duration = effective_duration_decomposition.shift
 
-            type, dots, tuplet_ratio = type_and_dots_and_tuplet_ratio(duration)
+            # And back to bars, which is what <duration>, the pointer and every
+            # other number here are counted in.
+            duration = notated_duration / bar_duration
+
+            type, dots, tuplet_ratio = type_and_dots_and_tuplet_ratio(notated_duration)
 
             raise NotImplementedError,
                   "Found irregular time (tuplet ratio #{tuplet_ratio}) on element #{element}. " \

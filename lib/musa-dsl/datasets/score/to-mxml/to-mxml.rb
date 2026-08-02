@@ -38,15 +38,31 @@ module Musa::Datasets
     #
     # ## Time Representation
     #
-    # - Score times are 1-based (first beat is at position 1)
-    # - Each measure represents one bar
-    # - Duration is specified in beats (1.0 = quarter note if beat_type is 4)
+    # **Positions and durations are counted in BARS**, and they are 1-based: bar
+    # 1 starts at position `1r`, bar 2 at `2r`, and a duration of `1r` lasts a
+    # whole bar whatever the meter. That is what the sequencer counts, and this
+    # follows it.
+    #
+    # A figure's NAME, on the other hand, is a fraction of a whole note, which is
+    # a different thing: a bar measures `beats_per_bar / beat_type` whole notes.
+    # In 4/4 the two coincide -- a bar is a whole note -- which is why one number
+    # served for both for a long time and why nothing outside 4/4 came out right
+    # (issue #70). So:
+    #
+    # - in 4/4, `duration: 1/4r` is a quarter note;
+    # - in 3/4, `duration: 1/4r` is a quarter of a bar, which is written as a
+    #   dotted eighth, and a quarter note is `duration: 1/3r`;
+    # - in 6/8, `duration: 1/6r` is a beat, which is written as an eighth.
+    #
+    # The conversion happens here, at the only place that has to name figures.
+    # Nothing else in the library needs to know about whole notes.
     #
     # @example Basic single-part score
     #   score = Musa::Datasets::Score.new
     #   score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
     #   score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
     #
+    #   # Two whole notes: each lasts a whole bar of 4/4.
     #   mxml = score.to_mxml(
     #     4, 24,  # 4 beats per bar, 24 ticks per beat
     #     bpm: 120,
@@ -89,6 +105,11 @@ module Musa::Datasets
       # @param beats_per_bar [Integer] time signature numerator (e.g., 4 for 4/4)
       # @param ticks_per_beat [Integer] resolution per beat (typically 24)
       #
+      # @param beat_type [Integer] time signature denominator: what figure the
+      #   beat is (4 for a quarter, 8 for an eighth). Defaults to 4. The
+      #   sequencer does not know this and does not need to -- it counts bars and
+      #   ticks -- but the notation cannot be written without it: it is what
+      #   makes 6/8 a 6/8 and not a 6/4, and what names every figure.
       # @param bpm [Integer] tempo in beats per minute (default: 90)
       # @param title [String] work title (default: 'Untitled')
       # @param creators [Hash{Symbol => String}] creator roles and names
@@ -138,6 +159,7 @@ module Musa::Datasets
       #   mxml = score.to_mxml(4, 24, parts: { piano: { name: 'Piano' } })
       #   File.write('output.musicxml', mxml.to_xml.string)
       def to_mxml(beats_per_bar, ticks_per_beat,
+                  beat_type: nil,
                   bpm: nil,
                   title: nil,
                   creators: nil,
@@ -146,7 +168,32 @@ module Musa::Datasets
                   logger: nil,
                   do_log: nil)
 
+        beat_type ||= 4
         bpm ||= 90
+
+        # THE TWO UNITS. A duration in this library is a fraction of a BAR --
+        # `1r` is a bar, and that is what the sequencer counts. The name a
+        # duration is written with is a fraction of a WHOLE NOTE. A bar measures
+        # `beats_per_bar / beat_type` whole notes, and the two readings coincide
+        # only in 4/4, which is why they were the same number for so long and
+        # why nothing outside 4/4 came out right (issue #70).
+        #
+        # Everything about time here is in bars; `bar_duration` is what the
+        # notation side multiplies by, and nothing else.
+        bar_duration = Rational(beats_per_bar, beat_type)
+
+        # A beat is `4 / beat_type` quarters, so a quarter holds this many of the
+        # sequencer's ticks. It has to be a whole number of them: MusicXML has no
+        # way to say "half a division".
+        divisions_per_quarter = Rational(ticks_per_beat * beat_type, 4)
+
+        raise ArgumentError,
+              "A quarter note is #{divisions_per_quarter} ticks in #{beats_per_bar}/#{beat_type} " \
+              "with #{ticks_per_beat} ticks per beat, and MusicXML divisions must be whole. " \
+              "Use a ticks_per_beat that is a multiple of #{Rational(4, beat_type).numerator}." \
+          unless divisions_per_quarter.denominator == 1
+
+        divisions_per_quarter = divisions_per_quarter.to_i
         title ||= 'Untitled'
         creators ||= { composer: 'Unknown' }
 
@@ -169,13 +216,16 @@ module Musa::Datasets
 
               _.measure do |_|
                 _.attributes do |_|
-                  _.divisions ticks_per_beat
+                  # MusicXML counts divisions per QUARTER NOTE, and a beat is a
+                  # quarter only when beat_type is 4. In 6/8 with 24 ticks to the
+                  # beat there are 48 of them in a quarter, not 24.
+                  _.divisions divisions_per_quarter
 
                   i = 0
                   (part_info&.[](:clefs) || { g: 2 }).each_pair do |clef, line|
                     i += 1
                     _.clef i, sign: clef.upcase, line: line
-                    _.time i, beats: beats_per_bar, beat_type: 4
+                    _.time i, beats: beats_per_bar, beat_type: beat_type
                   end
                 end
 
@@ -194,6 +244,7 @@ module Musa::Datasets
         parts.each_key do |part_id|
           fill_part mxml.parts[part_id],
                     beats_per_bar * ticks_per_beat,
+                    bar_duration,
                     (parts.size > 1 ? part_id : nil),
                     logger, do_log
         end
@@ -221,7 +272,7 @@ module Musa::Datasets
       # @return [void]
       #
       # @api private
-      def fill_part(part, divisions_per_bar, instrument, logger, do_log)
+      def fill_part(part, divisions_per_bar, bar_duration, instrument, logger, do_log)
         measure = nil
         dynamics_context = nil
 
@@ -248,7 +299,7 @@ module Musa::Datasets
           if pdvs.empty?
             logger.debug "\nadding full bar silence..." if do_log
 
-            process_pdv(measure, bar, divisions_per_bar,
+            process_pdv(measure, bar, divisions_per_bar, bar_duration,
                         { start: bar,
                           finish: bar + 1,
                           dataset: { pitch: :silence, duration: 1 }.extend(Musa::Datasets::PDV) },
@@ -269,7 +320,7 @@ module Musa::Datasets
 
               logger.debug "\nadding initial silence for duration #{silence_duration}..." if do_log
 
-              pointer = process_pdv(measure, bar, divisions_per_bar,
+              pointer = process_pdv(measure, bar, divisions_per_bar, bar_duration,
                                     { start: bar,
                                       finish: first[:start_in_interval],
                                       dataset: { pitch: :silence, duration: silence_duration }.extend(Musa::Datasets::PDV) },
@@ -283,7 +334,7 @@ module Musa::Datasets
             bar_elements.each do |element|
               case element[:dataset]
               when Musa::Datasets::PDV
-                pointer = process_pdv(measure, bar, divisions_per_bar, element, pointer, logger, do_log)
+                pointer = process_pdv(measure, bar, divisions_per_bar, bar_duration, element, pointer, logger, do_log)
 
               when Musa::Datasets::PS
                 dynamics_context = process_ps(measure, element, dynamics_context, logger, do_log)
@@ -298,7 +349,7 @@ module Musa::Datasets
 
               logger.debug "\nadded ending silence for duration #{silence_duration}..." if do_log
 
-              process_pdv(measure, bar, divisions_per_bar,
+              process_pdv(measure, bar, divisions_per_bar, bar_duration,
                           { start: bar + pointer,
                             finish: bar + 1 - Rational(1, divisions_per_bar),
                             dataset: { pitch: :silence, duration: silence_duration }.extend(Musa::Datasets::PDV) },
