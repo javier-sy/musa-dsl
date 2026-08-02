@@ -217,5 +217,54 @@ RSpec.describe Musa::Series do
       }.to raise_error(ArgumentError)
     end
 
+    it 'Prototype QUEUE don\'t allow adding instance series either' do
+      s = QUEUE(S(1, 2, 3))
+
+      expect {
+        s << S(3, 4, 5).i
+      }.to raise_error(ArgumentError)
+    end
+
+    it 'An empty QUEUE is a prototype and can be instantiated' do
+      s = QUEUE()
+
+      expect(s.state).to eq :prototype
+      expect(s.i.state).to eq :instance
+    end
+
+    it 'An empty QUEUE produces nothing until it is fed' do
+      s = QUEUE().i
+
+      expect(s.next_value).to be_nil
+
+      s << S(1, 2).i
+
+      expect(s.next_value).to eq 1
+      expect(s.next_value).to eq 2
+      expect(s.next_value).to be_nil
+    end
+
+    it 'An empty QUEUE can be restarted' do
+      s = QUEUE().i
+
+      expect { s.restart }.not_to raise_error
+      expect(s.next_value).to be_nil
+    end
+
+    it 'A cycle over an empty QUEUE waits in silence and loops what arrives' do
+      back = PROXY(cyclic: true)
+      queue = QUEUE().i
+      cycle = queue.after(back)
+      back.proxy_source = cycle
+
+      i = cycle.i
+
+      expect(3.times.collect { i.next_value }).to eq [nil, nil, nil]
+
+      queue << S(:a, :b).i
+
+      expect(6.times.collect { i.next_value }).to eq [:a, :b, :a, :b, :a, :b]
+    end
+
   end
 end

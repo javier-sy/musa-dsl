@@ -428,15 +428,26 @@ module Musa
         #   b.next_value  # => 1 (independent)
         #
         # @api public
-        def instance
+        def instance(built = nil)
           try_to_resolve_undefined_state_if_needed
 
           if instance?
             self
           elsif prototype?
-            new_instance = clone
+            # A prototype already turned into an instance during THIS walk gives
+            # back that instance. Without the register, instantiating a circular
+            # graph -- the ostinato PROXY exists for -- walked round it cloning
+            # for ever; with it, the cycle becomes a cycle again, of the same
+            # shape, between the new nodes (issue #77). It is the same device
+            # `deep_copy` uses for circular object graphs.
+            built ||= {}
+            existing = built[object_id]
+            return existing if existing
 
-            new_instance._instance!
+            new_instance = clone
+            built[object_id] = new_instance
+
+            new_instance._instance!(built)
             new_instance.mark_as_instance!(self)
             new_instance.init if new_instance.respond_to?(:init)
 
@@ -492,14 +503,16 @@ module Musa
         # @return [void]
         #
         # @api private
-        protected def _instance!
-          @source = @source.instance if @source
+        protected def _instance!(built = nil)
+          built ||= {}
+
+          @source = @source.instance(built) if @source
 
           case @sources
           when Array
-            @sources = @sources.collect(&:instance)
+            @sources = @sources.collect { |source| source.instance(built) }
           when Hash
-            @sources = @sources.transform_values(&:instance)
+            @sources = @sources.transform_values { |source| source.instance(built) }
           end
         end
 
@@ -614,17 +627,26 @@ module Musa
         # @return [void]
         #
         # @api private
-        private def try_to_resolve_undefined_state_if_needed
+        private def try_to_resolve_undefined_state_if_needed(visiting = nil)
 
           return unless @state.nil? || @state == :undefined
+
+          # WHY A VISITED SET. Being prototype or instance is a property of the
+          # whole graph and not of one node, so a node has to ask its sources,
+          # and they theirs. In a circular graph -- which is what PROXY exists
+          # for -- that walk comes back to a node that is still resolving, and
+          # without a memory of where it has been it goes round for ever: the
+          # documented ostinato `S(1,2,3).after(proxy)` overflowed the stack in
+          # the ASSIGNMENT, before anyone asked for a value (issue #77).
+          visiting = (visiting || []) + [self]
 
           states = []
 
           if has_source
             if mandatory_source
-              states << @source&.state || :undefined
+              states << state_for_resolution_of(@source, visiting)
             elsif @source
-              states << @source.state
+              states << state_for_resolution_of(@source, visiting)
             end
           end
 
@@ -638,12 +660,30 @@ module Musa
                         []
                       end
 
-            undefined_sources =
-              sources.empty? ||
-                sources.any?(&:undefined?) ||
-                sources.any?(&:instance?) && sources.any?(&:prototype?)
+            had_sources = !sources.empty?
 
-            instance_sources = sources.all?(&:instance?) unless undefined_sources
+            # A source that is part of the cycle being resolved contributes
+            # nothing to the decision: the state of a cycle is the state of its
+            # non-circular inputs. In the ostinato that is S(1, 2, 3), a
+            # prototype, and so the whole thing is a prototype.
+            sources_states = sources.collect { |source| state_for_resolution_of(source, visiting) }
+                                    .reject { |source_state| source_state == :cycle }
+
+            if had_sources && sources_states.empty?
+              # Everything this node depends on is in the cycle, so it cannot be
+              # decided from here. Leaving it alone -- rather than calling it
+              # undefined -- is what lets whoever is resolving the cycle ignore
+              # it and decide from the inputs that are outside.
+              return :cycle
+            end
+
+            undefined_sources =
+              sources_states.empty? ||
+                sources_states.any? { |source_state| source_state == :undefined } ||
+                sources_states.any? { |source_state| source_state == :instance } &&
+                  sources_states.any? { |source_state| source_state == :prototype }
+
+            instance_sources = sources_states.all? { |source_state| source_state == :instance } unless undefined_sources
 
             sources_state = if undefined_sources
                               :undefined
@@ -660,12 +700,37 @@ module Musa
             end
           end
 
+          return :cycle if states.include?(:cycle)
+
           # in case of having source and sources, if both states are equal the final state is that one, else the final state is undefined
           #
           new_state = states.first if states.first == states.last
           new_state ||= :undefined
 
           mark_as!(new_state)
+        end
+
+        # The state of a source as far as this resolution is concerned.
+        #
+        # `:cycle` for a source that is already being resolved further up the
+        # walk, or that could only answer by asking through the cycle again.
+        # Everything else answers with its state.
+        #
+        # @api private
+        private def state_for_resolution_of(source, visiting)
+          return :undefined if source.nil?
+          return :cycle if visiting.any? { |visited| visited.equal?(source) }
+
+          return :cycle if source.send(:try_to_resolve_undefined_state_if_needed, visiting) == :cycle
+
+          source.state_without_resolving || :undefined
+        end
+
+        # The recorded state, without setting off a resolution.
+        #
+        # @api private
+        protected def state_without_resolving
+          @state
         end
 
         # Error raised when serie is used in wrong state.

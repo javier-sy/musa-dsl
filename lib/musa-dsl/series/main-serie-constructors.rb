@@ -647,25 +647,78 @@ module Musa
         @restart_sources = true
       end
 
-      private def _next_value
-        value = nil
+      # Is this source the point where the sequence loops back into itself?
+      #
+      # @api private
+      private def cycle_boundary?(source)
+        source.respond_to?(:closes_cycle?) && source.closes_cycle?
+      end
 
-        if @index < @sources.size
-          value = @sources[@index].next_value
+      # Rewinds the WHOLE cycle, not just this node: in A -> B -> A, B has to go
+      # back to its beginning too, or the next turn finds it already exhausted.
+      # Visited set, as in the other two graph walks.
+      #
+      # @api private
+      protected def restart_cycle(visited = nil)
+        visited ||= []
+        return if visited.any? { |seen| seen.equal?(self) }
 
-          if value.nil?
-            @index += 1
-            if @index < @sources.size
-              @sources[@index].restart if @restart_sources
-              value = next_value
-            end
+        visited << self
+        @index = 0
+        @restart_sources = true
+
+        @sources.each do |source|
+          if cycle_boundary?(source)
+            target = source.cycle_target
+            target.send(:restart_cycle, visited) if target.respond_to?(:restart_cycle, true)
+          else
+            source.restart
           end
         end
+      end
 
-        value
+      private def _next_value
+        return nil if @_iterating          # re-entry through the cycle: stop here
+
+        stack = (Thread.current[:musa_series_cycle_stack] ||= [])
+        in_cycle = @sources.any? { |source| cycle_boundary?(source) }
+        stack.push(self) if in_cycle
+
+        @_iterating = true
+
+        begin
+          wrapped = false
+
+          loop do
+            return nil if @index >= @sources.size
+
+            value = @sources[@index].next_value
+            return value unless value.nil?
+
+            source = @sources[@index]
+
+            if cycle_boundary?(source)
+              # The turn is taken by the OUTERMOST node of the cycle: the only one
+              # whose frame is not inside another iteration of the same cycle.
+              return nil unless stack.first.equal?(self)
+              return nil if wrapped        # one turn per request: an empty turn ends here
+
+              wrapped = true
+              restart_cycle
+            else
+              @index += 1
+              @sources[@index].restart if @index < @sources.size && @restart_sources
+            end
+          end
+        ensure
+          @_iterating = false
+          stack.pop if in_cycle
+        end
       end
 
       def infinite?
+        return true if @sources.any? { |source| cycle_boundary?(source) }
+
         !!@sources.find(&:infinite?)
       end
     end

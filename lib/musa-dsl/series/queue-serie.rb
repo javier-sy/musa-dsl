@@ -42,11 +42,18 @@ module Musa
     # @example Dynamic playlist
     #   melody1 = S(60, 62)
     #   melody2 = S(67, 69)
-    #   # An empty QUEUE() is undefined and cannot be instantiated, so the queue
-    #   # starts with its first serie and grows from there.
+    #
     #   queue = QUEUE(melody1).i
     #   queue << melody2.i
     #   queue.to_a  # => [60, 62, 67, 69]
+    #
+    # @example A queue that starts with nothing
+    #   queue = QUEUE().i
+    #   queue.next_value  # => nil
+    #
+    #   queue << S(1, 2).i
+    #   queue.next_value  # => 1
+    #   queue.next_value  # => 2
     #
     # @api public
     def QUEUE(*series)
@@ -83,6 +90,15 @@ module Musa
 
       def initialize(series)
         self.sources = series
+
+        # A queue with nothing in it yet is not undecided: it is a queue waiting
+        # for material. Resolving it from its sources gives :undefined -- there
+        # is nothing to ask -- and an undefined serie cannot be instantiated,
+        # which leaves exactly the case the queue exists for out of reach. So an
+        # empty queue is a prototype, like every other freshly built serie, and
+        # the material arrives on its instance (`<<` only takes instances).
+        mark_as_prototype! if @sources.empty?
+
         init
       end
 
@@ -92,11 +108,14 @@ module Musa
       #
       # @return [self] for chaining
       #
-      # @raise [ArgumentError] if serie is not an instance
+      # @raise [ArgumentError] if the queue is not an instance, or if serie is
+      #   not an instance
       def <<(serie)
-        # when queue is a prototype it is also frozen so no serie can be added (it would raise an Exception if tried).
-        # when queue is an instance the added serie should also be an instance (raise an Exception otherwise)
+        # Material is queued on an instance: a prototype is the template every
+        # instance is built from, and putting one instance inside it would give
+        # all of them the same serie to consume.
         #
+        raise ArgumentError, "Only an instance queue can be fed" unless instance?
         raise ArgumentError, "Only an instance serie can be queued" unless serie.instance?
 
         @sources << serie
@@ -121,7 +140,7 @@ module Musa
       end
 
       private def _restart
-        @current.restart
+        @current&.restart          # an empty queue has nothing to restart yet
         @restart_sources = true
       end
 
