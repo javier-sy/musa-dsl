@@ -114,6 +114,77 @@ RSpec.describe Musa::Datasets do
     end
   end
 
+  # A rest survived one conversion and died on the next: `PDV#to_gdv` wrote
+  # `grade: :silence`, which nothing in the library reads, while everything --
+  # the neuma decoder that produces silences, `to_pdv`, `to_neuma`, `to_gdvd` --
+  # uses the `:silence` KEY (issue #80). There was no spec for the round trip.
+  context 'Rests through the conversions' do
+    let(:scale) { Musa::Scales::Scales.default_system.default_tuning.major[60] }
+    let(:decoder) { Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r) }
+
+    def parsed_silence
+      Musa::Neumalang::Neumalang.parse('(silence 4)', decode_with: decoder)
+                                .to_a(recursive: true).first
+    end
+
+    it 'survives PDV -> GDV -> PDV' do
+      pdv = { pitch: :silence, duration: 1r, velocity: 80 }.extend(Musa::Datasets::PDV)
+
+      gdv = pdv.to_gdv(scale)
+
+      expect(gdv).to eq(silence: true, duration: 1r, velocity: 1)
+      expect(gdv.to_pdv(scale)).to eq(pdv)
+    end
+
+    it 'survives the trip that starts at the parser' do
+      gdv = parsed_silence
+
+      expect(gdv).to eq(grade: 0, octave: 0, duration: 1r, velocity: 1, silence: true)
+
+      pdv = gdv.to_pdv(scale)
+      expect(pdv).to eq(pitch: :silence, duration: 1r, velocity: 80)
+
+      # What used to raise here: the GDV came back with `grade: :silence` and no
+      # :silence key, and to_pdv called scale[:silence].
+      expect(pdv.to_gdv(scale).to_pdv(scale)).to eq(pdv)
+    end
+
+    it 'is the key that says so, with or without the grade it silences' do
+      with_grade = { grade: 0, octave: 0, duration: 1r, silence: true }.extend(Musa::Datasets::GDV)
+      without = { silence: true, duration: 1r }.extend(Musa::Datasets::GDV)
+
+      expect(with_grade.to_pdv(scale)).to eq(pitch: :silence, duration: 1r)
+      expect(without.to_pdv(scale)).to eq(pitch: :silence, duration: 1r)
+    end
+
+    it 'reaches the notation and the delta encoding the same way' do
+      gdv = { silence: true, duration: 1r }.extend(Musa::Datasets::GDV)
+      gdv.base_duration = 1/4r
+
+      expect(gdv.to_neuma.to_s).to eq('(silence 4)')
+      expect(gdv.to_gdvd(scale)[:abs_grade]).to eq(:silence)
+    end
+
+    it 'stays a rest when it opens a delta-encoded sequence' do
+      # With no previous element to be a delta from, to_gdvd wrote the grade the
+      # rest silences: a silence opening a sequence came out as an audible note.
+      gdv = parsed_silence
+
+      gdvd = gdv.to_gdvd(scale)
+      gdvd.base_duration = 1/4r
+
+      expect(gdvd[:abs_grade]).to eq(:silence)
+      expect(gdvd.to_neuma.to_s).to eq('(silence 4 mf)')
+    end
+
+    it 'a note is unchanged by the same round trip' do
+      gdv = Musa::Neumalang::Neumalang.parse('(2 4 mf)', decode_with: decoder)
+                                      .to_a(recursive: true).first
+
+      expect(gdv.to_pdv(scale).to_gdv(scale)).to eq(gdv)
+    end
+  end
+
   # The whole dynamics table, written out, so that it stops depending on prose.
   #
   # It depended on prose and the prose was wrong three times over: `velocity_of`

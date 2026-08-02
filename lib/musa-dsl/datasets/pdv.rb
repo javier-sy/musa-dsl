@@ -78,7 +78,8 @@ module Musa::Datasets
   #
   # @example Silence (rest)
   #   pdv = { pitch: :silence, duration: 1.0 }.extend(PDV)
-  #   # Rest for 1 beat
+  #   # Rest for 1 beat. In GDV a rest is the :silence key, not a grade of that
+  #   # name; {#to_gdv} writes that key.
   #
   # @example With articulation
   #   pdv = {
@@ -156,14 +157,23 @@ module Musa::Datasets
     #   pdv = { pitch: :silence, duration: 1.0 }.extend(PDV)
     #   scale = Musa::Scales::Scales.et12[440.0].major[60]
     #   gdv = pdv.to_gdv(scale)
-    #   # => { grade: :silence, duration: 1.0 }
+    #   # => { silence: true, duration: 1.0 }
+    #
+    #   # A rest carries no grade: there is none to recover, and none is needed.
+    #   gdv.to_pdv(scale)  # => { pitch: :silence, duration: 1.0 }
     def to_gdv(scale)
       gdv = {}.extend GDV
       gdv.base_duration = @base_duration
 
       if self[:pitch]
         if self[:pitch] == :silence
-          gdv[:grade] = :silence
+          # The :silence KEY, which is what everything else reads and a declared
+          # natural key of GDV. It used to write `grade: :silence`, which nothing
+          # reads: the GDV came back malformed by the framework's own convention
+          # and could not be converted again (issue #80). It looked right only
+          # because to_neuma falls through to printing the grade, and the
+          # symbol's name happens to be the word the notation uses.
+          gdv[:silence] = true
         else
           note = scale.note_of_pitch(self[:pitch], allow_chromatic: true)
 

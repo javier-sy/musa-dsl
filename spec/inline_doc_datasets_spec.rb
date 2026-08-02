@@ -270,8 +270,10 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       gdv = pdv.to_gdv(scale)
 
-      expect(gdv[:grade]).to eq(:silence)
-      expect(gdv[:duration]).to eq(1.0)
+      expect(gdv).to eq(silence: true, duration: 1.0)
+
+      # And it goes back, which is the whole point (issue #80).
+      expect(gdv.to_pdv(scale)).to eq(pitch: :silence, duration: 1.0)
     end
   end
 
@@ -296,11 +298,11 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
     end
 
     it '@example Silence (rest)' do
-      gdv = { grade: :silence, duration: 1.0 }.extend(Musa::Datasets::GDV)
+      gdv = { silence: true, duration: 1r }.extend(Musa::Datasets::GDV)
 
-      expect(gdv[:grade]).to eq(:silence)
-      expect(gdv[:duration]).to eq(1.0)
-      # Rest for 1 beat
+      expect(gdv[:silence]).to be true
+      expect(gdv[:duration]).to eq(1r)
+      # Rest for 1 beat, said by the key and not by a grade named after it
     end
 
     it '@example Convert to MIDI' do
@@ -358,13 +360,21 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
     end
 
     it '@example Silence' do
-      gdv = { grade: :silence, silence: true, duration: 1.0 }.extend(Musa::Datasets::GDV)
       scale = Musa::Scales::Scales.et12[440.0].major[60]
 
-      pdv = gdv.to_pdv(scale)
+      gdv = { silence: true, duration: 1r }.extend(Musa::Datasets::GDV)
+      gdv.base_duration = 1/4r
 
-      expect(pdv[:pitch]).to eq(:silence)
-      expect(pdv[:duration]).to eq(1.0)
+      expect(gdv.to_pdv(scale)).to eq(pitch: :silence, duration: 1r)
+    end
+
+    it '@example A silence as the decoder writes it, with the grade it silences' do
+      scale = Musa::Scales::Scales.et12[440.0].major[60]
+
+      gdv = { grade: 0, octave: 0, duration: 1r, silence: true }.extend(Musa::Datasets::GDV)
+      gdv.base_duration = 1/4r
+
+      expect(gdv.to_pdv(scale)).to eq(pitch: :silence, duration: 1r)
     end
 
     it '@example Dynamics interpolation' do

@@ -111,8 +111,9 @@ module Musa::Datasets
   #   # First scale degree sharp (C# in C major)
   #
   # @example Silence (rest)
-  #   gdv = { grade: :silence, duration: 1r }.extend(GDV)
-  #   # Rest for 1 beat
+  #   gdv = { silence: true, duration: 1r }.extend(GDV)
+  #   # Rest for 1 beat. The :silence KEY is what says so -- a grade named
+  #   # :silence is not a rest, it is a grade nothing can look up.
   #
   # @example Convert to MIDI
   #   gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
@@ -203,11 +204,17 @@ module Musa::Datasets
     #   gdv.to_pdv(scale)  # => { pitch: 61, duration: 1r }
     #
     # @example Silence
-    #   # A rest is the :silence KEY, not a grade of that name -- and it yields a
-    #   # PDV with no pitch at all, not one whose pitch is :silence.
+    #   # A rest is the :silence KEY, not a grade of that name, and the key is
+    #   # enough on its own: the grade the decoder also puts there is the note
+    #   # that would have sounded, and nothing needs it.
     #   gdv = { silence: true, duration: 1r }.extend(GDV)
     #   gdv.base_duration = 1/4r
-    #   gdv.to_pdv(scale)  # => { duration: 1r }
+    #   gdv.to_pdv(scale)  # => { pitch: :silence, duration: 1r }
+    #
+    # @example A silence as the decoder writes it, with the grade it silences
+    #   gdv = { grade: 0, octave: 0, duration: 1r, silence: true }.extend(GDV)
+    #   gdv.base_duration = 1/4r
+    #   gdv.to_pdv(scale)  # => { pitch: :silence, duration: 1r }
     #
     # @example Dynamics interpolation
     #   gdv = { grade: 0, octave: 0, velocity: 0.5 }.extend(GDV)
@@ -218,12 +225,15 @@ module Musa::Datasets
       pdv = {}.extend PDV
       pdv.base_duration = @base_duration
 
-      if self[:grade]
-        pdv[:pitch] = if self[:silence]
-                        :silence
-                      else
-                        scale[self[:grade]].sharp(self[:sharps] || 0).at_octave(self[:octave] || 0).pitch
-                      end
+      # A rest is a rest whether or not it also carries the grade of the note
+      # that would have sounded. Asking for the grade first left a silence with
+      # no grade -- which is what a PDV rest converts into, since a PDV rest
+      # carries no grade to recover -- with no :pitch at all, so it stopped
+      # raising and started disappearing instead.
+      if self[:silence]
+        pdv[:pitch] = :silence
+      elsif self[:grade]
+        pdv[:pitch] = scale[self[:grade]].sharp(self[:sharps] || 0).at_octave(self[:octave] || 0).pitch
       end
 
       if self[:duration]
@@ -428,7 +438,16 @@ module Musa::Datasets
           gdvd[:delta_velocity] = self[:velocity] - previous[:velocity]
         end
       else
-        gdvd[:abs_grade] = self[:grade] if self[:grade]
+        # The same order as the branch above, and for the same reason: a rest
+        # asked about its grade answers with the grade it silences. Asking that
+        # first turned a rest opening a delta-encoded sequence into an audible
+        # note -- `(silence 4)` came out as `(0 4 mf)` (issue #80).
+        if self[:silence]
+          gdvd[:abs_grade] = :silence
+        elsif self[:grade]
+          gdvd[:abs_grade] = self[:grade]
+        end
+
         gdvd[:abs_duration] = self[:duration] if self[:duration]
         gdvd[:abs_velocity] = self[:velocity] if self[:velocity]
       end
