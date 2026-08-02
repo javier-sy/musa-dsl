@@ -425,12 +425,12 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(after_executed).to eq([767/96r])
     end
 
-    it 'a play over a serie without durations never completes its control' do
-      # Elements with no :duration all fire in the same instant (issue #72), and
-      # the control then never terminates: neither on_stop nor after ever runs.
-      # Since `after` is the documented way to chain sections, a section built on
-      # such a serie stops the chain silently. Pinned here so the day it is fixed
-      # this spec says so.
+    it 'completes its control even when the whole serie resolves in one instant' do
+      # Elements with no :duration all fire in the same instant, so the serie
+      # unwinds inside the `play` call and the control reaches the caller
+      # already over. `on_stop` and `after` used to be registered on it a moment
+      # too late and never ran at all -- and `after` is the documented way to
+      # chain sections, so the chain stopped silently (issue #84).
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
       fired = []
@@ -444,8 +444,27 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       400.times { seq.tick }
 
       expect(fired).to eq([95/96r, 95/96r])
-      expect(stopped).to be_empty
-      expect(afters).to be_empty
+      expect(stopped).to eq([95/96r])
+      expect(afters).to eq([95/96r + 2r])
+    end
+
+    it 'chains a section after a chord written as a serie' do
+      # A chord voiced note by note is a serie of `forward_duration: 0`
+      # elements, which is what AbsD documents that key for, and the whole serie
+      # then resolves in one instant.
+      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      log = []
+
+      chord = S(*[60, 64, 67].collect { |p| { pitch: p, duration: 2r, forward_duration: 0r } })
+
+      seq.at(1) do
+        seq.play(chord) { |pitch:, **| log << [:note, pitch] }
+           .after(2r) { log << [:next_section, seq.position] }
+      end
+
+      600.times { seq.tick }
+
+      expect(log).to eq([[:note, 60], [:note, 64], [:note, 67], [:next_section, 3r]])
     end
   end
 

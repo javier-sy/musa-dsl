@@ -119,7 +119,7 @@ RSpec.describe 'Pitfalls warned about in the reference' do
     expect(voices.voices.collect(&:channel)).to eq((0..15).to_a)
   end
 
-  it 'play in its default mode needs a :duration on every element' do
+  it 'elements with no duration all sound at once, and the control still completes' do
     sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
 
     positions = []
@@ -132,10 +132,12 @@ RSpec.describe 'Pitfalls warned about in the reference' do
 
     400.times { sequencer.tick }
 
-    # Without durations everything happens in the same instant and the control
-    # never completes, so `after` and `on_stop` never run (issue #72).
+    # Without durations everything happens in the same instant -- that part is
+    # by design, and is how a chord is written. What used to be lost with it was
+    # the ending: the serie unwound inside the `play` call and on_stop and after
+    # were registered on a control that was already over (issue #84).
     expect(positions).to eq([95/96r, 95/96r])
-    expect(stopped).to be_empty
+    expect(stopped).to eq([:fired])
   end
 
   it 'RND is a shuffle that exhausts; repeat is what samples with replacement' do

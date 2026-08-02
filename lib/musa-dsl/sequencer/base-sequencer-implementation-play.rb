@@ -218,6 +218,13 @@ module Musa::Sequencer
           end
         end
       else
+        # The play is over HERE, and the caller may not have the control yet: a
+        # serie that resolves within a single instant unwinds inside this very
+        # `play` call, because a continuation at the current position is run
+        # inline. Saying so is what lets `after` and `on_stop` registered a
+        # moment later still mean something (issue #84).
+        control._finished! self, position
+
         control.do_on_stop.each(&:call)
 
         unless control.stopped?
@@ -357,7 +364,27 @@ module Musa::Sequencer
       #
       # @api private
       def on_stop(&block)
+        # Already over: on_stop means "when it terminates", and it has. The
+        # normal path calls these directly too, rather than scheduling them.
+        return block.call if @finished_at
+
         @do_on_stop << block
+      end
+
+      # Records that the play has ended, and where.
+      #
+      # Only the termination branch of `_play` calls this. It exists because the
+      # control can reach the caller already dead -- see {#after}.
+      #
+      # @param sequencer [BaseSequencer] the sequencer that was playing
+      # @param position [Rational] where the play ended
+      #
+      # @return [void]
+      #
+      # @api private
+      def _finished!(sequencer, position)
+        @finished_sequencer = sequencer
+        @finished_at = position
       end
 
       # Registers callback to execute after play completes naturally
@@ -375,6 +402,16 @@ module Musa::Sequencer
       # @api private
       def after(bars = nil, &block)
         bars ||= 0
+
+        # Already over: `after(2)` means "two bars after it ends", and it ended
+        # at @finished_at, so that is where this goes. Registering it in the
+        # list would be registering it after the only moment anything reads the
+        # list, which is what used to happen to every play that resolved within
+        # one instant -- a chord written as a serie of `forward_duration: 0`
+        # elements, a lone event with no duration -- and the callback simply
+        # never ran (issue #84).
+        return @finished_sequencer.at(@finished_at + bars.rationalize, &block) if @finished_at
+
         @do_after << { bars: bars.rationalize, block: block }
       end
     end
