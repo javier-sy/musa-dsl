@@ -32,10 +32,13 @@ RSpec.describe 'Music Documentation Examples' do
       e_harmonic = tuning.minor_harmonic[64]
       chromatic = tuning.chromatic[60]
 
-      expect(c_major).to be_a(Musa::Scales::Scale)
-      expect(d_minor).to be_a(Musa::Scales::Scale)
-      expect(e_harmonic).to be_a(Musa::Scales::Scale)
-      expect(chromatic).to be_a(Musa::Scales::Scale)
+      # The kind decides the intervals; the number in brackets decides where
+      # they start. Note the harmonic minor's raised seventh, three semitones
+      # above the sixth, and that the chromatic has twelve grades and not seven.
+      expect((0..6).collect { |i| c_major[i].pitch }).to eq [60, 62, 64, 65, 67, 69, 71]
+      expect((0..6).collect { |i| d_minor[i].pitch }).to eq [62, 64, 65, 67, 69, 70, 72]
+      expect((0..6).collect { |i| e_harmonic[i].pitch }).to eq [64, 66, 67, 69, 71, 72, 75]
+      expect((0..11).collect { |i| chromatic[i].pitch }).to eq (60..71).to_a
     end
 
     it 'accesses scale notes by grade and function' do

@@ -92,7 +92,10 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
     it '@example Preserving dataset modules' do
       p_sequence = [60, 1, 62].extend(Musa::Datasets::P)
       result = p_sequence.arrayfy(size: 6)
-      expect(result.is_a?(Musa::Datasets::P)).to be true
+
+      # Padding to a longer size repeats the content, and the P travels with it.
+      expect(result).to eq [60, 1, 62, 60, 1, 62]
+      expect(result).to be_a Musa::Datasets::P
     end
   end
 
@@ -171,7 +174,10 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
     it '@example Preserving dataset modules' do
       event = { pitch: 60, velocity: 100 }.extend(Musa::Datasets::AbsI)
       result = event.hashify(keys: [:pitch, :velocity])
-      expect(result.is_a?(Musa::Datasets::AbsI)).to be true
+
+      # Nothing missing to add, so the content is untouched -- and still AbsI.
+      expect(result).to eq(pitch: 60, velocity: 100)
+      expect(result).to be_a Musa::Datasets::AbsI
     end
   end
 
@@ -186,19 +192,27 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
     end
 
     it '@example Preserving modules' do
-      # Note: deep_copy doesn't automatically preserve singleton modules
-      # Use copy_singleton_class_modules explicitly for this
       event = [60, 100].extend(Musa::Datasets::V)
       copy = Musa::Extension::DeepCopy::DeepCopy.deep_copy(event)
+
+      # The content travels; the singleton modules do NOT. That is the claim the
+      # comment here used to make in prose, and the reason the next call exists.
+      expect(copy).to eq [60, 100]
+      expect(copy).not_to be_a Musa::Datasets::V
+
       Musa::Extension::DeepCopy::DeepCopy.copy_singleton_class_modules(event, copy)
-      expect(copy.is_a?(Musa::Datasets::V)).to be true
+
+      expect(copy).to be_a Musa::Datasets::V
     end
 
     it '@example Carrying the singleton modules over' do
       source = [60, 100].extend(Musa::Datasets::V)
       target = [60, 100]
       Musa::Extension::DeepCopy::DeepCopy.copy_singleton_class_modules(source, target)
-      expect(target.is_a?(Musa::Datasets::V)).to be true
+
+      # Only the modules move: the target keeps the content it already had.
+      expect(target).to eq [60, 100]
+      expect(target).to be_a Musa::Datasets::V
     end
 
     it '@example Shallow dup (default)' do

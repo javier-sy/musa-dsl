@@ -535,8 +535,11 @@ RSpec.describe 'Series Inline Documentation Examples' do
         .map { |v| v.extend(Musa::Datasets::AbsTimed) }
       quantized = pitch_bend.quantize(step: 1)
       result = quantized.i.to_a
-      expect(result).to be_an(Array)
-      expect(result.size).to be > 0
+
+      # Two points in, two steps out -- and the second one starts halfway,
+      # because that is where the ramp crosses into the next semitone.
+      expect(result).to eq [{ time: 0r, value: 60r, duration: 1/2r },
+                            { time: 1/2r, value: 61r, duration: 1/2r }]
     end
 
     it 'Quantize to integers' do
@@ -544,7 +547,12 @@ RSpec.describe 'Series Inline Documentation Examples' do
         .map { |v| v.extend(Musa::Datasets::AbsTimed) }
       quantized = serie.quantize(step: 1)
       result = quantized.i.to_a
-      expect(result).to be_an(Array)
+
+      # The values come out exact, as Rationals, and each step carries the
+      # duration it holds -- it is a staircase, not a list of samples.
+      expect(result).to eq [{ time: 0r, value: 1r, duration: 1/2r },
+                            { time: 1/2r, value: 2r, duration: 1/2r }]
+      expect(result.first[:value]).to be_a Rational
     end
   end
 

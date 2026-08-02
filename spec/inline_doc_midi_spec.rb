@@ -345,12 +345,14 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
         channels: [0, 1]
       )
 
-      # Panic should send all-notes-off to each channel
-      expect(mock_output).to receive(:puts).at_least(2).times do |msg|
-        expect(msg).to be_a(MIDIEvents::ChannelMessage)
-      end
+      # Panic is CC 123 (all notes off) with value 0, one per channel: 0xB0 and
+      # 0xB1 for channels 0 and 1.
+      sent = []
+      allow(mock_output).to receive(:puts) { |msg| sent << msg.to_a }
 
       voices.panic
+
+      expect(sent).to eq [[0xB0, 123, 0], [0xB1, 123, 0]]
     end
 
     it 'handles panic with reset' do
@@ -360,10 +362,14 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
         channels: [0]
       )
 
-      # Should send all-notes-off AND system reset
-      expect(mock_output).to receive(:puts).at_least(1).times
+      # All notes off, and then a System Reset (0xFF) -- which is a realtime
+      # message, not a channel one, so it is sent once and not per channel.
+      sent = []
+      allow(mock_output).to receive(:puts) { |msg| sent << msg.to_a }
 
       voices.panic(reset: true)
+
+      expect(sent).to eq [[0xB0, 123, 0], [0xFF]]
     end
 
     it 'example from ControllersControl doc line 312 - Using symbolic controller names' do
@@ -440,12 +446,14 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
       # Start a note
       voice.note pitch: 60, velocity: 100, duration: 1r
 
-      # All notes off should send MIDI message
-      expect(mock_output).to receive(:puts) do |msg|
-        expect(msg).to be_a(MIDIEvents::ChannelMessage::Message)
-      end
+      # Both: the CC that tells the instrument to stop, and an explicit note-off
+      # for the note this voice knows it is holding.
+      sent = []
+      allow(mock_output).to receive(:puts) { |msg| sent << msg.to_a }
 
       voice.all_notes_off
+
+      expect(sent).to eq [[0xB0, 123, 0], [0x80, 60, 0]]
     end
 
     it 'handles NoteControl active state' do
@@ -496,10 +504,13 @@ RSpec.describe 'MIDI Inline Documentation Examples' do
 
       voice = voices.voices.first
 
-      # Should NOT send MIDI for silence
-      expect(mock_output).not_to receive(:puts)
+      # A silence occupies its duration and sends nothing at all.
+      sent = []
+      allow(mock_output).to receive(:puts) { |msg| sent << msg.to_a }
 
       voice.note pitch: :silence, duration: 1r/4
+
+      expect(sent).to eq []
     end
 
     it 'handles note with array of pitches' do

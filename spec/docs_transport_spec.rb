@@ -7,17 +7,30 @@ RSpec.describe 'Transport Documentation Examples' do
 
   context 'Transport - Timing & Clocks' do
     it 'creates different clock types for various timing sources' do
-      # TimerClock - internal Ruby timer
+      # TimerClock - internal Ruby timer. What is asked for is what it holds,
+      # as exact Rationals and not floats.
       timer_clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
-      expect(timer_clock).to be_a(Musa::Clock::TimerClock)
+      expect(timer_clock.bpm).to eq 120
+      expect(timer_clock.ticks_per_beat).to eq 24
 
-      # DummyClock - for testing without real timing (100 ticks)
+      # DummyClock - runs as fast as it can, for a bounded number of ticks.
+      # Careful with the count: it yields ONE FEWER than asked for, because the
+      # condition decrements before testing. `new(1)` yields nothing at all.
       dummy_clock = Musa::Clock::DummyClock.new(100)
-      expect(dummy_clock).to be_a(Musa::Clock::DummyClock)
+      ticks = 0
+      dummy_clock.run { ticks += 1 }
+      expect(ticks).to eq 99
 
-      # ExternalTickClock - manual tick control
+      # ExternalTickClock - one tick per call, whenever somebody calls.
       external_clock = Musa::Clock::ExternalTickClock.new
-      expect(external_clock).to be_a(Musa::Clock::ExternalTickClock)
+      seen = 0
+      runner = Thread.new { external_clock.run { seen += 1 } }
+      sleep 0.05
+      3.times { external_clock.tick }
+      sleep 0.05
+      external_clock.terminate
+      runner.join(1)
+      expect(seen).to eq 3
     end
 
     it 'creates transport with lifecycle callbacks and schedules events' do

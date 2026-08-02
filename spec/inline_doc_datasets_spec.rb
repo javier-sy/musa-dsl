@@ -53,8 +53,9 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       scale = Musa::Scales::Scales.et12[440.0].major[60]
       gdv = pdv.to_gdv(scale)
 
-      expect(gdv).to be_a(Musa::Datasets::GDV)
-      expect(gdv[:grade]).to eq(0)
+      # C4 is the tonic, so grade 0 in octave 0. And velocity 0 is not silence:
+      # GDV velocity is a signed step around mf, which is MIDI 64.
+      expect(gdv).to eq(grade: 0, octave: 0, duration: 1.0, velocity: 0)
     end
 
     it 'Score-style GDV' do
@@ -249,7 +250,9 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       gdv = pdv.to_gdv(scale)
 
-      expect(gdv).to be_a(Musa::Datasets::GDV)
+      # C4 is the tonic, so grade 0 in octave 0. And velocity 0 is not silence:
+      # GDV velocity is a signed step around mf, which is MIDI 64.
+      expect(gdv).to eq(grade: 0, octave: 0, duration: 1.0, velocity: 0)
     end
 
     it '@example Chromatic note' do
@@ -568,8 +571,17 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       gdvd[:abs_duration] = 1.0
       gdvd.base_duration = 1/4r
 
-      # abs_duration scaled by factor
-      expect(gdvd[:abs_duration]).to be_a(Numeric)
+      # One base duration of a quarter of a bar is a quarter of a bar.
+      expect(gdvd[:abs_duration]).to eq 1/4r
+
+      # A Float, though, because that is what it was given: 1.0 * (1/4r) is
+      # 0.25 and not 1/4r. Feed it a Rational and the exactness survives.
+      expect(gdvd[:abs_duration]).to be_a Float
+
+      exact = {}.extend(Musa::Datasets::GDVd)
+      exact[:abs_duration] = 1r
+      exact.base_duration = 1/4r
+      expect(exact[:abs_duration]).to be_a Rational
     end
 
     it '@example Basic delta reconstruction' do

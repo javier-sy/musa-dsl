@@ -335,13 +335,16 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
       neumas = "(0) (+2) (+4) (+5) (+7)".to_neumas
       gdvs = Musa::Neumalang::Neumalang.parse("(0) (+2) (+4) (+5) (+7)", decode_with: decoder)
 
-      # Without decoder: GDVD format
-      expect(neumas.i.to_a[0]).to have_key(:gdvd)
+      # Without a decoder the parse stops at the notation: a first grade stated
+      # absolutely, and everything after it as a movement from the one before.
+      expect(neumas.i.to_a.first(2)).to eq [{ kind: :gdvd, gdvd: { abs_grade: 0 } },
+                                            { kind: :gdvd, gdvd: { delta_grade: 2 } }]
 
-      # With decoder: GDV format
-      expect(gdvs.i.to_a[0]).to have_key(:grade)
-      expect(gdvs.i.to_a[0]).to have_key(:duration)
-      expect(gdvs.i.to_a[0]).to have_key(:velocity)
+      # With one, the movements are resolved against the scale and what is left
+      # is music: grades, and the duration and velocity the decoder was built
+      # with. Note the second is grade 2, not "+2".
+      expect(gdvs.i.to_a.first(2)).to eq [{ grade: 0, octave: 0, duration: 1r, velocity: 1 },
+                                          { grade: 2, octave: 0, duration: 1r, velocity: 1 }]
     end
 
     it 'integrates with Series for sequential playback' do

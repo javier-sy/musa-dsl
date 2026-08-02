@@ -422,7 +422,9 @@ RSpec.describe 'Transport Inline Documentation Examples' do
 
       transport.start
 
-      expect(initialized_position).to be_a(Rational)
+      # 95/96, not 1: the sequencer starts one tick BEFORE bar 1, so that the
+      # first tick it runs is bar 1 itself.
+      expect(initialized_position).to eq 95/96r
     end
 
     it '@example on_start callback' do
