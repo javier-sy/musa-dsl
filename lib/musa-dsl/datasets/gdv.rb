@@ -72,7 +72,8 @@ module Musa::Datasets
   #
   # ### To GDVd (Delta Encoding)
   #
-  # Converts to delta encoding for efficient storage:
+  # Converts to movement-from-a-previous-event, which is what lets the same
+  # material be replayed from any other starting point:
   #
   #     gdv1 = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
   #     gdv2 = { grade: 2, octave: 0, duration: 1r, velocity: 1 }.extend(GDV)

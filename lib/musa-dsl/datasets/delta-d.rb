@@ -4,8 +4,9 @@ module Musa::Datasets
   # Delta events with flexible duration encoding.
   #
   # DeltaD (Delta Duration) extends {Delta} events with three different ways to
-  # specify duration changes in delta-encoded sequences. This provides flexibility
-  # for efficient encoding of musical sequences.
+  # specify duration changes in delta-encoded sequences: set it, add to it, or
+  # multiply it. The factor is the musically interesting one -- it augments or
+  # diminishes a passage whatever its durations were.
   #
   # ## Duration Encoding Modes
   #
@@ -43,7 +44,8 @@ module Musa::Datasets
   #
   # ## Usage in Delta Encoding
   #
-  # Used by {GDVd} for efficient delta encoding of musical sequences:
+  # Used by {GDVd}, where each event states its duration as movement from the
+  # previous one:
   #
   # @example Different duration encoding modes
   #   previous = { duration: 1.0 }

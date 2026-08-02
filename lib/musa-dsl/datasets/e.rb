@@ -77,8 +77,10 @@ module Musa::Datasets
   # Delta represents events where values are incremental changes from a previous
   # state. Examples: pitch +2 semitones, duration +0.5 beats, velocity -10.
   #
-  # Delta encoding is efficient for sequences where consecutive events have
-  # similar values.
+  # A passage written as deltas says nothing about where it starts, so it can be
+  # replayed from any other starting point: the same movement from another note,
+  # in another register, at another dynamic. That is what it is for, rather than
+  # any saving in size.
   #
   # @example Delta vs Absolute
   #   # Absolute encoding (3 events)

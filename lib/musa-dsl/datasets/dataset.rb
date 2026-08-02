@@ -84,7 +84,7 @@
 #   scale = Musa::Scales::Scales.et12[440.0].major[60]
 #   pdv = gdv.to_pdv(scale)  # Converts to MIDI pitches
 #
-# @example Delta encoding for compression
+# @example Delta encoding: the second event as movement from the first
 #   scale = Musa::Scales::Scales.et12[440.0].major[60]
 #   gdv1 = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(Musa::Datasets::GDV)
 #   gdv2 = { grade: 2, octave: 0, duration: 1r, velocity: 1 }.extend(Musa::Datasets::GDV)

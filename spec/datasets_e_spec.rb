@@ -185,6 +185,60 @@ RSpec.describe Musa::Datasets do
     end
   end
 
+  # GDVd is not compression: a passage written as movement from a previous event
+  # says nothing about where it starts, so it can start anywhere. Which means
+  # the first event of a sequence has nothing before it, and that is exactly the
+  # one the reading half could not take (issue #88).
+  context 'The first event of a differential sequence' do
+    let(:scale) { Musa::Scales::Scales.default_system.default_tuning.major[60] }
+    let(:decoder) { Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r) }
+
+    def parsed(neuma)
+      Musa::Neumalang::Neumalang.parse(neuma, decode_with: decoder).to_a(recursive: true).first
+    end
+
+    it 'closes the pair: written with no previous, read with no previous' do
+      gdv = parsed('(2 4 mf)')
+
+      gdvd = gdv.to_gdvd(scale)
+
+      # Fully absolute: nothing in it is relative, so nothing is missing.
+      expect(gdvd).to eq(abs_grade: 2, abs_duration: 1r, abs_velocity: 1)
+      expect(gdvd.to_gdv(scale)).to eq(grade: 2, duration: 1r, velocity: 1)
+    end
+
+    it 'reads a rest opening a sequence as a rest' do
+      gdvd = parsed('(silence 4)').to_gdvd(scale)
+
+      expect(gdvd.to_gdv(scale)[:silence]).to be true
+    end
+
+    it 'still refuses a movement with nothing to move from' do
+      gdvd = { delta_grade: 2 }.extend(Musa::Datasets::GDVd)
+      gdvd.base_duration = 1/4r
+
+      expect { gdvd.to_gdv(scale) }.to raise_error(ArgumentError)
+    end
+
+    it 'is the same movement read from another base, which is what it is for' do
+      motif = %w[(+1) (+2) (-1)].collect do |neuma|
+        Musa::Neumalang::Neumalang.parse(neuma).to_a(recursive: true)
+                                  .first[:gdvd].extend(Musa::Datasets::GDVd)
+      end
+
+      from_c = motif.inject([{ grade: 0, octave: 0 }.extend(Musa::Datasets::GDV)]) do |gdvs, step|
+        gdvs << step.to_gdv(scale, previous: gdvs.last)
+      end
+
+      from_e = motif.inject([{ grade: 2, octave: 0 }.extend(Musa::Datasets::GDV)]) do |gdvs, step|
+        gdvs << step.to_gdv(scale, previous: gdvs.last)
+      end
+
+      expect(from_c.collect { |g| g[:grade] }).to eq([0, 1, 3, 2])
+      expect(from_e.collect { |g| g[:grade] }).to eq([2, 3, 5, 4])
+    end
+  end
+
   # The whole dynamics table, written out, so that it stops depending on prose.
   #
   # It depended on prose and the prose was wrong three times over: `velocity_of`

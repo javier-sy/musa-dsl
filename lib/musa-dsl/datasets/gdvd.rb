@@ -5,20 +5,27 @@ require_relative 'helper'
 
 
 module Musa::Datasets
-  # Delta-encoded score events for efficient compression.
+  # Score events written as movement from whatever came before.
   #
-  # GDVd (Grade/Duration/Velocity delta) represents musical events using
-  # delta encoding - storing only changes from previous events.
-  # Extends {DeltaD} for flexible duration encoding and {DeltaI} for indexed deltas.
+  # GDVd (Grade/Duration/Velocity delta) states each event as a change from a
+  # previous one: an interval rather than a grade, a factor rather than a
+  # duration. Extends {DeltaD} for flexible duration encoding and {DeltaI} for
+  # indexed deltas.
   #
   # ## Purpose
   #
-  # GDVd provides efficient delta encoding for musical sequences:
+  # NOT compression. The point is that a passage written this way says nothing
+  # about where it starts, so it can start anywhere: the same GDVd sequence
+  # applied to a different {GDV} is the same music transposed, in another
+  # register, at another dynamic, at another speed -- and applied to a different
+  # scale it is the same shape read through other intervals.
   #
-  # - **Compact storage**: Only changed values are stored
-  # - **Efficient serialization**: Neuma format uses delta notation
-  # - **Lossless compression**: Full reconstruction via {#to_gdv}
-  # - **Musical patterns**: Captures relative motion (intervals, velocity changes)
+  # That is what {#to_gdv}'s `previous:` is: the base the movement departs
+  # from. A motif is its profile, and the profile is the dataset.
+  #
+  # - **Relative motion**: intervals, dynamic changes, duration factors
+  # - **Re-rootable**: the same material from any starting point
+  # - **The notation is written this way too**: `(+1 -o1 *2)` is a GDVd
   #
   # ## Encoding Types
   #
@@ -191,8 +198,16 @@ module Musa::Datasets
     #   gdvd = { factor_duration: 2 }.extend(GDVd)
     #   gdv = gdvd.to_gdv(scale, previous: previous)
     #   # => { grade: 0, duration: 2.0 }
-    def to_gdv(scale, previous:)
-      r = previous.clone.delete_if {|k,_| !GDV::NaturalKeys.include?(k)}.extend GDV
+    def to_gdv(scale, previous: nil)
+      # No previous event is the beginning, and the beginning is where reading
+      # starts. What `to_gdvd` writes there is fully absolute -- abs_grade,
+      # abs_duration, abs_velocity -- so it needs nothing to depart from; the
+      # keyword used to be required anyway and the clone died on the nil, so the
+      # library could write an event it could not read back (issue #88).
+      #
+      # A genuinely differential event still fails without one, which is right:
+      # with nothing before it there is no movement to describe.
+      r = (previous || {}).clone.delete_if { |k, _| !GDV::NaturalKeys.include?(k) }.extend GDV
 
       r.base_duration = @base_duration
 
