@@ -449,10 +449,10 @@ module Musa
       # @return [Chord] new chord in different octave
       #
       # @example Move chord down one octave
-      #   chord.octave(-1)
+      #   c_major.tonic.chord.octave(-1).pitches  # => [48, 52, 55]
       #
       # @example Move chord up two octaves
-      #   chord.octave(2)
+      #   c_major.tonic.chord.octave(2).pitches  # => [84, 88, 91]
       def octave(octave)
         source_notes_map = @source_notes_map.transform_values do |notes|
           notes.collect { |note| note.at_octave(octave) }.freeze
@@ -471,10 +471,12 @@ module Musa
       # @return [Chord] new chord with moved positions
       #
       # @example Move root down, seventh up
-      #   chord.with_move(root: -1, seventh: 1)
+      #   c_major.tonic.chord(:seventh).with_move(root: -1, seventh: 1).pitches
+      #   # => [48, 64, 67, 83]
       #
       # @example Drop voicing (move third and seventh down)
-      #   chord.with_move(third: -1, seventh: -1)
+      #   c_major.tonic.chord(:seventh).with_move(third: -1, seventh: -1).pitches
+      #   # => [52, 59, 60, 67]
       def with_move(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move.merge(octaves), @duplicate, @source_notes_map)
       end
@@ -489,13 +491,15 @@ module Musa
       # @return [Chord] new chord with duplicated positions
       #
       # @example Duplicate root two octaves down
-      #   chord.with_duplicate(root: -2)
+      #   c_major.tonic.chord.with_duplicate(root: -2).pitches  # => [36, 60, 64, 67]
       #
       # @example Duplicate third in multiple octaves
-      #   chord.with_duplicate(third: [-1, 1])
+      #   c_major.tonic.chord.with_duplicate(third: [-1, 1]).pitches
+      #   # => [52, 60, 64, 67, 76]
       #
       # @example Duplicate multiple positions
-      #   chord.with_duplicate(root: -1, fifth: 1)
+      #   c_major.tonic.chord.with_duplicate(root: -1, fifth: 1).pitches
+      #   # => [48, 60, 64, 67, 79]
       def with_duplicate(**octaves)
         Chord.new(@root, @scale, @chord_definition, @move, @duplicate.merge(octaves), @source_notes_map)
       end

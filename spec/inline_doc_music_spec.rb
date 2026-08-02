@@ -162,8 +162,12 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       a_minor = tuning.minor[69]
 
-      expect(c_major).to be_a(Musa::Scales::Scale)
-      expect(a_minor).to be_a(Musa::Scales::Scale)
+      # The number in brackets is the root pitch, and the scale is built from it.
+      expect(c_major.root.pitch).to eq 60
+      expect((0..6).collect { |i| c_major[i].pitch }).to eq [60, 62, 64, 65, 67, 69, 71]
+
+      expect(a_minor.root.pitch).to eq 69
+      expect((0..6).collect { |i| a_minor[i].pitch }).to eq [69, 71, 72, 74, 76, 77, 79]
     end
 
     it 'demonstrates historical pitch' do
@@ -271,8 +275,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       i_chord = c_major.tonic.chord
       v_seventh = c_major.dominant.chord :seventh
 
-      expect(i_chord).to be_a(Musa::Chords::Chord)
-      expect(v_seventh).to be_a(Musa::Chords::Chord)
+      expect(i_chord.pitches).to eq [60, 64, 67]
+      expect(v_seventh.pitches).to eq [67, 71, 74, 77]
     end
 
     it 'demonstrates Scale#root' do
@@ -456,8 +460,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       triad = tonic.chord
       seventh = tonic.chord :seventh
 
-      expect(triad).to be_a(Musa::Chords::Chord)
-      expect(seventh).to be_a(Musa::Chords::Chord)
+      expect(triad.pitches).to eq [60, 64, 67]
+      expect(seventh.pitches).to eq [60, 64, 67, 71]
     end
 
     it 'demonstrates NoteInScale#functions' do
@@ -673,7 +677,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       note_in_minor = c_major_tonic.on(c_minor)
 
-      expect(note_in_minor).not_to be_nil
+      # Same pitch, read in another scale: the note does not move, its context does.
       expect(note_in_minor.pitch).to eq(60)
       expect(note_in_minor.scale).to eq(c_minor)
     end
@@ -686,7 +690,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       chord = note.chord
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      # No size given: a triad.
+      expect(chord.pitches).to eq [60, 64, 67]
     end
 
     it 'demonstrates NoteInScale#chord with specified size' do
@@ -698,8 +703,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       seventh = note.chord :seventh
       ninth = note.chord :ninth
 
-      expect(seventh).to be_a(Musa::Chords::Chord)
-      expect(ninth).to be_a(Musa::Chords::Chord)
+      expect(seventh.pitches).to eq [60, 64, 67, 71]
+      expect(ninth.pitches).to eq [60, 64, 67, 71, 74]
     end
 
     it 'demonstrates NoteInScale#chord with features hash' do
@@ -712,8 +717,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
       chord1 = note.chord(quality: :minor, size: :seventh, allow_chromatic: true)
       chord2 = note.chord(:minor, :seventh, allow_chromatic: true)
 
-      expect(chord1).to be_a(Musa::Chords::Chord)
-      expect(chord2).to be_a(Musa::Chords::Chord)
+      # The two spellings are the same chord: named features and bare values.
+      expect(chord1.pitches).to eq [60, 63, 67, 70]
+      expect(chord2.pitches).to eq chord1.pitches
     end
 
     it 'demonstrates NoteInScale#chord with voicing' do
@@ -724,7 +730,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       chord = note.chord :seventh, move: {root: -1}, duplicate: {fifth: 1}
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      expect(chord.pitches).to eq [48, 64, 67, 71, 79]
     end
   end
 
@@ -738,8 +744,11 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       definition = Musa::Chords::ChordDefinition[:maj_test]
 
-      expect(definition).not_to be_nil
       expect(definition.name).to eq(:maj_test)
+      expect(definition.features).to eq(quality: :major, size: :triad)
+
+      # What registering it was for: the offsets, applied to a root.
+      expect(definition.pitches(60)).to eq [60, 64, 67]
     end
 
     it 'demonstrates defining a dominant seventh' do
@@ -751,8 +760,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       definition = Musa::Chords::ChordDefinition[:dom7_test]
 
-      expect(definition).not_to be_nil
       expect(definition.name).to eq(:dom7_test)
+      expect(definition.features).to eq(quality: :dominant, size: :seventh)
+      expect(definition.pitches(60)).to eq [60, 64, 67, 70]
     end
 
     it 'find_by_pitches returns the definition, not its name' do
@@ -770,8 +780,11 @@ RSpec.describe 'Music Inline Documentation Examples' do
       maj = Musa::Chords::ChordDefinition[:maj]
       min7 = Musa::Chords::ChordDefinition[:min7]
 
-      expect(maj).to be_a(Musa::Chords::ChordDefinition)
-      expect(min7).to be_a(Musa::Chords::ChordDefinition)
+      expect(maj.features).to eq(quality: :major, size: :triad)
+      expect(maj.pitches(60)).to eq [60, 64, 67]
+
+      expect(min7.features).to eq(quality: :minor, size: :seventh)
+      expect(min7.pitches(60)).to eq [60, 63, 67, 70]
     end
 
     it 'demonstrates features_from conversion' do
@@ -785,8 +798,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       # From ChordDefinition @example
       definitions = Musa::Chords::ChordDefinition.find_by_features(quality: :major, size: :triad)
 
-      expect(definitions).to be_an(Array)
-      expect(definitions.first).to be_a(Musa::Chords::ChordDefinition)
+      # Exactly one definition answers to major triad.
+      expect(definitions.collect(&:name)).to eq [:maj]
     end
 
     it 'demonstrates find_by_pitches' do
@@ -860,7 +873,11 @@ RSpec.describe 'Music Inline Documentation Examples' do
         .with_move(root: -1, third: -1)
         .with_duplicate(fifth: [0, 1])
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      # G7 [67, 71, 74, 77], with root and third dropped an octave and the fifth
+      # duplicated. Note the 0 in the duplication: a copy in the SAME octave, so
+      # 74 appears twice. Moves and duplications compose, and the result is
+      # ordered by pitch, not by chord position.
+      expect(chord.pitches).to eq [55, 59, 74, 74, 77, 86]
     end
 
     it 'demonstrates feature navigation' do
@@ -871,8 +888,10 @@ RSpec.describe 'Music Inline Documentation Examples' do
       min_triad = maj_triad.with_quality(:minor)
       maj_seventh = maj_triad.with_size(:seventh)
 
-      expect(min_triad).to be_a(Musa::Chords::Chord)
-      expect(maj_seventh).to be_a(Musa::Chords::Chord)
+      # One feature at a time, from the same chord: the root does not move.
+      expect(maj_triad.pitches).to eq [60, 64, 67]
+      expect(min_triad.pitches).to eq [60, 63, 67]
+      expect(maj_seventh.pitches).to eq [60, 64, 67, 71]
     end
 
     it 'builds a chord on a bare pitch, with no scale in hand (issue #71)' do
@@ -910,7 +929,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
       scale = tuning.major[60]
       chord = Musa::Chords::Chord.with_root(scale.tonic, name: :maj7)
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      expect(chord.pitches).to eq [60, 64, 67, 71]
     end
 
     it 'demonstrates Chord.with_root with MIDI pitch and scale' do
@@ -919,7 +938,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       chord = Musa::Chords::Chord.with_root(60, scale: c_major, name: :min)
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      # A C minor triad named into being, inside a scale that does not contain
+      # its third.
+      expect(chord.pitches).to eq [60, 63, 67]
     end
 
     it 'demonstrates Chord.with_root with scale degree' do
@@ -928,7 +949,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       chord = Musa::Chords::Chord.with_root(:dominant, scale: c_major, quality: :dominant, size: :seventh)
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      # The root is a degree of the scale, not a pitch: G7 in C major.
+      expect(chord.pitches).to eq [67, 71, 74, 77]
+      expect(chord.features).to eq(quality: :dominant, size: :seventh)
     end
 
     it 'demonstrates Chord.with_root with features instead of name' do
@@ -937,7 +960,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
       c_major = tuning.major[60]
       chord = Musa::Chords::Chord.with_root(60, scale: c_major, quality: :major, size: :triad)
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      expect(chord.pitches).to eq [60, 64, 67]
     end
 
     it 'demonstrates Chord.with_root with voicing parameters' do
@@ -947,7 +970,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
       chord = Musa::Chords::Chord.with_root(60, scale: c_major, name: :maj7,
                                            move: {root: -1}, duplicate: {fifth: 1})
 
-      expect(chord).to be_a(Musa::Chords::Chord)
+      # Voicing at construction time: the root drops an octave and the fifth
+      # gains a copy an octave up. Five voices out of a four-note chord.
+      expect(chord.pitches).to eq [48, 64, 67, 71, 79]
     end
 
     it 'demonstrates Chord#notes' do
@@ -956,10 +981,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       scale = tuning.major[60]
       chord = scale.tonic.chord
 
-      chord.notes.each do |chord_grade_note|
-        expect(chord_grade_note.grade).to be_a(Symbol)
-        expect(chord_grade_note.note.pitch).to be_a(Integer)
-      end
+      expect(chord.notes.collect(&:grade)).to eq %i[root third fifth]
+      expect(chord.notes.collect { |n| n.note.pitch }).to eq [60, 64, 67]
     end
 
     it 'demonstrates Chord#pitches all pitches' do
@@ -1003,7 +1026,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       seventh = chord.featuring(size: :seventh)
 
-      expect(seventh).to be_a(Musa::Chords::Chord)
+      expect(seventh.features).to eq(quality: :major, size: :seventh)
+      expect(seventh.pitches).to eq [60, 64, 67, 71]
     end
 
     it 'demonstrates Chord#featuring change quality' do
@@ -1015,7 +1039,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
       # Need allow_chromatic for non-diatonic notes
       minor = chord.featuring(quality: :minor, allow_chromatic: true)
 
-      expect(minor).to be_a(Musa::Chords::Chord)
+      # The Eb is the reason allow_chromatic is needed: C major does not have it.
+      expect(minor.features).to eq(quality: :minor, size: :triad)
+      expect(minor.pitches).to eq [60, 63, 67]
     end
 
     it 'demonstrates Chord#featuring change multiple features' do
@@ -1027,7 +1053,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
       # Need allow_chromatic for non-diatonic notes
       dom_ninth = chord.featuring(quality: :dominant, size: :ninth, allow_chromatic: true)
 
-      expect(dom_ninth).to be_a(Musa::Chords::Chord)
+      expect(dom_ninth.features).to eq(quality: :dominant, size: :ninth)
+      expect(dom_ninth.pitches).to eq [60, 64, 67, 70, 74]
     end
 
     it 'demonstrates Chord#octave move chord down' do
@@ -1038,7 +1065,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       lower = chord.octave(-1)
 
-      expect(lower).to be_a(Musa::Chords::Chord)
+      expect(chord.pitches).to eq [60, 64, 67]
+      expect(lower.pitches).to eq [48, 52, 55]
     end
 
     it 'demonstrates Chord#octave move chord up' do
@@ -1049,7 +1077,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       higher = chord.octave(2)
 
-      expect(higher).to be_a(Musa::Chords::Chord)
+      expect(higher.pitches).to eq [84, 88, 91]
     end
 
     it 'demonstrates Chord#with_move root down seventh up' do
@@ -1060,7 +1088,10 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       voiced = chord.with_move(root: -1, seventh: 1)
 
-      expect(voiced).to be_a(Musa::Chords::Chord)
+      # The root drops an octave and the seventh rises one: the chord opens up
+      # without changing which notes it is made of.
+      expect(chord.pitches).to eq [60, 64, 67, 71]
+      expect(voiced.pitches).to eq [48, 64, 67, 83]
     end
 
     it 'demonstrates Chord#with_move drop voicing' do
@@ -1071,7 +1102,9 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       dropped = chord.with_move(third: -1, seventh: -1)
 
-      expect(dropped).to be_a(Musa::Chords::Chord)
+      # A drop voicing: two inner voices go down an octave, and what was the
+      # root is no longer the lowest note.
+      expect(dropped.pitches).to eq [52, 59, 60, 67]
     end
 
     it 'demonstrates Chord#with_duplicate root two octaves down' do
@@ -1082,7 +1115,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       doubled = chord.with_duplicate(root: -2)
 
-      expect(doubled).to be_a(Musa::Chords::Chord)
+      # Duplication ADDS a voice; the original stays where it was.
+      expect(doubled.pitches).to eq [36, 60, 64, 67]
     end
 
     it 'demonstrates Chord#with_duplicate third in multiple octaves' do
@@ -1093,7 +1127,8 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       expanded = chord.with_duplicate(third: [-1, 1])
 
-      expect(expanded).to be_a(Musa::Chords::Chord)
+      # An array duplicates the same position in several octaves at once.
+      expect(expanded.pitches).to eq [52, 60, 64, 67, 76]
     end
 
     it 'demonstrates Chord#with_duplicate multiple positions' do
@@ -1104,7 +1139,7 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       expanded = chord.with_duplicate(root: -1, fifth: 1)
 
-      expect(expanded).to be_a(Musa::Chords::Chord)
+      expect(expanded.pitches).to eq [48, 60, 64, 67, 79]
     end
   end
 
