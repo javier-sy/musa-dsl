@@ -179,8 +179,9 @@ chain of `if`.
 
 **Idiom** — **Variatio** (fields + `constructor`, re-constrained at runtime with
 `.on()`), **GenerativeGrammar** (`|` alternative, `+` sequence, `.repeat`,
-`.limit`), **Rules** (grow a tree, `prune` during growth, `fish` the survivors),
-**Darwin** (score candidates by measures and weights, select the fittest).
+`.limit`), **Darwin** (score candidates by measures and weights, select the
+fittest). And, in its own gem, **musa-rules** (elaborate each element of a
+sequence through stages, `prune` between them, knowing what was chosen before).
 
 **What is gained** — the exploration space becomes an object: re-restrictable,
 filterable, and prunable *during* growth instead of generate-then-filter. The

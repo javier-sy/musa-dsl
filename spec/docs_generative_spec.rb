@@ -62,64 +62,6 @@ RSpec.describe 'Generative Documentation Examples' do
       expect(limited_chords).to include({ root: 64, type: :minor })
     end
 
-    it 'generates chord voicings using Rules production system' do
-      # Build chord voicings by adding notes sequentially
-      rules = Musa::Rules::Rules.new do
-        # Step 1: Choose root note
-        grow 'add root' do |seed|
-          [60, 64, 67].each { |root| branch [root] }  # C, E, G
-        end
-
-        # Step 2: Add third (major or minor)
-        grow 'add third' do |chord|
-          branch chord + [chord[0] + 4]  # Major third
-          branch chord + [chord[0] + 3]  # Minor third
-        end
-
-        # Step 3: Add fifth
-        grow 'add fifth' do |chord|
-          branch chord + [chord[0] + 7]
-        end
-
-        # Pruning rule: avoid wide intervals
-        cut 'no wide spacing' do |chord|
-          if chord.size >= 2
-            prune if (chord[-1] - chord[-2]) > 12  # Max octave between adjacent notes
-          end
-        end
-
-        # End after three notes
-        ended_when do |chord|
-          chord.size == 3
-        end
-      end
-
-      tree = rules.apply(0)  # seed value (triggers generation)
-      combinations = tree.combinations
-
-      expect(combinations).to be_an(Array)
-      expect(combinations.size).to eq(6)  # 3 roots × 2 thirds × 1 fifth = 6 voicings
-
-      # Extract voicings from combinations (last element of each path)
-      voicings = combinations.map { |path| path.last }
-
-      # All voicings should have 3 notes
-      expect(voicings.all? { |v| v.size == 3 }).to be true
-
-      # Should include specific voicings
-      expect(voicings).to include([60, 64, 67])  # C major
-      expect(voicings).to include([60, 63, 67])  # C minor
-
-      # With parameters. `max_interval:` is passed through to the blocks, none
-      # of which reads it here, so the result is the same six voicings -- which
-      # is worth asserting rather than assuming.
-      tree_with_params = rules.apply(0, max_interval: 7)
-
-      expect(tree_with_params.combinations.collect(&:last))
-        .to eq([[60, 64, 67], [60, 63, 67], [64, 68, 71],
-                [64, 67, 71], [67, 71, 74], [67, 70, 74]])
-    end
-
     it 'generates combinations using Generative Grammar with operators' do
       # Use GenerativeGrammar module methods directly
       a = Musa::GenerativeGrammar.N('a', size: 1)

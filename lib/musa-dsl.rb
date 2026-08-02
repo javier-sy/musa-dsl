@@ -45,7 +45,7 @@ require_relative 'musa-dsl/generative'
 # - **Transport & Timing** - Multiple clock sources (internal, MIDI, external) with microsecond precision
 # - **Audio Engine Independent** - Works with any MIDI-capable, OSC-capable or any other output hardware or software system
 # - **Series-Based Composition** - Flexible sequence generators for pitches, rhythms, dynamics, and any musical parameter
-# - **Generative Tools** - Markov chains, combinatorial variations (Variatio), rule-based production systems (Rules), formal grammars (GenerativeGrammar), and genetic algorithms (Darwin)
+# - **Generative Tools** - Markov chains, combinatorial variations (Variatio), formal grammars (GenerativeGrammar), and genetic algorithms (Darwin)
 # - **Matrix Operations** - Mathematical transformations for musical structures
 # - **Scale System** - Comprehensive support for scales, tuning systems, and chord structures
 # - **Neumalang Notation** - Intuitive text-based and customizable musical (or sound) notation
@@ -104,7 +104,6 @@ module Musa
   # 
   # - {Musa::Darwin} - Evolutionary/genetic algorithms
   # - {Musa::Markov} - Markov chain generation
-  # - {Musa::Rules} - Rule-based generative system
   # - {Musa::Variatio} - Combinatorial variation generator
   #
   # ### Input/Output
@@ -163,7 +162,6 @@ module Musa
 
     include Musa::Darwin
     include Musa::Markov
-    include Musa::Rules
     include Musa::Variatio
 
     include Musa::MIDIRecorder

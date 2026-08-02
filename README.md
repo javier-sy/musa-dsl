@@ -23,7 +23,7 @@ Musa-DSL is a programming language DSL (Domain-Specific Language) based on Ruby 
 - **Transport & Timing** - Multiple clock sources (internal, MIDI, external) with microsecond precision
 - **Audio Engine Independent** - Works with any MIDI-capable, OSC-capable or any other output hardware or software system
 - **Series-Based Composition** - Flexible sequence generators for pitches, rhythms, dynamics, and any musical parameter
-- **Generative Tools** - Markov chains, combinatorial variations (Variatio), rule-based production systems (Rules), formal grammars (GenerativeGrammar), and genetic algorithms (Darwin)
+- **Generative Tools** - Markov chains, combinatorial variations (Variatio), formal grammars (GenerativeGrammar), and genetic algorithms (Darwin)
 - **Matrix Operations** - Mathematical transformations for musical structures
 - **Scale System** - Comprehensive support for scales, tuning systems, and chord structures
 - **Neumalang Notation** - Intuitive text-based and customizable musical (or sound) notation
@@ -70,7 +70,7 @@ Two complete, runnable examples included here. Pedagogical learning is covered s
 A collection of 22+ working demo projects covering the full spectrum of Musa DSL capabilities:
 
 - **Basic concepts**: Setup, series, neumas, canon
-- **Generative tools**: Markov chains, Variatio, Darwin, Grammar, Rules, Matrix
+- **Generative tools**: Markov chains, Variatio, Darwin, Grammar, Matrix
 - **DAW integration**: MIDI sync, live coding, clock modes
 - **External protocols**: OSC with SuperCollider and Max/MSP
 - **Advanced patterns**: Event architecture, parameter automation, multi-phase compositions
@@ -109,7 +109,7 @@ The musa-dsl framework is organized in modular layers. Each component has its ow
 
 ### 4. Generation & Transformation Layer
 - [**series**](docs/subsystems/series.md) - Lazy functional sequence generators with map/filter operations, numeric generators, buffering, quantization, and timed merging. Transpose, repeat, and combination operations; infinite and finite series support.
-- [**generative**](docs/subsystems/generative.md) - Algorithmic composition tools: Markov chains (probabilistic sequence generation), Variatio (Cartesian product parameter variations), Rules (L-system-like production systems with growth/pruning), GenerativeGrammar (formal grammar-based generation), and Darwin (genetic algorithms for evolutionary composition).
+- [**generative**](docs/subsystems/generative.md) - Algorithmic composition tools: Markov chains (probabilistic sequence generation), Variatio (Cartesian product parameter variations), GenerativeGrammar (formal grammar-based generation), and Darwin (genetic algorithms for evolutionary composition).
 - [**matrix**](docs/subsystems/matrix.md) - Matrix operations for musical gestures: matrix-to-P (point sequence) conversion for sequencer playback, gesture condensation and transformation. Treats sonic gestures as geometric objects.
 
 ### 5. Output & Communication Layer
