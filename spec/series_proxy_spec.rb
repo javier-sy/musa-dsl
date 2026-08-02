@@ -159,6 +159,19 @@ RSpec.describe Musa::Series do
       cycle
     end
 
+    it 'the same prototype in two branches gives two independent instances' do
+      # The register that makes a cycle instantiate once is a recursion stack,
+      # not a memory of everywhere the walk has been. Sharing one instance
+      # between two acyclic uses had them drain a single iterator between them
+      # (found by demo-19 of musadsl-demo, broken from 0.46.0 to 0.47.1).
+      material = S(1, 2, 3)
+
+      expect(H(a: material, b: material.reverse).i.to_a).to eq \
+        [{ a: 1, b: 3 }, { a: 2, b: 2 }, { a: 3, b: 1 }]
+
+      expect((material + material.reverse).i.to_a).to eq [1, 2, 3, 3, 2, 1]
+    end
+
     it 'a proxy that closes a cycle has to be declared cyclic' do
       back = PROXY()
 

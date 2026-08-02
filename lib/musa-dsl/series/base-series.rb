@@ -434,20 +434,33 @@ module Musa
           if instance?
             self
           elsif prototype?
-            # A prototype already turned into an instance during THIS walk gives
-            # back that instance. Without the register, instantiating a circular
-            # graph -- the ostinato PROXY exists for -- walked round it cloning
-            # for ever; with it, the cycle becomes a cycle again, of the same
-            # shape, between the new nodes (issue #77). It is the same device
-            # `deep_copy` uses for circular object graphs.
+            # A prototype reached again while it is STILL BEING instantiated
+            # gives back the instance being built for it. That is a cycle
+            # closing, and without this the walk went round the ostinato PROXY
+            # exists for cloning for ever; with it, the cycle becomes a cycle
+            # again, of the same shape, between the new nodes (issue #77).
+            #
+            # IN PROGRESS, not merely seen: the register is a recursion stack,
+            # and the entry goes away when the instantiation finishes. A
+            # prototype that appears twice in an ACYCLIC graph is two separate
+            # uses of the same template and must give two independent instances
+            # -- `H(a: fib, b: fib.reverse)` has to iterate `fib` twice, not hand
+            # both branches one iterator for them to drain between them.
+            # Registering for the whole walk, as this did between 0.46.0 and
+            # 0.47.1, gave them the same one.
             built ||= {}
-            existing = built[object_id]
-            return existing if existing
+            in_progress = built[object_id]
+            return in_progress if in_progress
 
             new_instance = clone
             built[object_id] = new_instance
 
-            new_instance._instance!(built)
+            begin
+              new_instance._instance!(built)
+            ensure
+              built.delete(object_id)
+            end
+
             new_instance.mark_as_instance!(self)
             new_instance.init if new_instance.respond_to?(:init)
 
