@@ -47,9 +47,9 @@ using Musa::Extension::ExplodeRanges
 [0, 2..4, 7].explode_ranges
 # => [0, 2, 3, 4, 7]
 
-# Works with nested structures
+# Only at the top level: a range inside a nested array is left alone.
 [1, 3..5, [10, 12..14]].explode_ranges
-# => [1, 3, 4, 5, [10, 12, 13, 14]]
+# => [1, 3, 4, 5, [10, 12..14]]
 
 # Useful for pitch collections
 chord = [60, 64..67, 72].explode_ranges

@@ -105,7 +105,8 @@ descending.i.to_a  # => [10, 8, 6, 4, 2, 0]
 # FIBO: Fibonacci rhythmic proportions
 rhythm = FIBO().max_size(8).map { |n| Rational(n, 16) }
 rhythm.i.to_a
-# => [1/16, 1/16, 1/8, 3/16, 5/16, 1/2, 13/16, 21/16]
+# => [1/16r, 1/16r, 1/8r, 3/16r, 5/16r, 1/2r, 13/16r, 21/16r]
+# Con la `r`: sin ella Ruby lee `1/16` como división entera y da 0.
 
 # RND: Random melody with constraints
 melody = RND(60, 62, 64, 65, 67, 69, 71, 72)
@@ -228,24 +229,40 @@ require 'musa-dsl'
 include Musa::Series
 
 # Example 1: Quantize continuous pitch bend to semitones
+#
+# The hashes have to be AbsTimed: quantize works on a serie of timed values,
+# and a bare hash of the right shape is not one -- it raises "Don't know how
+# to process".
 pitch_bend = S({ time: 0r, value: 60.3 },
                { time: 1r, value: 61.8 },
                { time: 2r, value: 63.1 })
+             .map { |v| v.extend(Musa::Datasets::AbsTimed) }
 
 quantized = pitch_bend.quantize(step: 1)  # Quantize to integer semitones
 
 quantized.i.to_a
-# => [{ time: 0r, value: 60, duration: 1r },
-#     { time: 1r, value: 62, duration: 1r }]
+# => [{ time: 0r, value: 60r, duration: 1/2r },
+#     { time: 1/2r, value: 61r, duration: 1r },
+#     { time: 3/2r, value: 62r, duration: 1r },
+#     { time: 5/2r, value: 63r, duration: 1/2r }]
+#
+# One step per semitone crossed, and each carries the time it holds: the
+# result is a staircase, not a list of samples taken at the input times.
 
 # Example 2: Predictive quantization for smooth crossings
 continuous = S({ time: 0r, value: 0 }, { time: 4r, value: 10 })
+             .map { |v| v.extend(Musa::Datasets::AbsTimed) }
 
 predicted = continuous.quantize(step: 2, predictive: true)
 
-predicted.i.to_a
-# Generates crossing points at values 0, 2, 4, 6, 8, 10
-# with precise timing for each boundary crossing
+predicted.i.to_a.first(3)
+# => [{ time: 0r, value: 0r, duration: 2/5r },
+#     { time: 2/5r, value: 2r, duration: 4/5r },
+#     { time: 6/5r, value: 4r, duration: 4/5r }]
+#
+# The crossings are where the ramp actually reaches each step, so the
+# durations are uneven: 2/5 of a bar to climb the first unit, 4/5 for each
+# of the rest.
 ```
 
 **TimedSerie Operations** - Time-Based Merging:

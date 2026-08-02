@@ -22,7 +22,9 @@
 # counted apart: they are not claims a test can contradict, and that is worth
 # knowing on its own.
 #
-#   ruby tools/doc-examples.rb            # everything
+#   ruby tools/doc-examples.rb            # lib/ and docs/
+#   ruby tools/doc-examples.rb --docs     # only the prose documentation
+#   ruby tools/doc-examples.rb --lib      # only the inline documentation
 #   ruby tools/doc-examples.rb series     # only paths matching "series"
 #   ruby tools/doc-examples.rb -v         # list every mismatch in full
 
@@ -137,6 +139,47 @@ module DocExamples
     end
   end
 
+  # The same, for the prose documentation.
+  #
+  # WHY IT IS HERE AND NOT IN A SPEC OF ITS OWN. `docs/subsystems/*.md` had
+  # `spec/docs_*_spec.rb` beside it, hand-transcribed from some of its blocks --
+  # eleven blocks in sequencer.md against one example in its spec. A
+  # transcription is a copy, and a copy drifts from its original in silence: fix
+  # the spec, leave the document lying, and the suite still reports green. That
+  # is the shape of failure P6 describes, one layer opining about another
+  # instead of deriving from it. Run where they live, and they can fail.
+  #
+  # A markdown file is ONE narrative, top to bottom, because that is how it is
+  # read: a block that says `melody.i.to_a` is standing on the `melody =` of the
+  # block above it. The Ruby side needs `preamble` to recover that binding from
+  # elsewhere in the file; here the blocks in order are the binding.
+  def extract_markdown(root = File.expand_path('../docs', __dir__))
+    Dir.glob(File.join(root, '**/*.md')).sort.flat_map do |path|
+      lines = File.readlines(path)
+      examples = []
+      current = nil
+      heading = nil
+
+      lines.each_with_index do |line, index|
+        if (match = line.match(/^#+\s+(.+?)\s*$/)) && current.nil?
+          heading = match[1]
+        end
+
+        if line.match?(/^```ruby\s*$/)
+          current = Example.new(file: path, line: index + 2, title: heading.to_s,
+                                code: [], namespace: [], block: [path, 0])
+        elsif line.match?(/^```\s*$/) && current
+          examples << current
+          current = nil
+        elsif current
+          current.code << line.chomp
+        end
+      end
+
+      examples.reject { |example| example.code.join.strip.empty? }
+    end
+  end
+
   # The @examples of one comment, in the order they are written. They share a
   # process and a binding, because they share a story.
   def narratives(examples)
@@ -166,6 +209,15 @@ module DocExamples
   # as statements are. RUNAWAY caps that accumulation: a fragment that never
   # parses would otherwise swallow everything after it.
   RUNAWAY = 40
+
+  # A markdown narrative carries its own vocabulary: its blocks run in order, so
+  # everything an earlier one bound is already there. Only Ruby files need the
+  # assignments recovered from around the comment.
+  def preamble_for(example)
+    return [] if example.file.end_with?('.md')
+
+    preamble(example.file, before: example.line)
+  end
 
   def preamble(path, before:)
     pending = []
@@ -330,7 +382,7 @@ module DocExamples
       # and the `part` verb stops being available.
       spoken = narrative.flat_map(&:code)
 
-      preamble(narrative.first.file, before: narrative.first.line).each do |code|
+      preamble_for(narrative.first).each do |code|
         name = code[ASSIGNMENT, 1]
         next if name && spoken.any? { |line| line.match?(/^\s*#{Regexp.escape(name)}\s+[^=\s]/) }
 
@@ -453,9 +505,13 @@ end
 
 if $PROGRAM_NAME == __FILE__
   verbose = ARGV.delete('-v')
+  only_lib = ARGV.delete('--lib')
+  only_docs = ARGV.delete('--docs')
   filter = ARGV.first
 
-  examples = DocExamples.extract
+  examples = []
+  examples += DocExamples.extract unless only_docs
+  examples += DocExamples.extract_markdown unless only_lib
   examples = examples.select { |e| e.file.include?(filter) } if filter
 
   totals = Hash.new(0)
@@ -470,8 +526,10 @@ if $PROGRAM_NAME == __FILE__
     end
   end
 
-  root = File.expand_path('../lib/musa-dsl', __dir__)
-  puts format('%d @example blocks in %d documentation comments', examples.size, narratives.size)
+  root = File.expand_path('..', __dir__)
+  from_docs = examples.count { |e| e.file.end_with?('.md') }
+  puts format('%d examples in %d narratives (%d in lib, %d in docs)',
+              examples.size, narratives.size, examples.size - from_docs, from_docs)
   puts format('  declared outputs checked: %d ok, %d MISMATCH', totals[:ok], totals[:mismatch])
   puts format('  errors while running:     %d', totals[:error])
   puts format('  hung (killed after %ds):   %d', DocExamples::TIMEOUT, totals[:timeout])
