@@ -120,12 +120,14 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
 
       result = matrices.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
-      expect(result.size).to be >= 1
-      # Each element is an array (may contain P objects nested)
-      result.each do |element|
-        expect(element).to be_an(Array)
-      end
+      # One entry per condensed matrix, and each entry is itself the array of P
+      # that Matrix#to_p returns -- one per directional segment. So the result is
+      # Array<Array<P>>, not Array<P>.
+      expect(result).to eq [[[[60], 1, [62]]], [[[64], 1, [65]]]]
+
+      expect(result.size).to eq 2
+      expect(result[0]).not_to be_a Musa::Datasets::P
+      expect(result[0][0]).to be_a Musa::Datasets::P
     end
 
     it 'supports keep_time parameter' do
@@ -133,12 +135,9 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
 
       result = matrices.to_p(time_dimension: 0, keep_time: true)
 
-      expect(result).to be_an(Array)
-      # Result is nested array structure
-      expect(result[0]).to be_an(Array)
-      # When keep_time is true, time dimension is preserved
-      # The structure is nested, so we need to check the inner array
-      expect(result[0][0]).to be_an(Array)
+      # The time stays inside each value, and is still what the delta is
+      # computed from.
+      expect(result).to eq [[[[0, 60, 100], 1, [1, 62, 110]]]]
     end
   end
 
@@ -273,9 +272,9 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0, 60]]
       result = matrix.to_p(time_dimension: 0)
 
-      # Single point, no duration
-      expect(result).to be_an(Array)
-      # Should return empty or single value depending on decompose logic
+      # Nothing: a segment needs two points to have a direction, and `decompose`
+      # keeps only runs of more than one row. A lone point is not a gesture.
+      expect(result).to eq []
     end
   end
 
@@ -310,16 +309,21 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
 
   context 'Matrix#decompose (line 305)' do
     it 'Decomposes into directional segments' do
-      # Points with time in dimension 0
+      # Time goes 0, 1, then back to 0.5, then 2: not monotonic, which is the
+      # whole reason `decompose` exists.
       points = [[0, 10], [1, 20], [0.5, 15], [2, 30]]
       matrix = Matrix.rows(points)
 
       # Note: decompose is private, so we test it indirectly through to_p
       result = matrix.to_p(time_dimension: 0)
 
-      # Should handle non-monotonic time sequences
-      expect(result).to be_an(Array)
-      expect(result.size).to be >= 1
+      # Three segments out of four points, and the points are SHARED between
+      # them. From the valley at time 0.5 the scan goes both ways -- back to the
+      # point at time 1, and on to the one at time 2 -- so [20] ends the first
+      # segment and also ends the second, and [15] starts two.
+      expect(result).to eq [[[10], 1, [20]],
+                            [[15], 0.5, [20]],
+                            [[15], 1.5, [30]]]
     end
 
     it 'handles monotonic increasing sequence' do
@@ -327,15 +331,8 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0, 10], [1, 20], [2, 30], [3, 40]]
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
-      expect(result.size).to be >= 1
-
-      # Should produce one continuous segment
-      first_p = result[0]
-      expect(first_p[0]).to eq([10])
-      expect(first_p[2]).to eq([20])
-      expect(first_p[4]).to eq([30])
-      expect(first_p[6]).to eq([40])
+      # One continuous segment
+      expect(result).to eq [[[10], 1, [20], 1, [30], 1, [40]]]
     end
 
     it 'handles monotonic decreasing sequence' do
@@ -343,8 +340,11 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[3, 40], [2, 30], [1, 20], [0, 10]]
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
-      # Should handle reversed time
+      # The rows are in descending time and come back as ONE segment in
+      # ascending time: `decompose` starts from the lowest time value and scans
+      # in both index directions, so a matrix written backwards is a gesture
+      # read forwards, not a reversed one.
+      expect(result).to eq [[[10], 1, [20], 1, [30], 1, [40]]]
     end
 
     it 'handles duplicate time values' do
@@ -352,7 +352,8 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0, 10], [0, 20], [1, 30]]
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
+      # Simultaneity is a zero delta, not a dropped row.
+      expect(result).to eq [[[10], 0, [20], 1, [30]]]
     end
 
     it 'handles time dimension other than 0' do
@@ -360,8 +361,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[60, 0], [62, 1], [64, 2]]
       result = matrix.to_p(time_dimension: 1)
 
-      expect(result).to be_an(Array)
-      expect(result.size).to be >= 1
+      expect(result).to eq [[[60], 1, [62], 1, [64]]]
     end
   end
 
@@ -433,19 +433,22 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
 
       first_p = result[0]
 
-      # Check all value arrays have V extension
-      (0...first_p.size).step(2) do |i|
-        expect(first_p[i]).to be_kind_of(Musa::Datasets::V)
-      end
+      expect(first_p).to eq [[60], 1, [62], 1, [64]]
+
+      # Every value carries V; the deltas between them do not.
+      (0...first_p.size).step(2) { |i| expect(first_p[i]).to be_kind_of(Musa::Datasets::V) }
+      (1...first_p.size).step(2) { |i| expect(first_p[i]).not_to be_kind_of(Musa::Datasets::V) }
     end
 
     it 'preserves P module extension on result' do
       matrix = Matrix[[0, 60], [1, 62]]
       result = matrix.to_p(time_dimension: 0)
 
-      result.each do |p|
-        expect(p).to be_kind_of(Musa::Datasets::P)
-      end
+      expect(result).to eq [[[60], 1, [62]]]
+
+      # The segments carry P; the array holding them does not.
+      expect(result).not_to be_kind_of(Musa::Datasets::P)
+      result.each { |p| expect(p).to be_kind_of(Musa::Datasets::P) }
     end
   end
 
@@ -454,7 +457,7 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix.empty(0, 2)
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
+      expect(result).to eq []
     end
 
     it 'handles single column matrix' do
@@ -462,7 +465,9 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0], [1], [2]]
       result = matrix.to_p(time_dimension: 0, keep_time: false)
 
-      expect(result).to be_an(Array)
+      # Degenerate, and worth knowing: dropping the only dimension leaves the
+      # durations with nothing to carry. The deltas are right, the values empty.
+      expect(result).to eq [[[], 1, [], 1, []]]
     end
 
     it 'handles large time gaps' do
@@ -479,8 +484,8 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[-2, 60], [-1, 62], [0, 64]]
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
-      # Should handle negative time properly
+      # Only the differences matter, so where the origin sits does not.
+      expect(result).to eq [[[60], 1, [62], 1, [64]]]
     end
 
     it 'handles zero duration intervals' do
@@ -488,8 +493,8 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0, 60], [0, 62], [0, 64]]
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
-      # Should handle zero durations
+      # A chord: three values, no time between them.
+      expect(result).to eq [[[60], 0, [62], 0, [64]]]
     end
 
     it 'handles fractional/rational time values' do
@@ -497,8 +502,9 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       matrix = Matrix[[0r, 60], [Rational(1,4), 62], [Rational(1,2), 64]]
       result = matrix.to_p(time_dimension: 0)
 
-      expect(result).to be_an(Array)
-      expect(result[0][1]).to eq(Rational(1,4))
+      # Exact, not 0.25: nothing along the way turns the rationals into floats.
+      expect(result).to eq [[[60], 1/4r, [62], 1/4r, [64]]]
+      expect(result[0][1]).to be_a Rational
     end
   end
 
@@ -547,8 +553,9 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
       phrase2 = Matrix[[1, 62], [2, 64], [3, 65]]
       merged = [phrase1, phrase2].to_p(time_dimension: 0)
 
-      # Should merge into: [[[60], 1, [62], 1, [64], 1, [65]]]
-      # Note: the result is wrapped in an extra array layer
+      # One condensed matrix, so one entry -- and that entry is the array of P
+      # that Matrix#to_p returns, which is why there are two levels here. See
+      # Array#to_p's @return.
       expect(merged.size).to eq(1)
       expect(merged[0]).to eq([[[60], 1, [62], 1, [64], 1, [65]]])
     end

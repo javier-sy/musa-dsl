@@ -115,13 +115,18 @@ module Musa
       #   @param keep_time [Boolean, nil] whether to preserve the time dimension in the output.
       #     When false or nil, the time dimension is removed and used only for duration calculations.
       #
-      #   @return [Array<Musa::Datasets::P>] array of P sequences, one per condensed matrix.
+      #   @return [Array<Array<Musa::Datasets::P>>] one entry per condensed matrix,
+      #     each of them the array of P that {::Matrix#to_p} returns -- one per
+      #     directional segment. Two levels, not one.
       #
       #   @example Converting array of matrices
       #     using Musa::Extension::Matrix
       #     matrices = [Matrix[[0, 60], [1, 62]], Matrix[[2, 64], [3, 65]]]
-      #     result = matrices.to_p(time_dimension: 0)
-      #     # Returns array of P sequences, one per matrix (or merged if they connect)
+      #     matrices.to_p(time_dimension: 0)
+      #     # => [[[[60], 1, [62]]], [[[64], 1, [65]]]]
+      #
+      #     # One entry per matrix here, because these two do not share a
+      #     # boundary row and so are not condensed into one.
       #
       #   @see #condensed_matrices
       #   @see ::Matrix#to_p
@@ -231,6 +236,15 @@ module Musa
       #     if false/nil, it's removed and used only for computing deltas.
       #
       #   @return [Array<Musa::Datasets::P>] array of P sequences, one per directional segment.
+      #
+      #   @note A segment needs at least two rows. A matrix of a single row
+      #     yields `[]`: one point has no direction and no duration, so it is not
+      #     a gesture.
+      #
+      #   @note The segments always come out in ascending time. `decompose` starts
+      #     from the lowest time value and scans in both index directions, so a
+      #     matrix whose rows are written backwards is a gesture read forwards,
+      #     not a reversed one.
       #
       #   @example Basic conversion
       #     using Musa::Extension::Matrix
