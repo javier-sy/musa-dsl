@@ -185,6 +185,60 @@ RSpec.describe Musa::Datasets do
     end
   end
 
+  # A pianissimo, however faint, is a sound; zero amplitude is not one. It used
+  # to raise -- the bands start at 1, nothing covered 0, and `nil - 5` blew up
+  # naming neither the velocity nor the dataset (issue #85).
+  context 'Velocity zero' do
+    let(:scale) { Musa::Scales::Scales.default_system.default_tuning.major[60] }
+
+    def to_gdv(pdv) = pdv.extend(Musa::Datasets::PDV).to_gdv(scale)
+
+    it 'is not the softest sound but no sound, so it becomes a rest' do
+      gdv = to_gdv(pitch: 60, duration: 1/4r, velocity: 0)
+
+      # The grade survives: GDV can say "this note, silenced", which is the shape
+      # the neuma decoder produces for a rest.
+      expect(gdv).to eq(grade: 0, octave: 0, duration: 1/4r, silence: true)
+      expect(gdv).not_to have_key(:velocity)
+    end
+
+    it 'normalises to a plain rest on the way back' do
+      expect(to_gdv(pitch: 60, duration: 1/4r, velocity: 0).to_pdv(scale))
+        .to eq(pitch: :silence, duration: 1/4r)
+    end
+
+    it 'is still a rest for the notation and for the delta encoding' do
+      gdv = to_gdv(pitch: 60, duration: 1/4r, velocity: 0)
+      gdv.base_duration = 1/4r
+
+      expect(gdv.to_neuma.to_s).to eq('(silence o0 1)')
+      expect(gdv.to_gdvd(scale)[:abs_grade]).to eq(:silence)
+    end
+
+    it 'gives the softest dynamic to anything positive, however faint' do
+      # What a continuous curve gives before it is rounded. It fell through the
+      # same hole as the zero.
+      expect(to_gdv(pitch: 60, velocity: 0.4)[:velocity]).to eq(-5)
+      expect(to_gdv(pitch: 60, velocity: 1)[:velocity]).to eq(-5)
+    end
+
+    it 'clamps above the top of the range instead of raising' do
+      expect(to_gdv(pitch: 60, velocity: 128)[:velocity]).to eq(4)
+      expect(to_gdv(pitch: 60, velocity: 127)[:velocity]).to eq(4)
+    end
+
+    it 'takes a diminuendo all the way to nothing' do
+      # [100, 86, 71, 57, 43, 29, 14, 0] is what `move from: 100, to: 0` gives
+      # over eight steps; the last one used to be the one that raised.
+      dynamics = [100, 86, 71, 57, 43, 29, 14, 0].collect do |velocity|
+        gdv = to_gdv(pitch: 60, duration: 1/4r, velocity: velocity)
+        gdv[:silence] ? :rest : gdv[:velocity]
+      end
+
+      expect(dynamics).to eq([3, 2, 1, 0, -1, -2, -3, :rest])
+    end
+  end
+
   # GDVd is not compression: a passage written as movement from a previous event
   # says nothing about where it starts, so it can start anywhere. Which means
   # the first event of a sequence has nothing before it, and that is exactly the

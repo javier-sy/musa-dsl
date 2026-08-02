@@ -46,6 +46,7 @@ module Musa::Datasets
   #
   # MIDI velocities are mapped to musical dynamics:
   #
+  #     MIDI 0       → not a dynamic at all: no sound, which becomes a rest
   #     MIDI 1-1     → velocity -5 (ppppp)
   #     MIDI 2-8     → velocity -4 (pppp)
   #     MIDI 9-16    → velocity -3 (ppp)
@@ -56,6 +57,11 @@ module Musa::Datasets
   #     MIDI 81-96   → velocity +2 (f)
   #     MIDI 97-112  → velocity +3 (ff)
   #     MIDI 113-127 → velocity +4 (fff)
+  #
+  # Zero is left out on purpose. A pianissimo, however faint, is a sound; zero
+  # amplitude is not one, so it is not the bottom of this scale but off it, and
+  # {#to_gdv} writes it as a rest. Anything above 127 or between 0 and 1 is
+  # clamped into the table.
   #
   # The names come from {Helper#velocity_of}, and zero is mp, not mf. The table
   # used to name them two steps towards the soft end, which is where the
@@ -161,6 +167,23 @@ module Musa::Datasets
     #
     #   # A rest carries no grade: there is none to recover, and none is needed.
     #   gdv.to_pdv(scale)  # => { pitch: :silence, duration: 1.0 }
+    #
+    # @example A note at no velocity is a note that does not sound
+    #   pdv = { pitch: 60, duration: 1/4r, velocity: 0 }.extend(PDV)
+    #   scale = Musa::Scales::Scales.et12[440.0].major[60]
+    #
+    #   # The grade survives the crossing: GDV can say "this note, silenced",
+    #   # which is the shape the neuma decoder produces for a rest.
+    #   pdv.to_gdv(scale)  # => { grade: 0, octave: 0, duration: (1/4), silence: true }
+    #
+    #   # Coming back normalises it to a plain rest, which is what PDV has.
+    #   pdv.to_gdv(scale).to_pdv(scale)  # => { pitch: :silence, duration: (1/4) }
+    #
+    # @example Any positive velocity is a sound, however faint
+    #   scale = Musa::Scales::Scales.et12[440.0].major[60]
+    #
+    #   { pitch: 60, velocity: 0.4 }.extend(PDV).to_gdv(scale)[:velocity]  # => -5
+    #   { pitch: 60, velocity: 200 }.extend(PDV).to_gdv(scale)[:velocity]  # => 4
     def to_gdv(scale)
       gdv = {}.extend GDV
       gdv.base_duration = @base_duration
@@ -192,7 +215,31 @@ module Musa::Datasets
 
       if self[:velocity]
         # TODO create a customizable MIDI velocity to score dynamics bidirectional conversor
-        gdv[:velocity] = GDV::VELOCITY_BANDS.index { |band| band.cover?(self[:velocity]) } - 5
+        if self[:velocity] <= 0
+          # No sound, and that is not the same as the softest sound. A
+          # pianissimo, however faint, is something being played; zero amplitude
+          # is not. MIDI's own velocity 0 means "note off" at the wire, but PDV
+          # is a dataset and not a protocol, so here it can only mean what it
+          # says.
+          #
+          # What the score layer writes for "this does not sound" is a rest, and
+          # GDV already has the representation: the grade of the note that would
+          # have sounded plus the :silence key, which is exactly the shape the
+          # neuma decoder produces for `(silence 4)`. So the pitch survives the
+          # crossing; it is `GDV#to_pdv` that normalises it back to a plain
+          # `pitch: :silence`.
+          #
+          # It used to raise: the bands start at 1, so nothing covered 0, `index`
+          # returned nil and `nil - 5` blew up with a message naming neither the
+          # velocity nor the dataset (issue #85).
+          gdv[:silence] = true
+        else
+          # Any positive velocity is a sound. Clamped because MIDI says nothing
+          # outside 1..127, and because a velocity between 0 and 1 -- what a
+          # continuous curve gives before it is rounded -- is a sound too, and
+          # fell through the same hole.
+          gdv[:velocity] = GDV::VELOCITY_BANDS.index { |band| band.cover?(self[:velocity].clamp(1, 127)) } - 5
+        end
       end
 
       (keys - NaturalKeys).each { |k| gdv[k] = self[k] }
