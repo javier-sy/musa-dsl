@@ -51,12 +51,26 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # the spec should stop claiming to come from one.
   ORPHANED_REFERENCES = 0
 
+  # The prose documentation, `docs/**/*.md`, measured apart. It is a different
+  # corpus with a different failure mode: the inline examples were written next
+  # to the code they describe, these were written about it, and being written
+  # ABOUT something is what lets a claim drift from it.
+  #
+  # Claims it verifies today. May only grow.
+  DOCS_VERIFIED_FLOOR = 41
+
+  # Blocks that declare an output and still do not run. A block that declares
+  # nothing is illustration -- `direction do dynamics 'f' end` shown outside the
+  # measure it belongs to -- and is not counted here; a block that makes a claim
+  # has to run for the claim to mean anything. MAY ONLY GO DOWN.
+  DOCS_BROKEN_CEILING = 33
+
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
   # given example falls into depends on the machine -- with midi-communications
   # installed but no hardware, "needs a gem" becomes "raises" -- and the sum is
   # what stays stable. MAY ONLY GO DOWN.
-  UNRUNNABLE_CEILING = 10
+  UNRUNNABLE_CEILING = 9
 
   # Every narrative is forked and given five seconds -- documentation is full of
   # transports that block and infinite series consumed with to_a -- so a machine
@@ -68,6 +82,12 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   before(:context) do
     @checks = DocExamples.narratives(DocExamples.extract).flat_map do |narrative|
       DocExamples.run(narrative).collect { |check| [narrative.first, check] }
+    end
+
+    @doc_checks = DocExamples.narratives(DocExamples.extract_markdown).flat_map do |narrative|
+      claims = narrative.any? { |example| example.code.any? { |line| line.include?('# =>') } }
+
+      DocExamples.run(narrative).collect { |check| [narrative.first, check, claims] }
     end
   end
 
@@ -135,6 +155,35 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
     expect(orphans.size).to be >= ORPHANED_REFERENCES,
                             "Only #{orphans.size} orphaned references left. Lower " \
                             "ORPHANED_REFERENCES to #{orphans.size}."
+  end
+
+  it 'verifies as much of the prose documentation as it used to' do
+    verified = @doc_checks.count { |_, check, _| check.status == :ok }
+
+    expect(verified).to be >= DOCS_VERIFIED_FLOOR,
+                        "Only #{verified} claims in docs/ are verified, down from " \
+                        "#{DOCS_VERIFIED_FLOOR}. Run `bundle exec ruby tools/doc-examples.rb --docs -v`."
+
+    expect(verified).to eq(DOCS_VERIFIED_FLOOR),
+                        "docs/ now verifies #{verified} claims. Raise DOCS_VERIFIED_FLOOR to it."
+  end
+
+  it 'does not break more of the prose documentation that claims something' do
+    broken = @doc_checks.count do |_, check, claims|
+      claims && %i[error timeout external].include?(check.status)
+    end
+
+    detail = @doc_checks.select { |_, check, claims| claims && check.status == :error }
+                        .first(8)
+                        .collect { |example, check, _| "  #{File.basename(example.file)}  #{check.actual[0, 70]}" }
+                        .join("\n")
+
+    expect(broken).to be <= DOCS_BROKEN_CEILING,
+                      "#{broken} blocks in docs/ declare an output and do not run, above the " \
+                      "ceiling of #{DOCS_BROKEN_CEILING}.\n\n#{detail}"
+
+    expect(broken).to be >= DOCS_BROKEN_CEILING,
+                      "Only #{broken} broken blocks left in docs/. Lower DOCS_BROKEN_CEILING to it."
   end
 
   it 'does not verify less than it used to' do

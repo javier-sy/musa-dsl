@@ -302,10 +302,21 @@ module DocExamples
   # with `to_a`; without this the runner stops being a tool and becomes a hazard.
   TIMEOUT = 5
 
+  # A narrative gets its budget per example, not as a flat number. The inline
+  # ones are one or two blocks of a few lines; a markdown file is ONE narrative
+  # of up to twenty blocks, and a flat five seconds turned into a lottery under
+  # load -- the same file verified 41 claims run alone and 37 with the suite
+  # around it, which is a ratchet that measures the machine instead of the
+  # documentation.
+  def timeout_for(narrative)
+    TIMEOUT + 3 * narrative.size
+  end
+
   # Runs the examples of one comment in a single process, in order, sharing a
   # binding -- and in isolation from every other comment, so refinements,
   # switched modes and registered definitions cannot leak between narratives.
   def run(narrative)
+    budget = timeout_for(narrative)
     read, write = IO.pipe
 
     pid = fork do
@@ -484,7 +495,7 @@ module DocExamples
     timed_out = false
 
     begin
-      Timeout.timeout(TIMEOUT) { payload = read.read }
+      Timeout.timeout(budget) { payload = read.read }
       Process.waitpid(pid)
     rescue Timeout::Error
       timed_out = true
@@ -496,7 +507,7 @@ module DocExamples
 
     if timed_out
       return [Check.new(statement: narrative.flat_map(&:code).join("\n"), declared: nil,
-                        actual: "did not finish in #{TIMEOUT}s", status: :timeout)]
+                        actual: "did not finish in #{budget}s", status: :timeout)]
     end
 
     (JSON.parse(payload, symbolize_names: true) rescue []).map { |h| Check.new(**h.merge(status: h[:status].to_sym)) }
@@ -519,10 +530,26 @@ if $PROGRAM_NAME == __FILE__
 
   narratives = DocExamples.narratives(examples)
 
+  # A block that declares an output is making a claim somebody can check, and it
+  # has to run for the claim to mean anything. A block that declares nothing is
+  # illustration -- `direction do dynamics 'f' end` shown outside the measure it
+  # belongs to -- and its failing to run standalone is not a defect. Counting
+  # them together drowns the first in the second.
+  claims = narratives.select { |n| n.any? { |e| e.code.any? { |line| line.include?('# =>') } } }
+                     .to_h { |n| [n.first.object_id, true] }
+
   narratives.each do |narrative|
+    is_claim = claims[narrative.first.object_id]
+
     DocExamples.run(narrative).each do |check|
       totals[check.status] += 1
-      failures << [narrative.first, check] if %i[mismatch error timeout].include?(check.status)
+      next unless %i[mismatch error timeout].include?(check.status)
+
+      if is_claim
+        failures << [narrative.first, check]
+      else
+        totals[:illustration] += 1
+      end
     end
   end
 
@@ -531,10 +558,12 @@ if $PROGRAM_NAME == __FILE__
   puts format('%d examples in %d narratives (%d in lib, %d in docs)',
               examples.size, narratives.size, examples.size - from_docs, from_docs)
   puts format('  declared outputs checked: %d ok, %d MISMATCH', totals[:ok], totals[:mismatch])
-  puts format('  errors while running:     %d', totals[:error])
-  puts format('  hung (killed after %ds):   %d', DocExamples::TIMEOUT, totals[:timeout])
+  puts format('  errors while running:     %d (of which %d in blocks that claim nothing)',
+              totals[:error], totals[:illustration])
+  puts format('  hung (budget is %d s plus 3 per block):   %d', DocExamples::TIMEOUT, totals[:timeout])
   puts format('  declared as prose (nothing a test can contradict): %d', totals[:prose])
   puts format('  need a gem this project does not depend on:        %d', totals[:external])
+  puts format('  fragments that do not stand alone, and claim nothing: %d', totals[:illustration])
 
   unless failures.empty?
     puts
