@@ -113,7 +113,9 @@ module Musa::Neumas
 
       # Base duration unit for duration calculations.
       #
-      # @return [Rational] base duration (e.g., 1/4 for quarter note)
+      # @return [Rational] base duration: what one unit of a neuma lasts, as a
+      #   fraction of a bar. 1/4r is a quarter of a bar, which is a quarter note
+      #   in 4/4; in 3/4 a quarter note is 1/3r. See {Musa::Datasets::AbsD}.
       #
       # @api public
       attr_accessor :base_duration

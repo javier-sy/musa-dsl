@@ -148,6 +148,27 @@ module Musa::Datasets
   # AbsD represents absolute events that have duration - they occupy a time span
   # rather than occurring at a single instant.
   #
+  # ## What a duration is measured in
+  #
+  # **A BAR.** `1r` is one bar, `1/4r` is a quarter of a bar, `2r` is two bars.
+  # That is what the sequencer counts -- position 1 is bar 1, position 2 is bar
+  # 2 -- and every duration in the library is a fraction of it.
+  #
+  # It is NOT a fraction of a whole note, and that distinction only shows itself
+  # outside 4/4, where a bar and a whole note stop being the same length:
+  #
+  # - in 4/4, `1/4r` lasts a quarter note, and `1r` a whole one;
+  # - in 3/4, `1/4r` lasts three quarters of a beat, and a quarter note is
+  #   `1/3r`; the bar, `1r`, is a dotted half;
+  # - in 6/8, a beat is `1/6r` and is written as an eighth.
+  #
+  # So "1/4r is a quarter note" is true of 4/4 and of nothing else. It is the
+  # meter's coincidence rather than a definition, and the documentation of this
+  # library stated it as a rule for a long time.
+  #
+  # The only place that needs to know about whole notes is {Score::ToMXML},
+  # which has to name figures, and it converts there.
+  #
   # ## Natural Keys
   #
   # - **:duration**: Total duration of the event process

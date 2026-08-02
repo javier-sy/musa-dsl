@@ -43,7 +43,7 @@ module Musa::Datasets
   # All times are stored as Rational numbers for exact arithmetic:
   #
   #     score.at(0r, add: event)    # At time 0
-  #     score.at(1/4r, add: event)  # At quarter note
+  #     score.at(1/4r, add: event)  # a quarter of a bar in
   #
   # @example Create empty score
   #   score = Musa::Datasets::Score.new

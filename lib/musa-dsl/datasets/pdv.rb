@@ -75,7 +75,8 @@ module Musa::Datasets
   # ## Base Duration
   #
   # The `base_duration` attribute defines the unit for duration values,
-  # typically 1/4r (quarter note).
+  # typically 1/4r, which is a quarter of a bar -- a quarter note in 4/4 and
+  # not in other meters; see {Musa::Datasets::AbsD}.
   #
   # @example Basic MIDI event
   #   pdv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PDV)

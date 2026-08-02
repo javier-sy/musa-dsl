@@ -113,7 +113,11 @@ module Musa::Datasets
     #   serie.next_value
     #   # => { from: 60, to: 64, duration: 1r, right_open: true }
     def to_ps_serie(base_duration: nil)
-      base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
+      # A quarter of a bar. Not "a quarter note": that is what it lasts in 4/4
+      # and nowhere else -- durations are fractions of a bar throughout the
+      # library (see {Musa::Datasets::AbsD}), and the two readings part company
+      # as soon as the meter is not 4/4.
+      base_duration ||= 1/4r
 
       # TODO if instead of using clone (needed because of p.shift) we use index counter the P elements would be evaluated on the last moment
 
@@ -157,7 +161,8 @@ module Musa::Datasets
       time_start ||= 0r
       time_start += self.first[time_start_component] if time_start_component
 
-      base_duration ||= 1/4r # TODO review incoherence between neumalang 1/4r base duration for quarter notes and general 1r size of bar
+      # A quarter of a bar; see the note in #to_ps_serie above.
+      base_duration ||= 1/4r
 
       PtoTimedSerie.new(self, base_duration, time_start)
     end

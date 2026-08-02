@@ -81,7 +81,7 @@ module Musa::Transcriptors
       # Transcribes GDV event, converting base markers to zero-duration events.
       #
       # @param gdv [Hash] GDV event with musical attributes
-      # @param base_duration [Rational] base duration unit (e.g., quarter note)
+      # @param base_duration [Rational] base duration unit, a fraction of a bar
       # @param tick_duration [Rational] minimum tick duration (e.g., 1/96)
       #
       # @return [Hash] transcribed event (zero-duration if base, unchanged otherwise)

@@ -175,7 +175,8 @@ module Musa
       # Creates transcriptor with specified feature processors.
       #
       # @param transcriptors [Array<FeatureTranscriptor>] chain of feature processors
-      # @param base_duration [Rational] base duration unit (e.g., quarter note = 1/4)
+      # @param base_duration [Rational] base duration unit, a fraction of a bar:
+      #   1/4r is a quarter of a bar (a quarter note in 4/4)
       # @param tick_duration [Rational] minimum tick duration (e.g., 1/96 for MIDI)
       #
       # @example Create MIDI transcriptor
