@@ -133,52 +133,7 @@ dummy_clock = Musa::Clock::DummyClock.new(100)
 6. Clock's run loop exits
 7. `transport.start` returns
 
-```ruby
-require 'musa-dsl'
-include Musa::All
-
-events = []
-
-transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
-transport.before_begin { events << :before_begin }
-transport.on_start     { events << :on_start }
-transport.after_stop   { events << :after_stop }
-
-transport.sequencer.at(1) { events << :bar_1 }
-transport.sequencer.at(2) { events << :bar_2 }
-
-transport.start
-
-events
-# => [:before_begin, :on_start, :bar_1, :bar_2, :after_stop, :before_begin]
-```
-
-The numbered sequence above, run. Read the last entry: `before_begin` appears a
-second time. Stopping prepares the transport for the next start, so a
-`before_begin` that allocates -- opens a MIDI port, builds voices -- has to
-expect to run more than once, and `after_stop` is where the matching release
-belongs.
-
-Note also how the callbacks were registered: one method call each, after
-construction. `Transport.new(clock) { |t| t.before_begin { ... } }` is accepted
-by Ruby, ignored by the constructor, and registers nothing. The constructor's own
-form is keywords: `Transport.new(clock, 4, 24, before_begin: -> { ... })`.
-
-And `on_change_position` fires only on a seek. A piece that runs from start to
-finish never triggers it:
-
-```ruby
-positions = []
-
-transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
-transport.on_change_position { |p| positions << p }
-transport.sequencer.at(1) { }
-transport.start
-
-positions  # => []
-```
-
-**Clock `stop` vs `terminate` contract:**
+### Clock `stop` vs `terminate` contract
 
 - **`stop`**: Fires `on_stop` callbacks. Idempotent (second call is a no-op). All clocks implement it.
 - **`terminate`**: Calls `stop` first (guarantees callbacks), then exits the run loop. All clocks implement it.
@@ -264,6 +219,53 @@ end
 
 # Start and wait for MIDI Clock Start message
 transport.start
+```
+
+## The lifecycle, run
+
+```ruby
+require 'musa-dsl'
+include Musa::All
+
+events = []
+
+transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
+transport.before_begin { events << :before_begin }
+transport.on_start     { events << :on_start }
+transport.after_stop   { events << :after_stop }
+
+transport.sequencer.at(1) { events << :bar_1 }
+transport.sequencer.at(2) { events << :bar_2 }
+
+transport.start
+
+events
+# => [:before_begin, :on_start, :bar_1, :bar_2, :after_stop, :before_begin]
+```
+
+The numbered sequence above, run. Read the last entry: `before_begin` appears a
+second time. Stopping prepares the transport for the next start, so a
+`before_begin` that allocates -- opens a MIDI port, builds voices -- has to
+expect to run more than once, and `after_stop` is where the matching release
+belongs.
+
+Note also how the callbacks were registered: one method call each, after
+construction. `Transport.new(clock) { |t| t.before_begin { ... } }` is accepted
+by Ruby, ignored by the constructor, and registers nothing. The constructor's own
+form is keywords: `Transport.new(clock, 4, 24, before_begin: -> { ... })`.
+
+And `on_change_position` fires only on a seek. A piece that runs from start to
+finish never triggers it:
+
+```ruby
+positions = []
+
+transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
+transport.on_change_position { |p| positions << p }
+transport.sequencer.at(1) { }
+transport.start
+
+positions  # => []
 ```
 
 ## API Reference
