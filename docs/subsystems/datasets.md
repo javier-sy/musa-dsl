@@ -9,6 +9,47 @@ Comprehensive framework for representing and transforming sonic events and proce
 - **Bidirectional conversions**: Transform between MIDI (PDV), score notation (GDV), delta encoding (GDVd), and other formats
 - **Integration**: Used throughout MusaDSL components (sequencer, series, neumas, transcription, matrix)
 
+## When is this the answer
+
+A dataset is a Hash (or an Array) with a module extended into it. The module is
+not decoration: it is what says how to read the keys, and it is what carries the
+conversions. So you reach for one when **a hash of yours has to be understood by
+something else** -- the sequencer, a voice, the MusicXML writer, a transcriptor.
+
+By the shape of what you have:
+
+| You have | You want | This |
+|---|---|---|
+| a MIDI pitch, a duration, a velocity | to send it to an instrument | **PDV** |
+| a scale degree, a duration, a dynamic | to write it as music, not as MIDI | **GDV** |
+| a motif that has to work from any starting note | to keep the shape and drop the origin | **GDVd** |
+| a value that changes over time | to walk it with `play_timed` | **AbsTimed** |
+| a shape given as points and the times between them | a gesture to be played or read as segments | **P** |
+| a ramp from one value to another | its endpoints and how long it takes | **PS** |
+| several parallel values at one instant | to treat them as one event | **V**, or **PackedV** keyed |
+
+**The distinction that organises the rest** is event against process. An event
+happens at an instant and has a duration -- a note. A process spans time and is
+read as it goes -- a glissando, an envelope, a gesture. `at` and `play` are for
+the first; `move` and `play_timed` for the second, and P, PS and AbsTimed are
+its datasets.
+
+**When it is NOT the answer.** A hash you build and consume yourself needs no
+dataset: extending it buys nothing and costs the reader a question. The module
+earns its place at the boundary, where somebody else has to know what the keys
+mean.
+
+**And two things that bite.**
+
+Copying a dataset with `dup(deep: true)` **drops the module** -- it is a
+singleton class, and `dup` drops singleton classes exactly as plain Ruby does.
+Use `clone(deep: true)`. What comes back from `dup` is a plain hash with the
+right keys, and it works until something calls `to_pdv` on it.
+
+A duration is a fraction of a **bar**, not of a whole note. `1r` is a bar. In
+4/4 that makes `1/4r` a quarter note, which is why the two readings agree there
+and only there: in 3/4 a quarter note is `1/3r`.
+
 ## Dataset Hierarchy
 
 **Event Type Modules (E)** - Define absolute vs delta encoding:
@@ -208,22 +249,53 @@ gdv = pdv.to_gdv(scale)
 
 **Absolute ↔ Delta Encoding (GDV ↔ GDVd)**:
 
+A GDVd states each event as *movement from whatever came before*: an interval
+instead of a grade, a factor instead of a duration. **This is not compression.**
+A passage written this way says nothing about where it starts, so it can start
+anywhere -- the same GDVd sequence applied to a different GDV is the same music
+transposed, in another register, at another dynamic, at another speed, and
+applied to a different scale it is the same shape read through other intervals.
+A motif is its profile, and the profile is the dataset.
+
 ```ruby
 include Musa::Datasets
 
 scale = Musa::Scales::Scales.et12[440.0].major[60]
 
-# First note (absolute)
-gdv1 = { grade: 0, duration: 1r, velocity: 0 }.extend(GDV)
-gdvd1 = gdv1.to_gdvd(scale)
+# Both events need :octave for an interval to be computable, and both need
+# base_duration set: without it the conversion divides by nil.
+gdv1 = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(GDV)
+gdv2 = { grade: 2, octave: 0, duration: 1r, velocity: 1 }.extend(GDV)
+[gdv1, gdv2].each { |g| g.base_duration = 1/4r }
+
+# The first has nothing to move from, so it states itself
+gdv1.to_gdvd(scale)
 # => { abs_grade: 0, abs_duration: 1r, abs_velocity: 0 }
 
-# Second note (delta from previous)
-gdv2 = { grade: 2, duration: 1r, velocity: 1 }.extend(GDV)
-gdvd2 = gdv2.to_gdvd(scale, previous: gdv1)
-# => { delta_grade: 2, delta_velocity: 1 }
-# duration unchanged, omitted for compression
+# The second, as movement from the first
+gdv2.to_gdvd(scale, previous: gdv1)
+# => { delta_grade: 2, delta_sharps: 0, delta_velocity: 1 }
+# The duration did not change, so nothing is said about it -- and saying
+# nothing about it is what lets this fragment keep whatever duration the
+# passage it is dropped into has.
 ```
+
+`previous:` is the base the movement departs from, in both directions: the same
+argument that turns a GDV into a GDVd turns it back, and that is where
+re-rooting happens.
+
+```ruby
+gdvd = gdv2.to_gdvd(scale, previous: gdv1)
+gdvd.base_duration = 1/4r
+
+gdvd.to_gdv(scale, previous: gdv1)
+# => { grade: 2, octave: 0, duration: 1r, velocity: 1 }
+```
+
+Give it another `previous:` and the same movement lands somewhere else. That is
+the whole point.
+
+The notation is written this way too: `(+1 -o1 *2)` in a neuma is a GDVd.
 
 **Array ↔ Hash (V ↔ PackedV)**:
 
@@ -251,16 +323,17 @@ pv = v.to_packed_V({ pitch: 60, duration: 1r, velocity: 64 })
 ```ruby
 include Musa::Datasets
 
-# Point series to parameter segments
+# Point series to parameter segments. `to_ps_serie` gives a PROTOTYPE, so it
+# has to be instantiated with `.i` before anything can be read from it.
 p = [60, 4, 64, 8, 67].extend(P)
-p.base_duration = 1/4r
 
-ps_serie = p.to_ps_serie
-ps1 = ps_serie.next_value
-# => { from: 60, to: 64, duration: 1r, right_open: true }
-
-ps2 = ps_serie.next_value
-# => { from: 64, to: 67, duration: 2r, right_open: false }
+p.to_ps_serie.i.to_a
+# => [{ from: 60, duration: 1r, to: 64, right_open: true },
+#     { from: 64, duration: 2r, to: 67, right_open: false }]
+#
+# Two points become one segment: [60, 4, 64] says "from 60, over 4 base
+# durations, to 64". The last one is not right_open because there is nothing
+# after it to leave room for.
 ```
 
 **Series → Timed Events (P → AbsTimed)**:
@@ -270,10 +343,11 @@ include Musa::Datasets
 
 p = [60, 4, 64, 8, 67].extend(P)
 
-timed_serie = p.to_timed_serie(base_duration: 1/4r, time_start: 0)
-timed_serie.next_value  # => { time: 0r, value: 60 }
-timed_serie.next_value  # => { time: 1r, value: 64 }
-timed_serie.next_value  # => { time: 3r, value: 67 }
+p.to_timed_serie(base_duration: 1/4r, time_start: 0).i.to_a
+# => [{ time: 0, value: 60 }, { time: 1r, value: 64 }, { time: 3r, value: 67 }]
+#
+# The times are the durations accumulated: 4 base durations of 1/4 is one bar,
+# 8 more is two more.
 ```
 
 **Score Notation → String (GDV → Neuma)**:
@@ -338,20 +412,26 @@ p_sequences = gesture.to_p(time_dimension: 0)
 
 **Neumas** - Parse to GDV:
 
+Parsing needs a decoder, because the notation is differential and the decoder
+is what holds the scale and the base duration the movements are read against.
+
 ```ruby
 include Musa::All
 
-# Neuma strings parse to GDV datasets
-neuma = "(0 4 mf) (2 4 f) (4 4 ff)"
-gdv_serie = Neumas(neuma, scale: Scales.default_system.default_tuning.major[60])
+scale = Scales.et12[440.0].major[60]
+decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
 
-gdv_serie.each do |gdv|
-  puts gdv.inspect  # Each is a GDV hash
-  # => { grade: 0, duration: 1r, velocity: 0 }
-  # => { grade: 2, duration: 1r, velocity: 1 }
-  # => { grade: 4, duration: 1r, velocity: 2 }
-end
+# Note the notation: the first grade is absolute, the rest are movements
+Musa::Neumalang::Neumalang.parse("(0 4 mf) (+2 4 f) (+2 4 ff)",
+                                 decode_with: decoder).i.to_a
+# => [{ grade: 0, octave: 0, duration: 1r, velocity: 1 },
+#     { grade: 2, octave: 0, duration: 1r, velocity: 2 },
+#     { grade: 4, octave: 0, duration: 1r, velocity: 3 }]
 ```
+
+Without `decode_with:` the parse stops at the notation and gives GDVd -- the
+movements themselves, unresolved. That is the useful form when the material is
+to be re-rooted somewhere else; see the GDVd section above.
 
 **Transcription** - Converts between representations:
 
