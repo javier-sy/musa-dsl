@@ -92,56 +92,6 @@ RSpec.describe 'Transport Inline Documentation Examples' do
     end
   end
 
-  context 'DummyClock (dummy-clock.rb)' do
-    it '@example Fixed tick count (automatic activation)' do
-      clock = Musa::Clock::DummyClock.new(100)  # Exactly 100 ticks
-      transport = Musa::Transport::Transport.new(clock, 4, 24)
-
-      ticks = 0
-      transport.sequencer.every(1) { ticks += 1 }
-
-      transport.start  # Runs 100 ticks, then stops
-
-      expect(ticks).to be > 0
-    end
-
-    it '@example Custom condition (automatic activation)' do
-      continue_running = true
-      clock = Musa::Clock::DummyClock.new { continue_running }
-      transport = Musa::Transport::Transport.new(clock, 4, 24)
-
-      ticks = 0
-      transport.sequencer.every(1) do
-        ticks += 1
-        continue_running = false if ticks >= 5
-      end
-
-      transport.start  # Runs while continue_running? is true
-
-      expect(ticks).to eq(5)
-    end
-
-    it '@example Testing specific sequences' do
-      ticks = 0
-      some_condition = true
-      clock = Musa::Clock::DummyClock.new { ticks < 50 || some_condition }
-
-      transport = Musa::Transport::Transport.new(clock, 4, 24)
-
-      transport.sequencer.every(1) do
-        ticks += 1
-        some_condition = false if ticks >= 60
-      end
-
-      transport.start
-
-      # The block is the clock's condition, evaluated before every tick: it
-      # keeps going while ticks < 50 OR the flag is set, and the flag is only
-      # cleared at 60. So it stops at exactly 60, not "at least 50".
-      expect(ticks).to eq(60)
-    end
-  end
-
   context 'ExternalTickClock (external-tick-clock.rb)' do
 
     it '@example Integration with game loop' do
@@ -242,45 +192,6 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(clock.ticks_per_beat).to eq(24r)
     end
 
-    it '@example With timing correction' do
-      # Correction compensates for system-specific timing offsets
-      clock = Musa::Clock::TimerClock.new(bpm: 140, ticks_per_beat: 24, correction: -0.001)
-
-      expect(clock.bpm).to eq(140r)
-    end
-
-    it '@example Dynamic tempo changes' do
-      clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
-
-      expect(clock.bpm).to eq(120r)
-
-      # ... later, while running:
-      clock.bpm = 140  # Tempo change takes effect immediately
-
-      expect(clock.bpm).to eq(140r)
-    end
-
-    it '@example All equivalent clock configurations' do
-      # All equivalent for 120 BPM, 24 ticks/beat:
-      clock1 = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
-      clock2 = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)  # Same as clock1
-      clock3 = Musa::Clock::TimerClock.new(60.0 / (120 * 24), ticks_per_beat: 24)  # period as positional arg
-
-      expect(clock1.bpm).to eq(clock2.bpm)
-      expect(clock1.bpm).to eq(clock3.bpm)
-      expect(clock1.ticks_per_beat).to eq(clock2.ticks_per_beat)
-      expect(clock1.ticks_per_beat).to eq(clock3.ticks_per_beat)
-    end
-
-    it '@example Tempo automation' do
-      clock = Musa::Clock::TimerClock.new(bpm: 120, ticks_per_beat: 24)
-
-      expect(clock.bpm).to eq(120r)
-
-      clock.bpm = 140  # Speed up!
-
-      expect(clock.bpm).to eq(140r)
-    end
   end
 
   context 'Timer (timer.rb)' do

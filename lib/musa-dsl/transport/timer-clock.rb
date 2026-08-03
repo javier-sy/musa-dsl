@@ -61,10 +61,24 @@ module Musa
     #   # Correction compensates for system-specific timing offsets
     #   clock = TimerClock.new(bpm: 140, correction: -0.001)
     #
+    #   clock.bpm             # => (140/1)
+    #   clock.ticks_per_beat  # => (24/1)
+    #
+    #   # The correction shifts WHEN each tick fires, not how many there are:
+    #   # neither the tempo nor the resolution moves.
+    #
     # @example Dynamic tempo changes
     #   clock = TimerClock.new(bpm: 120)
+    #   clock.period  # => (1/48)
+    #
     #   # ... later, while running:
     #   clock.bpm = 140  # Tempo change takes effect immediately
+    #
+    #   clock.bpm     # => (140/1)
+    #   clock.period  # => (1/56)
+    #
+    #   # The period follows the tempo: 60 / (bpm * ticks_per_beat), rational
+    #   # throughout, so a tempo change does not accumulate rounding.
     #
     # @see Timer Internal precision timer
     # @see Transport Connects clock to sequencer
@@ -88,6 +102,17 @@ module Musa
       #   TimerClock.new(bpm: 120, ticks_per_beat: 24)
       #   TimerClock.new(bpm: 120)  # ticks_per_beat defaults to 24
       #   TimerClock.new(0.02083, ticks_per_beat: 24)  # period is positional
+      #
+      #   three = [TimerClock.new(bpm: 120, ticks_per_beat: 24),
+      #            TimerClock.new(bpm: 120),
+      #            TimerClock.new(0.02083, ticks_per_beat: 24)]
+      #
+      #   three.map(&:bpm)             # => [(120/1), (120/1), (120/1)]
+      #   three.map(&:ticks_per_beat)  # => [(24/1), (24/1), (24/1)]
+      #   three.map(&:period)          # => [(1/48), (1/48), (1/48)]
+      #
+      #   # The third really is equal and not merely close: the period is
+      #   # rationalized, and 0.02083 rationalizes to 1/48.
       def initialize(period = nil, ticks_per_beat: nil, bpm: nil, correction: nil, delayed_ticks_error: nil, logger: nil, do_log: nil)
         do_log ||= false
 
@@ -159,9 +184,18 @@ module Musa
       #
       # @note If clock is running, tempo change takes effect immediately
       # @example Tempo automation
-      #   clock.bpm = 120
-      #   sleep 10
-      #   clock.bpm = 140  # Speed up!
+      #   clock = TimerClock.new(bpm: 60)
+      #
+      #   clock.bpm = 120         # ... some bars later ...
+      #   clock.bpm               # => (120/1)
+      #
+      #   clock.bpm = 140         # Speed up!
+      #   clock.bpm               # => (140/1)
+      #
+      #   # Whatever is given is rationalized, so a Float tempo does not leave a
+      #   # Float period behind it:
+      #   clock.bpm = 92.5
+      #   clock.bpm               # => (185/2)
       def bpm=(bpm)
         @bpm =  bpm.rationalize
         @period = 60r / (@bpm * @ticks_per_beat) if @bpm && @ticks_per_beat

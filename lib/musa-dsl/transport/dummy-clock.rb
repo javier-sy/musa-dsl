@@ -33,22 +33,56 @@ module Musa
     #
     # @example Fixed tick count (automatic activation)
     #   clock = DummyClock.new(100)  # Exactly 100 ticks
-    #   transport = Transport.new(clock)
+    #   transport = Transport.new(clock, 4, 24)
+    #
+    #   pulses = []
+    #   transport.sequencer.every(1) { pulses << transport.sequencer.position }
+    #
     #   transport.start  # Immediately runs 100 ticks, then stops
+    #
+    #   pulses  # => [(95/96), (191/96)]
+    #
+    #   # 4 beats of 24 ticks is 96 ticks to the bar, so a hundred of them is one
+    #   # bar and a bit: an `every 1` written outside any `at` pulses twice, one
+    #   # tick before each bar. The clock stops where it stops -- nothing rounds
+    #   # it up to a whole bar.
     #
     # @example Custom condition (automatic activation)
     #   continue = true
     #   clock = DummyClock.new { continue }
-    #   transport = Transport.new(clock)
+    #   transport = Transport.new(clock, 4, 24)
     #
-    #   transport.sequencer.at(10) { continue = false }
-    #   transport.start  # Immediately begins, stops at tick 10
+    #   pulses = 0
+    #   transport.sequencer.every(1) do
+    #     pulses += 1
+    #     continue = false if pulses >= 5
+    #   end
+    #
+    #   transport.start  # Immediately begins, stops when the block says so
+    #
+    #   pulses  # => 5
+    #
+    #   # The block is asked BEFORE each tick, so what it guards is the tick that
+    #   # has not happened yet.
     #
     # @example Testing specific sequences
     #   ticks = 0
+    #   some_condition = true
     #   clock = DummyClock.new { ticks < 50 || some_condition }
-    #   transport.sequencer.every(1) { ticks += 1 }
-    #   transport.start  # Immediately runs minimum 50 ticks
+    #   transport = Transport.new(clock, 4, 24)
+    #
+    #   transport.sequencer.every(1) do
+    #     ticks += 1
+    #     some_condition = false if ticks >= 60
+    #   end
+    #   transport.start
+    #
+    #   ticks  # => 60
+    #
+    #   # Sixty and not fifty: the two clauses are OR'd, so the condition holds
+    #   # while EITHER is true. `ticks < 50` stops mattering at 50 and the flag
+    #   # carries it to 60. Reading it as "a minimum of 50" is reading the first
+    #   # clause and ignoring the second.
     #
     # @see TimerClock For real-time operation with external activation
     # @see InputMidiClock For MIDI-synchronized operation
