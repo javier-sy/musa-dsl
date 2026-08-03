@@ -4,61 +4,89 @@ Neumas provide a compact text-based notation system for musical composition. Neu
 
 ```ruby
 require 'musa-dsl'
-require 'midi-communications'
-
-# To play the song, decode neumas to GDV and convert to PDV
 include Musa::All
 
 using Musa::Extension::Neumas
 
-# Neuma notation requires parentheses around each neuma element
-# Parsed using Musa::Neumalang::Neumalang.parse()
+# Neuma notation requires parentheses around each neuma element.
+# Two voices, written in parallel with |
+song = "(0 1 mf) (+2 1 mp) (+4 2 p)" |      # Voice 1: melody
+       "(+7 2 p) (+5 1 mp) (+7 1 mf)"       # Voice 2: harmony
 
-# Complete example with durations and dynamics (parallel voices using |)
-song = "(0 1 mf) (+2 1 mp) (+4 2 p) (+5 1/2 mf) (+7 1 f)" |      # Voice 1: melody with varied dynamics
-       "(+7 2 p) (+5 1 mp) (+7 1 mf) (+9 1/2 f) (+12 2 ff)"      # Voice 2: harmony with crescendo
-
-# Wrap parallel structure in serie
-song_serie = S(song)
-
-# Create decoder with a scale
 scale = Scales.et12[440.0].major[60]
-decoder = Decoders::NeumaDecoder.new(scale, base_duration: 1r)
+decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1r)
 
-# Setup sequencer with clock and transport
-output = MIDICommunications::Output.gets
+# A BaseSequencer runs as fast as it can, which is what makes this example
+# runnable. A piece meant to be heard uses a Transport over a real clock; the
+# scheduling code is the same.
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+played = []
 
-clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
-transport = Transport.new(clock, 4, 24)
-
-voices = MIDIVoices.new(sequencer: transport.sequencer, output: output, channels: [0, 1])
-
-# Play both voices simultaneously - sequencer handles parallel structure automatically
-transport.sequencer.with do
-  at 1 do
-    play song_serie, decoder: decoder, mode: :neumalang do |gdv|
-      # Convert GDV to PDV for MIDI output
-      pdv = gdv.to_pdv(scale)
-
-      # Use voice based on channel assignment (sequencer maintains voice separation)
-      voice_index = gdv[:channel] || 0
-      voices.voices[voice_index].note pitch: pdv[:pitch],
-                                      velocity: pdv[:velocity],
-                                      duration: pdv[:duration]
-    end
+seq.at(1) do
+  seq.play(S(song), decoder: decoder, mode: :neumalang) do |gdv|
+    pdv = gdv.to_pdv(scale)
+    played << [seq.position, pdv[:pitch], pdv[:duration]]
   end
 end
 
-transport.start
+seq.run
+
+played
+# => [[(1/1), 60, (1/1)], [(1/1), 72, (2/1)],
+#     [(2/1), 64, (1/1)], [(3/1), 81, (1/1)],
+#     [(3/1), 71, (2/1)], [(4/1), 93, (1/1)]]
 ```
+
+Read the pitches down each voice and the point of the `|` appears. Voice 1 is
+60, 64, 71 and voice 2 is 72, 81, 93: **each voice keeps its own state**, so the
+`+2` of the melody counts from the melody's last note and not from whatever the
+harmony just did. One decoder, two independent readings of it.
+
+The pitches also show what a relative step is. `(+7)` from grade 0 in C major is
+grade 7 -- the octave, 72 -- and not seven semitones. Steps are **scale
+degrees**; the semitones follow from the scale.
+
+And what is NOT there: the events carry `:grade`, `:octave`, `:duration` and
+`:velocity`, and nothing that says which voice they came from. Separating the
+voices for output is the caller's job -- give each `play` its own block, or
+schedule the two strings separately against different MIDI channels.
+
 
 **Notation syntax:**
 - `(0)`, `(+2)`, `(-1)` - Absolute/relative pitch steps (in parentheses)
 - `o0`, `o1`, `o-1` - Octave specification
-- `1`, `2`, `1/2`, `1/4` - Duration (whole, double, half, quarter)
+- `1`, `2`, `1/2`, `1/4` - Duration, as a MULTIPLE of the decoder's
+  `base_duration` -- not a note figure. `1` is one base_duration, `2` is two,
+  `1/2` is half of one
 - `ppp`, `pp`, `p`, `mp`, `mf`, `f`, `ff`, `fff` - Dynamics (velocity)
 - `+f`, `+ff`, `-p`, `-pp` - Relative dynamics (louder/softer)
 - `|` operator - Parallel voices (polyphonic structure)
+
+The duration line is the one that catches people. A neuma's `1` means one
+`base_duration`, and `base_duration` is itself a fraction of a BAR:
+
+```ruby
+# A lambda and not a `def`: a method body does not see the `scale` bound above it.
+durations_with = lambda do |base|
+  decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: base)
+  seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+  durations = []
+  seq.at(1) do
+    seq.play("(0 1) (0 2) (0 1/2)".to_neumas, decoder: decoder, mode: :neumalang) do |gdv|
+      durations << gdv[:duration]
+    end
+  end
+  seq.run
+  durations
+end
+
+durations_with[1r]    # => [(1/1), (2/1), (1/2)]
+durations_with[1/4r]  # => [(1/4), (1/2), (1/8)]
+```
+
+With `base_duration: 1/4r` in a 4/4 bar, a `1` sounds like a quarter note -- which
+is why "1 = quarter" reads true and is nonetheless the wrong rule. In 3/4 the
+same `1` is a third of a bar.
 
 ## When is this the answer
 
@@ -103,4 +131,31 @@ available in `score.rb`.
 
 **Source code:** `lib/neumas/` and `lib/neumalang/`
 
+## Sending it somewhere
 
+The examples above run on a `BaseSequencer`, which has no notion of sound. To
+hear the same code, put a real clock under a `Transport` and a `MIDIVoices` on
+the far side. Nothing about the scheduling changes:
+
+```ruby
+require 'midi-communications'
+
+output = MIDICommunications::Output.gets   # asks which port to use
+clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+transport = Transport.new(clock, 4, 24)
+
+voices = MIDIVoices.new(sequencer: transport.sequencer, output: output, channels: [0, 1])
+
+transport.sequencer.with do
+  at 1 do
+    play S(song), decoder: decoder, mode: :neumalang do |gdv|
+      pdv = gdv.to_pdv(scale)
+      voices.voices[0].note pitch: pdv[:pitch],
+                            velocity: pdv[:velocity],
+                            duration: pdv[:duration]
+    end
+  end
+end
+
+transport.start
+```

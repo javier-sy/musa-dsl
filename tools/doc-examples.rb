@@ -522,7 +522,17 @@ module DocExamples
         name = code[ASSIGNMENT, 1]
         next if name && spoken.any? { |line| line.match?(/^\s*#{Regexp.escape(name)}\s+[^=\s]/) }
 
-        eval(code, TOPLEVEL_BINDING) rescue nil # rubocop:disable Security/Eval, Style/RescueModifier
+        # `rescue Exception` and not a bare rescue: a preamble line that raises a
+        # ScriptError -- `require 'midi-communications'` carried forward from an
+        # earlier block -- is NOT a StandardError, so a bare rescue let it through,
+        # the forked child died before writing anything, and the whole narrative
+        # vanished reporting neither a check nor an error. Silent, and it took
+        # every claim in the block with it.
+        begin
+          eval(code, TOPLEVEL_BINDING) # rubocop:disable Security/Eval
+        rescue Exception # rubocop:disable Lint/RescueException
+          nil
+        end
       end
 
       # Refinements are lexically scoped to the eval that activates them, so a

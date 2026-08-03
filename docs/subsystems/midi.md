@@ -126,6 +126,45 @@ raw_messages = recorder.raw  # Array of timestamped MIDI events
 recorder.clear
 ```
 
+## What the recorder does, without any hardware
+
+The recorder needs no hardware to be understood: `record` takes the raw bytes
+and stamps them with wherever the sequencer is, so the whole surface can be
+exercised by moving the position by hand.
+
+```ruby
+require 'musa-dsl'
+include Musa::All
+
+sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+recorder = Musa::MIDIRecorder::MIDIRecorder.new(sequencer)
+
+recorder.transcription  # => []
+
+sequencer.position = 1r
+recorder.record([0x90, 60, 100])          # note on
+
+recorder.transcription
+# => [{ position: (1/1), channel: 0, pitch: 60, velocity: 100 }]
+
+sequencer.position = 5/4r
+recorder.record([0x80, 60, 64])           # note off
+
+recorder.transcription
+# => [{ position: (1/1), channel: 0, pitch: 60, velocity: 100,
+#       duration: (1/4), velocity_off: 64 }]
+
+recorder.raw.size       # => 2
+recorder.clear
+recorder.transcription  # => []
+```
+
+Note what the note-off does: it does not append an event, it **completes** the
+one that was open, adding `:duration` and `:velocity_off`. A note that is still
+sounding has neither, which is how you tell a finished phrase from a truncated
+one. `raw` keeps both messages regardless -- it is the tape, `transcription` is
+the reading.
+
 **Transcription output format:**
 
 Each note hash contains:
