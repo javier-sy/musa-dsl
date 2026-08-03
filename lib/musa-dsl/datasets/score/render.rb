@@ -30,10 +30,16 @@ module Musa
       #   score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
       #
       #   seq = Musa::Sequencer::Sequencer.new(4, 24)
-      #   score.render(on: seq) do |event|
-      #     puts "Play #{event[:pitch]} at #{seq.position}"
-      #   end
+      #
+      #   played = []
+      #   score.render(on: seq) { |event| played << [seq.position, event[:pitch]] }
       #   seq.run
+      #
+      #   played  # => [[(95/96), 60], [(191/96), 64]]
+      #
+      #   # Score time 1 is the sequencer's starting position, one tick before
+      #   # bar 1, because `render` schedules a wait of `score_time - 1` and a
+      #   # wait of zero fires where the sequencer already is.
       #
       # @example Nested scores
       #   inner = Musa::Datasets::Score.new
@@ -43,7 +49,17 @@ module Musa
       #   outer = Musa::Datasets::Score.new
       #   outer.at(1r, add: { pitch: 60 }.extend(Musa::Datasets::AbsD))
       #   outer.at(2r, add: inner)  # Nested score
-      #   # inner plays at sequencer time 2r
+      #
+      #   nested_seq = Musa::Sequencer::Sequencer.new(4, 24)
+      #   nested = []
+      #   outer.render(on: nested_seq) { |e| nested << [nested_seq.position, e[:pitch]] }
+      #   nested_seq.run
+      #
+      #   nested  # => [[(95/96), 60], [(191/96), 67], [(287/96), 69]]
+      #
+      #   # The inner score's own time 1 lands at the outer's time 2, and its
+      #   # time 2 at the outer's 3: a nested score's times are read from where
+      #   # it was placed, not from bar 1.
       #
       # @see Musa::Sequencer::Sequencer Sequencer for playback
       # @see Score#at Adding events to scores
@@ -94,6 +110,7 @@ module Musa
         #     puts "Time #{seq.position}: #{event.inspect}"
         #   end
         #   seq.run
+        #   # => "Time 95/96: {pitch: 60, duration: 1.0}"
         #
         # @example Nested score rendering
         #   inner = Musa::Datasets::Score.new

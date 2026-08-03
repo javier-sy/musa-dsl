@@ -118,8 +118,12 @@ module Musa::Datasets
   #     custom_key: :value
   #   }.extend(PDV)
   #   scale = Musa::Scales::Scales.et12[440.0].major[60]
-  #   gdv = pdv.to_gdv(scale)
-  #   # custom_key copied to GDV (not a natural key)
+  #   pdv.to_gdv(scale)
+  #   # => { grade: 0, octave: 0, duration: 1.0, velocity: 0, custom_key: :value }
+  #
+  #   # A key the conversion knows nothing about travels through untouched, and
+  #   # keeps its place at the end. That is what makes a PDV extensible: whatever
+  #   # a piece needs to carry alongside the note survives the round trip.
   #
   # @see GDV Score-style representation
   # @see AbsD Absolute duration events

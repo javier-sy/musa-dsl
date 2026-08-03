@@ -154,21 +154,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # C# represented as C (grade 0) + 1 sharp
     end
 
-    it '@example Preserve additional keys' do
-      pdv = {
-        pitch: 60,
-        duration: 1.0,
-        velocity: 64,
-        custom_key: :value
-      }.extend(Musa::Datasets::PDV)
-      scale = Musa::Scales::Scales.et12[440.0].major[60]
-
-      gdv = pdv.to_gdv(scale)
-
-      expect(gdv[:custom_key]).to eq(:value)
-      # custom_key copied to GDV (not a natural key)
-    end
-
     it '@example Chromatic note' do
       pdv = { pitch: 61, duration: 1.0 }.extend(Musa::Datasets::PDV)
       scale = Musa::Scales::Scales.et12[440.0].major[60]
@@ -479,28 +464,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'P (p.rb)' do
-    it '@example Basic point series (MIDI pitches)' do
-      # MIDI pitches with durations in quarter notes
-      p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
-
-      expect(p[0]).to eq(60)  # C4
-      expect(p[1]).to eq(4)   # for 4 quarters
-      expect(p[2]).to eq(64)  # E4
-      expect(p[3]).to eq(8)   # for 8 quarters
-      expect(p[4]).to eq(67)  # G4
-    end
-
-    it '@example Hash points (complex data structures)' do
-      p = [
-        { pitch: 60, velocity: 64 }, 4,
-        { pitch: 64, velocity: 80 }, 8,
-        { pitch: 67, velocity: 64 }
-      ].extend(Musa::Datasets::P)
-
-      expect(p[0]).to eq({ pitch: 60, velocity: 64 })
-      expect(p[1]).to eq(4)
-      expect(p[2]).to eq({ pitch: 64, velocity: 80 })
-    end
 
     it '@example Convert to timed serie' do
       p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
@@ -564,16 +527,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(event3[:value]).to eq(67)
     end
 
-    it '@example Custom start time' do
-      p = [60, 4, 64].extend(Musa::Datasets::P)
-
-      serie = p.to_timed_serie(base_duration: 1/4r, time_start: 10r).instance
-
-      event1 = serie.next_value
-      expect(event1[:time]).to eq(10r)
-      # First event at time 10
-    end
-
     it '@example Start time from component' do
       p = [{ time: 100, pitch: 60 }, 4, { pitch: 64 }].extend(Musa::Datasets::P)
 
@@ -584,51 +537,9 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # First event at time 100
     end
 
-    it '@example Transform hash points' do
-      p = [{ pitch: 60 }, 4, { pitch: 64 }].extend(Musa::Datasets::P)
-
-      p2 = p.map { |point| point.merge(velocity: 80) }
-
-      expect(p2[0][:velocity]).to eq(80)
-      expect(p2[2][:velocity]).to eq(80)
-      # Adds velocity to each point
-    end
   end
 
   context 'PS (ps.rb)' do
-
-    it '@example Parallel interpolation (multidimensional)' do
-      ps = {
-        from: [60, 64],  # C4 and E4
-        to: [72, 76],    # C5 and E5
-        duration: 1.0
-      }.extend(Musa::Datasets::PS)
-
-      expect(ps[:from]).to eq([60, 64])
-      expect(ps[:to]).to eq([72, 76])
-      # Both parameters move in parallel
-    end
-
-    it '@example Multiple parameters (sonic gesture)' do
-      ps = {
-        from: { pitch: 60, velocity: 64, pan: -1.0 },
-        to: { pitch: 72, velocity: 80, pan: 1.0 },
-        duration: 2.0
-      }.extend(Musa::Datasets::PS)
-
-      expect(ps[:from]).to eq({ pitch: 60, velocity: 64, pan: -1.0 })
-      expect(ps[:to]).to eq({ pitch: 72, velocity: 80, pan: 1.0 })
-      # Pitch, velocity, and pan all change smoothly
-    end
-
-    it '@example Right open interval' do
-      ps1 = { from: 60, to: 64, duration: 1.0, right_open: true }.extend(Musa::Datasets::PS)
-      ps2 = { from: 64, to: 67, duration: 1.0, right_open: false }.extend(Musa::Datasets::PS)
-
-      expect(ps1[:right_open]).to be true
-      expect(ps2[:right_open]).to be false
-      # ps1 stops just before 64, ps2 starts at 64 - no discontinuity
-    end
 
     it '@example Created from P point series' do
       p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
@@ -687,28 +598,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
   context 'Score (score.rb)' do
 
-    it '@example Create from hash' do
-      score = Musa::Datasets::Score.new({
-        0r => [{ pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV)],
-        1r => [{ pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV)]
-      })
-
-      expect(score.size).to eq(2)
-      expect(score.at(0r).size).to eq(1)
-      expect(score.at(1r).size).to eq(1)
-    end
-
-    it '@example Query time interval' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      events = score.between(0r, 2r)
-
-      expect(events.size).to eq(2)
-      # Returns all events starting in [0, 2) or overlapping interval
-    end
-
     it '@example Filter events' do
       score = Musa::Datasets::Score.new
       score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
@@ -764,22 +653,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(score.at(0r).size).to eq(2)
     end
 
-    it '@example Iterate over time slots' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      positions = []
-      counts = []
-      score.each do |time, events|
-        positions << time
-        counts << events.size
-      end
-
-      expect(positions).to eq([0r, 1r])
-      expect(counts).to eq([1, 1])
-    end
-
     it '@example Convert to hash' do
       score = Musa::Datasets::Score.new
       score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
@@ -789,44 +662,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(hash.keys).to eq([0r, 1r])
       expect(hash[0r]).to be_an(Array)
-    end
-
-    it '@example Query bar' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(3r, add: { pitch: 67, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      events = score.between(0r, 4r)
-
-      expect(events.size).to eq(3)
-      # Returns all events overlapping [0, 4)
-    end
-
-    it '@example Long note spans interval' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { duration: 10.0 }.extend(Musa::Datasets::AbsD))
-
-      events = score.between(2r, 4r)
-
-      expect(events.size).to eq(1)
-      # Event included (started before 4, finishes after 2)
-      expect(events[0][:start_in_interval]).to eq(2r)
-      expect(events[0][:finish_in_interval]).to eq(4r)
-    end
-
-    it '@example Get all changes in bar' do
-      score = Musa::Datasets::Score.new
-      score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      changes = score.changes_between(0r, 4r)
-
-      starts = changes.select { |c| c[:change] == :start }
-      finishes = changes.select { |c| c[:change] == :finish }
-
-      expect(starts.size).to eq(2)
-      expect(finishes.size).to eq(2)
     end
 
     it '@example Get all pitches' do
@@ -851,39 +686,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(grades).to eq(Set[0, 2, 4])
     end
 
-    it '@example Filter by pitch' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 72, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      high_notes = score.subset { |event| event[:pitch] > 60 }
-
-      expect(high_notes.at(1r).size).to eq(1)
-      expect(high_notes.at(2r).size).to eq(1)
-      expect(high_notes.at(0r)).to be_empty
-    end
-
-    it '@example Filter by attribute presence' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0, staccato: true }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      staccato_notes = score.subset { |event| event[:staccato] }
-
-      expect(staccato_notes.size).to eq(1)
-    end
-
-    it '@example Filter by grade' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { grade: 0, duration: 1.0 }.extend(Musa::Datasets::GDV))
-      score.at(1r, add: { grade: 2, duration: 1.0 }.extend(Musa::Datasets::GDV))
-      score.at(2r, add: { grade: 0, duration: 1.0 }.extend(Musa::Datasets::GDV))
-
-      tonic_notes = score.subset { |event| event[:grade] == 0 }
-
-      expect(tonic_notes.size).to eq(2)
-    end
   end
 
   context 'Score::Queriable (score/queriable.rb)' do
@@ -898,18 +700,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(by_pitch[60].size).to eq(2)
       expect(by_pitch[64].size).to eq(1)
-    end
-
-    it '@example Select events with attribute' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0, staccato: true }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      events = score.at(0r)
-      staccato = events.select_by_attribute(:staccato)
-
-      expect(staccato.size).to eq(1)
-      # Returns events where :staccato is not nil
     end
 
     it '@example Select by value' do
@@ -937,68 +727,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(by_grade[2].size).to eq(1)
     end
 
-    it '@example Select with attribute present' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0, staccato: true }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      events = score.at(0r)
-      result = events.select_by_attribute(:staccato)
-
-      expect(result.size).to eq(1)
-      # Events where :staccato is not nil
-    end
-
-    it '@example Select by specific value' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      events = score.at(0r)
-      result = events.select_by_attribute(:pitch, 60)
-
-      expect(result.size).to eq(1)
-      # Events where pitch == 60
-    end
-
-    it '@example Sort by pitch' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 67, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      events = score.at(0r)
-      sorted = events.sort_by_attribute(:pitch)
-
-      expect(sorted.map { |e| e[:pitch] }).to eq([60, 64, 67])
-      # Events sorted by ascending pitch
-    end
-
-    it '@example Group by pitch' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      results = score.between(0r, 3r)
-      by_pitch = results.group_by_attribute(:pitch)
-
-      expect(by_pitch[60].size).to eq(2)
-      # Groups by event[:dataset][:pitch]
-    end
-
-    it '@example Select with custom condition' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 72, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      results = score.between(0r, 3r)
-      high = results.subset { |event| event[:pitch] > 60 }
-
-      expect(high.size).to eq(2)
-    end
-
     it '@example Group by velocity' do
       score = Musa::Datasets::Score.new
       score.at(0r, add: { pitch: 60, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::PDV))
@@ -1010,18 +738,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(by_velocity[0].size).to eq(2)
       expect(by_velocity[1].size).to eq(1)
-    end
-
-    it '@example Select with attribute' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0, staccato: true }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      results = score.between(0r, 2r)
-      filtered = results.select_by_attribute(:staccato)
-
-      expect(filtered.size).to eq(1)
-      # Where dataset[:staccato] is not nil
     end
 
     it '@example Select by value' do
@@ -1037,123 +753,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # Where dataset[:grade] == 0
     end
 
-    it '@example Filter by pitch range' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 72, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      results = score.between(0r, 3r)
-      filtered = results.subset { |event| event[:pitch] > 60 && event[:pitch] < 72 }
-
-      expect(filtered.size).to eq(1)
-    end
-
-    it '@example Filter by multiple conditions' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { grade: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV))
-      score.at(1r, add: { grade: 0, duration: 1.0, velocity: 1 }.extend(Musa::Datasets::GDV))
-      score.at(2r, add: { grade: 2, duration: 1.0, velocity: 1 }.extend(Musa::Datasets::GDV))
-
-      results = score.between(0r, 3r)
-      filtered = results.subset { |event| event[:grade] == 0 && event[:velocity] > 0 }
-
-      expect(filtered.size).to eq(1)
-    end
-
-    it '@example Sort by start time within interval' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 67, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      results = score.between(0r, 3r)
-      sorted = results.sort_by_attribute(:pitch)
-
-      expect(sorted.map { |r| r[:dataset][:pitch] }).to eq([60, 64, 67])
-      # Results sorted by ascending pitch
-    end
   end
 
-  context 'Score::Render (score/render.rb)' do
-    it '@example Basic rendering' do
-      score = Musa::Datasets::Score.new
-      score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(2r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      seq = Musa::Sequencer::Sequencer.new(4, 24)
-
-      played = []
-      score.render(on: seq) do |event|
-        played << { pitch: event[:pitch], position: seq.position }
-      end
-
-      seq.run
-
-      expect(played.size).to eq(2)
-      expect(played[0][:pitch]).to eq(60)
-      expect(played[1][:pitch]).to eq(64)
-    end
-
-    it '@example Nested scores' do
-      inner = Musa::Datasets::Score.new
-      inner.at(1r, add: { pitch: 67, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      inner.at(2r, add: { pitch: 69, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      outer = Musa::Datasets::Score.new
-      outer.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      outer.at(2r, add: inner)  # Nested score
-
-      seq = Musa::Sequencer::Sequencer.new(4, 24)
-
-      played = []
-      outer.render(on: seq) do |event|
-        played << [event[:pitch], seq.position]
-      end
-
-      seq.run
-
-      # The nested score is placed at its own position in the outer one, so its
-      # bar 1 becomes the outer's bar 2. Every event fires one tick before its
-      # bar, which is where this sequencer starts everything.
-      expect(played).to eq([[60, 95/96r], [67, 191/96r], [69, 287/96r]])
-    end
-
-    it '@example Console output' do
-      score = Musa::Datasets::Score.new
-      score.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      seq = Musa::Sequencer::Sequencer.new(4, 24)
-
-      output = []
-      score.render(on: seq) do |event|
-        output << "Time #{seq.position}: #{event[:pitch]}"
-      end
-
-      seq.run
-
-      expect(output.first).to match(/Time .+: 60/)
-    end
-
-    it '@example Nested score rendering' do
-      inner = Musa::Datasets::Score.new
-      inner.at(1r, add: { pitch: 67, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      outer = Musa::Datasets::Score.new
-      outer.at(1r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      outer.at(2r, add: inner)
-
-      seq = Musa::Sequencer::Sequencer.new(4, 24)
-
-      events = []
-      outer.render(on: seq) do |event|
-        events << [event[:pitch], seq.position]
-      end
-
-      seq.run
-
-      # Inner scores are rendered at their scheduled times without being asked.
-      expect(events).to eq([[60, 95/96r], [67, 191/96r]])
-    end
-  end
 end

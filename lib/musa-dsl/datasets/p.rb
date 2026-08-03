@@ -71,6 +71,14 @@ module Musa::Datasets
   #     { pitch: 67, velocity: 64 }
   #   ].extend(Musa::Datasets::P)
   #
+  #   p.to_timed_serie(base_duration: 1/4r).i.to_a
+  #   # => [{ time: (0/1), value: { pitch: 60, velocity: 64 } },
+  #   #     { time: (1/1), value: { pitch: 64, velocity: 80 } },
+  #   #     { time: (3/1), value: { pitch: 67, velocity: 64 } }]
+  #
+  #   # A point can be anything; only the odd positions are read as points, and
+  #   # nothing looks inside them.
+  #
   # @example Convert to timed serie
   #   p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
   #   p.to_timed_serie(base_duration: 1/4r).i.to_a
@@ -156,8 +164,14 @@ module Musa::Datasets
     #   serie.next_value  # => { time: 3r, value: 67 }
     #
     # @example Custom start time
-    #   serie = p.to_timed_serie(time_start: 10)
-    #   # First event at time 10
+    #   line = [60, 4, 64, 8, 67].extend(P)
+    #   line.to_timed_serie(time_start: 10r).i.to_a
+    #   # => [{ time: (10/1), value: 60 },
+    #   #     { time: (11/1), value: 64 },
+    #   #     { time: (13/1), value: 67 }]
+    #
+    #   # The start shifts the whole serie; the distances between points are the
+    #   # durations and do not move.
     #
     # @example Start time from component
     #   p = [{ time: 100, pitch: 60 }, 4, { pitch: 64 }].extend(P)
@@ -191,7 +205,9 @@ module Musa::Datasets
     # @example Transform hash points
     #   p = [{ pitch: 60 }, 4, { pitch: 64 }].extend(P)
     #   p.map { |point| point.merge(velocity: 80) }
-    #   # Adds velocity to each point
+    #   # => [{ pitch: 60, velocity: 80 }, 4, { pitch: 64, velocity: 80 }]
+    #
+    #   # The 4 between them is a duration, and the block is never called on it.
     def map(&block)
       i = 0
       clone.map! do |element|

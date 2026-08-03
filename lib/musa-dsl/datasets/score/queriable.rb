@@ -32,16 +32,19 @@ module Musa::Datasets
       #
       # @example Group events by pitch
       #   events = score.at(0r)  # Returns array extended with QueryableByTimeSlot
-      #   by_pitch = events.group_by_attribute(:pitch)
-      #   # => { 60 => [event1, event2], 64 => [event3] }
+      #   events.group_by_attribute(:pitch)
+      #   # => { 60 => [{ pitch: 60, duration: (1/1), velocity: 1 }],
+      #   #      64 => [{ pitch: 64, duration: (1/1), staccato: true }] }
       #
       # @example Select events with attribute
-      #   staccato = events.select_by_attribute(:staccato)
-      #   # Returns events where :staccato is not nil
+      #   events.select_by_attribute(:staccato)
+      #   # => [{ pitch: 64, duration: (1/1), staccato: true }]
+      #
+      #   # By presence, not by truth: an attribute set to false would be kept.
       #
       # @example Select by value
-      #   forte = events.select_by_attribute(:velocity, 1)
-      #   # Returns events where velocity == 1
+      #   events.select_by_attribute(:velocity, 1)
+      #   # => [{ pitch: 60, duration: (1/1), velocity: 1 }]
       #
       # @api private
       module QueryableByTimeSlot
@@ -70,11 +73,11 @@ module Musa::Datasets
         #
         # @example Select with attribute present
         #   events.select_by_attribute(:staccato)
-        #   # Events where :staccato is not nil
+        #   # => [{ pitch: 64, duration: (1/1), staccato: true }]
         #
         # @example Select by specific value
         #   events.select_by_attribute(:pitch, 60)
-        #   # Events where pitch == 60
+        #   # => [{ pitch: 60, duration: (1/1), velocity: 1 }]
         def select_by_attribute(attribute, value = nil)
           if value.nil?
             select { |e| !e[attribute].nil? }
@@ -92,8 +95,10 @@ module Musa::Datasets
         # @return [Array] sorted events, extended with QueryableByTimeSlot
         #
         # @example Sort by pitch
-        #   sorted = events.sort_by_attribute(:pitch)
-        #   # Events sorted by ascending pitch
+        #   events.sort_by_attribute(:pitch).map { |e| e[:pitch] }  # => [60, 64]
+        #
+        #   # It filters before it sorts: an event without the attribute is not
+        #   # sorted last, it is dropped.
         def sort_by_attribute(attribute)
           select_by_attribute(attribute).sort_by { |e| e[attribute] }.extend(QueryableByTimeSlot)
         end
@@ -111,14 +116,24 @@ module Musa::Datasets
       #
       # @example Interval query result structure
       #   results = score.between(0r, 4r)
-      #   # Each result: { start: ..., finish: ..., dataset: event, ... }
+      #   results.first
+      #   # => { start: (0/1), finish: (1/1),
+      #   #      start_in_interval: (0/1), finish_in_interval: (1/1),
+      #   #      dataset: { pitch: 60, duration: (1/1), velocity: 1 } }
       #
       # @example Group by pitch
-      #   by_pitch = results.group_by_attribute(:pitch)
-      #   # Groups by event[:dataset][:pitch]
+      #   results.group_by_attribute(:pitch).keys  # => [60, 64, 67]
+      #
+      #   # Grouped by event[:dataset][:pitch], and the 67 at 1r is here too:
+      #   # `between` is an interval, not a time slot.
       #
       # @example Select with custom condition
       #   high = results.subset { |event| event[:pitch] > 60 }
+      #   high.map { |r| r[:dataset][:pitch] }  # => [64, 67]
+      #
+      #   # The block is given the DATASET; what comes back is the wrapper. This
+      #   # is the one asymmetry of the module, and the reason the two are not
+      #   # the same call.
       #
       # @api private
       module QueryableByDataset
@@ -146,8 +161,8 @@ module Musa::Datasets
         # @return [Array] filtered results, extended with QueryableByDataset
         #
         # @example Select with attribute
-        #   results.select_by_attribute(:staccato)
-        #   # Where dataset[:staccato] is not nil
+        #   results.select_by_attribute(:staccato).map { |r| r[:dataset][:pitch] }
+        #   # => [64]
         #
         # @example Select by value
         #   results.select_by_attribute(:grade, 0)
@@ -171,9 +186,16 @@ module Musa::Datasets
         #
         # @example Filter by pitch range
         #   results.subset { |event| event[:pitch] > 60 && event[:pitch] < 72 }
+        #         .map { |r| r[:dataset][:pitch] }
+        #   # => [64, 67]
         #
         # @example Filter by multiple conditions
-        #   results.subset { |event| event[:grade] == 0 && event[:velocity] > 0 }
+        #   results.subset { |event| event[:velocity] == 1 && event[:pitch] < 64 }
+        #         .map { |r| r[:dataset][:pitch] }
+        #   # => [60]
+        #
+        #   # An event without :velocity does not raise -- nil fails the
+        #   # comparison and it is simply not selected.
         def subset
           raise ArgumentError, "subset needs a block with the inclusion condition on the dataset" unless block_given?
           select { |e| yield e[:dataset] }.extend(QueryableByDataset)
@@ -188,8 +210,8 @@ module Musa::Datasets
         # @return [Array] sorted results, extended with QueryableByDataset
         #
         # @example Sort by start time within interval
-        #   sorted = results.sort_by_attribute(:pitch)
-        #   # Results sorted by ascending pitch
+        #   results.sort_by_attribute(:pitch).map { |r| r[:dataset][:pitch] }
+        #   # => [60, 64, 67]
         def sort_by_attribute(attribute)
           select_by_attribute(attribute).sort_by { |e| e[:dataset][attribute] }.extend(QueryableByDataset)
         end

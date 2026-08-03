@@ -62,8 +62,18 @@ module Musa::Datasets
   #   score.at(1r, add: gdv2)
   #
   # @example Query time interval
+  #   score = Score.new({ 0r => [{ pitch: 60, duration: 1.0 }.extend(PDV)],
+  #                       1r => [{ pitch: 64, duration: 1.0 }.extend(PDV)] })
+  #
   #   events = score.between(0r, 2r)
-  #   # Returns all events starting in [0, 2) or overlapping interval
+  #   events.map { |e| e[:dataset][:pitch] }  # => [60, 64]
+  #
+  #   # What comes back is not the dataset but a reading of it against the
+  #   # interval asked for:
+  #   events.first
+  #   # => { start: (0/1), finish: (1/1),
+  #   #      start_in_interval: (0/1), finish_in_interval: (1/1),
+  #   #      dataset: { pitch: 60, duration: 1.0 } }
   #
   # @example Filter events
   #   pitched = Score.new({ 0r => [{ pitch: 60, duration: 1r }.extend(PDV)],
@@ -261,9 +271,17 @@ module Musa::Datasets
     # @return [void]
     #
     # @example Iterate over time slots
+    #   score = Score.new({ 0r => [{ pitch: 60, duration: 1.0 }.extend(PDV)],
+    #                       1r => [{ pitch: 64, duration: 1.0 }.extend(PDV)] })
+    #
     #   score.each do |time, events|
     #     puts "At #{time}: #{events.size} event(s)"
     #   end
+    #
+    #   score.map { |time, events| [time, events.size] }  # => [[(0/1), 1], [(1/1), 1]]
+    #
+    #   # Sorted by time, whatever order they were added in: `each` sorts, and
+    #   # everything Enumerable gives the class comes through it.
     def each(&block)
       @score.sort.each(&block)
     end
@@ -299,14 +317,24 @@ module Musa::Datasets
     #   - **:dataset**: The event dataset
     #
     # @example Query bar
-    #   events = score.between(0r, 4r)
-    #   # Returns all events overlapping [0, 4)
+    #   score = Score.new({ 0r => [{ pitch: 60, duration: 1.0 }.extend(PDV)],
+    #                       1r => [{ pitch: 64, duration: 1.0 }.extend(PDV)],
+    #                       3r => [{ pitch: 67, duration: 1.0 }.extend(PDV)] })
+    #
+    #   score.between(0r, 4r).size  # => 3
     #
     # @example Long note spans interval
+    #   score = Score.new
     #   score.at(0r, add: { duration: 10.0 }.extend(AbsD))
-    #   events = score.between(2r, 4r)
-    #   # Event included (started before 4, finishes after 2)
-    #   # start_in_interval: 2r, finish_in_interval: 4r
+    #
+    #   score.between(2r, 4r)
+    #   # => [{ start: (0/1), finish: (10/1),
+    #   #       start_in_interval: (2/1), finish_in_interval: (4/1),
+    #   #       dataset: { duration: 10.0 } }]
+    #
+    #   # The event is included although it starts outside the interval, and the
+    #   # two _in_interval keys are the part of it that falls inside. That is the
+    #   # difference between asking "what begins here" and "what sounds here".
     def between(closed_interval_start, open_interval_finish)
       @indexer
         .select { |i| i[:start] < open_interval_finish && i[:finish] > closed_interval_start ||
@@ -345,7 +373,17 @@ module Musa::Datasets
     #   - **:dataset**: The event dataset
     #
     # @example Get all changes in bar
+    #   score = Score.new({ 1r => [{ pitch: 60, duration: 1.0 }.extend(PDV)],
+    #                       2r => [{ pitch: 64, duration: 1.0 }.extend(PDV)] })
+    #
     #   changes = score.changes_between(0r, 4r)
+    #   changes.map { |c| [c[:time], c[:change]] }
+    #   # => [[(1/1), :start], [(2/1), :finish], [(2/1), :start], [(3/1), :finish]]
+    #
+    #   # At 2 the :finish comes BEFORE the :start. Two notes meeting end to end
+    #   # would otherwise open the second before closing the first, and whatever
+    #   # is listening would hear one note where there are two.
+    #
     #   changes.each do |change|
     #     case change[:change]
     #     when :start
@@ -443,13 +481,32 @@ module Musa::Datasets
     # @raise [ArgumentError] if no block given
     #
     # @example Filter by pitch
+    #   score = Score.new({ 0r => [{ pitch: 60, duration: 1r }.extend(PDV),
+    #                              { pitch: 64, duration: 1r, staccato: true }.extend(PDV)],
+    #                       1r => [{ pitch: 67, duration: 1r }.extend(PDV)] })
+    #
     #   high_notes = score.subset { |event| event[:pitch] > 60 }
+    #
+    #   high_notes.class  # => Musa::Datasets::Score
+    #   high_notes.map { |time, events| [time, events.map { |e| e[:pitch] }] }
+    #   # => [[(0/1), [64]], [(1/1), [67]]]
+    #
+    #   # A Score and not an array of events: the times survive the filter, so
+    #   # what comes back can be rendered, queried and filtered again. A slot
+    #   # left with nothing in it is dropped rather than kept empty.
     #
     # @example Filter by attribute presence
     #   staccato_notes = score.subset { |event| event[:staccato] }
+    #   staccato_notes.map { |time, events| [time, events.map { |e| e[:pitch] }] }
+    #   # => [[(0/1), [64]]]
     #
     # @example Filter by grade
     #   tonic_notes = score.subset { |event| event[:grade] == 0 }
+    #   tonic_notes.size  # => 0
+    #
+    #   # Nothing raises for a key these events do not have: `nil == 0` is
+    #   # simply false. A subset over the wrong dataset kind comes back empty,
+    #   # not broken.
     def subset
       raise ArgumentError, "subset needs a block with the inclusion condition on the dataset" unless block_given?
 
