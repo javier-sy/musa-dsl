@@ -223,10 +223,25 @@ module DocExamples
   # A markdown narrative carries its own vocabulary: its blocks run in order, so
   # everything an earlier one bound is already there. Only Ruby files need the
   # assignments recovered from around the comment.
+  #
+  # What a markdown section does NOT carry is what the file established for
+  # itself before it -- `require`, `include`, `using`. Those are not local
+  # bindings, they are the context the whole document is written in, and a
+  # reader who lands on the fourth section from a link is still inside it. So
+  # they travel forward and local variables do not.
   def preamble_for(example)
-    return [] if example.file.end_with?('.md')
+    return markdown_context(example.file, before: example.line) if example.file.end_with?('.md')
 
     preamble(example.file, before: example.line)
+  end
+
+  CONTEXT = /\A\s*(require\b|require_relative\b|include\s+[A-Z]|using\s+[A-Z])/
+
+  def markdown_context(path, before:)
+    File.readlines(path).first(before - 1)
+        .collect(&:rstrip)
+        .select { |line| line.match?(CONTEXT) }
+        .uniq
   end
 
   def preamble(path, before:)
