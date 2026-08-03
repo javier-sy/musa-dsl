@@ -118,14 +118,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result).to be_a(Musa::Datasets::AbsD)
     end
 
-    it '@example Process base event' do
-      base = Musa::Transcriptors::FromGDV::Base.new
-      gdv = { grade: 0, duration: 1r, base: true }
-      result = base.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-
-      expect(result[:duration]).to eq(0)
-    end
-
     it '@example Normal event (unchanged)' do
       base = Musa::Transcriptors::FromGDV::Base.new
       gdv = { grade: 0, duration: 1r }
@@ -279,13 +271,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
                               base_duration: 1/4r, tick_duration: 1/96r).size).to eq(22)
     end
 
-    it '@example The same number over a faster performer gives a faster trill' do
-      quick = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/8r)
-
-      expect(quick.transcript({ grade: 0, duration: 1r, tr: 1/2r },
-                              base_duration: 1/4r, tick_duration: 1/96r).size).to eq(94)
-    end
-
     it 'a numeric :tr used to compound the base duration twice (issue #83)' do
       trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
 
@@ -326,16 +311,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       # Staccato sets note_duration to half
       expect(result[:duration]).to eq(1r)
       expect(result[:note_duration]).to eq(1/2r)
-    end
-
-    it '@example Staccato level 2' do
-      staccato = Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new
-      gdv = { grade: 0, duration: 1r, st: 2 }
-      result = staccato.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-
-      # Level 2: duration divided by 4
-      expect(result[:duration]).to eq(1r)
-      expect(result[:note_duration]).to eq(1/4r)
     end
 
     it '@example Very short note (minimum enforced)' do

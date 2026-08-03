@@ -143,26 +143,6 @@ RSpec.describe 'Transport Inline Documentation Examples' do
   end
 
   context 'ExternalTickClock (external-tick-clock.rb)' do
-    it '@example Manual stepping for testing' do
-      clock = Musa::Clock::ExternalTickClock.new
-      transport = Musa::Transport::Transport.new(clock, 4, 24)
-
-      executed = []
-      transport.sequencer.at(1) { executed << "tick 1" }
-      transport.sequencer.at(2) { executed << "tick 2" }
-
-      # Start in background thread
-      thread = Thread.new { transport.start }
-      sleep 0.1  # Let transport initialize
-
-      # Later, from external source:
-      100.times { clock.tick }  # Advances ticks manually
-
-      transport.stop
-      thread.join
-
-      expect(executed).to include("tick 1", "tick 2")
-    end
 
     it '@example Integration with game loop' do
       clock = Musa::Clock::ExternalTickClock.new
@@ -310,12 +290,6 @@ RSpec.describe 'Transport Inline Documentation Examples' do
       expect(timer.period).to eq(Rational(2083, 100000))
     end
 
-    it '@example 120 BPM, 24 ticks per beat' do
-      period = 60.0 / (120 * 24)  # 0.02083 seconds
-      timer = Musa::Clock::Timer.new(period)
-
-      expect(timer.period.to_f).to be_within(0.001).of(0.02083)
-    end
   end
 
   context 'Transport (transport.rb)' do
@@ -490,23 +464,6 @@ RSpec.describe 'Transport Inline Documentation Examples' do
 
       expect(position_jumps).not_to be_empty
       expect(position_jumps.first).to be_within(0.1).of(8.0)
-    end
-
-    it '@example Jump to bar 8 (fast-forwards through bars 1-7)' do
-      clock = Musa::Clock::DummyClock.new(400)
-      transport = Musa::Transport::Transport.new(clock, 4, 24)
-
-      executed = []
-
-      transport.sequencer.at 8 do
-        executed << "Bar 8"
-        transport.stop
-      end
-
-      transport.change_position_to(bars: 8)
-      transport.start
-
-      expect(executed).to include("Bar 8")
     end
 
     it '@example MIDI Song Position Pointer' do

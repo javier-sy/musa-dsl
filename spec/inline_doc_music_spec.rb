@@ -15,8 +15,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
     %i[maj_test dom7_test].each { |name| definitions&.delete(name) }
   end
 
-
-
   include Musa::Scales
   include Musa::Chords
 

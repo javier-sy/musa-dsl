@@ -85,12 +85,6 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Array#indexes_of_values (line 98)' do
-    it '@example Where each value appears' do
-      result = [10, 20, 10, 30, 20].indexes_of_values
-
-      # => { 10 => [0, 2], 20 => [1, 4], 30 => [3] }
-      expect(result).to eq({ 10 => [0, 2], 20 => [1, 4], 30 => [3] })
-    end
 
     it 'handles single occurrences' do
       result = [1, 2, 3].indexes_of_values
@@ -200,25 +194,6 @@ RSpec.describe 'Matrix Inline Documentation Examples' do
   end
 
   context 'Matrix#to_p (line 225)' do
-    it '@example Basic conversion' do
-      matrix = Matrix[[0, 60], [1, 62], [2, 64]]
-      result = matrix.to_p(time_dimension: 0)
-
-      # => Array with one P object:
-      #    [[60], 1, [62], 1, [64]].extend(P)
-      # Each value like [60] is extended with V module
-
-      expect(result).to be_an(Array)
-      expect(result.size).to eq(1)
-
-      first_p = result[0]
-      expect(first_p).to be_kind_of(Musa::Datasets::P)
-      expect(first_p[0]).to eq([60])
-      expect(first_p[0]).to be_kind_of(Musa::Datasets::V)
-      expect(first_p[1]).to eq(1)
-      expect(first_p[2]).to eq([62])
-      expect(first_p[4]).to eq([64])
-    end
 
     it '@example Keeping time dimension' do
       matrix = Matrix[[0, 60, 100], [1, 62, 110], [2, 64, 120]]

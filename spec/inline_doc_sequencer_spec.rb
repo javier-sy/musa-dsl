@@ -5,19 +5,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   include Musa::All
 
   context 'BaseSequencer (base-sequencer.rb)' do
-    it '@example Basic tick-based sequencer' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)  # 4/4, 24 ticks/beat
-
-      executed = []
-
-      seq.at(1) { executed << "Beat 1" }
-      seq.at(2) { executed << "Beat 2" }
-      seq.at(3.5) { executed << "Beat 3.5" }
-
-      seq.run  # Executes all scheduled events
-
-      expect(executed).to eq(["Beat 1", "Beat 2", "Beat 3.5"])
-    end
 
     it '@example Tickless sequencer' do
       seq = Musa::Sequencer::BaseSequencer.new  # Tickless mode
@@ -233,14 +220,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'TickBasedTiming (base-sequencer-tick-based.rb)' do
-    it '@example Creating tick-based sequencer (4/4, 96 ticks per beat)' do
-      sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)  # 4 beats, 96 ticks/beat
-
-      expect(sequencer.ticks_per_bar).to eq(384r)
-      expect(sequencer.tick_duration).to eq(1/384r)
-      # Position starts at 1r - tick_duration (before first tick brings it to 1r)
-      expect(sequencer.position).to be < 1r
-    end
 
     it '@example Advancing time with tick' do
       sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)
@@ -270,14 +249,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to eq(2r)
     end
 
-    it '@example Quantization to tick boundaries' do
-      sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)
-
-      # With 384 ticks per bar, tick_duration = 1/384r
-      quantized = sequencer.quantize_position(1.5001r, warn: false)
-
-      expect(quantized).to eq(1.5r)  # Rounded to nearest tick
-    end
   end
 
   context 'TicklessBasedTiming (base-sequencer-tickless-based.rb)' do
@@ -354,25 +325,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(executed).to eq(["A", "B", "C"])
     end
 
-    it '@example Jump to future position' do
-      sequencer = Musa::Sequencer::BaseSequencer.new
-
-      executed = []
-
-      sequencer.at(1.25r) { executed << "Event 1" }
-      sequencer.at(1.5r) { executed << "Event 2" }
-      sequencer.at(2.75r) { executed << "Event 3" }
-
-      # First tick to initialize position
-      sequencer.tick
-
-      # Now jump to position 2r
-      sequencer.position = 2r
-      # Executes events at 1.5r (1.25r already executed)
-
-      expect(executed).to include("Event 1", "Event 2")
-      expect(sequencer.position).to eq(2r)
-    end
   end
 
   context 'Play operations (base-sequencer-implementation-play.rb)' do
@@ -525,22 +477,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
   end
 
   context 'PlayEval modes (base-sequencer-implementation-play-helper.rb)' do
-    it '@example At-mode usage' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      series = S(
-        { pitch: 60, at: 1r },
-        { pitch: 62, at: 2r },
-        { pitch: 64, at: 3r }
-      )
-
-      played = []
-
-      seq.play(series, mode: :at) { |pitch:| played << [pitch, seq.position] }
-      400.times { seq.tick }
-
-      expect(played).to eq([[60, 1r], [62, 2r], [64, 3r]])
-    end
 
     it '@example A position already gone by is played as due, not dropped' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)

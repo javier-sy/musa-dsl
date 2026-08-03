@@ -70,6 +70,31 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # showing shape, and shape is not checkable.
   DOCS_BROKEN_CEILING = 0
 
+  # The documentation specs still to migrate.
+  #
+  # `inline_doc_*_spec.rb` and `docs_*_spec.rb` were written months ago to
+  # verify the `@example` blocks by transcribing them. The doctest now runs
+  # every one of those where it is written, so the transcribing half duplicates
+  # a mechanism -- and a transcription drifts in silence, which is how one of
+  # them came to carry a `.extend` the document lacked and another to note a
+  # wrong `@return` beside its assertion instead of reporting it.
+  #
+  # The migration is per example, not per file:
+  #
+  #   * asserts what the document already declares -> delete, the doctest has it
+  #   * knows what the document does not say -> promote: the `# =>` goes in the
+  #     example. Not mechanisable, because most of them assert an expression the
+  #     example does not write, so promoting is deciding what the example should
+  #     SHOW -- and it is where the value is: doing it for series found
+  #     `anticipate` documented with two block parameters when it takes three
+  #   * asserts something that cannot be declared -- `.randomize` has no value
+  #     to write down, only "same elements, different order" -- stays for good,
+  #     renamed for what it is
+  #
+  # MAY ONLY GO DOWN. Series is migrated (its three files are now
+  # `series_*_audited_behaviour_spec.rb`); this counts what is left.
+  UNMIGRATED_DOC_SPECS = 655
+
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
   # given example falls into depends on the machine -- with midi-communications
@@ -189,6 +214,20 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
 
     expect(broken).to be >= DOCS_BROKEN_CEILING,
                       "Only #{broken} broken blocks left in docs/. Lower DOCS_BROKEN_CEILING to it."
+  end
+
+  it 'does not leave more documentation specs unmigrated than it used to' do
+    remaining = Dir.glob(File.expand_path('{inline_doc_*,docs_*}_spec.rb', __dir__)).sum do |path|
+      File.readlines(path).count { |line| line.match?(/^\s*it\s+['"]/) }
+    end
+
+    expect(remaining).to be <= UNMIGRATED_DOC_SPECS,
+                         "#{remaining} examples still transcribe documentation, above the " \
+                         "#{UNMIGRATED_DOC_SPECS} already known. They are not new tests: they " \
+                         'are a mechanism the doctest replaced.'
+
+    expect(remaining).to be >= UNMIGRATED_DOC_SPECS,
+                         "Only #{remaining} left to migrate. Lower UNMIGRATED_DOC_SPECS to it."
   end
 
   it 'does not verify less than it used to' do

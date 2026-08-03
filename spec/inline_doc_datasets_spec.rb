@@ -134,14 +134,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(event2[:value][:pitch]).to eq(64)
     end
 
-    it '@example Basic duration' do
-      event = { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::AbsD)
-
-      expect(event.duration).to eq(1.0)
-      expect(event.note_duration).to eq(1.0)      # Defaults to duration
-      expect(event.forward_duration).to eq(1.0)   # Defaults to duration
-    end
-
     it '@example Staccato note' do
       event = { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(Musa::Datasets::AbsD)
 
@@ -157,17 +149,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # Next event starts immediately (chord)
     end
 
-    it '@example AbsD compatibility check' do
-      expect(Musa::Datasets::AbsD.is_compatible?({ duration: 1.0 })).to be true
-      expect(Musa::Datasets::AbsD.is_compatible?({ pitch: 60 })).to be false
-    end
-
-    it '@example Convert to AbsD' do
-      result = Musa::Datasets::AbsD.to_AbsD({ duration: 1.0 })
-
-      expect(result).to be_a(Musa::Datasets::AbsD)
-      expect(result[:duration]).to eq(1.0)
-    end
   end
 
   context 'PDV (pdv.rb)' do
@@ -242,17 +223,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(gdv[:custom_key]).to eq(:value)
       # custom_key copied to GDV (not a natural key)
-    end
-
-    it '@example Basic conversion' do
-      pdv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PDV)
-      scale = Musa::Scales::Scales.et12[440.0].major[60]
-
-      gdv = pdv.to_gdv(scale)
-
-      # C4 is the tonic, so grade 0 in octave 0. And velocity 0 is not silence:
-      # GDV velocity is a signed step around mf, which is MIDI 64.
-      expect(gdv).to eq(grade: 0, octave: 0, duration: 1.0, velocity: 0)
     end
 
     it '@example Chromatic note' do
@@ -341,17 +311,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(neuma).to eq("(0 o1 4 mf)")
     end
 
-    it '@example Basic conversion' do
-      gdv = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
-      scale = Musa::Scales::Scales.et12[440.0].major[60]
-
-      pdv = gdv.to_pdv(scale)
-
-      expect(pdv[:pitch]).to eq(60)
-      expect(pdv[:duration]).to eq(1.0)
-      expect(pdv[:velocity]).to eq(64)
-    end
-
     it '@example Chromatic note' do
       gdv = { grade: 0, octave: 0, sharps: 1, duration: 1.0 }.extend(Musa::Datasets::GDV)
       scale = Musa::Scales::Scales.et12[440.0].major[60]
@@ -388,16 +347,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       # Halfway between mp (64) and mf (80), and exactly halfway: 72.0.
       expect(pdv[:velocity]).to eq(72.0)
-    end
-
-    it '@example Basic note' do
-      gdv = { grade: 0, duration: 1r, velocity: 1 }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      neuma = gdv.to_neuma
-
-      expect(neuma).to eq("(0 4 mf)")
-      # grade 0, duration 4 quarters, mf dynamics
     end
 
     it '@example With octave' do
@@ -452,18 +401,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(gdv.to_neuma).to eq('(0 4 pppp)')
     end
 
-    it '@example First event (no previous)' do
-      gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-      scale = Musa::Scales::Scales.et12[440.0].major[60]
-
-      gdvd = gdv.to_gdvd(scale)
-
-      expect(gdvd[:abs_grade]).to eq(0)
-      expect(gdvd[:abs_duration]).to eq(1.0)
-      expect(gdvd[:abs_velocity]).to eq(0)
-    end
-
     it '@example Changed values' do
       gdv1 = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
       gdv1.base_duration = 1/4r
@@ -506,14 +443,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'GDVd (gdvd.rb)' do
-    it '@example First event (absolute encoding)' do
-      gdvd = { abs_grade: 0, abs_duration: 1/4r, abs_velocity: 0 }.extend(Musa::Datasets::GDVd)
-      gdvd.base_duration = 1/4r
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(0 1/4 mp)")
-    end
 
     it '@example Delta encoding (unchanged duration)' do
       gdvd = { delta_grade: 2, delta_velocity: 1 }.extend(Musa::Datasets::GDVd)
@@ -619,15 +548,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(gdv[:duration]).to eq(2.0)
     end
 
-    it '@example Delta grade' do
-      gdvd = { delta_grade: 2 }.extend(Musa::Datasets::GDVd)
-      gdvd.base_duration = 1/4r
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(+2)")
-    end
-
     it '@example Multiple deltas' do
       gdvd = { delta_grade: -2, delta_velocity: 1 }.extend(Musa::Datasets::GDVd)
       gdvd.base_duration = 1/4r
@@ -722,41 +642,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'PackedV (packed-v.rb)' do
-    it '@example Basic hash to array conversion' do
-      pv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PackedV)
-
-      v = pv.to_V([:pitch, :duration, :velocity])
-
-      expect(v).to eq([60, 1.0, 64])
-    end
-
-    it '@example Missing keys become nil (array mapper)' do
-      pv = { a: 1, c: 3 }.extend(Musa::Datasets::PackedV)
-
-      v = pv.to_V([:c, :b, :a])
-
-      expect(v).to eq([3, nil, 1])
-      # b missing, becomes nil
-    end
-
-    it '@example Hash mapper with defaults' do
-      pv = { a: 1, b: nil, c: 3 }.extend(Musa::Datasets::PackedV)
-
-      v = pv.to_V({ c: 100, b: 200, a: 300, d: 400 })
-
-      expect(v).to eq([3, 200, 1, 400])
-      # b nil -> uses default 200
-      # d missing -> uses default 400
-    end
-
-    it '@example Partial mapper (fewer keys in mapper)' do
-      pv = { a: 1, b: 2, c: 3 }.extend(Musa::Datasets::PackedV)
-
-      v = pv.to_V([:c, :b])
-
-      expect(v).to eq([3, 2])
-      # Only c and b extracted
-    end
 
     it '@example Key order matters' do
       pv = { a: 1, b: 2, c: 3 }.extend(Musa::Datasets::PackedV)
@@ -882,14 +767,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # First event at time 100
     end
 
-    it '@example Transform points (e.g., transpose pitches)' do
-      p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
-
-      p2 = p.map { |point| point + 12 }
-
-      expect(p2).to eq([72, 4, 76, 8, 79])
-    end
-
     it '@example Transform hash points' do
       p = [{ pitch: 60 }, 4, { pitch: 64 }].extend(Musa::Datasets::P)
 
@@ -956,12 +833,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(ps1[:right_open]).to be true
     end
 
-    it '@example Valid array segment' do
-      ps = { from: [60, 64], to: [72, 76], duration: 1.0 }.extend(Musa::Datasets::PS)
-
-      expect(ps.valid?).to be true
-    end
-
     it '@example Invalid - mismatched array sizes' do
       ps = { from: [60, 64], to: [72], duration: 1.0 }.extend(Musa::Datasets::PS)
 
@@ -997,29 +868,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'Helper (helper.rb)' do
-    it '@example positive_sign_of' do
-      helper = Object.new.extend(Musa::Datasets::Helper)
-
-      expect(helper.send(:positive_sign_of, 5)).to eq('+')
-      expect(helper.send(:positive_sign_of, -3)).to eq('')
-    end
-
-    it '@example sign_of' do
-      helper = Object.new.extend(Musa::Datasets::Helper)
-
-      expect(helper.send(:sign_of, 5)).to eq('+')
-      expect(helper.send(:sign_of, 0)).to eq('+')
-      expect(helper.send(:sign_of, -3)).to eq('-')
-    end
-
-    it '@example velocity_of' do
-      helper = Object.new.extend(Musa::Datasets::Helper)
-
-      expect(helper.send(:velocity_of, -3)).to eq('ppp')
-      expect(helper.send(:velocity_of, 0)).to eq('mp')
-      expect(helper.send(:velocity_of, 1)).to eq('mf')
-      expect(helper.send(:velocity_of, 4)).to eq('fff')
-    end
 
     it '@example Beyond the named eight, which the notation reaches' do
       helper = Object.new.extend(Musa::Datasets::Helper)
@@ -1027,14 +875,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(helper.send(:velocity_of, -4)).to eq('pppp')
       expect(helper.send(:velocity_of, -5)).to eq('ppppp')
       expect(helper.send(:velocity_of, 5)).to eq('ffff')
-    end
-
-    it '@example Boolean modifier (flag)' do
-      helper = Object.new.extend(Musa::Datasets::Helper)
-
-      result = helper.send(:modificator_string, :staccato, true)
-
-      expect(result).to eq('staccato')
     end
 
     it '@example Single parameter' do
@@ -1140,36 +980,11 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(score.size).to eq(2)
     end
 
-    it '@example Reset score' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      score.reset
-
-      expect(score.size).to eq(0)
-    end
-
-    it '@example Finish time' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { duration: 2.0 }.extend(Musa::Datasets::AbsD))
-
-      expect(score.finish).to eq(2r)
-    end
-
     it '@example Duration calculation' do
       score = Musa::Datasets::Score.new
       score.at(0r, add: { duration: 2.0 }.extend(Musa::Datasets::AbsD))
 
       expect(score.duration).to eq(1r)  # finish 2r - 1r
-    end
-
-    it '@example Add event' do
-      gdv = { grade: 0, duration: 1.0 }.extend(Musa::Datasets::GDV)
-      score = Musa::Datasets::Score.new
-
-      score.at(0r, add: gdv)
-
-      expect(score.at(0r).size).to eq(1)
     end
 
     it '@example Get time slot' do
@@ -1188,23 +1003,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
 
       expect(score.at(0r).size).to eq(2)
-    end
-
-    it '@example Size counting' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))  # Same time
-      score.at(1r, add: { pitch: 67, duration: 1.0 }.extend(Musa::Datasets::PDV))  # Different time
-
-      expect(score.size).to eq(2)  # two time positions
-    end
-
-    it '@example Positions sorted' do
-      score = Musa::Datasets::Score.new
-      score.at(1r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      expect(score.positions).to eq([0r, 1r])
     end
 
     it '@example Iterate over time slots' do

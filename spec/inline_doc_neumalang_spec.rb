@@ -6,15 +6,6 @@ RSpec.describe 'Neumalang Inline Documentation Examples' do
   using Musa::Extension::Neumas
 
   context 'Neumalang module documentation (neumalang.rb)' do
-    it '@example Basic parsing (simple melody)' do
-      neumas = Musa::Neumalang::Neumalang.parse("(0) (+2) (+2) (-1) (0)")
-      # Returns serie of GDVD neuma objects
-
-      # Access the series
-      expect(neumas.i.to_a.size).to eq(5)
-      expect(neumas.i.to_a[0][:gdvd][:abs_grade]).to eq(0)
-      expect(neumas.i.to_a[1][:gdvd][:delta_grade]).to eq(2)
-    end
 
     it '@example With decoder' do
       scale = Musa::Scales::Scales.et12[440.0].major[60]

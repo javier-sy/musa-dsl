@@ -41,21 +41,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(first_neuma[:gdvd][:delta_sharps]).to eq(-1)
     end
 
-    it '@example Create parallel from neumas' do
-      # Define individual voice lines
-      soprano = "(0) (+2) (+4) (+5) (+7)"
-      alto = "(-2) (0) (+2) (+3) (+5)"
-      tenor = "(-5) (-3) (-1) (0) (+2)"
-      bass = "(-9) (-7) (-5) (-4) (-2)"
-
-      # Combine into parallel (polyphonic) structure
-      satb = soprano | alto | tenor | bass
-
-      # Verify structure
-      expect(satb[:kind]).to eq(:parallel)
-      expect(satb[:parallel].size).to eq(4)
-    end
-
     it 'Compose sections from arrays' do
       # Define musical sections
       verse = "(0) (+2) (+2) (-1) (0)"
@@ -68,15 +53,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       # Count total neumas
       total_count = song.i.to_a.size
       expect(total_count).to be > 0
-    end
-
-    it '@example Create parallel from neumas' do
-      melody = "(0) (+2) (+4)"
-      bass = "(-7) (-5) (-3)"
-      harmony = melody | bass
-
-      expect(harmony[:kind]).to eq(:parallel)
-      expect(harmony[:parallel].size).to eq(2)
     end
 
     it '@example Chain multiple parallels' do
@@ -178,15 +154,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(result).to eq(gdvd1)
     end
 
-    it '@example Create decoder with base state' do
-      base_state = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
-      decoder = Musa::Neumas::Decoders::Decoder.new(base_state)
-
-      # Decoder maintains state
-      expect(decoder.base[:grade]).to eq(0)
-      expect(decoder.base[:duration]).to eq(1/4r)
-    end
-
     it '@example Create decoder with transcriptor' do
       base_state = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
 
@@ -205,18 +172,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   end
 
   context 'NeumaDecoder (neuma-gdv-decoder.rb)' do
-    it '@example Create decoder with scale' do
-      # Create a simple mock scale object
-      scale = Object.new
-      decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-        scale,
-        base_duration: 1/4r
-      )
-
-      # Decoder properties
-      expect(decoder.scale).to eq(scale)
-      expect(decoder.base_duration).to eq(1/4r)
-    end
 
     it '@example Using with transcriptor' do
       scale = Object.new
@@ -235,18 +190,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.transcriptor).to eq(transcriptor)
     end
 
-    it '@example Create decoder with scale' do
-      scale = Object.new
-      decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-        scale,
-        base_duration: 1/4r
-      )
-
-      # Check initial state
-      expect(decoder.base[:grade]).to eq(0)
-      expect(decoder.base[:duration]).to eq(1/4r)
-    end
-
     it '@example Custom initial state' do
       scale = Object.new
       decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
@@ -262,23 +205,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
 
   context 'NeumaDifferentialDecoder (neuma-gdvd-decoder.rb)' do
     using Musa::Extension::Neumas
-
-    it '@example Process GDVD' do
-      decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(
-        base_duration: 1/4r
-      )
-
-      # Create mock GDVD object
-      gdvd = Object.new
-      def gdvd.clone; self; end
-      def gdvd.base_duration=(val); @bd = val; @bd; end
-      def gdvd.base_duration; @bd; end
-
-      result = decoder.decode(gdvd)
-      # Still differential, not converted to absolute
-      expect(result).to eq(gdvd)
-      expect(result.base_duration).to eq(1/4r)
-    end
 
     it '@example Intermediate processing workflow' do
       # Process neumas in differential format before final conversion
@@ -309,18 +235,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoded.base_duration).to eq(1/8r)
     end
 
-    it '@example Process differential neuma' do
-      decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(base_duration: 1/4r)
-
-      # Create mock GDVD object
-      gdvd = Object.new
-      def gdvd.clone; self; end
-      def gdvd.base_duration=(val); @bd = val; end
-      def gdvd.base_duration; @bd; end
-
-      result = decoder.process(gdvd)
-      expect(result.base_duration).to eq(1/4r)
-    end
   end
 
   context 'String refinement (string-to-neumas.rb)' do
@@ -332,13 +246,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
 
       expect(melody.i.to_a(recursive: true).first).to eq({ kind: :gdvd, gdvd: { abs_grade: 0 } })
       expect(grades(melody)).to eq [0, 2, 2, -1, 0]
-    end
-
-    it '@example With ornaments' do
-      ornate = "(+2tr) (+3mor) (-1st)".to_neumas
-
-      expect(ornate.i.to_a(recursive: true).map { |e| e[:gdvd][:modifiers] })
-        .to eq [{ tr: true }, { mor: true }, { st: true }]
     end
 
     it '@example Parallel voices' do

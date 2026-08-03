@@ -7,46 +7,10 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
   context 'ExplodeRanges (array-explode-ranges.rb)' do
     using Musa::Extension::ExplodeRanges
 
-    it '@example Basic usage' do
-      result = [1, 3..5, 8].explode_ranges
-      expect(result).to eq([1, 3, 4, 5, 8])
-    end
-
-    it '@example MIDI channels' do
-      channels = [0, 2..4, 7, 9..10]
-      result = channels.explode_ranges
-      expect(result).to eq([0, 2, 3, 4, 7, 9, 10])
-    end
-
-    it '@example Mixed with other array methods' do
-      result = [1..3, 5, 7..9].explode_ranges.map { |n| n * 2 }
-      expect(result).to eq([2, 4, 6, 10, 14, 16, 18])
-    end
-
-    it '@example Empty ranges' do
-      result = [1, (5..4), 8].explode_ranges  # (5..4) is empty
-      expect(result).to eq([1, 8])
-    end
-
-    it '@example Exclusive ranges' do
-      result = [1, (3...6), 9].explode_ranges
-      expect(result).to eq([1, 3, 4, 5, 9])
-    end
-
-    it '@example Nested arrays are NOT expanded recursively' do
-      result = [1, [2..4], 5].explode_ranges
-      expect(result).to eq([1, [2..4], 5])  # Inner range NOT expanded
-    end
   end
 
   context 'Arrayfy (arrayfy.rb)' do
     using Musa::Extension::Arrayfy
-
-    it '@example Basic object wrapping' do
-      expect(5.arrayfy).to eq([5])
-      expect(nil.arrayfy).to eq([])
-      expect([1, 2, 3].arrayfy).to eq([1, 2, 3])
-    end
 
     it '@example Repetition with size' do
       expect(5.arrayfy(size: 3)).to eq([5, 5, 5])
@@ -69,19 +33,9 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(velocities).to eq([80, 100, 80, 100, 80])
     end
 
-    it '@example With size' do
-      result = "hello".arrayfy(size: 3)
-      expect(result).to eq(["hello", "hello", "hello"])
-    end
-
     it '@example Nil handling' do
       result = nil.arrayfy(size: 2, default: :empty)
       expect(result).to eq([:empty, :empty])
-    end
-
-    it '@example Cycling shorter array' do
-      result = [1, 2].arrayfy(size: 5)
-      expect(result).to eq([1, 2, 1, 2, 1])
     end
 
     it '@example Truncating longer array' do
@@ -102,75 +56,6 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
   context 'Hashify (hashify.rb)' do
     using Musa::Extension::Hashify
 
-    it '@example Basic object hashification' do
-      result = 100.hashify(keys: [:velocity, :duration])
-      expect(result).to eq({ velocity: 100, duration: 100 })
-    end
-
-    it '@example Array to hash' do
-      result = [60, 100, 0.5].hashify(keys: [:pitch, :velocity, :duration])
-      expect(result).to eq({ pitch: 60, velocity: 100, duration: 0.5 })
-    end
-
-    it '@example Hash filtering and reordering' do
-      result = { pitch: 60, velocity: 100, channel: 0, duration: 1 }
-        .hashify(keys: [:pitch, :velocity])
-      expect(result).to eq({ pitch: 60, velocity: 100 })
-    end
-
-    it '@example With defaults' do
-      result = [60].hashify(keys: [:pitch, :velocity, :duration], default: nil)
-      expect(result).to eq({ pitch: 60, velocity: nil, duration: nil })
-    end
-
-    it '@example Musical event normalization' do
-      # User provides just a pitch (note: object hashify maps all keys to same value)
-      result = 60.hashify(keys: [:pitch, :velocity])
-      expect(result).to eq({ pitch: 60, velocity: 60 })
-
-      # User provides array [pitch, velocity, duration]
-      result = [62, 90, 0.5].hashify(keys: [:pitch, :velocity, :duration])
-      expect(result).to eq({ pitch: 62, velocity: 90, duration: 0.5 })
-    end
-
-    it '@example Single value to multiple keys' do
-      result = 127.hashify(keys: [:velocity, :pressure])
-      expect(result).to eq({ velocity: 127, pressure: 127 })
-    end
-
-    it '@example Basic array mapping' do
-      result = [60, 100, 0.25].hashify(keys: [:pitch, :velocity, :duration])
-      expect(result).to eq({ pitch: 60, velocity: 100, duration: 0.25 })
-    end
-
-    it '@example Fewer elements than keys' do
-      result = [60, 100].hashify(keys: [:pitch, :velocity, :duration], default: nil)
-      expect(result).to eq({ pitch: 60, velocity: 100, duration: nil })
-    end
-
-    it '@example More elements than keys (extras ignored)' do
-      result = [60, 100, 0.5, :ignored].hashify(keys: [:pitch, :velocity])
-      expect(result).to eq({ pitch: 60, velocity: 100 })
-    end
-
-    it '@example Filtering keys' do
-      result = { pitch: 60, velocity: 100, channel: 0 }
-        .hashify(keys: [:pitch, :velocity])
-      expect(result).to eq({ pitch: 60, velocity: 100 })
-    end
-
-    it '@example Reordering keys' do
-      result = { velocity: 100, pitch: 60 }
-        .hashify(keys: [:pitch, :velocity])
-      expect(result).to eq({ pitch: 60, velocity: 100 })
-    end
-
-    it '@example Adding missing keys with default' do
-      result = { pitch: 60 }
-        .hashify(keys: [:pitch, :velocity], default: 80)
-      expect(result).to eq({ pitch: 60, velocity: 80 })
-    end
-
     it '@example Preserving dataset modules' do
       event = { pitch: 60, velocity: 100 }.extend(Musa::Datasets::AbsI)
       result = event.hashify(keys: [:pitch, :velocity])
@@ -183,13 +68,6 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
 
   context 'DeepCopy (deep-copy.rb)' do
     using Musa::Extension::DeepCopy
-
-    it '@example Basic deep copy' do
-      original = { items: [1, 2, 3] }
-      copy = original.dup(deep: true)
-      copy[:items] << 4
-      expect(original[:items]).to eq([1, 2, 3])  # unchanged
-    end
 
     it '@example Preserving modules' do
       event = [60, 100].extend(Musa::Datasets::V)
@@ -229,16 +107,6 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       expect(arr).to eq([[1, 2]])  # inner array independent
     end
 
-    it '@example Deep clone' do
-      hash = { nested: { value: 1 } }
-      copy = hash.clone(deep: true)
-
-      expect(copy[:nested].equal?(hash[:nested])).to be false
-
-      copy[:nested][:value] = 2
-      expect(hash[:nested][:value]).to eq(1)
-    end
-
     it '@example freeze: true freezes the whole copy, all the way down' do
       copy = { nested: { value: 1 } }.clone(deep: true, freeze: true)
 
@@ -257,28 +125,11 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
   end
 
   context 'DynamicProxy (dynamic-proxy.rb)' do
-    it '@example Basic usage' do
-      proxy = Musa::Extension::DynamicProxy::DynamicProxy.new
-      proxy.receiver = "Hello"
-      expect(proxy.upcase).to eq("HELLO")  # forwarded to String
-    end
 
-    it '@example Everything is forwarded, including is_a?' do
-      proxy = Musa::Extension::DynamicProxy::DynamicProxy.new
-      proxy.receiver = [1, 2, 3]
-      expect(proxy.size).to eq(3)
-      expect(proxy.first).to eq(1)
-      expect(proxy.is_a?(Array)).to be true
-    end
   end
 
   context 'InspectNice (inspect-nice.rb)' do
     using Musa::Extension::InspectNice
-
-    it '@example Hash formatting' do
-      result = { pitch: 60, velocity: 100 }.inspect
-      expect(result).to eq("{ pitch: 60, velocity: 100 }")
-    end
 
     it '@example Rational formatting (detailed mode)' do
       expect((5/4r).inspect).to eq("1+1/4r")
@@ -294,11 +145,6 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       Rational.to_s_as_inspect = nil  # Reset for other tests
     end
 
-    it '@example Mixed keys' do
-      result = { pitch: 60, 'name' => 'C4' }.inspect
-      expect(result).to eq('{ pitch: 60, "name" => "C4" }')
-    end
-
     it 'Detailed format examples' do
       expect((5/4r).inspect).to eq("1+1/4r")
       expect((7/4r).inspect).to eq("1+3/4r")
@@ -310,12 +156,6 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
     it '@example Simple format' do
       expect((5/4r).inspect(simple: true)).to eq("5/4")
       expect((8/4r).inspect(simple: true)).to eq("2")
-    end
-
-    it '@example When to_s_as_inspect is true' do
-      Rational.to_s_as_inspect = true
-      expect((5/4r).to_s).to eq("1+1/4r")
-      Rational.to_s_as_inspect = nil  # Reset
     end
 
     it '@example When to_s_as_inspect is false/nil' do
@@ -335,15 +175,6 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
       # :keyreq in both.
       expect(from_proc.parameters).to eq [[:opt, :a], [:opt, :b], [:keyreq, :c]]
       expect(from_lambda.parameters).to eq [[:req, :a], [:req, :b], [:keyreq, :c]]
-    end
-
-    it '@example Basic usage' do
-      block = proc { |a, b, c:| [a, b, c] }
-      binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
-
-      result = binder.call(1, 2, 3, 4, c: 5, d: 6)
-      expect(result).to eq([1, 2, 5])
-      # Only passes parameters that match signature
     end
 
     it '@example Checking parameter support' do
