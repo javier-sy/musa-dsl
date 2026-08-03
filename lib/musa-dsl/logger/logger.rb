@@ -216,12 +216,30 @@ module Musa
       #   logger_compact = Musa::Logger::Logger.new(sequencer: sequencer, position_format: 2.0)
       #   logger_precise = Musa::Logger::Logger.new(sequencer: sequencer, position_format: 4.4)
       #
+      # @param io [IO, String, nil] where to write; STDERR when omitted. Anything
+      #   ::Logger accepts, which includes a StringIO -- the reason this
+      #   parameter exists is that a logger hardwired to STDERR cannot be
+      #   observed, so its own format had to be tested against a hand-written
+      #   copy of it.
+      #
+      # @example Capturing what it writes
+      #   require 'stringio'
+      #
+      #   io = StringIO.new
+      #   sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #   logger = Musa::Logger::Logger.new(io, sequencer: sequencer)
+      #   logger.level = ::Logger::INFO
+      #
+      #   sequencer.at(4) { logger.info "First phrase complete" }
+      #   sequencer.run
+      #
+      #   io.string  # => "  4.000: [INFO]  First phrase complete\n"
+      #
       # @note The logger outputs to STDERR by default with level set to WARN.
-      # @note Uses InspectNice refinements for better formatting of Rationals and Hashes.
       # @note The sequencer's position is read at log time, not at event scheduling time.
       #   This means the position reflects when the log message is actually generated.
-      def initialize(sequencer: nil, position_format: nil)
-        super STDERR, level: WARN
+      def initialize(io = STDERR, sequencer: nil, position_format: nil)
+        super io, level: WARN
 
         # Store sequencer reference for position queries in formatter
         @sequencer = sequencer

@@ -40,24 +40,20 @@ RSpec.describe 'Logger Inline Documentation Examples' do
     end
   end
 
-  # Builds the REAL logger and swaps only its output device.
+  # Builds the real logger over a StringIO.
   #
-  # This helper used to re-implement the formatter of `lib/musa-dsl/logger/`
-  # line by line, because `Logger.new` wires STDERR and offers no injection
-  # point. That made every example here a test of the spec's own copy: the
-  # library could change its format and the suite would stay green. The copy had
-  # not drifted yet -- I checked, value by value -- but it was one edit away from
-  # doing so, silently.
-  #
-  # Reaching into @logdev is not pretty. It is, however, the whole of the
-  # deviation from the real object: the formatter, the position lookup and the
-  # level all come from the library.
+  # This helper used to re-implement the formatter of `lib/musa-dsl/logger/` line
+  # by line, because `Logger.new` hardwired STDERR and offered no way in. Every
+  # example here was asserting against that copy: the library could change its
+  # output format and the suite would stay green. It then reached into @logdev,
+  # which was better but still surgery. The constructor now takes the device, so
+  # this is the ordinary way to build one.
   def create_logger_with_capture(sequencer: nil, **options)
     output = AccumulatingIO.new
 
-    logger = Musa::Logger::Logger.new(sequencer: sequencer,
+    logger = Musa::Logger::Logger.new(output,
+                                      sequencer: sequencer,
                                       position_format: options[:position_format])
-    logger.instance_variable_set(:@logdev, ::Logger::LogDevice.new(output))
     logger.level = ::Logger::WARN
 
     [logger, output]

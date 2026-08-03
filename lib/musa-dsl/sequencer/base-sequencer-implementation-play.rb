@@ -279,7 +279,11 @@ module Musa::Sequencer
     #   played_notes.collect { |n| n[:pitch] }  # => [60, 62]
     #   # after_executed holds the position 2 bars after play completes
     #
-    # @api private
+    # This is what {BaseSequencer#play} RETURNS, so `stop`, `after`, `on_stop`,
+    # `pause` and `continue` are the caller's handle on a running serie. Only its
+    # construction is internal.
+    #
+    # @api public
     class PlayControl < EventHandler
       # @return [Array<Proc>] callbacks when play stops (any reason, including manual stop)
       attr_reader :do_on_stop
@@ -304,14 +308,31 @@ module Musa::Sequencer
         after(after_bars, &after) if after
       end
 
-      # Pauses play and stores continuation state.
+      # Suspends the serie where it is, keeping its place.
       #
-      # Sets paused flag. Continuation must be stored separately via
-      # store_continuation.
+      # Unlike {#stop}, nothing is torn down: the continuation is kept, so
+      # {#continue} resumes from the next element rather than from the start.
+      # Neither `on_stop` nor `after` fires -- a pause is not a termination.
       #
       # @return [void]
       #
-      # @api private
+      # @example
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #   played = []
+      #
+      #   control = seq.play(S({ v: 1, duration: 1r }, { v: 2, duration: 1r },
+      #                        { v: 3, duration: 1r }, { v: 4, duration: 1r },
+      #                        { v: 5, duration: 1r })) { |v:| played << v }
+      #
+      #   seq.at(3) { control.pause }
+      #   seq.run
+      #   played  # => [1, 2, 3]
+      #
+      #   control.continue
+      #   seq.run
+      #   played  # => [1, 2, 3, 4, 5]
+      #
+      # @api public
       def pause
         @paused = true
       end
@@ -344,13 +365,13 @@ module Musa::Sequencer
           mode_args: mode_args }
       end
 
-      # Continues from pause.
-      #
-      # Restores paused state and resumes play using stored continuation.
+      # Resumes a paused serie from where it stopped.
       #
       # @return [void]
       #
-      # @api private
+      # @see #pause for the example
+      #
+      # @api public
       def continue
         super
         @continuation_sequencer&.continuation_play(@continuation_parameters)
