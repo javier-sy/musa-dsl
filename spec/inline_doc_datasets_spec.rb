@@ -108,22 +108,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect { event.validate! }.not_to raise_error
     end
 
-    it '@example Delta vs Absolute' do
-      # Absolute encoding (3 events)
-      abs1 = { pitch: 60, duration: 1.0 }
-      abs2 = { pitch: 62, duration: 1.0 }
-      abs3 = { pitch: 64, duration: 1.0 }
-
-      expect(abs1[:pitch]).to eq(60)
-      expect(abs2[:pitch]).to eq(62)
-      expect(abs3[:pitch]).to eq(64)
-
-      # Delta encoding conceptually would be:
-      # { abs_pitch: 60, abs_duration: 1.0 }  # First event absolute
-      # { delta_pitch: +2 }                    # Duration unchanged
-      # { delta_pitch: +2 }                    # Duration unchanged
-    end
-
     it '@example Timed event' do
       event1 = { time: 0.0, value: { pitch: 60 } }.extend(Musa::Datasets::AbsTimed)
       event2 = { time: 1.0, value: { pitch: 64 } }.extend(Musa::Datasets::AbsTimed)
@@ -152,36 +136,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'PDV (pdv.rb)' do
-    it '@example Basic MIDI event' do
-      pdv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PDV)
-      pdv.base_duration = 1/4r
-
-      expect(pdv[:pitch]).to eq(60)
-      expect(pdv[:duration]).to eq(1.0)
-      expect(pdv[:velocity]).to eq(64)
-      # C4 (middle C) for 1 beat at mf dynamics
-    end
-
-    it '@example Silence (rest)' do
-      pdv = { pitch: :silence, duration: 1.0 }.extend(Musa::Datasets::PDV)
-
-      expect(pdv[:pitch]).to eq(:silence)
-      expect(pdv[:duration]).to eq(1.0)
-      # Rest for 1 beat
-    end
-
-    it '@example With articulation' do
-      pdv = {
-        pitch: 64,
-        duration: 1.0,
-        note_duration: 0.5,  # Staccato
-        velocity: 80
-      }.extend(Musa::Datasets::PDV)
-
-      expect(pdv[:pitch]).to eq(64)
-      expect(pdv[:note_duration]).to eq(0.5)
-      expect(pdv[:velocity]).to eq(80)
-    end
 
     it '@example Convert to score notation' do
       pdv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PDV)
@@ -251,24 +205,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'GDV (gdv.rb)' do
-    it '@example Basic score event' do
-      gdv = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      expect(gdv[:grade]).to eq(0)
-      expect(gdv[:octave]).to eq(0)
-      expect(gdv[:duration]).to eq(1.0)
-      expect(gdv[:velocity]).to eq(0)
-      # First scale degree, base octave, 1 beat, mp dynamics
-    end
-
-    it '@example Chromatic alteration' do
-      gdv = { grade: 0, octave: 0, sharps: 1, duration: 1.0 }.extend(Musa::Datasets::GDV)
-
-      expect(gdv[:grade]).to eq(0)
-      expect(gdv[:sharps]).to eq(1)
-      # First scale degree sharp (C# in C major)
-    end
 
     it '@example Silence (rest)' do
       gdv = { silence: true, duration: 1r }.extend(Musa::Datasets::GDV)
@@ -779,14 +715,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'PS (ps.rb)' do
-    it '@example Basic parameter segment (pitch glissando)' do
-      ps = { from: 60, to: 72, duration: 2.0 }.extend(Musa::Datasets::PS)
-
-      expect(ps[:from]).to eq(60)
-      expect(ps[:to]).to eq(72)
-      expect(ps[:duration]).to eq(2.0)
-      # Continuous slide from C4 to C5 over 2 beats
-    end
 
     it '@example Parallel interpolation (multidimensional)' do
       ps = {
@@ -847,24 +775,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'DeltaD (delta-d.rb)' do
-    it '@example Different duration encoding modes' do
-      previous = { duration: 1.0 }
-
-      # Absolute: set to specific value
-      delta1 = { abs_duration: 2.0 }.extend(Musa::Datasets::DeltaD)
-      expect(delta1[:abs_duration]).to eq(2.0)
-      # Result: duration becomes 2.0
-
-      # Delta: add to previous
-      delta2 = { delta_duration: 0.5 }.extend(Musa::Datasets::DeltaD)
-      expect(delta2[:delta_duration]).to eq(0.5)
-      # Result: duration becomes 1.5 (was 1.0)
-
-      # Factor: multiply previous
-      delta3 = { factor_duration: 2 }.extend(Musa::Datasets::DeltaD)
-      expect(delta3[:factor_duration]).to eq(2)
-      # Result: duration becomes 2.0 (was 1.0)
-    end
   end
 
   context 'Helper (helper.rb)' do

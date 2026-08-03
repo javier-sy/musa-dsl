@@ -47,10 +47,12 @@ module Musa
         #     measure.add_rest duration: 8, type: 'whole', measure: true
         #
         # @example Quarter rest
-        #   Rest.new(duration: 2, type: 'quarter')
+        #   Rest.new(duration: 2, type: 'quarter').to_xml.string
+        #   # => "<note>\n\t<rest />\n\t<duration>2</duration>\n\t<type>quarter</type>\n</note>\n"
         #
         # @example Measure rest (whole measure)
-        #   Rest.new(duration: 8, type: 'whole', measure: true)
+        #   Rest.new(duration: 8, type: 'whole', measure: true).to_xml.string
+        #   # => "<note>\n\t<rest measure=\"yes\"/>\n\t<duration>8</duration>\n\t<type>whole</type>\n</note>\n"
         #
         # @example Dotted eighth rest
         #   Rest.new(duration: 3, type: 'eighth', dots: 1)
@@ -72,7 +74,8 @@ module Musa
           # @param (see Note#initialize)
           #
           # @example Quarter rest
-          #   Rest.new(duration: 2, type: 'quarter')
+          #   Rest.new(duration: 2, type: 'quarter').to_xml.string
+          #   # => "<note>\n\t<rest />\n\t<duration>2</duration>\n\t<type>quarter</type>\n</note>\n"
           #
           # @example Whole measure rest
           #   Rest.new(duration: 8, type: 'whole', measure: true)

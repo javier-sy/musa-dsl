@@ -215,5 +215,4 @@ RSpec.describe 'Series Documentation Examples' do
     end
   end
 
-
 end

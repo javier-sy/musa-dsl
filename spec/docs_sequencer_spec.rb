@@ -142,5 +142,4 @@ RSpec.describe 'Sequencer Documentation Examples' do
     end
   end
 
-
 end

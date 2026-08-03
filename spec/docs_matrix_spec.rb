@@ -51,5 +51,4 @@ RSpec.describe 'Matrix Documentation Examples' do
     end
   end
 
-
 end

@@ -50,7 +50,8 @@ module Musa
         #     measure.add_pitch step: 'F', alter: 1, octave: 4, duration: 2, type: 'eighth'
         #
         # @example Middle C quarter note
-        #   PitchedNote.new('C', octave: 4, duration: 4, type: 'quarter')
+        #   PitchedNote.new('C', octave: 4, duration: 4, type: 'quarter').to_xml.string
+        #   # => "<note>\n\t<pitch>\n\t\t<step>C</step>\n\t\t<octave>4</octave>\n\t</pitch>\n\t<duration>4</duration>\n\t<type>quarter</type>\n</note>\n"
         #
         # @example F# with sharp symbol
         #   PitchedNote.new('F', alter: 1, octave: 5, duration: 2, type: 'eighth',

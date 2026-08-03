@@ -41,10 +41,12 @@ module Musa
         # visual display (bracket, number). Both are typically used together.
         #
         # @example Triplet (3:2)
-        #   TimeModification.new(actual_notes: 3, normal_notes: 2)
+        #   TimeModification.new(actual_notes: 3, normal_notes: 2).to_xml.string
+        #   # => "<time-modification>\n\t<actual-notes>3</actual-notes>\n\t<normal-notes>2</normal-notes>\n</time-modification>\n"
         #
         # @example Quintuplet (5:4)
-        #   TimeModification.new(actual_notes: 5, normal_notes: 4)
+        #   TimeModification.new(actual_notes: 5, normal_notes: 4).to_xml.string
+        #   # => "<time-modification>\n\t<actual-notes>5</actual-notes>\n\t<normal-notes>4</normal-notes>\n</time-modification>\n"
         #
         # @example Triplet with explicit normal type
         #   TimeModification.new(actual_notes: 3, normal_notes: 2,
@@ -168,10 +170,12 @@ module Musa
         #     Tuplet.new(type: 'stop')                   # Last note of triplet
         #
         # @example Simple triplet bracket (start)
-        #   Tuplet.new(type: 'start', bracket: true)
+        #   Tuplet.new(type: 'start', bracket: true).to_xml.string
+        #   # => "<tuplet type=\"start\" bracket=\"yes\">\n</tuplet>\n"
         #
         # @example Triplet end
-        #   Tuplet.new(type: 'stop')
+        #   Tuplet.new(type: 'stop').to_xml.string
+        #   # => "<tuplet type=\"stop\">\n</tuplet>\n"
         #
         # @example Tuplet without bracket
         #   Tuplet.new(type: 'start', bracket: false)
@@ -360,10 +364,12 @@ module Musa
         # pitch the written note represents.
         #
         # @example Natural harmonic
-        #   Harmonic.new(kind: 'natural')
+        #   Harmonic.new(kind: 'natural').to_xml.string
+        #   # => "<harmonic>\n\t<natural />\n</harmonic>\n"
         #
         # @example Artificial harmonic
-        #   Harmonic.new(kind: 'artificial')
+        #   Harmonic.new(kind: 'artificial').to_xml.string
+        #   # => "<harmonic>\n\t<artificial />\n</harmonic>\n"
         #
         # @example Harmonic with sounding pitch notation
         #   Harmonic.new(kind: 'natural', pitch: 'sounding-pitch')
@@ -382,7 +388,8 @@ module Musa
           #   'base-pitch', 'sounding-pitch', or 'touching-pitch'
           #
           # @example Natural harmonic
-          #   Harmonic.new(kind: 'natural')
+          #   Harmonic.new(kind: 'natural').to_xml.string
+          #   # => "<harmonic>\n\t<natural />\n</harmonic>\n"
           #
           # @example Artificial harmonic with sounding pitch
           #   Harmonic.new(kind: 'artificial', pitch: 'sounding-pitch')

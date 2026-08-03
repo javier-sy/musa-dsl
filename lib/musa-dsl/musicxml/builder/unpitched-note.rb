@@ -48,7 +48,8 @@ module Musa
         #     measure.add_unpitched duration: 1, type: 'eighth', accent: true
         #
         # @example Basic unpitched quarter note
-        #   UnpitchedNote.new(duration: 2, type: 'quarter')
+        #   UnpitchedNote.new(duration: 2, type: 'quarter').to_xml.string
+        #   # => "<note>\n\t<unpitched />\n\t<duration>2</duration>\n\t<type>quarter</type>\n</note>\n"
         #
         # @example Snare drum hit with accent
         #   UnpitchedNote.new(duration: 2, type: 'quarter', accent: true)

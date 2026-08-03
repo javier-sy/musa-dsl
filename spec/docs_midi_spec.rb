@@ -69,5 +69,4 @@ RSpec.describe 'MIDI Documentation Examples' do
     end
   end
 
-
 end

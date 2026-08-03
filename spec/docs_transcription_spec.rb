@@ -108,5 +108,4 @@ RSpec.describe 'Transcription Documentation Examples' do
     end
   end
 
-
 end

@@ -15,9 +15,6 @@ RSpec.describe 'Music Documentation Examples' do
     %i[sus4_test add9_test].each { |name| definitions&.delete(name) }
   end
 
-
-
-
   context 'Music - Scales & Chords' do
     include Musa::Scales
     include Musa::Chords
@@ -238,6 +235,5 @@ RSpec.describe 'Music Documentation Examples' do
       expect(add9_def.features[:size]).to eq(:extended)
     end
   end
-
 
 end

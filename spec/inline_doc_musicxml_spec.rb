@@ -188,29 +188,7 @@ RSpec.describe 'MusicXML Builder Inline Documentation Examples' do
   end
 
   context 'Key (attributes.rb)' do
-    it '@example C major' do
-      key = Musa::MusicXML::Builder::Internal::Key.new(fifths: 0)
 
-      xml_string = key.to_xml.string
-      expect(xml_string).to include('<key>')
-      expect(xml_string).to include('<fifths>0</fifths>')
-    end
-
-    it '@example D major (2 sharps)' do
-      key = Musa::MusicXML::Builder::Internal::Key.new(fifths: 2, mode: 'major')
-
-      xml_string = key.to_xml.string
-      expect(xml_string).to include('<fifths>2</fifths>')
-      expect(xml_string).to include('<mode>major</mode>')
-    end
-
-    it '@example B♭ minor (5 flats)' do
-      key = Musa::MusicXML::Builder::Internal::Key.new(fifths: -5, mode: 'minor')
-
-      xml_string = key.to_xml.string
-      expect(xml_string).to include('<fifths>-5</fifths>')
-      expect(xml_string).to include('<mode>minor</mode>')
-    end
   end
 
   context 'Time (attributes.rb)' do
@@ -237,45 +215,10 @@ RSpec.describe 'MusicXML Builder Inline Documentation Examples' do
   end
 
   context 'Clef (attributes.rb)' do
-    it '@example Treble clef' do
-      clef = Musa::MusicXML::Builder::Internal::Clef.new(sign: 'G', line: 2)
 
-      xml_string = clef.to_xml.string
-      expect(xml_string).to include('<clef>')
-      expect(xml_string).to include('<sign>G</sign>')
-      expect(xml_string).to include('<line>2</line>')
-    end
-
-    it '@example Bass clef' do
-      clef = Musa::MusicXML::Builder::Internal::Clef.new(sign: 'F', line: 4)
-
-      xml_string = clef.to_xml.string
-      expect(xml_string).to include('<sign>F</sign>')
-      expect(xml_string).to include('<line>4</line>')
-    end
-
-    it '@example Tenor voice (treble 8va basso)' do
-      clef = Musa::MusicXML::Builder::Internal::Clef.new(sign: 'G', line: 2, octave_change: -1)
-
-      xml_string = clef.to_xml.string
-      expect(xml_string).to include('<sign>G</sign>')
-      expect(xml_string).to include('<line>2</line>')
-      expect(xml_string).to include('<clef-octave-change>-1</clef-octave-change>')
-    end
   end
 
   context 'PitchedNote (pitched-note.rb)' do
-    it '@example Middle C quarter note' do
-      note = Musa::MusicXML::Builder::Internal::PitchedNote.new('C', octave: 4, duration: 4, type: 'quarter')
-
-      xml_string = note.to_xml.string
-      expect(xml_string).to include('<note>')
-      expect(xml_string).to include('<pitch>')
-      expect(xml_string).to include('<step>C</step>')
-      expect(xml_string).to include('<octave>4</octave>')
-      expect(xml_string).to include('<duration>4</duration>')
-      expect(xml_string).to include('<type>quarter</type>')
-    end
 
     it '@example F# with sharp symbol' do
       note = Musa::MusicXML::Builder::Internal::PitchedNote.new('F', alter: 1, octave: 5, duration: 2, type: 'eighth',
@@ -305,37 +248,10 @@ RSpec.describe 'MusicXML Builder Inline Documentation Examples' do
   end
 
   context 'Rest (rest.rb)' do
-    it '@example Quarter rest' do
-      rest = Musa::MusicXML::Builder::Internal::Rest.new(duration: 2, type: 'quarter')
 
-      xml_string = rest.to_xml.string
-      expect(xml_string).to include('<note>')
-      expect(xml_string).to include('<rest')
-      expect(xml_string).to include('<duration>2</duration>')
-      expect(xml_string).to include('<type>quarter</type>')
-    end
-
-    it '@example Measure rest (whole measure)' do
-      rest = Musa::MusicXML::Builder::Internal::Rest.new(duration: 8, type: 'whole', measure: true)
-
-      xml_string = rest.to_xml.string
-      expect(xml_string).to include('<note>')
-      expect(xml_string).to include('<rest measure="yes"/>')
-      expect(xml_string).to include('<duration>8</duration>')
-      expect(xml_string).to include('<type>whole</type>')
-    end
   end
 
   context 'UnpitchedNote (unpitched-note.rb)' do
-    it '@example Basic unpitched quarter note' do
-      note = Musa::MusicXML::Builder::Internal::UnpitchedNote.new(duration: 2, type: 'quarter')
-
-      xml_string = note.to_xml.string
-      expect(xml_string).to include('<note>')
-      expect(xml_string).to include('<unpitched />')
-      expect(xml_string).to include('<duration>2</duration>')
-      expect(xml_string).to include('<type>quarter</type>')
-    end
 
     it '@example Snare drum hit with accent' do
       note = Musa::MusicXML::Builder::Internal::UnpitchedNote.new(duration: 2, type: 'quarter', accent: true)
@@ -469,56 +385,15 @@ RSpec.describe 'MusicXML Builder Inline Documentation Examples' do
   end
 
   context 'TimeModification (note-complexities.rb)' do
-    it '@example Triplet (3:2)' do
-      time_mod = Musa::MusicXML::Builder::Internal::TimeModification.new(actual_notes: 3, normal_notes: 2)
 
-      xml_string = time_mod.to_xml.string
-      expect(xml_string).to include('<time-modification>')
-      expect(xml_string).to include('<actual-notes>3</actual-notes>')
-      expect(xml_string).to include('<normal-notes>2</normal-notes>')
-    end
-
-    it '@example Quintuplet (5:4)' do
-      time_mod = Musa::MusicXML::Builder::Internal::TimeModification.new(actual_notes: 5, normal_notes: 4)
-
-      xml_string = time_mod.to_xml.string
-      expect(xml_string).to include('<actual-notes>5</actual-notes>')
-      expect(xml_string).to include('<normal-notes>4</normal-notes>')
-    end
   end
 
   context 'Tuplet (note-complexities.rb)' do
-    it '@example Simple triplet bracket (start)' do
-      tuplet = Musa::MusicXML::Builder::Internal::Tuplet.new(type: 'start', bracket: true)
 
-      xml_string = tuplet.to_xml.string
-      expect(xml_string).to include('<tuplet type="start" bracket="yes">')
-    end
-
-    it '@example Triplet end' do
-      tuplet = Musa::MusicXML::Builder::Internal::Tuplet.new(type: 'stop')
-
-      xml_string = tuplet.to_xml.string
-      expect(xml_string).to include('<tuplet type="stop">')
-    end
   end
 
   context 'Harmonic (note-complexities.rb)' do
-    it '@example Natural harmonic' do
-      harmonic = Musa::MusicXML::Builder::Internal::Harmonic.new(kind: 'natural')
 
-      xml_string = harmonic.to_xml.string
-      expect(xml_string).to include('<harmonic>')
-      expect(xml_string).to include('<natural />')
-    end
-
-    it '@example Artificial harmonic' do
-      harmonic = Musa::MusicXML::Builder::Internal::Harmonic.new(kind: 'artificial')
-
-      xml_string = harmonic.to_xml.string
-      expect(xml_string).to include('<harmonic>')
-      expect(xml_string).to include('<artificial />')
-    end
   end
 
   context 'Creator (typed-text.rb)' do

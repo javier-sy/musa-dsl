@@ -154,5 +154,4 @@ RSpec.describe 'MusicXML Builder Documentation Examples' do
     end
   end
 
-
 end

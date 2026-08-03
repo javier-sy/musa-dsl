@@ -78,5 +78,4 @@ RSpec.describe 'Core Extensions Documentation Examples' do
     end
   end
 
-
 end

@@ -157,5 +157,4 @@ RSpec.describe 'Generative Documentation Examples' do
     end
   end
 
-
 end

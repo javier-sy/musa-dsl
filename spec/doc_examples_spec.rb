@@ -93,7 +93,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   #
   # MAY ONLY GO DOWN. Series is migrated (its three files are now
   # `series_*_audited_behaviour_spec.rb`); this counts what is left.
-  UNMIGRATED_DOC_SPECS = 655
+  UNMIGRATED_DOC_SPECS = 631
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a

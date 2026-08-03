@@ -121,5 +121,4 @@ RSpec.describe 'Neumas Documentation Examples' do
     end
   end
 
-
 end

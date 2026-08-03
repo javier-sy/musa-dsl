@@ -36,5 +36,4 @@ RSpec.describe 'REPL Documentation Examples' do
     end
   end
 
-
 end

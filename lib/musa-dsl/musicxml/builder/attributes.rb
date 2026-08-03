@@ -27,13 +27,16 @@ module Musa
         # - +1: G, +2: D, +3: A, +4: E, +5: B, +6: F♯, +7: C♯
         #
         # @example C major
-        #   Key.new(fifths: 0)
+        #   Key.new(fifths: 0).to_xml.string
+        #   # => "<key>\n\t<fifths>0</fifths>\n</key>\n"
         #
         # @example D major (2 sharps)
-        #   Key.new(fifths: 2, mode: 'major')
+        #   Key.new(fifths: 2, mode: 'major').to_xml.string
+        #   # => "<key>\n\t<fifths>2</fifths>\n\t<mode>major</mode>\n</key>\n"
         #
         # @example B♭ minor (5 flats)
-        #   Key.new(fifths: -5, mode: 'minor')
+        #   Key.new(fifths: -5, mode: 'minor').to_xml.string
+        #   # => "<key>\n\t<fifths>-5</fifths>\n\t<mode>minor</mode>\n</key>\n"
         #
         # @example Piano - different keys per staff
         #   Key.new(1, fifths: 0)  # Treble clef: C major
@@ -375,13 +378,16 @@ module Musa
           # @param octave_change [Integer, nil] octave transposition (-2, -1, 0, +1, +2)
           #
           # @example Treble clef
-          #   Clef.new(sign: 'G', line: 2)
+          #   Clef.new(sign: 'G', line: 2).to_xml.string
+          #   # => "<clef>\n\t<sign>G</sign>\n\t<line>2</line>\n</clef>\n"
           #
           # @example Bass clef
-          #   Clef.new(sign: 'F', line: 4)
+          #   Clef.new(sign: 'F', line: 4).to_xml.string
+          #   # => "<clef>\n\t<sign>F</sign>\n\t<line>4</line>\n</clef>\n"
           #
           # @example Tenor voice (treble 8va basso)
-          #   Clef.new(sign: 'G', line: 2, octave_change: -1)
+          #   Clef.new(sign: 'G', line: 2, octave_change: -1).to_xml.string
+          #   # => "<clef>\n\t<sign>G</sign>\n\t<line>2</line>\n\t<clef-octave-change>-1</clef-octave-change>\n</clef>\n"
           #
           # @example Percussion, which has no line
           #   Musa::MusicXML::Builder::Internal::Clef.new(sign: 'percussion').line  # => nil
