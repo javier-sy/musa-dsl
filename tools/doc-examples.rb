@@ -456,6 +456,12 @@ module DocExamples
       $stdout.reopen(File::NULL)
       $stderr.reopen(File::NULL)
 
+      # And nothing to read: `MIDICommunications::Output.gets` asks the user to
+      # pick a port, and with a live stdin it waits forever -- so an example that
+      # is merely unrunnable was reported as HUNG, burning the whole budget on
+      # every suite run. Reading from /dev/null it fails at once and says so.
+      $stdin.reopen(File::NULL)
+
       # Somewhere harmless to run: the examples write files (`File.write
       # 'output.xml'`, ...) and a tool that litters the repository it is checking
       # is a hazard, not a check.

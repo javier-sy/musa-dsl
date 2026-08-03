@@ -139,21 +139,29 @@ The REPL automatically hooks into sequencer error handling to report async error
 require 'musa-dsl'
 include Musa::All
 
-clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
+# A DummyClock so this page's example terminates; a live REPL session puts a
+# TimerClock or an InputMidiClock here.
+clock = Musa::Clock::DummyClock.new(200)
 transport = Transport.new(clock, 4, 24)
 
-transport.sequencer.with do
-  # If an error occurs during sequencer execution,
-  # REPL clients receive formatted error messages
+reported = []
+transport.sequencer.on_error { |e| reported << e.message }
 
+transport.sequencer.with do
+  # An error raised inside a scheduled block does not stop the piece: it is
+  # reported and swallowed, and that is what the REPL forwards to its clients.
   at 1 do
     raise "This error will be sent to REPL client"
   end
 
-  @repl = Musa::REPL::REPL.new(binding)
+  at 2 do
+    # ... and the next event still runs
+  end
 end
 
 transport.start
+
+reported  # => ["This error will be sent to REPL client"]
 ```
 
 ## Use Cases
