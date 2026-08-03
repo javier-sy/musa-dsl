@@ -66,7 +66,44 @@ module Musa
   end
 
   module Series::Constructors
-    # Quantizes time-value serie to discrete steps.
+    # Turns a continuous ramp into a staircase.
+    #
+    # ## When this is the answer
+    #
+    # Something computed as a curve -- a glissando, an envelope, a trajectory
+    # out of a matrix -- has to become discrete before it can be played: pitches
+    # are semitones, a controller takes integers, a rhythm lands on divisions.
+    # Quantizing is that step, and what comes back is not a set of samples taken
+    # at the input times but **a staircase**: one step per boundary crossed,
+    # each carrying the time it holds.
+    #
+    # The source has to be a serie of timed values -- hashes extended with
+    # {Musa::Datasets::AbsTimed}. A bare hash of the right shape is not one and
+    # raises "Don't know how to process".
+    #
+    # ## The two modes, and they sound different
+    #
+    # **Normal** changes the step when the ramp *reaches* it. **Predictive**
+    # changes when the ramp is nearer the next step than the last -- it rounds
+    # instead of waiting to arrive, which is what a listener hears as the pitch.
+    #
+    # @example A ramp of three semitones over two bars, quantized to semitones
+    #   ramp = S({ time: 0r, value: 60.0 }, { time: 2r, value: 63.0 })
+    #          .map { |v| v.extend(Musa::Datasets::AbsTimed) }
+    #
+    #   ramp.quantize(step: 1).i.to_a.collect { |v| [v[:time], v[:value]] }
+    #   # => [[0r, 60r], [2/3r, 61r], [4/3r, 62r]]
+    #
+    #   # 61 at 2/3 of a bar, which is where the ramp actually arrives at 61.
+    #
+    # @example The same ramp, predictive
+    #   ramp.quantize(step: 1, predictive: true).i.to_a.collect { |v| [v[:time], v[:value]] }
+    #   # => [[0r, 60r], [1/3r, 61r], [1r, 62r], [5/3r, 63r]]
+    #
+    #   # 61 at 1/3, halfway -- and it reaches 63, which the other never does.
+    #
+    # @example A coarser step is fewer notes, not smaller ones
+    #   ramp.quantize(step: 3).i.to_a.size  # => 1
     #
     # @param time_value_serie [Serie] source timed serie
     # @param reference [Numeric, nil] quantization reference

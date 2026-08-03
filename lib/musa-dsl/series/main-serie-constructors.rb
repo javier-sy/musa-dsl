@@ -194,19 +194,30 @@ module Musa
       FromArrayOfSeries.new series, false
     end
 
-    # Creates array-mode combined serie from array of series.
+    # Combines series of different lengths, cycling the short ones.
     #
-    # Like A but cycles all series. When a serie exhausts, it restarts from
-    # the beginning, continuing until all series complete their cycles.
+    # ## When this is the answer
     #
-    # @param series [Array] array of series
+    # Two materials of different lengths sounding together: a four-note ostinato
+    # against a three-note one, a rhythm of five against a melody of seven. They
+    # line up again only after the least common multiple of their lengths, and
+    # what happens in between -- the same notes meeting different partners -- is
+    # the point.
     #
-    # @return [FromArrayOfSeries] combined array serie that cycles all series
+    # {A} stops with the shortest, which is what you want when the series are
+    # meant to end together. `AC` keeps going until every one of them has
+    # completed a whole number of cycles, so the result is exactly one full turn
+    # of the pattern.
     #
-    # @example Combined cycling all series
-    #   ac = AC(S(1, 2), S(10, 20, 30))
-    #   ac.max_size(6).i.to_a  # => [[1, 10], [2, 20], [1, 30],
-    #                           #     [2, 10], [1, 20], [2, 30]]
+    # @example Two against three: six pairings before it repeats
+    #   AC(S(1, 2), S(10, 20, 30)).i.to_a
+    #   # => [[1, 10], [2, 20], [1, 30], [2, 10], [1, 20], [2, 30]]
+    #
+    #   # 1 meets 10, then 30, then 20, and only then is it back where it began.
+    #
+    # @example A, for comparison: it ends with the shortest
+    #   A(S(1, 2), S(10, 20, 30)).i.to_a
+    #   # => [[1, 10], [2, 20]]
     #
     # @api public
     def AC(*series)

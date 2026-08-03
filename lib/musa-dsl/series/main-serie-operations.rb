@@ -202,16 +202,34 @@ module Musa
         Flattener.new self
       end
 
-      # Processes values with parameterized block.
+      # Transforms each value with a block whose parameters can change later.
       #
-      # Generic processor passing values and parameters to block.
+      # ## When this is the answer, and not `.map`
       #
-      # @param parameters [Hash] parameters passed to processor block
+      # `.map { |v| v + 7 }` freezes the 7 in the block. `process_with` keeps
+      # it on the serie, where **it can be changed while the serie is running**
+      # -- so the transformation is under control instead of being decided once.
+      # A transposition that moves mid-phrase, a scaling driven from outside, a
+      # depth that a controller sets: anything where the amount is itself a
+      # parameter of the piece.
+      #
+      # If the amount is known and fixed, `.map` says it with less.
+      #
+      # @param parameters [Hash] parameters passed to the block, and settable later
       # @yield processor block
       # @yieldparam value [Object] current value
-      # @yieldparam parameters [Hash] processor parameters
+      # @yieldparam parameters [Hash] the current parameters
       #
       # @return [Processor] processed serie
+      #
+      # @example Transposition as a parameter, not as a constant
+      #   line = S(60, 62, 64, 65).process_with(interval: 0) { |v, interval:| v + interval }
+      #
+      #   i = line.i
+      #   i.next_value        # => 60
+      #   i.parameters = { interval: 12 }
+      #   i.next_value        # => 74
+      #   i.next_value        # => 76
       #
       # @api public
       def process_with(**parameters, &processor)
