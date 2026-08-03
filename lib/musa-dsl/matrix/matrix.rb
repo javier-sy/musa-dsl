@@ -43,9 +43,15 @@ module Musa
     #   # Matrix: [time, pitch]
     #   matrix = Matrix[[0, 60], [1, 62], [2, 64]]
     #   p_sequences = matrix.to_p(time_dimension: 0)
-    #   # Returns an array with one P:
-    #   #   [[60], 1, [62], 1, [64]].extend(P)
-    #   # Where [60], [62], [64] are arrays extended with V module
+    #   # => [[[60], 1, [62], 1, [64]]]
+    #
+    #   # An ARRAY of P, not a P: a matrix can decompose into more than one
+    #   # sequence, so the answer is always a list even when it holds one.
+    #   p_sequences.first.is_a?(Musa::Datasets::P)        # => true
+    #   p_sequences.first.first.is_a?(Musa::Datasets::V)  # => true
+    #
+    #   # The 1s between the points are the durations read off the time
+    #   # dimension, and each point is a V -- a vector of the rest.
     #
     # @example Multi-dimensional musical parameters
     #   using Musa::Extension::Matrix
@@ -53,9 +59,10 @@ module Musa
     #   # Matrix: [time, pitch, velocity]
     #   matrix = Matrix[[0, 60, 100], [0.5, 62, 110], [1, 64, 120]]
     #   p_sequences = matrix.to_p(time_dimension: 0, keep_time: false)
-    #   # Returns an array with one P:
-    #   #   [[60, 100], 0.5, [62, 110], 0.5, [64, 120]].extend(P)
-    #   # Time dimension removed, used only for duration calculation
+    #   # => [[[60, 100], 0.5, [62, 110], 0.5, [64, 120]]]
+    #
+    #   # Two parameters per point now, and the time dimension is gone from
+    #   # them: it was read to compute the 0.5s and then dropped.
     #
     # @example Condensing connected matrices
     #   using Musa::Extension::Matrix
@@ -65,9 +72,14 @@ module Musa
     #   phrase2 = Matrix[[1, 62], [2, 64], [3, 65]]
     #
     #   [phrase1, phrase2].to_p(time_dimension: 0)
-    #   # Returns an array with one P (merged):
-    #   #   [[60], 1, [62], 1, [64], 1, [65]].extend(P)
-    #   # Both phrases merged into one continuous sequence
+    #   # => [[[[60], 1, [62], 1, [64], 1, [65]]]]
+    #
+    #   # One level deeper than a single matrix: an array of matrices answers
+    #   # with one entry per CONDENSED GROUP, and each group is itself a list of
+    #   # P. These two share the row [1, 62], so they condense into one and the
+    #   # 62 is not repeated. Phrases that do not touch stay apart:
+    #   [Matrix[[0, 60], [1, 62]], Matrix[[5, 64], [6, 65]]].to_p(time_dimension: 0).size
+    #   # => 2
     #
     # @see Musa::Datasets::P
     # @see Musa::Datasets::V

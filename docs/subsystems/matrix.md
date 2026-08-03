@@ -28,15 +28,18 @@ melody_matrix = Matrix[[0, 60], [1, 62], [2, 64]]
 # time_dimension: 0 means first column is time
 # Time dimension removed, used only for duration calculation
 p_sequence = melody_matrix.to_p(time_dimension: 0)
+# => [[[60], 1, [62], 1, [64]]]
 
-# Result: [[[60], 1, [62], 1, [64]]]
-# Format: [[pitch1], duration1, [pitch2], duration2, [pitch3]]
-# Each value [60], [62], [64] is extended with V module
+# Format: [[pitch1], duration1, [pitch2], duration2, [pitch3]].
+# An ARRAY of P and not a P, because a matrix can decompose into more than one
+# sequence; each value is extended with V.
+p_sequence.first.is_a?(Musa::Datasets::P)         # => true
+p_sequence.first.first.is_a?(Musa::Datasets::V)   # => true
 
 # Multi-parameter example: [time, pitch, velocity]
 gesture = Matrix[[0, 60, 100], [0.5, 62, 110], [1, 64, 120]]
 p_with_velocity = gesture.to_p(time_dimension: 0)
-# Result: [[[60, 100], 0.5, [62, 110], 0.5, [64, 120]]]
+# => [[[60, 100], 0.5, [62, 110], 0.5, [64, 120]]]
 
 # Condensing connected gestures
 phrase1 = Matrix[[0, 60], [1, 62]]
@@ -44,8 +47,13 @@ phrase2 = Matrix[[1, 62], [2, 64], [3, 65]]
 
 # Matrices that share endpoints are automatically merged
 merged = [phrase1, phrase2].to_p(time_dimension: 0)
-# Result: [[[60], 1, [62], 1, [64], 1, [65]]]
-# Both phrases merged into continuous sequence
+# => [[[[60], 1, [62], 1, [64], 1, [65]]]]
+
+# One level deeper than a single matrix: an array of matrices answers with one
+# entry per condensed group. These two share the row [1, 62], so they merge and
+# the 62 is not repeated.
+[Matrix[[0, 60], [1, 62]], Matrix[[5, 64], [6, 65]]].to_p(time_dimension: 0).size
+# => 2
 ```
 
 **Use cases:**
