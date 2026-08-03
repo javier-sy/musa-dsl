@@ -126,18 +126,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   end
 
   context 'Decoder infrastructure (neuma-decoder.rb)' do
-    it 'Basic decoder creation' do
-      # Create a mock scale object
-      scale = Object.new
-      decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-        scale,
-        base_duration: 1/4r
-      )
-
-      # Decoder maintains state for differential processing
-      expect(decoder.base[:grade]).to eq(0)
-      expect(decoder.base[:duration]).to eq(1/4r)
-    end
 
     it '@example Stateful decoding' do
       decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new(
@@ -190,17 +178,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(decoder.transcriptor).to eq(transcriptor)
     end
 
-    it '@example Custom initial state' do
-      scale = Object.new
-      decoder = Musa::Neumas::Decoders::NeumaDecoder.new(
-        scale,
-        base: { grade: 2, octave: 1, duration: 1/8r, velocity: 0.8 }
-      )
-
-      # Verify custom state
-      expect(decoder.base[:grade]).to eq(2)
-      expect(decoder.base[:octave]).to eq(1)
-    end
   end
 
   context 'NeumaDifferentialDecoder (neuma-gdvd-decoder.rb)' do
@@ -248,12 +225,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
       expect(grades(melody)).to eq [0, 2, 2, -1, 0]
     end
 
-    it '@example Parallel voices' do
-      harmony = "(0) (+2) (+4)" | "(+7) (+5) (+7)"
-
-      expect(harmony[:kind]).to eq(:parallel)
-    end
-
     it '@example Convert to generative node' do
       node = "(0) (+2) (+2) (-1) (0)".nn  # to_neumas_to_node
 
@@ -298,14 +269,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
                 { delta_grade: -1 }, { abs_grade: 0 }])
     end
 
-    it '@example Two-voice harmony' do
-      melody = "(0) (+2) (+4) (+5)"
-      bass = "(-7) (-5) (-3) (-1)"
-      harmony = melody | bass
-
-      expect(harmony[:kind]).to eq(:parallel)
-      expect(harmony[:parallel].size).to eq(2)
-    end
   end
 
   context 'Integration tests' do

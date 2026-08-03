@@ -74,14 +74,10 @@ module Musa
     #     Scales.default_system.default_tuning       # => Default tuning (A=440Hz)
     #
     # @example Accessing scale systems
-    #   # Get system by symbol
-    #   system = Scales[:et12]
-    #
-    #   # Get system by method
-    #   system = Scales.et12
-    #
-    #   # Get default system
-    #   system = Scales.default_system
+    #   # The three ways reach the same system
+    #   Scales[:et12]           # => Musa::Scales::EquallyTempered12ToneScaleSystem
+    #   Scales.et12             # => Musa::Scales::EquallyTempered12ToneScaleSystem
+    #   Scales.default_system   # => Musa::Scales::EquallyTempered12ToneScaleSystem
     #
     # @example Working with tunings
     #   # Get tuning with A=440Hz (default)

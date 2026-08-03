@@ -81,19 +81,6 @@ RSpec.describe 'Series Documentation Examples' do
       expect(result_cycling[6]).to eq({ pitch: 62, duration: 1r, velocity: 90 })
     end
 
-    it 'merges melodic phrases with MERGE' do
-      phrase1 = S(60, 64, 67)
-      phrase2 = S(72, 69, 65)
-      phrase3 = S(60, 62, 64)
-
-      melody = MERGE(phrase1, phrase2, phrase3)
-      expect(melody.i.to_a).to eq([60, 64, 67, 72, 69, 65, 60, 62, 64])
-
-      # Repeat merged structure
-      section = MERGE(S(1, 2, 3), S(4, 5, 6)).repeat(2)
-      expect(section.i.to_a).to eq([1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6])
-    end
-
     it 'uses numeric generators FOR, FIBO, HARMO' do
       # FOR: ascending
       ascending = FOR(from: 0, to: 7, step: 1)

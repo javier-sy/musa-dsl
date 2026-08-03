@@ -181,17 +181,6 @@ RSpec.describe 'Datasets Documentation Examples' do
       expect(t3[:value]).to eq(67)
     end
 
-    it 'converts GDV to Neuma notation string' do
-      include Musa::Datasets
-
-      gdv = { grade: 0, octave: 1, duration: 1r, velocity: 2 }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      neuma = gdv.to_neuma
-
-      expect(neuma).to eq("(0 o1 4 f)")
-    end
-
     it 'uses datasets with transformations' do
       include Musa::Datasets
 

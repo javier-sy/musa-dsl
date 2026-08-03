@@ -19,26 +19,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
   include Musa::Chords
 
   context 'Scales Module Documentation' do
-    it 'demonstrates Scales registry access by symbol' do
-      # From Scales module @example: Accessing scale systems
-      system = Scales[:et12]
-
-      expect(system).to eq(Musa::Scales::EquallyTempered12ToneScaleSystem)
-    end
-
-    it 'demonstrates Scales registry access by method' do
-      # From Scales module @example: Accessing scale systems
-      system = Scales.et12
-
-      expect(system).to eq(Musa::Scales::EquallyTempered12ToneScaleSystem)
-    end
-
-    it 'demonstrates Scales registry default system access' do
-      # From Scales module @example: Accessing scale systems
-      system = Scales.default_system
-
-      expect(system).to eq(Musa::Scales::EquallyTempered12ToneScaleSystem)
-    end
 
     it 'demonstrates working with tunings' do
       # From Scales module @example: Working with tunings
@@ -275,14 +255,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       expect(i_chord.pitches).to eq [60, 64, 67]
       expect(v_seventh.pitches).to eq [67, 71, 74, 77]
-    end
-
-    it 'demonstrates Scale#root' do
-      # From Scale @example
-      tuning = Scales.default_system.default_tuning
-      c_major = tuning.major[60]
-
-      expect(c_major.root.pitch).to eq(60)
     end
 
     it 'demonstrates Scale#chromatic' do

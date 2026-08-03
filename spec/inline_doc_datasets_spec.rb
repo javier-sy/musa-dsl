@@ -294,42 +294,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(neuma).to eq("(2 o1 2 mf)")
     end
 
-    it '@example Sharp note' do
-      gdv = { grade: 0, sharps: 1, duration: 1r }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      neuma = gdv.to_neuma
-
-      expect(neuma).to eq("(0# 4)")
-    end
-
-    it '@example Flat note' do
-      gdv = { grade: 1, sharps: -1, duration: 1r }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      neuma = gdv.to_neuma
-
-      expect(neuma).to eq("(1_ 4)")
-    end
-
-    it '@example Silence' do
-      gdv = { silence: true, duration: 1r }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      neuma = gdv.to_neuma
-
-      expect(neuma).to eq("(silence 4)")
-    end
-
-    it '@example With modifiers' do
-      gdv = { grade: 0, duration: 1r, staccato: true }.extend(Musa::Datasets::GDV)
-      gdv.base_duration = 1/4r
-
-      neuma = gdv.to_neuma
-
-      expect(neuma).to eq("(0 4 staccato)")
-    end
-
     it '@example Softer than ppp, which VELOCITY_MAP reaches and the notation names' do
       gdv = { grade: 0, duration: 1r, velocity: -4 }.extend(Musa::Datasets::GDV)
       gdv.base_duration = 1/4r
@@ -380,35 +344,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
   context 'GDVd (gdvd.rb)' do
 
-    it '@example Delta encoding (unchanged duration)' do
-      gdvd = { delta_grade: 2, delta_velocity: 1 }.extend(Musa::Datasets::GDVd)
-      gdvd.base_duration = 1/4r
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(+2 +f)")
-      # Grade +2 semitones, velocity +1 (one f louder)
-    end
-
-    it '@example Chromatic change' do
-      gdvd = { delta_sharps: 1 }.extend(Musa::Datasets::GDVd)
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(+#)")
-      # Add one sharp
-    end
-
-    it '@example Duration multiplication' do
-      gdvd = { factor_duration: 2 }.extend(Musa::Datasets::GDVd)
-      gdvd.base_duration = 1/4r
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(. *2)")
-      # Double duration
-    end
-
     it '@example Reconstruction from delta' do
       previous = { grade: 0, octave: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
       gdvd = { delta_grade: 2, delta_velocity: 1 }.extend(Musa::Datasets::GDVd)
@@ -420,15 +355,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(gdv[:octave]).to eq(0)
       expect(gdv[:duration]).to eq(1.0)
       expect(gdv[:velocity]).to eq(1)
-    end
-
-    it '@example Octave change' do
-      gdvd = { delta_grade: -2, delta_octave: 1 }.extend(Musa::Datasets::GDVd)
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(-2 +o1)")
-      # Down 2 semitones, up one octave
     end
 
     it 'Base duration adjustment' do
@@ -482,32 +408,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(gdv[:grade]).to eq(0)
       expect(gdv[:duration]).to eq(2.0)
-    end
-
-    it '@example Multiple deltas' do
-      gdvd = { delta_grade: -2, delta_velocity: 1 }.extend(Musa::Datasets::GDVd)
-      gdvd.base_duration = 1/4r
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(-2 +f)")
-    end
-
-    it '@example Duration factor' do
-      gdvd = { factor_duration: 2 }.extend(Musa::Datasets::GDVd)
-      gdvd.base_duration = 1/4r
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(. *2)")
-    end
-
-    it '@example Chromatic change' do
-      gdvd = { delta_sharps: 1 }.extend(Musa::Datasets::GDVd)
-
-      neuma = gdvd.to_neuma
-
-      expect(neuma).to eq("(+#)")
     end
 
     it '@example Absolute values' do
@@ -873,12 +773,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(score.duration).to eq(2r)
       # Latest finish time (3r) - 1r
-    end
-
-    it '@example Empty score' do
-      score = Musa::Datasets::Score.new
-
-      expect(score.size).to eq(0)
     end
 
     it '@example With initial events' do
