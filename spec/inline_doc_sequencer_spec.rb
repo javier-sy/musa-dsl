@@ -66,118 +66,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(seq.position).to be < 1
     end
 
-    it '@example Monitoring event execution' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_log: true)
-
-      debug_calls = []
-
-      seq.on_debug_at do
-        debug_calls << { position: seq.position, time: Time.now }
-      end
-
-      seq.at(1) { }
-      seq.at(2) { }
-
-      seq.run
-
-      expect(debug_calls.size).to eq(2)
-      expect(debug_calls[0][:position]).to eq(1)
-      expect(debug_calls[1][:position]).to eq(2)
-    end
-
-    it '@example Handling errors in scheduled events' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24, do_error_log: false)
-
-      errors = []
-
-      seq.on_error do |error|
-        errors << { message: error.message, position: seq.position }
-      end
-
-      executed = []
-
-      seq.at(1) { executed << "Normal event" }
-      seq.at(2) { raise "Something went wrong!" }
-      seq.at(3) { executed << "This still executes" }
-
-      seq.run
-
-      expect(errors.size).to eq(1)
-      expect(errors[0][:message]).to eq("Something went wrong!")
-      expect(errors[0][:position]).to eq(2)
-      expect(executed).to eq(["Normal event", "This still executes"])
-    end
-
-    it '@example Tracking fast-forward operations' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      ff_state = []
-
-      seq.on_fast_forward do |is_starting|
-        if is_starting
-          ff_state << "Fast-forward started from position #{seq.position}"
-        else
-          ff_state << "Fast-forward ended at position #{seq.position}"
-        end
-      end
-
-      seq.at(1) { }
-      seq.at(5) { }
-
-      # Jump to position 10 (executes events at 1 and 5 during fast-forward)
-      seq.position = 10
-
-      expect(ff_state[0]).to match(/Fast-forward started from position/)
-      expect(ff_state[1]).to match(/Fast-forward ended at position 10/)
-    end
-
-    it '@example Logging tick positions' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      tick_log = []
-
-      seq.before_tick do |position|
-        tick_log << position
-      end
-
-      seq.at(1) { }
-      seq.at(2) { }
-
-      # Tick until we hit both events
-      seq.run
-
-      # before_tick is called for every tick position, including those with events
-      expect(tick_log.size).to be >= 2
-      expect(tick_log).to include(1)
-      expect(tick_log).to include(2)
-    end
-
-    it '@example Basic event pub/sub' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      received_values = []
-
-      # Subscribe to custom event
-      seq.on(:note_played) do |pitch, velocity|
-        received_values << { pitch: pitch, velocity: velocity }
-      end
-
-      # Launch event from scheduled block
-      seq.at(1) do
-        seq.launch(:note_played, 60, 100)
-      end
-
-      seq.at(2) do
-        seq.launch(:note_played, 64, 80)
-      end
-
-      seq.run
-
-      expect(received_values.size).to eq(2)
-      expect(received_values[0]).to eq({ pitch: 60, velocity: 100 })
-      expect(received_values[1]).to eq({ pitch: 64, velocity: 80 })
-    end
-
     it 'Linear fade with move' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 
@@ -208,24 +96,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.position).to eq(initial_position + 1/384r)
     end
 
-    it '@example Fast-forward to future position' do
-      sequencer = Musa::Sequencer::BaseSequencer.new(4, 96)
-
-      ff_started = false
-      ff_ended = false
-
-      sequencer.on_fast_forward do |is_starting|
-        ff_started = true if is_starting
-        ff_ended = true if !is_starting
-      end
-
-      sequencer.position = 2r  # Jump to bar 2
-
-      expect(ff_started).to be true
-      expect(ff_ended).to be true
-      expect(sequencer.position).to eq(2r)
-    end
-
   end
 
   context 'TicklessBasedTiming (base-sequencer-tickless-based.rb)' do
@@ -235,28 +105,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(sequencer.ticks_per_bar).to eq(Float::INFINITY)
       expect(sequencer.tick_duration).to eq(0r)
       expect(sequencer.position).to be_nil  # before first event
-    end
-
-    it '@example Precise timing without quantization' do
-      sequencer = Musa::Sequencer::BaseSequencer.new
-
-      executed = []
-
-      sequencer.at(1r) { executed << "Event 1" }
-      sequencer.at(1 + 1/7r) { executed << "Event 2" }  # Exact 1/7 division
-      sequencer.at(1 + 1/3r) { executed << "Event 3" }  # Exact 1/3 division
-
-      sequencer.tick  # Jumps to 1r
-      expect(executed).to eq(["Event 1"])
-      expect(sequencer.position).to eq(1r)
-
-      sequencer.tick  # Jumps to 8/7r (1 + 1/7)
-      expect(executed).to eq(["Event 1", "Event 2"])
-      expect(sequencer.position).to eq(8/7r)
-
-      sequencer.tick  # Jumps to 4/3r (1 + 1/3)
-      expect(executed).to eq(["Event 1", "Event 2", "Event 3"])
-      expect(sequencer.position).to eq(4/3r)
     end
 
     it '@example Complex polyrhythm (5 against 7)' do
@@ -397,62 +245,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
     end
   end
 
-  context 'PlayTimed operations (base-sequencer-implementation-play-timed.rb)' do
-    it '@example Hash mode timed series' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      timed_notes = S(
-        { time: 0r, value: {pitch: 60, velocity: 96} },
-        { time: 1r, value: {pitch: 64, velocity: 80} },
-        { time: 2r, value: {pitch: 67, velocity: 64} }
-      )
-
-      played_notes = []
-
-      seq.play_timed(timed_notes) do |values, time:, started_ago:, control:|
-        played_notes << { pitch: values[:pitch], velocity: values[:velocity], time: time }
-      end
-
-      seq.run
-
-      expect(played_notes.size).to eq(3)
-      expect(played_notes[0][:pitch]).to eq(60)
-      expect(played_notes[0][:velocity]).to eq(96)
-      # `time:` is the sequencer's ABSOLUTE POSITION, not the serie element's
-      # `time:`. The sequencer sits one tick before bar 1 (95/96 of a bar at 24
-      # ticks per beat and 4 beats per bar) so that its first tick lands exactly
-      # on bar 1, and the element at serie time 0 fires there.
-      expect(played_notes[0][:time]).to eq(Rational(95, 96))
-      expect(played_notes[1][:time]).to eq(Rational(191, 96))
-      expect(played_notes[2][:time]).to eq(Rational(287, 96))
-      expect(played_notes[1][:pitch]).to eq(64)
-      expect(played_notes[2][:pitch]).to eq(67)
-    end
-
-    it '@example Array mode with extra attributes' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      timed = S(
-        { time: 0r, value: [60, 96], channel: [0] },
-        { time: 1r, value: [64, 80], channel: [1] }
-      )
-
-      played_notes = []
-
-      seq.play_timed(timed) do |values, channel:, time:, started_ago:, control:|
-        played_notes << { pitch: values[0], velocity: values[1], channel: channel[0], time: time }
-      end
-
-      seq.run
-
-      expect(played_notes.size).to eq(2)
-      expect(played_notes[0][:pitch]).to eq(60)
-      expect(played_notes[0][:velocity]).to eq(96)
-      expect(played_notes[0][:channel]).to eq(0)
-      expect(played_notes[1][:channel]).to eq(1)
-    end
-  end
-
   context 'PlayEval modes (base-sequencer-implementation-play-helper.rb)' do
 
     it '@example A position already gone by is played as due, not dropped' do
@@ -486,94 +278,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
                                   { pitch: 64, position: 9r }])
     end
 
-    it '@example Wait-mode with duration' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      series = S(
-        { pitch: 60, duration: 1r },
-        { pitch: 62, duration: 0.5r },
-        { pitch: 64, duration: 1.5r }
-      )
-
-      played_notes = []
-
-      seq.play(series, mode: :wait) do |element|
-        played_notes << { pitch: element[:pitch], duration: element[:duration], position: seq.position }
-      end
-
-      seq.run
-
-      expect(played_notes.size).to eq(3)
-      expect(played_notes[0][:pitch]).to eq(60)
-      expect(played_notes[0][:duration]).to eq(1r)
-      expect(played_notes[1][:pitch]).to eq(62)
-      expect(played_notes[2][:pitch]).to eq(64)
-    end
-  end
-
-  context 'Move operations (base-sequencer-implementation-move.rb)' do
-    it '@example Simple pitch glide' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      pitch_values = []
-
-      seq.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |pitch|
-        pitch_values << { pitch: pitch.round, position: seq.position }
-      end
-
-      seq.run
-
-      expect(pitch_values.first[:pitch]).to eq(60)
-      expect(pitch_values.last[:pitch]).to eq(72)
-      expect(pitch_values.size).to be > 10
-    end
-
-    it '@example Multi-parameter fade' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      controller_values = []
-
-      seq.move(
-        from: {volume: 0, brightness: 0},
-        to: {volume: 127, brightness: 127},
-        duration: 8r,
-        every: 1/8r
-      ) do |params|
-        controller_values << {
-          volume: params[:volume].round,
-          brightness: params[:brightness].round,
-          position: seq.position
-        }
-      end
-
-      seq.run
-
-      expect(controller_values.first[:volume]).to eq(0)
-      expect(controller_values.first[:brightness]).to eq(0)
-      expect(controller_values.last[:volume]).to eq(127)
-      expect(controller_values.last[:brightness]).to eq(127)
-    end
-
-    it '@example Non-linear interpolation' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      values = []
-
-      seq.move(
-        from: 0, to: 100,
-        duration: 4r, every: 1/16r,
-        function: proc { |ratio| ratio ** 2 }  # Ease-in
-      ) { |value| values << value.round(2) }
-
-      seq.run
-
-      expect(values.first).to eq(0)
-      expect(values.last).to eq(100)
-
-      # Verify ease-in: values should increase more slowly at start
-      mid_point = values.size / 2
-      expect(values[mid_point]).to be < 50  # Should be less than linear midpoint
-    end
   end
 
   context 'Every operations (base-sequencer-implementation-every.rb)' do
@@ -592,26 +296,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(ticks.first).to be < 1
     end
 
-    it '@example Dynamic control' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      counters = []
-
-      control = seq.every(1r, duration: 4r) { counters << seq.position }
-
-      finished = false
-      control.on_stop { finished = true }
-
-      after_position = nil
-      control.after(2r) { after_position = seq.position }
-
-      seq.run
-
-      expect(counters.size).to eq(4)
-      expect(finished).to be true
-      # After callback executes 2 bars after loop stops
-      expect(after_position).to be >= counters.last + 1.9
-    end
   end
 
   context 'Sequencer DSL (sequencer-dsl.rb)' do

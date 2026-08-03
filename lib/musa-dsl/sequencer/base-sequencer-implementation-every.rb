@@ -91,10 +91,24 @@ module Musa::Sequencer
     # - **_execution_counter**: Number of iterations executed
     #
     # @example Dynamic control
-    #   control = sequencer.every(1r) { |control| puts control._execution_counter }
-    #   control.duration(4r)  # Stop after 4 bars
-    #   control.on_stop { puts "Finished!" }
-    #   control.after(2r) { puts "2 bars after finish" }
+    #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+    #   pulses = []
+    #   finished = false
+    #   after_at = nil
+    #
+    #   control = seq.every(1r, duration: 4r) { pulses << seq.position }
+    #   control.on_stop { finished = true }
+    #   control.after(2r) { after_at = seq.position }
+    #
+    #   seq.run
+    #
+    #   pulses    # => [(95/96), (191/96), (287/96), (383/96)]
+    #   finished  # => true
+    #   after_at  # => (575/96)
+    #
+    #   # `duration: 4r` counts bars of pulsing, so four pulses. `after` is
+    #   # measured from where the pulsing STOPPED -- 383/96 plus two bars --
+    #   # and not from the last pulse.
     #
     class EveryControl < EventHandler
       # @return [Rational, nil] maximum duration in bars

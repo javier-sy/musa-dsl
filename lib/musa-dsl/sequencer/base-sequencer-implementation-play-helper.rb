@@ -207,7 +207,13 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # Result: played_notes contains [{pitch: 60, duration: 1r, position: 0}, ...]
+      #
+      #   played_notes.map { |n| [n[:pitch], n[:position]] }
+      #   # => [[60, (95/96)], [62, (191/96)], [64, (239/96)]]
+      #
+      #   # Each element's duration is the wait BEFORE the next one, so the
+      #   # distances are 1 and 1/2 bars. The last duration is waited too; it
+      #   # just has nothing after it.
       #
       # @example Wait-mode with event
       #   # Elements can also use :wait_event for event-driven continuation

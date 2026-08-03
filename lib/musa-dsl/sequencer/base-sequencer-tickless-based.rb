@@ -59,9 +59,14 @@ module Musa
       #   sequencer.at(1r) { puts "Event 1" }
       #   sequencer.at(1 + 1/7r) { puts "Event 2" }  # Exact 1/7 division
       #   sequencer.at(1 + 1/3r) { puts "Event 3" }  # Exact 1/3 division
-      #   sequencer.tick  # Jumps to 1r
-      #   sequencer.tick  # Jumps to 8/7r (1 + 1/7)
-      #   sequencer.tick  # Jumps to 4/3r (1 + 1/3)
+      #   sequencer.tick; sequencer.position  # => (1/1)
+      #   sequencer.tick; sequencer.position  # => (8/7)
+      #   sequencer.tick; sequencer.position  # => (4/3)
+      #
+      #   # Three ticks for three events: a tickless sequencer's `tick` advances
+      #   # to the next thing there is to do, so 1/7 of a bar costs exactly as
+      #   # much as a whole one. There is no grid to round to -- `ticks_per_bar`
+      #   # is Infinity.
       #
       # @example Complex polyrhythm (5 against 7)
       #   require 'musa-dsl'

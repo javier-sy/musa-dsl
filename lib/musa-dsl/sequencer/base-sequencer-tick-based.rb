@@ -75,8 +75,17 @@ module Musa
       #   sequencer.position  # => 385/384r
       #
       # @example Fast-forward to future position
+      #   phases = []
+      #   sequencer.on_fast_forward { |starting| phases << starting }
+      #
       #   sequencer.position = 2r  # Jump to bar 2
-      #   # Triggers on_fast_forward(true), ticks forward, on_fast_forward(false)
+      #
+      #   phases              # => [true, false]
+      #   sequencer.position  # => (2/1)
+      #
+      #   # It really ticks its way there rather than jumping: everything
+      #   # scheduled in between runs, which is what the two callbacks are for --
+      #   # something has to be able to tell that this is not real time.
       #
       # @example Quantization warning
       #   sequencer.at(1.5001r) { puts "event" }

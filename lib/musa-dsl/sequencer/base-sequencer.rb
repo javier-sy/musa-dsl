@@ -363,7 +363,11 @@ module Musa
       #
       #   seq.run
       #
-      #   # debug_calls now contains [{position: 1, time: ...}, {position: 2, time: ...}]
+      #   debug_calls.map { |c| c[:position] }  # => [(1/1), (2/1)]
+      #
+      #   # One call per event, at the position the event was scheduled for:
+      #   # `at 1` lands on 1. (An `every` written outside any `at` would not --
+      #   # see {#every} -- but that is about `every`, not about this hook.)
       def on_debug_at(&block)
         @on_debug_at << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
@@ -393,8 +397,11 @@ module Musa
       #
       #   seq.run
       #
-      #   # errors now contains [{message: "Something went wrong!", position: 2}]
-      #   # All events execute despite the error at position 2
+      #   errors  # => [{ message: "Something went wrong!", position: (2/1) }]
+      #
+      #   # The event at 3 ran anyway: an exception in a scheduled block is
+      #   # reported and swallowed, never propagated to the sequencer's loop.
+      #   # One broken voice does not stop the piece.
       def on_error(&block)
         @on_error << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
@@ -429,7 +436,13 @@ module Musa
       #   # Jump to position 10 (executes events at 1 and 5 during fast-forward)
       #   seq.position = 10
       #
-      #   # ff_state contains ["Fast-forward started from position 0", "Fast-forward ended at position 10"]
+      #   ff_state
+      #   # => ["Fast-forward started from position 95/96",
+      #   #     "Fast-forward ended at position 10/1"]
+      #
+      #   # 95/96 and not 0: a sequencer with a tick grid starts one tick before
+      #   # bar 1, so that its first tick IS bar 1. Everything that reads the
+      #   # position before anything has played sees that, including this.
       def on_fast_forward(&block)
         @on_fast_forward << Musa::Extension::SmartProcBinder::SmartProcBinder.new(block)
       end
@@ -509,7 +522,12 @@ module Musa
       #
       #   seq.run
       #
-      #   # received_values contains [{pitch: 60, velocity: 100}, {pitch: 64, velocity: 80}]
+      #   received_values
+      #   # => [{ pitch: 60, velocity: 100 }, { pitch: 64, velocity: 80 }]
+      #
+      #   # The arguments of `launch` reach the handler as its block parameters,
+      #   # and the handler runs where the launch happened -- at position 1, not
+      #   # afterwards.
       #
       # @example Hierarchical event handling with control
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
@@ -823,9 +841,11 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # played_notes == [{pitch: 60, velocity: 96, time: 95/96r},
-      #   #                  {pitch: 64, velocity: 80, time: 191/96r},
-      #   #                  {pitch: 67, velocity: 64, time: 287/96r}]
+      #
+      #   played_notes
+      #   # => [{ pitch: 60, velocity: 96, time: (95/96) },
+      #   #     { pitch: 64, velocity: 80, time: (191/96) },
+      #   #     { pitch: 67, velocity: 64, time: (287/96) }]
       #   #
       #   # NOTE the yielded `time:` is the sequencer's ABSOLUTE POSITION when the
       #   # event fires, not the `time:` of the serie's element. The sequencer sits
@@ -849,7 +869,17 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # Result: played_notes contains [{pitch: 60, velocity: 96, channel: 0, time: 0r}, ...]
+      #
+      #   played_notes
+      #   # => [{ pitch: 60, velocity: 96, channel: [0, 0], time: (95/96) },
+      #   #     { pitch: 64, velocity: 80, channel: [1, 0], time: (191/96) }]
+      #
+      #   # `channel: 0` arrives as `[0, 0]`, not as 0: in array mode every
+      #   # attribute is brought to the arity of `value`, and a scalar is
+      #   # repeated across it. Written as `channel: [0]` it arrives as
+      #   # `[0, nil]` instead -- padded, not repeated. Either way the block
+      #   # receives an array, and reading it as a number is the mistake this
+      #   # example used to invite.
 
       def play_timed(timed_serie,
                      at: nil,
@@ -1032,7 +1062,17 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # Result: pitch_values contains [{pitch: 60, position: 0}, {pitch: 61, position: 0.25}, ...]
+      #
+      #   pitch_values.size          # => 16
+      #   pitch_values.first(3)
+      #   # => [{ pitch: 60, position: (95/96) },
+      #   #     { pitch: 61, position: (119/96) },
+      #   #     { pitch: 62, position: (143/96) }]
+      #   pitch_values.last          # => { pitch: 72, position: (455/96) }
+      #
+      #   # Sixteen steps and not seventeen: `duration: 4r` at `every: 1/4r` is
+      #   # 16 intervals, and the last one lands ON 72 -- the arrival is a step,
+      #   # not an extra one after the last.
       #
       # @example Multi-parameter fade
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
@@ -1053,14 +1093,33 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # Result: controller_values contains [{volume: 0, brightness: 0, position: 0}, ...]
+      #
+      #   controller_values.size   # => 64
+      #   controller_values.first  # => { volume: 0, brightness: 0, position: (95/96) }
+      #   controller_values.last   # => { volume: 127, brightness: 127, position: (851/96) }
+      #
+      #   # Both parameters are interpolated from the same ratio, so they arrive
+      #   # together whatever their ranges.
       #
       # @example Non-linear interpolation
-      #   sequencer.move(
+      #   seq = BaseSequencer.new(4, 24)
+      #   values = []
+      #
+      #   seq.move(
       #     from: 0, to: 100,
       #     duration: 4r, every: 1/16r,
       #     function: proc { |ratio| ratio ** 2 }  # Ease-in
-      #   ) { |value| puts value }
+      #   ) { |value| values << value }
+      #   seq.run
+      #
+      #   values.first(4)                 # => [(0/1), (100/3969), (400/3969), (100/441)]
+      #   values[values.size / 2].to_f    # => 25.79994960947342
+      #   values.last                     # => (100/1)
+      #
+      #   # Halfway through it is at 25.8 of 100, not at 50: that is what the
+      #   # ease-in buys. The function reshapes the ratio, not the endpoints --
+      #   # it still starts at `from` and arrives at `to`. And the values stay
+      #   # rational all the way: 100/3969 rather than 0.0252.
       #
       # @example Linear fade (only positional value needed)
       #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
