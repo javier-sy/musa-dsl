@@ -1,3 +1,3 @@
 module Musa
-  VERSION = '0.47.3'.freeze
+  VERSION = '0.48.0'.freeze
 end
