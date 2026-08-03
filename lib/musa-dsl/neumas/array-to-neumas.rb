@@ -54,6 +54,10 @@ module Musa
     #     "(0) (-2) (-4) (-5)"     # Phrase C
     #   ].to_neumas
     #
+    #   # The three phrases become one series, in order, with no seam:
+    #   grades = ->(s) { s.i.to_a.map { |n| n[:gdvd][:abs_grade] || n[:gdvd][:delta_grade] } }
+    #   grades[melody]  # => [0, 2, 4, 5, 7, 5, 4, 2, 0, -2, -4, -5]
+    #
     # @example Mixed element types
     #   using Musa::Extension::Neumas
     #
@@ -63,11 +67,18 @@ module Musa
     #
     #   song = [intro, verse, chorus].to_neumas
     #
+    #   grades = ->(s) { s.i.to_a.map { |n| n[:gdvd][:abs_grade] || n[:gdvd][:delta_grade] } }
+    #   grades[song]  # => [0, 2, 4, 0, 2, 2, -1, 0, 7, 5, 7]
+    #
     # @example Single element
     #   using Musa::Extension::Neumas
     #
     #   # Single element returns converted element directly (not merged)
     #   single = ["(0) (+2) (+4)"].to_neumas
+    #
+    #   single.class.name  # => "Musa::Series::Constructors::FromArray"
+    #
+    #   # The multi-element case merges instead, into a Sequence.
     #
     # Must be activated with `using Musa::Extension::Neumas`.
     #
@@ -106,13 +117,20 @@ module Musa
       #       "(0) (+2) (+4)",
       #       "(+5) (+7)"
       #     ].to_neumas
-      #     # Returns MERGE of two parsed series
+      #
+      #     phrases.class.name  # => "Musa::Series::Constructors::Sequence"
+      #
+      #     grades = ->(s) { s.i.to_a.map { |n| n[:gdvd][:abs_grade] || n[:gdvd][:delta_grade] } }
+      #     grades[phrases]  # => [0, 2, 4, 5, 7]
       #
       #   @example Mixed types
       #     using Musa::Extension::Neumas
       #
       #     existing = "(0) (+2)".to_neumas
       #     combined = [existing, "(+4) (+5)"].to_neumas
+      #
+      #     grades = ->(s) { s.i.to_a.map { |n| n[:gdvd][:abs_grade] || n[:gdvd][:delta_grade] } }
+      #     grades[combined]  # => [0, 2, 4, 5]
       #
       #   @example Single element
       #     using Musa::Extension::Neumas

@@ -63,7 +63,11 @@ module Musa
         #   Direction.new(placement: 'above') do
         #     metronome beat_unit: 'quarter', per_minute: '120'
         #     words 'Allegro'
-        #   end
+        #   end.to_xml.string
+        #   # => "<direction placement=\"above\">\n\t<direction-type>\n\t\t<metronome>\n\t\t\t<beat-unit>quarter</beat-unit>\n\t\t\t<per-minute>120</per-minute>\n\t\t</metronome>\n\t</direction-type>\n\t<direction-type>\n\t\t<words>Allegro</words>\n\t</direction-type>\n</direction>\n"
+        #
+        #   # Two direction-types, not one with two children: each mark is its own
+        #   # <direction-type> inside the same <direction>.
         #
         # @example Dynamic marking
         #   Direction.new(placement: 'below', dynamics: 'f')
@@ -71,7 +75,8 @@ module Musa
         # @example Crescendo hairpin
         #   Direction.new(placement: 'below') do
         #     wedge 'crescendo'
-        #   end
+        #   end.to_xml.string
+        #   # => "<direction placement=\"below\">\n\t<direction-type>\n\t\t<wedge type=\"crescendo\"/>\n\t</direction-type>\n</direction>\n"
         #
         # @example Pedal down
         #   Direction.new(placement: 'below', pedal: 'start')
@@ -229,6 +234,11 @@ module Musa
         # @example Quarter note = 120 BPM
         #   measure.metronome beat_unit: 'quarter', per_minute: '120'
         #
+        #   # The element it builds, on its own -- already wrapped in its
+        #   # <direction-type>, which is why a Direction can just concatenate them:
+        #   Metronome.new(beat_unit: 'quarter', per_minute: '120').to_xml.string
+        #   # => "<direction-type>\n\t<metronome>\n\t\t<beat-unit>quarter</beat-unit>\n\t\t<per-minute>120</per-minute>\n\t</metronome>\n</direction-type>\n"
+        #
         # @example Dotted eighth = 90
         #   measure.metronome beat_unit: 'eighth', beat_unit_dots: 1, per_minute: '90'
         class Metronome < DirectionType
@@ -305,6 +315,9 @@ module Musa
         #
         # @example Single dynamic
         #   measure.direction { dynamics 'f' }
+        #
+        #   Dynamics.new('f').to_xml.string
+        #   # => "<direction-type>\n\t<dynamics>\n\t\t<f />\n\t</dynamics>\n</direction-type>\n"
         #
         # @example Multiple dynamics (sforzando-forte)
         #   measure.direction { dynamics ['sf', 'f'] }

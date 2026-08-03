@@ -105,6 +105,12 @@
 #
 #   node = "(0) (+2) (+2) (-1) (0)".nn  # to_neumas_to_node
 #
+#   node.options.size        # => 1
+#   node.options.first.size  # => 1
+#   node.options.first.first.i.to_a.map { |n| n[:gdvd] }
+#   # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+#   #     { delta_grade: -1 }, { abs_grade: 0 }]
+#
 # @see Musa::Neumalang
 # @see Musa::Neumas::Decoders::NeumaDecoder
 # @see Musa::Generative
@@ -154,15 +160,30 @@ module Musa
       #     using Musa::Extension::Neumas
       #     neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
       #
+      #     # Each element is a { kind:, gdvd: } envelope; the gdvd is what was written.
+      #     neumas.i.to_a.map { |n| n[:gdvd] }
+      #     # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+      #     #     { delta_grade: -1 }, { abs_grade: 0 }]
+      #
       #   @example Parse with immediate decoding
       #     using Musa::Extension::Neumas
       #     # Create a simple decoder
       #     decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
       #     result = "(0) (+2) (+2) (-1) (0)".to_neumas(decode_with: decoder)
       #
+      #     # Decoding unwraps the envelope: the elements ARE the gdvd now.
+      #     result.i.to_a
+      #     # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+      #     #     { delta_grade: -1 }, { abs_grade: 0 }]
+      #
       #   @example Parse with debug
       #     using Musa::Extension::Neumas
       #     neumas = "(0) (+2) (+2)".to_neumas(debug: true)
+      #
+      #     # `debug:` only makes the parser narrate to stdout; what comes back is
+      #     # the same series it would return without it.
+      #     neumas.i.to_a.map { |n| n[:gdvd] }
+      #     # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 }]
       #
       #   @api public
       class ::String; end
@@ -182,6 +203,14 @@ module Musa
       #   @example Convert to node for generative grammar
       #     using Musa::Extension::Neumas
       #     node = "(0) (+2) (+2) (-1) (0)".to_neumas_to_node
+      #
+      #     # One option holding one sequence: the whole phrase is a single
+      #     # alternative, ready to be combined with | and + in a grammar.
+      #     node.options.size        # => 1
+      #     node.options.first.size  # => 1
+      #     node.options.first.first.i.to_a.map { |n| n[:gdvd] }
+      #     # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
+      #     #     { delta_grade: -1 }, { abs_grade: 0 }]
       #
       #   @see Musa::Generative
       #

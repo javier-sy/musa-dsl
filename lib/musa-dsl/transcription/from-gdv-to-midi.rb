@@ -320,6 +320,7 @@ module Musa::Transcriptors
       #
       # @example Lower turn
       #   gdv = { grade: 0, duration: 1r, turn: :down }
+      #   turn.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
       #   # => [
       #   #   { grade: -1, duration: 1/4r },  # -1
       #   #   { grade: 0, duration: 1/4r },   # 0

@@ -952,9 +952,22 @@ module Musa
       #
       # @example
       #   MajorScaleKind.intrinsic_metadata
-      #   # => { id: :major, grades: 7, pitches: [0, 2, 4, 5, 7, 9, 11],
-      #   #      intervals: [2, 2, 1, 2, 2, 2], has_leading_tone: true,
-      #   #      has_tritone: true, symmetric: nil }
+      #   # => { id: :major, grades: 7,
+      #   #      pitches: [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21],
+      #   #      intervals: [2, 2, 1, 2, 2, 2, 1],
+      #   #      has_leading_tone: true, has_tritone: false }
+      #
+      #   # Three things a reader should not have to discover by running it:
+      #   #
+      #   # `pitches` carries the scale TWICE -- the second octave included --
+      #   # because a scale kind is asked for grades beyond the seventh.
+      #   #
+      #   # `has_tritone` is false for the major scale, which contains F-B. The
+      #   # key is read from the root: it asks whether pitch 6 is in the scale,
+      #   # not whether any two of its pitches are a tritone apart.
+      #   #
+      #   # `symmetric` is absent, not nil: the key is only set when there is a
+      #   # symmetry to report.
       def self.intrinsic_metadata
         result = {}
         result[:id] = id if respond_to?(:id)

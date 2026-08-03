@@ -45,6 +45,8 @@ module Musa
         # 4. Optionally backup again for additional voices
         #
         # @example Piano with simultaneous treble and bass
+        #   measure = Measure.new(1, divisions: 2)
+        #
         #   measure.pitch 'D', octave: 4, duration: 4, type: 'half'
         #   measure.pitch 'E', octave: 4, duration: 4, type: 'half'
         #
@@ -52,7 +54,16 @@ module Musa
         #
         #   measure.pitch 'C', octave: 3, duration: 8, type: 'whole', staff: 2
         #
+        #   measure.to_xml.string.scan(/<(note|backup|forward)>/).flatten
+        #   # => ["note", "note", "backup", "note"]
+        #
+        #   # The backup sits between them, and the staff travels with the note:
+        #   measure.to_xml.string.lines.map(&:strip).grep(/backup|staff/)
+        #   # => ["<backup><duration>8</duration></backup>", "<staff>2</staff>"]
+        #
         # @example Two voices on the same staff
+        #   measure = Measure.new(1, divisions: 2)
+        #
         #   measure.pitch 'C', octave: 5, duration: 2, type: 'quarter', voice: 1
         #   measure.pitch 'D', octave: 5, duration: 2, type: 'quarter', voice: 1
         #   measure.pitch 'E', octave: 5, duration: 2, type: 'quarter', voice: 1
@@ -62,6 +73,10 @@ module Musa
         #
         #   measure.pitch 'E', octave: 4, duration: 4, type: 'half', voice: 2
         #   measure.pitch 'F', octave: 4, duration: 4, type: 'half', voice: 2
+        #
+        #   # Four notes in voice 1, the rewind, then two in voice 2:
+        #   measure.to_xml.string.scan(/<voice>(\d)<\/voice>|<(backup)>/).map { |a, b| a || b }
+        #   # => ["1", "1", "1", "1", "backup", "2", "2"]
         #
         # @example Three-voice polyphony
         #   # Voice 1
@@ -142,6 +157,10 @@ module Musa
         # @example Skip a quarter note in voice 2
         #   measure.forward 2, voice: 2  # Skip 2 divisions in voice 2
         #   measure.pitch 'C', octave: 5, duration: 2, type: 'quarter', voice: 2
+        #
+        #   # The element on its own:
+        #   Forward.new(2, voice: 2).to_xml.string
+        #   # => "<forward>\n\t<duration>2</duration>\n\t<voice>2</voice>\n</forward>\n"
         #
         # @example Offset entry on bass staff
         #   measure.forward 4, staff: 2  # Skip half measure on bass staff

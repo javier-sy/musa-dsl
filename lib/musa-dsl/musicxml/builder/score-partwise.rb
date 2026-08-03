@@ -110,6 +110,14 @@ module Musa
       #     end
       #   end
       #
+      #   score.to_xml.string.scan(/<score-part id="(\w+)">/).flatten  # => ["p1", "p2"]
+      #
+      #   score.to_xml.string.lines.map(&:strip).grep(/work-title|creator|part-name/)
+      #   # => ["<work-title>Duet</work-title>",
+      #   #     "<creator type=\"composer\">J. Composer</creator>",
+      #   #     "<part-name>Flute</part-name>",
+      #   #     "<part-name>Piano</part-name>"]
+      #
       # @see Internal::Part Part implementation
       # @see Internal::PartGroup Part grouping
       # @see Internal::Measure Measure implementation
@@ -137,7 +145,16 @@ module Musa
         #     movement_title: "Allegro",
         #     creators: { composer: "Mozart", arranger: "Smith" },
         #     rights: { lyrics: "Public Domain" }
-        #   )
+        #   ).to_xml.string.lines.map(&:strip).grep(/work-|movement-|creator|rights/)
+        #   # => ["<work-number>1</work-number>",
+        #   #     "<work-title>Sonata in C</work-title>",
+        #   #     "<movement-title>Allegro</movement-title>",
+        #   #     "<creator type=\"composer\">Mozart</creator>",
+        #   #     "<creator type=\"arranger\">Smith</creator>",
+        #   #     "<rights type=\"lyrics\">Public Domain</rights>"]
+        #
+        #   # <work-number> comes out before <work-title>: the order is the
+        #   # schema's, not the one the keywords were written in.
         #
         # @example With DSL block
         #   ScorePartwise.new do

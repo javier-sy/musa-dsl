@@ -154,6 +154,11 @@ module Musa
         # @example Common time (4/4)
         #   measure.attributes { time beats: 4, beat_type: 4 }
         #
+        #   # The element it builds, on its own. The name has to be qualified:
+        #   # bare `Time` is Ruby's own.
+        #   Musa::MusicXML::Builder::Internal::Time.new(beats: 4, beat_type: 4).to_xml.string
+        #   # => "<time>\n\t<beats>4</beats>\n\t<beat-type>4</beat-type>\n</time>\n"
+        #
         # @example Waltz (3/4)
         #   measure.attributes { time beats: 3, beat_type: 4 }
         #
@@ -497,7 +502,8 @@ module Musa
         #     key_fifths: 1,        # G major
         #     time_beats: 4, time_beat_type: 4,
         #     clef_sign: 'G', clef_line: 2
-        #   )
+        #   ).to_xml.string
+        #   # => "<attributes>\n\t<divisions>4</divisions>\n\t<key>\n\t\t<fifths>1</fifths>\n\t</key>\n\t<time>\n\t\t<beats>4</beats>\n\t\t<beat-type>4</beat-type>\n\t</time>\n\t<clef>\n\t\t<sign>G</sign>\n\t\t<line>2</line>\n\t</clef>\n</attributes>\n"
         #
         # @example Piano with different keys per staff
         #   Attributes.new do
@@ -507,7 +513,11 @@ module Musa
         #     time beats: 3, beat_type: 4
         #     clef 1, sign: 'G', line: 2
         #     clef 2, sign: 'F', line: 4
-        #   end
+        #   end.to_xml.string
+        #   # => "<attributes>\n\t<divisions>4</divisions>\n\t<key number=\"1\">\n\t\t<fifths>0</fifths>\n\t</key>\n\t<key number=\"2\">\n\t\t<fifths>-1</fifths>\n\t</key>\n\t<time>\n\t\t<beats>3</beats>\n\t\t<beat-type>4</beat-type>\n\t</time>\n\t<staves>2</staves>\n\t<clef number=\"1\">\n\t\t<sign>G</sign>\n\t\t<line>2</line>\n\t</clef>\n\t<clef number=\"2\">\n\t\t<sign>F</sign>\n\t\t<line>4</line>\n\t</clef>\n</attributes>\n"
+        #
+        #   # Nobody declared `staves 2`: numbering the keys and clefs is what
+        #   # says there are two staves, and `<staves>` follows from it.
         #
         # @example Change key signature mid-score
         #   Attributes.new do

@@ -226,8 +226,12 @@ module Musa
         #   block = proc { |a, b, c:, **rest| }
         #   binder = SmartProcBinder.new(block)
         #   puts binder.inspect
-        #   # => "SmartProcBinder: parameters = [[:req, :a], [:req, :b], [:key, :c], [:keyrest, :rest]]
-        #   #     key_parameters = {:c=>nil} has_rest = true"
+        #   # => "SmartProcBinder: parameters = [[:opt, :a], [:opt, :b], [:keyreq, :c], [:keyrest, :rest]] key_parameters = {c: nil} has_rest = true"
+        #
+        #   # `:opt` and not `:req`: a proc's positional parameters are ALWAYS
+        #   # optional -- that is what makes it a proc and not a lambda. The same
+        #   # block passed as a lambda reports `[:req, :a]`. And `c:` with no
+        #   # default is `:keyreq`, required.
         def inspect
           "SmartProcBinder: parameters = #{parameters} key_parameters = #{@key_parameters} has_rest = #{@has_key_rest}"
         end

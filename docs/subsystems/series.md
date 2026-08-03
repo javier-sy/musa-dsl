@@ -106,10 +106,10 @@ notes = pitches.with(dur: durations, vel: velocities) do |p, dur:, vel:|
 end
 
 notes.i.to_a
-# => [{pitch: 60, duration: 1, velocity: 96},
-#     {pitch: 64, duration: 1/2, velocity: 80},
-#     {pitch: 67, duration: 1/2, velocity: 90},
-#     {pitch: 72, duration: 1, velocity: 100}]
+# => [{pitch: 60, duration: 1r, velocity: 96},
+#     {pitch: 64, duration: 1/2r, velocity: 80},
+#     {pitch: 67, duration: 1/2r, velocity: 90},
+#     {pitch: 72, duration: 1r, velocity: 100}]
 ```
 
 **Creating PDV with `H()` and `HC()`:**
@@ -126,22 +126,22 @@ velocities = S(96, 80, 90, 100)      # 4 velocities
 notes = H(pitch: pitches, duration: durations, velocity: velocities)
 
 notes.i.to_a
-# => [{pitch: 60, duration: 1, velocity: 96},
-#     {pitch: 62, duration: 1/2, velocity: 80},
-#     {pitch: 64, duration: 1/4, velocity: 90}]
+# => [{pitch: 60, duration: 1r, velocity: 96},
+#     {pitch: 62, duration: 1/2r, velocity: 80},
+#     {pitch: 64, duration: 1/4r, velocity: 90}]
 
 # HC: Continue cycling all series (cycles until common multiple)
 notes_cycling = HC(pitch: pitches, duration: durations, velocity: velocities)
   .max_size(7)  # Limit output for readability
 
 notes_cycling.i.to_a
-# => [{pitch: 60, duration: 1, velocity: 96},
-#     {pitch: 62, duration: 1/2, velocity: 80},
-#     {pitch: 64, duration: 1/4, velocity: 90},
-#     {pitch: 65, duration: 1, velocity: 100},
-#     {pitch: 67, duration: 1/2, velocity: 96},
-#     {pitch: 60, duration: 1/4, velocity: 80},
-#     {pitch: 62, duration: 1, velocity: 90}]
+# => [{pitch: 60, duration: 1r, velocity: 96},
+#     {pitch: 62, duration: 1/2r, velocity: 80},
+#     {pitch: 64, duration: 1/4r, velocity: 90},
+#     {pitch: 65, duration: 1r, velocity: 100},
+#     {pitch: 67, duration: 1/2r, velocity: 96},
+#     {pitch: 60, duration: 1/4r, velocity: 80},
+#     {pitch: 62, duration: 1r, velocity: 90}]
 ```
 
 ## Merging Melodic Phrases
@@ -312,12 +312,17 @@ quantized = pitch_bend.quantize(step: 1)  # Quantize to integer semitones
 
 quantized.i.to_a
 # => [{ time: 0r, value: 60r, duration: 1/2r },
-#     { time: 1/2r, value: 61r, duration: 1r },
-#     { time: 3/2r, value: 62r, duration: 1r },
-#     { time: 5/2r, value: 63r, duration: 1/2r }]
+#     { time: 1/2r, value: 61r, duration: 1/2r },
+#     { time: 1r, value: 62r, duration: 1r }]
 #
 # One step per semitone crossed, and each carries the time it holds: the
 # result is a staircase, not a list of samples taken at the input times.
+#
+# Three steps for an input that spans 60.3 to 63.1: the value is truncated
+# to the semitone below, so the input never reaches 63 and the last step is
+# 62. And the times are where each crossing happens, not where a sample was
+# taken -- 1/2 is halfway between the first two points, because that is
+# where the ramp passes 61.
 
 # Example 2: Predictive quantization for smooth crossings
 continuous = S({ time: 0r, value: 0 }, { time: 4r, value: 10 })

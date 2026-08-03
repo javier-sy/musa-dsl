@@ -565,10 +565,13 @@ module Musa
     #
     # @example Extended: the same pitches, carrying their error
     #   inst = HARMO(error: 0.5, extended: true).i
-    #   3.times.map { inst.next_value }
-    #   # => [{ pitch: 0, error: 0.0 },
-    #   #     { pitch: 12, error: 0.0 },
-    #   #     { pitch: 19, error: 0.0195... }]
+    #   harmonics = 3.times.map { inst.next_value }
+    #
+    #   harmonics.map { |h| h[:pitch] }            # => [0, 12, 19]
+    #   harmonics.map { |h| h[:error].round(4) }   # => [0.0, 0.0, 0.0196]
+    #
+    #   # The octaves are exact; the twelfth is not. 3/1 is 0.0196 semitones
+    #   # above the tempered fifth, which is why a tolerance below that drops it.
     #
     # @example Over a fundamental other than C
     #   over_g = HARMO().i.map { |n| n + 67 }

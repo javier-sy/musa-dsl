@@ -47,6 +47,16 @@ module Musa
         #     end
         #   end
         #
+        #   xml = part.to_xml.string
+        #
+        #   xml.lines.first.strip                          # => "<part id=\"p1\">"
+        #
+        #   # The measures are numbered by their order, not declared:
+        #   xml.scan(/<measure number="(\d+)"/).flatten     # => ["1", "2"]
+        #
+        #   # The pitches, with F's alteration where it was written:
+        #   xml.scan(/<(?:step|alter)>(-?\w)<\//).flatten   # => ["D", "E", "F", "1"]
+        #
         # @see Measure Measure implementation
         # @see ScorePartwise#part Main way to create parts
         class Part

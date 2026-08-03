@@ -52,7 +52,8 @@ module Musa
         #   # => "<note>\n\t<unpitched />\n\t<duration>2</duration>\n\t<type>quarter</type>\n</note>\n"
         #
         # @example Snare drum hit with accent
-        #   UnpitchedNote.new(duration: 2, type: 'quarter', accent: true)
+        #   UnpitchedNote.new(duration: 2, type: 'quarter', accent: true).to_xml.string
+        #   # => "<note>\n\t<unpitched />\n\t<duration>2</duration>\n\t<type>quarter</type>\n\t<notations>\n\t\t<articulations>\n\t\t\t<accent />\n\t\t</articulations>\n\t</notations>\n</note>\n"
         #
         # @example Hi-hat with staccato
         #   UnpitchedNote.new(duration: 1, type: 'eighth', staccato: true)

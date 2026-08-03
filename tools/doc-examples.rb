@@ -39,7 +39,12 @@ module DocExamples
   Check = Struct.new(:statement, :declared, :actual, :status, keyword_init: true)
 
   # A declared output we can compare against, as opposed to a description of one.
-  LITERAL = /\A(\[.*\]|\{.*\}|-?[\d._\/r]+|true|false|nil|:[a-z_]+[?!]?|".*"|'.*')\z/i
+  #
+  # /m because a long list is declared over several lines -- an array of six XML
+  # fragments does not fit in one -- and without it those went through as prose:
+  # written as a claim, counted as decoration, verified by nobody. Precisely the
+  # kind of thing this tool exists to make impossible.
+  LITERAL = /\A(\[.*\]|\{.*\}|-?[\d._\/r]+|true|false|nil|:[a-z_]+[?!]?|".*"|'.*')\z/im
 
   # An example may declare that a statement FAILS -- `# => ArgumentError: cannot
   # move back` -- and that is how documentation usually describes a guard. Read
@@ -280,10 +285,21 @@ module DocExamples
   def statements(code)
     result = []
     pending = []
+    continuing = nil
 
     code.each do |line|
       declared = nil
       source = line
+
+      # A value declared over several lines keeps going while it does not close:
+      # `# => ["a",` continues into `#     "b"]`. Without this the first line was
+      # taken whole, failed to parse as a literal, and the claim was filed as
+      # prose -- unverifiable by construction, which is worse than not writing it.
+      if continuing && line.match?(/\A\s*#(?!\s*=>)/) && !continuing.last.match?(LITERAL)
+        continuing[1] = "#{continuing.last}\n#{line.sub(/\A\s*#\s?/, '')}".strip
+        next
+      end
+      continuing = nil
 
       if (match = line.match(/\A(.*?)\s*#\s*=>\s*(.+)\z/))
         source, declared = match[1], match[2].strip
@@ -312,6 +328,7 @@ module DocExamples
         # The output may be declared on its own line, after the statement.
         result << [joined.empty? ? result.pop&.first : joined, declared]
         pending = []
+        continuing = result.last
       elsif parses
         result << [joined, nil]
         pending = []

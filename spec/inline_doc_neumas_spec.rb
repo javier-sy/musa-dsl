@@ -71,58 +71,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
   context 'Array refinement (array-to-neumas.rb)' do
     using Musa::Extension::Neumas
 
-    it '@example Sequential phrases' do
-      melody = [
-        "(0) (+2) (+4) (+5)",    # Phrase A
-        "(+7) (+5) (+4) (+2)",   # Phrase B
-        "(0) (-2) (-4) (-5)"     # Phrase C
-      ].to_neumas
-
-      expect(grades(melody)).to eq [0, 2, 4, 5, 7, 5, 4, 2, 0, -2, -4, -5]
-    end
-
-    it '@example Mixed element types' do
-      intro = "(0) (+2) (+4)".to_neumas
-      verse = "(0) (+2) (+2) (-1) (0)"
-      chorus = "(+7) (+5) (+7)"
-
-      song = [intro, verse, chorus].to_neumas
-
-      expect(grades(song)).to eq [0, 2, 4, 0, 2, 2, -1, 0, 7, 5, 7]
-    end
-
-    it '@example Single element' do
-      # Single element returns converted element directly (not merged)
-      single = ["(0) (+2) (+4)"].to_neumas
-
-      # "directly" is observable: the same class a bare string parses to
-      expect(single.class).to eq "(0) (+2) (+4)".to_neumas.class
-      expect(grades(single)).to eq [0, 2, 4]
-    end
-
-    it '@example Convert string array' do
-      phrases = [
-        "(0) (+2) (+4)",
-        "(+5) (+7)"
-      ].to_neumas
-
-      # Returns MERGE of two parsed series
-      expect(grades(phrases)).to eq [0, 2, 4, 5, 7]
-    end
-
-    it '@example Mixed types' do
-      existing = "(0) (+2)".to_neumas
-      combined = [existing, "(+4) (+5)"].to_neumas
-
-      expect(grades(combined)).to eq [0, 2, 4, 5]
-    end
-
-    it '@example Single element' do
-      single = ["(0) (+2) (+4)"].to_neumas
-      # Returns parsed series directly (not merged)
-
-      expect(grades(single)).to eq [0, 2, 4]
-    end
   end
 
   context 'Decoder infrastructure (neuma-decoder.rb)' do
@@ -216,58 +164,6 @@ RSpec.describe 'Neumas Inline Documentation Examples' do
 
   context 'String refinement (string-to-neumas.rb)' do
     using Musa::Extension::Neumas
-
-    it '@example Basic parsing' do
-      melody = "(0) (+2) (+2) (-1) (0)".to_neumas
-      # Returns series of GDVD hashes
-
-      expect(melody.i.to_a(recursive: true).first).to eq({ kind: :gdvd, gdvd: { abs_grade: 0 } })
-      expect(grades(melody)).to eq [0, 2, 2, -1, 0]
-    end
-
-    it '@example Convert to generative node' do
-      node = "(0) (+2) (+2) (-1) (0)".nn  # to_neumas_to_node
-
-      # A single-option final node wrapping the parsed serie: the whole phrase is
-      # one alternative, ready to be combined with | and + in a grammar.
-      # (The node class lives in a private namespace, so the shape is the claim.)
-      expect(node.options.size).to eq(1)
-      expect(node.options.first.size).to eq(1)
-      expect(node.options.first.first.i.to_a.collect { |e| e[:gdvd] })
-        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
-                { delta_grade: -1 }, { abs_grade: 0 }])
-    end
-
-    it '@example Parse simple melody' do
-      neumas = "(0) (+2) (+2) (-1) (0)".to_neumas
-
-      expect(grades(neumas)).to eq [0, 2, 2, -1, 0]
-    end
-
-    it '@example Parse with immediate decoding' do
-      # Create a simple decoder
-      decoder = Musa::Neumas::Decoders::NeumaDifferentialDecoder.new
-      result = "(0) (+2) (+2) (-1) (0)".to_neumas(decode_with: decoder)
-
-      # Decoding unwraps the { kind:, gdvd: } envelope: the elements ARE the gdvd
-      expect(result.i.to_a(recursive: true))
-        .to eq [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 }, { delta_grade: -1 }, { abs_grade: 0 }]
-    end
-
-    it '@example Parse with debug' do
-      neumas = "(0) (+2) (+2)".to_neumas(debug: false)
-
-      expect(grades(neumas)).to eq [0, 2, 2]
-    end
-
-    it '@example Convert to node for generative grammar' do
-      node = "(0) (+2) (+2) (-1) (0)".to_neumas_to_node
-
-      expect(node.options.size).to eq(1)
-      expect(node.options.first.first.i.to_a.collect { |e| e[:gdvd] })
-        .to eq([{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
-                { delta_grade: -1 }, { abs_grade: 0 }])
-    end
 
   end
 

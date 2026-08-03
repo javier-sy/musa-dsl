@@ -47,6 +47,12 @@ module Musa
         #     name: "String Quartet",
         #     symbol: 'bracket'
         #   )
+        #
+        #   group_start.header_to_xml.string
+        #   # => "<part-group number=\"1\" type=\"start\">\n\t<group-name>String Quartet</group-name>\n\t<group-symbol>bracket</group-symbol>\n</part-group>\n"
+        #
+        #   # `header_to_xml` and not `to_xml`: a part group lives in the
+        #   # part-list header, not in the body of the score.
         #   # ... add parts vln1, vln2, vla, vlc ...
         #   group_stop = PartGroup.new(1, type: 'stop')
         #

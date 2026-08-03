@@ -55,11 +55,17 @@ module Musa
         #
         # @example F# with sharp symbol
         #   PitchedNote.new('F', alter: 1, octave: 5, duration: 2, type: 'eighth',
-        #                   accidental: 'sharp')
+        #                   accidental: 'sharp').to_xml.string
+        #   # => "<note>\n\t<pitch>\n\t\t<step>F</step>\n\t\t<alter>1</alter>\n\t\t<octave>5</octave>\n\t</pitch>\n\t<duration>2</duration>\n\t<type>eighth</type>\n\t<accidental>sharp</accidental>\n</note>\n"
+        #
+        #   # `alter` is the sounding change; `accidental` is the printed symbol.
+        #   # They travel separately, which is what lets a note be altered by the
+        #   # key signature without printing anything.
         #
         # @example Bb dotted half note with staccato
         #   PitchedNote.new('B', alter: -1, octave: 4, duration: 6, type: 'half',
-        #                   dots: 1, accidental: 'flat', staccato: true)
+        #                   dots: 1, accidental: 'flat', staccato: true).to_xml.string
+        #   # => "<note>\n\t<pitch>\n\t\t<step>B</step>\n\t\t<alter>-1</alter>\n\t\t<octave>4</octave>\n\t</pitch>\n\t<duration>6</duration>\n\t<type>half</type>\n\t<dot />\n\t<accidental>flat</accidental>\n\t<notations>\n\t\t<articulations>\n\t\t\t<staccato />\n\t\t</articulations>\n\t</notations>\n</note>\n"
         #
         # @example High A with trill
         #   PitchedNote.new('A', octave: 6, duration: 8, type: 'whole',

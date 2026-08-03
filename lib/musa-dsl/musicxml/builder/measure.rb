@@ -68,8 +68,18 @@ module Musa
         #     pitch 'F', octave: 4, duration: 2, type: 'quarter'
         #   end
         #
+        #   xml = measure.to_xml.string
+        #
+        #   xml.lines.first.strip                     # => "<measure number=\"1\">"
+        #   xml.scan(/<step>(\w)<\/step>/).flatten    # => ["C", "D", "E", "F"]
+        #
+        #   # `divisions` came from the constructor, the rest from the block:
+        #   xml.lines.map(&:strip).grep(/divisions|fifths|beats|beat-type/)
+        #   # => ["<divisions>2</divisions>", "<fifths>0</fifths>",
+        #   #     "<beats>4</beats>", "<beat-type>4</beat-type>"]
+        #
         # @example Measure with dynamics and tempo
-        #   Measure.new(2, divisions: 4) do
+        #   measure = Measure.new(2, divisions: 4) do
         #     metronome beat_unit: 'quarter', per_minute: 120
         #
         #     direction do
@@ -85,6 +95,20 @@ module Musa
         #       dynamics 'f'
         #     end
         #   end
+        #
+        #   xml = measure.to_xml.string
+        #
+        #   # `metronome` at measure level becomes a <direction> of its own, so
+        #   # what comes out is three directions around the two notes:
+        #   xml.scan(/<(direction|note)[ >]/).flatten
+        #   # => ["direction", "direction", "note", "note", "direction"]
+        #
+        #   # and the marks, in the order they were written:
+        #   xml.scan(/<wedge type="(\w+)"|<dynamics>\s*<(\w+) \/>/).map { |a, b| a || b }
+        #   # => ["p", "crescendo", "stop", "f"]
+        #
+        #   xml.lines.map(&:strip).grep(/beat-unit|per-minute/)
+        #   # => ["<beat-unit>quarter</beat-unit>", "<per-minute>120</per-minute>"]
         #
         # ## The measure the per-method examples are written against
         #
