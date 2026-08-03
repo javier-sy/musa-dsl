@@ -149,10 +149,17 @@ module DocExamples
   # is the shape of failure P6 describes, one layer opining about another
   # instead of deriving from it. Run where they live, and they can fail.
   #
-  # A markdown file is ONE narrative, top to bottom, because that is how it is
-  # read: a block that says `melody.i.to_a` is standing on the `melody =` of the
-  # block above it. The Ruby side needs `preamble` to recover that binding from
-  # elsewhere in the file; here the blocks in order are the binding.
+  # A markdown SECTION is a narrative, not the whole file: a block that says
+  # `melody.i.to_a` stands on the `melody =` of the block above it, and the
+  # blocks of one `##` are read together. The Ruby side needs `preamble` to
+  # recover that binding from elsewhere in the file; here the blocks in order
+  # are the binding.
+  #
+  # By section and not by file because a file is not read from the top by
+  # somebody who arrives at "Play Modes" from a search -- and because one
+  # blocking block would otherwise take everything after it down with it, which
+  # is what sequencer.md did: its first block starts a real transport, so every
+  # claim in the rest of the file was unreachable behind it.
   def extract_markdown(root = File.expand_path('../docs', __dir__))
     Dir.glob(File.join(root, '**/*.md')).sort.flat_map do |path|
       lines = File.readlines(path)
@@ -160,14 +167,17 @@ module DocExamples
       current = nil
       heading = nil
 
+      section = 0
+
       lines.each_with_index do |line, index|
         if (match = line.match(/^#+\s+(.+?)\s*$/)) && current.nil?
           heading = match[1]
+          section += 1 if line.start_with?('## ')
         end
 
         if line.match?(/^```ruby\s*$/)
           current = Example.new(file: path, line: index + 2, title: heading.to_s,
-                                code: [], namespace: [], block: [path, 0])
+                                code: [], namespace: [], block: [path, section])
         elsif line.match?(/^```\s*$/) && current
           examples << current
           current = nil

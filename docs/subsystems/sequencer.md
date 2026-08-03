@@ -90,6 +90,64 @@ end
 transport.start
 ```
 
+## When is this the answer
+
+Everything that happens in time goes through here, so the question is not
+whether but which verb. By the shape of what you have:
+
+| You have | You want | This |
+|---|---|---|
+| one singular moment -- a start, a mark, an end | something to happen there | `at` |
+| a delay measured from where you are | to come back after it | `wait` |
+| a serie whose elements carry their duration | it played, with time walked for you | `play` |
+| a serie of values with times attached | to be called at each of them | `play_timed` |
+| a value that has to travel from one to another | to be called at every step of the way | `move` |
+| a regular pulse | to keep doing something until told otherwise | `every` |
+
+**When `at` is right and when it is the reflex.** A genuine landmark -- the
+start of a section, one structural mark, the end -- is exactly what `at` is for.
+`at` **inside a loop, with the position computed from the loop variable**, is
+the reflex: it means the plan is being kept as arithmetic instead of as data.
+A serie carrying `duration:` and given to `play` says the same thing and stays
+sliceable, combinable and reusable. See [idioms](../idioms.md) §1.
+
+**`duration` and `note_duration` are not the same key.** For `play`, `:duration`
+is the step -- how long until the next element -- and `:note_duration` is how
+long the sound lasts. They coincide often enough that the difference only shows
+up when it matters: a staccato is a short `note_duration` inside an unchanged
+`duration`.
+
+**When it is NOT the answer.** Deciding *what* happens is not this subsystem's
+business: that is [series](series.md) and the generative tools. The sequencer
+places what you already chose.
+
+## Where time starts, and what a position is
+
+A position is a **bar number**, and `1r` is one bar. Durations are fractions of
+a bar, not of a whole note -- in 4/4 that makes `1/4r` a quarter note, which is
+why the two readings agree there and only there.
+
+A sequencer with a tick grid starts **one tick before bar 1**:
+
+```ruby
+sequencer = Musa::Sequencer::Sequencer.new(4, 24)
+sequencer.position   # => 95/96r
+```
+
+That is deliberate: 96 ticks to the bar, so the first tick it runs lands exactly
+on bar 1. It also has a consequence worth knowing, because it is a common
+surprise: an `every` written directly in the `with` block -- outside any `at` --
+starts counting from 95/96 and its pulses fall one tick before each bar. Put it
+inside `at 1` and it lands on the bar.
+
+```
+transport.sequencer.with do
+  at 1 do
+    every 1r do ... end     # pulses on 1, 2, 3...
+  end
+end
+```
+
 ## Times and durations
 
 The Sequencer internally encodes time using `Rational`. It is preferable to use Rational values (`1/2r`, `1r`, `3/4r`) instead of Float (`0.5`, `1.0`, `0.75`) for times and durations, as this avoids potential precision issues in the internal conversion.

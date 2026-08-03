@@ -2,6 +2,76 @@
 
 Series are the fundamental building blocks for generating musical sequences. They provide functional operations for transforming pitches, rhythms, dynamics, and any musical parameter.
 
+## When is this the answer
+
+You have a **succession of values of the same kind** and you want to transform
+it, combine it with another, or walk it in time. The signal that you want a
+serie is that you are about to write an Array and an `each`.
+
+| You have | You want | This |
+|---|---|---|
+| a list of grades | to play it | `H(grade: ..., duration: ...)` and `play` |
+| three parallel lists -- grades, durations, dynamics | one note per element | `H()`, which joins them by position |
+| a phrase | it backwards, rotated, twice | `.reverse`, `.shift`, `.repeat` -- and they compose |
+| a phrase | it in two voices reading independently | `.buffered`, then one `.buffer` per voice |
+| a rule rather than a list | the values it produces | `FOR`, `FIBO`, `SIN`, `RND`, `E` |
+| material that arrives while it is already sounding | to keep playing and take it when it comes | `QUEUE` |
+| a constant | to put it next to series that vary | `S(value).repeat` -- a constant is a serie too |
+
+**When it is NOT the answer.** A single value moving continuously towards
+another is not a serie: that is `move`. A structure chosen by probability is not
+a serie: that is Markov. One singular point in time is not a serie: that is
+`at`. And a list you build and consume in the same breath, without transforming
+or combining it, is better off an Array.
+
+## Prototype and instance
+
+Every constructor gives a **prototype**: a description of a succession, not a
+reading of it. `.i` (or `.instance`) turns it into an **instance**, which is
+what actually walks. That is why `.i` appears in every example below, and it is
+the one thing that has to be understood before anything else here makes sense.
+
+```ruby
+melody = S(0, 2, 4)
+
+melody.state      # => :prototype
+melody.i.state    # => :instance
+```
+
+A prototype cannot be consumed -- `melody.next_value` raises `PrototypingError`
+-- and that refusal is the point: it is what stops two voices sharing an
+iterator by accident.
+
+**Two instances of the same prototype are independent**, which is what makes a
+template a template:
+
+```ruby
+melody = S(1, 2, 3)
+a = melody.i
+b = melody.i
+
+a.next_value   # => 1
+b.next_value   # => 1, not 2: a and b share nothing
+```
+
+The same holds inside a graph. A prototype used in two branches gives **two**
+instances, one per branch, and each is walked separately:
+
+```ruby
+material = S(1, 2, 3)
+
+H(x: material, y: material.reverse).i.to_a
+# => [{ x: 1, y: 3 }, { x: 2, y: 2 }, { x: 3, y: 1 }]
+```
+
+Instantiating an instance gives back the same instance, so `.i` is safe to write
+wherever you are unsure -- it never re-reads something already being read.
+
+**A whole graph is one or the other.** `S(1,2,3).map { ... }.repeat` is a
+prototype because its source is; instantiating it instantiates everything it
+stands on. That is also why a serie built around a `PROXY` whose source is not
+set yet has no state at all until it is: there is nothing to decide it from.
+
 ## Basic Series Operations
 
 ```ruby
