@@ -1738,8 +1738,12 @@ module Musa
     #   tonic.frequency   # => ~261.63 Hz
     #
     # @example Interval navigation
-    #   tonic.up(:P5).pitch        # => 67 (G)
-    #   tonic.up(4, :natural).pitch # => 71 (4 scale degrees = B)
+    #   tonic.up(:P5).pitch          # => 67  (G, by interval)
+    #   tonic.up(4, :natural).pitch  # => 67  (G, by scale degree)
+    #
+    #   # The two agree here by coincidence and not by rule: a perfect fifth and
+    #   # four degrees of a major scale both land on the dominant. In another
+    #   # scale kind, or from another degree, they part company.
     #
     # @example Chromatic alterations
     #   tonic.sharp.pitch  # => 61 (C#)

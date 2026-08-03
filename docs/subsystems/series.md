@@ -176,7 +176,7 @@ descending.i.to_a  # => [10, 8, 6, 4, 2, 0]
 rhythm = FIBO().max_size(8).map { |n| Rational(n, 16) }
 rhythm.i.to_a
 # => [1/16r, 1/16r, 1/8r, 3/16r, 5/16r, 1/2r, 13/16r, 21/16r]
-# Con la `r`: sin ella Ruby lee `1/16` como división entera y da 0.
+# With the `r`: without it Ruby reads `1/16` as integer division and gives 0.
 
 # RND: Random melody with constraints
 melody = RND(60, 62, 64, 65, 67, 69, 71, 72)
