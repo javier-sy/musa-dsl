@@ -34,38 +34,43 @@ module Musa
     #
     # @example Manual stepping for testing
     #   clock = ExternalTickClock.new
-    #   transport = Transport.new(clock)
+    #   transport = Transport.new(clock, 4, 24)
+    #
+    #   ran = []
     #
     #   # Schedule some events. Note the parentheses: `at 1 { ... }` is a syntax
     #   # error in Ruby, since the braces would bind to the argument.
-    #   transport.sequencer.at(1) { puts "Bar 1" }
-    #   transport.sequencer.at(2) { puts "Bar 2" }
+    #   transport.sequencer.at(1) { ran << "Bar 1" }
+    #   transport.sequencer.at(2) { ran << "Bar 2" }
     #
-    #   # Start in background (non-blocking for ExternalTickClock)
-    #   thread = Thread.new { transport.start }
-    #   sleep 0.1  # Let transport initialize
+    #   # No thread and no sleep: `start` returns immediately here, which is the
+    #   # whole difference between this clock and the others.
+    #   transport.start
+    #   ran  # => []
     #
-    #   # Generate ticks manually. The sequencer starts one tick before bar 1,
-    #   # so the very first tick is bar 1 -- and bar 2 is 96 ticks further on.
-    #   clock.tick  # => "Bar 1"
+    #   # Generate ticks by hand. The sequencer starts one tick before bar 1, so
+    #   # the very first tick IS bar 1 -- and bar 2 is 96 ticks further on.
+    #   clock.tick
+    #   ran  # => ["Bar 1"]
+    #
     #   95.times { clock.tick }
-    #   clock.tick  # => "Bar 2"
+    #   ran  # => ["Bar 1"]
     #
-    #   transport.stop
-    #   thread.join
+    #   clock.tick
+    #   ran  # => ["Bar 1", "Bar 2"]
     #
     # @example Integration with game loop
     #   clock = ExternalTickClock.new
-    #   transport = Transport.new(clock)
-    #   thread = Thread.new { transport.start }
-    #   sleep 0.1
+    #   transport = Transport.new(clock, 4, 24)
+    #   transport.start
     #
-    #   # In game update loop:
-    #   def update(delta_time)
-    #     if should_tick?(delta_time)
-    #       clock.tick  # Advance sequencer by one tick
-    #     end
-    #   end
+    #   # In the game's update loop:
+    #   #   def update(delta_time)
+    #   #     clock.tick if should_tick?(delta_time)
+    #   #   end
+    #   #
+    #   # Ticking faster or slower is how the piece follows the game; nothing
+    #   # in the scheduling changes.
     #
     # @see DummyClock For automatic testing with fixed tick counts
     # @see TimerClock For internal timer-based timing

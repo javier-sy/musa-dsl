@@ -167,9 +167,18 @@ module Musa
         # @raise [ArgumentError] if new_position < current position
         #
         # @example Jump to future bar
-        #   sequencer.position       # => 383/384r
-        #   sequencer.position = 5r  # ticks forward, executing every event in between
-        #   sequencer.position       # => 5r
+        #   seq = BaseSequencer.new(4, 24)
+        #   executed = []
+        #   seq.at(1) { executed << 1 }
+        #   seq.at(2) { executed << 2 }
+        #
+        #   seq.position = 5r        # ticks forward, executing what it passes
+        #
+        #   executed       # => [1, 2]
+        #   seq.position   # => (5/1)
+        #
+        #   # It really travels: everything scheduled between here and there
+        #   # runs, as fast as it can. A seek is not a jump.
         #
         # @example Cannot move backward
         #   sequencer.position = 0r  # => ArgumentError: cannot move back

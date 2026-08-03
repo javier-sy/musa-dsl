@@ -152,6 +152,23 @@ transport.sequencer.with do
 end
 ```
 
+The same is true of `wait`, and it is easier to miss because a wait looks
+absolute when you read it:
+
+```ruby
+seq = Musa::Sequencer::Sequencer.new(4, 24)
+reached = []
+
+seq.with { wait(2) { reached << position } }
+seq.run
+
+reached  # => [(287/96)]
+```
+
+Two bars after 95/96, not bar 3: `wait` counts from wherever the block is
+running, and at the top of a `with` that is the starting position. Inside an
+`at 1` the same wait lands on 3 exactly.
+
 ## Times and durations
 
 The Sequencer internally encodes time using `Rational`. It is preferable to use Rational values (`1/2r`, `1r`, `3/4r`) instead of Float (`0.5`, `1.0`, `0.75`) for times and durations, as this avoids potential precision issues in the internal conversion.

@@ -45,31 +45,63 @@ module Musa
     # - Testing with dummy/external clocks
     # - Live coding with dynamic tempo changes
     #
-    # @example Basic setup with TimerClock
-    #   clock = Musa::Clock::TimerClock.new(bpm: 120)
+    # @example Basic setup
+    #   # A DummyClock so this runs; a piece that is meant to be heard puts a
+    #   # TimerClock or an InputMidiClock here and changes nothing else.
+    #   clock = Musa::Clock::DummyClock.new(5 * 96)
     #   # beats_per_bar and ticks_per_beat are positional, not keywords.
     #   transport = Musa::Transport::Transport.new(clock, 4, 24)
     #
     #   # Schedule events. Bars are numbered from 1, and `at 0` is before the
     #   # sequencer's starting position, so it would silently never fire. The
     #   # parentheses are required: `at 1 { ... }` is a Ruby syntax error.
-    #   transport.sequencer.at(1) { puts "Start!" }
-    #   transport.sequencer.at(4) { puts "Bar 4" }
+    #   log = []
+    #   transport.sequencer.at(1) { log << "Start!" }
+    #   transport.sequencer.at(4) { log << "Bar 4" }
     #
     #   transport.start
     #
+    #   log  # => ["Start!", "Bar 4"]
+    #
     # @example With lifecycle callbacks
-    #   transport = Transport.new(clock) do |t|
-    #     t.before_begin { puts "Initializing..." }
-    #     t.on_start { puts "Started!" }
-    #     t.after_stop { puts "Stopped, cleaning up..." }
-    #   end
+    #   events = []
+    #
+    #   transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
+    #   transport.before_begin { events << :before_begin }
+    #   transport.on_start     { |s| events << [:on_start, s.position] }
+    #   transport.after_stop   { events << :after_stop }
+    #
+    #   transport.sequencer.at(1) { events << :bar_1 }
+    #   transport.start
+    #
+    #   events
+    #   # => [:before_begin, [:on_start, (95/96)], :bar_1, :after_stop, :before_begin]
+    #
+    #   # Two things to read there. `on_start` sees 95/96 -- one tick before bar
+    #   # 1, the sequencer's own starting position. And `before_begin` appears
+    #   # AGAIN at the end: stopping prepares the transport for the next start,
+    #   # so a before_begin that allocates has to expect to run more than once.
+    #
+    # @example The same, as constructor keywords
+    #   # NOT as a block: `Transport.new(clock) { |t| t.before_begin { ... } }`
+    #   # is accepted by Ruby, ignored by the constructor, and registers nothing.
+    #   events = []
+    #
+    #   transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24,
+    #                             before_begin: -> { events << :before_begin },
+    #                             on_start: ->(s) { events << [:on_start, s.position] },
+    #                             after_stop: -> { events << :after_stop })
+    #   transport.sequencer.at(1) { events << :bar_1 }
+    #   transport.start
+    #
+    #   events
+    #   # => [:before_begin, [:on_start, (95/96)], :bar_1, :after_stop, :before_begin]
     #
     # @example MIDI Clock synchronization
-    #   midi_input = MIDICommunications::Input.all.first
-    #   clock = Musa::Clock::InputMidiClock.new(midi_input)
-    #   transport = Transport.new(clock)
-    #   transport.start  # Waits for MIDI Clock Start
+    #   # midi_input = MIDICommunications::Input.all.first
+    #   # clock = Musa::Clock::InputMidiClock.new(midi_input)
+    #   # transport = Transport.new(clock)
+    #   # transport.start  # waits for MIDI Clock Start
     #
     # @see Clock::TimerClock Internal timer-based clock
     # @see Clock::InputMidiClock MIDI Clock synchronized
@@ -286,19 +318,19 @@ module Musa
       #   transport.start  # Runs 100 ticks automatically, then returns
       #
       # @example With TimerClock (external activation)
-      #   clock = TimerClock.new(bpm: 120)
-      #   transport = Transport.new(clock, 4, 24)
-      #
-      #   thread = Thread.new { transport.start }  # Blocks waiting
-      #   sleep 0.1
-      #   clock.start  # Activate from external control
-      #   thread.join
+      #   # clock = TimerClock.new(bpm: 120)
+      #   # transport = Transport.new(clock, 4, 24)
+      #   #
+      #   # thread = Thread.new { transport.start }  # blocks waiting
+      #   # sleep 0.1
+      #   # clock.start                              # activate from outside
+      #   # thread.join
       #
       # @example With InputMidiClock (MIDI activation)
-      #   input = MIDICommunications::Input.all.first
-      #   clock = InputMidiClock.new(input)
-      #   transport = Transport.new(clock, 4, 24)
-      #   transport.start  # Blocks until MIDI Start received from DAW
+      #   # input = MIDICommunications::Input.all.first
+      #   # clock = InputMidiClock.new(input)
+      #   # transport = Transport.new(clock, 4, 24)
+      #   # transport.start  # blocks until MIDI Start arrives from the DAW
       #
       # @example With ExternalTickClock (manual control)
       #   clock = ExternalTickClock.new

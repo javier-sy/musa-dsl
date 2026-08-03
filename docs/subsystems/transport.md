@@ -36,7 +36,9 @@ against a regular pulse. A clock that waits the exact time between one event and
 the next, with no grid at all, is
 [issue #91](https://github.com/javier-sy/musa-dsl/issues/91).
 
-**The callbacks are three, and they are not interchangeable.** `before_begin`
+**Three of the callbacks are the lifecycle, and they are not interchangeable**
+(a fourth, `on_change_position`, reports seeks and is not part of it).
+`before_begin`
 runs before the first tick, with the sequencer already built -- it is where to
 schedule what has to exist before time starts. `on_start` runs when the clock
 actually starts. `after_stop` runs when it stops, however it stopped.
@@ -54,7 +56,7 @@ Clocks use two different activation models:
 - No external activation required
 - Appropriate for testing, batch processing, simulations
 
-**External Activation** (TimerClock, InputMidiClock, ExternalTickClock):
+**External Activation** (TimerClock, InputMidiClock):
 - Requires external signal/control to begin generating ticks
 - `transport.start` blocks waiting for activation
 - Appropriate for live coding, DAW sync, external control
@@ -113,7 +115,7 @@ dummy_clock = Musa::Clock::DummyClock.new(100)
 **Transport** connects a clock to a sequencer and manages the playback lifecycle. It provides methods for starting/stopping playback, seeking to different positions, and registering callbacks for lifecycle events.
 
 **Lifecycle phases:**
-1. **before_begin** - Run once before first start (initialization)
+1. **before_begin** - Runs before each start, including the one prepared by a stop (initialization)
 2. **on_start** - Run each time transport starts
 3. **Running** - Clock generates ticks → sequencer processes events
 4. **on_change_position** - Run when position jumps/seeks
@@ -132,15 +134,48 @@ dummy_clock = Musa::Clock::DummyClock.new(100)
 7. `transport.start` returns
 
 ```ruby
-# Example: Self-terminating composition
-transport.sequencer.at 10 do
-  puts "Composition finished"
-  transport.stop  # This will cause transport.start to return
-end
+require 'musa-dsl'
+include Musa::All
 
-transport.start  # Blocks until transport.stop is called
-puts "Cleanup..."  # Executes after stop
-output.close
+events = []
+
+transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
+transport.before_begin { events << :before_begin }
+transport.on_start     { events << :on_start }
+transport.after_stop   { events << :after_stop }
+
+transport.sequencer.at(1) { events << :bar_1 }
+transport.sequencer.at(2) { events << :bar_2 }
+
+transport.start
+
+events
+# => [:before_begin, :on_start, :bar_1, :bar_2, :after_stop, :before_begin]
+```
+
+The numbered sequence above, run. Read the last entry: `before_begin` appears a
+second time. Stopping prepares the transport for the next start, so a
+`before_begin` that allocates -- opens a MIDI port, builds voices -- has to
+expect to run more than once, and `after_stop` is where the matching release
+belongs.
+
+Note also how the callbacks were registered: one method call each, after
+construction. `Transport.new(clock) { |t| t.before_begin { ... } }` is accepted
+by Ruby, ignored by the constructor, and registers nothing. The constructor's own
+form is keywords: `Transport.new(clock, 4, 24, before_begin: -> { ... })`.
+
+And `on_change_position` fires only on a seek. A piece that runs from start to
+finish never triggers it:
+
+```ruby
+positions = []
+
+transport = Transport.new(Musa::Clock::DummyClock.new(200), 4, 24)
+transport.on_change_position { |p| positions << p }
+transport.sequencer.at(1) { }
+transport.start
+
+positions  # => []
 ```
 
 **Clock `stop` vs `terminate` contract:**

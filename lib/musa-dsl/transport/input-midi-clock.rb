@@ -49,24 +49,30 @@ module Musa
     # for detecting performance issues.
     #
     # @example Basic setup with DAW synchronization
-    #   input = MIDICommunications::Input.all.first
-    #   clock = InputMidiClock.new(input, logger: logger)
-    #   transport = Transport.new(clock)
+    #   # input = MIDICommunications::Input.all.first
+    #   # clock = InputMidiClock.new(input, logger: logger)
+    #   # transport = Transport.new(clock)
+    #   #
+    #   # transport.start  # blocks until the DAW sends MIDI Start (0xFA)
     #
-    #   # Start transport (blocks waiting for MIDI Start message)
-    #   transport.start  # Waits until DAW sends MIDI Start (0xFA)
+    # @example The input can be supplied later
+    #   clock = InputMidiClock.new  # no input yet
+    #   clock.input  # => nil
     #
-    # @example Dynamic input assignment
-    #   clock = InputMidiClock.new  # No input yet
-    #   transport = Transport.new(clock)
-    #   transport.start  # Waits for input to be assigned
+    #   # Whatever is assigned is held as given; the clock does not inspect it
+    #   # until it starts reading messages.
+    #   later_input = Object.new
+    #   clock.input = later_input
+    #   clock.input.equal?(later_input)  # => true
     #
-    #   # Later:
-    #   clock.input = MIDICommunications::Input.all.first
+    #   # A transport over this clock waits at `start` until an input arrives.
     #
     # @example Checking performance
-    #   clock.time_table  # => [0 => 1543, 1 => 234, 2 => 12, ...]
-    #   # Shows histogram: X ms took Y ticks
+    #   clock.time_table  # => []
+    #
+    #   # A histogram of how many ticks took how long, in milliseconds, filled
+    #   # in as the clock runs. Empty before it has read anything, and the place
+    #   # to look when a DAW-synchronized piece drifts.
     #
     # @see Transport Connects clock to sequencer
     # @see MIDICommunications::Input MIDI input ports

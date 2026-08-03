@@ -554,8 +554,13 @@ module Musa
       #
       #   seq.run
       #
-      #   # local_events contains ["local task"]
-      #   # global_events is empty (event handled locally, doesn't bubble up)
+      #   local_events   # => ["local task"]
+      #   global_events  # => []
+      #
+      #   # The event was handled where it was launched and did not bubble up.
+      #   # A handler registered inside an `at` shadows the outer one for the
+      #   # duration of that block, which is how a section can answer for itself
+      #   # without unregistering anything.
       def on(event, &block)
         @event_handlers.last.on event, &block
       end
@@ -959,11 +964,22 @@ module Musa
       #   end
       #
       # @example Conditional loop
+      #   seq = Musa::Sequencer::BaseSequencer.new(4, 24)
       #   count = 0
-      #   sequencer.every(1r, condition: proc { count < 5 }) do
-      #     puts count
+      #   positions = []
+      #
+      #   seq.every(1r, condition: proc { count < 3 }) do
       #     count += 1
+      #     positions << seq.position
       #   end
+      #   seq.at(10) { }   # keeps the run going past the loop
+      #   seq.run
+      #
+      #   positions  # => [(95/96), (191/96), (287/96)]
+      #   count      # => 3
+      #
+      #   # The condition is asked BEFORE each pulse, so it guards the one that
+      #   # has not happened yet: three pulses for `count < 3`, not four.
       def every(interval,
                 duration: nil, till: nil,
                 condition: nil,
@@ -1134,7 +1150,14 @@ module Musa
       #   end
       #
       #   seq.run
-      #   # Result: volume_values contains [0, 8, 16, 24, ..., 119, 127]
+      #
+      #   volume_values.size      # => 16
+      #   volume_values.first(4)  # => [0, 8, 17, 25]
+      #   volume_values.last      # => 127
+      #
+      #   # The step is 127/15 and not 8: sixteen values means fifteen intervals
+      #   # between the endpoints, so it climbs 8, 9, 8, 9... rather than by a
+      #   # round number. `.round` is what makes that visible.
       #
       # @example Using keyword parameters
       #   seq.move(from: 60, to: 72, duration: 4r, every: 1/4r) do |value, next_value, control:, duration:|
