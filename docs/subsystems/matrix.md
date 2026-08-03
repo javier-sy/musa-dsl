@@ -76,7 +76,7 @@ that travel together.
 | the same, but keeping time as a value | `keep_time: true` | |
 
 **When it is NOT the answer.** A succession of discrete events -- notes, chords,
-anything you would count -- is a [serie](series.md). Reach for a matrix when the
+anything you would count -- is a [serie](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/series.md). Reach for a matrix when the
 thing is continuous and multidimensional, and when the parameters have to stay
 *together*: that is what a matrix says and a set of parallel series does not.
 

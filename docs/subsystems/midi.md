@@ -22,8 +22,8 @@ ons and note offs are not meant to balance, and counting them is not how you
 find a stuck note -- what matters is the last thing said about each pitch.
 
 **When it is NOT the answer.** Anything that is not communication with a device.
-Pitch belongs to [music](music.md), duration to [datasets](datasets.md), and
-placement in time to the [sequencer](sequencer.md). A composition that reasons in
+Pitch belongs to [music](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/music.md), duration to [datasets](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/datasets.md), and
+placement in time to the [sequencer](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/sequencer.md). A composition that reasons in
 MIDI pitches has moved this boundary up into itself.
 
 ## MIDIVoices - Polyphonic Voice Management

@@ -4,4 +4,9 @@
 --no-private
 --embed-mixins
 lib/**/*.rb
-
+-
+docs/README.md
+docs/idioms.md
+docs/api-reference.md
+docs/subsystems/*.md
+docs/examples/*.md

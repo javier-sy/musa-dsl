@@ -62,8 +62,8 @@ gem install musa-dsl
 
 Two complete, runnable examples included here. Pedagogical learning is covered separately in the [musadsl-demo](https://github.com/javier-sy/musadsl-demo) repository.
 
-- **[Sequencer DSL with interacting voices](docs/examples/sequencer-dsl-voices.md)** — multiple voice lines coordinated through shared state, demonstrating the sequencer DSL and timing primitives.
-- **[Neuma notation](docs/examples/neuma-notation.md)** — composing melodies with grade-based Neuma notation and the parser.
+- **[Sequencer DSL with interacting voices](https://github.com/javier-sy/musa-dsl/blob/master/docs/examples/sequencer-dsl-voices.md)** — multiple voice lines coordinated through shared state, demonstrating the sequencer DSL and timing primitives.
+- **[Neuma notation](https://github.com/javier-sy/musa-dsl/blob/master/docs/examples/neuma-notation.md)** — composing melodies with grade-based Neuma notation and the parser.
 
 ## Demo Projects
 
@@ -97,36 +97,68 @@ MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) a
 The musa-dsl framework is organized in modular layers. Each component has its own detailed documentation.
 
 ### 1. Foundation Layer
-- [**core-ext**](docs/subsystems/core-extensions.md) - Ruby refinements and metaprogramming utilities: Arrayfy, Hashify, ExplodeRanges, DeepCopy, DynamicProxy, AttributeBuilder.
+- [**core-ext**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/core-extensions.md) - Ruby refinements and metaprogramming utilities: Arrayfy, Hashify, ExplodeRanges, DeepCopy, DynamicProxy, AttributeBuilder.
 - **logger** - Structured logging system with severity levels.
 
 ### 2. Temporal & Scheduling Layer
-- [**sequencer**](docs/subsystems/sequencer.md) - Event scheduling engine with musical time (bars/beats), microsecond-precise tick-based timing, and a DSL for temporal composition. Tick-based (quantized) and tickless (continuous) modes; series playback with automatic duration management; polyrhythms and polytemporal structures.
-- [**transport**](docs/subsystems/transport.md) - Comprehensive timing infrastructure connecting clock sources to the sequencer. Supports multiple clock types (TimerClock, InputMidiClock, ExternalTickClock, DummyClock), BPM management, tempo changes, and the start/stop/pause/continue playback lifecycle.
+- [**sequencer**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/sequencer.md) - Event scheduling engine with musical time (bars/beats), microsecond-precise tick-based timing, and a DSL for temporal composition. Tick-based (quantized) and tickless (continuous) modes; series playback with automatic duration management; polyrhythms and polytemporal structures.
+- [**transport**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/transport.md) - Comprehensive timing infrastructure connecting clock sources to the sequencer. Supports multiple clock types (TimerClock, InputMidiClock, ExternalTickClock, DummyClock), BPM management, tempo changes, and the start/stop/pause/continue playback lifecycle.
 
 ### 3. Notation & Parsing Layer
-- [**neumas + neumalang**](docs/subsystems/neumas.md) - Compact text-based musical notation system with parser and interpreter for converting notation to structured musical data, with DSL support.
+- [**neumas + neumalang**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/neumas.md) - Compact text-based musical notation system with parser and interpreter for converting notation to structured musical data, with DSL support.
 
 ### 4. Generation & Transformation Layer
-- [**series**](docs/subsystems/series.md) - Lazy functional sequence generators with map/filter operations, numeric generators, buffering, quantization, and timed merging. Transpose, repeat, and combination operations; infinite and finite series support.
-- [**generative**](docs/subsystems/generative.md) - Algorithmic composition tools: Markov chains (probabilistic sequence generation), Variatio (Cartesian product parameter variations), GenerativeGrammar (formal grammar-based generation), and Darwin (genetic algorithms for evolutionary composition).
-- [**matrix**](docs/subsystems/matrix.md) - Matrix operations for musical gestures: matrix-to-P (point sequence) conversion for sequencer playback, gesture condensation and transformation. Treats sonic gestures as geometric objects.
+- [**series**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/series.md) - Lazy functional sequence generators with map/filter operations, numeric generators, buffering, quantization, and timed merging. Transpose, repeat, and combination operations; infinite and finite series support.
+- [**generative**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/generative.md) - Algorithmic composition tools: Markov chains (probabilistic sequence generation), Variatio (Cartesian product parameter variations), GenerativeGrammar (formal grammar-based generation), and Darwin (genetic algorithms for evolutionary composition).
+- [**matrix**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/matrix.md) - Matrix operations for musical gestures: matrix-to-P (point sequence) conversion for sequencer playback, gesture condensation and transformation. Treats sonic gestures as geometric objects.
 
 ### 5. Output & Communication Layer
-- [**transcription**](docs/subsystems/transcription.md) - Musical event transformation system with ornament expansion (trills, mordents, turns), GDV to MIDI/MusicXML conversion, and dynamic articulation rendering. Expansion for MIDI or preservation as notation symbols for MusicXML.
-- [**musicxml**](docs/subsystems/musicxml-builder.md) - MusicXML score generation. Hierarchical structure, multiple voices, multi-part scores, articulations, dynamics, tempo, and notation directives. Standard MusicXML 3.0 output.
-- [**midi**](docs/subsystems/midi.md) - MIDI voice management with polyphonic voice allocation, channel management, note-on/note-off scheduling, automatic note tracking, and MIDI input recording with precise timestamping.
+- [**transcription**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/transcription.md) - Musical event transformation system with ornament expansion (trills, mordents, turns), GDV to MIDI/MusicXML conversion, and dynamic articulation rendering. Expansion for MIDI or preservation as notation symbols for MusicXML.
+- [**musicxml**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/musicxml-builder.md) - MusicXML score generation. Hierarchical structure, multiple voices, multi-part scores, articulations, dynamics, tempo, and notation directives. Standard MusicXML 3.0 output.
+- [**midi**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/midi.md) - MIDI voice management with polyphonic voice allocation, channel management, note-on/note-off scheduling, automatic note tracking, and MIDI input recording with precise timestamping.
 
 ### 6. Musical Knowledge Layer
-- [**music**](docs/subsystems/music.md) - Scales, tuning systems, intervals, and chord structures. Equal temperament and just intonation support; modal scales (major, minor, chromatic, etc.); chord definitions, harmonic analysis, and chord navigation.
-- [**datasets**](docs/subsystems/datasets.md) - Type-safe musical event representations: GDV (Grade-Duration-Velocity, scale-relative), PDV (Pitch-Duration-Velocity, absolute), PS, P, V. Conversions, validation, Score container (timeline-based multi-track composition), and advanced queries.
+- [**music**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/music.md) - Scales, tuning systems, intervals, and chord structures. Equal temperament and just intonation support; modal scales (major, minor, chromatic, etc.); chord definitions, harmonic analysis, and chord navigation.
+- [**datasets**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/datasets.md) - Type-safe musical event representations: GDV (Grade-Duration-Velocity, scale-relative), PDV (Pitch-Duration-Velocity, absolute), PS, P, V. Conversions, validation, Score container (timeline-based multi-track composition), and advanced queries.
 
 ### 7. Development & Interaction Layer
-- [**repl**](docs/subsystems/repl.md) - Interactive Read-Eval-Print Loop for live composition. TCP-based server for real-time code evaluation and error handling. Consumed by external REPL clients (editor extensions, custom evaluators).
+- [**repl**](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/repl.md) - Interactive Read-Eval-Print Loop for live composition. TCP-based server for real-time code evaluation and error handling. Consumed by external REPL clients (editor extensions, custom evaluators).
+
+## Documentation
+
+The subsystem guides linked above are the conceptual documentation: when each
+one is the answer, how to think about it, and the traps. Every Ruby block in
+them is executed by `tools/doc-examples.rb`, and every output they declare is
+compared with what the code actually returns -- so a page that has drifted fails
+the suite rather than misleading a reader.
+
+The API reference is generated from the inline YARD documentation, whose
+`@example` blocks are held to the same standard:
+
+```bash
+bundle exec yard doc
+bundle exec yard server
+```
+
+Then open http://localhost:8808.
+
+## Contributing
+
+Contributions are welcome. Fork the repository, create a feature branch, make
+your changes with tests, and open a pull request.
+
+**Repository:** https://github.com/javier-sy/musa-dsl
+
+## Examples & Works
+
+Listen to compositions created with Musa-DSL: [yeste.studio](https://yeste.studio)
 
 ## Author
 
-* [Javier Sánchez Yeste](https://github.com/javier-sy)
+* [Javier Sánchez Yeste](https://github.com/javier-sy) -- javier (at) yeste.studio
+
+Special thanks to [JetBrains](https://www.jetbrains.com/?from=Musa-DSL) for
+providing an Open Source project license for RubyMine during several years.
 
 ## License
 

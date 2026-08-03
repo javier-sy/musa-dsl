@@ -26,7 +26,7 @@ By the shape of the problem:
 
 **When it is NOT the answer.** If you are placing notes in time, choosing
 material, or shaping a phrase, nothing here is what you want -- see
-[series](series.md), [sequencer](sequencer.md) and [neumas](neumas.md). These
+[series](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/series.md), [sequencer](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/sequencer.md) and [neumas](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/neumas.md). These
 extensions have no musical meaning: they are about Ruby, and they are here
 because the musical layer is built on them.
 
@@ -331,54 +331,4 @@ sequencer.run
 - [Musa::Extension](https://rubydoc.info/gems/musa-dsl/Musa/Extension) - Ruby refinements and metaprogramming utilities
 - [Musa::Logger](https://rubydoc.info/gems/musa-dsl/Musa/Logger) - Structured logging system
 
-**Source code:** `lib/core-ext/` and `lib/logger/`
-
-
-## Documentation
-
-Full API documentation is available in YARD format. All files in the project are comprehensively documented with:
-
-- Architecture overviews
-- Usage examples
-- Parameter descriptions
-- Return values
-- Integration examples
-
-To generate and view the documentation locally:
-
-```bash
-yard doc
-yard server
-```
-
-Then open http://localhost:8808 in your browser.
-
-## Examples & Works
-
-Listen to compositions created with Musa-DSL: [yeste.studio](https://yeste.studio)
-
-## Contributing
-
-Contributions are welcome! Please feel free to:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a pull request
-
-**Repository:** https://github.com/javier-sy/musa-dsl
-
-## License
-
-Musa-DSL is released under the [LGPL-3.0-or-later](https://www.gnu.org/licenses/lgpl-3.0.html) license.
-
-## Acknowledgments
-
-- **Author:** Javier Sánchez Yeste ([yeste.studio](https://yeste.studio))
-- **Email:** javier (at) yeste.studio
-
-Special thanks to [JetBrains](https://www.jetbrains.com/?from=Musa-DSL) for providing an Open Source project license for RubyMine IDE during several years. 
-
----
-
-*Musa-DSL - Algorithmic sound and musical thinking through code*
+**Source code:** `lib/musa-dsl/core-ext/` and `lib/musa-dsl/logger/`

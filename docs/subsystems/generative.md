@@ -20,7 +20,7 @@ first -- you state the space and they enumerate it. Markov and Darwin are for
 the second -- you state a tendency or a criterion and they search.
 
 **When it is NOT the answer.** A transformation you can name -- reverse it,
-transpose it, rotate it, stretch it -- is a [serie](series.md) operation and
+transpose it, rotate it, stretch it -- is a [serie](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/series.md) operation and
 nothing here is needed. Reach for a generative tool when the material has to be
 *found* rather than derived.
 
