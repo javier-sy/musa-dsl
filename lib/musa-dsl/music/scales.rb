@@ -110,10 +110,25 @@ module Musa
       # @param default [Boolean] whether to set as default system
       # @return [self]
       #
+      # @raise [ArgumentError] if a system with that id is already registered
+      #
       # @example
-      #   Scales.register EquallyTempered12ToneScaleSystem, default: true
+      #   # This is how the library registers its own, at load time:
+      #   #   Scales.register EquallyTempered12ToneScaleSystem, default: true
+      #   #
+      #   # Doing it again is refused -- an id names one system for the whole
+      #   # process, and a scale already built from it would not notice a swap.
+      #   Scales.register Musa::Scales::EquallyTempered12ToneScaleSystem
+      #   # => ArgumentError
       def self.register(scale_system, default: nil)
         @scale_systems ||= {}
+
+        if (existing = @scale_systems[scale_system.id])
+          raise ArgumentError,
+                "scale system #{scale_system.id.inspect} is already registered " \
+                "as #{existing.name}; unregister it first if you mean to replace it"
+        end
+
         @scale_systems[scale_system.id] = scale_system
 
         @default_scale_system = scale_system if default
@@ -364,10 +379,34 @@ module Musa
       # @param scale_kind_class [Class<ScaleKind>] ScaleKind subclass to register
       # @return [self]
       #
+      # @raise [ArgumentError] if a kind with that id is already registered
+      #
       # @example
-      #   EquallyTempered12ToneScaleSystem.register MajorScaleKind
+      #   # This is how the library registers its own:
+      #   #   EquallyTempered12ToneScaleSystem.register MajorScaleKind
+      #   #
+      #   # A second registration under the same id is refused, and here it
+      #   # mattered twice over: replacing the class does NOT reach the tunings
+      #   # that have already built a scale of that kind, because those are
+      #   # cached -- so a silent swap gave different answers depending on
+      #   # whether anybody had asked before.
+      #   Musa::Scales::EquallyTempered12ToneScaleSystem.register(
+      #     Musa::Scales::MajorScaleKind)
+      #   # => ArgumentError
       def self.register(scale_kind_class)
         @scale_kind_classes ||= {}
+
+        # Same reasoning as ChordDefinition.register, with a twist that made it
+        # worse: replacing the class here does NOT reach the tunings that have
+        # already built a scale of that kind, because those are cached. So a
+        # silent replacement gave two different answers depending on whether
+        # anyone had asked before.
+        if (existing = @scale_kind_classes[scale_kind_class.id])
+          raise ArgumentError,
+                "scale kind #{scale_kind_class.id.inspect} is already registered " \
+                "as #{existing.name}; unregister it first if you mean to replace it"
+        end
+
         @scale_kind_classes[scale_kind_class.id] = scale_kind_class
         if scale_kind_class.chromatic?
           @chromatic_scale_kind_class = scale_kind_class
@@ -1337,12 +1376,19 @@ module Musa
       # @raise [ArgumentError] if octave is not integer
       #
       # @example
-      #   c_major.octave(1)   # C major one octave higher
-      #   c_major.octave(-1)  # C major one octave lower
+      #   c_major.octave(1).root.pitch   # => 72
+      #   c_major.octave(-1).root.pitch  # => 48
+      #
+      #   # An octave is an octave: the scale keeps its kind and its shape, and
+      #   # only the root moves. It used to move by GRADES -- `root_pitch +
+      #   # octave * grades` -- so C major an octave up came back as G major with
+      #   # an F sharp, because seven grades is seven semitones. It agreed with
+      #   # itself only on the chromatic scale, where the two happen to be the
+      #   # same number.
       def octave(octave)
         raise ArgumentError, "#{octave} is not integer" unless octave == octave.to_i
 
-        @kind[@root_pitch + octave * @kind.class.grades]
+        @kind[@root_pitch + octave * @kind.tuning.notes_in_octave]
       end
 
       # Accesses scale degree by grade, symbol, or function name.

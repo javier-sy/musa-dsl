@@ -515,7 +515,9 @@ module Musa
           number = number_of(controller_number_or_symbol)
           value ||= 0
 
-          @controller[number] = [[0, value].max, 0xff].min
+          # 0x7f and not 0xff: a MIDI data byte is seven bits, and anything
+          # above 127 goes on the wire as an invalid message.
+          @controller[number] = value.clamp(0, 0x7f)
           @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, number, @controller[number])
         end
 

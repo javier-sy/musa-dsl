@@ -95,14 +95,23 @@ module Musa
     #     ChordDefinition.find_by_pitches([60, 64, 67])  # C E G
     #     # => <ChordDefinition :maj>
     #
-    # @example Defining a major triad
-    #   ChordDefinition.register :maj,
-    #     quality: :major,
+    # @example Defining a chord the library does not have
+    #   # A name already in use is REFUSED -- :maj, :min7 and the rest are
+    #   # registered at load time, and replacing one silently would change what
+    #   # every other piece in the process means by it.
+    #   ChordDefinition.register :sus4,
+    #     quality: :suspended,
     #     size: :triad,
-    #     offsets: { root: 0, third: 4, fifth: 7 }
+    #     offsets: { root: 0, fourth: 5, fifth: 7 }
+    #
+    #   ChordDefinition[:sus4].pitches(60)  # => [60, 65, 67]
+    #
+    #   ChordDefinition.register :maj, quality: :major, size: :triad,
+    #                            offsets: { root: 0, third: 4, fifth: 7 }
+    #   # => ArgumentError
     #
     # @example Defining a dominant seventh
-    #   ChordDefinition.register :dom7,
+    #   ChordDefinition.register :dom7_wide,
     #     quality: :dominant,
     #     size: :seventh,
     #     offsets: { root: 0, third: 4, fifth: 7, seventh: 10 }
@@ -138,21 +147,39 @@ module Musa
       # @param features [Hash] chord characteristics (quality, size, etc.)
       # @return [self]
       #
-      # @example Major triad
-      #   ChordDefinition.register :maj,
-      #     quality: :major,
-      #     size: :triad,
-      #     offsets: { root: 0, third: 4, fifth: 7 }
+      # @raise [ArgumentError] if the name is already registered
       #
-      # @example Minor seventh
-      #   ChordDefinition.register :min7,
-      #     quality: :minor,
-      #     size: :seventh,
-      #     offsets: { root: 0, third: 3, fifth: 7, seventh: 10 }
+      # @example A name of your own
+      #   ChordDefinition.register :add9,
+      #     quality: :major,
+      #     size: :extended,
+      #     offsets: { root: 0, third: 4, fifth: 7, ninth: 14 }
+      #
+      #   ChordDefinition[:add9].pitches(60)  # => [60, 64, 67, 74]
+      #
+      # @example A name already taken
+      #   ChordDefinition.register :min7, quality: :minor, size: :seventh,
+      #                            offsets: { root: 0, third: 3, fifth: 7, seventh: 10 }
+      #   # => ArgumentError
+      #
+      #   # The registry is global and it is loaded before anyone gets a chance
+      #   # to add to it. Silently replacing an entry meant the piece that asked
+      #   # first went on asking for its own chord and got somebody else's.
       def self.register(name, offsets:, **features)
         definition = ChordDefinition.new(name, offsets: offsets, **features)
 
         @definitions ||= {}
+
+        # Registering over an existing name used to replace it silently, and a
+        # chord definition is global: the piece that registered first goes on
+        # asking for its own chord and gets somebody else's. Refuse instead, and
+        # say what is already there.
+        if (existing = @definitions[definition.name])
+          raise ArgumentError,
+                "chord definition #{definition.name.inspect} is already registered " \
+                "as #{existing.features.inspect}; unregister it first if you mean to replace it"
+        end
+
         @definitions[definition.name] = definition
 
         @features_by_value ||= {}

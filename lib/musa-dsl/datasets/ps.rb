@@ -166,6 +166,12 @@ module Musa::Datasets
       when Hash
         self[:to].is_a?(Hash) &&
             self[:from].keys == self[:to].keys
+      when Numeric
+        # One interpolated parameter, which is the module's own first example and
+        # what `P#to_ps_serie` produces from a P of scalars. The case used to
+        # fall through to `false` here, so the library manufactured segments its
+        # own validity check rejected -- unnoticed because nothing in lib/ asks.
+        self[:to].is_a?(Numeric)
       else
         false
       end && self[:duration].is_a?(Numeric) && self[:duration] > 0
