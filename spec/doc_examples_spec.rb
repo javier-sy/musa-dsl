@@ -91,8 +91,28 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   #     to write down, only "same elements, different order" -- stays for good,
   #     renamed for what it is
   #
-  # MAY ONLY GO DOWN. Series is migrated (its three files are now
-  # `series_*_audited_behaviour_spec.rb`); this counts what is left.
+  # What is left is NOT more of the same. The mechanical part is done: every
+  # example asserting what the documentation already declares, every assertion
+  # that a hash literal contains what was just written into it, every set of
+  # `include` fragments provably inside a string the example now declares. What
+  # remains needs authorship, and it was measured rather than guessed:
+  #
+  #   * ~180 could be promoted -- their spec asserts a value and the example
+  #     says nothing about it. Not mechanisable: they assert expressions the
+  #     example does not write, so promoting means deciding what the example
+  #     should SHOW. Tried twice, mechanically, and it applied to 8 of them in
+  #     series and 18 in musicxml because there the expression was already
+  #     written down;
+  #
+  #   * the rest is behaviour an example cannot declare -- threads, callbacks,
+  #     clocks, doubles, `raise_error`. transport is 33 of 34 like that, repl
+  #     19 of 20, midi 28 of 30. Those files are not pending work: they are
+  #     misnamed, and their resolution is the one series got, a name that says
+  #     what they hold.
+  #
+  # MAY ONLY GO DOWN. Series and musicxml are migrated; this counts what is
+  # left, and it counts examples rather than files so that renaming a file
+  # cannot make the number look better than the work done.
   UNMIGRATED_DOC_SPECS = 631
 
   # Examples that do not run: raise, block until killed, or need a gem this
