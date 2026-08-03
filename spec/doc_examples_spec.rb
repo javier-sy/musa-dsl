@@ -57,7 +57,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # ABOUT something is what lets a claim drift from it.
   #
   # Claims it verifies today. May only grow.
-  DOCS_VERIFIED_FLOOR = 116
+  DOCS_VERIFIED_FLOOR = 136
 
   # Blocks that declare an output and still do not run. A block that declares
   # nothing is illustration -- `direction do dynamics 'f' end` shown outside the

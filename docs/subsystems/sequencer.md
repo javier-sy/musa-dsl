@@ -6,9 +6,14 @@ The Sequencer manages time-based event scheduling with microsecond precision, su
 require 'musa-dsl'
 include Musa::All
 
-# Setup: Create clock and transport (for real-time execution)
-clock = TimerClock.new(bpm: 120, ticks_per_beat: 24)
-transport = Transport.new(clock, 4, 24)  # 4 beats per bar, 24 ticks per beat
+# Setup: create clock and transport.
+#
+# DummyClock runs the whole piece as fast as it can, which is what makes this
+# page's examples runnable. A piece that is meant to be heard swaps in
+# TimerClock (its own tempo) or InputMidiClock (a DAW's) and changes nothing
+# else -- see the transport documentation.
+clock = Musa::Clock::DummyClock.new(31 * 96)   # 31 bars of 4 beats x 24 ticks
+transport = Transport.new(clock, 4, 24)        # 4 beats per bar, 24 ticks per beat
 
 # Define series outside DSL block (Series constructors not available in DSL context)
 melody = S({ note: 60, duration: 1/2r }, { note: 62, duration: 1/2r },
@@ -86,7 +91,6 @@ transport.sequencer.with do
   end
 end
 
-# Start real-time playback
 transport.start
 ```
 
@@ -153,14 +157,39 @@ end
 The Sequencer internally encodes time using `Rational`. It is preferable to use Rational values (`1/2r`, `1r`, `3/4r`) instead of Float (`0.5`, `1.0`, `0.75`) for times and durations, as this avoids potential precision issues in the internal conversion.
 
 ```ruby
-# Preferable
-at 1/2r do ... end
-wait 3/4r do ... end
-every 1/4r do ... end
+require 'musa-dsl'
+include Musa::All
 
-# Works but may cause imprecision
-at 0.5 do ... end
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+reached = []
+
+seq.at(1 + 1/2r) { reached << seq.position }   # preferable
+seq.at(1.5)      { reached << seq.position }   # works, but see below
+seq.run
+
+reached  # => [(3/2), (3/2)]
 ```
+
+Both arrive at the same place here, because 1.5 happens to be exactly
+representable. The difference shows where a Float cannot be: a third of a bar is
+`1/3r` exactly and `0.3333333333333333` never, and the sequencer's grid is
+rational all the way down.
+
+Note the positions: `1 + 1/2r`, not `1/2r`. Bars are numbered from 1, and the
+sequencer starts one tick before bar 1, so anything scheduled below that is in
+the past before the piece begins:
+
+```ruby
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+never = []
+seq.at(1/2r) { never << :fired }
+seq.run
+
+never  # => []
+```
+
+It does not raise and it does not warn. `at` in the past is the single most
+common way for a piece to be silent for no visible reason.
 
 ## Block Parameter Flexibility (SmartProcBinder)
 
@@ -179,70 +208,99 @@ All scheduling methods (`every`, `play`, `move`, `play_timed`) pass parameters t
 
 ### Examples
 
+Each block below declares only what it wants, and the sequencer supplies it.
+Everything is recorded so the table above can be read off the result rather than
+taken on trust:
+
 ```ruby
-# every — no params needed
-every 1r, duration: 4r do
-  puts "tick at #{position}"
+require 'musa-dsl'
+include Musa::All
+
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+log = []
+
+# every — the block may take nothing, or `control:`
+seq.every(1r, duration: 2r) { |control:| log << [:every, control.class.name.split('::').last] }
+
+# play — the element's hash keys arrive as keywords
+melody = S({ note: 60, duration: 1r }, { note: 64, duration: 1/2r })
+seq.play(melody) { |note:, duration:| log << [:play, note, duration] }
+
+# move — two positionals and keyword metadata
+seq.move(from: 0, to: 12, duration: 1r, every: 1/2r) do |value, next_value, duration:|
+  log << [:move, value, next_value, duration]
 end
 
-# every — with control keyword
-every 1r do |control:|
-  puts "iteration #{control._execution_counter}"
-  control.stop if some_condition
-end
+# play_timed — the values, plus when it happened
+timed = S({ time: 0r, value: [60] }, { time: 1r, value: [64] })
+seq.play_timed(timed) { |values, time:, started_ago:| log << [:timed, values, time, started_ago] }
 
-# play — hash keys become keywords
-melody = S({ note: 60, duration: 1 }, { note: 64, duration: 1/2r })
-play melody do |note:, duration:|
-  voice.note(note, duration: duration)
-end
+seq.run
 
-# play — with control keyword
-play melody do |note:, duration:, control:|
-  voice.note(note, duration: duration)
-  control.stop if note == 64
-end
-
-# move — only positional value
-move from: 0, to: 127, duration: 4r, every: 1/4r do |value|
-  midi_cc(7, value.round)
-end
-
-# move — with keyword metadata
-move from: 60, to: 72, duration: 4r, every: 1/4r do |value, next_value, control:, duration:|
-  puts "value=#{value.round} next=#{next_value&.round} dur=#{duration}"
-end
-
-# play_timed — full signature
-play_timed(timed_serie) do |values, time:, started_ago:, control:|
-  puts "values=#{values} at time=#{time}"
-end
+log
+# => [[:every, "EveryControl"],
+#     [:play, 60, (1/1)],
+#     [:move, (0/1), (12/1), (1/2)],
+#     [:timed, [60], (95/96), []],
+#     [:move, (12/1), nil, (1/2)],
+#     [:every, "EveryControl"],
+#     [:play, 64, (1/2)],
+#     [:timed, [64], (191/96), []]]
 ```
+
+Three things the table cannot say and the result does:
+
+- `move` yields `next_value` as `nil` on its last step. There is nothing after
+  the arrival, and a block that reads ahead has to expect it.
+- `play_timed` yields `time:` as the sequencer's **absolute position**, not the
+  `time:` of the serie's element — 95/96 for the element at serie time 0,
+  because the sequencer starts one tick before bar 1.
+- `started_ago:` is an **array**, not a number: one entry per value that was
+  already sounding when this one arrived, empty when nothing was.
 
 ## Play Modes
 
 `play` supports three modes that determine how series elements are scheduled. The default mode is `:wait`.
 
 ```ruby
+require 'musa-dsl'
+include Musa::All
+using Musa::Extension::Neumas
+
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+waited = []
+timed = []
+neumas = []
+
 # :wait (default) — each element must have :duration; the sequencer waits
 # that duration before consuming the next element
-progression = S({ grade: 0, duration: 1 }, { grade: 3, duration: 1 })
-play progression do |grade:, duration:|
-  puts "Grade #{grade}, duration #{duration}"
-end
+progression = S({ grade: 0, duration: 1r }, { grade: 3, duration: 1r })
+seq.play(progression) { |grade:, duration:| waited << [grade, seq.position] }
 
-# :at — each element must have :at; the sequencer schedules it at that absolute position
-events = S({ note: 60, at: 1 }, { note: 64, at: 3 })
-play events, mode: :at do |note:, at:|
-  puts "Note #{note} at position #{at}"
-end
+# :at — each element must have :at; the sequencer schedules it at that
+# absolute position
+events = S({ note: 60, at: 1r }, { note: 64, at: 3r })
+seq.play(events, mode: :at) { |note:, at:| timed << [note, seq.position] }
 
 # :neumalang — full Neumalang DSL processing with decoder
-play neuma_serie, mode: :neumalang, decoder: decoder do |gdv|
-  pdv = gdv.to_pdv(scale)
-  voice.note(pdv[:pitch], velocity: pdv[:velocity], duration: pdv[:duration])
+scale = Musa::Scales.et12[440.0].major[60]
+decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
+seq.play("(0 1) (+2 1)".to_neumas, mode: :neumalang, decoder: decoder) do |gdv|
+  neumas << gdv.to_pdv(scale)[:pitch]
 end
+
+seq.run
+
+waited  # => [[0, (95/96)], [3, (191/96)]]
+timed   # => [[60, (1/1)], [64, (3/1)]]
+neumas  # => [60, 64]
 ```
+
+The contrast between the first two is the whole of the choice. In `:wait` the
+first element lands where the sequencer already is — 95/96, one tick before bar
+1 — and each following one a duration later. In `:at` the element says where it
+goes, so the first lands on bar 1 exactly, and a position already gone by is
+played immediately rather than dropped.
 
 ## Control Objects and `.stop`
 
@@ -260,97 +318,130 @@ The control objects returned by `every`, `play`, `play_timed`, and `move` suppor
 | Manual `.stop` | Yes | **No** |
 | Duration reached | Yes | Yes |
 | Till position exceeded | Yes | Yes |
-| Condition failed | Yes | Yes |
 | Series exhausted (play) | Yes | Yes |
-| Nil interval (every, one-shot) | Yes | Yes |
+| `move` completed | Yes | Yes |
+| Nil interval (`every`, one-shot) | **No** | **No** |
+
+The last row is not a design decision anyone wrote down; it is what the code
+does. A one-shot `every(nil)` runs its block once and then simply stops
+existing, so nothing downstream of it ever learns that it finished — neither the
+cleanup nor the continuation. Do not chain a section off a one-shot.
 
 ### Examples
 
-```ruby
-# Safe section chaining — .stop won't cause relaunch
-ctrl = every 1r do
-  # ... play pattern ...
-end
-
-ctrl.on_stop { puts "Pattern stopped (any reason)" }
-ctrl.after { launch :next_section }  # Only on natural end
-
-# Later: manual stop does NOT trigger :next_section
-ctrl.stop
-```
+The table above, read off the sequencer rather than taken on trust:
 
 ```ruby
-# Play with on_stop for cleanup
-ctrl = play melody do |note:, duration:|
-  voice.note(note, duration: duration)
+require 'musa-dsl'
+include Musa::All
+
+def fired_by
+  seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+  fired = []
+  control = yield seq
+  control.on_stop { fired << :on_stop }
+  control.after   { fired << :after }
+  seq.run
+  fired
 end
 
-ctrl.on_stop { voice.all_notes_off }  # Always cleanup
-ctrl.after { launch :next_phrase }     # Only if melody finishes naturally
+fired_by { |s| s.every(1r, duration: 2r) { } }                        # => [:on_stop, :after]
+fired_by { |s| s.every(1r, till: 3r) { } }                            # => [:on_stop, :after]
+fired_by { |s| s.play(S({ v: 1, duration: 1r })) { |v:| } }           # => [:on_stop, :after]
+fired_by { |s| s.move(from: 0, to: 4, duration: 1r, every: 1/2r) { } } # => [:after, :on_stop]
+fired_by { |s| s.every(nil) { } }                                     # => []
 ```
+
+Note the order under `move`: `after` runs before `on_stop`, where everything
+else runs them the other way round. If a cleanup and a continuation both touch
+the same state, that difference is visible.
+
+And the manual stop, which is the case the two callbacks exist to tell apart:
 
 ```ruby
-# Move with after for continuation
-ctrl = move from: 0, to: 127, duration: 4r, every: 1/4r do |v|
-  midi_cc(7, v.round)
-end
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+fired = []
 
-ctrl.on_stop { puts "Fade ended" }     # Any reason
-ctrl.after { launch :next_section }     # Only if fade completes
+control = seq.every(1r) { }
+control.on_stop { fired << :on_stop }
+control.after   { fired << :after }
+
+seq.at(3r) { control.stop }
+seq.run
+
+fired  # => [:on_stop]
 ```
+
+`after` did not fire, which is the whole point: a section chained with `after`
+does not launch when somebody stops the pattern by hand.
+
+```ruby
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+sent = []
+fired = []
+
+control = seq.move(from: 0, to: 127, duration: 1r, every: 1/2r) { |v| sent << v.round }
+control.on_stop { fired << :on_stop }   # any reason
+control.after   { fired << :next_section }  # only if the fade completes
+seq.run
+
+sent   # => [0, 127]
+fired  # => [:next_section, :on_stop]
+```
+
+A fade that is allowed to arrive launches the next section; one that is stopped
+by hand does not. That is the whole reason to write the continuation as `after`
+and not inside `on_stop`.
 
 ### Stopping `at`, `wait`, `now` and `play_timed`
 
 All scheduling methods return a control object that supports `.stop`:
 
 ```ruby
-# Stop a scheduled at/wait/now before it executes
-h = at 5 do
-  puts "This won't execute if stopped before bar 5"
-end
+require 'musa-dsl'
+include Musa::All
 
-at 3 do
-  h.stop  # Cancels the block scheduled at bar 5
-end
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+ran = []
+
+handle = seq.at(5) { ran << :bar5 }
+seq.at(3) { handle.stop }   # cancels the block scheduled at bar 5
+seq.run
+
+ran  # => []
 ```
+
+A series-based `at` stops where it is told, keeping what it already played:
 
 ```ruby
-# Stop a series-based at/wait
-h = at [1, 2, 3, 4, 5] do
-  puts "Repeating at positions from series"
-end
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+played = []
 
-at 3.5 do
-  h.stop  # No more executions from the series after this point
-end
+handle = seq.at([1, 2, 3, 4, 5]) { played << seq.position }
+seq.at(3.5) { handle.stop }
+seq.run
+
+played  # => [(1/1), (2/1), (3/1)]
 ```
 
-```ruby
-# Stop play_timed — same on_stop/after semantics as play/every/move
-ctrl = play_timed(timed_serie) do |values, time:, started_ago:, control:|
-  # process values
-end
-
-ctrl.on_stop { puts "Stopped (any reason)" }
-ctrl.after { launch :next_section }  # Only on natural end
-
-at 10 do
-  ctrl.stop  # on_stop fires, after does NOT
-end
-```
+Positions 4 and 5 never happen: `.stop` at 3.5 ends the whole series, not just
+the next one.
 
 ### Parameter form
 
-`on_stop` and `after` can also be passed as parameters:
+`on_stop` and `after` can also be passed as parameters, which is the same thing
+the block form does:
 
 ```ruby
-every 1r, on_stop: proc { cleanup }, after: proc { continue } do
-  # ...
-end
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+fired = []
 
-play melody, on_stop: proc { cleanup } do |note:|
-  # ...
-end
+seq.every(1r, duration: 2r,
+          on_stop: proc { fired << :on_stop },
+          after: proc { fired << :after }) { }
+seq.run
+
+fired  # => [:on_stop, :after]
 ```
 
 ## API Reference

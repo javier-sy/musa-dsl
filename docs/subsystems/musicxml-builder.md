@@ -37,31 +37,41 @@ The entry point for creating MusicXML documents is `Musa::MusicXML::Builder::Sco
 
 ## Key Features
 
+The fragments below are written against a measure built like this, so that each
+one can be read -- and run -- on its own:
+
+```ruby
+require 'musa-dsl'
+
+Measure = Musa::MusicXML::Builder::Internal::Measure
+measure = Measure.new(1, divisions: 4)
+```
+
 **Multiple staves:**
 Use `staff:` parameter to specify which staff (1, 2, etc.) for grand staff notation (piano, harp, organ, etc.).
 ```ruby
-pitch 'C', octave: 3, staff: 2  # Note in staff 2 (bass clef)
+measure.pitch 'C', octave: 3, staff: 2  # Note in staff 2 (bass clef)
 ```
 
 **Multiple voices:**
 Use `voice:` parameter for polyphonic notation within a single staff (independent melodic lines).
 ```ruby
-pitch 'C', octave: 4, voice: 1  # Voice 1
-pitch 'E', octave: 3, voice: 2  # Voice 2 (simultaneous)
+measure.pitch 'C', octave: 4, voice: 1  # Voice 1
+measure.pitch 'E', octave: 3, voice: 2  # Voice 2 (simultaneous)
 ```
 
 **Backup/Forward:**
 Navigate timeline within measures to layer voices. `backup(duration)` returns to an earlier point, `forward(duration)` skips ahead.
 ```ruby
-pitch 'C', octave: 4, duration: 4
-backup 4  # Return to beginning
-pitch 'E', octave: 3, duration: 4  # Play simultaneously
+measure.pitch 'C', octave: 4, duration: 4
+measure.backup 4  # Return to beginning
+measure.pitch 'E', octave: 3, duration: 4  # Play simultaneously
 ```
 
 **Divisions:**
 Set rhythmic precision as divisions per quarter note in measure attributes. Higher values allow smaller note values.
 ```ruby
-attributes do
+measure.attributes do
   divisions 4  # 4 divisions per quarter (allows 16th notes)
 end
 ```
@@ -69,22 +79,22 @@ end
 **Alterations:**
 Use `alter:` parameter for accidentals: `-1` for flat, `1` for sharp, `2` for double sharp, etc.
 ```ruby
-pitch 'F', octave: 4, alter: 1  # F# (sharp)
-pitch 'B', octave: 4, alter: -1  # Bb (flat)
+measure.pitch 'F', octave: 4, alter: 1  # F# (sharp)
+measure.pitch 'B', octave: 4, alter: -1  # Bb (flat)
 ```
 
 **Articulations:**
 Add slurs, dots, and other articulations via parameters.
 ```ruby
-pitch 'C', octave: 4, slur: 'start'  # Begin slur
-pitch 'D', octave: 4, slur: 'stop'   # End slur
-pitch 'E', octave: 4, dots: 1        # Dotted note
+measure.pitch 'C', octave: 4, slur: 'start'  # Begin slur
+measure.pitch 'D', octave: 4, slur: 'stop'   # End slur
+measure.pitch 'E', octave: 4, dots: 1        # Dotted note
 ```
 
 **Dynamics:**
 Add dynamic markings using `direction` blocks with `dynamics` method. Supported: `pp`, `p`, `mp`, `mf`, `f`, `ff`, `fff`, etc.
 ```ruby
-direction do
+measure.direction do
   dynamics 'f'  # Forte
 end
 ```
@@ -92,23 +102,46 @@ end
 **Wedges:**
 Add crescendo/diminuendo markings with `wedge` in direction blocks.
 ```ruby
-direction do
+measure.direction do
   wedge 'crescendo'  # Start crescendo
 end
 # ... notes ...
-direction wedge: 'stop'  # End crescendo
+measure.direction { wedge 'stop' }  # End crescendo
 ```
 
 **Metronome:**
 Add tempo markings with `metronome` in measures.
 ```ruby
-metronome beat_unit: 'quarter', per_minute: 120
+measure.metronome beat_unit: 'quarter', per_minute: 120
 ```
 
 **Rests:**
 Use `rest` method instead of `pitch` for rest notation.
 ```ruby
-rest duration: 2, type: 'quarter'
+measure.rest duration: 2, type: 'quarter'
+```
+
+Every fragment above was added to the same `measure`, so this is the markup they
+produced between them:
+
+```ruby
+measure.to_xml.string.lines.map(&:strip)
+       .grep(/staff|<voice>|alter|dot |slur|<f \/>|wedge|per-minute|<rest/).uniq
+# => ["<staff>2</staff>", "<voice>1</voice>", "<voice>2</voice>",
+#     "<alter>1</alter>", "<alter>-1</alter>",
+#     "<slur type=\"start\"/>", "<slur type=\"stop\"/>", "<dot />",
+#     "<f />", "<wedge type=\"crescendo\"/>", "<wedge type=\"stop\"/>",
+#     "<per-minute>120</per-minute>", "<rest />"]
+```
+
+Note what `direction` does with what it is given: each mark becomes its own
+`<direction>` element rather than several inside one, which is why a crescendo
+and its stop are two directions and not a range.
+
+```ruby
+measure.to_xml.string.scan(/<(note|backup|direction)[ >]/).flatten
+# => ["note", "note", "note", "note", "backup", "note", "note", "note", "note",
+#     "note", "note", "direction", "direction", "direction", "direction", "note"]
 ```
 
 ## Two Usage Modes
@@ -127,22 +160,26 @@ score = Musa::MusicXML::Builder::ScorePartwise.new(
   encoding_date: DateTime.new(2024, 1, 1)
 )
 
-# Add parts using add_* methods
-part = score.add_part(:p1, name: "Piano", abbreviation: "Pno.")
+# Add parts using add_* methods. Note the variable names: `part` and `measure`
+# are also DSL verbs, and in Ruby a local variable shadows a method of the same
+# name -- bind them here and the block form further down stops parsing.
+piano = score.add_part(:p1, name: "Piano", abbreviation: "Pno.")
 
 # Add measures and attributes
-measure = part.add_measure(divisions: 4)
+bar1 = piano.add_measure(divisions: 4)
 
 # Add attributes (key, time, clef, etc.)
-measure.attributes.last.add_key(1, fifths: 0)        # C major
-measure.attributes.last.add_time(1, beats: 4, beat_type: 4)
-measure.attributes.last.add_clef(1, sign: 'G', line: 2)
+bar1.attributes.last.add_key(1, fifths: 0)        # C major
+bar1.attributes.last.add_time(1, beats: 4, beat_type: 4)
+bar1.attributes.last.add_clef(1, sign: 'G', line: 2)
 
 # Add notes
-measure.add_pitch(step: 'C', octave: 4, duration: 4, type: 'quarter')
-measure.add_pitch(step: 'E', octave: 4, duration: 4, type: 'quarter')
-measure.add_pitch(step: 'G', octave: 4, duration: 4, type: 'quarter')
-measure.add_pitch(step: 'C', octave: 5, duration: 4, type: 'quarter')
+bar1.add_pitch(step: 'C', octave: 4, duration: 4, type: 'quarter')
+bar1.add_pitch(step: 'E', octave: 4, duration: 4, type: 'quarter')
+bar1.add_pitch(step: 'G', octave: 4, duration: 4, type: 'quarter')
+bar1.add_pitch(step: 'C', octave: 5, duration: 4, type: 'quarter')
+
+score.to_xml.string.scan(/<step>(\w)<\/step>/).flatten  # => ["C", "E", "G", "C"]
 
 # Export to file
 File.write("score.musicxml", score.to_xml.string)
