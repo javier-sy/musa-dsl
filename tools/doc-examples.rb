@@ -558,12 +558,11 @@ if $PROGRAM_NAME == __FILE__
   puts format('%d examples in %d narratives (%d in lib, %d in docs)',
               examples.size, narratives.size, examples.size - from_docs, from_docs)
   puts format('  declared outputs checked: %d ok, %d MISMATCH', totals[:ok], totals[:mismatch])
-  puts format('  errors while running:     %d (of which %d in blocks that claim nothing)',
-              totals[:error], totals[:illustration])
+  puts format('  errors while running:     %d', totals[:error])
   puts format('  hung (budget is %d s plus 3 per block):   %d', DocExamples::TIMEOUT, totals[:timeout])
   puts format('  declared as prose (nothing a test can contradict): %d', totals[:prose])
   puts format('  need a gem this project does not depend on:        %d', totals[:external])
-  puts format('  fragments that do not stand alone, and claim nothing: %d', totals[:illustration])
+  puts format('  of the errors and timeouts, in blocks that claim nothing: %d', totals[:illustration])
 
   unless failures.empty?
     puts

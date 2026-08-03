@@ -2,6 +2,42 @@
 
 Comprehensive framework for working with musical scales, tuning systems, and chord structures. The system resolves two main domains:
 
+## When is this the answer
+
+Scales and chords are here so that **pitch stops being a number**. A MIDI pitch
+says where a key is; a degree says what a note *does* -- and everything this
+subsystem offers follows from working with the second and converting to the
+first at the edge.
+
+By the shape of what you have:
+
+| You have | You want | This |
+|---|---|---|
+| a tonic and a mode | the notes of that scale, indexable | `tuning.major[60]`, then `scale[0]`, `scale[:dominant]` |
+| a degree | the note it is, with its context | `scale[2]` -- a NoteInScale, not an Integer |
+| a degree | the chord built on it | `scale.chord_on(2)`, or `scale[2].chord` |
+| a chord | it in another position or register | `with_move`, `with_duplicate`, `octave` |
+| a chord | the same function with another quality or size | `featuring`, `with_quality`, `with_size` |
+| a chord and a new scale | the same notes read as degrees of that scale | `as_chord_in_scale` |
+| a set of pitches | to know what chord they are | `ChordDefinition.find_by_pitches` |
+| a scale a piece has moved to | to keep writing in degrees | build the new scale and go on using degrees |
+
+**When it is NOT the answer.** If what you have really is a MIDI pitch -- it
+came from a device, it goes to a device, and nothing in between asks what it
+means -- leave it a number. Wrapping it in a scale to unwrap it two lines later
+buys nothing.
+
+**What it costs to stay in pitches.** Transposing becomes arithmetic instead of
+a change of tonic; modulating becomes rewriting every number; and a chord is a
+list you have to keep consistent by hand. That is the price the reflex charges
+later, not at the moment of writing.
+
+**And the one that surprises everybody:** `pitches` comes out ordered by pitch,
+not by chord position. After a drop voicing the root is not the first element --
+`c_major.tonic.chord(:seventh).with_move(third: -1, seventh: -1).pitches` gives
+`[52, 59, 60, 67]`, and the third is the bass. Ask a position by name
+(`chord.root`, `chord.third`) when the position is what matters.
+
 ## Scales System
 
 The **Scales** module provides hierarchical access to musical scales with multiple tuning systems and scale types:
@@ -256,17 +292,22 @@ g_mixolydian.degree_of_chord(g7_in_mixolydian)  # => 0 (I degree)
 
 ```ruby
 # Create chords directly from scale degrees using Scale#chord_on
-i_chord = scale.chord_on(0)                    # Tonic triad
-v7 = scale.chord_on(:dominant, :seventh)       # V7
-iv_maj7 = scale.chord_on(:IV, :seventh, :major)  # IVmaj7
+c_major.chord_on(0).pitches                       # => [60, 64, 67]
+c_major.chord_on(:dominant, :seventh).pitches     # => [67, 71, 74, 77]
+c_major.chord_on(:IV, :seventh, :major).pitches   # => [65, 69, 72, 76]
+
+# The degree can be given as a number, as a function name or as a roman
+# numeral, and they are the same thing said three ways.
 
 # Equivalent to using the note method then chord:
-scale[0].chord                      # Same as scale.chord_on(0)
-scale[:dominant].chord(:seventh)    # Same as scale.chord_on(:dominant, :seventh)
+c_major[0].chord.pitches                    # => [60, 64, 67]
+c_major[:dominant].chord(:seventh).pitches  # => [67, 71, 74, 77]
 
-# With voicing parameters
-scale.chord_on(:I, :seventh, move: {root: -1})
-scale.chord_on(0, :triad, duplicate: {root: 1})
+# With voicing parameters, applied at construction
+c_major.chord_on(:I, :seventh, move: {root: -1}).pitches
+# => [48, 64, 67, 71]
+c_major.chord_on(0, :triad, duplicate: {root: 1}).pitches
+# => [60, 64, 67, 72]
 ```
 
 #### Finding Scales That Contain a Chord

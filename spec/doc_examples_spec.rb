@@ -57,13 +57,18 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # ABOUT something is what lets a claim drift from it.
   #
   # Claims it verifies today. May only grow.
-  DOCS_VERIFIED_FLOOR = 61
+  DOCS_VERIFIED_FLOOR = 68
 
   # Blocks that declare an output and still do not run. A block that declares
   # nothing is illustration -- `direction do dynamics 'f' end` shown outside the
   # measure it belongs to -- and is not counted here; a block that makes a claim
-  # has to run for the claim to mean anything. MAY ONLY GO DOWN.
-  DOCS_BROKEN_CEILING = 7
+  # has to run for the claim to mean anything.
+  #
+  # At zero, and it stays there: every claim the prose documentation makes is
+  # now executed where it is written. What is left unrun claims nothing, which
+  # is a different problem and has its own reading -- an illustration teaches by
+  # showing shape, and shape is not checkable.
+  DOCS_BROKEN_CEILING = 0
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
