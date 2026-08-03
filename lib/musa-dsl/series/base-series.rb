@@ -1055,7 +1055,12 @@ module Musa
         #
         # @example Preserve instance
         #   inst = S(1, 2, 3).i
-        #   inst.to_a(duplicate: true)  # Consumes copy, inst unchanged
+        #
+        #   inst.to_a(duplicate: true)  # => [1, 2, 3]
+        #   inst.next_value             # => 1
+        #
+        #   # A copy was consumed, so the instance is still at the beginning.
+        #   # Without `duplicate: true` it would be exhausted and give nil.
         #
         # @example Recursive conversion
         #   s = S(S(1, 2), S(3, 4))

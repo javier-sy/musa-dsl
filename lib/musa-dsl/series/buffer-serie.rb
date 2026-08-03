@@ -28,8 +28,14 @@ module Musa
     #
     # @example Create buffered serie
     #   buffered = S(1, 2, 3, 4).buffered
+    #
+    #   # `.buffer` gives a PROTOTYPE, so instantiate it once and keep it: a
+    #   # second `.i` would be a second reading, starting over.
     #   reader1 = buffered.buffer.i
     #   reader2 = buffered.buffer.i
+    #
+    #   reader1.next_value  # => 1
+    #   reader2.next_value  # => 1
     #
     # @example Multiple independent readers
     #   source = S(1, 2, 3, 4).buffered

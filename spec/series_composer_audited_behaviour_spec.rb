@@ -1,3 +1,33 @@
+# Behaviours of the series subsystem that the documentation does not claim.
+#
+# WHY THIS FILE EXISTS, AND WHY IT IS NOT CALLED inline_doc_*. It was: a
+# hand-written transcription of the `@example` blocks in `lib/`, written to
+# verify them. `tools/doc-examples.rb` now runs every one of those where it is
+# written and checks every output it declares, so transcribing them here was
+# duplicating a mechanism -- and a transcription drifts from its original in
+# silence, which is how a spec came to carry a `.extend` the document lacked.
+#
+# What survived the audit is what the doctest cannot do:
+#
+#   * a claim the documentation does not make. If the example says nothing
+#     about what it produces and this file knows, the fix is to promote it: the
+#     `# =>` goes in the example, the doctest takes over, and the spec goes.
+#     Eight did during the audit, and promoting them found `anticipate`
+#     documented with two block parameters when it takes three -- an error no
+#     doctest could see, because an example that declares nothing is never
+#     compared with anything;
+#
+#   * an output that CANNOT be declared. `.randomize` has no value to write
+#     down, so what is checkable is the invariant -- same elements, different
+#     order -- and asserting a property is the only possible check. These stay
+#     here for good;
+#
+#   * behaviour reached through the documentation but never stated in it.
+#
+# The rule, so this does not grow back: a spec file does not transcribe
+# documentation. What a spec knows and the document does not say is a
+# documentation gap, not a test asset.
+
 require 'spec_helper'
 require 'musa-dsl'
 
@@ -5,106 +35,15 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   include Musa::All
 
   context 'Composer class - Pipeline Definition' do
-    it '@example Pipeline with constructor' do
-      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
-        my_pipeline ({ S: [1, 2, 3] }), reverse, { skip: 1 }
-        route my_pipeline, to: output
-      end
-      expect(composer.output.i.to_a).to eq([2, 1])
-    end
 
-    it '@example Pipeline with operations only' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        my_pipeline reverse, { skip: 1 }
-        route input, to: my_pipeline
-        route my_pipeline, to: output
-      end
-      expect(composer.output.i.to_a).to eq([2, 1])
-    end
   end
 
   context 'Composer class - Routing System' do
-    it '@example Hash routing' do
-      composer = Musa::Series::Composer::Composer.new(inputs: [:a, :b], auto_commit: false) do
-        step1 reverse
-        step2 reverse
-        hash_merge ({ H: {} })
 
-        route a, to: step1
-        route b, to: step2
-        route step1, to: hash_merge, as: :x
-        route step2, to: hash_merge, as: :y
-        route hash_merge, to: output
-      end
-
-      composer.input(:a).proxy_source = S(1, 2, 3)
-      composer.input(:b).proxy_source = S(10, 20, 30)
-      composer.commit!
-      expect(composer.output.i.to_a).to eq([{x: 3, y: 30}, {x: 2, y: 20}, {x: 1, y: 10}])
-    end
-
-    it '@example Setter routing' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        step1 reverse
-        route input, to: step1
-        route step1, to: output
-      end
-
-      expect(composer.output.i.to_a).to eq([3, 2, 1])
-    end
   end
 
   context 'Composer class - Basic Examples' do
-    it '@example Basic pipeline' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        step1 reverse
-        route input, to: step1
-        route step1, to: output
-      end
-      expect(composer.output.i.to_a).to eq([3, 2, 1])
-    end
 
-    it '@example Multiple inputs merging' do
-      composer = Musa::Series::Composer::Composer.new(inputs: { a: S(1, 2), b: S(10, 20) }) do
-        hash_merge ({ H: {} })
-        route a, to: hash_merge, as: :x
-        route b, to: hash_merge, as: :y
-        route hash_merge, to: output
-      end
-      expect(composer.output.i.to_a).to eq([{x: 1, y: 10}, {x: 2, y: 20}])
-    end
-
-    it '@example Multiple outputs' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        doubled ({ eval: ->(v) { v * 2 } })
-        tripled ({ eval: ->(v) { v * 3 } })
-
-        route input, to: doubled
-        route input, to: tripled
-        route doubled, to: output
-      end
-      expect(composer.output.i.to_a).to eq([2, 4, 6])
-    end
-
-    it '@example Complex routing' do
-      composer = Musa::Series::Composer::Composer.new(inputs: [:a, :b], auto_commit: false) do
-        step1 reverse
-        step2 ({ skip: 1 })
-        hash_merge ({ H: {} })
-
-        route a, to: step1
-        route b, to: step2
-        route step1, to: hash_merge, as: :x
-        route step2, to: hash_merge, as: :y
-        route hash_merge, to: output
-      end
-
-      composer.input(:a).proxy_source = S(1, 2, 3)
-      composer.input(:b).proxy_source = S(10, 20, 30)
-      composer.commit!
-
-      expect(composer.output.i.to_a).to eq([{x: 3, y: 20}, {x: 2, y: 30}])
-    end
   end
 
   context 'Method: input' do
@@ -124,28 +63,6 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: output' do
-    it '@example Access output' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        step reverse
-        route input, to: step
-        route step, to: output
-      end
-
-      expect(composer.output.i.to_a).to eq([3, 2, 1])
-    end
-
-    it '@example Multiple outputs' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        doubled ({ eval: ->(v) { v * 2 } })
-        tripled ({ eval: ->(v) { v * 3 } })
-
-        route input, to: doubled
-        route input, to: tripled
-        route doubled, to: output
-      end
-
-      expect(composer.output.i.to_a).to eq([2, 4, 6])
-    end
 
     it 'example - Several outputs' do
       composer = Musa::Series::Composer::Composer.new(input: Musa::Series::Constructors.S(1, 2, 3),
@@ -165,103 +82,17 @@ RSpec.describe 'Series Composer Inline Documentation Examples' do
   end
 
   context 'Method: route' do
-    it '@example Hash routing (inside DSL block)' do
-      composer = Musa::Series::Composer::Composer.new(inputs: [:a, :b], auto_commit: false) do
-        step1 reverse
-        step2 reverse
-        hash_merge ({ H: {} })
 
-        route a, to: step1
-        route b, to: step2
-        route step1, to: hash_merge, as: :x
-        route step2, to: hash_merge, as: :y
-        route hash_merge, to: output
-      end
-
-      composer.input(:a).proxy_source = S(1, 2)
-      composer.input(:b).proxy_source = S(10, 20)
-      composer.commit!
-      expect(composer.output.i.to_a).to eq([{x: 2, y: 20}, {x: 1, y: 10}])
-    end
-
-    it '@example Setter routing (inside DSL block)' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3)) do
-        step reverse
-        route input, to: step
-        route step, to: output
-      end
-
-      expect(composer.output.i.to_a).to eq([3, 2, 1])
-    end
-
-    it '@example Custom on parameter (inside DSL block)' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3), auto_commit: false) do
-        step reverse
-        hash_merge ({ H: {} })
-        route input, to: step
-        route step, to: hash_merge, on: :sources, as: :x  # Fixed: on: :sources (not :source)
-        route hash_merge, to: output
-      end
-
-      composer.commit!
-      expect(composer.output.i.to_a).to eq([{x: 3}, {x: 2}, {x: 1}])
-    end
   end
 
   context 'Method: pipeline' do
-    it '@example Direct call (inside DSL block)' do
-      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
-        pipeline(:my_step, [{ S: [1, 2, 3] }, :reverse])  # Fixed: elements as array
-        route my_step, to: output
-      end
 
-      expect(composer.output.i.to_a).to eq([3, 2, 1])
-    end
-
-    it '@example DSL equivalent (method_missing)' do
-      composer = Musa::Series::Composer::Composer.new(inputs: nil) do
-        my_step ({ S: [1, 2, 3] }), reverse
-        route my_step, to: output
-      end
-
-      expect(composer.output.i.to_a).to eq([3, 2, 1])
-    end
   end
 
   context 'Method: update' do
-    it '@example Add routes dynamically' do
-      composer = Musa::Series::Composer::Composer.new(input: S(1, 2, 3), auto_commit: false) do
-        step1 reverse
-        step2 ({ skip: 1 })
-
-        route input, to: step1
-        route step1, to: step2
-      end
-
-      # Update with additional routing
-      composer.update do
-        route step2, to: output
-      end
-
-      composer.commit!
-      expect(composer.output.i.to_a).to eq([2, 1])
-    end
   end
 
   context 'Method: commit!' do
-    it '@example Manual commit' do
-      composer = Musa::Series::Composer::Composer.new(auto_commit: false) do
-        step reverse
-        route input, to: step
-        route step, to: output
-      end
-
-      composer.input.proxy_source = S(1, 2, 3)
-      composer.commit!
-      result = composer.output.i.to_a
-
-      expect(result).to eq([3, 2, 1])
-    end
 
     it 'verifies output is blocked before commit' do
       composer = Musa::Series::Composer::Composer.new(auto_commit: false) do

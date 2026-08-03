@@ -97,7 +97,7 @@ module Musa
     #   5.times.collect { i.next_value }  # => [1, 2, 3, nil, nil]
     #
     # @example With initial source
-    #   proxy = PROXY(S(1, 2, 3))
+    #   PROXY(S(1, 2, 3)).i.to_a  # => [1, 2, 3]
     #
     # @api public
     def PROXY(serie = nil, cyclic: nil)

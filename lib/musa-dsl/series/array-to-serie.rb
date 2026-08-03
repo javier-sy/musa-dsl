@@ -23,12 +23,20 @@ class Array
   #   [60, 64, 67].to_serie.i.to_a  # => [60, 64, 67]
   #
   # @example Serie of series
-  #   [[1, 2], [3, 4]].to_serie(of_series: true)
-  #   # Each [1,2], [3,4] becomes S(1,2), S(3,4)
+  #   nested = [[1, 2], [3, 4]].to_serie(of_series: true)
+  #
+  #   # Each element is a serie of its own, so reading one means instantiating it
+  #   nested.i.to_a.collect { |serie| serie.i.to_a }
+  #   # => [[1, 2], [3, 4]]
   #
   # @example Recursive conversion
-  #   [[1, [2, 3]], [4, 5]].to_serie(recursive: true)
-  #   # Nested arrays become nested series
+  #   nested = [[1, [2, 3]], [4, 5]].to_serie(recursive: true)
+  #
+  #   # It goes all the way down: the first element is a serie holding a value
+  #   # and another serie.
+  #   first = nested.i.next_value.i.to_a
+  #   first.first          # => 1
+  #   first.last.i.to_a    # => [2, 3]
   #
   # @api public
   def to_serie(of_series: nil, recursive: nil)

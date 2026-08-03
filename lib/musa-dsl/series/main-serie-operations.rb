@@ -136,7 +136,11 @@ module Musa
       #
       # @example Conditional repeat
       #   count = 0
-      #   s = S(1, 2, 3).repeat { count += 1; count < 3 }
+      #   S(1, 2, 3).repeat { (count += 1) < 3 }.i.to_a
+      #   # => [1, 2, 3, 1, 2, 3, 1, 2, 3]
+      #
+      #   # The block is asked between turns, so three turns run: the third
+      #   # answer is what stops a fourth.
       #
       # @example Infinite repeat
       #   s = S(1, 2, 3).repeat
@@ -579,10 +583,14 @@ module Musa
       #
       # @example Named series
       #   melody = S(60, 64, 67)
-      #   rhythm = S(1r, 0.5r, 0.5r)
-      #   combined = melody.with(duration: rhythm) { |pitch, duration:|
-      #     {pitch: pitch, duration: duration}
-      #   }
+      #   rhythm = S(1r, 1/2r, 1/2r)
+      #
+      #   melody.with(duration: rhythm) { |pitch, duration:|
+      #     { pitch: pitch, duration: duration }
+      #   }.i.to_a
+      #   # => [{ pitch: 60, duration: 1r },
+      #   #     { pitch: 64, duration: 1/2r },
+      #   #     { pitch: 67, duration: 1/2r }]
       #
       # @api public
       def with(*with_series, on_restart: nil, isolate_values: nil, **with_key_series, &block)
@@ -644,16 +652,21 @@ module Musa
       #
       # @return [Anticipate] anticipating serie
       #
+      # The block gets THREE values -- the previous one, the current one and the
+      # next -- and either end is nil where there is nothing.
+      #
       # @example Smooth transitions
-      #   s = S(1, 5, 3, 8).anticipate { |current, next_val|
-      #     next_val ? (current + next_val) / 2.0 : current
-      #   }
+      #   S(1, 5, 3, 8).anticipate { |_previous, current, following|
+      #     following ? (current + following) / 2.0 : current
+      #   }.i.to_a
+      #   # => [3.0, 4.0, 5.5, 8]
       #
       # @example Add interval information
-      #   notes = S(60, 64, 67, 72).anticipate { |pitch, next_pitch|
-      #     interval = next_pitch ? next_pitch - pitch : nil
-      #     {pitch: pitch, interval: interval}
-      #   }
+      #   S(60, 64, 67, 72).anticipate { |_previous, pitch, next_pitch|
+      #     { pitch: pitch, interval: next_pitch ? next_pitch - pitch : nil }
+      #   }.i.to_a
+      #   # => [{ pitch: 60, interval: 4 }, { pitch: 64, interval: 3 },
+      #   #     { pitch: 67, interval: 5 }, { pitch: 72, interval: nil }]
       #
       # @api public
       def anticipate(&block)
