@@ -76,7 +76,7 @@ E (base event)
 **Musical datasets** (scale-based and MIDI):
 - **PDV**: Pitch/Duration/Velocity - MIDI-style absolute pitches (0-127)
 - **GDV**: Grade/Duration/Velocity - Score-style scale degrees with dynamics
-- **GDVd**: Grade/Duration/Velocity delta - Incremental encoding for compression
+- **GDVd**: Grade/Duration/Velocity delta - a MOVEMENT from a previous base, which is what makes material re-rootable. Not compression: see below.
 
 **Sonic datasets** (continuous parameters and events):
 - **PS**: Parameter Segments - Continuous changes between multidimensional points (from/to/duration for glissandi, sweeps, modulations)
@@ -99,7 +99,7 @@ AbsD defines three duration concepts that enable complex rhythmic structures:
 
 | Field | Purpose | Default |
 |-------|---------|---------|
-| `:duration` | Total event process time | Required |
+| `:duration` | Total event process time | One of the three |
 | `:note_duration` | Actual sound length (staccato/legato) | = duration |
 | `:forward_duration` | Time until next event starts | = duration |
 
@@ -123,7 +123,7 @@ include Musa::Datasets
 
 **Understanding DeltaD:**
 
-DeltaD is the delta-encoding counterpart to AbsD. While AbsD stores absolute durations, DeltaD stores changes relative to a previous event. If duration hasn't changed from the previous event, it can be omitted for compression (as shown in GDV → GDVd conversions).
+DeltaD is the delta-encoding counterpart to AbsD. While AbsD stores absolute durations, DeltaD stores changes relative to a previous event. If duration hasn't changed from the previous event it is simply absent, because there is no change to record -- the same reason, not a space saving.
 
 ## Natural Keys
 

@@ -75,7 +75,7 @@ module Musa::Datasets
   # Events with delta (incremental) values.
   #
   # Delta represents events where values are incremental changes from a previous
-  # state. Examples: pitch +2 semitones, duration +0.5 beats, velocity -10.
+  # state. Examples: pitch +2 semitones, duration +0.5 bars, velocity -10.
   #
   # A passage written as deltas says nothing about where it starts, so it can be
   # replayed from any other starting point: the same movement from another note,
@@ -125,7 +125,7 @@ module Musa::Datasets
   #   { time: 1.0, value: { pitch: 64 } }.extend(AbsTimed)
   #
   # @see Abs Parent absolute module
-  # @see P Pitch series (produces AbsTimed)
+  # @see P Point series (produces AbsTimed)
   module AbsTimed
     include Abs
 
@@ -204,7 +204,7 @@ module Musa::Datasets
   # @example Staccato note
   #   staccato = { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(AbsD)
   #   staccato.note_duration     # => 0.5 (sounds shorter)
-  #   staccato.forward_duration  # => 1.0 (the next event still waits a full beat)
+  #   staccato.forward_duration  # => 1.0 (the next event still waits a full bar)
   #
   # @example Simultaneous events
   #   chord_note = { pitch: 60, duration: 1.0, forward_duration: 0 }.extend(AbsD)
@@ -220,7 +220,7 @@ module Musa::Datasets
   #   # click does not sound for the whole gap. Nil is the honest answer.
   #
   # @see Abs Parent absolute module
-  # @see PS Pitch series with duration
+  # @see PS Parameter segment (from/to/duration)
   # @see PDV Pitch/Duration/Velocity
   # @see GDV Grade/Duration/Velocity
   module AbsD

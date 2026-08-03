@@ -105,7 +105,7 @@ module Musa::Datasets
   # @example Basic score event
   #   gdv = { grade: 0, octave: 0, duration: 1r, velocity: 0 }.extend(Musa::Datasets::GDV)
   #   gdv.base_duration = 1/4r
-  #   # First scale degree, base octave, 1 beat, mp dynamics
+  #   # First scale degree, base octave, one bar, mp dynamics
   #
   # @example Chromatic alteration
   #   gdv = { grade: 0, octave: 0, sharps: 1, duration: 1r }.extend(GDV)
@@ -113,7 +113,7 @@ module Musa::Datasets
   #
   # @example Silence (rest)
   #   gdv = { silence: true, duration: 1r }.extend(GDV)
-  #   # Rest for 1 beat. The :silence KEY is what says so -- a grade named
+  #   # Rest for one bar. The :silence KEY is what says so -- a grade named
   #   # :silence is not a rest, it is a grade nothing can look up.
   #
   # @example Convert to MIDI
@@ -295,7 +295,7 @@ module Musa::Datasets
     # @note The dynamics run ppp pp p mp mf f ff for velocities -3..3, so
     #   velocity 0 is mp and not the middle of the range. And the duration must
     #   be Rational: a Float duration reaches the notation as one, and
-    #   `{ duration: 1r }` renders "(0 4.0 mp)".
+    #   `{ duration: 1.0 }` renders "(0 4.0 mp)"; written `1r` it renders "(0 4 mp)".
     #
     # @example Softer than ppp, which VELOCITY_MAP reaches and the notation names
     #   gdv = { grade: 0, duration: 1r, velocity: -4 }.extend(GDV)

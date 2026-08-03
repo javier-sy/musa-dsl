@@ -41,7 +41,7 @@ module Musa::Datasets
   #
   # **Delta**:
   #
-  # - **delta_grade**: Change grade by semitones
+  # - **delta_grade**: Change grade by SCALE DEGREES, not semitones
   # - **delta_sharps**: Change chromatic alteration
   # - **delta_interval**: Change by scale interval (with delta_interval_sign)
   # - **delta_octave**: Change octave
@@ -78,7 +78,7 @@ module Musa::Datasets
   #
   # Delta events use special notation in Neuma format:
   #
-  # - **Delta grade**: "+2" or "-2" (semitone change)
+  # - **Delta grade**: "+2" or "-2" (change in scale degrees)
   # - **Delta sharps**: "+#" or "-_" (chromatic change)
   # - **Delta octave**: "+o1" or "-o1" (octave change)
   # - **Delta duration**: "+0.5" or "-0.5" (duration change)
@@ -94,7 +94,7 @@ module Musa::Datasets
   #   gdvd = { delta_grade: 2, delta_velocity: 1 }.extend(GDVd)
   #   gdvd.base_duration = 1/4r
   #   gdvd.to_neuma  # => "(+2 +f)"
-  #   # Grade +2 semitones, velocity +1 (one f louder)
+  #   # Grade +2 degrees, velocity +1 (one step louder)
   #
   # @example Chromatic change
   #   gdvd = { delta_sharps: 1 }.extend(GDVd)
@@ -117,7 +117,7 @@ module Musa::Datasets
   # @example Octave change
   #   gdvd = { delta_grade: -2, delta_octave: 1 }.extend(GDVd)
   #   gdvd.to_neuma  # => "(-2 +o1)"
-  #   # Down 2 semitones, up one octave
+  #   # Down 2 degrees, up one octave
   #
   # @see GDV Absolute score notation
   # @see DeltaD Delta duration encoding
@@ -163,6 +163,18 @@ module Musa::Datasets
     #   gdvd.base_duration = 1/2r
     #   gdvd[:abs_duration]  # => 1/2r
     #   gdvd.to_neuma        # => "(0 1)"
+    #
+    # @example The stored value keeps the numeric class it was given
+    #   gdvd = { abs_duration: 1.0 }.extend(GDVd)
+    #   gdvd.base_duration = 1/4r
+    #   gdvd[:abs_duration]  # => 0.25
+    #
+    #   # A Float, because that is what it was given: 1.0 * (1/4r) is 0.25 and
+    #   # not 1/4r. Given a Rational, the exactness survives -- which is why
+    #   # durations are written 1r and not 1.0 everywhere else in this library.
+    #   exact = { abs_duration: 1r }.extend(GDVd)
+    #   exact.base_duration = 1/4r
+    #   exact[:abs_duration]  # => (1/4)
     def base_duration=(value)
       factor = value / (@base_duration || 1)
       @base_duration = value
@@ -315,7 +327,7 @@ module Musa::Datasets
     #
     #     ([grade_delta] [octave_delta] [duration_delta] [velocity_delta] [modifiers...])
     #
-    # - **Grade delta**: "+2" or "-2" (semitone change)
+    # - **Grade delta**: "+2" or "-2" (change in scale degrees)
     # - **Sharp delta**: "+#" or "-_" (chromatic change)
     # - **Octave delta**: "+o1" or "-o1" (octave change)
     # - **Duration delta**: "+0.5", "-0.5", or "*2" (duration change)

@@ -165,8 +165,12 @@ module Musa::Datasets
         #   # => [64]
         #
         # @example Select by value
-        #   results.select_by_attribute(:grade, 0)
-        #   # Where dataset[:grade] == 0
+        #   results.select_by_attribute(:velocity, 1).map { |r| r[:dataset][:pitch] }
+        #   # => [60]
+        #
+        #   # Over an attribute these events do not carry, nothing raises and
+        #   # nothing matches:
+        #   results.select_by_attribute(:grade, 0)  # => []
         def select_by_attribute(attribute, value = nil)
           if value.nil?
             select { |e| !e[:dataset][attribute].nil? }

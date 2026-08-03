@@ -12,7 +12,7 @@ module Musa
       #
       # ## Time Calculation
       #
-      # Score times are 1-based (first beat is 1), but sequencer waits are
+      # Score times are 1-based (the first BAR is 1), but sequencer waits are
       # 0-based. The conversion is:
       #
       #     effective_wait = score_time - 1

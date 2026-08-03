@@ -94,8 +94,13 @@ module Musa::Datasets
   #
   # @example Start time from component
   #   p = [{ time: 100, pitch: 60 }, 4, { time: 200, pitch: 64 }].extend(P)
-  #   serie = p.to_timed_serie(time_start_component: :time)
-  #   # First event at time 100 (from first point's :time)
+  #   p.to_timed_serie(time_start_component: :time).i.to_a
+  #   # => [{ time: (100/1), value: { time: 100, pitch: 60 } },
+  #   #     { time: (101/1), value: { time: 200, pitch: 64 } }]
+  #
+  #   # Only the FIRST point's component sets the clock. The 200 in the second
+  #   # point travels as data and is not read as a time: the second event is at
+  #   # 101, one duration after the first.
   #
   # @example Transform points
   #   p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
@@ -175,8 +180,12 @@ module Musa::Datasets
     #
     # @example Start time from component
     #   p = [{ time: 100, pitch: 60 }, 4, { pitch: 64 }].extend(P)
-    #   serie = p.to_timed_serie(time_start_component: :time)
-    #   # First event at time 100
+    #   p.to_timed_serie(time_start_component: :time).i.to_a
+    #   # => [{ time: (100/1), value: { time: 100, pitch: 60 } },
+    #   #     { time: (101/1), value: { pitch: 64 } }]
+    #
+    #   # Only the first point needs the component: the rest are placed by the
+    #   # durations between them.
     def to_timed_serie(time_start: nil, time_start_component: nil, base_duration: nil)
       time_start ||= 0r
       time_start += self.first[time_start_component] if time_start_component

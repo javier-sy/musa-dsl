@@ -28,13 +28,13 @@
 #
 # - **{V}**: Value array - simple ordered values
 # - **{PackedV}**: Packed value hash - named key-value pairs
-# - **{P}**: Pitch series - alternating values and durations
+# - **{P}**: Point series - alternating values and durations
 #
 # ### 3. Musical Datasets
 #
 # Domain-specific musical representations:
 #
-# - **{PS}**: Pitch series (from/to/duration for glissandi)
+# - **{PS}**: Parameter segment (from/to/duration, for glissandi)
 # - **{PDV}**: Pitch/Duration/Velocity (MIDI-style representation)
 # - **{GDV}**: Grade/Duration/Velocity (score-style with scale degrees)
 # - **{GDVd}**: Grade/Duration/Velocity delta (incremental encoding)
@@ -78,7 +78,7 @@
 #   # => { grade: 0, octave: 0, duration: 1.0, velocity: 0 }
 #
 #   # C4 is the tonic, so grade 0 in octave 0. And velocity 0 is not silence:
-#   # GDV velocity is a signed step around mf, which is MIDI 64.
+#   # GDV velocity is a signed step around mp, which is MIDI 64.
 #
 # @example Score-style grade/duration/velocity
 #   gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
@@ -117,6 +117,6 @@ module Musa::Datasets
   # to indicate they are part of the dataset framework.
   #
   # @see E Event base module
-  # @see P Pitch series dataset
+  # @see P Point series dataset
   module Dataset; end
 end

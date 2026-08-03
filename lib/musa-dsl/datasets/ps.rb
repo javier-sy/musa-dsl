@@ -61,7 +61,7 @@ module Musa::Datasets
   #
   # @example Basic parameter segment (pitch glissando)
   #   ps = { from: 60, to: 72, duration: 2.0 }.extend(Musa::Datasets::PS)
-  #   # Continuous slide from C4 to C5 over 2 beats
+  #   # Continuous slide from C4 to C5 over 2 bars
   #
   # @example Parallel interpolation (multidimensional)
   #   ps = {

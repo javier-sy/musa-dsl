@@ -43,7 +43,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   KNOWN_LIES = {}.freeze
 
   # Claims verified today. May only grow.
-  VERIFIED_FLOOR = 843
+  VERIFIED_FLOOR = 849
 
   # Spec examples named `@example <title>` whose title no longer appears in the
   # documentation. At zero, and it stays there: an example that loses its
@@ -113,7 +113,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # MAY ONLY GO DOWN. Series and musicxml are migrated; this counts what is
   # left, and it counts examples rather than files so that renaming a file
   # cannot make the number look better than the work done.
-  UNMIGRATED_DOC_SPECS = 329
+  UNMIGRATED_DOC_SPECS = 251
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a

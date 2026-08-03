@@ -81,11 +81,12 @@ module Musa::Datasets
   # @example Basic MIDI event
   #   pdv = { pitch: 60, duration: 1.0, velocity: 64 }.extend(Musa::Datasets::PDV)
   #   pdv.base_duration = 1/4r
-  #   # C4 (middle C) for 1 beat at mf dynamics
+  #   # C4 (middle C) for one BAR at mp -- duration is a fraction of a bar,
+  #   # and MIDI 64 is mp, not mf
   #
   # @example Silence (rest)
   #   pdv = { pitch: :silence, duration: 1.0 }.extend(PDV)
-  #   # Rest for 1 beat. In GDV a rest is the :silence key, not a grade of that
+  #   # Rest for one bar. In GDV a rest is the :silence key, not a grade of that
   #   # name; {#to_gdv} writes that key.
   #
   # @example With articulation
