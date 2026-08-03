@@ -236,20 +236,39 @@ module Musa
     #
     # @return [FromEvalBlockWithParameters] evaluation-based serie
     #
-    # @example Counter
-    #   # last_value is nil on the first call -- the positional arguments are
-    #   # the serie's parameters, handed to every call, not a seed value.
+    # ## When this is the answer
+    #
+    # Every other constructor decides its values when it is built. `E` decides
+    # them when it is asked, which is the only way to write a serie whose values
+    # depend on something the serie does not own: a variable the piece is
+    # changing, an input that has arrived, a decision made elsewhere while the
+    # music was already sounding.
+    #
+    # If the values are known in advance, `S`, `FOR`, `FIBO` or a transformation
+    # of one of them says it better. `E` is for what is not.
+    #
+    # @example Reading state that changes between one value and the next
+    #   density = 3
+    #   readings = E { |last_value:| density }
+    #
+    #   i = readings.i
+    #   i.next_value   # => 3
+    #   density = 8    # somebody else changed it
+    #   i.next_value   # => 8
+    #
+    # @example Ending when something outside says so
+    #   # Returning nil ends the serie, and nothing else can express "stop when
+    #   # this condition, which I cannot see from here, becomes true".
+    #   remaining = 3
+    #   countdown = E { |last_value:| (remaining -= 1) >= 0 ? remaining : nil }
+    #
+    #   countdown.i.to_a  # => [2, 1, 0]
+    #
+    # @example Carrying state of its own, in `parameters`
+    #   # last_value is nil on the first call, and the positional arguments are
+    #   # the serie's parameters -- handed to every call, not a seed value.
     #   counter = E { |last_value:| (last_value || 0) + 1 unless last_value == 5 }
     #   counter.i.to_a  # => [1, 2, 3, 4, 5]
-    #
-    # @example Fibonacci
-    #   fib = E { |last_value:, caller:|
-    #     a, b = caller.parameters
-    #     caller.parameters = [b, a + b]
-    #     a
-    #   }
-    #   fib.parameters = [0, 1]
-    #   fib.i.max_size(10).to_a  # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
     #
     # @api public
     def E(*value_args, **key_args, &block)
@@ -424,14 +443,16 @@ module Musa
     #
     # - **start_value**: Initial value (default: center)
     # - **steps**: Period in steps (nil for continuous)
-    # - **amplitude**: Wave amplitude (default: 1.0)
+    # - **amplitude**: Wave amplitude, PEAK TO PEAK (default: 1.0). The wave
+    #   spans `center ± amplitude / 2`, so `center: 70, amplitude: 50` runs
+    #   from 45 to 95 and not from 20 to 120.
     # - **center**: Center/offset value (default: 0.0)
     #
-    # Wave equation: `center + amplitude * sin(progress)`
+    # Wave equation: `center + (amplitude / 2) * sin(progress)`
     #
     # @param start_value [Numeric, nil] initial value
     # @param steps [Numeric, nil] full period in steps
-    # @param amplitude [Numeric, nil] wave amplitude (default: 1.0)
+    # @param amplitude [Numeric, nil] wave amplitude, peak to peak (default: 1.0)
     # @param center [Numeric, nil] center offset (default: 0.0)
     #
     # @return [SinFunction] sine wave serie

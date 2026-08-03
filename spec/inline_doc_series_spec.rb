@@ -54,12 +54,12 @@ RSpec.describe 'Series Inline Documentation Examples' do
                             [2, 10], [1, 20], [2, 30]])
     end
 
-    it '@example Counter' do
+    it '@example Carrying state of its own, in `parameters`' do
       counter = E(1) { |v, last_value:| (last_value || v) + 1 unless (last_value || v) >= 5 }
       expect(counter.i.to_a).to eq([2, 3, 4, 5])
     end
 
-    it '@example Fibonacci' do
+    it 'E can carry state across calls in caller.parameters' do
       fib = E { |last_value:, caller:|
         a, b = caller.parameters
         caller.parameters = [b, a + b]
@@ -265,12 +265,11 @@ RSpec.describe 'Series Inline Documentation Examples' do
       expect(s.i.to_a).to eq([2, 4])
     end
 
-    it '@example Index switching' do
-      s1 = S(1, 2, 3)
-      s2 = S(10, 20, 30)
-      selector = S(0, 1, 0, 1)
-      result = selector.switch(s1, s2)
-      expect(result.i.to_a).to eq([1, 10, 2, 20])
+    it '@example Two materials taking turns, each continuing where it left off' do
+      question = S(:q1, :q2, :q3)
+      answer   = S(:a1, :a2)
+
+      expect(S(0, 1, 0, 1, 0).switch(question, answer).i.to_a).to eq %i[q1 a1 q2 a2 q3]
     end
 
     it '@example Append' do

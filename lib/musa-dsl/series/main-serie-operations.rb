@@ -367,36 +367,69 @@ module Musa
         Selector.new self, &block
       end
 
-      # Switches between multiple series based on selector values.
+      # Reads one value from whichever serie the selector names.
       #
-      # Uses selector serie to choose which source serie to read from.
-      # Selector values can be indices (Integer) or keys (Symbol).
+      # **The unselected series do not advance.** Each one waits where it was
+      # and continues from there next time it is chosen, which is what makes
+      # this a dialogue between materials rather than a window onto them: two
+      # voices taking turns, each picking up its own thread.
       #
-      # @param indexed_series [Array] series indexed by integer
-      # @param hash_series [Hash] series indexed by symbol key
+      # Compare {#multiplex}, where everything advances and only one value is
+      # heard.
+      #
+      # @param indexed_series [Array] series chosen by integer position
+      # @param hash_series [Hash] series chosen by name
       #
       # @return [Switcher] switching serie
       #
-      # @example Index switching
-      #   s1 = S(1, 2, 3)
-      #   s2 = S(10, 20, 30)
-      #   selector = S(0, 1, 0, 1)
-      #   result = selector.switch(s1, s2)
-      #   result.i.to_a  # => [1, 10, 2, 20]
+      # @example Two materials taking turns, each continuing where it left off
+      #   question = S(:q1, :q2, :q3)
+      #   answer   = S(:a1, :a2)
+      #
+      #   S(0, 1, 0, 1, 0).switch(question, answer).i.to_a
+      #   # => [:q1, :a1, :q2, :a2, :q3]
+      #
+      # @example Naming them instead of counting them
+      #   S(:melody, :bass, :melody).switch(melody: S(60, 62, 64),
+      #                                     bass: S(36, 38)).i.to_a
+      #   # => [60, 36, 62]
       #
       # @api public
       def switch(*indexed_series, **hash_series)
         Switcher.new self, indexed_series, hash_series
       end
 
-      # Multiplexes values from multiple series based on selector.
+      # Advances every serie and gives back the value of the one selected.
       #
-      # Like switch but returns composite values instead of switching.
+      # **All of them move, all of the time.** What the selector chooses is
+      # which one is heard, not which one runs -- so this is a window onto
+      # several simultaneous streams, and looking away from one does not pause
+      # it. A crossfade, a texture where one layer surfaces at a time, an
+      # instrument that changes what it is doubling.
       #
-      # @param indexed_series [Array] series to multiplex
-      # @param hash_series [Hash] series to multiplex by key
+      # Compare {#switch}, where the unselected series wait.
+      #
+      # @param indexed_series [Array] series chosen by integer position
+      # @param hash_series [Hash] series chosen by name
       #
       # @return [MultiplexSelector] multiplexed serie
+      #
+      # @example The same selection as switch, and what it costs
+      #   a = S(:a1, :a2, :a3)
+      #   b = S(:b1, :b2)
+      #
+      #   S(0, 1, 0, 1, 0).multiplex(a, b).i.to_a
+      #   # => [:a1, :b2, :a3]
+      #
+      #   # Three values where switch gave five: every step spent one of each,
+      #   # so by the fourth b had nothing left -- and it is the step that
+      #   # SELECTS an exhausted serie that ends everything. While nobody looks
+      #   # at it, an exhausted source costs nothing.
+      #
+      # @example Which layer is heard, by name
+      #   S(:high, :low, :high).multiplex(high: S(72, 74, 76),
+      #                                   low: S(48, 50, 52)).i.to_a
+      #   # => [72, 50, 76]
       #
       # @api public
       def multiplex(*indexed_series, **hash_series)
@@ -787,7 +820,12 @@ module Musa
 
         def initialize(selector, indexed_series, hash_series)
           self.source = selector
-          self.sources = indexed_series || hash_series
+          # `indexed_series` is a splat, so it is `[]` and not nil when nothing
+          # was passed positionally -- and `[]` is truthy. Written as `||` the
+          # keyword form never reached here at all: `switch(a: ..., b: ...)`
+          # built an empty Array of sources and then raised TypeError trying to
+          # index it with a Symbol.
+          self.sources = indexed_series.empty? ? hash_series : indexed_series
 
           init
         end
@@ -814,8 +852,10 @@ module Musa
         end
 
         def infinite?
-          @source.infinite? && @sources.any?(&:infinite?)
+          @source.infinite? && sources_list.any?(&:infinite?)
         end
+
+        private def sources_list = @sources.is_a?(Hash) ? @sources.values : @sources
       end
 
       private_constant :Switcher
@@ -830,7 +870,12 @@ module Musa
 
         def initialize(selector, indexed_series, hash_series)
           self.source = selector
-          self.sources = indexed_series || hash_series
+          # `indexed_series` is a splat, so it is `[]` and not nil when nothing
+          # was passed positionally -- and `[]` is truthy. Written as `||` the
+          # keyword form never reached here at all: `switch(a: ..., b: ...)`
+          # built an empty Array of sources and then raised TypeError trying to
+          # index it with a Symbol.
+          self.sources = indexed_series.empty? ? hash_series : indexed_series
 
           init
         end
@@ -856,15 +901,20 @@ module Musa
                 @first = false
                 index_or_key = @source.next_value
                 unless index_or_key.nil?
-                  @sources.each(&:next_value)
+                  # `each` over a Hash yields [key, serie] pairs, so it has to
+                  # be `each_value`: the whole point of multiplex is that EVERY
+                  # source advances, keyed or not.
+                  (@sources.is_a?(Hash) ? @sources.each_value : @sources.each).each(&:next_value)
                   @sources[index_or_key].current_value
                 end
               end
         end
 
         def infinite?
-          @source.infinite? && @sources.any?(&:infinite?)
+          @source.infinite? && sources_list.any?(&:infinite?)
         end
+
+        private def sources_list = @sources.is_a?(Hash) ? @sources.values : @sources
       end
 
       private_constant :MultiplexSelector
@@ -879,14 +929,19 @@ module Musa
 
         def initialize(selector, indexed_series, hash_series)
           self.source = selector
-          self.sources = indexed_series || hash_series
+          # `indexed_series` is a splat, so it is `[]` and not nil when nothing
+          # was passed positionally -- and `[]` is truthy. Written as `||` the
+          # keyword form never reached here at all: `switch(a: ..., b: ...)`
+          # built an empty Array of sources and then raised TypeError trying to
+          # index it with a Symbol.
+          self.sources = indexed_series.empty? ? hash_series : indexed_series
 
           init
         end
 
         private def _restart
           @source.restart
-          @sources.each(&:restart)
+          sources_list.each(&:restart)
         end
 
         private def _next_value
@@ -903,8 +958,10 @@ module Musa
           value
         end
 
+        private def sources_list = @sources.is_a?(Hash) ? @sources.values : @sources
+
         def infinite?
-          !!(@source.infinite? || @sources.find(&:infinite?))
+          !!(@source.infinite? || sources_list.find(&:infinite?))
         end
       end
 
