@@ -2,6 +2,30 @@
 
 High-level MIDI tools for sequencer-synchronized playback and recording. These utilities integrate MIDI I/O with the sequencer timeline, ensuring correct timing even during fast-forward or quantization.
 
+## When is this the answer
+
+This is the boundary: everything above it is music, everything below it is a
+protocol from 1983. You come here to send notes to an instrument and to record
+what came back, and the less of your piece knows about it, the better.
+
+| You have | You want | This |
+|---|---|---|
+| notes to send | them played, with note-offs handled | `MIDIVoices` -- one voice per channel |
+| a chord | its notes as one event | `voice.note [60, 64, 67], duration: 1r` |
+| something to record | the incoming events, on the timeline | `MIDIRecorder` |
+| a note that must not end by itself | to release it by hand | `note` without `duration:`, then `note_off` |
+
+**A pitch on a channel is a boolean, not a counter.** Two overlapping notes of
+the same pitch on one voice are one sounding pitch: musa-dsl sends a NoteOn for
+each re-articulation and a single NoteOff when the last of them lets go. Note
+ons and note offs are not meant to balance, and counting them is not how you
+find a stuck note -- what matters is the last thing said about each pitch.
+
+**When it is NOT the answer.** Anything that is not communication with a device.
+Pitch belongs to [music](music.md), duration to [datasets](datasets.md), and
+placement in time to the [sequencer](sequencer.md). A composition that reasons in
+MIDI pitches has moved this boundary up into itself.
+
 ## MIDIVoices - Polyphonic Voice Management
 
 **MIDIVoices** manages MIDI channels as voices synchronized with the sequencer clock. Each voice maintains state (active notes, controllers, sustain pedal) and schedules all events on the musical timeline.

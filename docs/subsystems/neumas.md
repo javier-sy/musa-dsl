@@ -60,6 +60,41 @@ transport.start
 - `+f`, `+ff`, `-p`, `-pp` - Relative dynamics (louder/softer)
 - `|` operator - Parallel voices (polyphonic structure)
 
+## When is this the answer
+
+Neumas are for writing music **as text you can read and edit as music**: a line
+of notation instead of a list of hashes. Reach for them when the material is
+melodic and you want to see its shape in the source.
+
+```
+'(0 1 mf) (+2 1) (+2 1 st)'
+```
+
+Each neuma is `(grade duration velocity ornament)`, and the durations are
+multiples of a base duration -- `1` is one base duration, not a quarter note.
+
+**The first grade is absolute and the rest are movements.** That is not a
+shorthand: it is what lets the same line be re-rooted anywhere, and it is the
+same idea as [GDVd](datasets.md) arriving from the notation side. A decoder is
+what resolves those movements, and it is what holds the scale and the base
+duration they are read against.
+
+| You have | You want | This |
+|---|---|---|
+| a melodic line you want to see | it written as notation | a neuma string |
+| a neuma string | movements, unresolved, to re-root later | parse without a decoder -- you get GDVd |
+| a neuma string | notes in a scale, ready to sound | parse `decode_with:` a `NeumaDecoder` |
+| ornaments -- trill, mordent, staccato | them actually performed | a `Transcriptor`; without one they are silently ignored |
+
+**When it is NOT the answer.** Material that is computed rather than written --
+a series transformation, a generated sequence, anything where the interesting
+thing is the rule and not the notes -- gains nothing from being spelled out as
+text. Neumas are for what you would otherwise write on paper.
+
+**And the one that bites:** `using Musa::Extension::Neumas` is a refinement, so
+it is **file-scoped**. Declaring it in `main.rb` does not make `.to_neumas`
+available in `score.rb`.
+
 ## API Reference
 
 **Complete API documentation:**

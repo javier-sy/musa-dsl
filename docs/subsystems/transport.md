@@ -9,6 +9,38 @@ Clock --ticks--> Transport --tick()--> Sequencer --events--> Music
 
 The system provides precise timing control with support for internal timers, MIDI clock synchronization, and manual control for testing and integration.
 
+## When is this the answer
+
+The transport is what turns a schedule into something that happens. You need one
+whenever the music has to run in time -- and you do **not** need one to compute,
+render or export, where `sequencer.run` walks the whole schedule as fast as it
+can.
+
+The decision is which clock, and it comes down to **who owns the tempo**:
+
+| The tempo comes from | This |
+|---|---|
+| musa-dsl itself | `TimerClock` -- master; needs an explicit `clock.start` |
+| a DAW, over MIDI | `InputMidiClock` -- slave; follows start, stop and position |
+| your own code, tick by tick | `ExternalTickClock` -- you call `tick` |
+| nowhere: run as fast as possible | `DummyClock`, for tests and offline rendering |
+
+**Master or slave is not a preference, it is a fact about the setup.** If a DAW
+is recording, it owns the tempo and musa-dsl follows; if musa-dsl is driving the
+DAW, the reverse. Choosing the wrong one shows up as drift that no amount of
+correction fixes.
+
+**All of them are grids.** A clock emits a pulse every so often, which is a MIDI
+inheritance -- 24 ppqn -- and it is why irregular structures have to be written
+against a regular pulse. A clock that waits the exact time between one event and
+the next, with no grid at all, is
+[issue #91](https://github.com/javier-sy/musa-dsl/issues/91).
+
+**The callbacks are three, and they are not interchangeable.** `before_begin`
+runs before the first tick, with the sequencer already built -- it is where to
+schedule what has to exist before time starts. `on_start` runs when the clock
+actually starts. `after_stop` runs when it stops, however it stopped.
+
 ## Clock - Timing Sources
 
 **Clock** is the abstract base class for timing sources. All clocks generate regular ticks that drive the sequencer forward. Multiple clock implementations are available for different use cases.

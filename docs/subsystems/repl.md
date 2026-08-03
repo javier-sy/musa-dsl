@@ -19,6 +19,29 @@ Maximum control. Useful when:
 
 A complete worked example with a Tidal-Cycles-style `d(n)` / `hush` / `solo` API: [`musadsl-demo/_demo-13-live-coding`](https://github.com/javier-sy/musadsl-demo).
 
+## When is this the answer
+
+The REPL is for **changing the music while it is playing**. It is a TCP server
+that evaluates code in the context of a running piece, which is what live coding
+needs and what nothing else here provides.
+
+| You want | This |
+|---|---|
+| to try an idea against a piece that is already running | the REPL |
+| to edit from an editor rather than a terminal | a client -- the VSCode extension talks this protocol |
+| to keep the piece's own vocabulary available in what you type | evaluate in the sequencer's context |
+
+**When it is NOT the answer.** A piece that is written, run and listened to does
+not need it: put the code in a file. The REPL earns its place when the loop
+between changing something and hearing it has to be shorter than a restart.
+
+**And it changes an assumption the rest of the framework makes.** With a REPL
+open, the schedule can grow from another thread while the sequencer is running --
+something can be scheduled between one event and the next. Everything that
+assumes a closed world (nothing else touches the schedule) stops holding, which
+is why [issue #91](https://github.com/javier-sy/musa-dsl/issues/91) treats live
+coding as the case that decides its design.
+
 ## REPL clients
 
 Editor extensions that connect to the REPL server over TCP/1327:

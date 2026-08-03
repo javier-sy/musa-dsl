@@ -53,6 +53,30 @@ merged = [phrase1, phrase2].to_p(time_dimension: 0)
 - Transforming algorithmic compositions from matrix form to time-based sequences
 - Merging fragmented sonic gestures
 
+## When is this the answer
+
+A matrix is for a **gesture**: several parameters moving together over time,
+where what matters is the trajectory and not the individual points. A row is one
+moment -- `[time, pitch, velocity, pan]` -- and the columns are the parameters
+that travel together.
+
+| You have | You want | This |
+|---|---|---|
+| points of a curve you drew or computed | them played as a shape | `Matrix#to_p`, then `play_timed` |
+| several gestures that share an endpoint | one continuous trajectory | `Array#condensed_matrices` |
+| a gesture whose time is one of its dimensions | the time used for durations and dropped | `to_p(time_dimension: 0)` |
+| the same, but keeping time as a value | `keep_time: true` | |
+
+**When it is NOT the answer.** A succession of discrete events -- notes, chords,
+anything you would count -- is a [serie](series.md). Reach for a matrix when the
+thing is continuous and multidimensional, and when the parameters have to stay
+*together*: that is what a matrix says and a set of parallel series does not.
+
+**Two things worth knowing before you are surprised by them.** A single row
+yields nothing: one point has no direction and no duration, so it is not a
+gesture. And the segments always come out in ascending time -- a matrix whose
+rows are written backwards is a gesture read forwards, not a reversed one.
+
 ## API Reference
 
 **Complete API documentation:**

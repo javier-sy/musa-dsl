@@ -2,6 +2,30 @@
 
 Comprehensive builder for generating MusicXML 3.0 files compatible with music notation software (Finale, Sibelius, MuseScore, Dorico, etc.). MusicXML is the standard open format for exchanging digital sheet music between applications.
 
+## When is this the answer
+
+You want a **score somebody can read** -- opened in Finale, Sibelius, MuseScore
+or Dorico. That is the whole of it, and it is a different goal from sounding:
+notation has to say what a performer needs, which is not what a synthesiser
+needs.
+
+| You have | You want | This |
+|---|---|---|
+| a piece already written as datasets | a score, without rebuilding it | `Score#to_mxml` |
+| notation to construct directly | full control of the elements | the builder DSL |
+| ornaments | them kept as symbols, not expanded into notes | a MusicXML transcriptor |
+
+**Notation is a rendering, not the music.** The same GDV goes to MIDI with its
+ornaments expanded and to MusicXML with them preserved; see
+[transcription](transcription.md). If you find yourself writing the same phrase
+twice, once to sound and once to print, something has been decided at the wrong
+layer.
+
+**And the unit trap.** MusicXML counts durations in divisions **per quarter
+note**, while a duration in this framework is a fraction of a **bar**. In 4/4
+the two agree; in 3/4 they do not, and a quarter note is `1/3r` of a bar. The
+generator takes `beats_per_bar` and `beat_type` for exactly this reason.
+
 ## Root Class: ScorePartwise
 
 The entry point for creating MusicXML documents is `Musa::MusicXML::Builder::ScorePartwise`, which represents the `<score-partwise>` root element. It organizes music by parts (instruments/voices) and measures.

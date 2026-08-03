@@ -2,6 +2,28 @@
 
 The Transcription system converts GDV events to MIDI (with ornament expansion) or MusicXML format (preserving ornaments as symbols).
 
+## When is this the answer
+
+Transcription is the step between *what the music is* and *how a particular
+medium says it*. A trill is one note with an ornament; a MIDI instrument has no
+ornaments and needs the notes; a score has no notes to spare and needs the
+symbol. Both are the same music, and the transcriptor is what decides which
+telling.
+
+| You are going to | You need | Because |
+|---|---|---|
+| play through MIDI | `ToMIDI` | the ornament has to become the notes it stands for |
+| write a score | `ToMusicXML` | the ornament has to stay a symbol |
+| both, from one source | two transcriptors over the same GDV | the source says the music, not the rendering |
+
+**Without a transcriptor, ornaments are silently ignored.** A `(0 1 mf tr)`
+played with no transcription set produces one plain note and no error. That
+silence is the most common surprise in this subsystem.
+
+**When it is NOT the answer.** If the material has no ornaments and no
+articulation -- plain notes with pitch, duration and velocity -- there is nothing
+to transcribe, and a decoder alone is enough.
+
 ## MIDI with Ornament Expansion
 
 ```ruby

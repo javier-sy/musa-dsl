@@ -2,6 +2,33 @@
 
 Tools for generative and algorithmic music composition.
 
+## When is this the answer
+
+These four do not compete: they answer different questions, and the question is
+musical before it is technical. What do you want to *happen*?
+
+| You want | Because | This |
+|---|---|---|
+| every combination of some choices | the space is small and you want to see all of it | **Variatio** |
+| continuity: each thing follows plausibly from the last | you can describe transitions but not the whole | **Markov** |
+| structures that a grammar allows | the shape has rules -- a phrase, a period, a form | **GenerativeGrammar** |
+| the best of many candidates | you can *score* a result but not compose it directly | **Darwin** |
+
+The distinction that decides most cases: **can you say what you want, or only
+recognise it when you hear it?** Variatio and GenerativeGrammar are for the
+first -- you state the space and they enumerate it. Markov and Darwin are for
+the second -- you state a tendency or a criterion and they search.
+
+**When it is NOT the answer.** A transformation you can name -- reverse it,
+transpose it, rotate it, stretch it -- is a [serie](series.md) operation and
+nothing here is needed. Reach for a generative tool when the material has to be
+*found* rather than derived.
+
+**Seed everything.** All of these consume randomness, and an unseeded piece is
+one you cannot come back to. `RND(random:)`, `.randomize(random:)` and a
+`Random.new(seed)` of your own are what make a generated passage a decision
+rather than an accident.
+
 ## Markov Chains
 
 Probabilistic sequence generation using transition matrices. Markov chains generate sequences where each value depends only on the current state and transition probabilities.
