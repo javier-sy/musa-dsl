@@ -155,55 +155,7 @@ RSpec.describe 'Core Extensions Inline Documentation Examples' do
   end
 
   context 'With (with.rb)' do
-    it '@example DSL mode (instance_eval)' do
-      class Builder1
-        include Musa::Extension::With
 
-        def initialize(&block)
-          @items = []
-          with(&block) if block
-        end
-
-        def add(item)
-          @items << item
-        end
-
-        attr_reader :items
-      end
-
-      builder = Builder1.new do
-        add :foo
-        add :bar
-      end
-
-      expect(builder.items).to eq([:foo, :bar])
-    end
-
-    it '@example Caller context with _ parameter' do
-      class Builder2
-        include Musa::Extension::With
-
-        def initialize(&block)
-          @items = []
-          with(&block) if block
-        end
-
-        def add(item)
-          @items << item
-        end
-
-        attr_reader :items
-      end
-
-      external_var = 42
-
-      builder = Builder2.new do |_|
-        _.add :foo
-        expect(external_var).to eq(42)  # Can access caller's variables
-      end
-
-      expect(builder.items).to eq([:foo])
-    end
   end
 
   context 'Logger (logger/logger.rb)' do

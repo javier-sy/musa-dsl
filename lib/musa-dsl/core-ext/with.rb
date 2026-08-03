@@ -49,22 +49,32 @@ module Musa
     #     def add(item)
     #       @items << item
     #     end
+    #
+    #     attr_reader :items
     #   end
     #
     #   builder = Builder.new do
     #     add :foo
     #     add :bar
     #   end
-    #   # Block has direct access to #add method
+    #
+    #   builder.items  # => [:foo, :bar]
+    #
+    #   # `add` resolves on the Builder without a receiver: the block was
+    #   # instance_eval'd, so `self` inside it is the object being built.
     #
     # @example Caller context with _ parameter
     #   external_var = 42
     #
-    #   Builder.new do |_|
-    #     _.add :foo
-    #     puts external_var  # Can access caller's variables
+    #   builder = Builder.new do |_|
+    #     _.add external_var  # Can access caller's variables
     #   end
-    #   # Block keeps caller's context, object accessed via _
+    #
+    #   builder.items  # => [42]
+    #
+    #   # Declaring a parameter switches the mode: the block keeps the caller's
+    #   # `self`, so `external_var` is in scope, and the object arrives as that
+    #   # parameter. One or the other -- there is no way to have both.
     #
     # @example With parameters
     #   class NamedBuilder

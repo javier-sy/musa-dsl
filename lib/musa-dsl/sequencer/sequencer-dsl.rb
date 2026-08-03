@@ -35,25 +35,47 @@ module Musa
     # - Algorithmic composition
     #
     # @example Basic DSL usage
+    #   log = []
+    #
     #   sequencer = Musa::Sequencer::Sequencer.new(4, 96) do
-    #     at(1r) { puts "Bar 1" }
-    #     at(2r) { puts "Bar 2" }
+    #     at(1r) { log << "Bar 1" }
+    #     at(2r) { log << "Bar 2" }
     #
     #     every(1r, duration: 4r) do
-    #       puts "Every beat"
+    #       log << "Every beat"
     #     end
     #   end
     #
     #   sequencer.run
     #
+    #   log
+    #   # => ["Every beat", "Bar 1", "Every beat", "Bar 2",
+    #   #     "Every beat", "Every beat"]
+    #
+    #   # The first "Every beat" comes BEFORE "Bar 1". An `every` written at the
+    #   # top of the block starts pulsing from the sequencer's own position,
+    #   # which is one tick before bar 1 -- so its pulses land a tick before
+    #   # each bar rather than on it. Put it inside an `at(1r)` and it lands on
+    #   # the bars.
+    #
     # @example DSL context access
+    #   log = []
+    #
     #   sequencer = Musa::Sequencer::Sequencer.new(4, 96) do
     #     at(1r) do
-    #       puts "Position: #{position}"  # DSL context method
+    #       log << position  # DSL context method
     #
-    #       wait(1r) { puts "One bar later" }  # Nested scheduling
+    #       wait(1r) { log << position }  # Nested scheduling
     #     end
     #   end
+    #
+    #   sequencer.run
+    #
+    #   log  # => [(1/1), (2/1)]
+    #
+    #   # `position` and `wait` are available inside the block without a
+    #   # receiver, and `wait` counts from where the block is running: one bar
+    #   # after 1 is 2, not one bar after the sequencer started.
     #
     # @api public
     class Sequencer
@@ -426,7 +448,13 @@ module Musa
       #
       #   seq.run
       #
-      #   # executed contains ["bar 1", "beat at 1", "bar 2", "beat at 2", ...]
+      #   executed
+    #   # => ["beat at 383/384", "bar 1", "beat at 767/384", "bar 2",
+    #   #     "beat at 1151/384", "beat at 1535/384"]
+    #
+    #   # `position` interpolates inside the `every` block because the block was
+    #   # evaluated in the DSL context -- and it reports 383/384, a tick before
+    #   # bar 1, for the reason given under {Sequencer}'s own example.
       #
       # @example Passing parameters to with block
       #   seq = Musa::Sequencer::Sequencer.new(4, 96)
@@ -441,7 +469,11 @@ module Musa
       #
       #   seq.run
       #
-      #   # notes contains [60, 64, 67]
+      #   notes  # => [60, 64, 67]
+    #
+    #   # The parameters are block parameters, so they are ordinary local
+    #   # variables inside the scheduled blocks -- captured by the closure, not
+    #   # looked up in the DSL context.
       #
       # @example Comparison: with DSL context vs external context
       #   seq = Musa::Sequencer::Sequencer.new(4, 96)

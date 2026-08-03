@@ -88,7 +88,11 @@ module Musa
     #
     #   logger = Musa::Logger::Logger.new
     #   logger.warn "Something happened"
-    #   # Output: [WARN] Something happened
+    #   # Output on STDERR: "[WARN]  Something happened"
+    #   #
+    #   # Two spaces after the level: the progname's slot is empty, not absent.
+    #   # And STDERR, not STDOUT -- which is why capturing this in a test means
+    #   # building the logger over an IO of your own.
     #
     # @example With sequencer integration
     #   require 'musa-dsl'
@@ -102,7 +106,7 @@ module Musa
     #
     #   sequencer.run
     #
-    #   # Output:  4.500: [INFO] Note played
+    #   # Output on STDERR: "  4.500: [INFO]  Note played"
     #
     # @example With custom position format
     #   require 'musa-dsl'
