@@ -94,6 +94,12 @@ module Musa
     #
     #   # A minor scale
     #   a_minor = tuning.minor[69]
+    #
+    #   c_major.root.pitch  # => 60
+    #   a_minor.root.pitch  # => 69
+    #
+    #   # The number in the brackets IS the root pitch: a scale kind is asked for
+    #   # a root and answers with the scale rooted there.
     module Scales
       # Registers a scale system.
       #
@@ -771,8 +777,9 @@ module Musa
       #
       # @example
       #   major_kind = tuning[:major]
-      #   c_major = major_kind[60]     # C major
-      #   g_major = major_kind[67]     # G major
+      #
+      #   major_kind[60].root.pitch  # => 60   (C major)
+      #   major_kind[67].root.pitch  # => 67   (G major)
       def get(root_pitch)
         @scales[root_pitch] = Scale.new(self, root_pitch: root_pitch) unless @scales.key?(root_pitch)
         @scales[root_pitch]
@@ -785,7 +792,9 @@ module Musa
       # @return [Scale] scale rooted on middle C
       #
       # @example
-      #   tuning.major.default_root  # C major
+      #   tuning.major.default_root.root.pitch  # => 60
+      #
+      #   # Middle C, because that is where a scale sits when nobody says.
       def default_root
         self[60]
       end
@@ -795,7 +804,9 @@ module Musa
       # @return [Scale] scale rooted on MIDI 0
       #
       # @example
-      #   tuning.major.absolut  # Scale rooted at MIDI 0
+      #   tuning.major.absolut.root.pitch  # => 0
+      #
+      #   # Rooted at MIDI 0: the scale as a shape, before it is placed anywhere.
       def absolut
         self[0]
       end
@@ -813,8 +824,15 @@ module Musa
       # @example Find G major triad in all major scales
       #   tuning = Scales.et12[440.0]
       #   g_triad = tuning.major[60].dominant.chord
-      #   tuning.major.find_chord_in_scales(g_triad)
-      #   # => [Chord in C major (V), Chord in G major (I), Chord in D major (IV)]
+      #   found = tuning.major.find_chord_in_scales(g_triad)
+      #
+      #   found.map { |c| [c.scale.root_pitch, c.scale.degree_of_chord(c)] }
+      #   # => [[7, 0], [12, 4], [14, 3]]
+      #
+      #   # G first, and the roots are 7, 12 and 14 rather than 67, 60 and 62:
+      #   # the scales come back rooted on pitch offsets from the tuning, not on
+      #   # the octave the chord was taken from. G major (root 7, degree 0), then
+      #   # C major (12, its dominant) and D major (14, its subdominant).
       #
       # @see Musa::Chords::Chord#as_chord_in_scale
       # @see ScaleSystemTuning#search_chord_in_scales
@@ -1267,7 +1285,9 @@ module Musa
       #
       #   @example
       #     scale = Scales.et12[440.0].major[60]
-      #     scale.tuning  # => ScaleSystemTuning for 12-TET at A=440Hz
+      #
+      #     scale.tuning              # => a ScaleSystemTuning
+      #     scale.tuning.a_frequency  # => 440.0
       def_delegators :@kind, :tuning
 
       # Scale kind (major, minor, etc.).
@@ -1356,6 +1376,12 @@ module Musa
       #   scale['I#']    # Raised tonic
       #   scale[:V_]     # Flatted dominant
       #   scale['II##']  # Double-raised second
+      #
+      #   scale['II##'].pitch  # => 64
+      #
+      #   # 64 is E, and so is the third degree -- but this is a D double sharp.
+      #   # The alteration is remembered as an alteration, not folded into the
+      #   # pitch it happens to share.
       def get(grade_or_symbol)
 
         raise ArgumentError, "grade_or_symbol '#{grade_or_symbol}' should be a Integer, String or Symbol" unless grade_or_symbol.is_a?(Symbol) || grade_or_symbol.is_a?(String) || grade_or_symbol.is_a?(Integer)
@@ -1504,8 +1530,12 @@ module Musa
       #
       # @example Chromatic note: same pitch, another scale
       #   note = c_major.note_of_pitch(63, allow_chromatic: true)
-      #   note.pitch  # => 63
-      #   note.scale  # => the chromatic scale, NOT c_major
+      #   note.pitch                            # => 63
+      #   note.scale.kind.class.chromatic?      # => true
+      #   note.scale.equal?(c_major)            # => false
+      #
+      #   # The chromatic scale of the same tuning, NOT c_major: the pitch is
+      #   # kept and the scale is what gives way.
       #
       # @example Nearest note: same scale, another pitch
       #   note = c_major.note_of_pitch(63, allow_nearest: true)
@@ -1623,8 +1653,8 @@ module Musa
       #   scale.chord_on(0, :seventh, :major)      # Imaj7
       #
       # @example With voicing
-      #   scale.chord_on(:I, :seventh, move: {root: -1})
-      #   scale.chord_on(0, :triad, duplicate: {root: 1})
+      #   scale.chord_on(:I, :seventh, move: {root: -1}).pitches   # => [48, 64, 67, 71]
+      #   scale.chord_on(0, :triad, duplicate: {root: 1}).pitches  # => [60, 64, 67, 72]
       #
       # @see NoteInScale#chord
       # @see #get
@@ -1817,11 +1847,16 @@ module Musa
       # @raise [ArgumentError] if offset is not integer
       #
       # @example Transpose relative
-      #   note.at_octave(1).pitch   # Up one octave from current
-      #   note.at_octave(-1).pitch  # Down one octave from current
+      #   note = c_major[0]
+      #
+      #   note.at_octave(1).pitch   # => 72   (up one octave from current)
+      #   note.at_octave(-1).pitch  # => 48   (down one)
       #
       # @example Transpose absolute
-      #   note.at_octave(2, absolute: true).pitch  # At octave 2, regardless of current
+      #   c_major[0].at_octave(1).at_octave(2, absolute: true).pitch  # => 84
+      #
+      #   # The first move is forgotten, not added to: `absolute:` says WHICH
+      #   # octave, not how many to travel.
       def at_octave(offset, absolute: false)
         raise ArgumentError, "#{offset} is not integer" unless offset == offset.to_i
 
@@ -1903,7 +1938,10 @@ module Musa
       # @return [NoteInScale] note at interval above
       #
       # @example Natural interval (scale degrees)
-      #   note.up(2, :natural)  # Up 2 scale degrees
+      #   c_major.tonic.up(2, :natural).pitch  # => 64  (E, two degrees up)
+      #
+      #   # Two DEGREES, so four semitones here and three from the second degree:
+      #   # the distance depends on where in the scale you start.
       #
       # @example Chromatic interval (semitones)
       #   note.up(:P5)  # Up perfect fifth (7 semitones)
@@ -1964,8 +2002,8 @@ module Musa
       # @return [NoteInScale] note at interval below
       #
       # @example
-      #   note.down(2, :natural)  # Down 2 scale degrees
-      #   note.down(:P5)          # Down perfect fifth
+      #   c_major.dominant.down(2, :natural).pitch  # => 64   (down 2 scale degrees)
+      #   c_major.dominant.down(:P5).pitch          # => 60   (down a perfect fifth)
       def down(interval_name_or_interval, natural_or_chromatic = nil)
         up(interval_name_or_interval, natural_or_chromatic, sign: -1)
       end
@@ -2019,8 +2057,11 @@ module Musa
       # @return [Scale] new scale rooted at this pitch
       #
       # @example Create minor scale from a note
-      #   e = c_major[64]           # E in C major
+      #   e = c_major[2]                  # E in C major
       #   e_minor = e.as_root_of(:minor)  # E minor scale
+      #
+      #   e_minor              # => a Scale
+      #   e_minor.root.pitch   # => 64
       #
       # @example With ScaleKind object
       #   minor_kind = tuning[:minor]
@@ -2072,8 +2113,8 @@ module Musa
       #   note.chord  # Major triad
       #
       # @example Specified size
-      #   note.chord :seventh   # Seventh chord matching scale
-      #   note.chord :ninth     # Ninth chord
+      #   c_major[0].chord(:seventh).pitches  # => [60, 64, 67, 71]
+      #   c_major[0].chord(:ninth).pitches    # => [60, 64, 67, 71, 74]
       #
       # @example With features
       #   # The features must be reachable in the scale: a minor seventh on the
@@ -2084,7 +2125,16 @@ module Musa
       #   # => { quality: :minor, size: :seventh }
       #
       # @example With voicing
-      #   note.chord :seventh, move: {root: -1}, duplicate: {fifth: 1}
+      #   voiced = c_major[0].chord(:seventh, move: {root: -1}, duplicate: {fifth: 1})
+      #
+      #   voiced.pitches     # => [48, 64, 67, 71, 79]
+      #   voiced.root.pitch  # => 48
+      #   voiced.fifth.pitch # => 67
+      #
+      #   # The positions still answer by name after the voicing: the root is
+      #   # where it was moved to, and the fifth reports the original of the two
+      #   # copies. Reading a voiced chord by position is what makes voicing
+      #   # composable rather than a final rendering step.
       #
       # @see Chord Chord class
       def chord(*feature_values,

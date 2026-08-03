@@ -53,12 +53,17 @@ module Musa
     #                 submediant, leading
     # - **Special**: relative/relative_major for iii
     #
-    # ## Usage
+    # @example The raised seventh, and the gap it opens
+    #   a_harmonic = Scales[:et12][440.0][:minor_harmonic][69]
     #
-    #     a_harmonic_minor = Scales[:et12][440.0][:minor_harmonic][69]
-    #     a_harmonic_minor.vii  # G# (80) - raised 7th, not G (79)
-    #     a_harmonic_minor.vi   # F (77)
-    #     # Augmented second: F to G# = 3 semitones
+    #   a_harmonic.vi.pitch   # => 77  (F)
+    #   a_harmonic.vii.pitch  # => 80  (G#, raised: it would be 79 in natural minor)
+    #
+    #   a_harmonic.vii.pitch - a_harmonic.vi.pitch  # => 3
+    #
+    #   # Three semitones between two consecutive degrees: the augmented second
+    #   # that gives this scale its sound, and the reason the seventh is raised
+    #   # at all -- a leading tone a semitone below the tonic.
     #
     # @see ScaleKind Abstract base class
     # @see MinorNaturalScaleKind Natural minor (with minor 7th)

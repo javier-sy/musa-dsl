@@ -50,13 +50,16 @@ module Musa
     # - **Ordinal**: first, second, third, fourth, fifth, sixth, seventh
     # - **Special**: relative/relative_major for iii
     #
-    # ## Usage
+    # @example Scale degrees
+    #   a_minor = Scales[:et12][440.0][:minor][69]
     #
-    #     a_minor = Scales[:et12][440.0][:minor][69]
-    #     a_minor.tonic        # A (69)
-    #     a_minor.dominant     # E (76)
-    #     a_minor.iii          # C (72) - relative major root
-    #     a_minor.relative_major.as_root_of(:major)  # C major scale
+    #   a_minor.tonic.pitch     # => 69  (A)
+    #   a_minor.dominant.pitch  # => 76  (E)
+    #   a_minor.iii.pitch       # => 72  (C, the relative major's root)
+    #
+    # @example Reaching the relative major
+    #   a_minor.relative_major.pitch               # => 72
+    #   a_minor.relative_major.as_root_of(:major)  # => a Scale
     #
     # @see ScaleKind Abstract base class
     # @see MajorScaleKind Major scale

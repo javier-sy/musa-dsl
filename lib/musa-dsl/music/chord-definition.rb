@@ -116,8 +116,10 @@ module Musa
       # @return [ChordDefinition, nil] definition or nil if not found
       #
       # @example
-      #   ChordDefinition[:maj]   # => <ChordDefinition :maj>
-      #   ChordDefinition[:min7]  # => <ChordDefinition :min7>
+      #   ChordDefinition[:maj].features    # => { quality: :major, size: :triad }
+      #   ChordDefinition[:min7].pitches(60)  # => [60, 63, 67, 70]
+      #
+      #   ChordDefinition[:no_such_chord]   # => nil
       def self.get(name)
         @definitions[name]
       end
@@ -146,7 +148,7 @@ module Musa
       #   ChordDefinition.register :min7,
       #     quality: :minor,
       #     size: :seventh,
-      #     offsets: { root: 0, third: 3, fifth: 7, seventh: 11 }
+      #     offsets: { root: 0, third: 3, fifth: 7, seventh: 10 }
       def self.register(name, offsets:, **features)
         definition = ChordDefinition.new(name, offsets: offsets, **features)
 

@@ -20,13 +20,13 @@ module Musa
     # - **chromatic?**: Returns true (only scale kind with this property)
     # - Used automatically when accessing non-diatonic notes in diatonic scales
     #
-    # ## Usage
+    # @example The degrees are semitones
+    #   chromatic = Scales[:et12][440.0][:chromatic][60]
     #
-    #     chromatic = Scales[:et12][440.0][:chromatic][60]
-    #     chromatic._1   # C
-    #     chromatic._2   # C#/Db
-    #     chromatic._3   # D
-    #     # ... all 12 semitones
+    #   chromatic._1.pitch  # => 60  (C)
+    #   chromatic._2.pitch  # => 61  (C#/Db)
+    #   chromatic._3.pitch  # => 62  (D)
+    #   # ... all 12 semitones
     #
     # @see ScaleKind Abstract base class
     # @see MajorScaleKind Major scale (7 notes)

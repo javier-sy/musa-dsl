@@ -251,6 +251,14 @@ voiced = i_chord.with_move(root: -1, fifth: 1)  # Root down, fifth up
 voiced.move   # => { root: -1, fifth: 1 }
 i_chord.move  # => {}
 
+voiced.pitches      # => [48, 64, 79]
+voiced.root.pitch   # => 48
+voiced.fifth.pitch  # => 79
+
+# `pitches` comes back ordered by pitch, so the root is no longer first -- but
+# the positions still answer by name. That is what makes a voicing something you
+# can keep working with rather than a final rendering.
+
 # Duplicate tones in other octaves
 doubled = i_chord.with_duplicate(root: -2, third: [-1, 1])  # Root 2 down, third 1 down and 1 up
 doubled.duplicate  # => { root: -2, third: [-1, 1] }
@@ -322,8 +330,7 @@ c_major.chord_on(0, :triad, duplicate: {root: 1}).pitches
 g_triad = c_major.dominant.chord  # G-B-D
 
 # Search in diatonic scales
-g_triad.search_in_scales(family: :diatonic)
-# => [Chord in C major (V), Chord in G major (I), Chord in D major (IV), ...]
+g_triad.search_in_scales(family: :diatonic).size  # => 11
 
 # Search using metadata filters
 g_triad.search_in_scales(family: :greek_modes, brightness: -1..1)
@@ -337,11 +344,31 @@ g_triad.search_in_scales(family: :diatonic).each do |chord|
   degree = scale.degree_of_chord(chord)
   puts "#{scale.kind.class.id} rooted on #{scale.root_pitch}: degree #{degree}"
 end
-# Output:
-# major rooted on 60: degree 4
-# major rooted on 67: degree 0
-# major rooted on 62: degree 3
+# prints:
+#    major rooted on 7: degree 0
+#    major rooted on 12: degree 4
+#    major rooted on 14: degree 3
+#    minor rooted on 9: degree 6
+#    minor rooted on 11: degree 5
+#    minor rooted on 16: degree 2
+#    minor_harmonic rooted on 11: degree 5
+#    minor_harmonic rooted on 12: degree 4
+#    major_harmonic rooted on 7: degree 0
+#    major_harmonic rooted on 12: degree 4
+#    major_harmonic rooted on 15: degree 2
+
+# The same, as a value:
+g_triad.search_in_scales(family: :diatonic)
+       .map { |c| [c.scale.kind.class.id, c.scale.root_pitch] }.first(4)
+# => [[:major, 7], [:major, 12], [:major, 14], [:minor, 9]]
 ```
+
+Three things to read off that list. **G major comes first**, not C: the search
+walks roots upward from the chord's own, and G is where this chord is the tonic.
+**The roots are 7, 12 and 14**, not 67, 60 and 62 -- a scale that comes back
+from a search is rooted on a pitch offset within the tuning, not on the octave
+the chord was taken from. And `:diatonic` holds **four** kinds, not three:
+harmonic major is in there too.
 
 #### Low-Level Navigation Methods
 
@@ -448,7 +475,7 @@ tuning.dorian.class.metadata[:family]  # => :my_custom_category
 
 #### Scale Families
 
-- `:diatonic` - Major, minor natural, minor harmonic
+- `:diatonic` - Major, minor natural, minor harmonic, major harmonic
 - `:greek_modes` - Dorian, Phrygian, Lydian, Mixolydian, Locrian
 - `:melodic_minor_modes` - Melodic minor and its modes
 - `:pentatonic` - Pentatonic major/minor
@@ -587,16 +614,21 @@ Musa::Chords::ChordDefinition.register :sus4,
   size: :triad,
   offsets: { root: 0, fourth: 5, fifth: 7 }
 
-# Use the custom chord definition
+# Use it. The name goes as a KEYWORD -- `chord(:sus4)` reads :sus4 as a feature
+# value and raises "Unable to find chord definition".
 c_major = tuning.major[60]
-# To use custom chords, access via NoteInScale#chord with the definition name
-# or create manually using the definition
+
+c_major.tonic.chord(name: :sus4).pitches     # => [60, 65, 67]
+c_major.dominant.chord(name: :sus4).pitches  # => [67, 72, 74]
 
 # Example 3: Register a custom chord definition (add9)
 Musa::Chords::ChordDefinition.register :add9,
   quality: :major,
   size: :extended,
   offsets: { root: 0, third: 4, fifth: 7, ninth: 14 }
+
+Musa::Chords::Chord.with_root(60, scale: c_major, name: :add9).pitches
+# => [60, 64, 67, 74]
 ```
 
 ## API Reference
@@ -605,6 +637,6 @@ Musa::Chords::ChordDefinition.register :add9,
 - [Musa::Scales](https://rubydoc.info/gems/musa-dsl/Musa/Scales) - Scale systems and tuning
 - [Musa::Chords](https://rubydoc.info/gems/musa-dsl/Musa/Chords) - Chord structures and navigation
 
-**Source code:** `lib/music/`
+**Source code:** `lib/musa-dsl/music/`
 
 

@@ -97,11 +97,28 @@ module Musa
     #     .with_move(root: -1, third: -1)
     #     .with_duplicate(fifth: [0, 1])
     #
+    #   chord.pitches  # => [55, 59, 74, 74, 77, 86]
+    #
+    #   # G7 is [67, 71, 74, 77]. Root and third drop an octave; the fifth is
+    #   # duplicated at [0, 1] -- the 0 is a copy in the SAME octave, which is
+    #   # why 74 appears twice. And the result comes back ordered by pitch, not
+    #   # by chord position.
+    #
     # @example Feature navigation
     #   scale = Scales.default_system.default_tuning.major[60]
     #   maj_triad = scale.tonic.chord
     #   min_triad = maj_triad.with_quality(:minor)
     #   maj_seventh = maj_triad.with_size(:seventh)
+    #
+    #   maj_triad.pitches    # => [60, 64, 67]
+    #   min_triad.pitches    # => [60, 63, 67]
+    #   maj_seventh.pitches  # => [60, 64, 67, 71]
+    #
+    #   maj_triad.with_quality(:diminished).pitches  # => [60, 63, 66]
+    #
+    #   # `with_quality` reaches outside the scale without being asked: the Eb of
+    #   # the minor and the Gb of the diminished are not in C major. `featuring`
+    #   # refuses the same change unless `allow_chromatic:` says so.
     #
     # @see ChordDefinition Chord template/definition
     # @see NoteInScale Note within scale
@@ -129,16 +146,20 @@ module Musa
       # @return [Chord] new chord instance
       #
       # @example With note from scale
-      #   Chord.with_root(scale.tonic, name: :maj7)
+      #   Chord.with_root(c_major.tonic, name: :maj7).pitches  # => [60, 64, 67, 71]
       #
       # @example With MIDI pitch and scale
-      #   Chord.with_root(60, scale: c_major, name: :min)
+      #   Chord.with_root(60, scale: c_major, name: :min).pitches  # => [60, 63, 67]
+      #
+      #   # A C minor inside C major: naming the definition skips the search that
+      #   # would have refused it.
       #
       # @example With scale degree
-      #   Chord.with_root(:dominant, scale: c_major, quality: :dominant, size: :seventh)
+      #   Chord.with_root(c_major[4], size: :seventh).pitches  # => [67, 71, 74, 77]
       #
       # @example With features instead of name
-      #   Chord.with_root(60, scale: c_major, quality: :major, size: :triad)
+      #   Chord.with_root(60, scale: c_major, quality: :major, size: :triad).pitches
+      #   # => [60, 64, 67]
       #
       # @example Without a scale, on a bare MIDI pitch
       #   # The fallback is a major scale rooted on the pitch itself, so the
@@ -155,9 +176,14 @@ module Musa
       #   Chord.with_root(60, name: :min).pitches  # => [60, 63, 67]
       #   Chord.with_root(60, name: :dim).pitches  # => [60, 63, 66]
       #
+      #   # Without either, the search finds nothing and says so:
+      #   Chord.with_root(60, quality: :minor, size: :triad)
+      #   # => ArgumentError
+      #
       # @example With voicing parameters
-      #   Chord.with_root(60, scale: c_major, name: :maj7,
-      #                   move: {root: -1}, duplicate: {fifth: 1})
+      #   Chord.with_root(c_major[0], size: :seventh,
+      #                   move: {root: -1}, duplicate: {fifth: 1}).pitches
+      #   # => [48, 64, 67, 71, 79]
       def self.with_root(root_note_or_pitch_or_symbol, scale: nil, allow_chromatic: false, name: nil, move: nil, duplicate: nil, **features)
         root =
           case root_note_or_pitch_or_symbol
@@ -359,6 +385,13 @@ module Musa
       # @return [Array<ChordGradeNote>] sorted array of grade-note pairs
       #
       # @example
+      #   chord.notes.collect(&:grade)              # => [:root, :third, :fifth, :seventh]
+      #   chord.notes.collect { |n| n.note.pitch }  # => [67, 71, 74, 77]
+      #
+      #   # Sorted by PITCH, and the grade travels with the note -- which is what
+      #   # lets a voicing move the root below the third and still be read by
+      #   # position afterwards.
+      #
       #   chord.notes.each do |chord_grade_note|
       #     puts "#{chord_grade_note.grade}: #{chord_grade_note.note.pitch}"
       #   end
@@ -418,8 +451,17 @@ module Musa
       #   # => { quality: :minor, size: :triad }
       #
       # @example Change multiple features
-      #   c_major.dominant.chord.featuring(quality: :dominant, size: :ninth).features
-      #   # => { quality: :dominant, size: :ninth }
+      #   dominant_ninth = c_major.dominant.chord.featuring(quality: :dominant, size: :ninth)
+      #
+      #   dominant_ninth.features  # => { quality: :dominant, size: :ninth }
+      #   dominant_ninth.pitches   # => [67, 71, 74, 77, 81]
+      #
+      #   # No `allow_chromatic:` needed here: a dominant ninth on the fifth
+      #   # degree is diatonic. Asked for on the tonic it is not, and then it
+      #   # has to be allowed:
+      #   c_major.tonic.chord.featuring(quality: :dominant, size: :ninth,
+      #                                 allow_chromatic: true).pitches
+      #   # => [60, 64, 67, 70, 74]
       def featuring(*values, allow_chromatic: false, **hash)
         # create a new list of features based on current features but
         # replacing the values for the new ones and adding the new features
