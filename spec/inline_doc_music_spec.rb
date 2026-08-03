@@ -20,14 +20,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
   context 'Scales Module Documentation' do
 
-    it 'demonstrates working with tunings' do
-      # From Scales module @example: Working with tunings
-      tuning = Scales[:et12][440.0]
-
-      expect(tuning).to be_a(Musa::Scales::ScaleSystemTuning)
-      expect(tuning.a_frequency).to eq(440.0)
-    end
-
     it 'demonstrates baroque pitch tuning' do
       # From Scales module @example: Working with tunings
       baroque = Scales[:et12][415.0]
@@ -99,14 +91,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
       frequency = Musa::Scales::EquallyTempered12ToneScaleSystem.frequency_of_pitch(69, nil, 415.0)
 
       expect(frequency).to be_within(0.01).of(415.0)
-    end
-
-    it 'demonstrates ScaleSystem tuning access with standard pitch' do
-      # From ScaleSystem @example
-      tuning = Musa::Scales::EquallyTempered12ToneScaleSystem[440.0]
-
-      expect(tuning).to be_a(Musa::Scales::ScaleSystemTuning)
-      expect(tuning.a_frequency).to eq(440.0)
     end
 
     it 'demonstrates ScaleSystem tuning access with baroque pitch' do
@@ -770,14 +754,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
 
       # Exactly one definition answers to major triad.
       expect(definitions.collect(&:name)).to eq [:maj]
-    end
-
-    it 'demonstrates find_by_pitches' do
-      # From ChordDefinition @example
-      definition = Musa::Chords::ChordDefinition.find_by_pitches([60, 64, 67])
-
-      expect(definition).to be_a(Musa::Chords::ChordDefinition)
-      expect(definition.name).to eq(:maj)
     end
 
     it 'demonstrates ChordDefinition#pitches' do

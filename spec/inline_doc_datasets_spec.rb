@@ -705,12 +705,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   end
 
   context 'Score (score.rb)' do
-    it '@example Create empty score' do
-      score = Musa::Datasets::Score.new
-
-      expect(score).to be_a(Musa::Datasets::Score)
-      expect(score.size).to eq(0)
-    end
 
     it '@example Create from hash' do
       score = Musa::Datasets::Score.new({

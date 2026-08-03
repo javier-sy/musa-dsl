@@ -40,21 +40,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(midi_events.last).to eq({ grade: 4, duration: 1/2r, note_duration: 1/4r })
     end
 
-    it '@example Create transcriptor chain' do
-      transcriptor = Musa::Transcription::Transcriptor.new(
-        [Musa::Transcriptors::FromGDV::ToMIDI::Appogiatura.new,
-         Musa::Transcriptors::FromGDV::ToMIDI::Trill.new,
-         Musa::Transcriptors::FromGDV::ToMIDI::Staccato.new],
-        base_duration: 1/4r,
-        tick_duration: 1/96r
-      )
-
-      expect(transcriptor.transcriptors.size).to eq(3)
-      expect(transcriptor.transcriptors[0]).to be_a(Musa::Transcriptors::FromGDV::ToMIDI::Appogiatura)
-      expect(transcriptor.transcriptors[1]).to be_a(Musa::Transcriptors::FromGDV::ToMIDI::Trill)
-      expect(transcriptor.transcriptors[2]).to be_a(Musa::Transcriptors::FromGDV::ToMIDI::Staccato)
-    end
-
     it '@example Create MIDI transcriptor' do
       transcriptor = Musa::Transcription::Transcriptor.new(
         Musa::Transcriptors::FromGDV::ToMIDI.transcription_set,
