@@ -25,7 +25,7 @@ module Musa
     #   lazy = DynamicProxy.new
     #   # ... later ...
     #   lazy.receiver = [1, 2, 3]
-    #   lazy.size  # => 3, now forwarded to the array
+    #   lazy.size  # => 3  (now forwarded to the array)
     module DynamicProxy
       # Mixin module providing dynamic proxy behavior.
       #

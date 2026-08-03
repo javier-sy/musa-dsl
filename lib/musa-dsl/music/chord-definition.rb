@@ -271,7 +271,7 @@ module Musa
       # @return [Array<Integer>] chord pitches
       #
       # @example
-      #   chord_def.pitches(60)  # => [60, 64, 67] for C major
+      #   chord_def.pitches(60)  # => [60, 64, 67]  (C major)
       def pitches(root_pitch)
         @pitch_offsets.values.collect { |offset| root_pitch + offset }
       end

@@ -51,7 +51,7 @@ a = melody.i
 b = melody.i
 
 a.next_value   # => 1
-b.next_value   # => 1, not 2: a and b share nothing
+b.next_value   # => 1  (not 2: a and b share nothing)
 ```
 
 The same holds inside a graph. A prototype used in two branches gives **two**

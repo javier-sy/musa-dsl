@@ -43,7 +43,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   KNOWN_LIES = {}.freeze
 
   # Claims verified today. May only grow.
-  VERIFIED_FLOOR = 697
+  VERIFIED_FLOOR = 776
 
   # Spec examples named `@example <title>` whose title no longer appears in the
   # documentation. At zero, and it stays there: an example that loses its
@@ -57,7 +57,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # ABOUT something is what lets a claim drift from it.
   #
   # Claims it verifies today. May only grow.
-  DOCS_VERIFIED_FLOOR = 85
+  DOCS_VERIFIED_FLOOR = 116
 
   # Blocks that declare an output and still do not run. A block that declares
   # nothing is illustration -- `direction do dynamics 'f' end` shown outside the
@@ -113,7 +113,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # MAY ONLY GO DOWN. Series and musicxml are migrated; this counts what is
   # left, and it counts examples rather than files so that renaming a file
   # cannot make the number look better than the work done.
-  UNMIGRATED_DOC_SPECS = 478
+  UNMIGRATED_DOC_SPECS = 477
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a
@@ -205,6 +205,35 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
     expect(orphans.size).to be >= ORPHANED_REFERENCES,
                             "Only #{orphans.size} orphaned references left. Lower " \
                             "ORPHANED_REFERENCES to #{orphans.size}."
+  end
+
+  # A value with a gloss the splitter cannot separate goes through as prose, and
+  # prose is compared with nothing. That is where
+  # `tonic.up(4, :natural).pitch  # => 71 (4 scale degrees = B)` sat for as long
+  # as it existed, wrong by four semitones, in a file with a green suite -- and
+  # 107 more declarations were in the same shape.
+  #
+  # There is no ceiling here on purpose. A masked value is not a quantity to keep
+  # under control; it is a claim written so that nothing can contradict it, and
+  # the only two honest ways out are to write it so it CAN be checked
+  # (`# => 71  (a gloss)`, two spaces, or parentheses) or to write prose that
+  # does not open with a value.
+  it 'declares no value in a shape that cannot be checked' do
+    masked = (DocExamples.extract + DocExamples.extract_markdown).flat_map do |example|
+      DocExamples.statements(example.code).filter_map do |source, declared|
+        next unless declared
+
+        value = DocExamples.value_of(declared)
+        ["#{example.file}:#{example.line}", source.lines.first.to_s.strip, value] if
+          DocExamples.masked_value?(value)
+      end
+    end
+
+    detail = masked.map { |where, source, value| "  #{where}\n    #{source}\n    # => #{value}" }.join("\n")
+
+    expect(masked).to be_empty,
+                      "#{masked.size} declared outputs begin as a value and cannot be read as one, " \
+                      "so they are filed as prose and verified by nobody:\n\n#{detail}"
   end
 
   it 'verifies as much of the prose documentation as it used to' do

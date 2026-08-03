@@ -270,7 +270,10 @@ module Musa
       #   seq.at(2) { puts "Event 2" }
       #   seq.every(1, till: 8) { puts "Repeating" }
       #
-      #   puts seq.size  # => 2 (scheduled events)
+      #   puts seq.size  # => 3 (scheduled events)
+      #
+      #   # Three: the `every` counts too. `size` is how many things are waiting
+      #   # to happen, and a repeating one is a single waiting thing.
       #   puts seq.empty?  # => false
       #
       #   # Reset clears everything

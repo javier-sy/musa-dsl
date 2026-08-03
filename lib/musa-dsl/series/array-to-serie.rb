@@ -59,7 +59,9 @@ class Array
   # @return [Serie] converted serie
   #
   # @example Short form
-  #   [1, 2, 3].s  # => S(1, 2, 3)
+  #   serie = [1, 2, 3].s        # the same thing S(1, 2, 3) builds
+  #   serie.class                # => Musa::Series::Constructors::FromArray
+  #   serie.i.to_a               # => [1, 2, 3]
   #
   # @api public
   alias_method :s, :to_serie

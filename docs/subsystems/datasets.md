@@ -539,12 +539,22 @@ changes.each do |change|
   end
 end
 
-# => 1r: Note ON  - pitch 60
+# prints:
+#    1r: Note ON  - pitch 60
 #    2r: Note ON  - pitch 64
 #    3r: Note OFF - pitch 60
 #    3r: Note OFF - pitch 64
 #    3r: Note ON  - pitch 67
 #    4r: Note OFF - pitch 67
+
+# The same timeline as a value, which is what the loop above is reading:
+changes.map { |c| [c[:time], c[:change], c[:dataset][:pitch]] }
+# => [[(1/1), :start, 60], [(2/1), :start, 64],
+#     [(3/1), :finish, 60], [(3/1), :finish, 64], [(3/1), :start, 67],
+#     [(4/1), :finish, 67]]
+
+# At 3r the two :finish come before the :start. Two notes meeting end to end
+# would otherwise open the third before closing the first two.
 ```
 
 **Attribute Collection** - `values_of(attribute)`:
@@ -567,11 +577,13 @@ pitches = score.values_of(:pitch)
 
 # Analyze durations
 durations = score.values_of(:duration)
-# => #<Set: {1r}>
+# => #<Set: {(1/1)}>
 
 # Check velocities
 velocities = score.values_of(:velocity)
-# => #<Set: {64}>  (default velocity from PDV)
+# => #<Set: {nil}>
+# Not 64: these events were built without a velocity, and a missing attribute
+# contributes nil rather than a default.
 ```
 
 **Filtering** - `subset { |event| condition }`:

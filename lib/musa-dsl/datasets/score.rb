@@ -455,12 +455,17 @@ module Musa::Datasets
     # @return [Set] set of unique values
     #
     # @example Get all pitches
-    #   pitches = score.values_of(:pitch)
-    #   # => #<Set: {60, 64, 67}>
+    #   score = Score.new({ 0r => [{ pitch: 60, duration: 1r }.extend(PDV)],
+    #                       1r => [{ pitch: 64, duration: 1r }.extend(PDV)] })
     #
-    # @example Get all grades
-    #   grades = score.values_of(:grade)
-    #   # => #<Set: {0, 2, 4}>
+    #   score.values_of(:pitch)  # => #<Set: {60, 64}>
+    #
+    # @example An attribute the events do not carry
+    #   score.values_of(:grade)  # => #<Set: {nil}>
+    #
+    #   # A set holding nil, not an empty set: every event contributes its value
+    #   # for the attribute and a missing one is nil. Asking a score of PDVs for
+    #   # grades answers "all of them have none" rather than "there are none".
     def values_of(attribute)
       values = Set[]
       @score.each_value do |slot|

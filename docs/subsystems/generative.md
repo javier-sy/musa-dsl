@@ -100,7 +100,8 @@ all_chords = variatio.run
 
 # Override field values at runtime
 limited_chords = variatio.on(root: [60, 64])
-# => 2 roots × 2 types = 4 variations
+limited_chords.size
+# => 4  (2 roots × 2 types)
 ```
 
 ## Generative Grammar

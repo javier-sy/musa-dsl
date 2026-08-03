@@ -419,8 +419,14 @@ module Musa
     #
     # @example Single random value
     #   rnd = RND1(1, 2, 3, 4, 5)
-    #   rnd.i.next_value  # => random 1-5
-    #   rnd.i.next_value  # => nil (exhausted)
+    #   inst = rnd.i
+    #
+    #   inst.next_value  # => a Integer   (one of 1..5)
+    #   inst.next_value  # => nil         (exhausted: RND1 yields ONE value)
+    #
+    #   # `inst` and not `rnd.i` twice: every `.i` is a NEW instance, which would
+    #   # start again and give a second random value instead of the nil that
+    #   # says the serie is done.
     #
     # @example Random seed selection
     #   seed = RND1(10, 20, 30, random: 42)

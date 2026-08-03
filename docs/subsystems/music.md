@@ -171,7 +171,7 @@ fifth_up = c_major.tonic.sharp(7)  # => G (+7 semitones = perfect fifth)
 third_up = c_major.tonic.sharp(4)  # => E (+4 semitones = major third)
 
 # Frequency calculation
-frequency = c_major.tonic.frequency  # => 261.63 Hz (middle C at A=440)
+frequency = c_major.tonic.frequency  # => ~261.63 Hz (middle C at A=440)
 
 # Greek modes (church modes)
 d_dorian = tuning.dorian[62]         # D Dorian (minor with major 6th)
@@ -248,11 +248,17 @@ ninth_chord = i_chord.with_size(:ninth)      # C major 9th
 
 # Voicing modifications - move specific tones to different octaves
 voiced = i_chord.with_move(root: -1, fifth: 1)  # Root down, fifth up
-i_chord.move  # => { root: -1, fifth: 1 } (current settings)
+voiced.move   # => { root: -1, fifth: 1 }
+i_chord.move  # => {}
 
 # Duplicate tones in other octaves
 doubled = i_chord.with_duplicate(root: -2, third: [-1, 1])  # Root 2 down, third 1 down and 1 up
-i_chord.duplicate  # => { root: -2, third: [-1, 1] } (current settings)
+doubled.duplicate  # => { root: -2, third: [-1, 1] }
+i_chord.duplicate  # => {}
+
+# `with_move` and `with_duplicate` build a NEW chord; the one they were called
+# on is untouched. Reading the settings back off the original is the mistake
+# these two lines exist to prevent.
 
 # Transpose entire chord
 lower = i_chord.octave(-1)  # Move chord down one octave

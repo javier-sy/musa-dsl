@@ -626,17 +626,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(pitches).to eq(Set[60, 64, 67])
     end
 
-    it '@example Get all grades' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { grade: 0, duration: 1.0 }.extend(Musa::Datasets::GDV))
-      score.at(1r, add: { grade: 2, duration: 1.0 }.extend(Musa::Datasets::GDV))
-      score.at(2r, add: { grade: 4, duration: 1.0 }.extend(Musa::Datasets::GDV))
-
-      grades = score.values_of(:grade)
-
-      expect(grades).to eq(Set[0, 2, 4])
-    end
-
   end
 
   context 'Score::Queriable (score/queriable.rb)' do

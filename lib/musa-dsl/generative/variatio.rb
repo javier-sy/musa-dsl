@@ -65,8 +65,8 @@ module Musa
   #   end
   #
   #   # Override :a to limit variations
-  #   variatio.on(a: 1..3)
-  #   # => 3 × 3 = 9 variations instead of 10 × 3 = 30
+  #   variatio.on(a: 1..3).size
+  #   # => 9  (3 values of :a × 3 of :b, instead of the 10 × 3 of a bare `run`)
   #
   # @example Nested fieldsets with attributes
   #   variatio = Musa::Variatio::Variatio.new :synth do
@@ -88,8 +88,18 @@ module Musa
   #     end
   #   end
   #
-  #   variations = variatio.run
-  #   # => 2 waves × 3 cutoffs × 2 lfo types × 2 rates × 2 depths = 48 variations
+  #   variatio.run.size  # => 96
+  #
+  #   variatio.run.first
+  #   # => { wave: :saw, cutoff: 500,
+  #   #      lfo: { vibrato: { rate: 4, depth: 0.1 },
+  #   #             tremolo: { rate: 4, depth: 0.1 } } }
+  #
+  #   # 96 and not 48. A fieldset is not a CHOICE among its values -- every
+  #   # variation carries both :vibrato and :tremolo -- so its inner fields are
+  #   # combined once for EACH of them: (2 rates × 2 depths) squared is 16 per
+  #   # (wave, cutoff), and 2 × 3 × 16 = 96. Read as "× 2 lfo types × 2 rates ×
+  #   # 2 depths" it comes out at 48, which is the arithmetic of a choice.
   #
   # @example With finalize block
   #   variatio = Musa::Variatio::Variatio.new :note do
@@ -179,8 +189,8 @@ module Musa
       #   variatio.run.size  # => 30
       #
       #   # Override :x to limit variations
-      #   variatio.on(x: 1..3).size  # => 3 × 3 = 9
-      #   variatio.on(x: [5], y: [:a]).size  # => 1 × 1 = 1
+      #   variatio.on(x: 1..3).size  # => 9  (3 × 3)
+      #   variatio.on(x: [5], y: [:a]).size  # => 1  (1 × 1)
       def on(**values)
         constructor_binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new @constructor
         finalize_binder = Musa::Extension::SmartProcBinder::SmartProcBinder.new @finalize if @finalize

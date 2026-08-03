@@ -44,7 +44,25 @@ module DocExamples
   # fragments does not fit in one -- and without it those went through as prose:
   # written as a claim, counted as decoration, verified by nobody. Precisely the
   # kind of thing this tool exists to make impossible.
-  LITERAL = /\A(\[.*\]|\{.*\}|-?[\d._\/r]+|true|false|nil|:[a-z_]+[?!]?|".*"|'.*')\z/im
+  LITERAL = /\A(\[.*\]|\{.*\}|\(-?\d+\/\d+\)|-?[\d._\/r]+|true|false|nil|:[a-z_]+[?!]?|".*"|'.*')\z/im
+
+  # `# => ~261.63 Hz`. An approximation is a claim like any other; what it says
+  # is "to the precision I wrote". Read as prose it says nothing, and frequency
+  # is exactly where a reader wants a number.
+  APPROXIMATE = /\A~\s*(-?\d+(?:\.(\d+))?)/
+
+  # `# => a ScaleSystemTuning`, `# => an Array of NoteInScale`. When the value is
+  # an object there is nothing to write down, and the honest claim is its type.
+  # Without this the only options were to declare nothing or to paste an
+  # #inspect nobody can read.
+  TYPE = /\A(?:an?|the)\s+([A-Z][\w:]*)\b/
+
+  # `# => #<Set: {60, 64, 67}>`. An object with no literal syntax, declared the
+  # only way it can be: the way it inspects. Ruby reads a leading `#` as a
+  # comment, so left to the ordinary path this parses to nothing, evaluates to
+  # nil, and reports MISMATCH whatever the value is -- a check that fires for the
+  # wrong reason, which is no check at all.
+  INSPECTION = /\A#</
 
   # An example may declare that a statement FAILS -- `# => ArgumentError: cannot
   # move back` -- and that is how documentation usually describes a guard. Read
@@ -66,14 +84,79 @@ module DocExamples
   # Most declared outputs are glossed: `# => 4   (major third)`, `# => 1r (start
   # of bar 1)`. Read whole they are prose and go unchecked -- which is how a
   # value can be wrong and nobody notice, the exact failure this tool exists for.
-  # A gloss is separated from the value by a run of spaces, which is what tells
-  # it apart from `(1/1)`, a Rational's own inspect.
+  #
+  # The gloss used to be recognised only after a RUN of spaces, to tell it apart
+  # from `(1/1)`, a Rational's own inspect. Almost nobody writes two spaces:
+  # `# => 71 (4 scale degrees = B)` has one, so the whole string failed to parse
+  # and went through as prose -- and that particular one was wrong, by four
+  # semitones, for as long as it has existed. 108 declarations were in that
+  # shape.
+  #
+  # So the value is now the LONGEST leading part that is a complete literal,
+  # whatever separates it from its gloss. `[60, 64, 67] (C, E, G)` yields the
+  # array and not `[60,`; `true/false` yields nothing and stays prose, which is
+  # right, because it is a description of two possibilities rather than a value.
   def value_of(declared)
     return declared if declared =~ LITERAL
 
-    head = declared.split(/\s{2,}/, 2).first.to_s.strip
+    # An expression, not only a literal: `[1, 0] * 11` is how anyone would write
+    # a trill's twenty-two grades, and reading it as prose loses the claim.
+    return declared if checkable_expression?(declared)
 
-    head =~ LITERAL ? head : declared
+    corte = declared.length
+    while (corte = declared.rindex(/\s/, corte - 1))
+      head = declared[0...corte].strip
+      break if head.empty?
+      # The remainder has to look like a GLOSS and not like the rest of an
+      # expression: `71 (4 scale degrees)` splits, `3 × 3 = 9 variations` does
+      # not -- taking its leading 3 for the value is how a sentence about
+      # arithmetic became a false claim about a return value.
+      # A gloss is parenthesised, a trailing comment, or a bare unit -- one word,
+      # then a parenthesis or the end. A SENTENCE is not a gloss: `2 waves x 3
+      # cutoffs = 48 variations` would otherwise declare that the value is 2.
+      resto = declared[corte..].strip
+      next unless resto =~ /\A(\(|#)/ || resto =~ /\A[A-Za-z]+\s*(\(|\z)/
+      return head if head =~ LITERAL && parses?(head)
+    end
+
+    declared
+  end
+
+  def parses?(source)
+    !!RubyVM::AbstractSyntaxTree.parse(source)
+  rescue SyntaxError
+    false
+  end
+
+  # An expression worth evaluating, as opposed to something that merely happens
+  # to be valid Ruby. Two traps, both of which produced a MISMATCH for a reason
+  # that had nothing to do with the documentation being wrong:
+  #
+  #   * a leading `#` is a comment, so `#<Set: {60, 64}>` parses to nothing and
+  #     evaluates to nil;
+  #   * a bare capitalised word is a constant reference, and `# => E` is a NOTE
+  #     NAME -- but `Musa::Datasets::E` exists, so it resolved, and a note was
+  #     compared against a dataset module.
+  # Whether a declared output already stands on its own, and a following comment
+  # line is therefore a NOTE and not the rest of the value. Without this the
+  # continuation swallowed the explanation under `# => #<Set: {nil}>` -- which is
+  # a complete claim -- and reported a mismatch against the prose.
+  def complete_declaration?(declared)
+    declared =~ LITERAL || declared =~ INSPECTION || declared =~ APPROXIMATE ||
+      declared =~ TYPE || checkable_expression?(declared)
+  end
+
+  def checkable_expression?(declared)
+    parses?(declared) && declared !~ /\A\s*#/ && declared !~ /\A\s*[A-Z][\w:]*\s*\z/
+  end
+
+  # A value written with a gloss the splitter could not separate -- so it went
+  # unchecked -- when it plainly begins as a value. This is the shape the 71/67
+  # was hiding in, and the only way to keep it from growing back is to refuse
+  # it: write it so it can be checked, or write prose that does not pretend.
+  def masked_value?(declared)
+    !complete_declaration?(declared) && declared !~ EXCEPTION &&
+      declared =~ /\A(\[|\{|-?\d|true\b|false\b|nil\b|:|"|')/
   end
 
   # Every @example block in the inline documentation, with its code recovered
@@ -295,7 +378,7 @@ module DocExamples
       # `# => ["a",` continues into `#     "b"]`. Without this the first line was
       # taken whole, failed to parse as a literal, and the claim was filed as
       # prose -- unverifiable by construction, which is worse than not writing it.
-      if continuing && line.match?(/\A\s*#(?!\s*=>)/) && !continuing.last.match?(LITERAL)
+      if continuing && line.match?(/\A\s*#(?!\s*=>)/) && !complete_declaration?(continuing.last)
         continuing[1] = "#{continuing.last}\n#{line.sub(/\A\s*#\s?/, '')}".strip
         next
       end
@@ -501,7 +584,25 @@ module DocExamples
         status =
           if wanted
             :mismatch # it promised to reject this and did not
-          elsif claimed !~ LITERAL
+          elsif claimed =~ APPROXIMATE
+            # To the precision it was written with: `~261.63` promises two
+            # decimals and nothing about the third.
+            decimals = Regexp.last_match(2).to_s.length
+            wrote = Regexp.last_match(1).to_f
+            got = (spoke ? output[/-?\d+(\.\d+)?/].to_f : value.to_f rescue nil)
+            got && got.round(decimals) == wrote.round(decimals) ? :ok : :mismatch
+          elsif claimed =~ INSPECTION
+            value.inspect.gsub(/\s+/, '') == claimed.gsub(/\s+/, '') ? :ok : :mismatch
+          elsif claimed =~ TYPE
+            named = begin
+                      eval(Regexp.last_match(1), TOPLEVEL_BINDING) # rubocop:disable Security/Eval
+                    rescue Exception # rubocop:disable Lint/RescueException
+                      nil
+                    end
+            if named.is_a?(Module) then value.is_a?(named) ? :ok : :mismatch
+            else :prose
+            end
+          elsif claimed !~ LITERAL && !checkable_expression?(claimed)
             :prose
           else
             expected = begin
