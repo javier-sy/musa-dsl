@@ -188,7 +188,9 @@ module Musa
       #     using Musa::Extension::Hashify
       #     event = { pitch: 60, velocity: 100 }.extend(Musa::Datasets::AbsI)
       #     event.hashify(keys: [:pitch, :velocity])
-      #     # Result also extended with AbsI
+      #     # => { pitch: 60, velocity: 100 }
+      #     event.hashify(keys: [:pitch, :velocity]).is_a?(Musa::Datasets::AbsI)
+      #     # => true
       #
       #   @note Singleton class modules are preserved via DeepCopy.copy_singleton_class_modules
       class ::Hash; end

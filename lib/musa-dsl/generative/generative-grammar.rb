@@ -72,7 +72,14 @@ module Musa
   #   dp.node = d
   #
   #   d.options(:size, :sum, :<=, 4, content: :join)
-  #   # => ["cca", "ccb", "caa", "cab", "cba", "cbb", "aca", "acb", ...]
+  #   # => ["cca", "ccb", "caa", "cab", "cba", "cbb",
+  #   #     "aca", "acb", "aaa", "aab", "aba", "abb",
+  #   #     "bca", "bcb", "baa", "bab", "bba", "bbb"]
+  #
+  #   # Eighteen, and worth listing in full rather than trailing off: the shape
+  #   # of the set is the answer. Every string is three long because the limit
+  #   # is on the summed size, and the recursion through the proxy is what lets
+  #   # `c` be followed by the whole grammar again.
   #
   # @example Block nodes for dynamic content
   #   a = N(color: :blue) { |parent| 'hola' }

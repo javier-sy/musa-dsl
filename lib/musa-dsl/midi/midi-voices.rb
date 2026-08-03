@@ -83,6 +83,28 @@ module Musa
     #   voice = voices.voices.first
     #   voice.note pitch: [60, 64, 67], velocity: 90, duration: 1r
     #
+    #   # A velocity per pitch is allowed, and they line up by position:
+    #   voice.note pitch: [60, 62, 64], velocity: [80, 90, 100], duration: 1r/4
+    #   # the three note-ons carry velocities 80, 90 and 100
+    #
+    # @example A silence sends nothing at all
+    #   # A stand-in for a MIDI output: it just records what it is sent.
+    #   output = Class.new { def initialize = @sent = []
+    #                        def puts(*m) = @sent.concat(m)
+    #                        def sent = @sent.map(&:to_a)
+    #                        def size = @sent.size }.new
+    #
+    #   sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+    #   voices = Musa::MIDIVoices::MIDIVoices.new(sequencer: sequencer,
+    #                                             output: output, channels: [0])
+    #   voice = voices.voices.first
+    #
+    #   voice.note pitch: :silence, duration: 1r/4
+    #   output.sent  # => []
+    #
+    #   # Not a note-on with velocity 0 -- nothing at all. The rest occupies its
+    #   # time in the sequencer and leaves the wire alone.
+    #
     # @example Using note controls with callbacks
     #   voice = voices.voices.first
     #   note_ctrl = voice.note pitch: 60, duration: nil  # indefinite
@@ -150,6 +172,26 @@ module Musa
       #
       # @param reset [Boolean] whether to emit an FF SystemRealtime (panic) message.
       # @return [void]
+      #
+      # @example What goes on the wire
+      #   # A stand-in for a MIDI output: it just records what it is sent.
+      #   output = Class.new { def initialize = @sent = []
+      #                        def puts(*m) = @sent.concat(m)
+      #                        def sent = @sent.map(&:to_a)
+    #                        def size = @sent.size }.new
+      #
+      #   sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #   voices = Musa::MIDIVoices::MIDIVoices.new(sequencer: sequencer,
+      #                                             output: output, channels: [0])
+      #   voice = voices.voices.first
+      #
+      #   voices.panic
+      #   output.sent  # => [[176, 123, 0]]
+      #
+      #   # CC 123 -- all notes off -- once per channel. With `reset: true` an
+      #   # FF system-reset follows it:
+      #   voices.panic(reset: true)
+      #   output.sent  # => [[176, 123, 0], [176, 123, 0], [255]]
       def panic(reset: nil)
         reset ||= false
 
@@ -346,6 +388,26 @@ module Musa
       # Sends immediate note-off messages for all active pitches and an all-notes-off message on this channel and resets internal state.
       #
       # @return [void]
+      #
+      # @example Both, and in that order
+      #   # A stand-in for a MIDI output: it just records what it is sent.
+      #   output = Class.new { def initialize = @sent = []
+      #                        def puts(*m) = @sent.concat(m)
+      #                        def sent = @sent.map(&:to_a)
+    #                        def size = @sent.size }.new
+      #
+      #   sequencer = Musa::Sequencer::BaseSequencer.new(4, 24)
+      #   voices = Musa::MIDIVoices::MIDIVoices.new(sequencer: sequencer,
+      #                                             output: output, channels: [0])
+      #   voice = voices.voices.first
+      #
+      #   voice.note(pitch: 60, velocity: 100, duration: 1r/4)
+      #   voice.all_notes_off
+      #   output.sent  # => [[144, 60, 100], [176, 123, 0], [128, 60, 0]]
+      #
+      #   # The CC 123 AND an explicit note-off for what was sounding. The
+      #   # controller message is not honoured by every synth, so the explicit
+      #   # offs are what make this reliable.
       def all_notes_off
         @output.puts MIDIEvents::ChannelMessage.new(0xb, @channel, 0x7b, 0)
 

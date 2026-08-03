@@ -18,8 +18,8 @@ module Musa
   #
   # The logger reads the sequencer's position at the moment each log message
   # is generated. Since positions are typically Rational numbers representing
-  # bars (e.g., 4/4 = 1 bar), the InspectNice refinement ensures they display
-  # in a readable decimal format.
+  # bars (e.g., 4/4 = 1 bar), the formatter renders them with `%f` after a
+  # `to_f` -- decimal, and not the fraction a Rational usually inspects as.
   #
   # ## Common Use Cases
   #
@@ -38,7 +38,7 @@ module Musa
   #   logger.level = Logger::INFO
   #
   #   # In your composition
-  #   sequencer.at 0 do
+  #   sequencer.at 1 do
   #     logger.info "Composition started"
   #   end
   #
@@ -48,9 +48,13 @@ module Musa
   #
   #   sequencer.run
   #
-  #   # Output:
-  #   #  0.000: [INFO] Composition started
-  #   #  4.000: [INFO] First phrase complete
+  #   # Output on STDERR:
+  #   #    1.000: [INFO]  Composition started
+  #   #    4.000: [INFO]  First phrase complete
+  #
+  #   # `at 1` and not `at 0`: bars are numbered from 1 and the sequencer starts
+  #   # one tick before bar 1, so an `at 0` block never runs -- silently. And two
+  #   # spaces after the level: the progname's slot is empty, not absent.
   #
   # @see Musa::Logger::Logger
   # @see Musa::Sequencer::Sequencer
@@ -152,7 +156,7 @@ module Musa
     #   logger.level = Logger::DEBUG
     #
     #   # Different components log at different times
-    #   sequencer.at 0 do
+    #   sequencer.at 1 do
     #     logger.info('Transport') { "Starting playback" }
     #   end
     #
@@ -166,10 +170,10 @@ module Musa
     #
     #   sequencer.run
     #
-    #   # Output:
-    #   #  0.000: [INFO] [Transport] Starting playback
-    #   #  1.500: [Series] Evaluating next value
-    #   #  2.250: [WARN] [MIDIVoice] Note overflow detected
+    #   # Output on STDERR:
+    #   #    1.000: [INFO] [Transport] Starting playback
+    #   #    1.500: [Series] Evaluating next value
+    #   #    2.250: [WARN] [MIDIVoice] Note overflow detected
     #
     # @example Changing log level dynamically
     #   require 'musa-dsl'

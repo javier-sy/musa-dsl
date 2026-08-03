@@ -118,6 +118,16 @@ module Musa
   #     end
   #   end
   #
+  #   variations = variatio.run
+  #
+  #   variations.size                    # => 9
+  #   variations.first[:dynamics]        # => :mf
+  #   variations.first[:loudness].round(2)  # => 0.5
+  #
+  #   # `finalize` runs once per finished variation, after the constructor and
+  #   # after every fieldset has been applied -- which is why it can compute
+  #   # something from values the constructor never saw together.
+  #
   # @see Variatio Main combinatorial variation generator class
   # @see Musa::Extension::SmartProcBinder Smart procedure binding for constructor/finalize blocks
   # @see Musa::Extension::Arrayfy Array conversion utilities for field options

@@ -61,7 +61,11 @@ module Musa
         #     type: 'start',
         #     symbol: 'brace',
         #     group_barline: true
-        #   )
+        #   ).header_to_xml.string
+        #   # => "<part-group number=\"1\" type=\"start\">\n\t<group-symbol>brace</group-symbol>\n\t<group-barline>yes</group-barline>\n</part-group>\n"
+        #
+        #   # `group_barline: true` comes out as the string "yes": MusicXML has no
+        #   # booleans, and the builder does the translation.
         #   # ... add parts for right hand and left hand ...
         #   PartGroup.new(1, type: 'stop')
         class PartGroup

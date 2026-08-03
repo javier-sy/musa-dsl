@@ -1,3 +1,16 @@
+# What the Logger's formatter puts on the wire.
+#
+# WHY THIS FILE IS NOT CALLED inline_doc_*. Its examples cannot be declared in
+# the documentation and verified there like the rest of the library's: the logger
+# writes to STDERR, which tools/doc-examples.rb silences in the forked child, so
+# an `@example` could never show its own output. What the documentation can do --
+# and now does -- is state the format and the two traps in it: `at 0` never fires,
+# and there are two spaces after the level because the progname's slot is empty
+# rather than absent.
+#
+# What is left here is the format itself, asserted line by line, against the real
+# logger. See the note on the helper for why that last word matters.
+
 require 'spec_helper'
 require 'musa-dsl'
 require 'stringio'
@@ -27,44 +40,25 @@ RSpec.describe 'Logger Inline Documentation Examples' do
     end
   end
 
-  # Helper method to create logger with captured output
+  # Builds the REAL logger and swaps only its output device.
+  #
+  # This helper used to re-implement the formatter of `lib/musa-dsl/logger/`
+  # line by line, because `Logger.new` wires STDERR and offers no injection
+  # point. That made every example here a test of the spec's own copy: the
+  # library could change its format and the suite would stay green. The copy had
+  # not drifted yet -- I checked, value by value -- but it was one edit away from
+  # doing so, silently.
+  #
+  # Reaching into @logdev is not pretty. It is, however, the whole of the
+  # deviation from the real object: the formatter, the position lookup and the
+  # level all come from the library.
   def create_logger_with_capture(sequencer: nil, **options)
     output = AccumulatingIO.new
-    # Create base logger instance first
-    base_logger = ::Logger.new(output, level: ::Logger::WARN)
 
-    # Now create our Logger subclass, passing the sequencer
-    logger = Musa::Logger::Logger.allocate
-    logger.instance_variable_set(:@sequencer, sequencer)
-    logger.instance_variable_set(:@position_format, options[:position_format] || 3.3)
-
-    # Copy the logdev and formatter from base logger, then set up our custom formatter
-    logger.instance_variable_set(:@logdev, base_logger.instance_variable_get(:@logdev))
-    logger.instance_variable_set(:@level, base_logger.level)
-    logger.instance_variable_set(:@progname, base_logger.progname)
-    logger.instance_variable_set(:@formatter, base_logger.formatter)
-    logger.instance_variable_set(:@default_formatter, base_logger.instance_variable_get(:@default_formatter))
-
-    # Now set up the custom formatter (copied from logger.rb initialize method)
-    using_sequencer = sequencer
-    position_fmt = options[:position_format] || 3.3
-
-    logger.formatter = proc do |severity, time, progname, msg|
-      level = "[#{severity}] " unless severity == 'DEBUG'
-
-      if msg
-        position = if using_sequencer
-                     integer_digits = position_fmt.to_i
-                     decimal_digits = ((position_fmt - integer_digits) * 10).round
-                     "%#{integer_digits + decimal_digits + 1}s: " % ("%.#{decimal_digits}f" % using_sequencer.position.to_f)
-                   end
-
-        progname = "[#{progname}]" if progname
-        "#{position}#{level}#{progname}#{' ' if position || level || progname}#{msg}\n"
-      else
-        "\n"
-      end
-    end
+    logger = Musa::Logger::Logger.new(sequencer: sequencer,
+                                      position_format: options[:position_format])
+    logger.instance_variable_set(:@logdev, ::Logger::LogDevice.new(output))
+    logger.level = ::Logger::WARN
 
     [logger, output]
   end

@@ -46,6 +46,16 @@ module Musa::Transcriptors
     #
     # The `transcription_set` returns transcriptors applied in order:
     #
+    # @example The chain, and its order
+    #   Musa::Transcriptors::FromGDV::ToMIDI.transcription_set
+    #                                       .map { |t| t.class.name.split('::').last }
+    #   # => ["Appogiatura", "Mordent", "Turn", "Trill", "Staccato", "Base"]
+    #
+    #   # Order matters: each transcriptor sees what the previous ones produced,
+    #   # and `Base` runs last because it is what turns whatever is left into
+    #   # plain notes.
+    #
+    #
     # 1. `Appogiatura` - Expand appogiatura grace notes
     # 2. `Mordent` - Expand mordent ornaments
     # 3. `Turn` - Expand turn ornaments

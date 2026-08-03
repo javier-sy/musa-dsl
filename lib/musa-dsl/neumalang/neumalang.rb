@@ -164,7 +164,24 @@ module Musa
     #     "(0) (+2) (+2) (-1) (0)",
     #     decode_with: decoder
     #   )
-    #   # Returns serie of GDV events
+    #
+    #   gdvs.i.to_a.first  # => { grade: 0, octave: 0, duration: (1/4), velocity: 1 }
+    #   gdvs.i.to_a.map { |g| g[:grade] }  # => [0, 2, 4, 3, 0]
+    #
+    #   # Decoding resolves the relative steps into absolute grades and applies
+    #   # the decoder's base_duration. Without `decode_with:` the elements stay
+    #   # as { kind:, gdvd: } envelopes carrying the deltas.
+    #
+    # @example What can be parsed, and what is refused
+    #   Musa::Neumalang::Neumalang.parse('42 3.14 :sym "hello" nil true false')
+    #                             .to_a(recursive: true).map { |e| e[:value] }
+    #   # => [42, 3.14, :sym, "hello", nil, true, false]
+    #
+    #   # Ruby literals travel through as values, which is what lets a piece put
+    #   # its own data in the same stream as its notes.
+    #
+    #   Musa::Neumalang::Neumalang.parse(123)
+    #   # => ArgumentError: Only String or File allowed to be parsed
     #
     # @example Complex notation
     #   neumas = Musa::Neumalang::Neumalang.parse(

@@ -154,6 +154,18 @@ module Musa::Neumas
       #
       # @return [NeumaDecoder] subcontext decoder with current state
       #
+      # @example
+      #   scale = Musa::Scales.et12[440.0].major[60]
+      #   decoder = NeumaDecoder.new(scale, base_duration: 1/4r)
+      #
+      #   sub = decoder.subcontext
+      #   sub.scale.equal?(decoder.scale)  # => true
+      #   sub.base_duration                # => (1/4)
+      #
+      #   # Same scale and same unit, separate state: what the subcontext decodes
+      #   # moves its own `@last` and leaves the parent's where it was. That is
+      #   # what an ornament needs -- a grace note must not re-root the phrase.
+      #
       # @api public
       def subcontext
         NeumaDecoder.new @scale, base_duration: @base_duration, transcriptor: @transcriptor, base: @last

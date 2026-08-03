@@ -172,6 +172,13 @@ module Musa
         #   signature.add_beats(beats: 3, beat_type: 8)
         #   signature.beats.size  # => 3
         #
+        #   signature.to_xml.string
+        #   # => "<time>\n\t<beats>3</beats>\n\t<beat-type>8</beat-type>\n\t<beats>2</beats>\n\t<beat-type>8</beat-type>\n\t<beats>3</beats>\n\t<beat-type>8</beat-type>\n</time>\n"
+        #
+        #   # Three beats/beat-type pairs inside ONE <time>: that is how MusicXML
+        #   # writes an additive signature, and it is why `add_beats` exists
+        #   # alongside the `beats:` keyword.
+        #
         # @example The same, through the DSL
         #   compound = measure.attributes do
         #     time do

@@ -206,7 +206,10 @@ module Musa
       # @example Transcribe single event
       #   gdv = { grade: 0, duration: 1r, tr: true }
       #   result = transcriptor.transcript(gdv)
-      #   # => [{ grade: 1, duration: 1/16r }, { grade: 0, duration: 1/16r }, ...]
+      #
+      #   result.size      # => 22
+      #   result.first(2)  # => [{ grade: 1, duration: (1/16) },
+      #                    #     { grade: 0, duration: (1/16) }]
       #
       # @example Transcribe array of events
       #   gdvs = [

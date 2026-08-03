@@ -600,18 +600,18 @@ module Musa
       #
       # ## Escaping Rule
       #
-      # - `"//something"` → `"///something"` (escaped)
+      # - `"//something"` → `"////something"` (escaped)
       # - `"normal text"` → `"normal text"` (unchanged)
       #
       # The client is responsible for unescaping by removing one '//' prefix
-      # from any line starting with '///' (assuming it's not a known command).
+      # from any line starting with '//' (assuming it's not a known command).
       #
       # @param text [String] text to potentially escape
       # @return [String] escaped text (or original if no escaping needed)
       #
       # What it does (a reading: a private helper):
       #
-      #     escape("//comment")  # "///comment"
+      #     escape("//comment")  # => "////comment"
       #     escape("Hello")      # "Hello"
       #
       # @api private

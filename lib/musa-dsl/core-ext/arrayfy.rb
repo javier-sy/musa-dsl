@@ -121,7 +121,11 @@ module Musa
       #   @example Preserving dataset modules
       #     using Musa::Extension::Arrayfy
       #     p_sequence = [60, 1, 62].extend(Musa::Datasets::P)
-      #     p_sequence.arrayfy(size: 6)  # Result also extended with P
+      #     p_sequence.arrayfy(size: 6)  # => [60, 1, 62, 60, 1, 62]
+      #     p_sequence.arrayfy(size: 6).is_a?(Musa::Datasets::P)  # => true
+      #
+      #     # The module survives the cycling, which is what lets a P be padded
+      #     # to a voice's length and still be played as a P.
       #
       #   @note The cycling formula: array * (size / array.size + (size % array.size).zero? ? 0 : 1)
       #     ensures enough repetitions to reach target size.

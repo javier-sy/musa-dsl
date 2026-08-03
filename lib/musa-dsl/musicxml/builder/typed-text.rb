@@ -58,7 +58,8 @@ module Musa
         #
         # @example Creator
         #   creator = Creator.new(:composer, "Ludwig van Beethoven")
-        #   creator.to_xml  # => <creator type="composer">Ludwig van Beethoven</creator>
+        #   creator.to_xml.string
+        #   # => "<creator type=\"composer\">Ludwig van Beethoven</creator>\n"
         class Creator < TypedText
           # Creates a creator entry.
           #
@@ -81,7 +82,8 @@ module Musa
         #
         # @example Rights
         #   rights = Rights.new(:lyrics, "Copyright 2024 Publisher Name")
-        #   rights.to_xml  # => <rights type="lyrics">Copyright 2024 Publisher Name</rights>
+        #   rights.to_xml.string
+        #   # => "<rights type=\"lyrics\">Copyright 2024 Publisher Name</rights>\n"
         class Rights < TypedText
           # Creates a rights entry.
           #

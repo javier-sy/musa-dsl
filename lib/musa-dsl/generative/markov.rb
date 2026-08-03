@@ -58,8 +58,14 @@ module Musa
   #       a: { b: 0.2, c: 0.8 },  # 20% b, 80% c
   #       b: { a: 0.3, c: 0.7 },  # 30% a, 70% c
   #       c: [:a, :b, :x]         # Equal probability
-  #     }
+  #     },
+  #     random: 2                 # a seed, so this example is repeatable
   #   ).i
+  #
+  #   markov.to_a  # => [:a, :c, :b, :c, :x]
+  #
+  #   # It walks until it reaches `finish`, and the weights say where it is
+  #   # likely to go, never where it must.
   #
   # @example Algorithmic transitions with history
   #   markov = Musa::Markov::Markov.new(
@@ -70,8 +76,14 @@ module Musa
   #       # Transition based on history length
   #       b: proc { |history| history.size.even? ? :a : :c },
   #       c: [:a, :b, :x]
-  #     }
+  #     },
+  #     random: 2
   #   ).i
+  #
+  #   markov.to_a  # => [:a, :c, :b, :c, :a, :c, :x]
+  #
+  #   # A transition can be a proc instead of a distribution, and it is given
+  #   # everything chosen so far -- which is what makes this more than a chain.
   #
   # @example Musical pitch transitions
   #   # Create melodic sequence with style-based transitions

@@ -100,6 +100,14 @@
 #   harmony = "(0) (+2) (+4)" | "(+7) (+5) (+7)"
 #   harmony[:parallel].size  # => 2
 #
+#   harmony[:parallel].map { |voice| voice[:kind] }  # => [:serie, :serie]
+#   harmony[:parallel][0][:serie].i.to_a.map { |n| n[:gdvd] }
+#   # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 4 }]
+#
+#   # Two independent series under one node, not an interleaving. Each keeps its
+#   # own relative state when it is decoded, which is what lets the `+2` of one
+#   # voice ignore whatever the other just did.
+#
 # @example Convert to generative node
 #   using Musa::Extension::Neumas
 #
@@ -164,6 +172,33 @@ module Musa
       #     neumas.i.to_a.map { |n| n[:gdvd] }
       #     # => [{ abs_grade: 0 }, { delta_grade: 2 }, { delta_grade: 2 },
       #     #     { delta_grade: -1 }, { abs_grade: 0 }]
+      #
+      #   @example Flats, and the digit-separator trap
+      #     "(+2_) (+2_2) (+1_/2)".to_neumas.i.to_a.map { |n| n[:gdvd] }
+      #     # => [{ delta_grade: 2, delta_sharps: -1 },
+      #     #     { delta_grade: 22 },
+      #     #     { delta_grade: 1, delta_sharps: -1, factor_duration: (1/2) }]
+      #
+      #     # `_` after a grade is a flat. `_` BETWEEN DIGITS is Ruby's own digit
+      #     # separator, so `+2_2` is grade 22 and not a doubly-flattened 2.
+      #     # There is no error and no warning: the notation is valid, it just
+      #     # means something else. Write a double flat as `+2__`.
+      #
+      #   @example Absolute and relative grades
+      #     "(0) (+2) (4) (+1)".to_neumas.i.to_a.map { |n| n[:gdvd] }
+      #     # => [{ abs_grade: 0 }, { delta_grade: 2 },
+      #     #     { abs_grade: 4 }, { delta_grade: 1 }]
+      #
+      #     # A grade with no sign is ABSOLUTE wherever it appears, so a phrase
+      #     # can re-anchor itself in the middle without leaving relative mode.
+      #
+      #   @example Dynamics are a signed step, not a level
+      #     "(0 pp) (0 p) (0 mp) (0 mf) (0 f) (0 ff) (0 fff)".to_neumas
+      #       .i.to_a.map { |n| n[:gdvd][:abs_velocity] }
+      #     # => [-2, -1, 0, 1, 2, 3, 4]
+      #
+      #     # `mp` is 0: the mark names a position on a scale centred there, and
+      #     # what travels is the number.
       #
       #   @example Parse with immediate decoding
       #     using Musa::Extension::Neumas
