@@ -67,6 +67,13 @@ module Musa::Transcriptors
       #     base_duration: 1/4r
       #   )
       #
+      #   transcriptor.transcriptors.map { |t| t.class.name.split('::').last }
+      #   # => ["Appogiatura", "Base"]
+      #
+      #   # Two, where the MIDI chain has several: an ornament that MusicXML can
+      #   # notate as itself must NOT be expanded into notes, or the score would
+      #   # show the realization instead of the sign.
+      #
       # @api public
       def self.transcription_set
         [ Appogiatura.new,

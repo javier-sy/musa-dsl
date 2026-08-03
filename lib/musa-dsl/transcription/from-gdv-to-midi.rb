@@ -216,7 +216,15 @@ module Musa::Transcriptors
       #
       # @example Lower mordent
       #   gdv = { grade: 0, duration: 1r, mor: :down }
-      #   # Uses lower neighbor (grade: -1)
+      #   mor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
+      #   # => [
+      #   #   { grade: 0, duration: (1/16) },
+      #   #   { grade: -1, duration: (1/16) },
+      #   #   { grade: 0, duration: (7/8) }
+      #   # ]
+      #
+      #   # Same three notes as the upper mordent, with -1 where the 1 was, and
+      #   # the main note keeps whatever is left of the original duration.
       #
       # @api public
       # Process: .mor
@@ -426,11 +434,24 @@ module Musa::Transcriptors
       #   trill = Trill.new(duration_factor: 1/4r)
       #   gdv = { grade: 0, duration: 1r, tr: true }
       #   result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-      #   # Generates alternating upper/main notes filling duration
+      #
+      #   result.size                          # => 22
+      #   result.map { |n| n[:grade] }         # => [1, 0] * 11
+      #   result.map { |n| n[:duration] }.uniq # => [(1/16), (1/24)]
+      #
+      #   # It accelerates: four notes at 1/16 and then eighteen at 1/24, which
+      #   # is why the durations are not all one value.
       #
       # @example Trill starting low
       #   gdv = { grade: 0, duration: 1r, tr: :low }
-      #   # Starts with lower neighbor, then alternates upper/main
+      #   low = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
+      #
+      #   low.map { |n| n[:grade] }.first(6)  # => [-1, 0, 1, 0, 1, 0]
+      #   low.size                            # => 20
+      #
+      #   # The lower neighbour is a prefix, not a change of pattern: after it
+      #   # the trill is the ordinary upper one. Two of the 22 notes go into
+      #   # paying for it.
       #
       # @example A numeric :tr, which scales this performer's trill
       #   trill = Trill.new(duration_factor: 1/4r)

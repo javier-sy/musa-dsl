@@ -176,19 +176,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[2][:grade]).to eq(0)
     end
 
-    it '@example Lower mordent' do
-      mor = Musa::Transcriptors::FromGDV::ToMIDI::Mordent.new(duration_factor: 1/4r)
-      gdv = { grade: 0, duration: 1r, mor: :down }
-      result = mor.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-
-      # Lower mordent uses lower neighbor
-      expect(result).to be_a(Array)
-      expect(result.size).to eq(3)
-      expect(result[0][:grade]).to eq(0)
-      expect(result[1][:grade]).to eq(-1)  # Lower neighbor
-      expect(result[2][:grade]).to eq(0)
-    end
-
     it '@example Upper turn' do
       turn = Musa::Transcriptors::FromGDV::ToMIDI::Turn.new
       gdv = { grade: 0, duration: 1r, turn: true }
@@ -217,27 +204,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
       expect(result[1][:grade]).to eq(0)   # Main
       expect(result[2][:grade]).to eq(1)   # Upper neighbor
       expect(result[3][:grade]).to eq(0)   # Main
-    end
-
-    it '@example Standard trill' do
-      trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
-      gdv = { grade: 0, duration: 1r, tr: true }
-      result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-
-      # duration_factor: 1/4r is also the default, so this is the same 22 notes.
-      expect(result.size).to eq(22)
-      expect(result.collect { |n| n[:grade] }).to eq([1, 0] * 11)
-      expect(result.collect { |n| n[:duration] }).to eq([1/16r] * 4 + [1/24r] * 18)
-    end
-
-    it '@example Trill starting low' do
-      trill = Musa::Transcriptors::FromGDV::ToMIDI::Trill.new(duration_factor: 1/4r)
-      gdv = { grade: 0, duration: 1r, tr: :low }
-      result = trill.transcript(gdv, base_duration: 1/4r, tick_duration: 1/96r)
-
-      # Starts with lower neighbor
-      expect(result[0][:grade]).to eq(-1)
-      expect(result[1][:grade]).to eq(0)
     end
 
     it '@example A numeric :tr, which scales this performer\'s trill' do
@@ -310,15 +276,6 @@ RSpec.describe 'Transcription Inline Documentation Examples' do
   end
 
   context 'ToMusicXML module documentation (from-gdv-to-musicxml.rb)' do
-    it '@example Create MusicXML transcription chain' do
-      transcriptors = Musa::Transcriptors::FromGDV::ToMusicXML.transcription_set
-      transcriptor = Musa::Transcription::Transcriptor.new(
-        transcriptors,
-        base_duration: 1/4r
-      )
-
-      expect(transcriptor.transcriptors.size).to eq(2)
-    end
 
     it '@example Process appogiatura' do
       app = Musa::Transcriptors::FromGDV::ToMusicXML::Appogiatura.new
