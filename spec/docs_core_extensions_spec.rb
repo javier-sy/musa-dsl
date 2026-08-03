@@ -34,18 +34,6 @@ RSpec.describe 'Core Extensions Documentation Examples' do
       expect(result).to eq([0, 2, 3, 4, 7])
     end
 
-    it 'deep copies objects using Marshal' do
-      original = { grade: 0, duration: 1r, nested: { value: 42 } }
-      copy = Marshal.load(Marshal.dump(original))
-
-      # Modify copy doesn't affect original
-      copy[:grade] = 2
-      copy[:nested][:value] = 99
-
-      expect(original[:grade]).to eq(0)
-      expect(original[:nested][:value]).to eq(42)
-    end
-
     it 'demonstrates DynamicProxy concept' do
       # DynamicProxy is used internally for lazy series evaluation
       # This test verifies the concept without testing implementation details

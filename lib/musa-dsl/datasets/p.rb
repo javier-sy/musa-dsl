@@ -73,12 +73,16 @@ module Musa::Datasets
   #
   # @example Convert to timed serie
   #   p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
-  #   serie = p.to_timed_serie(base_duration: 1/4r)
-  #   # base_duration: quarter note = 1/4 beat
+  #   p.to_timed_serie(base_duration: 1/4r).i.to_a
+  #   # => [{ time: 0r, value: 60 }, { time: 1r, value: 64 }, { time: 3r, value: 67 }]
+  #
+  #   # The 4 and the 8 between the pitches are durations in base_durations, so
+  #   # the third point lands at 3r and not at 2r.
   #
   # @example Start at specific time
-  #   serie = p.to_timed_serie(time_start: 10)
-  #   # First event at time 10
+  #   p = [60, 4, 64].extend(Musa::Datasets::P)
+  #   p.to_timed_serie(base_duration: 1/4r, time_start: 10r).i.to_a
+  #   # => [{ time: 10r, value: 60 }, { time: 11r, value: 64 }]
   #
   # @example Start time from component
   #   p = [{ time: 100, pitch: 60 }, 4, { time: 200, pitch: 64 }].extend(P)
@@ -87,8 +91,10 @@ module Musa::Datasets
   #
   # @example Transform points
   #   p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
-  #   p2 = p.map { |point| point + 12 }
-  #   # Transform each point (e.g., transpose pitches up one octave)
+  #   p.map { |point| point + 12 }  # => [72, 4, 76, 8, 79]
+  #
+  #   # Only the points: the 4 and the 8 are durations and come out untouched,
+  #   # so a transposition can be written without guarding against them.
   #
   # @see PS Parameter segments
   # @see AbsTimed Timed events

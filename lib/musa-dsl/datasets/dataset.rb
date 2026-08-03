@@ -74,7 +74,11 @@
 #
 #   # Convert to score notation using scale
 #   scale = Musa::Scales::Scales.et12[440.0].major[60]
-#   gdv = pdv.to_gdv(scale)  # Uses scale degrees
+#   pdv.to_gdv(scale)
+#   # => { grade: 0, octave: 0, duration: 1.0, velocity: 0 }
+#
+#   # C4 is the tonic, so grade 0 in octave 0. And velocity 0 is not silence:
+#   # GDV velocity is a signed step around mf, which is MIDI 64.
 #
 # @example Score-style grade/duration/velocity
 #   gdv = { grade: 0, duration: 1.0, velocity: 0 }.extend(Musa::Datasets::GDV)
@@ -98,6 +102,9 @@
 #   score = Musa::Datasets::Score.new
 #   score.at(0, add: { grade: 0, duration: 1.0 }.extend(Musa::Datasets::GDV))
 #   score.at(1, add: { grade: 2, duration: 1.0 }.extend(Musa::Datasets::GDV))
+#
+#   score.size          # => 2
+#   score.at(0).size    # => 1
 #
 # @see E Base event type
 # @see PDV MIDI-style representation

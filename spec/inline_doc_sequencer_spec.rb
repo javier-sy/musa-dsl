@@ -45,29 +45,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
       expect(played_notes[4][:duration]).to eq(2)
     end
 
-    it '@example Every and move' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-
-      tick_positions = []
-      volume_values = []
-
-      # Execute every beat starting from position 0 until position 7
-      seq.every(1, till: 7) { tick_positions << seq.position }
-
-      # Animate value from 0 to 127 over 4 beats
-      seq.move(every: 1/4r, from: 0, to: 127, duration: 4) do |value|
-        volume_values << value.round
-      end
-
-      seq.run
-
-      # Every executes at positions up to (but not including) till value
-      expect(tick_positions.size).to be >= 6
-      expect(volume_values.first).to eq(0)
-      expect(volume_values.last).to eq(127)
-      expect(volume_values.size).to be > 10  # Multiple steps
-    end
-
     it '@example Resetting sequencer state' do
       seq = Musa::Sequencer::BaseSequencer.new(4, 24)
 

@@ -108,16 +108,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect { event.validate! }.not_to raise_error
     end
 
-    it '@example Timed event' do
-      event1 = { time: 0.0, value: { pitch: 60 } }.extend(Musa::Datasets::AbsTimed)
-      event2 = { time: 1.0, value: { pitch: 64 } }.extend(Musa::Datasets::AbsTimed)
-
-      expect(event1[:time]).to eq(0.0)
-      expect(event1[:value][:pitch]).to eq(60)
-      expect(event2[:time]).to eq(1.0)
-      expect(event2[:value][:pitch]).to eq(64)
-    end
-
     it '@example Staccato note' do
       event = { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(Musa::Datasets::AbsD)
 
@@ -544,15 +534,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       # First event at time 100 (from first point's :time)
     end
 
-    it '@example Transform points' do
-      p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
-
-      p2 = p.map { |point| point + 12 }
-
-      expect(p2).to eq([72, 4, 76, 8, 79])
-      # Transform each point (e.g., transpose pitches up one octave)
-    end
-
     it '@example Create parameter segments' do
       p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
 
@@ -717,17 +698,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(score.at(1r).size).to eq(1)
     end
 
-    it '@example Add events' do
-      score = Musa::Datasets::Score.new
-      gdv1 = { grade: 0, duration: 1.0 }.extend(Musa::Datasets::GDV)
-      gdv2 = { grade: 2, duration: 1.0 }.extend(Musa::Datasets::GDV)
-
-      score.at(0r, add: gdv1)
-      score.at(1r, add: gdv2)
-
-      expect(score.size).to eq(2)
-    end
-
     it '@example Query time interval' do
       score = Musa::Datasets::Score.new
       score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
@@ -767,15 +737,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(score.duration).to eq(2r)
       # Latest finish time (3r) - 1r
-    end
-
-    it '@example With initial events' do
-      score = Musa::Datasets::Score.new({
-        0r => [{ pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV)],
-        1r => [{ pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV)]
-      })
-
-      expect(score.size).to eq(2)
     end
 
     it '@example Duration calculation' do

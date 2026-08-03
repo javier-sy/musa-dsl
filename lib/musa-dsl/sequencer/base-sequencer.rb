@@ -128,8 +128,17 @@ module Musa
     #   end
     #
     #   seq.run
-    #   # Result: tick_positions = [0, 1, 2, 3, 4, 5, 6, 7]
-    #   # Result: volume_values = [0, 8, 16, ..., 119, 127]
+    #
+    #   tick_positions.size            # => 7
+    #   tick_positions.first           # => 95/96r
+    #   volume_values.first            # => 0
+    #   volume_values.last             # => 127
+    #
+    #   # 95/96 and not 1: a sequencer with a tick grid starts one tick before
+    #   # bar 1, so an `every` written outside any `at` pulses one tick before
+    #   # each bar. Inside `at 1` it lands on them. And seven pulses and not
+    #   # eight, because `till:` is where it stops rather than the last one it
+    #   # plays.
     #
     # The per-method examples further down are written against:
     #
