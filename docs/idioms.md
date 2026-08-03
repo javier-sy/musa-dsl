@@ -27,6 +27,12 @@ earlier, when the plan is modelled. Hold absolute positions and a loop of `at`
 is already inevitable; hold durations and `play` is already natural. No guard
 placed later can rescue a plan modelled in the wrong coordinates.
 
+The code in this document is written as sketches -- `at 1 + start do ... end`,
+`play plan_serie do |duration:, order:, ...|` -- because what is being compared
+is the SHAPE of two solutions, not a working one. They are fenced as `text` and
+not as `ruby` for that reason: a fence that says ruby is a promise that the block
+runs, and `tools/doc-examples.rb` holds every such block to it.
+
 Two corollaries used throughout this document:
 
 - **Model plans as durations, not as positions.**
@@ -40,7 +46,7 @@ Two corollaries used throughout this document:
 
 **Reflex** — precompute absolute positions, then iterate:
 
-```ruby
+```text
 plan.each_with_index do |(start, duration), i|
   at 1 + start do ... end
 end
@@ -50,7 +56,7 @@ end
 length differs from the step, `note_duration:` and `forward_duration:`),
 consumed by `play`, which walks time itself:
 
-```ruby
+```text
 play plan_serie do |duration:, order:, ...|
   ...
 end
