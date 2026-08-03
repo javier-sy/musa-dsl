@@ -4,6 +4,37 @@
 
 Core Extensions provide Ruby refinements and metaprogramming utilities that enable MusaDSL's flexible DSL syntax. These are the building blocks used throughout the framework.
 
+## When is this the answer
+
+These are not tools for writing music. They are what the DSL is made of, and you
+reach for them when you are **extending** it -- a builder of your own, a verb
+that takes parameters as loosely as the framework's do, a structure that has to
+survive being copied.
+
+By the shape of the problem:
+
+| You have | You want | This |
+|---|---|---|
+| a parameter that may be one thing or many | to stop writing `x.is_a?(Array) ? x : [x]` | `arrayfy` |
+| a parameter that may be one value or one per voice | `velocity: 80` and `velocity: [80, 90]` to mean the same thing | `hashify` -- a single value broadcasts to every key |
+| `60..67` written where a list was expected | the range opened out | `explode_ranges` |
+| a nested structure about to be handed to somebody who mutates | a copy that shares nothing | `dup(deep: true)`, or `clone(deep: true)` if it is a dataset |
+| a block whose body should read as a DSL | `item 'first'` to resolve against your object | `With` |
+| a reference to something that does not exist yet | to hand it out now and decide later | `DynamicProxy` |
+| a class with many `add_x` / `xs` pairs to write | not to write them | `AttributeBuilder` |
+| a block that receives who-knows-what | to declare only the parameters you use | `SmartProcBinder` |
+
+**When it is NOT the answer.** If you are placing notes in time, choosing
+material, or shaping a phrase, nothing here is what you want -- see
+[series](series.md), [sequencer](sequencer.md) and [neumas](neumas.md). These
+extensions have no musical meaning: they are about Ruby, and they are here
+because the musical layer is built on them.
+
+**The two that bite.** `dup` drops the singleton class and `clone` keeps it, so
+copying a GDV with `dup(deep: true)` gives back a plain hash that works until
+something calls `to_pdv` on it. And `explode_ranges` only opens the top level: a
+range inside a nested array stays a range.
+
 ## Ruby Refinements & Metaprogramming
 
 **Arrayfy & Hashify** - Parameter Normalization:
@@ -23,15 +54,25 @@ value.arrayfy  # => [42]
 array = [1, 2, 3]
 array.arrayfy  # => [1, 2, 3] (already array, unchanged)
 
-# Hashify: convert to hash with specified keys
+# Hashify: convert to hash with the given keys, which go in `keys:`
 data = [60, 1r, 80]
-data.hashify(:pitch, :duration, :velocity)
+data.hashify(keys: [:pitch, :duration, :velocity])
 # => { pitch: 60, duration: 1r, velocity: 80 }
 
-# Works with hashes (validates keys)
+# A hash keeps what it has and gains what it lacks
 existing = { pitch: 64, duration: 1r }
-existing.hashify(:pitch, :duration, :velocity)
+existing.hashify(keys: [:pitch, :duration, :velocity])
 # => { pitch: 64, duration: 1r, velocity: nil }
+
+# And a single value is BROADCAST to every key, which is the whole point:
+# it is what lets `velocity: 80` and `velocity: [80, 90, 100]` be written
+# the same way at the call site
+80.hashify(keys: [:soprano, :alto, :bass])
+# => { soprano: 80, alto: 80, bass: 80 }
+
+# `default:` fills the gaps instead of leaving them nil
+{ pitch: 64 }.hashify(keys: [:pitch, :velocity], default: 80)
+# => { pitch: 64, velocity: 80 }
 ```
 
 **ExplodeRanges** - Range Expansion:
@@ -60,25 +101,54 @@ chord = [60, 64..67, 72].explode_ranges
 
 Create deep copies of objects with circular reference handling and singleton module preservation.
 
+The refinement adds a `deep:` option to `dup` and `clone`; there is no
+`deep_copy` method on the object.
+
 ```ruby
 require 'musa-dsl'
 
 using Musa::Extension::DeepCopy
 
 original = { pitch: 60, envelope: { attack: 0.1, decay: 0.2 } }
-copy = original.deep_copy
+copy = original.dup(deep: true)
 
 copy[:envelope][:attack] = 0.5
 
-original[:envelope][:attack]  # => 0.1 (unchanged)
-copy[:envelope][:attack]       # => 0.5 (modified)
-
-# Preserves singleton modules (dataset types)
-gdv = { grade: 0, duration: 1r }.extend(Musa::Datasets::GDV)
-gdv_copy = gdv.deep_copy
-
-gdv_copy.is_a?(Musa::Datasets::GDV)  # => true (module preserved)
+original[:envelope][:attack]  # => 0.1
+copy[:envelope][:attack]      # => 0.5
 ```
+
+**`dup` or `clone` decides whether the dataset survives**, and it decides it the
+same way plain Ruby does: `dup` drops the singleton class, `clone` keeps it. A
+GDV, a PDV, an AbsI — every dataset in this framework is a Hash or an Array with
+a module extended into its singleton class, so this is not a detail:
+
+```ruby
+gdv = { grade: 0, duration: 1r }.extend(Musa::Datasets::GDV)
+
+gdv.clone(deep: true).is_a?(Musa::Datasets::GDV)  # => true
+gdv.dup(deep: true).is_a?(Musa::Datasets::GDV)    # => false
+```
+
+Copy a dataset with `dup` and what comes back is a plain hash with the right
+keys, which will go on working until something asks it `to_pdv` and finds no
+such method.
+
+**Freezing follows `Object#clone`'s three rules, at every node.** `freeze: true`
+freezes the whole copy, `false` freezes nothing, and the default — `nil` —
+gives each node the state its own original had, so a frozen tree comes back
+frozen and a mixed one comes back mixed:
+
+```ruby
+frozen = { a: { b: 1 }.freeze }.freeze
+frozen.clone(deep: true).frozen?       # => true
+frozen.clone(deep: true)[:a].frozen?   # => true
+
+frozen.clone(deep: true, freeze: false).frozen?  # => false
+```
+
+It also handles circular graphs: a structure that refers to itself is copied
+once and the copy refers to itself in the same shape.
 
 **SmartProcBinder** - Intelligent Parameter Binding:
 
@@ -105,106 +175,106 @@ end
 # regardless of parameter order or naming
 ```
 
-**DynamicProxy** - Lazy Initialization Pattern:
+**DynamicProxy** - A Reference Before There Is Anything To Refer To:
 
-Forward method calls to a lazily-initialized target. Used for deferred object creation.
+An object that forwards everything to a `receiver` you set later. It does not
+create anything by itself: what it buys is being able to hand out a reference
+now and decide what it points at afterwards.
 
 ```ruby
 require 'musa-dsl'
 
-# DynamicProxy is used internally for lazy series evaluation
-# and deferred resource allocation
+proxy = Musa::Extension::DynamicProxy::DynamicProxy.new
 
-# Example: Proxy pattern for expensive resource
-class ExpensiveResource
-  def initialize
-    puts "Initializing expensive resource..."
-    @data = (1..1000000).to_a
-  end
+proxy.receiver = [1, 2, 3]
+proxy.size   # => 3
 
-  def process
-    puts "Processing..."
-  end
+proxy.receiver = 'Hello'
+proxy.size   # => 5
+```
+
+Called before its receiver is set, it says so rather than failing obscurely:
+
+```ruby
+begin
+  Musa::Extension::DynamicProxy::DynamicProxy.new.size
+rescue NoMethodError => e
+  e.message
 end
-
-# Create proxy (doesn't initialize resource yet)
-proxy = Musa::Extension::DynamicProxy::DynamicProxy.new(ExpensiveResource)
-
-# Resource is created only when first method is called
-proxy.process  # Outputs: "Initializing expensive resource..." then "Processing..."
-proxy.process  # Only outputs: "Processing..." (resource already initialized)
+# => "Method 'size' is unknown because self is a DynamicProxy with undefined receiver"
 ```
 
 **With** - Flexible Block Execution:
 
-Execute blocks with flexible context switching (instance_eval vs call with self). Core utility for DSL builders.
+Run a block either in the caller's context or in the object's, which is what
+lets a DSL read as a DSL. `include Musa::Extension::With` and the object gains
+`with`.
 
 ```ruby
 require 'musa-dsl'
 
-using Musa::Extension::With
-
-# Used internally by DSL builders to execute configuration blocks
-# Can switch between instance_eval (DSL style) and block.call (parameter style)
-
 class Builder
+  include Musa::Extension::With
+
+  attr_reader :items
+
   def initialize(&block)
     @items = []
-    # Execute block in builder context using With
-    self.with &block
+    with(&block) if block
   end
 
   def item(name)
     @items << name
-  end
-
-  def items
-    @items
+    self
   end
 end
 
-# DSL-style block (instance_eval)
-builder = Builder.new do
-  item "first"
-  item "second"
-end
-
-builder.items  # => ["first", "second"]
+Builder.new { item 'first'; item 'second' }.items
+# => ["first", "second"]
 ```
+
+Inside the block, `item` resolves against the Builder: the block was
+`instance_eval`ed. Write a parameter named `_` and it flips — the block runs in
+the caller's context and the object arrives as that parameter, which is what you
+want when the block needs the surrounding scope more than the object's verbs.
 
 **AttributeBuilder** - DSL Builder Macros:
 
-Metaprogramming macros for creating DSL builder patterns. Automatically generates setter and getter methods.
+Generates the adder/getter pairs that the Score classes are built from. It is
+`extend`ed, not included, and the macros are named after the shape of what they
+build -- there is no generic `attribute`:
+
+| Macro | Generates |
+|---|---|
+| `attr_simple_builder :name` | `name(value)` sets, `name` reads |
+| `attr_tuple_adder_to_hash :item, Klass` | `add_item(id, value)`, `items` |
+| `attr_tuple_adder_to_array :item, Klass` | `add_item(...)`, `items` |
+| `attr_complex_adder_to_array :item, Klass` | the same, with a block-built value |
+| `attr_complex_adder_to_custom :item` | the same, with your own constructor |
 
 ```ruby
 require 'musa-dsl'
 
-# AttributeBuilder is used internally by MusicXML Builder and other DSL components
+Track = Struct.new(:id, :name)
 
-class SynthConfig
-  include Musa::Extension::AttributeBuilder
+class Arrangement
+  extend Musa::Extension::AttributeBuilder
 
-  # Define DSL attributes
-  attribute :waveform
-  attribute :frequency
-  attribute :amplitude
-
-  def initialize(&block)
-    self.with &block if block
+  def initialize
+    @tracks = {}
   end
+
+  attr_tuple_adder_to_hash :track, Track
 end
 
-# Use DSL to configure
-synth = SynthConfig.new do
-  waveform :sine
-  frequency 440
-  amplitude 0.8
-end
-
-synth.waveform   # => :sine
-synth.frequency  # => 440
-synth.amplitude  # => 0.8
+arrangement = Arrangement.new
+arrangement.add_track :piano, 'Piano I'
+arrangement.tracks[:piano].name  # => "Piano I"
 ```
+
+The plural is derived from the singular (`track` → `tracks`) unless `plural:`
+says otherwise, and the adder builds `Klass.new(id, value)`, so the class has to
+take both.
 
 ## Logger - Sequencer-Aware Logging
 
@@ -222,12 +292,10 @@ require 'musa-dsl'
 # Create sequencer-aware logger
 sequencer = Musa::Sequencer::Sequencer.new(4, 24)
 
-logger = Musa::Logger.new(
-  sequencer: sequencer,
-  level: :debug,
-  position_format_integer_digits: 3,    # Position: "  4" instead of "4"
-  position_format_decimal_digits: 3     # Position: "4.500" instead of "4.5"
-)
+# The position format is ONE number: integer digits before the point, decimal
+# digits after it. 3.3 prints bar 4.5 as "  4.500".
+logger = Musa::Logger::Logger.new(sequencer: sequencer, position_format: 3.3)
+logger.level = Logger::DEBUG
 
 # Use logger in sequencer context
 sequencer.at 1 do
