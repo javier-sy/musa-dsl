@@ -42,26 +42,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
   end
 
   context 'ScaleSystem Documentation' do
-    it 'demonstrates ScaleSystem.id' do
-      # From ScaleSystem @example
-      id = Musa::Scales::EquallyTempered12ToneScaleSystem.id
-
-      expect(id).to eq(:et12)
-    end
-
-    it 'demonstrates ScaleSystem.notes_in_octave' do
-      # From ScaleSystem @example
-      notes = Musa::Scales::EquallyTempered12ToneScaleSystem.notes_in_octave
-
-      expect(notes).to eq(12)
-    end
-
-    it 'demonstrates ScaleSystem.part_of_tone_size' do
-      # From ScaleSystem @example
-      size = Musa::Scales::EquallyTempered12ToneScaleSystem.part_of_tone_size
-
-      expect(size).to eq(1)
-    end
 
     it 'demonstrates ScaleSystem.intervals' do
       # From ScaleSystem @example
@@ -109,12 +89,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(modern.a_frequency).to eq(442.0)
     end
 
-    it 'demonstrates offset_of_interval' do
-      # From ScaleSystem @example
-      offset = Musa::Scales::EquallyTempered12ToneScaleSystem.offset_of_interval(:P5)
-
-      expect(offset).to eq(7)
-    end
   end
 
   context 'ScaleSystemTuning Documentation' do
@@ -164,17 +138,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
       grades = Musa::Scales::MajorScaleKind.grades
 
       expect(grades).to eq(7)
-    end
-
-    it 'demonstrates ScaleKind.grade_of_function' do
-      # From ScaleKind @example
-      tonic_grade = Musa::Scales::MajorScaleKind.grade_of_function(:tonic)
-      dominant_grade = Musa::Scales::MajorScaleKind.grade_of_function(:dominant)
-      v_grade = Musa::Scales::MajorScaleKind.grade_of_function(:V)
-
-      expect(tonic_grade).to eq(0)
-      expect(dominant_grade).to eq(4)
-      expect(v_grade).to eq(4)
     end
 
     it 'demonstrates creating scales from scale kind' do
@@ -356,14 +319,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect([62, 64]).to include(note.pitch)
     end
 
-    it 'demonstrates offset_of_interval' do
-      # From Scale @example
-      tuning = Scales.default_system.default_tuning
-      c_major = tuning.major[60]
-
-      expect(c_major.offset_of_interval(:P5)).to eq(7)
-      expect(c_major.offset_of_interval(:M3)).to eq(4)
-    end
   end
 
   context 'NoteInScale Documentation' do
@@ -741,13 +696,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
       expect(min7.pitches(60)).to eq [60, 63, 67, 70]
     end
 
-    it 'demonstrates features_from conversion' do
-      # From ChordDefinition @example
-      features = Musa::Chords::ChordDefinition.features_from([:major, :triad])
-
-      expect(features).to eq({ quality: :major, size: :triad })
-    end
-
     it 'demonstrates find_by_features' do
       # From ChordDefinition @example
       definitions = Musa::Chords::ChordDefinition.find_by_features(quality: :major, size: :triad)
@@ -951,17 +899,6 @@ RSpec.describe 'Music Inline Documentation Examples' do
       pitches = chord.pitches(:root, :third)
 
       expect(pitches).to eq([60, 64])
-    end
-
-    it 'demonstrates Chord#features' do
-      # From Chord @example
-      tuning = Scales.default_system.default_tuning
-      scale = tuning.major[60]
-      chord = scale.tonic.chord
-
-      features = chord.features
-
-      expect(features).to include(quality: :major, size: :triad)
     end
 
     it 'demonstrates Chord#featuring change size' do

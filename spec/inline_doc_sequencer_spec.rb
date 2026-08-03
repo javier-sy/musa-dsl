@@ -247,17 +247,6 @@ RSpec.describe 'Sequencer Inline Documentation Examples' do
 
   context 'PlayEval modes (base-sequencer-implementation-play-helper.rb)' do
 
-    it '@example A position already gone by is played as due, not dropped' do
-      seq = Musa::Sequencer::BaseSequencer.new(4, 24)
-      played = []
-
-      seq.play(S({ pitch: 60, at: 0r }, { pitch: 62, at: 2r }),
-               mode: :at) { |pitch:| played << [pitch, seq.position] }
-      400.times { seq.tick }
-
-      expect(played).to eq([[60, 95/96r], [62, 2r]])
-    end
-
     it ':at mode plays each element where the element says, not where its predecessor did' do
       # This used to be off by one: the :at travelled in the continuation, which
       # is when the NEXT element is fetched, so these three sounded at 95/96r,

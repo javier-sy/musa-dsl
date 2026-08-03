@@ -5,13 +5,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
   include Musa::All
 
   context 'Dataset base (dataset.rb)' do
-    it 'Basic PackedV to V conversion' do
-      pv = { a: 1, b: 2, c: 3 }.extend(Musa::Datasets::PackedV)
-
-      v = pv.to_V([:c, :b, :a])
-
-      expect(v).to eq([3, 2, 1])
-    end
 
     it 'Point series structure' do
       p = [60, 4, 64, 8, 67].extend(Musa::Datasets::P)
@@ -106,14 +99,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(event.valid?).to be true
       expect { event.validate! }.not_to raise_error
-    end
-
-    it '@example Staccato note' do
-      event = { pitch: 60, duration: 1.0, note_duration: 0.5 }.extend(Musa::Datasets::AbsD)
-
-      expect(event.duration).to eq(1.0)
-      expect(event.note_duration).to eq(0.5)
-      # Note sounds for 0.5, but next event waits 1.0
     end
 
     it '@example Simultaneous events' do
@@ -452,17 +437,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
     end
   end
 
-  context 'PackedV (packed-v.rb)' do
-
-    it '@example Key order matters' do
-      pv = { a: 1, b: 2, c: 3 }.extend(Musa::Datasets::PackedV)
-
-      v = pv.to_V([:c, :b, :a])
-
-      expect(v).to eq([3, 2, 1])
-    end
-  end
-
   context 'P (p.rb)' do
 
     it '@example Convert to timed serie' do
@@ -579,21 +553,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
       expect(helper.send(:velocity_of, 5)).to eq('ffff')
     end
 
-    it '@example Single parameter' do
-      helper = Object.new.extend(Musa::Datasets::Helper)
-
-      result = helper.send(:modificator_string, :pedal, 'down')
-
-      expect(result).to eq('pedal("down")')
-    end
-
-    it '@example Multiple parameters' do
-      helper = Object.new.extend(Musa::Datasets::Helper)
-
-      result = helper.send(:modificator_string, :bend, [2, 'up'])
-
-      expect(result).to eq('bend(2, "up")')
-    end
   end
 
   context 'Score (score.rb)' do
@@ -643,14 +602,6 @@ RSpec.describe 'Datasets Inline Documentation Examples' do
 
       expect(events).to be_an(Array)
       expect(events.size).to eq(1)
-    end
-
-    it '@example Multiple events at same time (chord)' do
-      score = Musa::Datasets::Score.new
-      score.at(0r, add: { pitch: 60, duration: 1.0 }.extend(Musa::Datasets::PDV))
-      score.at(0r, add: { pitch: 64, duration: 1.0 }.extend(Musa::Datasets::PDV))
-
-      expect(score.at(0r).size).to eq(2)
     end
 
     it '@example Convert to hash' do

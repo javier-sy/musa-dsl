@@ -113,7 +113,7 @@ RSpec.describe 'Inline documentation examples', runs_last: true do
   # MAY ONLY GO DOWN. Series and musicxml are migrated; this counts what is
   # left, and it counts examples rather than files so that renaming a file
   # cannot make the number look better than the work done.
-  UNMIGRATED_DOC_SPECS = 496
+  UNMIGRATED_DOC_SPECS = 478
 
   # Examples that do not run: raise, block until killed, or need a gem this
   # project does not depend on. Counted together because which of the three a

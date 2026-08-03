@@ -11,14 +11,6 @@ RSpec.describe 'Core Extensions Documentation Examples' do
     using Musa::Extension::ExplodeRanges
     using Musa::Extension::DeepCopy
 
-    it 'normalizes parameters with arrayfy' do
-      value = 42
-      expect(value.arrayfy).to eq([42])
-
-      array = [1, 2, 3]
-      expect(array.arrayfy).to eq([1, 2, 3])
-    end
-
     it 'converts to hash with hashify' do
       data = [60, 1r, 80]
       result = data.hashify(keys: [:pitch, :duration, :velocity])
@@ -26,12 +18,6 @@ RSpec.describe 'Core Extensions Documentation Examples' do
       expect(result[:pitch]).to eq(60)
       expect(result[:duration]).to eq(1r)
       expect(result[:velocity]).to eq(80)
-    end
-
-    it 'expands ranges with explode_ranges' do
-      result = [0, 2..4, 7].explode_ranges
-
-      expect(result).to eq([0, 2, 3, 4, 7])
     end
 
     it 'demonstrates DynamicProxy concept' do

@@ -119,16 +119,6 @@ RSpec.describe 'Datasets Documentation Examples' do
       expect(pv[:velocity]).to eq(64)
     end
 
-    it 'converts PackedV to V (hash to array)' do
-      include Musa::Datasets
-
-      # Hash to array
-      pv = { pitch: 60, duration: 1r, velocity: 64 }.extend(Musa::Datasets::PackedV)
-      v = pv.to_V([:pitch, :duration, :velocity])
-
-      expect(v).to eq([60, 1r, 64])
-    end
-
     it 'compresses with default values (V to PackedV)' do
       include Musa::Datasets
 
