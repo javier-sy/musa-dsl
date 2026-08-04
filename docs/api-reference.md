@@ -83,4 +83,4 @@ yard stats --list-undoc
 
 - **Conceptual Documentation**: [subsystems/](subsystems/) - Guides and tutorials for each subsystem
 - **Examples**: [examples/](examples/) - Runnable code examples
-- **Main Documentation**: [README.md](https://github.com/javier-sy/musa-dsl/blob/master/docs/README.md) - Documentation hub
+- **Main Documentation**: [README.md](README.md) - Documentation hub

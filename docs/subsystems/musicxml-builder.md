@@ -17,7 +17,7 @@ needs.
 
 **Notation is a rendering, not the music.** The same GDV goes to MIDI with its
 ornaments expanded and to MusicXML with them preserved; see
-[transcription](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/transcription.md). If you find yourself writing the same phrase
+[transcription](transcription.md). If you find yourself writing the same phrase
 twice, once to sound and once to print, something has been decided at the wrong
 layer.
 

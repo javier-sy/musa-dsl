@@ -26,7 +26,7 @@ By the shape of the problem:
 
 **When it is NOT the answer.** If you are placing notes in time, choosing
 material, or shaping a phrase, nothing here is what you want -- see
-[series](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/series.md), [sequencer](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/sequencer.md) and [neumas](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/neumas.md). These
+[series](series.md), [sequencer](sequencer.md) and [neumas](neumas.md). These
 extensions have no musical meaning: they are about Ruby, and they are here
 because the musical layer is built on them.
 

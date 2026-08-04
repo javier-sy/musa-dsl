@@ -103,7 +103,7 @@ multiples of a base duration -- `1` is one base duration, not a quarter note.
 
 **The first grade is absolute and the rest are movements.** That is not a
 shorthand: it is what lets the same line be re-rooted anywhere, and it is the
-same idea as [GDVd](https://github.com/javier-sy/musa-dsl/blob/master/docs/subsystems/datasets.md) arriving from the notation side. A decoder is
+same idea as [GDVd](datasets.md) arriving from the notation side. A decoder is
 what resolves those movements, and it is what holds the scale and the base
 duration they are read against.
 
