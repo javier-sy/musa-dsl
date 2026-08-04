@@ -247,8 +247,8 @@ result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Series](https://rubydoc.info/gems/musa-dsl/Musa/Series) - Sequence generators and operations
+**Classes:**
+- `Musa::Series` - Sequence generators and operations
 
 **Source code:** `lib/musa-dsl/series/`
 

@@ -166,9 +166,9 @@ puts mxml.to_xml.string
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Transcription](https://rubydoc.info/gems/musa-dsl/Musa/Transcription) - Musical event transformation and ornament expansion
+**Classes:**
+- `Musa::Transcription` - Musical event transformation and ornament expansion
 
-**Source code:** `lib/transcription/` and `lib/musicxml/`
+**Source code:** `lib/musa-dsl/transcription/` and `lib/musa-dsl/musicxml/`
 
 

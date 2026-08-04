@@ -633,9 +633,9 @@ Musa::Chords::Chord.with_root(60, scale: c_major, name: :add9).pitches
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Scales](https://rubydoc.info/gems/musa-dsl/Musa/Scales) - Scale systems and tuning
-- [Musa::Chords](https://rubydoc.info/gems/musa-dsl/Musa/Chords) - Chord structures and navigation
+**Classes:**
+- `Musa::Scales` - Scale systems and tuning
+- `Musa::Chords` - Chord structures and navigation
 
 **Source code:** `lib/musa-dsl/music/`
 

@@ -177,10 +177,10 @@ Each note hash contains:
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::MIDIVoices](https://rubydoc.info/gems/musa-dsl/Musa/MIDIVoices) - Voice management and polyphonic playback
-- [Musa::MIDIRecorder](https://rubydoc.info/gems/musa-dsl/Musa/MIDIRecorder) - MIDI input recording and transcription
+**Classes:**
+- `Musa::MIDIVoices` - Voice management and polyphonic playback
+- `Musa::MIDIRecorder` - MIDI input recording and transcription
 
-**Source code:** `lib/midi/`
+**Source code:** `lib/musa-dsl/midi/`
 
 

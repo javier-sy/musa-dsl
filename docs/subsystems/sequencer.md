@@ -463,9 +463,9 @@ fired  # => [:on_stop, :after]
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Sequencer](https://rubydoc.info/gems/musa-dsl/Musa/Sequencer) - Main sequencer class and DSL
+**Classes:**
+- `Musa::Sequencer` - Main sequencer class and DSL
 
-**Source code:** `lib/sequencer/`
+**Source code:** `lib/musa-dsl/sequencer/`
 
 

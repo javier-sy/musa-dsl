@@ -233,12 +233,12 @@ worst = ranked.last              # Lowest fitness (but still viable)
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Generative::Markov](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Markov) - Probabilistic sequence generation
-- [Musa::Generative::Variatio](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Variatio) - Cartesian product variations
-- [Musa::Generative::GenerativeGrammar](https://rubydoc.info/gems/musa-dsl/Musa/Generative/GenerativeGrammar) - Formal grammar generation
-- [Musa::Generative::Darwin](https://rubydoc.info/gems/musa-dsl/Musa/Generative/Darwin) - Genetic algorithms
+**Classes:**
+- `Musa::Generative::Markov` - Probabilistic sequence generation
+- `Musa::Generative::Variatio` - Cartesian product variations
+- `Musa::Generative::GenerativeGrammar` - Formal grammar generation
+- `Musa::Generative::Darwin` - Genetic algorithms
 
-**Source code:** `lib/generative/`
+**Source code:** `lib/musa-dsl/generative/`
 
 

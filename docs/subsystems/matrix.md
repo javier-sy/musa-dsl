@@ -87,9 +87,9 @@ rows are written backwards is a gesture read forwards, not a reversed one.
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Matrix](https://rubydoc.info/gems/musa-dsl/Musa/Matrix) - Matrix to point sequence conversion
+**Classes:**
+- `Musa::Matrix` - Matrix to point sequence conversion
 
-**Source code:** `lib/matrix/`
+**Source code:** `lib/musa-dsl/matrix/`
 
 

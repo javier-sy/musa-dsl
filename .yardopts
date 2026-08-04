@@ -6,6 +6,5 @@
 lib/**/*.rb
 -
 docs/idioms.md
-docs/api-reference.md
 docs/subsystems/*.md
 docs/examples/*.md

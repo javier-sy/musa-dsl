@@ -125,11 +125,11 @@ available in `score.rb`.
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Neumas](https://rubydoc.info/gems/musa-dsl/Musa/Neumas) - Musical notation data structures
-- [Musa::Neumalang](https://rubydoc.info/gems/musa-dsl/Musa/Neumalang) - Notation parser and interpreter
+**Classes:**
+- `Musa::Neumas` - Musical notation data structures
+- `Musa::Neumalang` - Notation parser and interpreter
 
-**Source code:** `lib/neumas/` and `lib/neumalang/`
+**Source code:** `lib/musa-dsl/neumas/` and `lib/musa-dsl/neumalang/`
 
 ## Sending it somewhere
 

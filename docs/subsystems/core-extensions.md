@@ -327,8 +327,8 @@ sequencer.run
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Extension](https://rubydoc.info/gems/musa-dsl/Musa/Extension) - Ruby refinements and metaprogramming utilities
-- [Musa::Logger](https://rubydoc.info/gems/musa-dsl/Musa/Logger) - Structured logging system
+**Classes:**
+- `Musa::Extension` - Ruby refinements and metaprogramming utilities
+- `Musa::Logger` - Structured logging system
 
 **Source code:** `lib/musa-dsl/core-ext/` and `lib/musa-dsl/logger/`

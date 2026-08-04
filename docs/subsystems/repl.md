@@ -173,9 +173,9 @@ reported  # => ["This error will be sent to REPL client"]
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::REPL](https://rubydoc.info/gems/musa-dsl/Musa/REPL) - Live coding server and protocol
+**Classes:**
+- `Musa::REPL` - Live coding server and protocol
 
-**Source code:** `lib/repl/`
+**Source code:** `lib/musa-dsl/repl/`
 
 

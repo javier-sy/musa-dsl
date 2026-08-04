@@ -469,10 +469,10 @@ events_in_range = score.between(1r, 3r)
 
 ## API Reference
 
-**Complete API documentation:**
-- [Musa::Datasets](https://rubydoc.info/gems/musa-dsl/Musa/Datasets) - Musical data structures (GDV, PDV, Score)
+**Classes:**
+- `Musa::Datasets` - Musical data structures (GDV, PDV, Score)
 
-**Source code:** `lib/datasets/`
+**Source code:** `lib/musa-dsl/datasets/`
 
 ## Score - Advanced Queries & Filtering
 
