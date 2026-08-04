@@ -161,8 +161,14 @@ and they are the last thing to read rather than the first:
    metaprogramming everything else assumes
 2. [datasets](docs/subsystems/datasets.md) — read as an extension point: how a
    Hash becomes a musical event, and how to add your own
-3. [idioms](docs/idioms.md) — the shapes the framework expects, and what the
-   reflex would have been
+
+**And one that is not a stage of any of them.**
+[idioms](docs/idioms.md) is for the moment of writing, whichever path brought you
+there: it is organised by the SHAPE of the problem, and each entry names a reflex
+— something a competent programmer writes before asking what MusaDSL calls it.
+The reflex always works, which is the problem: it produces code that runs, sounds
+right, passes every test, and is foreign to the framework. Read it from the
+symptom, when you are about to make the mistake rather than after.
 
 ## Documentation
 
