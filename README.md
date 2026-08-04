@@ -124,6 +124,46 @@ The musa-dsl framework is organized in modular layers. Each component has its ow
 ### 7. Development & Interaction Layer
 - [**repl**](docs/subsystems/repl.md) - Interactive Read-Eval-Print Loop for live composition. TCP-based server for real-time code evaluation and error handling. Consumed by external REPL clients (editor extensions, custom evaluators).
 
+## Where to start
+
+The layers above are the order the framework is BUILT in, bottom-up by
+dependency. It is not the order to read it in. These are:
+
+**New to MusaDSL?** Start with one of the [examples](#examples) and the
+architecture above, then read in this order — which cuts across the layers on
+purpose, because output is the fastest way to hear that something works:
+
+1. [midi](docs/subsystems/midi.md) — getting a sound out
+2. [sequencer](docs/subsystems/sequencer.md) — putting it in time
+3. [series](docs/subsystems/series.md) — generating the material
+4. [datasets](docs/subsystems/datasets.md) — what an event is made of
+
+**Want to compose?**
+
+1. [neumas](docs/subsystems/neumas.md) — the notation
+2. [music](docs/subsystems/music.md) — scales and chords
+3. [generative](docs/subsystems/generative.md) — Markov, Variatio, grammars, Darwin
+4. [musicxml-builder](docs/subsystems/musicxml-builder.md) — if the piece has to be read on paper
+5. The [22 demo projects](https://github.com/javier-sy/musadsl-demo), which are
+   complete pieces rather than snippets
+
+**Live coding?**
+
+1. [repl](docs/subsystems/repl.md) — the server your editor talks to
+2. A MusaLCE client (VSCode, Bitwig, Live)
+3. [sequencer](docs/subsystems/sequencer.md) — its DSL is what you type live
+4. [transport](docs/subsystems/transport.md) — syncing to a DAW's clock
+
+**Extending the DSL?** These two are the foundation the framework is written on,
+and they are the last thing to read rather than the first:
+
+1. [core-extensions](docs/subsystems/core-extensions.md) — the refinements and
+   metaprogramming everything else assumes
+2. [datasets](docs/subsystems/datasets.md) — read as an extension point: how a
+   Hash becomes a musical event, and how to add your own
+3. [idioms](docs/idioms.md) — the shapes the framework expects, and what the
+   reflex would have been
+
 ## Documentation
 
 The subsystem guides linked above are the conceptual documentation: when each
