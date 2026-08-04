@@ -1,10 +1,6 @@
 --markup markdown
 --title "Musa-DSL API"
---readme README.md
+--readme README.yard.md
 --no-private
 --embed-mixins
 lib/**/*.rb
--
-docs/idioms.md
-docs/subsystems/*.md
-docs/examples/*.md

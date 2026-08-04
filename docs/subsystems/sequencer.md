@@ -113,7 +113,7 @@ start of a section, one structural mark, the end -- is exactly what `at` is for.
 `at` **inside a loop, with the position computed from the loop variable**, is
 the reflex: it means the plan is being kept as arithmetic instead of as data.
 A serie carrying `duration:` and given to `play` says the same thing and stays
-sliceable, combinable and reusable. See [idioms](../idioms.md) §1.
+sliceable, combinable and reusable.
 
 **`duration` and `note_duration` are not the same key.** For `play`, `:duration`
 is the step -- how long until the next element -- and `:note_duration` is how
