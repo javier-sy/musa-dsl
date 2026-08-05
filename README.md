@@ -162,6 +162,18 @@ and they are the last thing to read rather than the first:
 2. [datasets](docs/subsystems/datasets.md) — read as an extension point: how a
    Hash becomes a musical event, and how to add your own
 
+**Writing a whole piece rather than a snippet?**
+[project structure](docs/guides/project-structure.md) is how a musa-dsl project is
+laid out — the split between infrastructure and score, reaching one from the
+other, stopping cleanly, and shaping form as events rather than as absolute
+positions. Conventions, not API: none of it is enforced, and all of it follows
+from something that is.
+
+**Looking for a name you half remember?** [vocabulary](docs/vocabulary.md) is
+every name the guides above teach, on one page, by subsystem. It answers *what is
+there* — the one question you cannot look up — and it is generated from the
+published API and the guides themselves, so it cannot drift from either.
+
 **And one that is not a stage of any of them.**
 [idioms](docs/idioms.md) is for the moment of writing, whichever path brought you
 there: it is organised by the SHAPE of the problem, and each entry names a reflex
