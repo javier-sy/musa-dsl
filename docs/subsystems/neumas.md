@@ -42,6 +42,38 @@ Read the pitches down each voice and the point of the `|` appears. Voice 1 is
 `+2` of the melody counts from the melody's last note and not from whatever the
 harmony just did. One decoder, two independent readings of it.
 
+**And that state outlives the reading.** A decoder handed to a second `play`
+brings the first one's last values with it, so a section opening with `(+1)`
+counts from wherever the previous section stopped -- which is right for a piece
+written as one continuous line, and wrong for sections meant to stand on their
+own:
+
+```ruby
+scale = Scales.et12[440.0].major[60]
+
+section = lambda do |decoder, neumas|
+  seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+  grades = []
+  seq.at(1) do
+    seq.play(neumas.to_neumas, decoder: decoder, mode: :neumalang) { |gdv| grades << gdv[:grade] }
+  end
+  seq.run
+  grades
+end
+
+decoder = Musa::Neumas::Decoders::NeumaDecoder.new(scale, base_duration: 1/4r)
+
+section.call(decoder, '(0 1) (+2 1) (+2 1)')   # => [0, 2, 4]
+section.call(decoder, '(+1 1)')                # => [5]  (not 1: it counts from 4)
+
+decoder.base = { grade: 0, octave: 0, duration: 1/4r, velocity: 1 }
+section.call(decoder, '(+1 1)')                # => [1]
+```
+
+Nothing raises and nothing warns: the second section simply sounds transposed.
+Setting `decoder.base` at the head of each independent section is what makes its
+opening mean what it says.
+
 The pitches also show what a relative step is. `(+7)` from grade 0 in C major is
 grade 7 -- the octave, 72 -- and not seven semitones. Steps are **scale
 degrees**; the semitones follow from the scale.

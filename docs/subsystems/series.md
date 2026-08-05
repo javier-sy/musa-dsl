@@ -67,6 +67,15 @@ H(x: material, y: material.reverse).i.to_a
 Instantiating an instance gives back the same instance, so `.i` is safe to write
 wherever you are unsure -- it never re-reads something already being read.
 
+`.to_a`, on the other hand, **restarts**. It is a way of looking at a whole
+succession, not a way of draining what is left of one already being walked:
+
+```ruby
+s = S(1, 2, 3).i
+s.next_value   # => 1
+s.to_a         # => [1, 2, 3]  (not [2, 3]: to_a reads from the start)
+```
+
 **A whole graph is one or the other.** `S(1,2,3).map { ... }.repeat` is a
 prototype because its source is; instantiating it instantiates everything it
 stands on. That is also why a serie built around a `PROXY` whose source is not
@@ -180,8 +189,10 @@ rhythm.i.to_a
 
 # RND: Random melody with constraints
 melody = RND(60, 62, 64, 65, 67, 69, 71, 72)
-  .max_size(16)
+  .repeat                                           # without it there are only 8
   .remove { |note, history| note == history.last }  # No consecutive repeats
+  .max_size(16)                                     # after remove, or the cap
+melody.i.to_a.size  # => 16                         # counts what remove throws away
 
 # HARMO: Harmonic series (overtones)
 harmonics = HARMO(error: 0.5).max_size(10)
@@ -222,7 +233,7 @@ result.i.to_a  # => [84, 76, 74, 72, 84, 76, 74, 72]
 - `AC(s1, s2, ...)` - Array combined (cycles all series)
 - `FOR(from:, to:, step:)` - Numeric range generator
 - `MERGE(s1, s2, ...)` - Concatenate series sequentially
-- `RND(...)` - Random values (infinite)
+- `RND(...)` - Random permutation, **not** a die: each value is drawn once and removed, so `RND(1..6)` gives six values and then ends, and `infinite?` is false. Sampling *with* replacement is `RND(...).repeat`, which reshuffles on each pass and is infinite
 - `RND1(...)` - Random single value (exhausts after one)
 - `SIN(steps:, amplitude:, center:)` - Sinusoidal waveform
 - `FIBO(first = 1, second = 1)` - Fibonacci sequence; the seeds are its first two values, so `FIBO()` gives 1, 1, 2, 3, 5..., `FIBO(0, 1)` includes the leading zero and `FIBO(2, 1)` gives the Lucas numbers

@@ -21,6 +21,15 @@ each re-articulation and a single NoteOff when the last of them lets go. Note
 ons and note offs are not meant to balance, and counting them is not how you
 find a stuck note -- what matters is the last thing said about each pitch.
 
+**Channels are numbered from 0.** The sixteen are `0` to `15`, which is what the
+protocol puts on the wire. Instruments and DAWs almost all display them from 1,
+so the channel you read on a screen is one more than the one you write here: the
+percussion channel of General MIDI, universally called 10, is `9`.
+
+**A voice is reached through `.voices`.** `MIDIVoices` does not define `[]`, so
+`voices[0]` raises `NoMethodError` -- the voice is `voices.voices[0]`. Writing
+that twice is enough to want a one-line accessor for it in the score.
+
 **When it is NOT the answer.** Anything that is not communication with a device.
 Pitch belongs to [music](music.md), duration to [datasets](datasets.md), and
 placement in time to the [sequencer](sequencer.md). A composition that reasons in

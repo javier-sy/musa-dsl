@@ -24,6 +24,14 @@ transpose it, rotate it, stretch it -- is a [serie](series.md) operation and
 nothing here is needed. Reach for a generative tool when the material has to be
 *found* rather than derived.
 
+**Markov is a serie; the other three are not.** `Markov::Markov` implements the
+serie interface, so it maps, filters and combines like any other, and it is read
+with `.i` and `next_value` rather than run to completion. That does not mean
+`play` takes it as it stands -- `play` reads events carrying a `:duration`, and a
+Markov yields bare states, so it passes through `H(grade: markov, duration: ...)`
+or a `.map` into hashes on the way. Variatio, GenerativeGrammar and Darwin hand
+back a collection instead, and the serie is built from what they return.
+
 **Seed everything.** All of these consume randomness, and an unseeded piece is
 one you cannot come back to. `RND(random:)`, `.randomize(random:)` and a
 `Random.new(seed)` of your own are what make a generated passage a decision
@@ -39,6 +47,21 @@ Parameters:
 - `transitions:` - Hash mapping each state to possible next states with probabilities
   - Format: `state => { next_state => probability, ... }`
   - Probabilities for each state should sum to 1.0
+
+**The `finish:` value is emitted, not just obeyed.** It ends the succession *and*
+arrives as its last value, so it reaches the block that was expecting a grade:
+
+```ruby
+chain = Musa::Markov::Markov.new(
+  start: 0, finish: :end,
+  transitions: { 0 => { 2 => 1.0 }, 2 => { 4 => 1.0 }, 4 => { :end => 1.0 } }
+)
+
+chain.i.to_a                              # => [0, 2, 4, :end]
+chain.remove { |v| v == :end }.i.to_a     # => [0, 2, 4]
+```
+
+Either filter it out, as above, or pick a finish value the music can survive.
 
 ```ruby
 require 'musa-dsl'

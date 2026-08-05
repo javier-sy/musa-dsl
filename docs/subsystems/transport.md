@@ -43,6 +43,14 @@ runs before the first tick, with the sequencer already built -- it is where to
 schedule what has to exist before time starts. `on_start` runs when the clock
 actually starts. `after_stop` runs when it stops, however it stopped.
 
+**`stop` cannot be called from a signal handler.** Stopping resets the sequencer,
+that reset takes a mutex, and Ruby refuses to take one inside a trap: a plain
+`trap('INT') { transport.stop }` raises `ThreadError: can't be called from trap
+context` and the transport goes on running, so the Ctrl+C that was meant to end
+the piece does nothing at all. Moving the call out of trap context --
+`trap('INT') { Thread.new { transport.stop } }` -- is enough, and `start` then
+returns as it should.
+
 ## Clock - Timing Sources
 
 **Clock** is the abstract base class for timing sources. All clocks generate regular ticks that drive the sequencer forward. Multiple clock implementations are available for different use cases.

@@ -192,6 +192,23 @@ representable. The difference shows where a Float cannot be: a third of a bar is
 `1/3r` exactly and `0.3333333333333333` never, and the sequencer's grid is
 rational all the way down.
 
+And a Float that does not fall on the grid is not kept as it is: it is **rounded
+to the nearest tick**, silently. With 4 beats of 24 ticks there are 96 ticks in a
+bar, so `1.3` becomes the 29th of them:
+
+```ruby
+seq = Musa::Sequencer::BaseSequencer.new(4, 24)
+landed = nil
+
+seq.at(1.3) { landed = seq.position }
+seq.run
+
+landed  # => (125/96)
+```
+
+Nothing warns about it, and the error is small enough to survive listening and
+large enough to accumulate.
+
 Note the positions: `1 + 1/2r`, not `1/2r`. Bars are numbered from 1, and the
 sequencer starts one tick before bar 1, so anything scheduled below that is in
 the past before the piece begins:
