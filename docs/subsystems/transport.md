@@ -220,14 +220,48 @@ clock = Musa::Clock::InputMidiClock.new(midi_input)
 # Create transport
 transport = Musa::Transport::Transport.new(clock, 4, 24)
 
-# Schedule events
-transport.sequencer.at 1 do
-  puts "Synchronized start at bar 1!"
+# Schedule events INSIDE on_start, not before transport.start. See below.
+transport.on_start do
+  transport.sequencer.at 1 do
+    puts "Synchronized start at bar 1!"
+  end
 end
 
 # Start and wait for MIDI Clock Start message
 transport.start
 ```
+
+### Under a DAW's clock, schedule from `on_start` or `before_begin`
+
+Anything scheduled before `transport.start` can be gone before the first note
+sounds, and the reason is that pressing Play does not always send a Start.
+
+A DAW with Song Position Pointer enabled cannot say "play from here" in one
+message: `Start` means "from the beginning" and carries no position. So it sends
+three -- `Stop`, `Song Position Pointer`, `Continue` -- and that first `Stop` is
+a real stop. A stop resets the sequencer, which discards every `at`, `every` and
+`play` registered on it. The transport then starts and runs an empty sequencer.
+
+With Song Position Pointer switched off the same piece plays normally: Play
+sends a plain `Start`, there is no stop, and nothing is reset.
+
+Whether it bites depends on how the three messages arrive. They are sent within
+a millisecond of each other, and when a single read returns all three the
+transport repositions without stopping -- nothing is reset and a piece that
+schedules early works. When they arrive apart, it does not.
+
+That grouping is decided by the platform and by whatever else the machine is
+doing at that moment, so **a piece written this way can work for years and then
+stop working without anything in it having changed**: a different operating
+system, a busier machine, a Ruby that schedules its threads differently. Working
+today is not evidence that the rule does not apply.
+
+**The symptom is silence, not an error**, and it is indistinguishable at a glance
+from a transport that never started. If a piece runs mute under a DAW, read the
+sequencer's position while it runs: advancing position with no notes is this.
+
+`before_begin` and `on_start` run after that reset, which is what makes them the
+right place.
 
 ## The lifecycle, run
 

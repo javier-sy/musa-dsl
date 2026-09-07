@@ -59,4 +59,4 @@ missing from the documents, and that is where to add it.
 
 ## transport
 
-`Clock` · `DummyClock` · `ExternalTickClock` · `InputMidiClock` · `TimerClock` · `Transport` · `after_stop` · `before_begin` · `change_position_to` · `n` · `on_change_position` · `on_start` · `on_stop` · `run` · `sequencer` · `start` · `stop` · `terminate` · `tick`
+`Clock` · `DummyClock` · `ExternalTickClock` · `InputMidiClock` · `TimerClock` · `Transport` · `after_stop` · `at` · `before_begin` · `change_position_to` · `every` · `n` · `on_change_position` · `on_start` · `on_stop` · `play` · `run` · `sequencer` · `start` · `stop` · `terminate` · `tick`
