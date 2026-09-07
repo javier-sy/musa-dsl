@@ -284,6 +284,28 @@ module Musa
 
         when 'Continue'
           @logger.debug('InputMidiClock') { 'processing Continue...' }
+
+          # A Continue means "carry on playing", and carrying on from a stop is
+          # starting. Doing nothing here made the special case above -- Stop,
+          # Song Position Pointer and Continue arriving together -- the only
+          # path that could ever set @started outside a literal Start, and that
+          # path only matches when all three land in the same read.
+          #
+          # Whether they do is a property of the platform, not of the DAW. Core
+          # MIDI delivers packet lists that can carry several messages, so on
+          # macOS they usually arrive together; WinMM raises one notification
+          # per short message, so on Windows they usually do not. Measured
+          # against Bitwig with Song Position Pointer enabled, the Stop arrived
+          # alone 0.3 to 0.8 ms before the other two, and the grouping varied
+          # between presses of Play. The clock then discarded every tick
+          # forever: 1320 of them in one run, in silence.
+          #
+          # So the pattern above is no longer the only way in. It still earns
+          # its place -- when the three do arrive together it repositions
+          # without stopping, and a stop resets the sequencer -- but nothing
+          # depends on it any more.
+          process_start unless @started
+
           @logger.debug('InputMidiClock') { 'processing Continue... done' }
 
         when 'Clock'
