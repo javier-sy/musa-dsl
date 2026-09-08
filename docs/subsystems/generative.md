@@ -82,6 +82,26 @@ markov = Musa::Markov::Markov.new(
 melody_pitches = markov.to_a
 ```
 
+### Replacing the table while the chain is running
+
+`transitions=` swaps the table on a live chain, which is how a piece changes its
+harmonic behaviour between sections. **The new table has to cover every state the
+chain can currently be in, not only the states it wants to produce.** The chain
+keeps its `@current` across the swap, and if the new table has no entry for it:
+
+```
+RuntimeError: No transition defined for 5
+```
+
+That raise happens on every call from then on, and under a sequencer it is easy
+to miss entirely: the scheduled block's exception is recorded and the sequencer
+carries on, so the voice simply goes quiet while everything else keeps playing.
+Nothing crashes and nothing warns.
+
+The way out is to build the tables over the **union** of the states any of them
+can reach, giving each one an entry for every state even if some of those entries
+only lead back out of it.
+
 ## Variatio
 
 Generates all combinations of parameter variations using Cartesian product. Useful for creating comprehensive parameter sweeps, exploring all possibilities of a musical motif, or generating exhaustive harmonic permutations.
