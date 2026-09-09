@@ -27,7 +27,7 @@ missing from the documents, and that is where to add it.
 
 ## midi
 
-`MIDIRecorder` · `MIDIVoices` · `channel` · `duration` · `note` · `note_off` · `pitch` · `position` · `raw` · `record` · `transcription` · `velocity` · `velocity_off` · `voice` · `voices`
+`MIDIRecorder` · `MIDIVoice` · `MIDIVoices` · `channel` · `duration` · `note` · `note_off` · `pitch` · `position` · `raw` · `record` · `transcription` · `velocity` · `velocity_off` · `voice` · `voices`
 
 ## music
 
@@ -47,7 +47,7 @@ missing from the documents, and that is where to add it.
 
 ## sequencer
 
-`Sequencer` · `after` · `at` · `duration` · `every` · `move` · `next_value` · `note_duration` · `now` · `on_stop` · `play` · `play_timed` · `sequencer` · `stop` · `time` · `wait` · `with`
+`Sequencer` · `SmartProcBinder` · `after` · `at` · `duration` · `error` · `every` · `launch` · `logger` · `move` · `next_value` · `note_duration` · `now` · `on_stop` · `play` · `play_timed` · `run` · `sequencer` · `stop` · `time` · `wait` · `with`
 
 ## series
 

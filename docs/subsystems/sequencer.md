@@ -231,6 +231,30 @@ All scheduling methods (`every`, `play`, `move`, `play_timed`) pass parameters t
 
 **Important**: keyword parameters (like `control:`) must be declared as **keyword arguments** in the block signature (`|control:|`), not as positional arguments (`|control|`).
 
+**And the one that bites: a parameter with no value arrives as `nil`, which
+overrides the Ruby default you wrote.** `SmartProcBinder` supplies every
+declared parameter, so `nil` is passed rather than the parameter being left out
+— and a default only fires when an argument is *absent*, never when it is `nil`.
+This matters most in `launch`, where the recursion looks like it will seed
+itself:
+
+```text
+# WRONG — rep is nil on the first call, not 0
+control.after { launch :section }
+on :section do |rep = 0|
+  launch :section, rep + 1   # NoMethodError: undefined method '+' for nil
+end
+
+# RIGHT — pass the starting value explicitly
+control.after { launch :section, 0 }
+on :section do |rep = 0|     # the default now only documents the intent
+  launch :section, rep + 1
+end
+```
+
+The rule is the same wherever a block declares a parameter the caller may not
+supply: give it a value, and treat the Ruby default as documentation.
+
 ### Parameters available per method
 
 | Method | Positional params | Keyword params |
@@ -291,6 +315,31 @@ Three things the table cannot say and the result does:
   because the sequencer starts one tick before bar 1.
 - `started_ago:` is an **array**, not a number: one entry per value that was
   already sounding when this one arrived, empty when nothing was.
+
+## A block that raises does not stop the piece
+
+Every scheduled block runs inside a rescue: an exception is written to the
+sequencer's logger and the sequencer carries on with the next tick. Nothing
+propagates to whoever called `run`, and nothing appears on stdout unless the
+logger is being watched.
+
+That is the right behaviour for a piece playing live — one broken voice should
+not take the other five with it — but it has a consequence worth knowing before
+it happens to you: **a voice can fall silent for the rest of the piece while
+everything reports success.** It has happened twice here, once to a solo line
+whose Markov table had no entry for the state it was in, and once to a whole
+section. In both cases the piece ran to completion and the verification passed.
+
+If a voice goes quiet with no error, this is the first thing to check. An
+offline verification can catch it by intercepting `logger.error` on the
+transport's logger and failing when anything arrives:
+
+```text
+errors = []
+transport.logger.define_singleton_method(:error) { |*args, &b| errors << (b ? b.call : args.first) }
+# ... run the piece ...
+raise "a scheduled block failed: #{errors.first}" unless errors.empty?
+```
 
 ## Play Modes
 

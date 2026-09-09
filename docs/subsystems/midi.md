@@ -82,6 +82,30 @@ voices.fast_forward = true
 voices.fast_forward = false  # Resume audible output
 ```
 
+## A pitch on a channel is a boolean, not a counter
+
+Two overlapping notes of the same pitch on the same voice are **one pitch
+sounding**. `MIDIVoice` reference-counts per pitch: it emits a NoteOn for each,
+and a single NoteOff when the last `NoteControl` is released. That is correct —
+MIDI has no way to express "two of the same note on one channel" — but it breaks
+two things people write.
+
+**Counting will not find hanging notes.** `NoteOn - NoteOff > 0` is the normal
+state of any piece with overlaps, not a leak. What answers the question is
+whether any pitch still holds controls:
+
+```ruby
+hanging = voice.active_pitches.select { |_pitch, state| !state[:note_controls].empty? }
+```
+
+**And a per-pitch counter invents chords that never sounded.** Any analysis that
+tracks "which pitches are on" by incrementing on NoteOn and decrementing on
+NoteOff leaves pitches sounding forever once they overlap, and then reports
+clusters no listener heard. A real case: a first pass over a piece reported
+chromatic clusters in 42 bars; measuring with the last event per pitch, the
+number was 27, and the 15 extra were the counter's own residue. **The truth is
+the last event for each pitch, not the running total.**
+
 ## MIDIRecorder - MIDI Event Recording
 
 **MIDIRecorder** captures raw MIDI bytes alongside sequencer position timestamps and converts them into structured note events. Useful for recording phrases from external MIDI controllers synchronized with the sequencer timeline.

@@ -31,7 +31,7 @@ require 'musa-dsl'
 
 using Musa::Extension::Neumas
 
-# Neuma notation with ornaments: trill (.tr) and mordent (.mor)
+# Neuma notation with ornaments: trill (tr) and mordent (mor)
 neumas = "(0 1 mf) (+2 1 tr) (+4 1 mor) (+5 1)"
 
 # Create scale and decoder
@@ -67,11 +67,14 @@ end
 #    Pitch: 79, Duration: 1/4, Velocity: 80    # G5 (no ornament)
 ```
 
-**Supported ornaments:**
-- `.tr` - Trill (rapid alternation with upper note)
-- `.mor` - Mordent (quick alternation with adjacent note)
-- `.turn` - Turn (four-note figure)
-- `.st` - Staccato (shortened duration)
+**Supported ornaments**, written with no dot — the example above is the correct
+form, and a leading dot is not a variant spelling: `(0 1 mf .tr)` parses to
+nothing at all rather than raising, so the note simply never sounds.
+
+- `tr` - Trill (rapid alternation with upper note)
+- `mor` - Mordent (quick alternation with adjacent note)
+- `turn` - Turn (four-note figure)
+- `st` - Staccato (shortened duration)
 
 ## MusicXML with Ornament Symbols
 
