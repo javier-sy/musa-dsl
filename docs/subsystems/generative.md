@@ -84,13 +84,13 @@ melody_pitches = markov.to_a
 
 ### Replacing the table while the chain is running
 
-`transitions=` swaps the table on a live chain, which is how a piece changes its
-harmonic behaviour between sections. **The new table has to cover every state the
+`transitions=` swaps the table on a live chain. 
+**The new table has to cover every state the
 chain can currently be in, not only the states it wants to produce.** The chain
-keeps its `@current` across the swap, and if the new table has no entry for it:
+keeps its current state across the swap, and if the new table has no entry for it:
 
 ```
-RuntimeError: No transition defined for 5
+RuntimeError: No transition defined for <STATE>
 ```
 
 That raise happens on every call from then on, and under a sequencer it is easy

@@ -67,9 +67,7 @@ end
 #    Pitch: 79, Duration: 1/4, Velocity: 80    # G5 (no ornament)
 ```
 
-**Supported ornaments**, written with no dot — the example above is the correct
-form, and a leading dot is not a variant spelling: `(0 1 mf .tr)` parses to
-nothing at all rather than raising, so the note simply never sounds.
+**Supported ornaments**:
 
 - `tr` - Trill (rapid alternation with upper note)
 - `mor` - Mordent (quick alternation with adjacent note)

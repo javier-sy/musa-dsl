@@ -326,9 +326,8 @@ logger is being watched.
 That is the right behaviour for a piece playing live — one broken voice should
 not take the other five with it — but it has a consequence worth knowing before
 it happens to you: **a voice can fall silent for the rest of the piece while
-everything reports success.** It has happened twice here, once to a solo line
-whose Markov table had no entry for the state it was in, and once to a whole
-section. In both cases the piece ran to completion and the verification passed.
+everything reports success.** The piece runs to completion, the verification
+passes, and the only symptom is silence where there should be a line.
 
 If a voice goes quiet with no error, this is the first thing to check. An
 offline verification can catch it by intercepting `logger.error` on the
