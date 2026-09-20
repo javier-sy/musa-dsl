@@ -91,6 +91,7 @@ MusaDSL is a comprehensive ecosystem consisting of a core framework (musa-dsl) a
 - [**midi-parser**](https://github.com/javier-sy/midi-parser) - MIDI file parsing and analysis
 - [**midi-communications**](https://github.com/javier-sy/midi-communications) - Cross-platform MIDI I/O abstraction layer
 - [**midi-communications-macos**](https://github.com/javier-sy/midi-communications-macos) - macOS-specific MIDI native implementation
+- [**midi-communications-windows**](https://github.com/javier-sy/midi-communications-windows) - Windows-specific MIDI native implementation
 
 ## MusaDSL Architecture
 
