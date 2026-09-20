@@ -46,7 +46,7 @@ module Musa
     #
     # Based on https://github.com/adamluzsi/duplicate.rb/blob/master/lib/duplicate.rb
     #
-    # Modifications by Javier Sánchez Yeste
+    # Modifications by yeste.studio
     module DeepCopy
       # Main deep copy module providing class methods.
       module DeepCopy
