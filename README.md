@@ -1,7 +1,7 @@
 # Musa-DSL
 
 [![Ruby Version](https://img.shields.io/badge/ruby-3.4.7-red.svg)](https://www.ruby-lang.org/)
-[![License](https://img.shields.io/badge/license-LGPL--3.0--or--later-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0.html)
+[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 A Ruby framework and DSL for algorithmic sound and musical thinking and composition.
 
@@ -214,11 +214,29 @@ Listen to compositions created with Musa-DSL: [yeste.studio](https://yeste.studi
 
 ## Author
 
-* [Javier Sánchez Yeste](https://github.com/javier-sy) -- javier (at) yeste.studio
+* [yeste.studio](https://yeste.studio) -- javier (at) yeste.studio
 
 Special thanks to [JetBrains](https://www.jetbrains.com/?from=Musa-DSL) for
 providing an Open Source project license for RubyMine during several years.
 
 ## License
 
-[Musa-DSL](https://github.com/javier-sy/musa-dsl) Copyright (c) 2016-2026 [Javier Sánchez Yeste](https://yeste.studio), licensed under LGPL 3.0 License
+Musa-DSL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See [LICENSE](LICENSE).
+
+**What this means for you.** Composing, performing and publishing music made with Musa-DSL carries no obligation: the music is yours. The GPL applies to *software*: if you distribute a program that includes or is built on Musa-DSL, that program must be released under the GPL too, with its source.
+
+**Commercial license.** If you need Musa-DSL under terms its license does not cover — for instance, inside a closed product — yeste.studio offers a commercial license. Write to javier@yeste.studio.
+
+**Versions.** From 1.0.0, Musa-DSL follows [Semantic Versioning](https://semver.org): breaking changes only come with a new major version.
+
+[Musa-DSL](https://github.com/javier-sy/musa-dsl) Copyright (c) 2016-2026 [yeste.studio](https://yeste.studio)
+
+### Frequently asked questions
+
+**Is my music affected by the GPL?** No. The GPL covers the software, not what you make with it. Your compositions, scores and recordings are yours, under any terms you choose.
+
+**I publish the scripts I compose with.** Scripts that `require 'musa-dsl'` are, in the GPL's reading, works based on Musa-DSL: publish them under the GPL or a compatible license. Most people already do; if that is a problem for you, write to us.
+
+**I want to build a product on Musa-DSL.** Release it under the GPL with its source, or get a commercial license from yeste.studio (the same offer applies to every yeste.studio product, whatever its license).
+
+**I use Musa-DSL at a university or in a company.** Using, teaching and modifying it internally needs nothing. The GPL only applies when you distribute software built on it.

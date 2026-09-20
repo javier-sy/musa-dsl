@@ -33,5 +33,6 @@ Requires Ruby ~> 3.4.
 
 ---
 
-Copyright (c) 2016-2026 [Javier Sánchez Yeste](https://yeste.studio),
-licensed under LGPL-3.0-or-later.
+Copyright (c) 2016-2026 [yeste.studio](https://yeste.studio), licensed under
+GPL-3.0-or-later; a commercial license is available from yeste.studio. See the
+License section of the README on GitHub.

@@ -5,11 +5,11 @@ Gem::Specification.new do |s|
   s.version     = Musa::VERSION
   s.summary     = 'A simple Ruby DSL for making complex music'
   s.description = 'Musa-DSL: A Ruby framework and DSL for algorithmic sound and musical thinking and composition'
-  s.authors     = ['Javier Sánchez Yeste']
-  s.email       = 'javier.sy@gmail.com'
+  s.authors     = ['yeste.studio']
+  s.email       = 'javier@yeste.studio'
   s.files       = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|samples|\.github)/}) }
   s.homepage    = 'https://musadsl.yeste.studio'
-  s.license     = 'LGPL-3.0-or-later'
+  s.license     = 'GPL-3.0-or-later'
 
   s.required_ruby_version = '>= 3.4.7'
 
@@ -28,8 +28,8 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'citrus', '~> 3.0'
 
-  s.add_dependency 'midi-events', '~> 0.7'
-  s.add_dependency 'midi-parser', '~> 0.5'
+  s.add_dependency 'midi-events', '~> 1.0'
+  s.add_dependency 'midi-parser', '~> 1.0'
 
   s.add_development_dependency 'descriptive-statistics', '~> 2.2'
   s.add_development_dependency 'rack', '~> 2.2'
